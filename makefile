@@ -15,9 +15,9 @@ WEEWX_DOWNLOADS=$(WEEWX_HTMLDIR)/downloads
 # location for staging weewx package uploads
 WEEWX_STAGING=$(WEEWX_HTMLDIR)/downloads/development_versions
 # Location of doc sources
-DOC_SRC=docs
+DOC_SRC=docs_src
 # Location of built docs
-DOC_BUILT=html_docs
+DOC_BUILT=docs
 # Location of the skins
 SKINLOC=skins
 
@@ -104,12 +104,10 @@ clean:
 	find bin -name "*.pyc" -exec rm {} \;
 	find bin -name "__pycache__" -prune -exec rm -rf {} \;
 	rm -rf $(BLDDIR) $(DSTDIR)
-	rm -rf bin/wee_resources
 
 realclean:
-	rm -f MANIFEST
-	rm -rf build
-	rm -rf dist
+	rm -rf $(DOC_BUILT)
+	rm -rf bin/wee_resources
 
 
 ###############################################################################

@@ -6,7 +6,7 @@ junk*
 .DS_Store
 /build
 /dist
-/html_docs
+/docs
 /.venv
 /venv
 

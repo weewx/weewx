@@ -8,7 +8,7 @@ This will require a separate "examples" webpage, which isn't a bad idea on its o
 weectl station create --- Initialize ~/weewx-data with weewx.conf, skins, and "util" files.
 weectl config reconfigure --- Reconfigure the config file.
 weectl config upgrade --- Upgrade the config file
-weectl skin upgrade --- Upgrade the skins
+weectl skins upgrade --- Upgrade the skins
 
 
 
