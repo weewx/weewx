@@ -52,6 +52,8 @@ time of max rainfall during the day.
 Relax requirement that column `dateTime` be the first column in the database.
 Fixes issue #855.
 
+Fix bug when using Pillow v9.5.0. Fixes issue #862.
+
 
 ### 4.10.2 02/22/2023
 
