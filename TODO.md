@@ -1,5 +1,17 @@
 # To do
 
+## pip installs
+
+No longer install documentation and examples. Instead, get them from the website.
+This will require a separate "examples" webpage, which isn't a bad idea on its own.
+
+weectl station create --- Initialize ~/weewx-data with weewx.conf, skins, and "util" files.
+weectl config reconfigure --- Reconfigure the config file.
+weectl config upgrade --- Upgrade the config file
+weectl skin upgrade --- Upgrade the skins
+
+
+
 ## Debian packaging
 
 Right now, the depository is for a "squeeze" and "buster" distribution. Do we keep adding them
@@ -17,7 +29,7 @@ come from a script, not a human.
 
 How to switch from init.d to systemd.
 
-How to upgrade from V4 using Python 2 to V5.
+How to upgrade from V4 using Python 2 to V5, using Python 3.
 
 
 ## Utilities
@@ -38,6 +50,10 @@ Update the logging wiki.
 
 
 Put legacy (V4.x) docs at weewx.com/legacy_docs.
+
+Change Debian install instructions to
+
+    echo "deb [arch=all] http://weewx.com/apt/python3 stable main" | sudo tee /etc/apt/sources.list.d/weewx.list
 
 
 
