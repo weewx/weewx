@@ -122,21 +122,27 @@ Version: 4.10
         <p>
             Then follow the standard installation procedure:
         </p>
-        <p>Unpack the archive:</p>
+        <ol>
+        <li>
+            Download the source package from the <a href="https://weewx.com/downloads/">download area</a> of the
+            website.
+        </li>
+
+        <li>Unpack the source package:</li>
         <pre class="tty cmd">tar xvfz weewx-X.Y.Z.tar.gz</pre>
-        <p>Change directory into it:</p>
+        <li>Change directory into it:</li>
         <pre class="tty cmd">cd weewx-X.Y.Z </pre>
-        <p>Build the distribution, using whatever version of Python you plan to use. For example, for Python 3:</p>
+        <li>Build the distribution, using whatever version of Python you plan to use. For example, for Python 3:</li>
         <pre class="tty cmd">python3 ./setup.py build </pre>
 
         <p class='warning'><strong>Warning!</strong><br/> Before doing the next step, be sure that <span class="code">home</span>
             in the file <span class="code">setup.cfg</span> is set to the location of the previous WeeWX installation.
         </p>
 
-        <p>
+        <li>
             After checking <span class='code'>setup.cfg</span>, install your new version of WeeWX, again using
             the version of Python you plan on using:
-        </p>
+        </li>
 
         <pre class="tty cmd">sudo python3 ./setup.py install </pre>
 
@@ -155,7 +161,7 @@ Version: 4.10
             </li>
         </ul>
 
-        <p>Finally, restart WeeWX.</p>
+        <li>Finally, restart WeeWX.</li>
 
         <h1><a id="Upgrading_using_DEB_package">Upgrading using DEB package</a></h1>
 
