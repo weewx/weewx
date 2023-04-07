@@ -197,7 +197,8 @@ merge_weewxconf() {
                 echo saving distribution config file as $cfgfile-$NEWVER
                 cp -p $cfgfile.dist $cfgfile-$NEWVER
                 echo merging previous and distribution into $cfgfile
-                $cfgapp station upgrade --config=$cfgfile --dist-config=$cfgfile-$NEWVER --no-prompt --no-backup
+                # Upgrade the configuration file only.
+                $cfgapp station upgrade --config=$cfgfile --dist-config=$cfgfile-$NEWVER --config-only --no-prompt --no-backup
             else
                 echo distribution config file is wrong version for merging
             fi
