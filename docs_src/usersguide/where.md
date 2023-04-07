@@ -12,8 +12,8 @@ Here is a summary of the layout for the different install methods, along with th
 
 === "Debian"
 
-    | Role                    | Symbolic name     | Nominal value                  |
-    |-------------------------|-------------------|--------------------------------|
+    | Role                    | Symbolic name    | Nominal value                   |
+    |-------------------------|------------------|---------------------------------|
     | WeeWX root directory    | _`WEEWX_ROOT`_   | `/`                             |
     | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`             |
     | Configuration directory | _`CONFIG_ROOT`_  | `/etc/weewx/`                   |
@@ -43,7 +43,7 @@ Here is a summary of the layout for the different install methods, along with th
     | Role                    | Symbolic name    | Nominal value        |
     |-------------------------|------------------|----------------------|
     | WeeWX root directory    | _`WEEWX_ROOT`_   | `~/weewx-data`       |
-    | Executables             | _`BIN_ROOT`_     | `~/.local/bin`       |
+    | Executables             | _`BIN_ROOT`_     | see below            |
     | Configuration directory | _`CONFIG_ROOT`_  | `./`                 |
     | Skins and templates     | _`SKIN_ROOT`_    | `./skins/`           |
     | SQLite databases        | _`SQLITE_ROOT`_  | `./archive/`         |
@@ -51,6 +51,21 @@ Here is a summary of the layout for the different install methods, along with th
     | Documentation           | _`DOC_ROOT`_     | `./docs`             |
     | Examples                | _`EXAMPLE_ROOT`_ | `./examples/`        |
     | User directory          | _`USER_ROOT`_    | `./bin/user`         |
+
+
+## Location of pip-installed executables
+
+If you use a pip install, the location of the executables will depend on the details:
+
+| Install method                            | Commands                                                                     | Location of executables |
+|-------------------------------------------|------------------------------------------------------------------------------|-------------------------|
+| pip, no sudo, with `--user` (recommended) | `pip3 install weewx --user`                                                  | `~/.local/bin/`         |
+| pip, no sudo, no `--user`                 | `pip3 install weewx`                                                         | `~/.local/bin/`         |
+| pip with sudo (not recommended)           | `sudo pip3 install weewx`                                                    | `/usr/local/bin/` (1)   |
+| Virtual environment                       | `python3 -m venv ve`<br/>`. ve/bin/activate`<br/>`pip3 install weewx`        | `./ve/bin/`             |
+| Virtual environment with `--user`         | `python3 -m venv ve`<br/>`. ve/bin/activate`<br/>`pip3 install weewx --user` | Not allowed             |
+
+(1) Checked on Ubuntu 22.02 and Rocky v9.1
 
 
 ## Log files

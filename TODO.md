@@ -1,16 +1,5 @@
 # To do
 
-## pip installs
-
-No longer install documentation and examples. Instead, get them from the website.
-This will require a separate "examples" webpage, which isn't a bad idea on its own.
-
-weectl station create --- Initialize ~/weewx-data with weewx.conf, skins, and "util" files.
-weectl config reconfigure --- Reconfigure the config file.
-weectl config upgrade --- Upgrade the config file
-weectl skins upgrade --- Upgrade the skins
-
-
 
 ## Debian packaging
 
@@ -29,7 +18,7 @@ come from a script, not a human.
 
 How to switch from init.d to systemd.
 
-How to upgrade from V4 using Python 2 to V5, using Python 3.
+How to upgrade from V4 using Python 2, to V5 using Python 3.
 
 
 ## Utilities
