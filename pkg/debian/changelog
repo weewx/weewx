@@ -1,3 +1,6 @@
+weewx (5.0.0a28-1) unstable; urgency=low
+  * Use flag --config-only to upgrade config file
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 07 Apr 2023 05:36:56 -0700
 weewx (5.0.0a27-1) unstable; urgency=low
   * Fix bug in postinst
  -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Wed, 29 Mar 2023 14:47:50 -0700
