@@ -105,7 +105,7 @@ clean:
 	find bin -name "__pycache__" -prune -exec rm -rf {} \;
 	rm -rf $(BLDDIR) $(DSTDIR)
 
-realclean:
+realclean: clean
 	rm -rf $(DOC_BUILT)
 	rm -rf bin/wee_resources
 

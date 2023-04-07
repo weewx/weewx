@@ -40,6 +40,7 @@ usage: weectl station create [--config=CONFIG-PATH] \
        weectl station upgrade [--config=CONFIG-PATH] \
                               [--docs-root=DOCS_ROOT] \
                               [--examples-root=EXAMPLES_ROOT] \
+                              [--config-only] \
                               [--no-prompt] \
                               [--no-backup] \
                               [--dry-run]
@@ -65,7 +66,7 @@ Which action to take:
 ```
 
 In the documentation that follows,  the exact output will depend on
-your operating system and username. What is shown below is for macOS and user `tkeffer`.
+your operating system and username. What is shown below is for Linux and user `tkeffer`.
 
 ## `weectl station create`
 
@@ -150,7 +151,7 @@ optional arguments:
   --examples-root EXAMPLES_ROOT
                         Where to put the examples, relative to WEEWX_ROOT.
                         Default is "examples".
-  --no-prompt           If set, do not prompt. Use default values.
+  --no-prompt           Do not prompt. Use default values.
   --dry-run             Print what would happen, but do not actually do it.
 ```
 
@@ -253,8 +254,8 @@ optional arguments:
   --html-root HTML_ROOT
                         Where to put the generated HTML and images, relative
                         to WEEWX_ROOT. Default is "public_html".
-  --no-prompt           If set, do not prompt. Use default values.
-  --no-backup           If set, do not backup the old configuration file.
+  --no-prompt           Do not prompt. Use default values.
+  --no-backup           Do not backup the old configuration file.
   --dry-run             Print what would happen, but do not actually do it.
 ```
 
@@ -283,8 +284,10 @@ Running `weectl station upgrade --help` will show you its options.
 ```
 % weectl station upgrade --help
 usage: weectl station upgrade [--config=CONFIG-PATH] \
+                              [--dist-config=DIST-CONFIG-PATH]] \
                               [--docs-root=DOCS_ROOT] \
                               [--examples-root=EXAMPLES_ROOT] \
+                              [--config-only] \
                               [--no-prompt] \
                               [--no-backup] \
                               [--dry-run]
@@ -299,14 +302,21 @@ optional arguments:
   -h, --help            show this help message and exit
   --config CONFIG-PATH  Path to configuration file. Default is
                         "/home/tkeffer/weewx-data/weewx.conf"
+  --dist-config DIST-CONFIG-PATH
+                        Use configuration file DIST-CONFIG-PATH as the new
+                        configuration file. Default is to retrieve it from
+                        package resources. The average user is unlikely to
+                        need this option.
   --docs-root DOCS_ROOT
                         Where to put the new documentation, relative to
                         WEEWX_ROOT. Default is "docs".
   --examples-root EXAMPLES_ROOT
                         Where to put the new examples, relative to WEEWX_ROOT.
                         Default is "examples".
-  --no-prompt           If set, do not prompt. Use default values.
-  --no-backup           If set, do not backup the old configuration file.
+  --config-only         Upgrade the configuration file only. Do not touch the
+                        docs, examples, and utility files.
+  --no-prompt           Do not prompt. Use default values.
+  --no-backup           Do not backup the old configuration file.
   --dry-run             Print what would happen, but do not actually do it.
 ```
 
@@ -336,7 +346,7 @@ optional arguments:
   --skin-root SKIN_ROOT
                         Where to put the skins, relatve to WEEWX_ROOT. Default
                         is "skins".
-  --no-prompt           If set, do not prompt. Use default values.
+  --no-prompt           Do not prompt. Use default values.
   --dry-run             Print what would happen, but do not actually do it.
 ```
 

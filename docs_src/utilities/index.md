@@ -1,6 +1,6 @@
 # Guide to WeeWX utilities
 
-#### [`weectl`](weectl/index.md)
+#### [`weectl`](../weectl/index.md)
 
 - Creation and management of user data.
 - Installation and uninstallation of extensions.

@@ -691,7 +691,7 @@ def _patch_file(srcpath, dstpath, re_list):
 
 
 def station_upgrade(config_path, dist_config_path=None, docs_root=None, examples_root=None,
-                    no_prompt=False, no_backup=False, dry_run=False):
+                    config_only=False, no_prompt=False, no_backup=False, dry_run=False):
     """Upgrade the user data for the configuration file found at config_path"""
 
     if dry_run:
@@ -700,9 +700,13 @@ def station_upgrade(config_path, dist_config_path=None, docs_root=None, examples
     # Retrieve the old configuration file as a ConfigObj:
     config_path, config_dict = weecfg.read_config(config_path)
 
-    ans = weeutil.weeutil.y_or_n(f"\nUpgrade station at {config_path}? (Y/n) ",
-                                 noprompt=no_prompt,
-                                 default='y')
+    if config_only:
+        msg = f"\nUpgrade configuration file at {config_path}? (Y/n) "
+    else:
+        msg = f"\nUpgrade station at {config_path}? (Y/n) "
+
+    ans = weeutil.weeutil.y_or_n(msg, noprompt=no_prompt, default='y')
+
     if ans != 'y':
         print("Nothing done.")
         return
@@ -718,17 +722,18 @@ def station_upgrade(config_path, dist_config_path=None, docs_root=None, examples
 
     weecfg.update_config.update_and_merge(config_dict, dist_config_dict)
     print(f"Finished upgrading the configuration file found at {config_path}.")
-    docs_dir = copy_docs(config_dict, docs_root=docs_root,
-                         dry_run=dry_run, force=True)
-    print(f"Finished upgrading docs found at {docs_dir}.")
-    examples_dir = copy_examples(config_dict, examples_root=examples_root,
-                                 dry_run=dry_run, force=True)
-    print(f"Finished upgrading examples found at {examples_dir}.")
-    util_dir = copy_util(config_path, config_dict, dry_run=dry_run)
-    if util_dir:
-        print(f"Finished upgrading utilities directory found at {util_dir}.")
-    else:
-        print("Could not upgrade the utilities directory.")
+
+    if not config_only:
+        docs_dir = copy_docs(config_dict, docs_root=docs_root, dry_run=dry_run, force=True)
+        print(f"Finished upgrading docs found at {docs_dir}.")
+        examples_dir = copy_examples(config_dict, examples_root=examples_root,
+                                     dry_run=dry_run, force=True)
+        print(f"Finished upgrading examples found at {examples_dir}.")
+        util_dir = copy_util(config_path, config_dict, dry_run=dry_run)
+        if util_dir:
+            print(f"Finished upgrading utilities directory found at {util_dir}.")
+        else:
+            print("Could not upgrade the utilities directory.")
 
     # Save the updated config file with backup
     print(f"Saving configuration file to {config_path}.")

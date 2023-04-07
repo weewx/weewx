@@ -45,6 +45,7 @@ station_upgrade_usage = f"""{bcolors.BOLD}weectl station upgrade [--config=CONFI
                               [--dist-config=DIST-CONFIG-PATH]] \\
                               [--docs-root=DOCS_ROOT] \\
                               [--examples-root=EXAMPLES_ROOT] \\
+                              [--config-only] \\
                               [--no-prompt] \\
                               [--no-backup] \\
                               [--dry-run]{bcolors.ENDC}
@@ -113,7 +114,7 @@ def add_subparser(subparsers):
                                        help='Where to put the examples, relative to '
                                             'WEEWX_ROOT. Default is "examples".')
     station_create_parser.add_argument('--no-prompt', action='store_true',
-                                       help='If set, do not prompt. Use default values.')
+                                       help='Do not prompt. Use default values.')
     station_create_parser.add_argument('--dry-run',
                                        action='store_true',
                                        help='Print what would happen, but do not actually '
@@ -132,10 +133,9 @@ def add_subparser(subparsers):
                                                  f'Default is "{weecfg.default_config_path}"')
     _add_common_args(station_reconfigure_parser)
     station_reconfigure_parser.add_argument('--no-prompt', action='store_true',
-                                            help='If set, do not prompt. Use default values.')
+                                            help='Do not prompt. Use default values.')
     station_reconfigure_parser.add_argument('--no-backup', action='store_true',
-                                            help='If set, do not backup the '
-                                                 'old configuration file.')
+                                            help='Do not backup the old configuration file.')
     station_reconfigure_parser.add_argument('--dry-run',
                                             action='store_true',
                                             help='Print what would happen, but do not actually '
@@ -166,10 +166,13 @@ def add_subparser(subparsers):
     station_upgrade_parser.add_argument('--examples-root',
                                         help='Where to put the new examples, relative to '
                                              'WEEWX_ROOT. Default is "examples".')
+    station_upgrade_parser.add_argument('--config-only', action='store_true',
+                                        help='Upgrade the configuration file only. Do not touch '
+                                             'the docs, examples, and utility files.')
     station_upgrade_parser.add_argument('--no-prompt', action='store_true',
-                                        help='If set, do not prompt. Use default values.')
+                                        help='Do not prompt. Use default values.')
     station_upgrade_parser.add_argument('--no-backup', action='store_true',
-                                        help='If set, do not backup the old configuration file.')
+                                        help='Do not backup the old configuration file.')
     station_upgrade_parser.add_argument('--dry-run',
                                         action='store_true',
                                         help='Print what would happen, but do not actually '
@@ -190,7 +193,7 @@ def add_subparser(subparsers):
                                               help='Where to put the skins, relatve to '
                                                    'WEEWX_ROOT. Default is "skins".')
     station_upgrade_skins_parser.add_argument('--no-prompt', action='store_true',
-                                              help='If set, do not prompt. Use default values.')
+                                              help='Do not prompt. Use default values.')
     station_upgrade_skins_parser.add_argument('--dry-run',
                                               action='store_true',
                                               help='Print what would happen, but do not actually '
@@ -254,6 +257,7 @@ def upgrade_station(namespace):
                                           dist_config_path=namespace.dist_config,
                                           docs_root=namespace.docs_root,
                                           examples_root=namespace.examples_root,
+                                          config_only=namespace.config_only,
                                           no_prompt=namespace.no_prompt,
                                           no_backup=namespace.no_backup,
                                           dry_run=namespace.dry_run)
