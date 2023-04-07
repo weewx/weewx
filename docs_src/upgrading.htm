@@ -128,47 +128,20 @@ Version: 5.0
         <p>
             If you are upgrading a pip install:
         </p>
-        <ol>
-        <li>
-            Download the source package from the <a href="https://weewx.com/downloads/">download area</a> of the
-            website.
-        </li>
-
-        <li>Unpack the source package:</li>
-        <pre class="tty cmd">tar xvfz weewx-X.Y.Z.tar.gz</pre>
-        <li>Change directory into it:</li>
-        <pre class="tty cmd">cd weewx-X.Y.Z </pre>
-        <li>Build the distribution, using whatever version of Python you plan to use. For example, for Python 3:</li>
-        <pre class="tty cmd">python3 ./setup.py build </pre>
-
-        <p class='warning'><strong>Warning!</strong><br/> Before doing the next step, be sure that <span class="code">home</span>
-            in the file <span class="code">setup.cfg</span> is set to the location of the previous WeeWX installation.
+        <pre class="tty cmd">pip install weewx --upgrade</pre>
+        <p>
+            You may then wish to upgrade your configuration file, documentation, examples, and daemon utility files by
+            using the tool <a href="../weectl/station#weectl-station-upgrade"><span class="code">weectl station
+            upgrade</span></a>:
         </p>
+        <pre class="tty cmd">weectl station upgrade</pre>
+        <p>
+            You may also want to upgrade your skins, although this may break any modifications you have made to
+            them. Your old skins will be saved in a timestamped directory.
+        </p>
+        <pre class="tty cmd">weectl station upgrade --what skins</pre>
 
-        <li>
-            After checking <span class='code'>setup.cfg</span>, install your new version of WeeWX, again using
-            the version of Python you plan on using:
-        </li>
-        </ol>
-
-        <pre class="tty cmd">sudo python3 ./setup.py install </pre>
-
-        <p>The install process will do the following:</p>
-        <ul>
-            <li>Install the new version in the <span class="code">bin</span> directory, while preserving any user
-                extensions in the <span class="code">bin/user</span> directory
-            </li>
-            <li>Save a copy of the old <span class="code">weewx.conf</span> as
-                <span class='code'>weewx.conf.YYYYMMDDHHMMSS</span>
-            </li>
-            <li>Update your copy of <span class="code">weewx.conf</span>, reflecting any changes required by the latest
-                version of WeeWX. This updated version is then installed.
-            </li>
-            <li>Install a <span class="code">skins</span> directory if one does not already exist.
-            </li>
-        <li>Finally, restart WeeWX.</li>
-
-        </ul>
+        <p>Finally, restart WeeWX.</p>
 
         <h2 id="Upgrading_using_DEB_package">Upgrading using DEB package</h2>
 
@@ -176,14 +149,14 @@ Version: 5.0
             class="code">/etc/apt/sources.list.d/weewx.list</span>, then upgrade to the latest version like this:
         </p>
 
-        <pre class='tty cmd'>sudo apt-get update
-sudo apt-get install weewx</pre>
+        <pre class='tty cmd'>sudo apt update
+sudo apt install weewx</pre>
 
         <p>Otherwise, download the latest X.Y.Z DEB package from the <a href="https://weewx.com/downloads/">Download
             page</a> on weewx.com, then upgrade like this:
         </p>
 
-        <pre class='tty cmd'>sudo dpkg -i weewx_X.Y.Z-R.deb</pre>
+        <pre class='tty cmd'>sudo apt install ./python3-weewx_X.Y.Z-R_all.deb</pre>
 
         <p>The upgrade process will not modify the WeeWX databases.</p>
 
