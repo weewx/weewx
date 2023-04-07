@@ -45,33 +45,25 @@ station_upgrade_usage = f"""{bcolors.BOLD}weectl station upgrade [--config=CONFI
                               [--dist-config=DIST-CONFIG-PATH]] \\
                               [--docs-root=DOCS_ROOT] \\
                               [--examples-root=EXAMPLES_ROOT] \\
-                              [--config-only] \\
+                              [--skin-root=SKIN_ROOT] \\
+                              [--what [{{config,docs,examples,util,skins}} ... ] \\
                               [--no-prompt] \\
                               [--no-backup] \\
                               [--dry-run]{bcolors.ENDC}
 """
 
-station_upgrade_skins_usage = f"""{bcolors.BOLD}weectl station upgrade-skins [--config=CONFIG-PATH] \\
-                                    [--skin-root=SKIN_ROOT] \\
-                                    [--no-prompt] \\
-                                    [--dry-run]{bcolors.ENDC}
-"""
-
 station_usage = '\n       '.join((station_create_usage, station_reconfigure_usage,
-                                  station_upgrade_usage, station_upgrade_skins_usage))
+                                  station_upgrade_usage))
 
 WEEWX_ROOT_DESCRIPTION = f"""In what follows, {bcolors.BOLD}WEEWX_ROOT{bcolors.ENDC} is the
 directory that contains the configuration file. For example, if 
 "--config={weecfg.default_config_path}", then WEEWX_ROOT will be "{weecfg.default_weewx_root}"."""
 
 CREATE_DESCRIPTION = """Create a new user data area, including a configuration file. """ \
-                     +  WEEWX_ROOT_DESCRIPTION
+                     + WEEWX_ROOT_DESCRIPTION
 
-UPGRADE_DESCRIPTION = """Upgrade an existing user data area, including the configuration file, 
-docs, examples, and utility files. """ + WEEWX_ROOT_DESCRIPTION
-
-UPGRADE_SKINS_DESCRIPTION = """Upgrade skins to the latest version. 
-A backup will be made first. """ + WEEWX_ROOT_DESCRIPTION
+UPGRADE_DESCRIPTION = """Upgrade an existing user data area, including any combination of the 
+configuration file, docs, examples, daemon utility files, and skins. """ + WEEWX_ROOT_DESCRIPTION
 
 
 def add_subparser(subparsers):
@@ -147,8 +139,8 @@ def add_subparser(subparsers):
         action_parser.add_parser('upgrade',
                                  usage=station_upgrade_usage,
                                  description=UPGRADE_DESCRIPTION,
-                                 help='Upgrade the configuration file, docs, examples, and '
-                                      'utility files.')
+                                 help='Upgrade any combination of the configuration file, docs, '
+                                      'examples, daemon utility files, and skins.')
 
     station_upgrade_parser.add_argument('--config',
                                         metavar='CONFIG-PATH',
@@ -166,9 +158,16 @@ def add_subparser(subparsers):
     station_upgrade_parser.add_argument('--examples-root',
                                         help='Where to put the new examples, relative to '
                                              'WEEWX_ROOT. Default is "examples".')
-    station_upgrade_parser.add_argument('--config-only', action='store_true',
-                                        help='Upgrade the configuration file only. Do not touch '
-                                             'the docs, examples, and utility files.')
+    station_upgrade_parser.add_argument('--skin-root',
+                                        help='Where to put the skins, relative to '
+                                             'WEEWX_ROOT. Default is "skins".')
+    station_upgrade_parser.add_argument('--what',
+                                        choices=['config', 'docs', 'examples', 'util', 'skins'],
+                                        default=['config', 'docs', 'examples', 'util'],
+                                        nargs='+',
+                                        help='What to upgrade. Default is to upgrade the '
+                                             'configuration file, documentation, examples, and '
+                                             'daemon utility files.')
     station_upgrade_parser.add_argument('--no-prompt', action='store_true',
                                         help='Do not prompt. Use default values.')
     station_upgrade_parser.add_argument('--no-backup', action='store_true',
@@ -178,27 +177,6 @@ def add_subparser(subparsers):
                                         help='Print what would happen, but do not actually '
                                              'do it.')
     station_upgrade_parser.set_defaults(func=upgrade_station)
-
-    # ---------- Action 'upgrade-skins' ----------
-    station_upgrade_skins_parser = action_parser.add_parser('upgrade-skins',
-                                                            usage=station_upgrade_skins_usage,
-                                                            description=UPGRADE_SKINS_DESCRIPTION,
-                                                            help='Upgrade the skins, '
-                                                                 'making a backup copy first.')
-    station_upgrade_skins_parser.add_argument('--config',
-                                              metavar='CONFIG-PATH',
-                                              help=f'Path to configuration file. '
-                                                   f'Default is "{weecfg.default_config_path}"')
-    station_upgrade_skins_parser.add_argument('--skin-root',
-                                              help='Where to put the skins, relatve to '
-                                                   'WEEWX_ROOT. Default is "skins".')
-    station_upgrade_skins_parser.add_argument('--no-prompt', action='store_true',
-                                              help='Do not prompt. Use default values.')
-    station_upgrade_skins_parser.add_argument('--dry-run',
-                                              action='store_true',
-                                              help='Print what would happen, but do not actually '
-                                                   'do it.')
-    station_upgrade_skins_parser.set_defaults(func=upgrade_skins)
 
 
 # ==============================================================================
@@ -231,7 +209,7 @@ def create_station(namespace):
 
 
 def reconfigure_station(namespace):
-    """Map namespace to a call to statoin_reconfigure()"""
+    """Map namespace to a call to station_reconfigure()"""
     try:
         weecfg.station_config.station_reconfigure(config_path=namespace.config,
                                                   driver=namespace.driver,
@@ -257,19 +235,11 @@ def upgrade_station(namespace):
                                           dist_config_path=namespace.dist_config,
                                           docs_root=namespace.docs_root,
                                           examples_root=namespace.examples_root,
-                                          config_only=namespace.config_only,
+                                          skin_root=namespace.skin_root,
+                                          what=namespace.what,
                                           no_prompt=namespace.no_prompt,
                                           no_backup=namespace.no_backup,
                                           dry_run=namespace.dry_run)
-
-
-def upgrade_skins(namespace):
-    weecfg.station_config.upgrade_skins(config_path=namespace.config,
-                                        skin_root=namespace.skin_root,
-                                        no_prompt=namespace.no_prompt,
-                                        dry_run=namespace.dry_run)
-
-
 
 
 # ==============================================================================

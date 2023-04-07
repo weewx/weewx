@@ -691,8 +691,11 @@ def _patch_file(srcpath, dstpath, re_list):
 
 
 def station_upgrade(config_path, dist_config_path=None, docs_root=None, examples_root=None,
-                    config_only=False, no_prompt=False, no_backup=False, dry_run=False):
+                    skin_root=None, what=None, no_prompt=False, no_backup=False, dry_run=False):
     """Upgrade the user data for the configuration file found at config_path"""
+
+    if what is None:
+        what = ('config', 'docs', 'examples', 'util')
 
     if dry_run:
         print("This is a dry run. Nothing will actually be done.")
@@ -700,10 +703,11 @@ def station_upgrade(config_path, dist_config_path=None, docs_root=None, examples
     # Retrieve the old configuration file as a ConfigObj:
     config_path, config_dict = weecfg.read_config(config_path)
 
-    if config_only:
-        msg = f"\nUpgrade configuration file at {config_path}? (Y/n) "
-    else:
-        msg = f"\nUpgrade station at {config_path}? (Y/n) "
+    abbrev = {'config': 'configuration file',
+              'docs': 'documentation',
+              'util': 'daemon utility files'}
+    choices = ', '.join([abbrev.get(p, p) for p in what])
+    msg = f"\nUpgrade {choices} at {config_path}? (Y/n) "
 
     ans = weeutil.weeutil.y_or_n(msg, noprompt=no_prompt, default='y')
 
@@ -720,51 +724,44 @@ def station_upgrade(config_path, dist_config_path=None, docs_root=None, examples
         with importlib.resources.open_text('wee_resources', 'weewx.conf', encoding='utf-8') as fd:
             dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
 
-    weecfg.update_config.update_and_merge(config_dict, dist_config_dict)
-    print(f"Finished upgrading the configuration file found at {config_path}.")
+    if 'config' in what:
+        weecfg.update_config.update_and_merge(config_dict, dist_config_dict)
+        print(f"Finished upgrading the configuration file found at {config_path}.")
+        print(f"Saving configuration file to {config_path}.")
+        # Save the updated config file with backup
+        backup_path = weecfg.save(config_dict, config_path, not no_backup)
+        if backup_path:
+            print(f"Saved old configuration file as {backup_path}.")
+        else:
+            print("No backup of configuration file.")
 
-    if not config_only:
-        docs_dir = copy_docs(config_dict, docs_root=docs_root, dry_run=dry_run, force=True)
+    if 'docs' in what:
+        docs_dir = copy_docs(config_dict, docs_root=docs_root,
+                             dry_run=dry_run, force=True)
         print(f"Finished upgrading docs found at {docs_dir}.")
+
+    if 'examples' in what:
         examples_dir = copy_examples(config_dict, examples_root=examples_root,
                                      dry_run=dry_run, force=True)
         print(f"Finished upgrading examples found at {examples_dir}.")
+
+    if 'util' in what:
         util_dir = copy_util(config_path, config_dict, dry_run=dry_run)
         if util_dir:
             print(f"Finished upgrading utilities directory found at {util_dir}.")
         else:
             print("Could not upgrade the utilities directory.")
 
-    # Save the updated config file with backup
-    print(f"Saving configuration file to {config_path}.")
+    if 'skins' in what:
+        upgrade_skins(config_dict, skin_root=skin_root, no_prompt=no_prompt, dry_run=dry_run)
+
     if dry_run:
         print("This was a dry run. Nothing was actually done.")
-    else:
-        backup_path = weecfg.save(config_dict, config_path, not no_backup)
-        if backup_path:
-            print(f"Saved old configuration file as {backup_path}.")
-        else:
-            print("No backup of configuration file.")
-        print("Done")
+    print("Done")
 
 
-def upgrade_skins(config_path, skin_root=None, no_prompt=False, dry_run=False):
+def upgrade_skins(config_dict, skin_root=None, no_prompt=False, dry_run=False):
     """Make a backup of the old skins, then copy over new skins."""
-    if dry_run:
-        print("This is a dry run. Nothing will actually be done.")
-
-    ans = weeutil.weeutil.y_or_n(f"\nUpgrade skins at {config_path}?\n"
-                                 "A backup copy will be made first. (Y/n) ",
-                                 noprompt=no_prompt,
-                                 default='y')
-    if ans != 'y':
-        print("Nothing done.")
-        return
-
-    # Retrieve the configuration file as a ConfigObj:
-    config_path, config_dict = weecfg.read_config(config_path)
-
-    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
 
     if not skin_root:
         try:
@@ -772,8 +769,18 @@ def upgrade_skins(config_path, skin_root=None, no_prompt=False, dry_run=False):
         except KeyError:
             skin_root = 'skins'
 
-    # SKIN_ROOT is the location of the skins relative to WEEWX_ROOT. Find it's absolute location
+    # SKIN_ROOT is the location of the skins relative to WEEWX_ROOT. Find the absolute
+    # location of the skins
     skin_dir = os.path.join(config_dict['WEEWX_ROOT'], skin_root)
+
+    ans = weeutil.weeutil.y_or_n(f"\nDouble checking. Do you really want to upgrade the skins "
+                                 f"at {skin_dir}?\n"
+                                 "A backup copy will be made first. (Y/n) ",
+                                 noprompt=no_prompt,
+                                 default='y')
+    if ans != 'y':
+        print("Skins will not be upgraded.")
+        return
 
     if os.path.exists(skin_dir):
         if not dry_run:
@@ -783,6 +790,3 @@ def upgrade_skins(config_path, skin_root=None, no_prompt=False, dry_run=False):
         print(f"No skin directory found at {skin_dir}.")
 
     copy_skins(config_dict, dry_run)
-
-    if dry_run:
-        print("This was a dry run. Nothing was actually done.")
