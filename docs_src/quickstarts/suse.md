@@ -63,7 +63,7 @@ sudo /etc/init.d/weewx start
 
 To enable uploads, such as Weather Underground, or to customize reports, modify
 the configuration file `/etc/weewx/weewx.conf`. See the [*User
-Guide*](../usersguide) and [*Customization Guide*](../custom) for details.
+Guide*](../../usersguide) and [*Customization Guide*](../../custom) for details.
 
 WeeWX must be restarted for configuration file changes to take effect.
 

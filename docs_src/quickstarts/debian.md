@@ -15,15 +15,13 @@ The first time you install WeeWX, you must configure `apt` so that it knows to t
 1. Tell your system to trust weewx.com. If you see any errors, please consult the [FAQ](https://github.com/weewx/weewx/wiki/faq-apt-key-problems).
 
     ```shell
-    wget -qO - https://weewx.com/keys.html | \
-      sudo gpg --dearmor --output /etc/apt/trusted.gpg.d/weewx.gpg
+    wget -qO - https://weewx.com/keys.html | sudo gpg --dearmor --output /etc/apt/trusted.gpg.d/weewx.gpg
     ```
 
-2. Run the following command to tell `apt` where to find the appropriate WeeWX repository.
+2. Run the following command to tell `apt` where to find the WeeWX Python 3 repository.
 
     ```shell
-    wget -qO - https://weewx.com/apt/weewx-python3.list | \
-      sudo tee /etc/apt/sources.list.d/weewx.list
+    echo "deb [arch=all] https://weewx.com/apt/python3 buster main" | sudo tee /etc/apt/sources.list.d/weewx.list
     ```
 
 
@@ -55,12 +53,13 @@ If you chose the simulator as your station type, then at some point you will
 probably want to switch to using real hardware. Here's how to reconfigure.
 
 ```shell
+# Stop the daemon:
 sudo systemctl stop weewx
 # Reconfigure to use your hardware:
 sudo weectl station reconfigure
 # Remove the old database:
 sudo rm /var/lib/weewx/weewx.sdb
-# Restart:
+# Restart the daemon:
 sudo systemctl start weewx
 ```
 
@@ -68,13 +67,17 @@ sudo systemctl start weewx
 
 To enable uploads, such as Weather Underground, or to customize reports, modify
 the configuration file `/etc/weewx/weewx.conf`. See the [*User
-Guide*](../usersguide) and [*Customization Guide*](../custom) for details.
+Guide*](../../usersguide) and [*Customization Guide*](../../custom) for details.
 
 WeeWX must be restarted for configuration file changes to take effect.
 
+``` shell
+sudo systemctl restart weewx
+```
+
 ## Uninstall
 
-To uninstall WeeWX but retain configuration files and data:
+To uninstall WeeWX, but retain configuration files and data:
 
 ```shell
 sudo apt remove weewx
