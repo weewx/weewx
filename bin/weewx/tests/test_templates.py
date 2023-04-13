@@ -25,6 +25,7 @@ import weewx.accum
 import weewx.reportengine
 import weewx.station
 import weewx.units
+import weewx.wxxtypes
 
 weewx.debug = 1
 
@@ -55,6 +56,14 @@ except IOError:
 except configobj.ConfigObjError:
     sys.stderr.write("Error while parsing configuration file %s" % config_path)
     raise
+
+altitude_vt = weewx.units.ValueTuple(float(config_dict['Station']['altitude'][0]),
+                                     config_dict['Station']['altitude'][1],
+                                     'group_altitude')
+latitude = float(config_dict['Station']['latitude'])
+longitude = float(config_dict['Station']['longitude'])
+# Initialize the xtypes system for derived weather types:
+weewx.xtypes.xtypes.append(weewx.wxxtypes.WXXTypes(altitude_vt, latitude, longitude))
 
 # We test accumulator configurations as well, so initialize the Accumulator dictionary:
 weewx.accum.initialize(config_dict)

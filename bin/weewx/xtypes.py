@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2019-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2019-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -807,9 +807,67 @@ class AggregateHeatCool(XType):
 
 
 class XTypeTable(XType):
-    """Calculate a series for an xtype. An xtype may not necessarily be in the database, so
-    this version calculates it on the fly. Note: this version only works if no aggregation has
-    been requested."""
+    """Calculates for xtypes. An xtype may not necessarily be in the database, so
+    this version tries to calculate aggregates and series on the fly."""
+
+    @staticmethod
+    def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
+        """Calculate an aggregate value for an xtype. Addresses issue #864. """
+
+        # This version offers a limited set of aggregation types
+        if aggregate_type not in {'sum', 'count', 'avg', 'max', 'min', 'mintime', 'maxtime'}:
+            raise weewx.UnknownAggregation(aggregate_type)
+
+        std_unit_system = None
+        total = 0.0
+        count = 0
+        minimum = None
+        maximum = None
+        mintime = None
+        maxtime = None
+
+        # Hit the database.
+        for record in db_manager.genBatchRecords(*timespan):
+            if std_unit_system:
+                if std_unit_system != record['usUnits']:
+                    raise weewx.UnsupportedFeature("Unit system cannot change within the database")
+            else:
+                std_unit_system = record['usUnits']
+
+            # Given a record, use the xtypes system to calculate a value. A ValueTuple will be
+            # returned, so use only the first element. NB: If the xtype cannot be calculated,
+            # the call to get_scalar() will raise a CannotCalculate exception. We let it
+            # bubble up.
+            value = get_scalar(obs_type, record, db_manager)[0]
+            if value is not None:
+                total += value
+                count += 1
+                if minimum is None or value < minimum:
+                    minimum = value
+                    mintime = record['dateTime']
+                if maximum is None or value > maximum:
+                    maximum = value
+                    maxtime = record['dateTime']
+
+        if aggregate_type == 'sum':
+            result = total
+        elif aggregate_type == 'count':
+            result = count
+        elif aggregate_type == 'avg':
+            result = total / count if count else None
+        elif aggregate_type == 'mintime':
+            result = mintime
+        elif aggregate_type == 'maxtime':
+            result = maxtime
+        elif aggregate_type == 'min':
+            result = minimum
+        else:
+            assert aggregate_type == 'max'
+            result = maximum
+
+        u, g = weewx.units.getStandardUnitType(std_unit_system, obs_type, aggregate_type)
+
+        return weewx.units.ValueTuple(result, u, g)
 
     @staticmethod
     def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None,

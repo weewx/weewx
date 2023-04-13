@@ -54,6 +54,9 @@ Fixes issue #855.
 
 Fix bug when using Pillow v9.5.0. Fixes issue #862.
 
+Allow aggregation of xtypes that are not in the database schema.
+Fixes issue #864.
+
 
 ### 4.10.2 02/22/2023
 
