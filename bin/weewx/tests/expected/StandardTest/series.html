@@ -135,19 +135,19 @@
 
     <h2>Aggregated series of wind vectors</h2>
 
-    <p>Aggregated wind seriex (<em>not JSON)</em>), complex notation
+    <p>Aggregated wind series (<em>not JSON)</em>), complex notation
         $month.windvec.series(aggregate_type='max', aggregate_interval='day')</p>
     <pre>01-Sep-2010 00:00, 02-Sep-2010 00:00, (-1, 9) mph
 02-Sep-2010 00:00, 03-Sep-2010 00:00, (20, 1) mph
 03-Sep-2010 00:00, 04-Sep-2010 00:00, (20, 0) mph</pre>
 
-    <p>Aggregated wind seriex (<em>not JSON)</em>), complex notation with formatting
+    <p>Aggregated wind series (<em>not JSON)</em>), complex notation with formatting
         $month.windvec.series(aggregate_type='max', aggregate_interval='day').format("%.5f")</p>
     <pre>01-Sep-2010 00:00, 02-Sep-2010 00:00, (-0.61126, 9.32596) mph
 02-Sep-2010 00:00, 03-Sep-2010 00:00, (19.93581, 1.30666) mph
 03-Sep-2010 00:00, 04-Sep-2010 00:00, (20.00000, 0.00000) mph</pre>
 
-    <p>Aggregated wind seriex (<em>not JSON</em>), polar notation
+    <p>Aggregated wind series (<em>not JSON</em>), polar notation
         $month.windvec.series(aggregate_type='max', aggregate_interval='day').polar.format("%.5f")</p>
     <pre>01-Sep-2010 00:00, 02-Sep-2010 00:00, (9.34597 mph, 356&#176;)
 02-Sep-2010 00:00, 03-Sep-2010 00:00, (19.97859 mph, 86&#176;)

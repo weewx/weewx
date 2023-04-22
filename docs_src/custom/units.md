@@ -114,7 +114,7 @@ month's electric consumption, totaled by day, add this section to the
 [[[monthelectric]]]
     [[[[electricity]]]]
         aggregate_type = sum
-        aggregate_interval = day
+        aggregate_interval = 1d
         label = Electric consumption (daily total)
 ```
 

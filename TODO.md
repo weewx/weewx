@@ -1,5 +1,22 @@
 # To do
 
+Convert `$trend` to use `nominal_spans()`.
+
+Document `nominal_spans()`.
+
+Semantics of missing data. If I ask for an aggregate of a type that is missing data entirely,
+what should `get_aggregate()` return? For example, assume there are no data at all within
+`timespan`. What is `x`?
+
+    x = weewx.xtypes.ArchiveTable.get_aggregate('outTemp', timespan, 'max', db_manager)
+
+Is it
+
+    x = ValueTuple(None, 'degree_F', 'group_temperature')
+
+or
+
+    x = None
 
 ## Debian packaging
 
@@ -17,7 +34,7 @@ come from a script, not a human.
 ## Upgrade guide
 
 How to switch from init.d to systemd.
-
+c
 How to upgrade from V4 using Python 2, to V5 using Python 3.
 
 

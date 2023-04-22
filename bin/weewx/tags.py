@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -60,9 +60,11 @@ class TimeBinder(object):
     def trend(self, time_delta=None, time_grace=None, data_binding=None):
         """Returns a TrendObj that is bound to the trend parameters."""
         if time_delta is None:
-            time_delta = to_int(self.option_dict['trend'].get('time_delta', 10800))
+            time_delta = self.option_dict['trend'].get('time_delta', 10800)
+        time_delta = weeutil.weeutil.nominal_spans(time_delta)
         if time_grace is None:
-            time_grace = to_int(self.option_dict['trend'].get('time_grace', 300))
+            time_grace = self.option_dict['trend'].get('time_grace', 300)
+        time_grace = weeutil.weeutil.nominal_spans(time_grace)
         return TrendObj(time_delta, time_grace, self.db_lookup, data_binding, self.report_time,
                         self.formatter, self.converter, **self.option_dict)
 

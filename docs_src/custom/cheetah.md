@@ -1299,7 +1299,7 @@ WeeWX V4.5 introduced some experimental tags for producing _series_ of data, pos
 
 For example, suppose you need the maximum temperature for each day of the month. This tag
 
-    $month.outTemp.series(aggregate_type='max', aggregate_interval='day', time_series='start').json
+    $month.outTemp.series(aggregate_type='max', aggregate_interval='1d', time_series='start').json
 
 would produce the following:
 

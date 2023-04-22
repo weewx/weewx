@@ -45,7 +45,7 @@ they will look like:
         bottom_label_format = %m/%d/%y %H:%M
         time_length = 2592000    # == 30 days
         aggregate_type = avg
-        aggregate_interval = 10800    # == 3 hours
+        aggregate_interval = 3h
         show_daynight = false
 ```
 
@@ -76,7 +76,7 @@ sub-sub-section `[[[monthrain]]]`:
             yscale = None, None, 0.02
             [[[[rain]]]]
                 aggregate_type = sum
-                aggregate_interval = day
+                aggregate_interval = 1d
                 label = Rain (daily total)
 ```
 
@@ -142,7 +142,7 @@ second without. If you do the obvious it won't work:
 [[[daytemp_with_avg]]]
     [[[[outTemp]]]]
         aggregate_type = avg
-        aggregate_interval = hour
+        aggregate_interval = 1h
     [[[[outTemp]]]]  # OOPS! The same section name appears more than once!
 ```
 
@@ -160,7 +160,7 @@ column. So, our example would look like this:
     [[[[avgTemp]]]]
         data_type = outTemp
         aggregate_type = avg
-        aggregate_interval = hour
+        aggregate_interval = 1h
         label = Avg. Temp.
     [[[[outTemp]]]]
 ```
@@ -293,7 +293,7 @@ averages:
 
 ``` ini
 [[[weekgustoverlay]]]
-    aggregate_interval = hour
+    aggregate_interval = 1h
     [[[[windvec]]]]
         label = Hourly Wind
         plot_type = vector

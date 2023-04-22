@@ -373,8 +373,8 @@ growing_base = 50.0, degree_F
 
 #### time_delta
 
-Set to the time difference over which you want trends to be calculated.
-The default is 3 hours.
+Set to the time difference over which you want trends to be calculated. 
+Alternatively, a [duration notation](../appendix#Durations) can be used. The default is 3 hours.
 
 #### time_grace
 
@@ -717,7 +717,8 @@ The nominal number of ticks along the y-axis. The default is
 
 #### time_length
 
-The nominal length of the time period to be covered in seconds. The
+The nominal length of the time period to be covered in seconds. Alternatively, a 
+[duration notation](../appendix#Durations) can be used. The
 exact length of the x-axis is chosen by the plotting engine to cover
 this period. Optional. Default is `86400` (one day).
 
@@ -799,10 +800,9 @@ These are options that are set for individual lines.
 
 #### aggregate_interval
 
-The time period over which the data should be aggregated, in seconds.
-Required if `aggregate_type` has been set. Alternatively, the
-time can be specified by using one of the "shortcuts" (that is,
-`hour`, `day`, `week`, `month`, or `year`).
+The time period over which the data should be aggregated, in seconds. 
+Alternatively, a [duration notation](../appendix#Durations) can be used. 
+Required if `aggregate_type` has been set. 
 
 #### aggregate_type
 

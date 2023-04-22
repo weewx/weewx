@@ -103,11 +103,20 @@ class WeeutilTest(unittest.TestCase):
     def test_nominal_spans(self):
 
         self.assertEqual(nominal_spans(1800), 1800)
+        self.assertEqual(nominal_spans('1800'), 1800)
         self.assertEqual(nominal_spans('hour'), 3600)
         self.assertEqual(nominal_spans('HOUR'), 3600)
+        self.assertEqual(nominal_spans('60M'), 3600)
+        self.assertEqual(nominal_spans('3h'), 3 * 3600)
+        self.assertEqual(nominal_spans('3d'), 3 * 3600 * 24)
+        self.assertEqual(nominal_spans('2w'), 14 * 3600 * 24)
+        self.assertEqual(nominal_spans('12m'), 365.25 * 24 * 3600)
+        self.assertEqual(nominal_spans('1y'), 365.25 * 24 * 3600)
         self.assertIsNone(nominal_spans(None))
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             nominal_spans('foo')
+        with self.assertRaises(ValueError):
+            nominal_spans('1800.0')
 
     def test_intervalgen(self):
 

@@ -198,13 +198,33 @@ def nominal_spans(label):
     """Convert a (possible) string into an integer time."""
     if label is None:
         return None
-    try:
-        # Is the label either an integer, or something that can be converted into an integer?
-        interval = int(label)
-    except ValueError:
-        # Is it in our list of nominal spans? If not, fail hard.
-        interval = nominal_intervals[label.lower()]
-    return interval
+
+    if isinstance(label, str):
+        try:
+            return nominal_intervals[label.lower()]
+        except KeyError:
+            pass
+        if label.endswith('M'):
+            # Minute
+            return int(label[:-1]) * 60
+        elif label.endswith('h'):
+            # Hour
+            return int(label[:-1]) * 3600
+        elif label.endswith('d'):
+            # Day
+            return int(label[:-1]) * 3600 * 24
+        elif label.endswith('w'):
+            # Week
+            return int(label[:-1]) * 7 * 3600 * 24
+        elif label.endswith('m'):
+            # Month
+            return int(label[:-1]) * 365.25 * 24 * 3600 / 12
+        elif label.endswith('y'):
+            # Year
+            return int(label[:-1]) * 365.25 * 24 * 3600
+        else:
+            return int(label)
+    return label
 
 
 def isStartOfDay(time_ts):
@@ -773,7 +793,8 @@ def intervalgen(start_ts, stop_ts, interval):
         start_ts (float): The start of the first interval in unix epoch time. In unix epoch time.
         stop_ts (float): The end of the last interval will be equal to or less than this.
             In unix epoch time.
-        interval (int): The time length of an interval in seconds.
+        interval (int|str): The time length of an interval in seconds, or a shorthand description
+            (such as 'day', or 'hour', or '3d').
 
     Yields:
          TimeSpan: A sequence of TimeSpans. Both the start and end of the timespan
