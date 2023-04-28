@@ -192,6 +192,13 @@ nominal_intervals = {
     'month': int(365.25 / 12 * 86400),
     'year': int(365.25 * 86400),
 }
+duration_synonyms = {
+    'hour': '1h',
+    'day': '1d',
+    'week': '1w',
+    'month': '1m',
+    'year': '1y',
+}
 
 
 def nominal_spans(label):
@@ -200,28 +207,25 @@ def nominal_spans(label):
         return None
 
     if isinstance(label, str):
-        try:
-            return nominal_intervals[label.lower()]
-        except KeyError:
-            pass
+        label = duration_synonyms.get(label.lower(), label)
         if label.endswith('M'):
             # Minute
             return int(label[:-1]) * 60
         elif label.endswith('h'):
             # Hour
-            return int(label[:-1]) * 3600
+            return int(label[:-1]) * nominal_intervals['hour']
         elif label.endswith('d'):
             # Day
-            return int(label[:-1]) * 3600 * 24
+            return int(label[:-1]) * nominal_intervals['day']
         elif label.endswith('w'):
             # Week
-            return int(label[:-1]) * 7 * 3600 * 24
+            return int(label[:-1]) * nominal_intervals['week']
         elif label.endswith('m'):
             # Month
-            return int(label[:-1]) * 365.25 * 24 * 3600 / 12
+            return int(label[:-1]) * nominal_intervals['month']
         elif label.endswith('y'):
             # Year
-            return int(label[:-1]) * 365.25 * 24 * 3600
+            return int(label[:-1]) * nominal_intervals['year']
         else:
             return int(label)
     return label

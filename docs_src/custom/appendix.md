@@ -578,14 +578,19 @@ The same notation can be used in trends. For example:
 
 Here is a summary of the notation:
 
-| Example | Meaning |
-|---------|---------|
-| `10800` | 3 hours |
-| `3h`    | 3 hours |
-| `1d`    | 1 day   |
-| `2w`    | 2 weeks |
-| `1m`    | 1 month |
-| `1y`    | 1 year  | 
+| Example | Meaning            |
+|---------|--------------------|
+| `10800` | 3 hours            |
+| `3h`    | 3 hours            |
+| `1d`    | 1 day              |
+| `2w`    | 2 weeks            |
+| `1m`    | 1 month            |
+| `1y`    | 1 year             |
+| `hour`  | Synonym for `1h`   |
+| `day`   | Synonym for `1d`   |
+| `week`  | Synonym for `1w`   |
+| `month` | Synonym for `1m`   |
+| `year`  | Synonym for `1y`   |
 
 
 
