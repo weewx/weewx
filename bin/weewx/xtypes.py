@@ -155,23 +155,29 @@ class ArchiveTable(XType):
         data_vec = list()
 
         if aggregate_type:
-            # With aggregation
+            # Return a series with aggregation
             unit, unit_group = None, None
+
             if aggregate_type == 'cumulative':
                 do_aggregate = 'sum'
                 total = 0
             else:
                 do_aggregate = aggregate_type
+
             for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
-                # Get the aggregate as a ValueTuple
-                agg_vt = get_aggregate(obs_type, stamp, do_aggregate, db_manager)
-                if agg_vt[0] is None:
+                if stamp.stop <= db_manager.first_timestamp:
                     continue
+                if stamp.start >= db_manager.last_timestamp:
+                    break
+                try:
+                    # Get the aggregate as a ValueTuple
+                    agg_vt = get_aggregate(obs_type, stamp, do_aggregate, db_manager)
+                except weewx.CannotCalculate:
+                    agg_vt = ValueTuple(None, unit, unit_group)
                 if unit:
-                    # It's OK if the unit is unknown (=None).
+                    # Make sure units are consistent so far.
                     if agg_vt[1] is not None and (unit != agg_vt[1] or unit_group != agg_vt[2]):
-                        raise weewx.UnsupportedFeature("Cannot change unit groups "
-                                                       "within an aggregation.")
+                        raise weewx.UnsupportedFeature("Cannot change units within a series.")
                 else:
                     unit, unit_group = agg_vt[1], agg_vt[2]
                 start_vec.append(stamp.start)
@@ -186,31 +192,26 @@ class ArchiveTable(XType):
         else:
 
             # No aggregation
-            sql_str = "SELECT dateTime, %s, usUnits, `interval` FROM %s " \
-                      "WHERE dateTime > ? AND dateTime <= ?" % (obs_type, db_manager.table_name)
-
             std_unit_system = None
 
-            # Hit the database. It's possible the type is not in the database, so be prepared
-            # to catch a NoColumnError:
-            try:
-                for record in db_manager.genSql(sql_str, (startstamp, stopstamp)):
+            for record in db_manager.genBatchRecords(*timespan):
 
-                    # Unpack the record
-                    timestamp, value, unit_system, interval = record
+                if std_unit_system:
+                    if std_unit_system != record['usUnits']:
+                        raise weewx.UnsupportedFeature("Unit type cannot change within a series.")
+                else:
+                    std_unit_system = record['usUnits']
+                if obs_type in record:
+                    value = record[obs_type]
+                else:
+                    try:
+                        value = get_scalar(obs_type, record, db_manager)[0]
+                    except weewx.CannotCalculate:
+                        value = None
 
-                    if std_unit_system:
-                        if std_unit_system != unit_system:
-                            raise weewx.UnsupportedFeature("Unit type cannot change "
-                                                           "within an aggregation interval.")
-                    else:
-                        std_unit_system = unit_system
-                    start_vec.append(timestamp - interval * 60)
-                    stop_vec.append(timestamp)
-                    data_vec.append(value)
-            except weedb.NoColumnError:
-                # The sql type doesn't exist. Convert to an UnknownType error
-                raise weewx.UnknownType(obs_type)
+                start_vec.append(record['dateTime'] - record['interval'] * 60)
+                stop_vec.append(record['dateTime'])
+                data_vec.append(value)
 
             unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type,
                                                                aggregate_type)
@@ -285,8 +286,8 @@ class ArchiveTable(XType):
         Args:
             obs_type (str): The type over which aggregation is to be done (e.g., 'barometer',
                 'outTemp', 'rain', ...)
-            timespan (TimeSpan): An instance of weeutil.Timespan with the time period over which
-                aggregation is to be done.
+            timespan (weeutil.weeutil.TimeSpan): An instance of weeutil.Timespan with the time
+                period over which aggregation is to be done.
             aggregate_type (str): The type of aggregation to be done.
             db_manager (weewx.manager.Manager): An instance of weewx.manager.Manager or subclass.
             option_dict (dict): Not used in this version.
@@ -808,7 +809,7 @@ class AggregateHeatCool(XType):
 
 class XTypeTable(XType):
     """Calculates for xtypes. An xtype may not necessarily be in the database, so
-    this version tries to calculate aggregates and series on the fly."""
+    this version tries to calculate aggregates on the fly."""
 
     @staticmethod
     def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
@@ -868,51 +869,6 @@ class XTypeTable(XType):
         u, g = weewx.units.getStandardUnitType(std_unit_system, obs_type, aggregate_type)
 
         return weewx.units.ValueTuple(result, u, g)
-
-    @staticmethod
-    def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None,
-                   **option_dict):
-        """Get a series of an xtype, by using the main archive table. Works only for no
-        aggregation. """
-
-        start_vec = list()
-        stop_vec = list()
-        data_vec = list()
-
-        if aggregate_type:
-            # This version does not know how to do aggregations, although this could be
-            # added in the future.
-            raise weewx.UnknownAggregation(aggregate_type)
-
-        else:
-            # No aggregation
-
-            std_unit_system = None
-
-            # Hit the database.
-            for record in db_manager.genBatchRecords(*timespan):
-
-                if std_unit_system:
-                    if std_unit_system != record['usUnits']:
-                        raise weewx.UnsupportedFeature("Unit system cannot change "
-                                                       "within a series.")
-                else:
-                    std_unit_system = record['usUnits']
-
-                # Given a record, use the xtypes system to calculate a value:
-                try:
-                    value = get_scalar(obs_type, record, db_manager)
-                    data_vec.append(value[0])
-                except weewx.CannotCalculate:
-                    data_vec.append(None)
-                start_vec.append(record['dateTime'] - record['interval'] * 60)
-                stop_vec.append(record['dateTime'])
-
-            unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type)
-
-        return (ValueTuple(start_vec, 'unix_epoch', 'group_time'),
-                ValueTuple(stop_vec, 'unix_epoch', 'group_time'),
-                ValueTuple(data_vec, unit, unit_group))
 
 
 # ############################# WindVec extensions #########################################
@@ -1012,22 +968,21 @@ class WindVec(XType):
         """Returns an aggregation of a wind vector type over a timespan by using the main archive
         table.
 
-        obs_type: The type over which aggregation is to be done. For this function, it must be
-        'windvec' or 'windgustvec'. Anything else will cause weewx.UnknownType to be raised.
+        Args:
+            obs_type (str): The type over which aggregation is to be done. For this function, it
+                must be 'windvec' or 'windgustvec'. Anything else will cause an exception of
+                type weewx.UnknownType to be raised.
+            timespan (weeutil.weeutil.TimeSpan): An instance of Timespan with the time period over
+                which aggregation is to be done.
+            aggregate_type (str): The type of aggregation to be done. For this function, must be
+                'avg', 'sum', 'count', 'first', 'last', 'min', or 'max'. Anything else will cause
+                weewx.UnknownAggregation to be raised.
+            db_manager (weewx.manager.Manager): An instance of Manager or subclass.
+            option_dict (dict): Not used in this version.
 
-        timespan: An instance of weeutil.Timespan with the time period over which aggregation is to
-        be done.
-
-        aggregate_type: The type of aggregation to be done. For this function, must be 'avg',
-        'sum', 'count', 'first', 'last', 'min', or 'max'. Anything else will cause
-        weewx.UnknownAggregation to be raised.
-
-        db_manager: An instance of weewx.manager.Manager or subclass.
-
-        option_dict: Not used in this version.
-
-        returns: A ValueTuple containing the result. Note that the value contained in the
-        ValueTuple will be a complex number.
+        Returns:
+            ValueTuple: A ValueTuple containing the result. Note that the value contained
+                in the ValueTuple will be a complex number.
         """
         if obs_type not in WindVec.windvec_types:
             raise weewx.UnknownType(obs_type)

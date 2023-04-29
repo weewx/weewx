@@ -1,6 +1,7 @@
 # WeeWX Copyright {#weewx-copyright}
 
-Copyright 2009-2023 by Thomas Keffer <tkeffer@gmail.com> and Matthew Wall
+Copyright 2009-2023 by Thomas Keffer <tkeffer@gmail.com>, Matthew Wall,
+and Gary Roderick.
 
 This program is free software: you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the
