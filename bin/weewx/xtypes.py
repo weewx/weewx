@@ -399,7 +399,8 @@ class ArchiveTable(XType):
         elif aggregate_type == 'vecdir':
             deg = 90.0 - math.degrees((math.atan2(ysum, xsum)))
             value = deg if deg >= 0 else deg + 360.0
-        elif aggregate_type == 'vecavg':
+        else:
+            assert aggregate_type == 'vecavg'
             value = math.sqrt((xsum ** 2 + ysum ** 2) / sumtime ** 2)
 
         # Look up the unit type and group of this combination of observation type and aggregation:
@@ -408,6 +409,7 @@ class ArchiveTable(XType):
 
         # Form the ValueTuple and return it:
         return weewx.units.ValueTuple(value, u, g)
+
 
 #
 # ######################## Class DailySummaries ##############################
@@ -476,7 +478,7 @@ class DailySummaries(XType):
                    "AND mintime IS NOT NULL "
                    "ORDER BY min ASC, mintime ASC LIMIT 1",
         'not_null': "SELECT count>0 as c FROM %(table_name)s_day_%(obs_key)s "
-                 "WHERE dateTime >= %(start)s AND dateTime < %(stop)s ORDER BY c DESC LIMIT 1",
+                    "WHERE dateTime >= %(start)s AND dateTime < %(stop)s ORDER BY c DESC LIMIT 1",
         'rms': "SELECT SUM(wsquaresum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s "
                "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'sum': "SELECT SUM(sum) FROM %(table_name)s_day_%(obs_key)s "
@@ -556,14 +558,14 @@ class DailySummaries(XType):
             # then set the resulting value to None.
             value = None
 
-        elif aggregate_type in ['min', 'maxmin', 'max', 'minmax', 'meanmin', 'meanmax',
-                                'maxsum', 'minsum', 'sum', 'gustdir']:
+        elif aggregate_type in {'min', 'maxmin', 'max', 'minmax', 'meanmin', 'meanmax',
+                                'maxsum', 'minsum', 'sum', 'gustdir'}:
             # These aggregates are passed through 'as is'.
             value = row[0]
 
-        elif aggregate_type in ['mintime', 'maxmintime', 'maxtime', 'minmaxtime', 'maxsumtime',
+        elif aggregate_type in {'mintime', 'maxmintime', 'maxtime', 'minmaxtime', 'maxsumtime',
                                 'minsumtime', 'count', 'max_ge', 'max_le', 'min_ge', 'min_le',
-                                'not_null', 'sum_ge', 'sum_le', 'avg_ge', 'avg_le']:
+                                'not_null', 'sum_ge', 'sum_le', 'avg_ge', 'avg_le'}:
             # These aggregates are always integers:
             value = int(row[0])
 
@@ -899,9 +901,9 @@ class WindVec(XType):
         'max': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
                "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL "
                "ORDER BY %(mag)s DESC LIMIT 1;",
-        'not_null' : "SELECT 1, usUnits FROM %(table_name)s "
-                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                     "AND %(mag)s IS NOT NULL LIMIT 1;"
+        'not_null': "SELECT 1, usUnits FROM %(table_name)s "
+                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
+                    "AND %(mag)s IS NOT NULL LIMIT 1;"
     }
     # for types 'avg', 'sum'
     complex_sql_wind = 'SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s WHERE dateTime > ? ' \
