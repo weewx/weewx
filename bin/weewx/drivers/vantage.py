@@ -1305,10 +1305,8 @@ class Vantage(weewx.drivers.AbstractDevice):
         zone_code   = self._getEEPROM_value(0x11)[0]
         gmt_offset  = self._getEEPROM_value(0x14, "<h")[0] / 100.0
         tempLogging = "LAST"  if self._getEEPROM_value(0xffc)[0] else "AVERAGE"
-        retransmit_channel = self._getEEPROM_value(0x18)[0]
-        
-        return (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset,
-                tempLogging, retransmit_channel)
+
+        return stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset,tempLogging
 
     def getStnTransmitters(self):
         """ Get the types of transmitters on the eight channels."""
@@ -1323,8 +1321,10 @@ class Vantage(weewx.drivers.AbstractDevice):
             lower_byte, upper_byte = transmitter_data[2 * channel - 2: 2 * channel]
             # Transmitter type in the lower nibble
             transmitter_type = lower_byte & 0x0f
-            # Repeater ID in the upper nibble
-            repeater_id = lower_byte >> 4
+            # Repeater ID in the upper nibble.
+            repeater_no = lower_byte >> 4
+            # Convert the number to the repeater channel letter, or None.
+            repeater_id = chr(repeater_no - 8 + ord('A')) if repeater_no else None
             # The least significant bit of use_tx will be whether to listen to the current channel.
             use_flag = use_tx & 0x01
             # Shift use_tx over by one bit to get it ready for the next channel.
@@ -2359,7 +2359,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             transmitter_list = None
         else:
             print("    TRANSMITTERS: ", file=dest)
-            print("      Channel   Receive     Retransmit  Repeater  Type", file=dest)
+            print("      Channel   Receive   Retransmit  Repeater    Type", file=dest)
             for tx_id in range(8):
                 comment = ""
                 transmitter_type = transmitter_list[tx_id]["transmitter_type"]
@@ -2379,7 +2379,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                               % transmitter_list[tx_id]["hum"]
                 elif transmitter_type == 'none':
                     transmitter_type = "(N/A)"
-                print("         %d      %-8s    %-10s  %-5s     %s %s"
+                print("         %d      %-8s      %-10s%-5s     %s %s"
                       % (tx_id + 1, listen, retransmit, repeater_str, transmitter_type, comment), file=dest)
             print("", file=dest)
 
