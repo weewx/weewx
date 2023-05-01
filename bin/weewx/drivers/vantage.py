@@ -583,6 +583,7 @@ class Vantage(weewx.drivers.AbstractDevice):
                 for loop in range(N):
                     loop_packet = self._get_packet()
                     yield loop_packet
+                return
 
             except weewx.WeeWxIOError as e:
                 log.error("LOOP batch try #%d; error: %s", attempt, e)
