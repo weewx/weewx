@@ -23,7 +23,7 @@ from weewx.crc16 import crc16
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.6.1'
+DRIVER_VERSION = '3.6.2'
 
 int2byte = struct.Struct(">B").pack
 
@@ -1073,18 +1073,20 @@ class Vantage(weewx.drivers.AbstractDevice):
                 cause results to be emitted as extraTempN where N is the ID number. [1-8]
             extra_hum_id(int|None):  The ID to be used if this is a humidity channel. This will
                 cause results to be emitted as extraHumidN where N is the ID number. [1-8]
-            repeater_id(int): The repeater number for this channel.
-                Zero means no repeater. [0-8]
+            repeater_id(str|None): The repeater ID for this channel [A-H], or None for no repeater.
         """
-        
+
+        if repeater_id is not None:
+            repeater_id = repeater_id.upper()
+
         # Check arguments for validity
         if not 1 <= channel <= 8:
-            raise weewx.ViolatedPrecondition("Invalid channel %d" % channel)
+            raise weewx.ViolatedPrecondition(f"Invalid channel {channel:d}")
         if not 0 <= transmitter_type <= 10:
-            raise weewx.ViolatedPrecondition("Invalid transmitter type %d" % transmitter_type)
-        if not 0 <= repeater_id <= 8:
-            raise weewx.ViolatedPrecondition("Invalid repeater %d" % repeater_id)
-
+            raise weewx.ViolatedPrecondition(f"Invalid transmitter type {transmitter_type:d}")
+        # The repeater ID must be either None, or in the range A-H:
+        if repeater_id is not None and not (ord('A') <= ord(repeater_id) <= ord('H')):
+            raise weewx.ViolatedPrecondition(f"Invalid repeater ID {repeater_id}")
         extra_id_bits = 0xFF
 
         # Set the appropriate bit for the temperature sender number
@@ -1106,10 +1108,11 @@ class Vantage(weewx.drivers.AbstractDevice):
         transmitter_type_bits = transmitter_type & 0x0F
         if repeater_id:
             # The transmitter uses a repeater. Add it in.
-            transmitter_type_bits |= (repeater_id + 7) << 4
+            repeater_code = ord(repeater_id) - ord('A') + 8
+            transmitter_type_bits |= repeater_code << 4
 
         usetx_bits = self._getEEPROM_value(0x17)[0]
-        # A transmitter type of 10 indicates that channel does not have a transmitter.
+        # A transmitter type of 10 indicates do not listen to that channel
         if transmitter_type == 10:
             # The given channel is not being used. We need to clear the bit:
             usetx_bits &= ~(1 << channel - 1)
@@ -1132,25 +1135,34 @@ class Vantage(weewx.drivers.AbstractDevice):
         self.port.send_data_with_crc16(struct.pack('>B', usetx_bits), max_tries=1)
         # Then call NEWSETUP to get it all to stick:
         self.port.send_data(b"NEWSETUP\n")
-        
-        self._setup()
-        log.info("Transmitter type for channel %d set to %d (%s), repeater: %s, %s",
-                 channel, transmitter_type,
-                 Vantage.transmitter_type_dict[transmitter_type],
-                 Vantage.repeater_dict[repeater_id], Vantage.listen_dict[in_use])
 
-    def setRetransmit(self, new_channel):
-        """Set console retransmit channel."""
+        self._setup()
+
+    def setRetransmit(self, channel):
+        """Set console retransmit channel.
+
+        Args:
+            channel (int): Zero to turn off all retransmitting. Otherwise, a channel number [1-8]
+                to turn on retransmitting.
+        """
+        if channel:
+            # Get the old retransmit data
+            retransmit_data = self._getEEPROM_value(0x18)[0]
+            # Turn on the appropriate channel by ORing in the new channel
+            retransmit_data |= 1 << channel - 1
+        else:
+            # Turn off all channels
+            retransmit_data = 0
         # Tell the console to put one byte in hex location 0x18
         self.port.send_data(b"EEBWR 18 01\n")
         # Follow it up with the data:
-        self.port.send_data_with_crc16(int2byte(new_channel), max_tries=1)
+        self.port.send_data_with_crc16(int2byte(retransmit_data), max_tries=1)
         # Then call NEWSETUP to get it to stick:
         self.port.send_data(b"NEWSETUP\n")
-        
+
         self._setup()
-        if new_channel:
-            log.info("Retransmit set to 'ON' at channel: %d", new_channel)
+        if channel:
+            log.info("Retransmit set to 'ON' at channel: %d", channel)
         else:
             log.info("Retransmit set to 'OFF'")
     
@@ -1274,7 +1286,7 @@ class Vantage(weewx.drivers.AbstractDevice):
     def getFirmwareVersion(self):
         """Return the firmware version as a string."""
         return self.port.send_command(b'NVER\n')[0]
-    
+
     def getStnInfo(self):
         """Return lat / lon, time zone, etc."""
         
@@ -1295,8 +1307,9 @@ class Vantage(weewx.drivers.AbstractDevice):
     def getStnTransmitters(self):
         """ Get the types of transmitters on the eight channels."""
 
-        transmitters = [ ]
-        use_tx =           self._getEEPROM_value(0x17)[0]
+        transmitters = []
+        use_tx = self._getEEPROM_value(0x17)[0]
+        retransmit_data = self._getEEPROM_value(0x18)[0]
         transmitter_data = self._getEEPROM_value(0x19, "16B")
 
         # Iterate over channels 1, 2, ..., 8
@@ -1310,10 +1323,16 @@ class Vantage(weewx.drivers.AbstractDevice):
             use_flag = use_tx & 0x01
             # Shift use_tx over by one bit to get it ready for the next channel.
             use_tx >>= 1
+            # The least significant bit of retransmit_data will be whether to retransmit
+            # the current channel.
+            retransmit = retransmit_data & 0x01
+            # Shift retransmit_data by one bit to get it ready for the next channel.
+            retransmit_data >>= 1
             transmitter_dict = {
-                'transmitter_type' : Vantage.transmitter_type_dict[transmitter_type],
-                'repeater' : Vantage.repeater_dict[repeater_id],
-                'listen' : Vantage.listen_dict[use_flag]
+                'transmitter_type': Vantage.transmitter_type_dict[transmitter_type],
+                'repeater': repeater_id,
+                'listen': Vantage.listen_dict[use_flag],
+                'retransmit' : 'Y' if retransmit else 'N'
             }
             if transmitter_dict['transmitter_type'] in ['temp', 'temp_hum']:
                 # Extra temperature is origin 1.
@@ -2055,6 +2074,32 @@ class VantageService(Vantage, weewx.engine.StdService):
 #===============================================================================
 
 class VantageConfigurator(weewx.drivers.AbstractConfigurator):
+    """Configures the Davis Vantage weather station."""
+
+    # Comments about retransmitting and repeaters
+    #
+    # Retransmitting
+    #    Any console can retransmit (not to be confused with acting as a repeater).
+    #    This is done through either the setup screen, or by using wee_device. For example,
+    #        wee_device --set-retransmit=on,4
+    #    would tell the console to retransmit data from the ISS on channel 4.
+    #    Another console can then be configured to receive information from this channel,
+    #    rather than directly from the ISS:
+    #        wee_device --set-transmitter-type=4,0
+    #    This says listen for an ISS on channel 4. Note that no repeater is involved.
+
+    # Repeaters
+    #    A repeater is a specialized bit of Davis hardware that retransmits signals of any kind
+    #    (not just the ISS). If you want to use a repeater, you need to tell the console not only
+    #    which channel to listen to, but also what sensor will be on that channel.
+    #    The setting up of a repeater is covered in the VP2 Console Manual, Appendix C (last page).
+    #    You must set both the channel, and the repeater ID. For example, a temperature/humidity
+    #    station on channel 5, which uses repeater B, would be set with the following:
+    #        wee_device --set-transmitter-type=5,3,2,4,B
+    #    This says to look for the station on channel 5. It will be of type temp_hum (3). The
+    #    temperature will appear as extraTemp2, the humidity as extraHumid4. It will use
+    #    repeater "B".
+
     @property
     def description(self):
         return "Configures the Davis Vantage weather station."
@@ -2131,10 +2176,10 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
         parser.add_option("--set-transmitter-type", type=str,
                           dest="set_transmitter_type",
                           metavar="CHANNEL,TYPE,TEMP,HUM,REPEATER_ID",
-                          help="Set the transmitter type for CHANNEL (1-8), TYPE (0=iss, 1=temp, 2=hum, "
-                               "3=temp_hum, 4=wind, 5=rain, 6=leaf, 7=soil, 8=leaf_soil, 9=sensorlink, 10=none), "
-                               "as extra TEMP station and extra HUM station (both 1-7, if applicable), "
-                               "REPEATER_ID ('A'-'H', if used)")
+                          help="Set the transmitter type for CHANNEL (1-8), TYPE (0=iss, 1=temp, "
+                               "2=hum, 3=temp_hum, 4=wind, 5=rain, 6=leaf, 7=soil, 8=leaf_soil, "
+                               "9=sensorlink, 10=none), as extra TEMP station and extra HUM "
+                               "station (both 1-7, if applicable), REPEATER_ID (A-H, or 0=OFF)")
         parser.add_option("--set-retransmit", type=str, dest="set_retransmit",
                           metavar="OFF|ON|ON,CHANNEL",
                           help="Turn console retransmit function 'ON' or 'OFF'.")
@@ -2277,8 +2322,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
              station.rain_unit, station.wind_unit), file=dest)
 
         try:
-            (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset,
-             tempLogging, retransmit_channel) = station.getStnInfo()
+            stnlat, stnlon, man_or_auto, dst, gmt_or_zone, \
+                zone_code, gmt_offset, tempLogging = station.getStnInfo()
             if man_or_auto == 'AUTO':
                 dst = 'N/A'
             if gmt_or_zone == 'ZONE_CODE':
@@ -2286,7 +2331,6 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             else:
                 gmt_offset_str = "%+.1f hours" % gmt_offset
                 zone_code = 'N/A'
-            on_off = "ON" if retransmit_channel else "OFF"
             print("""    CONSOLE STATION INFO:
       Latitude (onboard):           %+0.1f
       Longitude (onboard):          %+0.1f
@@ -2296,9 +2340,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
       Time zone code:               %s
       GMT offset:                   %s
       Temperature logging:          %s
-      Retransmit channel:           %s (%d)
         """ % (stnlat, stnlon, man_or_auto, dst, gmt_or_zone, zone_code, gmt_offset_str,
-               tempLogging, on_off, retransmit_channel), file=dest)
+               tempLogging), file=dest)
         except weewx.RetriesExceeded:
             pass
     
@@ -2309,12 +2352,14 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
             transmitter_list = None
         else:
             print("    TRANSMITTERS: ", file=dest)
-            print("      Channel   Receive   Repeater  Type", file=dest)
+            print("      Channel   Receive     Retransmit  Repeater  Type", file=dest)
             for tx_id in range(8):
                 comment = ""
                 transmitter_type = transmitter_list[tx_id]["transmitter_type"]
-                repeater         = transmitter_list[tx_id]["repeater"]
-                listen           = transmitter_list[tx_id]["listen"]
+                retransmit = transmitter_list[tx_id]["retransmit"]
+                repeater = transmitter_list[tx_id]["repeater"]
+                repeater_str = repeater if repeater else "NONE"
+                listen = transmitter_list[tx_id]["listen"]
                 if transmitter_type == 'temp_hum':
                     comment = "(as extra temperature %d and extra humidity %d)" \
                               % (transmitter_list[tx_id]["temp"],
@@ -2327,8 +2372,8 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                               % transmitter_list[tx_id]["hum"]
                 elif transmitter_type == 'none':
                     transmitter_type = "(N/A)"
-                print("         %d      %-8s    %-4s    %s %s"
-                      % (tx_id + 1, listen, repeater, transmitter_type, comment), file=dest)
+                print("         %d      %-8s    %-10s  %-5s     %s %s"
+                      % (tx_id + 1, listen, retransmit, repeater_str, transmitter_type, comment), file=dest)
             print("", file=dest)
 
         # Add reception statistics if we can:
@@ -2378,14 +2423,16 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                     if t_type in ['temp', 'temp_hum'] and \
                             extraTemp == transmitter_list[t_id]["temp"]:
                         print("      Extra Temperature %d:          %+.1f F"
-                              % (extraTemp, calibration_dict["extraTemp%d" % extraTemp]), file=dest)
+                              % (extraTemp, calibration_dict["extraTemp%d" % extraTemp]),
+                              file=dest)
             for extraHumid in range(1, 8):
                 for t_id in range(0, 8):
                     t_type = transmitter_list[t_id]["transmitter_type"]
                     if t_type in ['hum', 'temp_hum'] and \
                             extraHumid == transmitter_list[t_id]["hum"]:
                         print("      Extra Humidity %d:             %+.1f F"
-                              % (extraHumid, calibration_dict["extraHumid%d" % extraHumid]), file=dest)
+                              % (extraHumid, calibration_dict["extraHumid%d" % extraHumid]),
+                              file=dest)
             for t_id in range(0, 8):
                 t_type = transmitter_list[t_id]["transmitter_type"]
                 if t_type in ['soil', 'leaf_soil']:
@@ -2640,85 +2687,82 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     def set_transmitter_type(station, transmitter_str, noprompt):
         """Set the transmitter type for one of the eight channels."""
 
-        transmitter_list = [int(x) if x.isdigit() else x for x in transmitter_str.split(',')]
+        transmitter_list = transmitter_str.split(',')
 
-        channel = transmitter_list[0]
-        if not 1 <= channel <= 8:
-            print("Channel number must be between 1 and 8.")
-            return
-        
+        channel = int(transmitter_list[0])
+
         # Check new channel against retransmit channel.
         # Warn and stop if new channel is used as retransmit channel.
         retransmit_channel = station._getEEPROM_value(0x18)[0]
         if retransmit_channel == channel:
-            print("This channel is used as retransmit channel.")
+            print(f"Channel {channel} is used as a retransmit channel.")
             print("Please turn off retransmit function or choose another channel.")
             return
-        
-        # Init repeater to 'no repeater'
-        repeater = 0
-        # Check the last entry in transmitter_list to see if it is a repeater letter
+
+        transmitter_type = int(transmitter_list[1])
+        extra_temp = to_int(transmitter_list[2]) if len(transmitter_list) > 2 else None
+        extra_hum = to_int(transmitter_list[3]) if len(transmitter_list) > 3 else None
+        repeater_id = transmitter_list[4].upper() if len(transmitter_list) > 4 else None
         try:
-            if transmitter_list[-1].isalpha():
-                repeater_id = transmitter_list[-1].upper()
-                del transmitter_list[-1]
-                # Check with repeater_dict and get the ID number
-                for key in station.repeater_dict:
-                    if station.repeater_dict[key] == repeater_id:
-                        repeater = key
-                        break
-                if repeater == 0:
-                    print("Repeater ID must be between 'A' and 'H'.")
-                    return
-        except AttributeError:
-            # No repeater letter
+            # Is it the digit zero?
+            if repeater_id is not None and int(repeater_id) == 0:
+                # Yes. Set to None
+                repeater_id = None
+        except ValueError:
+            # Cannot be converted to integer. Must be an ID.
             pass
-        
-        transmitter_type = transmitter_list[1]
-        extra_temp = transmitter_list[2] if len(transmitter_list) > 2 else None
-        extra_hum = transmitter_list[3] if len(transmitter_list) > 3 else None
         usetx = 0 if transmitter_type == 10 else 1
 
         try:
-            transmitter_type_name = station.transmitter_type_dict[transmitter_type]
+            transmitter_type_name = Vantage.transmitter_type_dict[transmitter_type]
         except KeyError:
-            print("Unknown transmitter type (%s)" % transmitter_type)
+            print(f'Unknown transmitter type ("{transmitter_type}")')
             return
-        
-        if transmitter_type_name in ['temp', 'temp_hum'] and not 1 <= extra_temp <= 7:
-            print("Transmitter type %s requires extra_temp in range 1-7'" % transmitter_type_name)
-            return
-        
-        if transmitter_type_name in ['hum', 'temp_hum'] and not 1 <= extra_hum <= 7:
-            print("Transmitter type %s requires extra_hum in range 1-7'" % transmitter_type_name)
-            return
-        
-        msg = "Proceeding will set channel %d to type %d (%s), repeater: %s, %s.\n" \
-              % (channel,
-                 transmitter_type,
-                 transmitter_type_name,
-                 station.repeater_dict[repeater],
-                 station.listen_dict[usetx])
-        ans = weeutil.weeutil.y_or_n(msg + "Are you sure you want to proceed (y/n)? ",
-                                     noprompt)
+
+        # Check the temperature station ID
+        if transmitter_type_name in ['temp', 'temp_hum']:
+            if extra_temp is None:
+                print(f'A transmitter of type "{transmitter_type_name}" requires a '
+                      f"TEMP station ID")
+                return
+
+        # Check the humidity station ID
+        if transmitter_type_name in ['hum', 'temp_hum']:
+            if extra_hum is None:
+                print(f'A transmitter of type "{transmitter_type_name}" requires a '
+                      f"HUM station ID")
+                return
+
+        msg = f"Proceeding will set channel {channel} " \
+              f"to type {transmitter_type:d} " \
+              f"({transmitter_type_name}, {Vantage.listen_dict[usetx]}), " \
+              f"repeater: {'OFF' if not repeater_id else repeater_id}\n"
+        ans = weeutil.weeutil.y_or_n(msg + "Are you sure you want to proceed (y/n)? ", noprompt)
         if ans == 'y':
-            station.setTransmitterType(channel, transmitter_type, extra_temp, extra_hum, repeater)
-            print("Transmitter type for channel %d set to %d (%s), repeater: %s, %s."
-                  % (channel,
-                     transmitter_type,
-                     transmitter_type_name,
-                     station.repeater_dict[repeater],
-                     station.listen_dict[usetx]))
+            station.setTransmitterType(channel, transmitter_type, extra_temp, extra_hum,
+                                       repeater_id)
+            msg = f"Set channel {channel} " \
+                  f"to type {transmitter_type:d} " \
+                  f"({transmitter_type_name}, {Vantage.listen_dict[usetx]}), " \
+                  f"repeater: {'OFF' if not repeater_id else repeater_id}\n"
+            print(msg)
+            log.info(msg)
         else:
             print("Nothing done.")
 
     @staticmethod
     def set_retransmit(station, channel_on_off, noprompt):
-        """Set console retransmit channel."""
+        """Set console retransmit channel.
+
+        Args:
+            station(Vantage): An instance of class Vantage
+            channel_on_off (str): A comma separated string. First element is 'ON' or 'OFF'.
+                Second element is which channel
+            noprompt (bool): True to ask whether the user is sure. Otherwise, don't.
+        """
 
         channel = None
-        channel_on_off = channel_on_off.strip().upper()
-        channel_on_off_list = channel_on_off.split(',')
+        channel_on_off_list = channel_on_off.strip().upper().split(',')
         on_off = channel_on_off_list[0]
         if on_off == 'OFF':
             channel = 0
@@ -2730,13 +2774,13 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                     print("Channel out of range 1..8.")
                     print("Nothing done.")
                     return
-                if transmitter_list[channel-1]["listen"] == "active":
+                if transmitter_list[channel - 1]["listen"] == "active":
                     print("Channel %d in use. Please select another channel." % channel)
                     print("Nothing done.")
                     return
             else:
                 # Pick one for the user
-                for i in range(0, 7):
+                for i in range(8):
                     if transmitter_list[i]["listen"] == "inactive":
                         channel = i + 1
                         break
@@ -2745,24 +2789,14 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                 print("Nothing done.")
                 return
         else:
-            print("Unrecognized command. Must be 'ON' or 'OFF'.")
+            print(f"Unrecognized command '{on_off}'. Must be 'ON' or 'OFF'.")
             print("Nothing done.")
             return
-    
-        old_channel = station._getEEPROM_value(0x18)[0]
-        if old_channel == channel:
-            if channel:
-                print("Old and new retransmit settings are the same.")
-                print("Nothing done.")
-            else:
-                print("Retransmit already OFF.")
-                print("Nothing done.")
-            return
-        
+
         if channel:
-            msg = "Proceeding will set retransmit to 'ON' at channel: %d.\n" % channel
+            msg = "Proceeding will set retransmit to 'ON' on channel: %d.\n" % channel
         else:
-            msg = "Proceeding will set retransmit to 'OFF'\n."
+            msg = "Proceeding will set retransmit to 'OFF'.\n"
         ans = weeutil.weeutil.y_or_n(msg + "Are you sure you want to proceed (y/n)? ",
                                      noprompt)
         if ans == 'y':

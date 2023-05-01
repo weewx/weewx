@@ -46,6 +46,10 @@ null. Fixes issue #849.
 
 Fix wrong station type for Vantage `wee_device --info` query.
 
+Add retransmit information for Vantage `wee_device --info` query.
+
+Fix problem when setting Vantage repeater. Fixes issue #863.
+
 Change `minsumtime` and `maxsumtime` to return start-of-day, rather than the
 time of max rainfall during the day.
 
