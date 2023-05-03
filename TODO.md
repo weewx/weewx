@@ -1,22 +1,10 @@
 # To do
 
-Convert `$trend` to use `nominal_spans()`.
+Test the generation of .png files.
 
-Document `nominal_spans()`.
+When doing a skin upgrade, touch only the "core" skins.
 
-Semantics of missing data. If I ask for an aggregate of a type that is missing data entirely,
-what should `get_aggregate()` return? For example, assume there are no data at all within
-`timespan`. What is `x`?
 
-    x = weewx.xtypes.ArchiveTable.get_aggregate('outTemp', timespan, 'max', db_manager)
-
-Is it
-
-    x = ValueTuple(None, 'degree_F', 'group_temperature')
-
-or
-
-    x = None
 
 ## Debian packaging
 

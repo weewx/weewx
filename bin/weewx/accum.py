@@ -394,7 +394,7 @@ class FirstLastAccum(object):
         ts:  The timestamp.
         """
         if val is not None:
-            string_val = str(val)
+            string_val = val
             if self.firsttime is None or ts < self.firsttime:
                 self.first = string_val
                 self.firsttime = ts

@@ -64,6 +64,9 @@ Fixes issue #864.
 Additional shorthand notations for aggregation and trend intervals. For
 example, '3h' for three hours.
 
+Accumulator `firstlast` no longer coerces values to a string. Thanks to user
+"Karen" for spotting this!
+
 
 ### 4.10.2 02/22/2023
 
