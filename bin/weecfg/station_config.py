@@ -497,30 +497,25 @@ def copy_skins(config_dict, dry_run=False):
 
     # SKIN_ROOT is the location of the skins relative to WEEWX_ROOT. Find it's absolute location
     skin_dir = os.path.join(config_dict['WEEWX_ROOT'], config_dict['StdReport']['SKIN_ROOT'])
-    if not dry_run:
-        # Make it if it doesn't already exist
+    # Make it if it doesn't already exist
+    if not dry_run and not os.path.exists(skin_dir):
         print(f"Making directory {skin_dir}.")
-        os.makedirs(skin_dir, exist_ok=True)
+        os.makedirs(skin_dir)
 
     # Find the skins we already have
-    if dry_run or not os.path.exists(skin_dir):
-        existing_skins = set()
-    else:
-        with os.scandir(skin_dir) as existing_contents:
-            existing_skins = {os.path.basename(d.path) for d in existing_contents if d.is_dir()}
+    existing_skins = _get_existing_skins(skin_dir)
+    # Find the skins that are available in the resource package
+    available_skins = _get_core_skins()
+
+    # The difference is what's missing
+    missing_skins = available_skins - existing_skins
 
     with weeutil.weeutil.path_to_resource('wee_resources', 'skins') as skin_resources:
-        # Find which skins are available in the resource package
-        with os.scandir(skin_resources) as resource_contents:
-            available_skins = {os.path.basename(d.path) for d in resource_contents if d.is_dir()}
-
-        missing_skins = available_skins - existing_skins
-
         # Copy over any missing skins
         for skin in missing_skins:
             src = os.path.join(skin_resources, skin)
             dest = os.path.join(skin_dir, skin)
-            print(f"Copying skin {skin} into {dest}.")
+            print(f"Copying new skin {skin} into {dest}.")
             if not dry_run:
                 shutil.copytree(src, dest)
 
@@ -773,20 +768,48 @@ def upgrade_skins(config_dict, skin_root=None, no_prompt=False, dry_run=False):
     # location of the skins
     skin_dir = os.path.join(config_dict['WEEWX_ROOT'], skin_root)
 
-    ans = weeutil.weeutil.y_or_n(f"\nDouble checking. Do you really want to upgrade the skins "
-                                 f"at {skin_dir}?\n"
-                                 "A backup copy will be made first. (Y/n) ",
-                                 noprompt=no_prompt,
-                                 default='y')
-    if ans != 'y':
-        print("Skins will not be upgraded.")
-        return
+    available_skins = _get_core_skins()
+    existing_skins = _get_existing_skins(skin_dir)
+    upgradable_skins = available_skins.intersection(existing_skins)
 
     if os.path.exists(skin_dir):
         if not dry_run:
-            backup = weeutil.weeutil.move_with_timestamp(skin_dir)
-            print(f"Old skin directory saved to {backup}.")
+            for skin_name in upgradable_skins:
+                skin_path = os.path.join(skin_dir, skin_name)
+                backup = weeutil.weeutil.move_with_timestamp(skin_path)
+                print(f"Skin {skin_name} saved to {backup}.")
     else:
         print(f"No skin directory found at {skin_dir}.")
 
     copy_skins(config_dict, dry_run)
+
+
+def _get_core_skins():
+    """ Get the set of skins that come with weewx
+
+    Returns:
+        set: A set containing the names of the core skins
+    """
+    with weeutil.weeutil.path_to_resource('wee_resources', 'skins') as skin_resources:
+        # Find which skins are available in the resource package
+        with os.scandir(skin_resources) as resource_contents:
+            available_skins = {os.path.basename(d.path) for d in resource_contents if d.is_dir()}
+
+    return available_skins
+
+
+def _get_existing_skins(skin_dir):
+    """ Get the set of skins that already exist in the user's data area.
+
+    Args:
+        skin_dir(str): Path to the skin directory
+
+    Returns:
+        set: A set containing the names of the skins in the user's data area
+    """
+
+    with os.scandir(skin_dir) as existing_contents:
+        existing_skins = {os.path.basename(d.path) for d in existing_contents if d.is_dir()}
+
+    return existing_skins
+
