@@ -217,13 +217,13 @@ bin/wee_resources/: $(DOC_BUILT) $(SKINLOC) weewx.conf
 	touch bin/wee_resources/__init__.py
 	cp -rp examples bin/wee_resources/
 	rm -rf bin/wee_resources/docs/ && cp -rp $(DOC_BUILT) bin/wee_resources/docs
-	rm -rf bin/wee_resources/skins/ && cp -rp skins/ bin/wee_resources/
+	rm -rf bin/wee_resources/skins/ && cp -rp skins bin/wee_resources/
 	mkdir -p bin/wee_resources/util/
-	cp -rp util/init.d/ bin/wee_resources/util/
-	cp -rp util/launchd/ bin/wee_resources/util/
-	cp -rp util/systemd/ bin/wee_resources/util/
+	cp -rp util/init.d bin/wee_resources/util/
+	cp -rp util/launchd bin/wee_resources/util/
+	cp -rp util/systemd bin/wee_resources/util/
 	mkdir -p bin/wee_resources/bin/
-	cp -rp bin/user/ bin/wee_resources/bin/
+	cp -rp bin/user bin/wee_resources/bin/
 	cp -p weewx.conf bin/wee_resources/
 
 pypi-packages $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL): bin/wee_resources/ pyproject.toml
