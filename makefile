@@ -16,8 +16,6 @@ WEEWX_DOWNLOADS=$(WEEWX_HTMLDIR)/downloads
 WEEWX_STAGING=$(WEEWX_HTMLDIR)/downloads/development_versions
 # Location of doc sources
 DOC_SRC=docs_src
-# Location of built docs
-DOC_BUILT=docs
 # Location of the skins
 SKINLOC=skins
 
@@ -32,6 +30,9 @@ DSTDIR=dist
 SRCPKG=weewx-$(VERSION).tgz
 WHEELSRC=weewx-$(VERSION).tar.gz
 WHEEL=weewx-$(VERSION)-py3-none-any.whl
+
+# Location of built docs
+DOC_BUILT=$(BLDDIR)/docs
 
 PYTHON?=python3
 
@@ -89,16 +90,16 @@ help: info
 	@echo ""
 
 info:
-	@echo "     VERSION: $(VERSION)"
-	@echo "   MMVERSION: $(MMVERSION)"
-	@echo "      PYTHON: $(PYTHON)"
-	@echo "         CWD: $(CWD)"
-	@echo "        USER: $(USER)"
-	@echo "   WEEWX_COM: $(WEEWX_COM)"
-	@echo " STAGING_DIR: $(STAGING_DIR)"
-	@echo "     DOC_SRC: $(DOC_SRC)"
-	@echo "   DOC_BUILT: $(DOC_BUILT)"
-	@echo "     SKINLOC: $(SKINLOC)"
+	@echo "       VERSION: $(VERSION)"
+	@echo "     MMVERSION: $(MMVERSION)"
+	@echo "        PYTHON: $(PYTHON)"
+	@echo "           CWD: $(CWD)"
+	@echo "          USER: $(USER)"
+	@echo "     WEEWX_COM: $(WEEWX_COM)"
+	@echo " WEEWX_STAGING: $(WEEWX_STAGING)"
+	@echo "       DOC_SRC: $(DOC_SRC)"
+	@echo "     DOC_BUILT: $(DOC_BUILT)"
+	@echo "       SKINLOC: $(SKINLOC)"
 
 clean:
 	find bin -name "*.pyc" -exec rm {} \;
@@ -177,6 +178,7 @@ test-clean:
 
 # Build the documentation:
 build-docs $(DOC_BUILT): $(DOC_SRC)/**/*
+	@mkdir -p $(BLDDIR)
 	@echo "Building documents"
 	$(PYTHON) -m mkdocs --quiet build --site-dir=$(DOC_BUILT)
 
