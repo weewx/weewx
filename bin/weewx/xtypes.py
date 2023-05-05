@@ -192,26 +192,31 @@ class ArchiveTable(XType):
         else:
 
             # No aggregation
+            sql_str = "SELECT dateTime, %s, usUnits, `interval` FROM %s " \
+                      "WHERE dateTime > ? AND dateTime <= ?" % (obs_type, db_manager.table_name)
+
             std_unit_system = None
 
-            for record in db_manager.genBatchRecords(*timespan):
+            # Hit the database. It's possible the type is not in the database, so be prepared
+            # to catch a NoColumnError:
+            try:
+                for record in db_manager.genSql(sql_str, (startstamp, stopstamp)):
 
-                if std_unit_system:
-                    if std_unit_system != record['usUnits']:
-                        raise weewx.UnsupportedFeature("Unit type cannot change within a series.")
-                else:
-                    std_unit_system = record['usUnits']
-                if obs_type in record:
-                    value = record[obs_type]
-                else:
-                    try:
-                        value = get_scalar(obs_type, record, db_manager)[0]
-                    except weewx.CannotCalculate:
-                        value = None
+                    # Unpack the record
+                    timestamp, value, unit_system, interval = record
 
-                start_vec.append(record['dateTime'] - record['interval'] * 60)
-                stop_vec.append(record['dateTime'])
-                data_vec.append(value)
+                    if std_unit_system:
+                        if std_unit_system != unit_system:
+                            raise weewx.UnsupportedFeature("Unit type cannot change "
+                                                           "within an aggregation interval.")
+                    else:
+                        std_unit_system = unit_system
+                    start_vec.append(timestamp - interval * 60)
+                    stop_vec.append(timestamp)
+                    data_vec.append(value)
+            except weedb.NoColumnError:
+                # The sql type doesn't exist. Convert to an UnknownType error
+                raise weewx.UnknownType(obs_type)
 
             unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type,
                                                                aggregate_type)
@@ -810,8 +815,54 @@ class AggregateHeatCool(XType):
 
 
 class XTypeTable(XType):
-    """Calculates for xtypes. An xtype may not necessarily be in the database, so
-    this version tries to calculate aggregates on the fly."""
+    """Calculate a series for an xtype. An xtype may not necessarily be in the database, so
+    this version calculates it on the fly. Note: this version only works if no aggregation has
+    been requested."""
+
+    @staticmethod
+    def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None,
+                   **option_dict):
+        """Get a series of an xtype, by using the main archive table. Works only for no
+        aggregation. """
+
+        start_vec = list()
+        stop_vec = list()
+        data_vec = list()
+
+        if aggregate_type:
+            # This version does not know how to do aggregations, although this could be
+            # added in the future.
+            raise weewx.UnknownAggregation(aggregate_type)
+
+        else:
+            # No aggregation
+
+            std_unit_system = None
+
+            # Hit the database.
+            for record in db_manager.genBatchRecords(*timespan):
+
+                if std_unit_system:
+                    if std_unit_system != record['usUnits']:
+                        raise weewx.UnsupportedFeature("Unit system cannot change "
+                                                       "within a series.")
+                else:
+                    std_unit_system = record['usUnits']
+
+                # Given a record, use the xtypes system to calculate a value:
+                try:
+                    value = get_scalar(obs_type, record, db_manager)
+                    data_vec.append(value[0])
+                except weewx.CannotCalculate:
+                    data_vec.append(None)
+                start_vec.append(record['dateTime'] - record['interval'] * 60)
+                stop_vec.append(record['dateTime'])
+
+            unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type)
+
+        return (ValueTuple(start_vec, 'unix_epoch', 'group_time'),
+                ValueTuple(stop_vec, 'unix_epoch', 'group_time'),
+                ValueTuple(data_vec, unit, unit_group))
 
     @staticmethod
     def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):

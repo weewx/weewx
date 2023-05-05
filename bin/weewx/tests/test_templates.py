@@ -195,7 +195,7 @@ class Common(object):
                                                  % (actual_filename_abs, n, actual_line,
                                                     expected_line))
 
-                        print("Checked %d lines" % n)
+                        print(f"Checked {n:d} lines in {filename_rel}")
 
 
 class TestSqlite(Common, unittest.TestCase):

@@ -1,6 +1,6 @@
 # To do
 
-Test the generation of .png files.
+Almanac values for right ascension, declination, etc. need to be returned as `ValueHelper`.
 
 When doing a skin upgrade, touch only the "core" skins.
 
