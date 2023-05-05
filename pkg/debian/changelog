@@ -1,3 +1,6 @@
+weewx (5.0.0a30-1) unstable; urgency=low
+  * Back up skins individually, instead of the whole directory.
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 05 May 2023 11:28:04 -0700
 weewx (5.0.0a28-1) unstable; urgency=low
   * Use flag --config-only to upgrade config file
  -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 07 Apr 2023 05:36:56 -0700
