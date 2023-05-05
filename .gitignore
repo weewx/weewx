@@ -1,20 +1,20 @@
 *~
+.DS_Store
 *.pyc
 __pycache__
 *.egg-info
-junk*
-.DS_Store
-/build
-/dist
-/docs
-/.venv
-/venv
+.venv
+venv
 
 # Include all of .idea in the repository except ...
-/.idea/workspace.xml
-/.idea/tasks.xml
-/.idea/dictionary/*
-/.idea/shelf/*
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionary/*
+.idea/shelf/*
 
-# Ignore wee_resources ...
-/bin/wee_resources/
+# Ignore artifacts produced during build/packaging
+MANIFEST
+build
+dist
+docs
+bin/wee_resources

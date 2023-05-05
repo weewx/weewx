@@ -195,10 +195,7 @@ src-tarball: $(DSTDIR)/$(SRCPKG)
 
 $(DSTDIR)/$(SRCPKG):
 	mkdir -p $(BLDDIR)/weewx-$(VERSION)
-	rsync -ar ./ $(BLDDIR)/weewx-$(VERSION) --exclude wee_resources --exclude __pycache__ \
-		--exclude .gitignore --exclude .git --exclude tests --exclude dist --exclude build \
-		--exclude .editorconfig --exclude poetry.lock --exclude pyproject.toml \
-		--exclude mkdocs.yml --exclude .idea --exclude .github
+	rsync -ar ./ $(BLDDIR)/weewx-$(VERSION) --exclude-from .gitignore --exclude .git
 	mkdir -p $(DSTDIR)
 	tar cfz $(DSTDIR)/$(SRCPKG) -C $(BLDDIR) weewx-$(VERSION)
 
