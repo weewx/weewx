@@ -54,24 +54,28 @@ checklist for doing a release:
 
 pre-requisites ----------------------------------------------------------------
 
+Building anything other than the src tarball requires mkdocs.
 Signing packages requires gpg and local copy of authorized private+public keys.
 The debian repo management requires aptly.
 The redhat repo management requires createrepo.
 The suse repo management requires createrepo.
 
 To build debian package install the following (use 'apt-get install'):
+  mkdocs
   git
   rsync
   gpg
   debhelper
 
 To build redhat package install the following (use 'yum install'):
+  mkdocs
   git
   rsync
   rpm-build
   rpm-sign
 
 To build suse package install the following (use 'zypper install'):
+  mkdocs
   git
   rsync
   rpm-build
@@ -84,26 +88,26 @@ how to update the version number:
   make version                  # this propagates the version number everywhere
   git commit -a -m "bump to version x.y.z"
 
-how to build wheel and source tarball
+how to build wheel and source tarball:
   make pypi-packages
 
-how to build debian packages:
+how to build debian package:
   make deb-changelog
-  emacs pkg/debian/changelog    # add any package-specific changes, if any
+  emacs pkg/debian/changelog    # add package-specific changes, if any
   git commit -m "update deb changelog" pkg/debian/changelog
   make debian-package
 
-how to build redhat packages:
+how to build redhat package:
   make redhat-changelog
-  emacs pkg/changelog.el       # add any package-specific changes, if any
+  emacs pkg/changelog.el       # add package-specific changes, if any
   git commit -m "update redhat changelog" pkg/changelog.el
-  make redhat-packages
+  make redhat-package
 
-how to build redhat packages:
+how to build redhat package:
   make suse-changelog
   emacs pkg/changelog.suse     # add any package-specific changes, if any
   git commit -m "update suse changelog" pkg/changelog.suse
-  make suse-packages
+  make suse-package
 
 to build redhat packages with custom rpm revision:
   make redhat-changelog RPMREVISION=2
