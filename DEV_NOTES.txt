@@ -80,6 +80,11 @@ To build suse package install the following (use 'zypper install'):
   rsync
   rpm-build
 
+To build pypi package install the following:
+  mkdocs
+  mkdocs-material
+  poetry
+
 
 howto -------------------------------------------------------------------------
 

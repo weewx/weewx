@@ -50,9 +50,9 @@ help: info
 	@echo "   suse-changelog prepend stub changelog entry for suse"
 	@echo ""
 	@echo "  pypi-packages create wheel and source tarball suitable for pypi"
-	@echo " debian-package create the debian package"
-	@echo "redhat-packages create the redhat packages"
-	@echo "  suse-packages create the suse packages"
+	@echo "debian-package  create the debian package"
+	@echo "redhat-package  create the redhat packages"
+	@echo "  suse-package  create the suse packages"
 	@echo ""
 	@echo "     check-deb  check the deb package"
 	@echo "     check-rpm  check the rpm package"
@@ -67,7 +67,7 @@ help: info
 	@echo "    build-docs  build the docs using mkdocs"
 	@echo "   upload-docs  upload docs to $(WEEWX_COM)"
 	@echo ""
-	@echo "       release  rearrange files on the download server"
+	@echo "       release  promote staged files on the download server"
 	@echo ""
 	@echo "          test  run all unit tests"
 	@echo "                SUITE=path/to/foo.py to run only foo tests"
@@ -100,6 +100,7 @@ info:
 	@echo "       DOC_SRC: $(DOC_SRC)"
 	@echo "     DOC_BUILT: $(DOC_BUILT)"
 	@echo "       SKINLOC: $(SKINLOC)"
+	@echo ""
 
 clean:
 	find bin -name "*.pyc" -exec rm {} \;
