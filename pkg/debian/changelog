@@ -1,3 +1,6 @@
+weewx (5.0.0a30-1) unstable; urgency=low
+  * Back up skins individually, instead of the whole directory.
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 05 May 2023 11:28:04 -0700
 weewx (5.0.0a29-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Fri, 05 May 2023 13:35:31 -0400
