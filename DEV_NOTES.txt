@@ -60,29 +60,28 @@ The debian repo management requires aptly.
 The redhat repo management requires createrepo.
 The suse repo management requires createrepo.
 
+Install mkdocs without touching your system python:
+  pip3 install --user mkdocs
+  pip3 install --user mkdocs-material
+
 To build debian package install the following (use 'apt-get install'):
-  mkdocs
   git
   rsync
   gpg
   debhelper
 
 To build redhat package install the following (use 'yum install'):
-  mkdocs
   git
   rsync
   rpm-build
   rpm-sign
 
 To build suse package install the following (use 'zypper install'):
-  mkdocs
   git
   rsync
   rpm-build
 
-To build pypi package install the following:
-  mkdocs
-  mkdocs-material
+To build pypi package install the following (see the pypi section):
   poetry
 
 
