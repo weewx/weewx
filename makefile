@@ -51,8 +51,8 @@ help: info
 	@echo ""
 	@echo "  pypi-packages create wheel and source tarball suitable for pypi"
 	@echo "debian-package  create the debian package"
-	@echo "redhat-package  create the redhat packages"
-	@echo "  suse-package  create the suse packages"
+	@echo "redhat-package  create the redhat package"
+	@echo "  suse-package  create the suse package"
 	@echo ""
 	@echo "     check-deb  check the deb package"
 	@echo "     check-rpm  check the rpm package"
@@ -316,7 +316,7 @@ fi
 RPMARCH=noarch
 RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER).$(RPMOS)$(OSREL).$(RPMARCH)
 RPMPKG=weewx-$(RPMVER).$(RPMOS)$(OSREL).$(RPMARCH).rpm
-rpm-package: $(BUILD_DOCS) $(DSTDIR)/$(SRCPKG)
+rpm-package: build-docs $(DSTDIR)/$(SRCPKG)
 	rm -rf $(RPMBLDDIR)
 	mkdir -p -m 0755 $(RPMBLDDIR)
 	mkdir -p -m 0755 $(RPMBLDDIR)/BUILD
