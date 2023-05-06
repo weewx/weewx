@@ -213,16 +213,18 @@ upload-src:
 # Copy resources into the source tree as required by pypi for its tarball
 bin/wee_resources/: $(DOC_BUILT) $(SKINLOC) weewx.conf
 	@echo "Copying resources into wee_resources"
-	mkdir -p bin/wee_resources/
+	mkdir -p bin/wee_resources
 	touch bin/wee_resources/__init__.py
 	cp -rp examples bin/wee_resources/
-	rm -rf bin/wee_resources/docs/ && cp -rp $(DOC_BUILT) bin/wee_resources/docs
-	rm -rf bin/wee_resources/skins/ && cp -rp skins bin/wee_resources/
-	mkdir -p bin/wee_resources/util/
+	rm -rf bin/wee_resources/docs
+	cp -rp $(DOC_BUILT) bin/wee_resources/docs
+	rm -rf bin/wee_resources/skins
+	cp -rp skins bin/wee_resources/
+	mkdir -p bin/wee_resources/util
 	cp -rp util/init.d bin/wee_resources/util/
 	cp -rp util/launchd bin/wee_resources/util/
 	cp -rp util/systemd bin/wee_resources/util/
-	mkdir -p bin/wee_resources/bin/
+	mkdir -p bin/wee_resources/bin
 	cp -rp bin/user bin/wee_resources/bin/
 	cp -p weewx.conf bin/wee_resources/
 
@@ -256,7 +258,7 @@ DEBPKG=weewx_$(DEBVER)_$(DEBARCH).deb
 ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
-debian-package: deb-package-prep
+debian-package: build-docs deb-package-prep
 	cp pkg/debian/control $(DEBBLDDIR)/debian/control
 	rm -f $(DEBBLDDIR)/debian/files
 	rm -rf $(DEBBLDDIR)/debian/weewx*
@@ -265,7 +267,7 @@ debian-package: deb-package-prep
 	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python3-$(DEBPKG)
 
 deb-package-prep: $(DSTDIR)/$(SRCPKG)
-	mkdir -p $(BLDDIR)
+	mkdir -p $(DEBBLDDIR)
 	cp -p $(DSTDIR)/$(SRCPKG) $(BLDDIR)/weewx_$(VERSION).orig.tar.gz
 	rm -rf $(DEBBLDDIR)/debian
 	mkdir -m 0755 $(DEBBLDDIR)/debian
