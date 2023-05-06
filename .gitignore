@@ -16,5 +16,4 @@ venv
 MANIFEST
 build
 dist
-docs
 bin/wee_resources
