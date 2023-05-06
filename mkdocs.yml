@@ -43,7 +43,7 @@ extra_css:
   - css/weewx_ui.css
 
 docs_dir: 'docs_src'
-site_dir: 'docs'
+site_dir: 'build/docs'
 
 nav:
   - "Quick starts":
