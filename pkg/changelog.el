@@ -1,3 +1,5 @@
+* Sat May 06 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0a30-1
+- new upstream release
 * Fri May 05 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0a29-1
 - new upstream release
 * Wed Feb 22 2023 Thomas Keffer (Author of weewx) <tkeffer@gmail.com> - 4.10.2-1
