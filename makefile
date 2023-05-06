@@ -184,7 +184,7 @@ build-docs $(DOC_BUILT): $(DOC_SRC)/**/*
 	$(PYTHON) -m mkdocs --quiet build --site-dir=$(DOC_BUILT)
 
 check-docs:
-	weblint docs/*.htm
+	weblint $(DOC_BUILT)/*.htm
 
 # upload docs to the web site
 upload-docs: $(DOC_BUILT)
@@ -316,7 +316,7 @@ fi
 RPMARCH=noarch
 RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER).$(RPMOS)$(OSREL).$(RPMARCH)
 RPMPKG=weewx-$(RPMVER).$(RPMOS)$(OSREL).$(RPMARCH).rpm
-rpm-package: $(DSTDIR)/$(SRCPKG)
+rpm-package: $(BUILD_DOCS) $(DSTDIR)/$(SRCPKG)
 	rm -rf $(RPMBLDDIR)
 	mkdir -p -m 0755 $(RPMBLDDIR)
 	mkdir -p -m 0755 $(RPMBLDDIR)/BUILD
@@ -330,7 +330,7 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
             -e 's%OSREL%$(OSREL)%' \
             pkg/weewx.spec.in > $(RPMBLDDIR)/SPECS/weewx.spec
 	cat pkg/changelog.$(RPMOS) >> $(RPMBLDDIR)/SPECS/weewx.spec
-	cp $(DSTDIR)/$(SRCPKG) $(RPMBLDDIR)/SOURCES
+	cp $(DSTDIR)/$(SRCPKG) $(RPMBLDDIR)/SOURCES/weewx-$(VERSION).tar.gz
 	rpmbuild -ba --clean --define '_topdir $(CWD)/$(RPMBLDDIR)' --target noarch $(CWD)/$(RPMBLDDIR)/SPECS/weewx.spec
 	mkdir -p $(DSTDIR)
 	mv $(RPMBLDDIR)/RPMS/$(RPMARCH)/$(RPMPKG) $(DSTDIR)
@@ -343,12 +343,7 @@ endif
 redhat-changelog:
 	make rpm-changelog RPMOS=el
 
-redhat-packages: rpm-package-el7 rpm-package-el8
-
-rpm-package-el7:
-	make rpm-package RPMOS=el OSREL=7
-
-rpm-package-el8:
+redhat-package:
 	make rpm-package RPMOS=el OSREL=8
 
 suse-changelog:
@@ -516,4 +511,4 @@ critic:
 	perlcritic -1 --verbose 8 pkg/mkchangelog.pl
 
 code-summary:
-	cloc --force-lang="HTML",tmpl --force-lang="INI",conf --force-lang="INI",inc bin docs examples skins util
+	cloc --force-lang="HTML",tmpl --force-lang="INI",conf --force-lang="INI",inc bin docs_src examples skins util
