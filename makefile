@@ -421,12 +421,6 @@ pull-apt-repo:
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
-	aptly repo add python2-weewx $(DSTDIR)/python-$(DEBPKG)
-	aptly snapshot create python-weewx-$(DEBVER) from repo python2-weewx
-	aptly publish drop squeeze python2
-	aptly publish -architectures=all snapshot python-weewx-$(DEBVER) python2
-# i would prefer to just do a switch, but that does not work. idkw
-#	aptly publish switch squeeze python2 python-weewx-$(DEBVER)
 	aptly repo add python3-weewx $(DSTDIR)/python3-$(DEBPKG)
 	aptly snapshot create python3-weewx-$(DEBVER) from repo python3-weewx
 	aptly publish drop buster python3
