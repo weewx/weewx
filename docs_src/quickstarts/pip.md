@@ -1,7 +1,7 @@
 # Installation using pip
 
-This is a guide to installing WeeWX using [pip](https://pip.pypa.io). It can be used to
-install WeeWX on almost any operating system, including macOS.
+This is a guide to installing WeeWX using [pip](https://pip.pypa.io). It can
+be used to install WeeWX on almost any operating system, including macOS.
 
 ## Preparation
 
@@ -29,6 +29,7 @@ before beginning. Follow the directions below for your system:
     ```
 
 === "Redhat"
+
     ```shell
     sudo yum update
     sudo yum install -y gcc
@@ -124,14 +125,15 @@ weewxd
 ### Run as a daemon
 
 If you wish to run `weewxd` as a daemon, follow the following steps, depending
-on your operating system. These steps will require root privileges in order to
-install the required daemon file.
+on your operating system. These steps require root privileges to install the
+required daemon file.
 
-=== "Debian"
+=== "Systems that use systemd (e.g., Debian, Redhat, SUSE)"
 
     !!! Note
-        The resulting daemon will be run using your username. If you prefer to use run as `root`,
-        you will have to modify the file `/etc/systemd/system/weewx.service`.
+        The resulting daemon will be run using your username. If you prefer to
+        use run as `root`, you will have to modify the file
+        `/etc/systemd/system/weewx.service`.
 
     ```shell
     cd ~/weewx-data
@@ -141,51 +143,19 @@ install the required daemon file.
     sudo systemctl start weewx
     ```
     
-=== "Very old Debian"
+=== "Systems that use SysV init (e.g., Slackware, Devuan, Puppy, DD-WRT)"
 
     !!! Note
-        The resulting daemon will be run using your username. If you prefer to use run as `root`,
-        you will have to modify the file `/etc/init.d/weewx`.
+        The resulting daemon will be run using your username. If you prefer to
+        use run as `root`, you will have to modify the file
+        `/etc/init.d/weewx`.
 
     ```shell
-    # Use the old init.d method if your os is ancient
     cd ~/weewx-data
     sudo cp util/init.d/weewx.debian /etc/init.d/weewx
     sudo chmod +x /etc/init.d/weewx
     sudo update-rc.d weewx defaults 98
     sudo /etc/init.d/weewx start     
-    ```
-
-=== "Redhat"
-
-    !!! Note
-        The resulting daemon will be run using your username. If you prefer to use run as `root`,
-        you will have to modify the file `/etc/systemd/system/weewx.service`.
-
-    ```shell
-    # If SELinux is enabled, you will need the following command first:
-    chcon -R --reference /bin/ls ~/.local/bin
-
-    # Then proceed as normal:
-    cd ~/weewx-data
-    sudo cp util/systemd/weewx.service /etc/systemd/system
-    sudo systemctl daemon-reload
-    sudo systemctl enable weewx
-    sudo systemctl start weewx
-    ```
-
-=== "openSUSE Leap"
-
-    !!! Note
-        The resulting daemon will be run using your username. If you prefer to use run as `root`,
-        you will have to modify the file `/etc/systemd/system/weewx.service`.
-
-    ```shell
-    cd ~/weewx-data
-    sudo cp util/systemd/weewx.service /etc/systemd/system
-    sudo systemctl daemon-reload
-    sudo systemctl enable weewx
-    sudo systemctl start weewx
     ```
 
 === "macOS"
@@ -199,8 +169,8 @@ install the required daemon file.
 
 ### Verify
 
-After about 5 minutes (the exact length of time depends on your archive interval), cut and
-paste the following into your web browser:
+After about 5 minutes (the exact length of time depends on your archive
+interval), cut and paste the following into your web browser:
 
     ~/weewx-data/public_html/index.html
 
@@ -208,32 +178,35 @@ You should see your station information and data.
 
 You may also want to check your system log for any problems.
 
+
 ## Configure
 
 If you chose the simulator as your station type, then at some point you will
 probably want to switch to using real hardware. Here's how to reconfigure.
 
-=== "Debian/Redhat/openSUSE"
+=== "Systems that use systemd (e.g., Debian, Redhat, SUSE)"
 
     ```shell
+    # Stop the weewx daemon:
     sudo systemctl stop weewx
     # Reconfigure to use your hardware:
     weectl station reconfigure
     # Remove the old database:
     rm ~/weewx-data/archive/weewx.sdb
-    # Restart:
+    # Start the weewx daemon:
     sudo systemctl start weewx
     ```
 
-=== "Very old Debian"
+=== "Systems that use SysV init (e.g., Slackware, Devuan, Puppy, DD-WRT)"
 
     ```shell
+    # Stop the weewx daemon:
     sudo /etc/init.d/weewx stop
     # Reconfigure to use your hardware:
     weectl station reconfigure
     # Remove the old database:
     rm ~/weewx-data/archive/weewx.sdb
-    # Restart:
+    # Start the weewx daemon:
     sudo /etc/init.d/weewx start
     ```
 
@@ -260,7 +233,7 @@ Guide*](../usersguide) and [*Customization Guide*](../custom) for details.
 
 Stop, disable, and remove any daemon files:
 
-=== "Debian/Redhat/openSUSE"
+=== "Systems that use systemd (e.g., Debian, Redhat, SUSE)"
 
     ```shell
     sudo systemctl stop weewx
@@ -268,10 +241,11 @@ Stop, disable, and remove any daemon files:
     sudo rm /etc/systemd/system/weewx.service
     ```
 
-=== "Very old Debian"
+=== "Systems that use SysV init (e.g., Slackware, Devuan, Puppy, DD-WRT)"
 
     ```shell
     sudo /etc/rc.d/init.d/weewx stop
+    sudo update-rc.d weewx remove
     sudo rm /etc/init.d/weewx
     ```
 
@@ -282,15 +256,14 @@ Stop, disable, and remove any daemon files:
     sudo rm /Library/LaunchDaemons/com.weewx.weewxd.plist
     ```
 
-
 Use pip to uninstall the program.
 
 ```shell
 python3 -m pip uninstall weewx -y
 ```
 
-You can also use pip to uninstall the dependencies, but first check that they are
-not being used by other programs!
+You can also use pip to uninstall the dependencies, but first check that they
+are not being used by other programs!
 
 ```shell
 python3 -m pip uninstall pyserial pyusb CT3 Pillow configobj PyMySQL pyephem ephem -y
