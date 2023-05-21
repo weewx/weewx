@@ -216,13 +216,13 @@ probably want to switch to using real hardware. Here's how to reconfigure.
 === "Debian/Redhat/openSUSE"
 
     ```shell
-    sudo systemctl stop
+    sudo systemctl stop weewx
     # Reconfigure to use your hardware:
     weectl station reconfigure
     # Remove the old database:
     rm ~/weewx-data/archive/weewx.sdb
     # Restart:
-    sudo systemctl start
+    sudo systemctl start weewx
     ```
 
 === "Very old Debian"
