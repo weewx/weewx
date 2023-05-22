@@ -67,6 +67,9 @@ example, '3h' for three hours.
 Accumulator `firstlast` no longer coerces values to a string. Thanks to user
 "Karen" for spotting this!
 
+Fixed problem that prevented the astrometric heliocentric longitude of a body
+from being calculated properly.
+
 
 ### 4.10.2 02/22/2023
 

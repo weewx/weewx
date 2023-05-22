@@ -467,7 +467,7 @@ class AlmanacBinder(object):
             observer = _get_observer(self.almanac, self.almanac.time_djd)
             ephem_body.compute(observer)
             if attr in {'az', 'alt', 'a_ra', 'a_dec', 'g_ra', 'ra', 'g_dec', 'dec',
-                        'elong', 'radius', 'hlong', 'hlat', 'sublat', 'sublong'}:
+                        'elong', 'radius', 'hlon', 'hlat', 'sublat', 'sublong'}:
                 # Return the results in degrees rather than radians
                 return math.degrees(getattr(ephem_body, attr))
             elif attr == 'moon_fullness':
