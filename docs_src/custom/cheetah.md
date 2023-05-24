@@ -1697,7 +1697,7 @@ following table:
         <td>radius</td>
     </tr>
     <tr>
-        <td>hlong</td>
+        <td>hlon</td>
         <td>hlat</td>
     </tr>
     <tr>

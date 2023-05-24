@@ -70,6 +70,9 @@ Accumulator `firstlast` no longer coerces values to a string. Thanks to user
 Fixed problem that prevented the astrometric heliocentric longitude of a body
 from being calculated properly.
 
+Default format for azimuth properties (such as wind direction) is now zero
+padded 3 digits. E.g., `005°` instead of `5°`. 
+
 
 ### 4.10.2 02/22/2023
 
