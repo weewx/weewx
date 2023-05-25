@@ -73,6 +73,11 @@ from being calculated properly.
 Default format for azimuth properties (such as wind direction) is now zero
 padded 3 digits. E.g., `005°` instead of `5°`. 
 
+Most almanac properties are now returned as `ValueHelpers`, so they will
+obey local formatting conventions (in particular, decimal separators). To
+avoid breaking old skins, these properties now have new names. For example,
+use `$almanac.venus.altitude` instead of `$almanac.venus.alt`. 
+
 
 ### 4.10.2 02/22/2023
 

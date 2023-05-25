@@ -1509,9 +1509,9 @@ Current time is $current.dateTime
     Sunrise, transit, sunset: $almanac.sun.rise $almanac.sun.transit $almanac.sun.set
     Moonrise, transit, moonset: $almanac.moon.rise $almanac.moon.transit $almanac.moon.set
     Mars rise, transit, set: $almanac.mars.rise $almanac.mars.transit $almanac.mars.set
-    Azimuth, altitude of mars: $almanac.mars.az $almanac.mars.alt
-    Next new, full moon: $almanac.next_new_moon $almanac.next_full_moon
-    Next summer, winter solstice: $almanac.next_summer_solstice $almanac.next_winter_solstice
+    Azimuth, altitude of Mars: $almanac.mars.azimuth $almanac.mars.altitude
+    Next new, full moon: $almanac.next_new_moon; $almanac.next_full_moon
+    Next summer, winter solstice: $almanac.next_summer_solstice; $almanac.next_winter_solstice
 #else
     Sunrise, sunset: $almanac.sunrise $almanac.sunset
 #end if
@@ -1520,13 +1520,13 @@ Current time is $current.dateTime
 If pyephem is installed this would result in:
 
 <div class="example_output">
-Current time is 29-Mar-2011 09:20<br/>
-Sunrise, transit, sunset: 06:51 13:11 19:30<br/>  
-Moonrise, transit, moonset: 04:33 09:44 15:04  <br/>
-Mars rise, transit, set: 06:35 12:30 18:26  <br/>
-Azimuth, altitude of mars: 124.354959275 26.4808431952<br/>  
-Next new, full moon: 03-Apr-2011 07:32 17-Apr-2011 19:43  <br/>
-Next summer, winter solstice: 21-Jun-2011 10:16 21-Dec-2011 21:29<br/>
+Current time is 03-Sep-2010 11:00
+    Sunrise, transit, sunset: 06:29 13:05 19:40
+    Moonrise, transit, moonset: 00:29 08:37 16:39
+    Mars rise, transit, set: 10:12 15:38 21:04
+    Azimuth, altitude of Mars: 111° 08°
+    Next new, full moon: 08-Sep-2010 03:29; 23-Sep-2010 02:17
+    Next summer, winter solstice: 21-Jun-2011 10:16; 21-Dec-2010 15:38
 </div>
 
 Otherwise, a fallback of basic calculations is used, resulting in:
@@ -1558,7 +1558,7 @@ or
 
 or
 
-    $almanac.sidereal_time
+    $almanac.sidereal_angle
 
 Here is a table of the information that falls into this category:
 
@@ -1606,8 +1606,7 @@ Here is a table of the information that falls into this category:
         <td>next_last_quarter_moon</td>
     </tr>
     <tr>
-        <td>sidereal_time</td>
-        <td></td>
+        <td>sidereal_angle</td>
     </tr>
     <tr>
         <td></td>
@@ -1617,7 +1616,8 @@ Here is a table of the information that falls into this category:
 </table>
 
 !!! Note
-    The tag `$almanac.sidereal_time` returns a value in decimal degrees rather than a customary value from 0 to 24 hours.
+    The tag `$almanac.sidereal_angle` returns a value in decimal degrees rather than a more
+    customary value from 0 to 24 hours.
 
 ### Heavenly bodies
 
@@ -1677,20 +1677,20 @@ following table:
     </caption>
     <tbody class="code">
     <tr>
-        <td>az</td>
-        <td>alt</td>
+        <td>azimuth</td>
+        <td>altitude</td>
     </tr>
     <tr>
-        <td>a_ra</td>
-        <td>a_dec</td>
+        <td>astro_ra</td>
+        <td>astro_dec</td>
     </tr>
     <tr>
-        <td>g_ra</td>
-        <td>ra</td>
+        <td>geo_ra</td>
+        <td>topo_ra</td>
     </tr>
     <tr>
-        <td>g_dec</td>
-        <td>dec</td>
+        <td>geo_dec</td>
+        <td>topo_dec</td>
     </tr>
     <tr>
         <td>elong</td>
@@ -1736,7 +1736,7 @@ following table:
 </table>
 
 !!! Note
-    The tags `ra`, `a_ra` and `g_ra` return values in decimal degrees rather than customary values from 0 to 24 hours.
+    The tags `topo_ra`, `astro__ra` and `geo_ra` return values in decimal degrees rather than customary values from 0 to 24 hours.
 
 ### Functions
 

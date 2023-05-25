@@ -14,6 +14,7 @@
 import json
 import locale
 import logging
+import math
 import time
 
 import weeutil.weeutil
@@ -254,6 +255,7 @@ agg_group = {
 USUnits = ListOfDicts({
     "group_altitude"    : "foot",
     "group_amp"         : "amp",
+    "group_angle"       : "degree_angle",
     "group_boolean"     : "boolean",
     "group_concentration": "microgram_per_meter_cubed",
     "group_count"       : "count",
@@ -293,6 +295,7 @@ USUnits = ListOfDicts({
 MetricUnits = ListOfDicts({
     "group_altitude"    : "meter",
     "group_amp"         : "amp",
+    "group_angle"       : "degree_angle",
     "group_boolean"     : "boolean",
     "group_concentration": "microgram_per_meter_cubed",
     "group_count"       : "count",
@@ -358,6 +361,7 @@ conversionDict = {
     'day'              : {'second'           : lambda x : x * SECS_PER_DAY,
                           'minute'           : lambda x : x*1440.0,
                           'hour'             : lambda x : x*24.0},
+    'degree_angle'     : {'radian'           : math.radians},
     'degree_C'         : {'degree_F'         : CtoF,
                           'degree_E'         : CtoE,
                           'degree_K'         : CtoK},
@@ -466,6 +470,7 @@ conversionDict = {
                           'mbar_per_hour'    : lambda x : x / 0.75006168,
                           'hPa_per_hour'     : lambda x : x / 0.75006168,
                           'kPa_per_hour'     : lambda x : x / 7.5006168},
+    'radian'           : {'degree_angle'     : math.degrees},
     'second'           : {'hour'             : lambda x : x/3600.0,
                           'minute'           : lambda x : x/60.0,
                           'day'              : lambda x : x / SECS_PER_DAY},

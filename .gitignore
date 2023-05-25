@@ -7,6 +7,7 @@ __pycache__
 venv
 
 # Include all of .idea in the repository except ...
+.idea/misc.xml
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/dictionary/*

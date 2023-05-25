@@ -274,6 +274,14 @@ unit system.
         <td>amp</td>
     </tr>
     <tr>
+        <td class="first_col">group_angle</td>
+        <td></td>
+        <td>degree_angle<br/>radian</td>
+        <td>degree_angle</td>
+        <td>degree_angle</td>
+        <td>degree_angle</td>
+    </tr>
+    <tr>
         <td class="first_col">group_boolean</td>
         <td></td>
         <td>boolean</td>

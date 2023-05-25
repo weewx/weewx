@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -8,12 +8,10 @@
 This module can optionally use PyEphem, which offers high quality
 astronomical calculations. See http://rhodesmill.org/pyephem. """
 
-from __future__ import absolute_import
-from __future__ import print_function
-import time
-import sys
-import math
 import copy
+import math
+import sys
+import time
 
 import weeutil.Moon
 import weewx.units
@@ -104,11 +102,15 @@ class Almanac(object):
     
     Finally, try a star
     >>> print("Rigel rise, transit, set: %s, %s, %s" % (almanac.rigel.rise, almanac.rigel.transit, almanac.rigel.set))
-    Rigel rise, transit, set: 12:32:33, 18:00:38, 23:28:43
+    Rigel rise, transit, set: 12:32:32, 18:00:38, 23:28:43
 
-    Exercise sidereal time
+    Exercise sidereal time...
     >>> print("%.4f" % almanac.sidereal_time)
     348.3400
+
+    ... and angle
+    >>> print(almanac.sidereal_angle)
+    348°
 
     Exercise equinox, solstice routines
     >>> print(almanac.next_vernal_equinox)
@@ -136,6 +138,12 @@ class Almanac(object):
     >>> print("Moon azimuth, altitude = (%.2f, %.2f)" % (almanac.moon.az, almanac.moon.alt))
     Moon azimuth, altitude = (133.55, 47.89)
     
+    Again, but returning ValueHelpers
+    >>> print("Solar azimuth, altitude = (%s, %s)" % (almanac.sun.azimuth, almanac.sun.altitude))
+    Solar azimuth, altitude = (154°, 44°)
+    >>> print("Moon azimuth, altitude = (%s, %s)" % (almanac.moon.azimuth, almanac.moon.altitude))
+    Moon azimuth, altitude = (134°, 48°)
+
     Try a time and location where the sun is always up
     >>> t = 1371044003
     >>> print(timestamp_to_string(t))
@@ -205,27 +213,22 @@ class Almanac(object):
         Args:
 
             time_ts (int): A unix epoch timestamp with the time of the almanac. If None, the
-            present time will be used.
-
+                present time will be used.
             lat (float): Observer's latitude in degrees.
-
             lon (float): Observer's longitude in degrees.
-
-            altitude: (float) Observer's elevation in **meters**. [Optional. Default is 0 (sea level)]
-
-            temperature (float): Observer's temperature in **degrees Celsius**. [Optional. Default is 15.0]
-
-            pressure (float): Observer's atmospheric pressure in **mBars**. [Optional. Default is 1010]
-
-            horizon (float): Angle of the horizon in degrees [Optional. Default is zero]
-
+            altitude: (float|None) Observer's elevation in **meters**. [Optional. Default
+                is 0 (sea level)]
+            temperature (float|None): Observer's temperature in **degrees Celsius**.
+                [Optional. Default is 15.0]
+            pressure (float|None): Observer's atmospheric pressure in **mBars**.
+                [Optional. Default is 1010]
+            horizon (float|None): Angle of the horizon in degrees [Optional. Default is zero]
             moon_phases (list): An array of 8 strings with descriptions of the moon
-            phase. [optional. If not given, then weeutil.Moon.moon_phases will be used]
-
-            formatter (weewx.units.Formatter): An instance of weewx.units.Formatter() with the formatting information
-            to be used.
-
-            converter (weewx.units.Converter): An instance of weewx.units.Converter with the conversion information to be used.
+                phase. [optional. If not given, then weeutil.Moon.moon_phases will be used]
+            formatter (weewx.units.Formatter|None): An instance of weewx.units.Formatter
+                with the formatting information to be used.
+            converter (weewx.units.Converter|None): An instance of weewx.units.Converter
+                with the conversion information to be used.
         """
         self.time_ts = time_ts if time_ts else time.time()
         self.lat = lat
@@ -339,13 +342,21 @@ class Almanac(object):
                                            context="ephem_year",
                                            formatter=self.formatter,
                                            converter=self.converter)
-        # Check to see if the attribute is sidereal time
-        elif attr == 'sidereal_time':
-            # sidereal time is obtained from an ephem Observer method, first get
-            # an Observer object
+        # Check to see if the attribute is a sidereal angle
+        elif attr == 'sidereal_time' or attr == 'sidereal_angle':
+            # sidereal time is obtained from an ephem Observer object...
             observer = _get_observer(self, self.time_djd)
-            # Then call the method returning the result in degrees
-            return math.degrees(getattr(observer, attr)())
+            # ... then get the angle in degrees ...
+            val = math.degrees(observer.sidereal_time())
+            # ... finally, depending on the attribute name, pick the proper return type:
+            if attr == 'sidereal_time':
+                return val
+            else:
+                vt = ValueTuple(val, 'degree_compass', 'group_direction')
+                return weewx.units.ValueHelper(vt,
+                                               context = 'ephem_day',
+                                               formatter=self.formatter,
+                                               converter=self.converter)
         else:
             # The attribute must be a heavenly body (such as 'sun', or 'jupiter').
             # Bind the almanac and the heavenly body together and return as an
@@ -361,6 +372,9 @@ fn_map = {'rise': 'next_rising',
 class AlmanacBinder(object):
     """This class binds the observer properties held in Almanac, with the heavenly
     body to be observed."""
+
+    pyephem_map = {'azimuth': 'az', 'altitude': 'alt', 'astro_ra': 'a_ra', 'astro_dec': 'a_dec',
+                   'geo_ra': 'g_ra', 'geo_dec': 'g_dec', 'topo_ra': 'ra', 'topo_dec': 'dec'}
 
     def __init__(self, almanac, heavenly_body):
         self.almanac = almanac
@@ -421,8 +435,8 @@ class AlmanacBinder(object):
         if attr.startswith('__') or attr in ['mro', 'im_func', 'func_code']:
             raise AttributeError(attr)
 
-        # Many of these functions have the unfortunate side effect of changing the state of the body
-        # being examined. So, create a temporary body and then throw it away
+        # Many of these functions have the unfortunate side effect of changing the state of the
+        # body being examined. So, create a temporary body and then throw it away
         ephem_body = _get_ephem_body(self.heavenly_body)
 
         if attr in ['rise', 'set', 'transit']:
@@ -466,14 +480,33 @@ class AlmanacBinder(object):
             # These functions need the current time in Dublin Julian Days
             observer = _get_observer(self.almanac, self.almanac.time_djd)
             ephem_body.compute(observer)
-            if attr in {'az', 'alt', 'a_ra', 'a_dec', 'g_ra', 'ra', 'g_dec', 'dec',
-                        'elong', 'radius', 'hlon', 'hlat', 'sublat', 'sublong'}:
-                # Return the results in degrees rather than radians
+            # V5.0 changed the name of some attributes, so they could be returned as
+            # a ValueHelper, instead of a floating point number. This would break existing skins,
+            # so new attribute names are being used.
+            if attr in {'azimuth', 'altitude', 'astro_ra', 'astro_dec',
+                        'geo_ra', 'geo_dec', 'topo_ra', 'topo_dec', 'elong', 'radius',
+                        'hlon', 'hlat', 'sublat', 'sublong'}:
+                # Map the name to the name pyephem uses...
+                pyephem_name = AlmanacBinder.pyephem_map.get(attr, attr)
+                # ... then calculate the value in radians ...
+                val = getattr(ephem_body, pyephem_name)
+                # ... form the proper ValueTuple ...
+                if attr in {'azimuth', 'astro_ra', 'geo_ra', 'topo_ra', 'hlon', 'sublong'}:
+                    vt = ValueTuple(math.degrees(val), 'degree_compass', 'group_direction')
+                else:
+                    vt = ValueTuple(val, 'radian', 'group_angle')
+                # ... and, finally, return the ValueHelper:
+                return weewx.units.ValueHelper(vt,
+                                               context="ephem_day",
+                                               formatter=self.almanac.formatter,
+                                               converter=self.almanac.converter)
+            elif attr in {'az', 'alt', 'a_ra', 'a_dec', 'g_ra', 'ra', 'g_dec', 'dec',}:
+                # These are the old names, which return a floating point number in decimal degrees.
                 return math.degrees(getattr(ephem_body, attr))
             elif attr == 'moon_fullness':
-                # The attribute "moon_fullness" is the percentage of the moon surface that is illuminated.
-                # Unfortunately, phephem calls it "moon_phase", so call ephem with that name.
-                # Return the result in percent.
+                # The attribute "moon_fullness" is the percentage of the moon surface that is
+                # illuminated. Unfortunately, phephem calls it "moon_phase", so call ephem with
+                # that name. Return the result in percent.
                 return 100.0 * ephem_body.moon_phase
             else:
                 # Just return the result unchanged. This will raise an AttributeError exception
