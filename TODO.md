@@ -1,7 +1,6 @@
 # To do
 
-Almanac values for right ascension, declination, etc. need to be returned as `ValueHelper`.
-
+Package `pyephem` is now called simply `ephem` in pypi.org.
 
 
 ## Debian packaging

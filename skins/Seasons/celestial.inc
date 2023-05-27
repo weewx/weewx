@@ -7,8 +7,8 @@
 ## If extended almanac information is available, do extra calculations.
 #if $almanac.hasExtras
   ## Pick a "None string" on the basis of whether the sun is above or below the horizon
-  #set $sun_altitude = $almanac.sun.alt
-  #if $sun_altitude < 0
+  #set $sun_altitude = $almanac.sun.altitude
+  #if $sun_altitude.raw < 0
     #set $sun_None='<i>%s</i>' % $gettext("Always down")
   #else
     #set $sun_None='<i>%s</i>' % $gettext("Always up")
@@ -56,19 +56,19 @@
           </tr>
           <tr>
             <td class="label">$gettext("Azimuth")</td>
-            <td class="data">$("%.1f&deg;" % $almanac.sun.az)</td>
+            <td class="data">$almanac.sun.azimuth.format("%03.1f")</td>
           </tr>
           <tr>
             <td class="label">$pgettext("Astronomical", "Altitude")</td>
-            <td class="data">$("%.1f&deg;" % $sun_altitude)</td>
+            <td class="data">$sun_altitude.format("%.1f")</td>
           </tr>
           <tr>
             <td class="label">$gettext("Right ascension")</td>
-            <td class="data">$("%.1f&deg;" % $almanac.sun.ra)</td>
+            <td class="data">$almanac.sun.topo_ra.format("%03.1f")</td>
           </tr>
           <tr>
             <td class="label">$gettext("Declination")</td>
-            <td class="data">$("%.1f&deg;" % $almanac.sun.dec)</td>
+            <td class="data">$almanac.sun.topo_dec.format("%.1f")</td>
           </tr>
           #if $almanac.next_equinox.raw < $almanac.next_solstice.raw
             ## The equinox is before the solstice. Display them in order.
@@ -116,19 +116,19 @@
           <tr><td class="label">&nbsp;</td><td class="data">&nbsp;</td></tr>
           <tr>
             <td class="label">$gettext("Azimuth")</td>
-            <td class="data">$("%.1f&deg;" % $almanac.moon.az)</td>
+            <td class="data">$almanac.moon.azimuth.format("%.1f)</td>
           </tr>
           <tr>
             <td class="label">$pgettext("Astronomical", "Altitude")</td>
-            <td class="data">$("%.1f&deg;" % $almanac.moon.alt)</td>
+            <td class="data">$almanac.moon.altitude.format("%.1f)</td>
           </tr>
           <tr>
             <td class="label">$gettext("Right ascension")</td>
-            <td class="data">$("%.1f&deg;" % $almanac.moon.ra)</td>
+            <td class="data">$almanac.moon.topo_ra.format("%.1f")</td>
           </tr>
           <tr>
             <td class="label">$gettext("Declination")</td>
-            <td class="data">$("%.1f&deg;" % $almanac.moon.dec)</td>
+            <td class="data">$almanac.moon.topo_dec.format("%.1f")</td>
           </tr>
           #if $almanac.next_full_moon.raw < $almanac.next_new_moon.raw
             <tr>
