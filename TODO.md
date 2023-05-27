@@ -1,6 +1,5 @@
 # To do
 
-Package `pyephem` is now called simply `ephem` in pypi.org.
 
 
 ## Debian packaging

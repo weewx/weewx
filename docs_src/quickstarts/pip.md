@@ -26,7 +26,7 @@ your system:
     sudo apt update && sudo apt upgrade
     sudo apt -y install gcc
     sudo apt -y install python3-dev
-    # This makes the install of pyephem go more smoothly:
+    # This makes the install of ephem go more smoothly:
     python3 -m pip install wheel
     ```
 
@@ -36,7 +36,7 @@ your system:
     sudo yum update
     sudo yum install -y gcc
     sudo yum install -y python3-devel
-    # This makes the install of pyephem go more smoothly:
+    # This makes the install of ephem go more smoothly:
     python3 -m pip install wheel
     ```
 
@@ -274,7 +274,7 @@ You can also use pip to uninstall the dependencies, but first check that they
 are not being used by other programs!
 
 ```shell
-python3 -m pip uninstall pyserial pyusb CT3 Pillow configobj PyMySQL pyephem ephem -y
+python3 -m pip uninstall pyserial pyusb CT3 Pillow configobj PyMySQL ephem ephem -y
 ```
 
 Finally, if desired, delete the data directory:
