@@ -20,6 +20,9 @@ Package installs now use systemd instead of the old System V `/etc/init.d`.
 Removed all references to the deprecated package `distutils`, which is due to
 be removed in Python v3.12.
 
+Removed the utility `wunderfixer`. The Weather Underground seems to no longer
+allow posting past-dated records.
+
 Documentation now uses [MkDocs](https://www.mkdocs.org/).
 
 Logging handler `rotate` has been removed. Its need to access a privileged

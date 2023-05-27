@@ -259,10 +259,6 @@ Set to your Weather Underground station ID (e.g., `KCASANFRA11`). Required.
 
 Set to your Weather Underground password. Required.
 
-#### api_key
-
-Set to your [Weather Underground API key](https://www.wunderground.com/member/api-keys). This is needed only if you plan on using the utility [wunderfixer](../../../utilities/utilities.htm#wunderfixer_utility).
-
 #### rapidfire
 
 Set to `true` to have WeeWX post using the [Weather Underground's "Rapidfire" protocol](https://www.wunderground.com/weatherstation/rapidfirehelp.asp). This will send a post to the WU site with every LOOP packet, which can be as often as every 2.5 seconds in the case of the Vantage instruments. Not all instruments support this. Optional. Default is `false`.

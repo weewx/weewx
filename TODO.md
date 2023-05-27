@@ -27,8 +27,6 @@ How to upgrade from V4 using Python 2, to V5 using Python 3.
 Lot of inconsistencies in how the path to the config file is handled. Some utilities accept a
 command line option, others require `--config=`.
 
-Remove wunderfixer and its documentation.
-
 ## Logging
 
 Consider making `$HOME/weewx-data/logs` the default log for MacOS.

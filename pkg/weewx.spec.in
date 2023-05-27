@@ -62,7 +62,7 @@
 %global cfg_file     %{dst_cfg_dir}/weewx.conf
 %global dst_user_dir %{dst_bin_dir}/user
 
-%define entry_points weewxd wee_config wee_database wee_debug wee_device wee_extension wee_import wee_reports wunderfixer
+%define entry_points weewxd wee_config wee_database wee_debug wee_device wee_extension wee_import wee_reports
 
 Summary: weather software
 Name: weewx
@@ -220,7 +220,6 @@ rm -rf %{buildroot}
 %{_bindir}/wee_extension
 %{_bindir}/wee_import
 %{_bindir}/wee_reports
-%{_bindir}/wunderfixer
 %doc %{dst_doc_dir}/
 %config(noreplace) %{dst_cfg_dir}/
 %config(noreplace) %{dst_user_dir}/extensions.py

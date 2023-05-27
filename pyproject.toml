@@ -41,7 +41,6 @@ packages = [
     { include = "wee_reports.py", from = "bin" },
     { include = "weectl.py", from = "bin" },
     { include = "weewxd.py", from = "bin" },
-    { include = "wunderfixer.py", from = "bin" },
 ]
 
 include = [
@@ -79,7 +78,6 @@ wee_import = 'wee_import:main'
 wee_reports = 'wee_reports:main'
 weectl = 'weectl:main'
 weewxd = 'weewxd:main'
-wunderfixer = 'wunderfixer:main'
 
 [build-system]
 # Minimum requirements for the build system to execute.
