@@ -116,11 +116,11 @@
           <tr><td class="label">&nbsp;</td><td class="data">&nbsp;</td></tr>
           <tr>
             <td class="label">$gettext("Azimuth")</td>
-            <td class="data">$almanac.moon.azimuth.format("%.1f)</td>
+            <td class="data">$almanac.moon.azimuth.format("%.1f")</td>
           </tr>
           <tr>
             <td class="label">$pgettext("Astronomical", "Altitude")</td>
-            <td class="data">$almanac.moon.altitude.format("%.1f)</td>
+            <td class="data">$almanac.moon.altitude.format("%.1f")</td>
           </tr>
           <tr>
             <td class="label">$gettext("Right ascension")</td>
@@ -158,7 +158,7 @@
       </div>
     </div>
   #else
-    <p>Install <em>pyephem</em> for detailed celestial timings.</p>
+    <p>Install <a href="https://pypi.org/project/ephem/"><em>ephem</em></a> for detailed celestial timings.</p>
   #end if
   </div>
 </div>
