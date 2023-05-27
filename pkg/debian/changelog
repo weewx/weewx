@@ -1,3 +1,10 @@
+weewx (5.0.0b3-1) unstable; urgency=low
+  * Update version numbers
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Sat, 27 May 2023 08:03:33 -0700
+weewx (5.0.0b2-1) unstable; urgency=low
+  * Remove utility wunderfixer.
+  * Most almanac attributes now return a ValueHelper.
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Sat, 27 May 2023 05:07:43 -0700
 weewx (5.0.0b1-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 06 May 2023 07:35:56 -0400
