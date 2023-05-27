@@ -74,7 +74,7 @@ The skin contains three different kinds of generated output:
 
 1.  Summary by Month (line 9). The skin uses `SummaryByMonth` to produce NOAA summaries, one for each month, as a simple text file.
 2.  Summary by Year (line 15). The skin uses `SummaryByYear` to produce NOAA summaries, one for each year, as a simple text file.
-3.  Summary "To Date" (line 21). The skin produces an HTML `index.html` page, as well as HTML files for detailed statistics, telemetry, and celestial information. It also includes a master page (`tabular.html`) in which NOAA information is displayed. All these files are HTML.
+3.  Section "To Date" (line 21). The skin produces an HTML `index.html` page, as well as HTML files for detailed statistics, telemetry, and celestial information. It also includes a master page (`tabular.html`) in which NOAA information is displayed. All these files are HTML.
 
 Because the option
 
@@ -82,7 +82,7 @@ Because the option
 
 appears directly under `[StdReport]`, this will be the default encoding of the generated files unless explicitly overridden. We see an example of this under `[SummaryByMonth]` and `[SummaryByYear]`, which use option `normalized_ascii` instead of `html_entities`. This encoding replaces accented characters with a non-accented analog.
 
-Other than `SummaryByMonth` and `SummaryByYear`, the section names are arbitrary. The section `ToDate` could just as well have been called `files_to_date`, and the sections `index`, `statistics`, and `telemetry` could just as well have been called `tom`, `dick`, and `harry`.
+Other than `SummaryByMonth` and `SummaryByYear`, the section names are arbitrary. The section `[[ToDate]]` could just as well have been called `[[files_to_date]]`, and the sections `[[[index]]]`, `[[[statistics]]]`, and `[[[telemetry]]]` could just as well have been called `[[[tom]]]`, `[[[dick]]]`, and `[[[harry]]]`.
 
 ### `[[SummaryByYear]]`
 
@@ -219,15 +219,15 @@ Formally, for current observations, WeeWX first looks for the observation type i
 
 The most general tag for a "current" observation looks like:
 
-    $current($timestamp=some_time, $max_delta=delta_t,$data_binding=binding_name).obstype[.optional_unit_conversion][.optional_rounding][.optional_formatting]
+    $current(timestamp=some_time, max_delta=delta_t,data_binding=binding_name).obstype[.optional_unit_conversion][.optional_rounding][.optional_formatting]
 
 Where:
 
-_`$timestamp`_ is a timestamp that you want to display in unix epoch time. It is optional, The default is to display the value for the current time.
+_`timestamp`_ is a timestamp that you want to display in unix epoch time. It is optional, The default is to display the value for the current time.
 
-_`$max_delta`_ is the largest acceptable time difference (in seconds) between the time specified by `$timestamp` and a record's timestamp in the database. By default, it is zero, which means there must be an exact match with a specified time for a record to be retrieved. If it were `30`, then a record up to 30 seconds away would be acceptable.
+_`max_delta`_ is the largest acceptable time difference (in seconds) between the time specified by `timestamp` and a record's timestamp in the database. By default, it is zero, which means there must be an exact match with a specified time for a record to be retrieved. If it were `30`, then a record up to 30 seconds away would be acceptable.
 
-_`$data_binding`_ is a _binding name_ to a database. An example would be `wx_binding`. See the section _[Binding names](../../custom#binding-names)_ for more details.
+_`data_binding`_ is a _binding name_ to a database. An example would be `wx_binding`. See the section _[Binding names](../../custom#binding-names)_ for more details.
 
 _`obstype`_ is an observation type, such as `barometer`. This type must appear either as a field in the database, or in the current (usually, the latest) record.
 
@@ -251,19 +251,19 @@ represents an _aggregation over time_, using a certain _aggregation type_. In th
 
 The most general tag for an aggregation over time looks like:
 
-    $period($data_binding=binding_name, $optional_ago=_delta).statstype.aggregation[.optional_unit_conversion][.optional_rounding][.optional_formatting]
+    $period(data_binding=binding_name, optional_ago=delta).statstype.aggregation[.optional_unit_conversion][.optional_rounding][.optional_formatting]
 
 Where:
 
-_`period`_ is the time period over which the aggregation is to be done. Possible choices are listed in the [table below](#aggregation_periods).
+_`period`_ is the _aggregation period_ over which the aggregation is to be done. Possible choices are listed in the [table below](#aggregation_periods).
 
 _`data_binding`_ is a _binding name_ to a database. An example would be `wx_binding`. See the section _[Binding names](../../custom#binding-names)_ for more details.
 
 _`optional_ago`_ is a keyword that depends on the aggregation period. For example, for week, it would be `weeks_ago`, for day, it would be `days_ago`, _etc._
 
-_`delta`_ is an integer indicating which aggregation period is desired. For example `$week($weeks_ago=1)` indicates last week, `$day($days_ago=2)` would be the day-before-yesterday, _etc_. The default is zero: that is, this aggregation period.
+_`delta`_ is an integer indicating which aggregation period is desired. For example `$week(weeks_ago=1)` indicates last week, `$day(days_ago=2)` would be the day-before-yesterday, _etc_. The default is zero: that is, this aggregation period.
 
-_`statstype`_ is a _statistical type_. This is generally any observation type that appears in the database, as well as a few synthetic types (such as heating and cooling degree-days). Not all aggregations are supported for all types.
+_`statstype`_ is a _statistical type_. This is generally any observation type that appears in the database (such as `outTemp` or `windSpeed`), as well as a few synthetic types (such as heating and cooling degree-days). Not all aggregations are supported for all types.
 
 _`aggregation`_ is an _aggregation type_. If you ask for `$month.outTemp.avg` you are asking for the _average_ outside temperature for the month. Possible aggregation types are given in _[Appendix: Aggregation types](../appendix/#aggregation_types)_.
 
@@ -345,7 +345,7 @@ There are several _aggregation periods_ that can be used:
     </tbody>
 </table>
 
-The _`$optional_ago`_ parameters can be useful for statistics farther in the past. Here are some examples:
+The "_`optional_ago`_" parameters can be useful for statistics farther in the past. Here are some examples:
 
 <table class="indent">
     <tbody>
@@ -355,34 +355,34 @@ The _`$optional_ago`_ parameters can be useful for statistics farther in the pas
         <td>Meaning</td>
     </tr>
     <tr>
-        <td class="first_col code">$hour($hours_ago=<em>h</em>)
+        <td class="first_col code">$hour(hours_ago=<em>h</em>)
         </td>
-        <td class="code">$hour($hours_ago=1).outTemp.avg</td>
+        <td class="code">$hour(hours_ago=1).outTemp.avg</td>
         <td>The average temperature last hour (1 hour ago).</td>
     </tr>
     <tr>
-        <td class="first_col code">$day($days_ago=<em>d</em>)
+        <td class="first_col code">$day(days_ago=<em>d</em>)
         </td>
-        <td class="code">$day($days_ago=2).outTemp.avg</td>
+        <td class="code">$day(days_ago=2).outTemp.avg</td>
         <td>The average temperature day before yesterday (2 days ago).
         </td>
     </tr>
     <tr>
-        <td class="first_col code">$week($weeks_ago=<em>d</em>)
+        <td class="first_col code">$week(weeks_ago=<em>w</em>)
         </td>
-        <td class="code">$week($weeks_ago=1).outTemp.max</td>
+        <td class="code">$week(weeks_ago=1).outTemp.max</td>
         <td>The maximum temperature last week.</td>
     </tr>
     <tr>
-        <td class="first_col code">$month($months_ago=<em>m</em>)
+        <td class="first_col code">$month(months_ago=<em>m</em>)
         </td>
-        <td class="code">$month($months_ago=1).outTemp.max</td>
+        <td class="code">$month(months_ago=1).outTemp.max</td>
         <td>The maximum temperature last month.</td>
     </tr>
     <tr>
-        <td class="first_col code">$year($years_ago=<em>m</em>)
+        <td class="first_col code">$year(years_ago=<em>y</em>)
         </td>
-        <td class="code">$year($years_ago=1).outTemp.max</td>
+        <td class="code">$year(years_ago=1).outTemp.max</td>
         <td>The maximum temperature last year.</td>
     </tr>
     </tbody>
@@ -895,7 +895,7 @@ The tag `$trend` is available for time trends, such as changes in barometric pre
 | Tag                                  | Results    |
 |--------------------------------------|------------|
 | `$trend.barometer`                   | -.05 inHg  |
-| `$trend($time_delta=3600).barometer` | -.02 inHg  |
+| `$trend(time_delta=3600).barometer` | -.02 inHg  |
 | `$trend.outTemp`                     | 1.1 °C     |
 | `$trend.time_delta`                  | 10800 secs |
 | `$trend.time_delta.hour`             | 3 hrs      |
@@ -928,7 +928,7 @@ Where:
 
 _`binding_name`_ is a _binding name_ to a database. An example would be `wx_binding`. See the section _[Binding names](../../custom#binding-names)_ for more details.
 
-_`optional_delta_=delta`_ is one or more comma separated delta settings from the table below. If more than one delta setting is included then the period used for the aggregate is the sum of the individual delta settings. If no delta setting is included, or all included delta settings are zero, the returned aggregate is based on the current obstype only.
+_`optional_delta=delta`_ is one or more comma separated delta settings from the table below. If more than one delta setting is included then the period used for the aggregate is the sum of the individual delta settings. If no delta setting is included, or all included delta settings are zero, the returned aggregate is based on the current obstype only.
 
 _`boundary`_ is an optional specifier that can force the starting time to a time boundary. If set to 'midnight', then the starting time will be at the previous midnight. If left out, then the start time will be the sum of the optional deltas.
 
@@ -950,26 +950,26 @@ There are several delta settings that can be used:
         <td>Meaning</td>
     </tr>
     <tr>
-        <td class="first_col code">$time_delta=<em>seconds</em></td>
-        <td class="code">$span($time_delta=1800).outTemp.avg</td>
+        <td class="first_col code">time_delta=<em>seconds</em></td>
+        <td class="code">$span(time_delta=1800).outTemp.avg</td>
         <td>The average temperature over the last immediate 30 minutes (1800 seconds).
         </td>
     </tr>
     <tr>
-        <td class="first_col code">$hour_delta=<em>hours</em></td>
-        <td class="code">$span($hour_delta=6).outTemp.avg</td>
+        <td class="first_col code">hour_delta=<em>hours</em></td>
+        <td class="code">$span(hour_delta=6).outTemp.avg</td>
         <td>The average temperature over the last immediate 6 hours.
         </td>
     </tr>
     <tr>
-        <td class="first_col code">$day_delta=<em>days</em></td>
-        <td class="code">$span($day_delta=1).rain.sum</td>
+        <td class="first_col code">day_delta=<em>days</em></td>
+        <td class="code">$span(day_delta=1).rain.sum</td>
         <td>The total rainfall over the last immediate 24 hours.
         </td>
     </tr>
     <tr>
-        <td class="first_col code">$week_delta=<em>weeks</em></td>
-        <td class="code">$span($week_delta=2).barometer.max</td>
+        <td class="first_col code">week_delta=<em>weeks</em></td>
+        <td class="code">$span(week_delta=2).barometer.max</td>
         <td>The maximum barometric pressure over the last immediate 2 weeks.
         </td>
     </tr>
