@@ -1,7 +1,6 @@
 # To do
 
 
-
 ## Debian packaging
 
 Right now, the depository is for a "squeeze" and "buster" distribution. Do we keep adding them

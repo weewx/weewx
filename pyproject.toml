@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "weewx"
 version = "5.0.0b3"
-description = "The WeeWX weather software system. This is an ALPHA release, and is likely to be unstable!"
+description = "The WeeWX weather software system. This is an BETA release, and may have many bugs!"
 authors = ["Tom Keffer <tkeffer@gmail.com>"]
 license = "GPL3"
 readme = 'README.md'
@@ -68,7 +68,6 @@ ephem = "^4.1"
 PyMySQL = {extras = ["rsa"], version = "^1.0"}
 pyserial = "^3.4"
 pyusb = "^1.0.2"
-six = "^1"
 
 [tool.poetry.scripts]
 wee_database = 'wee_database:main'
