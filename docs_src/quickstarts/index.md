@@ -1,15 +1,15 @@
-Quick start guides to help you get WeeWX up and running.
-
-For more details, see the section [*Installation*](../usersguide/installing-weewx/#installation-overview) in the User's Guide.
+The quick start guides have step-by-step instructions for installing WeeWX on
+various operating systems.  For detailed installation, configuration, and
+operating instructions, see the [User's Guide](../usersguide/).
 
 ### [Debian](./debian) 
-For Debian-based systems such as Ubuntu, Mint, Raspberry Pi OS, *etc*.
+For systems based on Debian such as Ubuntu, Mint, and Raspberry Pi OS.
 
 ### [Red Hat](./redhat)
-For Red Hat based systems such as Red Hat, CentOS, Fedora, Rocky, *etc*.
+For systems based on Redhat such as Fedora, CentOS, and Rocky.
 
 ### [openSUSE](./suse)
-For SUSE-based systems such as SUSE and openSUSE.
+For systems based on SUSE such as openSUSE.
 
 ### [Pip](./pip)
-For all operating systems, including macOS.
+For all operating systems, including macOS and *BSD.
