@@ -143,3 +143,26 @@ function openTab(evt, contentSelector) {
     $(evt.currentTarget).addClass('selected');
 
 }
+
+function declare_obsolete() {
+    /*
+     * This function adds a warning that a webpage is obsolete. To use it, simply call the
+     * function. For example, you could use this in the <head> section:
+        <script>
+            $(function () {
+                declare_obsolete();
+            })
+        </script>
+     */
+    let locn = document.getElementsByClassName('main');
+    if (locn) {
+        const obsolete_text = "<p>This document is for an old version of " +
+            "WeeWX that is no longer supported. " +
+            "You should upgrade to the latest version.</p>";
+
+        let tmp = document.createElement('div');
+        tmp.setAttribute('class', 'warning');
+        tmp.innerHTML = obsolete_text;
+        locn[0].prepend(tmp);
+    }
+}
