@@ -6,7 +6,7 @@
 SIGN=1
 
 # WWW server
-WEEWX_COM=weewx.com
+WEEWX_COM:=weewx.com
 
 # location of the html documentation
 WEEWX_HTMLDIR=/var/www/html
@@ -188,7 +188,7 @@ check-docs:
 
 # upload docs to the web site
 upload-docs: $(DOC_BUILT)
-	rsync -Orv $(DOC_BUILT)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/v5-docs
+	rsync -Orv $(DOC_BUILT)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/$(MMVERSION)
 
 
 ###############################################################################
