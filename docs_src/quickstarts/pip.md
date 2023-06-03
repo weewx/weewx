@@ -13,7 +13,7 @@ be used to install WeeWX on almost any operating system, including macOS.
   offer an [installation package](https://packaging.python.org/en/latest/guides/installing-using-linux-tools/).
   Otherwise, [see the directions on the pip website](https://pip.pypa.io/en/stable/installation/).
 
-- While you will not need root privileges to install and configure WeeWX, you
+- Although you do not need root privileges to install and configure WeeWX, you
   will need them to set up a daemon and, perhaps, to change device permissions.
 
 Depending on your operating system and what has already been installed, you may
@@ -40,7 +40,7 @@ your system:
     python3 -m pip install wheel
     ```
 
-=== "openSUSE Leap"
+=== "SUSE"
 
     ```shell
     # Check to see what version of Python you have:
@@ -74,14 +74,14 @@ There are many ways to do this (see the wiki document [pip
 install strategies](https://github.com/weewx/weewx/wiki/pip-install-strategies)
 for a partial list), but the method below is one of the simplest and safest.
 
+```shell
+python3 -m pip install weewx --user
+```
+
 !!! Note
     While not strictly necessary, it's a good idea to invoke pip using
     `python3 -m pip`, rather than simply `pip`. This way you can be sure which
     version of Python is being used.
-
-```shell
-python3 -m pip install weewx --user
-```
 
 When finished, the WeeWX executables will have been installed in
 `~/.local/bin`, and the libraries in your Python "user" area, generally
@@ -90,8 +90,9 @@ When finished, the WeeWX executables will have been installed in
 !!! Note
     You may get a warning to the effect:
     ```
-    WARNING: The script wheel is installed in '/home/ubuntu/.local/bin' which is not on PATH.
-    Consider adding this directory to PATH or, if you prefer to suppress this warning, use --no-warn-script-location.
+    WARNING: The script wheel is installed in '/home/ubuntu/.local/bin' which
+    is not on PATH.  Consider adding this directory to PATH or, if you prefer
+    to suppress this warning, use --no-warn-script-location.
     ```
     If you do, log out, then log back in.
 
@@ -112,15 +113,21 @@ The tool will ask you a series of questions, then create a directory
 `~/weewx-data` in your home directory with a new configuration file. It will
 also install skins, documentation, utilitiy files, and examples in the same
 directory. After running `weewxd`, the same directory will be used to hold
-the database file and any generated HTML pages. It plays a role similar to
-`/home/weewx` in older versions of WeeWX but, unlike `/home/weewx`, it does
-not hold any code.
+the database file and any generated HTML pages.
 
-If you already have a `/home/weewx` and wish to reuse it, see the [Upgrading
-guide](../upgrading.htm) and the [*Migrating setup.py installs to Version 5*](v5-upgrade.md).
+!!! Note
+    The directory `~/weewx-data` plays a role similar to `/home/weewx` in older
+    versions of WeeWX but, unlike `/home/weewx`, it does not hold any code.
+
+    If you already have a `/home/weewx` and wish to reuse it, see the
+    [Upgrading guide](../upgrading.htm) and the
+    [*Migrating setup.py installs to Version 5*](v5-upgrade.md).
 
 
 ## Run `weewxd`
+
+The program `weewxd` does the data collection, archiving, uploading, and report
+generation.  You can run it directly, or as a daemon.
 
 ### Run directly
 
@@ -134,16 +141,13 @@ weewxd
 
 ### Run as a daemon
 
-To make `weewxd` start when the system is booted, run `weewxd` as a daemon.
+To make weewx start when the system is booted, run `weewxd` as a daemon.
 The steps to configure `weewxd` to run as a damone depend on your operating
 system, and require root privileges.
 
-=== "Systems that use systemd (e.g., Debian, Redhat, SUSE)"
+=== "systemd"
 
-    !!! Note
-        The resulting daemon will be run using your username. If you prefer to
-        use run as `root`, you will have to modify the file
-        `/etc/systemd/system/weewx.service`.
+    Systems that use systemd, e.g., Debian, Redhat, SUSE
 
     ```shell
     sudo cp ~/weewx-data/util/systemd/weewx.service /etc/systemd/system
@@ -151,13 +155,15 @@ system, and require root privileges.
     sudo systemctl enable weewx
     sudo systemctl start weewx
     ```
-    
-=== "Systems that use SysV init (e.g., Slackware, Devuan, Puppy, DD-WRT)"
 
     !!! Note
         The resulting daemon will be run using your username. If you prefer to
         use run as `root`, you will have to modify the file
-        `/etc/init.d/weewx`.
+        `/etc/systemd/system/weewx.service`.
+    
+=== "sysV"
+
+    Systems that use SysV init, e.g., Slackware, Devuan, Puppy, DD-WRT
 
     ```shell
     sudo cp ~/weewx-data/util/init.d/weewx.debian /etc/init.d/weewx
@@ -165,6 +171,11 @@ system, and require root privileges.
     sudo update-rc.d weewx defaults 98
     sudo /etc/init.d/weewx start     
     ```
+
+    !!! Note
+        The resulting daemon will be run using your username. If you prefer to
+        use run as `root`, you will have to modify the file
+        `/etc/init.d/weewx`.
 
 === "macOS"
 
@@ -189,10 +200,12 @@ You may also want to check your system log for any problems.
 ## Configure
 
 If you chose the simulator as your station type, then at some point you will
-probably want to switch to using real hardware. Here's how to reconfigure.
+probably want to switch to using real hardware. This is how to reconfigure.
 
-=== "Systems that use systemd (e.g., Debian, Redhat, SUSE)"
+=== "systemd"
 
+    Systems that use systemd, e.g., Debian, Redhat, SUSE
+ 
     ```shell
     # Stop the weewx daemon:
     sudo systemctl stop weewx
@@ -204,7 +217,9 @@ probably want to switch to using real hardware. Here's how to reconfigure.
     sudo systemctl start weewx
     ```
 
-=== "Systems that use SysV init (e.g., Slackware, Devuan, Puppy, DD-WRT)"
+=== "sysV"
+
+    Systems that use SysV init, e.g., Slackware, Devuan, Puppy, DD-WRT
 
     ```shell
     # Stop the weewx daemon:
@@ -220,20 +235,23 @@ probably want to switch to using real hardware. Here's how to reconfigure.
 === "macOS"
 
     ```shell
+    # Stop the weewx daemon:
     sudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist
     # Reconfigure to use your hardware:
     weectl station reconfigure
     # Remove the old database:
     rm ~/weewx-data/archive/weewx.sdb
-    # Restart:
+    # Start the weewx daemon:
     sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist
     ```
 
 ## Customize
 
-To enable uploads, such as Weather Underground, or to customize reports, modify
-the configuration file `~/weewx-data/weewx.conf`. See the [*User
-Guide*](../usersguide) and [*Customization Guide*](../custom) for details.
+To enable uploads or to customize reports, modify the configuration file
+`~/weewx-data/weewx.conf`. See the [*User Guide*](../usersguide) and
+[*Customization Guide*](../custom) for details.
+
+WeeWX must be restarted for configuration file changes to take effect.
 
 
 ## Uninstall
@@ -241,7 +259,9 @@ Guide*](../usersguide) and [*Customization Guide*](../custom) for details.
 Before you uninstall, be sure that `weewxd` is not running.  Then remove the
 daemon configuration.
 
-=== "Systems that use systemd (e.g., Debian, Redhat, SUSE)"
+=== "systemd"
+
+    Systems that use systemd, e.g., Debian, Redhat, SUSE
 
     ```shell
     sudo systemctl stop weewx
@@ -249,7 +269,9 @@ daemon configuration.
     sudo rm /etc/systemd/system/weewx.service
     ```
 
-=== "Systems that use SysV init (e.g., Slackware, Devuan, Puppy, DD-WRT)"
+=== "sysV"
+
+    Systems that use SysV init, e.g., Slackware, Devuan, Puppy, DD-WRT
 
     ```shell
     sudo /etc/rc.d/init.d/weewx stop
