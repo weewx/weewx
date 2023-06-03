@@ -6,7 +6,7 @@
 SIGN=1
 
 # WWW server
-WEEWX_COM=weewx.com
+WEEWX_COM:=weewx.com
 
 # location of the html documentation
 WEEWX_HTMLDIR=/var/www/html
@@ -153,7 +153,7 @@ upload-src:
 
 # upload docs to the web site
 upload-docs:
-	rsync -Orv docs $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)
+	rsync -Orv docs $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/docs/$(MMVERSION)
 
 # update the version in all relevant places
 VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
@@ -342,6 +342,7 @@ release:
 	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
 	ssh $(USER)@$(WEEWX_COM) "if [ -f $(RELDIR)/$(SRCPKG) ]; then ln -s released_versions/$(SRCPKG) $(WEEWX_DOWNLOADS); fi"
 	ssh $(USER)@$(WEEWX_COM) "chmod 664 $(WEEWX_DOWNLOADS)/released_versions/weewx?$(VERSION)*"
+	ssh $(USER)@$(WEEWX_COM) "cd $(WEEWX_HTMLDIR)/docs && ln -s $(MMVERSION) latest"
 
 # this is only used when creating a new apt repository from scratch
 # the .html and .list files are not part of an official apt repository.  they
