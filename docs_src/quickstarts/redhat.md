@@ -1,11 +1,11 @@
-# Installation on Redhat-based systems 
+# Installation on Redhat systems 
 
-This is a guide to installing WeeWX from an RPM package on Redhat-based systems
-including Fedora, CentOS, or Rocky.
+This is a guide to installing WeeWX from an RPM package on systems based on
+Redhat, including Fedora, CentOS, or Rocky.
 
 WeeWX V5 requires Python 3.7 or greater, which is only available on Redhat 8 or
-later.  For Redhat systems older than 8, either use WeeWX V4, or install Python
-3.7 then install WeeWX V5 using pip.
+later.  For older Redhat systems, either use WeeWX V4, or install Python 3.7
+then install WeeWX V5 using pip.
 
 
 ## Install pre-requisites
@@ -36,7 +36,8 @@ trust weewx.com, and know where to find the WeeWX releases.
 2. Tell `yum` where to find the WeeWX repository.
 
     ```shell
-    curl -s https://weewx.com/yum/weewx-el8.repo | sudo tee /etc/yum.repos.d/weewx.repo
+    curl -s https://weewx.com/yum/weewx-el8.repo | \
+        sudo tee /etc/yum.repos.d/weewx.repo
     ```
 
 
@@ -52,20 +53,18 @@ sudo yum install weewx
 
 ### Verify
 
-After about 5 minutes (the exact length of time depends on your archive
-interval), copy the following and into a web browser:
+After 5 minutes, copy the following and paste into a web browser:
 
     /var/www/html/index.html
 
-You should see your station information and data.
+You should see simulated data.
 
 Check the system log `/var/log/messages` for problems.
 
 
 ## Configure
 
-At some point you will want to switch from the `Simulator` to real hardware.
-This is how to reconfigure.
+To switch from the `Simulator` to real hardware, reconfigure the driver.
 
 ```shell
 # Stop the daemon:
@@ -74,7 +73,7 @@ sudo systemctl stop weewx
 sudo weectl station reconfigure
 # Remove the old database:
 sudo rm /var/lib/weewx/weewx.sdb
-# Restart:
+# Start the daemon:
 sudo systemctl start weewx
 ```
 

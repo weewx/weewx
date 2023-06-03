@@ -1,16 +1,17 @@
-# Installation on SUSE-based systems 
+# Installation on SUSE systems 
 
-This is a guide to installing WeeWX from an RPM package on systems such as SUSE or openSUSE.
+This is a guide to installing WeeWX from an RPM package systems based on SUSE,
+such as openSUSE Leap.
 
-## Compatible operating system versions
+WeeWX V5 requires Python 3.7 or greater, which is only available on SUSE-15 or
+later.  For older SUSE systems, either use WeeWX V4, or install Python 3.7 then
+install WeeWX V5 using pip.
 
-WeeWX V5.x requires *Python v3.7 or greater*, which is only available on operating systems based on *SUSE-15 or later*. A package installer for Python 2 is not available.
-
-It is recommended that users of older operating systems either use WeeWX V4.x (unsupported), or install Python 3.7 or greater on their system.
 
 ## Configure zypper
 
-The first time you install WeeWX, you must configure `zypper` so that it knows to trust weewx.com, and knows where to find the WeeWX releases.
+The first time you install WeeWX, you must configure `zypper` so that it will
+trust weewx.com, and know where to find the WeeWX releases.
 
 1. Tell your system to trust weewx.com:
 
@@ -18,54 +19,63 @@ The first time you install WeeWX, you must configure `zypper` so that it knows t
     sudo rpm --import https://weewx.com/keys.html
     ```
 
-2. Define the repo:
+2. Tell `zypper` where to find the WeeWX repository.
 
     ```shell
     curl -s https://weewx.com/suse/weewx-suse15.repo | \
         sudo tee /etc/zypp/repos.d/weewx.repo
     ```
 
+
 ## Install
 
-Having configured `zypper`, you can now use it to install WeeWX. The installer will prompt for a location, latitude/longitude, altitude, station type, and parameters specific to your station hardware.
+Install WeeWX using `zypper`. When you are done, WeeWX will be running the
+`Simulator` in the background as a daemon.
 
 ```
 sudo zypper install weewx
 ```
 
+
 ### Verify
 
-After about 5 minutes (the exact length of time depends on your archive interval), cut and
-paste the following into your web browser:
+After 5 minutes, copy the following and paste into a web browser:
 
     /var/www/html/index.html
 
-You should see your station information and data.
+You should see simulated data.
 
-You may also want to check your system log for any problems.
+Check the system log `/var/log/messages` for problems.
+
 
 ## Configure
 
-If you chose the simulator as your station type, then at some point you will
-probably want to switch to using real hardware. Here's how to reconfigure.
+To switch from the `Simulator` to real hardware, reconfigure the driver.
 
 ```shell
-sudo /etc/init.d/weewx stop
+# Stop the daemon:
+sudo systemctl stop weewx
 # Reconfigure to use your hardware:
 sudo weectl station reconfigure
 # Remove the old database:
 sudo rm /var/lib/weewx/weewx.sdb
-# Restart:
-sudo /etc/init.d/weewx start
+# Start the daemon:
+sudo systemctl start weewx
 ```
+
 
 ## Customize
 
-To enable uploads, such as Weather Underground, or to customize reports, modify
-the configuration file `/etc/weewx/weewx.conf`. See the [*User
-Guide*](../../usersguide) and [*Customization Guide*](../../custom) for details.
+To enable uploads or to customize reports, modify the configuration file
+`/etc/weewx/weewx.conf`. See the [*User Guide*](../../usersguide) and
+[*Customization Guide*](../../custom) for details.
 
 WeeWX must be restarted for configuration file changes to take effect.
+
+```shell
+sudo systemctl restart weewx
+```
+
 
 ## Uninstall
 
