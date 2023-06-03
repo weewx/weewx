@@ -52,7 +52,6 @@ nav:
       - RedHat: ./quickstarts/redhat.md
       - SuSE: ./quickstarts/suse.md
       - pip: ./quickstarts/pip.md
-      - "Migrating to V5": ./quickstarts/v5-upgrade.md
 
   - "User's guide":
       - "Introduction": ./usersguide/index.md
