@@ -115,6 +115,8 @@ nav:
   - "Hardware comparison": hardware.htm
   - "Change log": changes.md
   - "Support": support.md
+  - "Legacy docs":
+      - "V4.10": /docs/4.10
 
 plugins:
   - search
