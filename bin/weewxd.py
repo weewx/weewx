@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
@@ -27,9 +26,9 @@ from weewx import daemon
 
 log = logging.getLogger(__name__)
 
-usagestr = """Usage: weewxd.py --help
-       weewxd.py --version
-       weewxd.py [CONFIG_FILE|--config=CONFIG_FILE]
+usagestr = """Usage: %prog --help
+       %prog --version
+       %prog  [CONFIG_FILE|--config=CONFIG_FILE]
               [--daemon] [--pidfile=PIDFILE]
               [--exit]   [--loop-on-init]
               [--log-label=LABEL]

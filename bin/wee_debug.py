@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #    Copyright (c) 2009-2023 Gary Roderick, Tom Keffer <tkeffer@gmail.com>, and Matthew Wall
 #
@@ -46,12 +45,12 @@ COUNT_FIELD = 'dateTime'
 # Redirect the import of setup (needed to get extension info)
 sys.modules['setup'] = weecfg.extension
 
-usage = """wee_debug --help
-       wee_debug --info
+usage = """%prog  --help
+       %prog  --info
             [CONFIG_FILE|--config=CONFIG_FILE]
             [--output|--output DEBUG_PATH]
             [--verbosity=0|1|2]
-       wee_debug --version
+       %prog  --version
 
 Description:
 
