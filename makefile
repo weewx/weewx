@@ -178,7 +178,9 @@ test-clean:
 ## documentation targets
 
 # Build the documentation:
-build-docs $(DOC_BUILT): $(DOC_SRC)/**/*
+build-docs: $(DOC_BUILT)
+
+$(DOC_BUILT): $(DOC_SRC)/**/*
 	@mkdir -p $(BLDDIR)
 	@echo "Building documents"
 	$(PYTHON) -m mkdocs --quiet build --site-dir=$(DOC_BUILT)
