@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com> and Gary Roderick
 #

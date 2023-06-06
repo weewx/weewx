@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 #    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
@@ -24,26 +23,26 @@ from weeutil.weeutil import timestamp_to_string, y_or_n, to_int
 
 log = logging.getLogger(__name__)
 
-usage = """wee_database --help
-       wee_database --create
-       wee_database --reconfigure
-       wee_database --transfer --dest-binding=BINDING_NAME [--dry-run]
-       wee_database --add-column=NAME [--type=(REAL|INTEGER)]
-       wee_database --rename-column=NAME --to-name=NEW_NAME
-       wee_database --drop-columns=NAME1,NAME2,...
-       wee_database --check
-       wee_database --update [--dry-run]
-       wee_database --drop-daily
-       wee_database --rebuild-daily [--date=YYYY-mm-dd |
+usage = """%prog --help
+       %prog --create
+       %prog --reconfigure
+       %prog --transfer --dest-binding=BINDING_NAME [--dry-run]
+       %prog --add-column=NAME [--type=(REAL|INTEGER)]
+       %prog --rename-column=NAME --to-name=NEW_NAME
+       %prog --drop-columns=NAME1,NAME2,...
+       %prog --check
+       %prog --update [--dry-run]
+       %prog --drop-daily
+       %prog --rebuild-daily [--date=YYYY-mm-dd |
                                     [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
                                     [--dry-run]
-       wee_database --reweight [--date=YYYY-mm-dd |
+       %prog --reweight [--date=YYYY-mm-dd |
                                [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
                                [--dry-run]
-       wee_database --calc-missing [--date=YYYY-mm-dd |
+       %prog --calc-missing [--date=YYYY-mm-dd |
                                    [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
-       wee_database --check-strings
-       wee_database --fix-strings [--dry-run]
+       %prog --check-strings
+       %prog --fix-strings [--dry-run]
 
 Description:
 
