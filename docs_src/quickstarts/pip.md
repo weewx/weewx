@@ -231,8 +231,8 @@ probably want to switch to using real hardware. This is how to reconfigure.
 ## Customize
 
 To enable uploads or to customize reports, modify the configuration file
-`~/weewx-data/weewx.conf`. See the [*User Guide*](../usersguide) and
-[*Customization Guide*](../custom) for details.
+`~/weewx-data/weewx.conf`. See the [*User Guide*](../../usersguide) and
+[*Customization Guide*](../../custom) for details.
 
 WeeWX must be restarted for configuration file changes to take effect.
 
