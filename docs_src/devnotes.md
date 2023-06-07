@@ -9,21 +9,27 @@ The primary design goals of WeeWX are:
 
 -   Architectural simplicity. No semaphores, no named pipes, no
     inter-process communications, no complex multi-threading to manage.
+
 -   Extensibility. Make it easy for the user to add new features or to
     modify existing features.
+
 -   *Fast enough* In any design decision, architectural simplicity and
     elegance trump speed.
+
 -   One code base. A single code base should be used for all platforms,
     all weather stations, all reports, and any combination of features.
     Ample configuration and customization options should be provided so
     the user does not feel tempted to start hacking code. At worse, the
     user may have to subclass, which is much easier to port to newer
     versions of the code base, than customizing the base code.
+
 -   Minimal dependencies. The code should rely on a minimal number of
     external packages, so the user does not have to go chase them down
     all over the Web before getting started.
+
 -   Simple data model. The implementation should use a very simple data
     model that is likely to support many different types of hardware.
+
 -   A *pythonic* code base. The code should be written in a style that
     others will recognize.
 

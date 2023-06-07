@@ -180,7 +180,7 @@ test-clean:
 # Build the documentation:
 build-docs: $(DOC_BUILT)
 
-$(DOC_BUILT): $(DOC_SRC)/**/*
+$(DOC_BUILT): $(shell find $(DOC_SRC) -type f)
 	@mkdir -p $(BLDDIR)
 	@echo "Building documents"
 	$(PYTHON) -m mkdocs --quiet build --site-dir=$(DOC_BUILT)
