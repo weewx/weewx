@@ -18,9 +18,22 @@ many different types of hardware, including some not yet supported by WeeWX.
 
 ## Installation
 
-Install WeeWX releases from pypi using `pip`, or from repositories for Debian,
-Red Hat, and SuSE systems using `apt`, `yum/dnf`, or `zypper`.  Or run WeeWX
+Install WeeWX releases from repositories for Debian, Red Hat, and SuSE systems
+using `apt`, `yum/dnf`, or `zypper`, from pypi using `pip`, or run WeeWX
 directly from source.
+
+The installers for Debian, Red Hat, and SUSE use the conventions and software
+management tools for their respective operating system; these are the quickest
+way to get up and running.
+
+The pypi installer will work on any operating system; use this approach for
+macOS or one of the *BSDs, or if you are using an older operating system.
+This is also a good approach if you plan to do a lot of customization, or if
+you are developing a driver, skin, or other extension.
+
+If you are working on the WeeWX core, or if you want to experiment with
+code that is under development, then you will probably want to run from
+a git clone of the source tree.
 
 * [Debian](quickstarts/debian)
 * [Redhat](quickstarts/redhat)
@@ -33,12 +46,17 @@ See the [user guide](usersguide/installing-weewx) for detailed instructions.
 
 ## Documentation
 
-This documentation includes:
+WeeWX includes extensive documentation, and the WeeWX developers work hard to
+keep it relevant and up to date.  If you have questions about how WeeWX works,
+how to customize reports, how to change date/time formats, which units are
+supported, how to translate WeeWX into your language, how to integrate WeeWX
+with other applications, how to make WeeWX work with new hardware, ... please
+consult the documentation first.  This documentation includes:
 
 * [User's guide](usersguide) - installation, getting started, troubleshooting
 * [Customization guide](custom) - reports, plots, localization, formatting, extensions
-* [Utilities](utilities) - tools to manage hardware and data
-* [Hardware guide](hardware) - how to configure hardware
+* [Utilities](utilities) - tools to manage stations, reports, and data
+* [Hardware guide](hardware) - how to configure hardware, features of supported hardware
 * [Notes for developers](devnotes)
 * [Upgrade guide](upgrading)
 
