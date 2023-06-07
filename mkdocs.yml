@@ -109,7 +109,7 @@ nav:
     - wee_reports: utilities/wee_reports.md
 
   - "Hardware guide":
-    - "Driver status": hardware/index.md
+    - Drivers: hardware/drivers.md
     - AcuRite: hardware/acurite.md
     - CC3000: hardware/cc3000.md
     - FineOffset: hardware/fousb.md
@@ -123,8 +123,13 @@ nav:
     - WS23xx: hardware/ws23xx.md
     - WS28xx: hardware/ws28xx.md
 
+  - "Upgrade guide":
+    - changes: upgrade/changes.md
+    - pip: upgrade/pip.md
+    - deb: upgrade/deb.md
+    - rpm: upgrade/rpm.md
+ 
   - "Notes for developers": devnotes.md
-  - "Upgrade guide": upgrading.htm
   - "Change log": changes.md
 
 plugins:
