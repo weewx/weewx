@@ -32,16 +32,15 @@ wee_device /path/to/weewx.conf --help
 For details about the options available for each type of hardware, see the
 appropriate hardware section:
 
-
-<li><a href="../hardware.htm#acurite_notes">AcuRite</a></li>
-<li><a href="../hardware.htm#cc3000_notes">CC3000</a></li>
-<li><a href="../hardware.htm#fousb_notes">FineOffsetUSB</a></li>
-<li><a href="../hardware.htm#te923_notes">TE923</a></li>
-<li><a href="../hardware.htm#ultimeter_notes">Ultimeter</a></li>
-<li><a href="../hardware.htm#vantage_notes">Vantage</a></li>
-<li><a href="../hardware.htm#wmr100_notes">WMR100</a></li>
-<li><a href="../hardware.htm#wmr300_notes">WMR300</a></li>
-<li><a href="../hardware.htm#wmr9x8_notes">WMR9x8</a></li>
-<li><a href="../hardware.htm#ws1_notes">WS1</a></li>
-<li><a href="../hardware.htm#ws23xx_notes">WS23xx</a></li>
-<li><a href="../hardware.htm#ws28xx_notes">WS28xx</a></li>
+* [AcuRite](../../hardware/acurite)
+* [CC3000](../../hardware/cc3000)
+* [FineOffset](../../hardware/fousb)
+* [TE923](../../hardware/te923)
+* [Ultimeter](../../hardware/ultimeter)
+* [Vantage](../../hardware/vantage)
+* [WMR100](../../hardware/wmr100)
+* [WMR300](../../hardware/wmr300)
+* [WMR9x8](../../hardware/wmr9x8)
+* [WS1](../../hardware/ws1)
+* [WS23xx](../../hardware/ws23xx)
+* [WS28xx](../../hardware/ws28xx)
