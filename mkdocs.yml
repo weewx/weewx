@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
-site_name: 'weewx documentation'
+site_name: 'WeeWX Documentation'
 site_url: 'https://www.weewx.com'
 site_author: "Tom Keffer <tkeffer@gmail.com>"
 repo_url: https://github.com/weewx/weewx
@@ -52,6 +52,7 @@ nav:
       - RedHat: ./quickstarts/redhat.md
       - SuSE: ./quickstarts/suse.md
       - pip: ./quickstarts/pip.md
+      - source: ./quickstarts/source.md
 
   - "User's guide":
       - "Introduction": ./usersguide/index.md
@@ -108,14 +109,11 @@ nav:
       - wee_import: utilities/utilities.htm#wee_import_utility
       - wee_reports: utilities/utilities.htm#wee_reports_utility
       - weewxd: utilities/utilities.htm#weewxd
-  - "Upgrade guide": upgrading.htm
+
   - "Hardware guide": hardware.htm
   - "Notes for developers": devnotes.md
-  - "Hardware comparison": hardware.htm
+  - "Upgrade guide": upgrading.htm
   - "Change log": changes.md
-  - "Support": support.md
-  - "Legacy docs":
-      - "V4.10": /docs/4.10
 
 plugins:
   - search
