@@ -1,11 +1,12 @@
 # weectl extension
 
-Use the subcommand `extension` to manage WeeWX extensions. Running
-`weectl extension --help` will give you information about its actions
-and options:
+Use the `weectl` subcommand `extension` to manage WeeWX extensions.
 
-```shell
-% weectl extension --help
+Specify `--help` to see the actions and options:
+```
+weectl extension --help
+```
+```
 usage: weectl extension list [--config=CONFIG-PATH]
 
        weectl extension install {FILE|DIR|URL}
@@ -30,14 +31,15 @@ Which action to take:
 ```
 
 
-## weectl extension list
+## `weectl extension list`
 
 This action will list all installed extensions.
 
-Running `weectl extension list --help` will show its options.
-
-```shell
-% weectl extension list --help
+Specify `--help` to see the options:
+```
+weectl extension list --help
+```
+```
 usage: weectl extension list [--config=CONFIG-PATH]
 
 optional arguments:
@@ -47,22 +49,23 @@ optional arguments:
   --verbosity N         How much information to display {0-3}.
 ```
 
-### config
+### `--config=FILENAME`
 
 The utility is pretty good about guessing where the WeeWX configuration file
 is located. If it guesses wrong, use this option to specify the configuration
 file.
 
 
-## weectl extension install
+## `weectl extension install`
 
 This action will install an extension from a zipfile, tarball, directory, or
 URL.
 
-Running `weectl extension install --help` will show its options.
-
-```shell
-% weectl extension install --help
+Specify `--help` to see the options:
+```
+weectl extension install --help
+```
+```
 usage:   weectl extension install {FILE|DIR|URL}
            [--config=CONFIG-PATH]
            [--dry-run] [--verbosity=N]
@@ -80,30 +83,31 @@ optional arguments:
   --verbosity N         How much information to display {0-3}.
 ```
 
-### config
+### `--config=FILENAME`
 
 The utility is pretty good about guessing where the WeeWX configuration file
 is located. If it guesses wrong, use this option to specify the configuration
 file.
 
-### dry-run
+### `--dry-run`
 
 This option will show you what the installer would do, but will not actually
 do it.
 
-### verbosity=N
+### `--verbosity=N`
 
 This option selects how much information to show as the installation proceeds.
 
 
-## weectl extension uninstall
+## `weectl extension uninstall`
 
 This action uninstalls an extension.
 
-Running `weectl extension uninstall --help` will show its options.
-
-```shell
-% weectl extension uninstall --help
+Specify `--help` to see the options:
+```
+weectl extension uninstall --help
+```
+```
 usage:   weectl extension uninstall NAME
            [--config=CONFIG-PATH]
            [--dry-run] [--verbosity=N]
@@ -119,18 +123,18 @@ optional arguments:
   --verbosity N         How much information to display {0-3}.
 ```
 
-### config
+### `--config=FILENAME`
 
 The utility is pretty good about guessing where the WeeWX configuration file
 is located. If it guesses wrong, use this option to specify the configuration
 file.
 
-### dry-run
+### `--dry-run`
 
 This option will show you what the installer would do, but will not actually
 do it.
 
-### verbosity=N
+### `--verbosity=N`
 
 This option selects how much information to show as the installation proceeds.
 
@@ -163,7 +167,7 @@ This was a dry run. Nothing was actually done.
 
 Do it for real, default verbosity:
 
-```shell
+```
 % weectl extension install https://github.com/matthewwall/weewx-windy/archive/master.zip
 Request to install 'https://github.com/matthewwall/weewx-windy/archive/master.zip'
 Extracting from zip archive /var/folders/xm/72q6zf8j71x8df2cqh0j9f6c0000gn/T/tmpk8ggl4qr
@@ -174,7 +178,7 @@ Finished installing extension windy from https://github.com/matthewwall/weewx-wi
 
 List the results:
 
-```shell
+```
 % weectl extension list                                                                 
 Extension Name    Version   Description
 windy             0.7       Upload weather data to Windy.
@@ -182,7 +186,7 @@ windy             0.7       Upload weather data to Windy.
 
 Uninstall the extension:
 
-```shell
+```
 % weectl extension uninstall windy
 Request to remove extension 'windy'
 Finished removing extension 'windy'

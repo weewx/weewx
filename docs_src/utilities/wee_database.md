@@ -4,9 +4,11 @@ The database utility simplifies typical database maintenance operations. For
 example, it can rebuild the daily summaries or check a SQLite database for
 embedded strings where floats are expected.
 
-Run the utility with the `--help` option to see how it is used:
-```shell
+Specify `--help` to see how it is used:
+```
 wee_database --help
+```
+```
 Usage: wee_database --help
        wee_database --create
        wee_database --reconfigure
@@ -80,19 +82,17 @@ Options:
                         False.
 ```
 
-## Actions and options
-
-### create
+### `--create`
 
 If the database does not already exist, this action will create it and
 initialize it with the schema specified in the WeeWX configuration file.
 Because WeeWX does this automatically, this action is rarely needed.
 
-```shell
+```
 wee_database --create
 ```
 
-### reconfigure
+### `--reconfigure`
 
 This action is useful for changing the schema or unit system in your database.
 
@@ -102,7 +102,7 @@ It creates a new database with the same name as the old, except with the suffix
 specified in `weewx.conf`. Finally, it copies over the data from your old
 database into the new database.
 
-```shell
+```
 wee_database --reconfigure
 ```
 
@@ -110,7 +110,7 @@ See the section <a href="customizing.htm#Changing_the_unit_system">Changing
 the database unit system in an existing database</a> in the Customization
 Guide for step-by-step instructions that use this option.
 
-### transfer
+### `--transfer`
 
 This action is useful for moving your database from one type of database to
 another, such as from SQLite to MySQL. To use it, you must have two bindings
@@ -121,45 +121,45 @@ source, the other as the destination. Specify the source binding with option
 will be used.
 
 
-```shell
+```
 wee_database --transfer --binding=source_binding --dest-binding=dest_binding
 wee_database --transfer --dest-binding=dest_binding
 ```
 
 See the Wiki for examples of moving data from <a href="https://github.com/weewx/weewx/wiki/Transfer%20from%20sqlite%20to%20MySQL#using-wee_database">SQLite to MySQL</a>, and from <a href="https://github.com/weewx/weewx/wiki/Transfer%20from%20MySQL%20to%20sqlite#using-wee_database">MySQL to SQLite</a>, using `wee_database`.
 
-### add-column
+### `--add-column=NAME`
 
 This action adds a new database observation type (column) to the database. If
 used without the `--type` option, the type will default to `REAL`.
 
-```shell
+```
 wee_database --add-column
 ```
 
 Optionally, option `--type` can be used with a SQL type `REAL`, `INTEGER`,
 or any other SQL column definition (such as `INTEGER DEFAULT 0`).
 
-```shell
+```
 wee_database --add-column=NAME --type=TYPE
 ```
 
-### rename-column
+### `--rename-column=NAME`
 
 Use this action to rename a database observation type (column) to a new name.
 It requires the option `--to-name`.
 
-```shell
+```
 wee_database --rename-column=NAME --to-name=NEW_NAME
 ```
 
 For example, to rename the column `luminosity` in your schema to `illuminance`:
 
-```shell
+```
 wee_database --rename-column=luminosity --to-name=illuminance
 ```
 
-### drop-columns
+### `--drop-columns=NAME`
 
 This action will drop one or more observation types (columns) from the
 database. If more than one column name is given, they should be separated by
@@ -168,7 +168,7 @@ commas and <em>no spaces</em>.
 It is an error to attempt to drop a non-existing column. In this case, nothing
 will be done.
 
-```shell
+```
 wee_database --drop-columns=NAME1,NAME2
 ```
 
@@ -179,7 +179,7 @@ wee_database --drop-columns=NAME1,NAME2
     pass. This is why option `--drop-columns` accepts more than one name.
 
 
-### check
+### `--check`
 
 This action will check the calculations in the daily summary tables as well as
 checking the archive for null strings (refer to `--check-strings`). If the
@@ -188,13 +188,13 @@ user is advised to update the daily summary tables using the `--update` action.
 If null strings are found the user is advised to fix them using the
 `--fix-strings` action.
 
-```shell
+```
 wee_database --check
 ```
 
 <a id="wee_database_utility_update">FIXME</a>
 
-### update
+### `--update`
 
 This action updates the daily summary tables to use interval weighted
 calculations as well as recalculating the `windSpeed` maximum daily values and
@@ -202,7 +202,7 @@ times. Interval weighted calculations are only applied to the daily summaries
 if not previously applied. The update process is irreversible and users are
 advised to backup their database before performing this action.
 
-```shell
+```
 wee_database --update
 ```
 
@@ -210,7 +210,7 @@ For further information on interval weighting and recalculation of daily
 `windSpeed` maximum values, see the sections <a href="upgrading.htm#change_to_daily_summaries">Changes to daily summaries</a> and <a href="upgrading.htm#recalculation_of_windspeed">Recalculation of `windSpeed` maximum values</a> in the Upgrade Guide.
 
 
-### drop-daily
+### `--drop-daily`
 
 In addition to the regular archive data, every WeeWX database also includes a
 daily summary table for each observation type. Because there can be dozens of
@@ -219,11 +219,11 @@ happen very often, but there can be occasions when it's necessary to drop them
 all and then rebuild them. Dropping them by hand would be very tedious! This
 action does them all at once.
 
-```shell
+```
 wee_database --drop-daily
 ```
 
-### rebuild-daily
+### `--rebuild-daily`
 
 This action is the inverse of action `--drop-daily` in that it rebuilds the
 daily summaries from the archive data. In most cases it is not necessary to
@@ -250,7 +250,7 @@ for which there is data in the database. When the `--from` and `--to` options
 are used together the daily summary rebuild is limited to the specified
 inclusive period.
 
-```shell
+```
 wee_database --rebuild-daily
 wee_database --rebuild-daily --date=YYYY-mm-dd
 wee_database --rebuild-daily --from=YYYY-mm-dd
@@ -271,7 +271,7 @@ wee_database --rebuild-daily --from=YYYY-mm-dd --to=YYYY-mm-dd
     between.
 
 
-### reweight
+### `--reweight`
 
 As an alternative to dropping and rebuilding the daily summaries, this action
 simply rebuilds the weighted daily sums (used to calculate averages) from the
@@ -282,25 +282,29 @@ unchanged.
 Other options are as in `--rebuild-daily`.
 
 
-### calc-missing
+### `--calc-missing`
 
-This action calculates derived observations for archive records in the database and then stores the calculated
-observations in the database. This can be useful if erroneous archive data is corrected or some additional
-observational data is added to the archive that may alter previously calculated or missing derived
-observations.
+This action calculates derived observations for archive records in the database
+and then stores the calculated observations in the database. This can be
+useful if erroneous archive data is corrected or some additional observational
+data is added to the archive that may alter previously calculated or missing
+derived observations.
 
-The period over which the derived observations are calculated can be limited through use of the
-`--date`, `--from` and/or `--to`
-options. When used without any of these options `--calc-missing` will calculate
-derived observations for all archive records in the database. The `--date` option
-limits the calculation of derived observations to the specified date only. The `--from`
-and `--to` options can be used together to specify the start and end date-time
-respectively of the period over which derived observations will be calculated. If `--from`
-is used by itself the period is fom the date-time specified up to and including the last archive record in
-the database. If `--to` is used by itself the period is the first archive record in
-the database through to the specified date-time.
+The period over which the derived observations are calculated can be limited
+through use of the `--date`, `--from` and/or `--to` options. When used without
+any of these options `--calc-missing` will calculate derived observations for
+all archive records in the database. The `--date` option limits the calculation
+of derived observations to the specified date only. The `--from` and `--to`
+options can be used together to specify the start and end date-time
+respectively of the period over which derived observations will be calculated.
 
-```shell
+If `--from` is used by itself the period is fom the date-time specified up to
+and including the last archive record in the database.
+
+If `--to` is used by itself the period is the first archive record in the
+database through to the specified date-time.
+
+```
 wee_database --calc-missing
 wee_database --calc-missing --date=YYYY-mm-dd
 wee_database --calc-missing --from=YYYY-mm-dd[THH:MM]
@@ -330,25 +334,22 @@ wee_database --calc-missing --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]
     `--calc-missing` and the `StdWXCalculate` service. Those who use the
     default data binding need take no special precautions.
 
-
-<a id="wee_database_utility_check_strings">FIXME</a>
-
-### check-strings
+### `--check-strings`
 
 Normally, all entries in the archive are numbers. However, some SQLite
 database editors use a null string instead of a null value when deleting
 entries. These null strings can cause problems. This action checks the
 database to see if it contains any null strings.
 
-```shell
+```
 wee_database --check-strings
 ```
 
-### fix-strings
+### `--fix-strings`
 
 This action will check for any null strings in a SQLite database and if found
 substitute a true null value.
 
-```shell
+```
 wee_database --fix-strings
 ```

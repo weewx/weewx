@@ -1,11 +1,14 @@
 # weectl station
 
-Use the subcommand `station` to manage the configuration data for a station.
-Running `weectl station --help` will give you information about its actions and
-options.
+Use the `weectl` subcommand `station` to manage the configuration data for a
+station.
+
+Specify `--help` to see the actions and options:
 
 ```
-% weectl station --help
+weectl station --help
+```
+```
 usage: weectl station create [--config=CONFIG-PATH]
                              [--dist-config=DIST-CONFIG-PATH]]
                              [--driver=DRIVER]
@@ -65,7 +68,7 @@ In the documentation that follows,  the exact output will depend on your
 operating system and username. What is shown below is for Linux and user
 `tkeffer`.
 
-## weectl station create
+## `weectl station create`
 
 This action will create a new area for user data. After the command completes,
 the area will include
@@ -79,10 +82,11 @@ the area will include
 `weectl station create` is typically used when installing using pip, or when
 you want to create multiple stations.
 
-Running `weectl station create --help` will show its options.
-
+Specify `--help` to see the options:
 ```
-% weectl station create --help
+weectl station create --help
+```
+```
 usage: weectl station create [--config=CONFIG-PATH]
                              [--driver=DRIVER]
                              [--location=LOCATION]
@@ -150,66 +154,65 @@ optional arguments:
   --dry-run             Print what would happen, but do not actually do it.
 ```
 
-### config
+### --config=FILENAME
 
 Path to the configuration file to be created. The directory of the path will
 become the value for `WEEWX_ROOT` in the configuration file. Default is
 `~/weewx-data/weewx.conf`.
 
-### driver
+### --driver=DRIVER
 
 Which driver to use. Default is `simulator`.
 
-### location
+### --location=LOCATION
 
 A description of your station, such as `--location="A small town in Rongovia"`
 
-### altitude
+### --altitude=ALTITUDE
 
 The altitude of your station, along with the unit it is measured in. For
 example, `--altitude=50,meter`. Note that the unit is measured in the singular
 (`foot`, not `feet`).
 
-### latitude
+### --latitude=LATITUDE
 
 The station latitude in decimal degrees. Negative for the southern hemisphere.
 
-### longitude
+### --longitude=LONGITUDE
 
 The station longitude in decimal degrees. Negative for the western hemisphere.
 
-### register
+### --register={y|n}
 
 Whether to include the station in the WeeWX registry and
 [map](https://weewx.com/stations.html). If you set `--register`, you must also
 specify a unique URL for your station with option `--station-url`.
 
-### station-url
+### --station-url=URL
 
 A unique URL for your station.
 
 Example: `--station-url=https://www.wunderground.com/dashboard/pws/KNDPETE15`.
 
-### units
+### --units=UNIT_SYSTEM
 
-What units to use for your reports. Choices are `us`, `metricwx`, or `metric`.
-See the Appendix 
-[_Units_](../../custom/appendix/#units) for details.
+What units to use for your reports. Options are `us`, `metricwx`, or `metric`.
+See the Appendix [_Units_](../../custom/appendix/#units) for details.
 
-### no-prompt
+### --no-prompt
 
 Generally, the utility will prompt for values unless `--no-prompt` has been
 set. With `--no-prompt`, the values to be used are the default values,
 replaced with whatever options have been set on the command line. For example,
 
-```shell
+```
 weectl station create --driver='weewx.drivers.vantage' --no-prompt
 ```
 
 will cause the defaults to be used for all values except `--driver`, which will
 use the Vantage driver.
 
-### dry-run
+### --dry-run
 
 With option `--dry-run` you can test what `weect station create` would do
 without actually doing it. It will print out the steps, but not
@@ -230,7 +233,7 @@ All of these root options are *relative to `WEEWX_ROOT`*. Of course, like any
 other path, if the option starts with a slash (`/`), it becomes an absolute
 path. So, for example,
 
-```shell
+```
 --html-root=/var/www/html
 ```
 
@@ -238,17 +241,18 @@ will cause HTML files to be put in the traditional system WWW directory
 `/var/www/html`.
 
 
-## weectl station reconfigure
+## `weectl station reconfigure`
 
 This action will reconfigure the contents of the configuration file
 `weewx.conf`. Unless option `--no-prompt` has been specified, it will prompt
 you for each setting, using the previous settings as default values, and give
 you a chance to change them. 
 
-Running `weectl station reconfigure --help` will show you its options.
-
+Specify `--help` to see the options:
 ```
-% weectl station reconfigure  --help
+weectl station reconfigure  --help
+```
+```
 usage: weectl station reconfigure [--config=CONFIG-PATH] 
                                   [--driver=DRIVER]
                                   [--location=LOCATION]
@@ -301,42 +305,42 @@ optional arguments:
   --dry-run             Print what would happen, but do not actually do it.
 ```
 
-### config
+### --config=FILENAME
 
 Path to the configuration file to be updated. The directory of the path will
 become the value for `WEEWX_ROOT` in the configuration file. Default is
 `~/weewx-data/weewx.conf`.
 
-### no-prompt
+### --no-prompt
 
 When used with the `--no-prompt` option, `weectl station reconfigure` will
 modify specific parameters with no interaction. For example, this would set
 the station altitude to 35 feet:
 
-```shell
+```
 weectl station reconfigure --altitude=35,foot --no-prompt
 ```
 
 This would change the driver to a user-installed netatmo driver:
 
-```shell
+```
 weectl station reconfigure --driver=user.netatmo --no-prompt
 ```
 
-### dry-run
+### --dry-run
 
 With option `--dry-run` you can test what `weect station create` would do
 without actually doing it. It will print out the steps, but not
 actually write anything.
 
-### no-backup
+### --no-backup
 
 Do not create a copy of the previous configuration file.
 
 Other options are as described in the [`weectl station create`](#weectl-station-create) section.
 
 
-## weectl station upgrade
+## `weectl station upgrade`
 
 This action can upgrade the configuration file, documentation, examples,
 daemon utility files, and skins.  When you upgrade the WeeWX software, that
@@ -346,10 +350,11 @@ configurations and skins will continue to work with new WeeWX updates.
 However, if you want to get new features, you might have to update your
 configurations or skins.  Use this utility to do that.
 
-Running `weectl station upgrade --help` will show you its options.
-
+Specify `--help` to see the options:
 ```
-% weectl station upgrade --help
+weectl station upgrade --help
+```
+```
 usage: weectl station upgrade [--config=CONFIG-PATH]
                               [--dist-config=DIST-CONFIG-PATH]]
                               [--docs-root=DOCS_ROOT]
@@ -393,13 +398,13 @@ optional arguments:
   --dry-run             Print what would happen, but do not actually do it.
 ```
 
-### config
+### --config=FILENAME
 
 Path to the configuration file to be updated. The directory of the path will
 become the value for `WEEWX_ROOT` in the configuration file. Default is
 `~/weewx-data/weewx.conf`.
 
-### what
+### --what
 
 By default, `weectl station upgrade` will upgrade the configuration file,
 documentation, examples, and daemon utility files. However, you can customize
@@ -407,7 +412,7 @@ exactly what gets upgraded.
 
 !!! Note
     The `--what` option does not take an equal sign (`=`). Just list the
-    desired things to be upgraded, without commas between.
+    desired things to be upgraded, without commas between them.
 
 For example, to upgrade the configuration file and skins only, you would
 specify
@@ -428,7 +433,7 @@ All of these root options are *relative to `WEEWX_ROOT`*. Of course, like any
 other path, if the option starts with a slash (`/`), it becomes an absolute
 path. So, for example,
 
-```shell
+```
 --docs-root=/usr/local/doc/weewx
 ```
 

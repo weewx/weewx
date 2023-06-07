@@ -47,38 +47,38 @@ site_dir: 'build/docs'
 
 nav:
   - "Quick starts":
-      - Debian: ./quickstarts/debian.md
-      - RedHat: ./quickstarts/redhat.md
-      - SuSE: ./quickstarts/suse.md
-      - pip: ./quickstarts/pip.md
-      - source: ./quickstarts/source.md
+    - Debian: ./quickstarts/debian.md
+    - RedHat: ./quickstarts/redhat.md
+    - SuSE: ./quickstarts/suse.md
+    - pip: ./quickstarts/pip.md
+    - source: ./quickstarts/source.md
 
   - "User's guide":
-      - "Introduction": ./usersguide/index.md
-      - "System requirements": ./usersguide/system-requirements.md
-      - "Installing WeeWX": ./usersguide/installing-weewx.md
-      - "Where to find things" : ./usersguide/where.md
-      - "Running WeeWX": ./usersguide/running-weewx.md
-      - "Web server integration": ./usersguide/webserver-integration.md
-      - "Backup & restore": ./usersguide/backing-up-weewx.md
-      - "Configuring MySQL": ./usersguide/mysql-mariadb-config.md
-      - "Troubleshooting": ./usersguide/troubleshooting-guide.md
-      - "Reference: options":
-        - "Overview": ./usersguide/weewx-config-file/index.md
-        - "General options": ./usersguide//weewx-config-file/general.md
-        - "[Station]": ./usersguide/weewx-config-file/stations-config.md
-        - "[StdRESTful]": ./usersguide/weewx-config-file/stdrestful-config.md
-        - "[StdReport]": ./usersguide/weewx-config-file/stdreport-config.md
-        - "[StdConvert]": ./usersguide/weewx-config-file/stdconvert-config.md
-        - "[StdCalibrate]": ./usersguide/weewx-config-file/stdcalibrate-config.md
-        - "[StdQC]": ./usersguide/weewx-config-file/stdqc-config.md
-        - "[StdWXCalculate]": ./usersguide/weewx-config-file/stdwxcalculate-config.md
-        - "[StdArchive]": ./usersguide/weewx-config-file/stdarchive.md
-        - "[StdTimeSynch]": ./usersguide/weewx-config-file/stdtimesynch.md
-        - "[DataBindings]": ./usersguide/weewx-config-file/data-bindings.md
-        - "[Databases]": ./usersguide/weewx-config-file/databases.md
-        - "[DatabaseTypes]": ./usersguide/weewx-config-file/databasetypes.md
-        - "[Engine]": ./usersguide/weewx-config-file/engine.md
+    - "Introduction": ./usersguide/index.md
+    - "System requirements": ./usersguide/system-requirements.md
+    - "Installing WeeWX": ./usersguide/installing-weewx.md
+    - "Where to find things" : ./usersguide/where.md
+    - "Running WeeWX": ./usersguide/running-weewx.md
+    - "Web server integration": ./usersguide/webserver-integration.md
+    - "Backup & restore": ./usersguide/backing-up-weewx.md
+    - "Configuring MySQL": ./usersguide/mysql-mariadb-config.md
+    - "Troubleshooting": ./usersguide/troubleshooting-guide.md
+    - "Reference: options":
+      - "Overview": ./usersguide/weewx-config-file/index.md
+      - "General options": ./usersguide//weewx-config-file/general.md
+      - "[Station]": ./usersguide/weewx-config-file/stations-config.md
+      - "[StdRESTful]": ./usersguide/weewx-config-file/stdrestful-config.md
+      - "[StdReport]": ./usersguide/weewx-config-file/stdreport-config.md
+      - "[StdConvert]": ./usersguide/weewx-config-file/stdconvert-config.md
+      - "[StdCalibrate]": ./usersguide/weewx-config-file/stdcalibrate-config.md
+      - "[StdQC]": ./usersguide/weewx-config-file/stdqc-config.md
+      - "[StdWXCalculate]": ./usersguide/weewx-config-file/stdwxcalculate-config.md
+      - "[StdArchive]": ./usersguide/weewx-config-file/stdarchive.md
+      - "[StdTimeSynch]": ./usersguide/weewx-config-file/stdtimesynch.md
+      - "[DataBindings]": ./usersguide/weewx-config-file/data-bindings.md
+      - "[Databases]": ./usersguide/weewx-config-file/databases.md
+      - "[DatabaseTypes]": ./usersguide/weewx-config-file/databasetypes.md
+      - "[Engine]": ./usersguide/weewx-config-file/engine.md
 
   - Customization guide:
     - "Introduction": custom/index.md
@@ -97,16 +97,15 @@ nav:
     - "Appendix": custom/appendix.md
 
   - Utilities:
-      - weectl:
-          - Overview: weectl/index.md
-          - weectl station: weectl/station.md
-          - weectl extension: weectl/extension.md
-      - wee_database: wee_database.md
-      - wee_debug: utilities/utilities.htm#wee_debug_utility
-      - wee_device: utilities/utilities.htm#wee_device_utility
-      - wee_import: utilities/utilities.htm#wee_import_utility
-      - wee_reports: utilities/utilities.htm#wee_reports_utility
-      - weewxd: utilities/utilities.htm#weewxd
+    - weewxd: utilities/weewxd.md
+    - weectl:
+      - weectl station: utilities/weectl-station.md
+      - weectl extension: utilities/weectl-extension.md
+    - wee_database: utilities/wee_database.md
+    - wee_debug: utilities/wee_debug.md
+    - wee_device: utilities/wee_device.md
+    - wee_import: utilities/wee_import.md
+    - wee_reports: utilities/wee_reports.md
 
   - "Hardware guide": hardware.htm
   - "Notes for developers": devnotes.md

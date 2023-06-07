@@ -402,7 +402,7 @@ includes a new feature, make sure you commit your changes relative to
 the *development* branch. If it is just a bug fix, it should be
 committed against the `master` branch.
 
-### About forking the repository
+### Forking the repository
 
 The WeeWX GitHub repository is configured to use 
 [GitHub Actions](https://docs.github.com/en/actions/learn-github-actions/understanding-github-actions)
@@ -448,7 +448,7 @@ includes *daily summaries* in the database as an optimization.
 In the daily summaries, each observation type gets its own table, which
 holds a statistical summary for the day. For example, for outside
 temperature observation type `outTemp`, this table would be
-named `archive_day_outTemp`. Here's what it would look like:
+named `archive_day_outTemp`. This is what it would look like:
 
 <table class="fixed_width">
   <caption>Structure of the <span class="code">archive_day_outTemp</span> daily summary</caption>
@@ -509,7 +509,7 @@ named `archive_day_outTemp`. Here's what it would look like:
   </tr>
 </table>
 
-Here's what the table columns mean:
+This is what the table columns mean:
 
 <table class="no_indent">
   <tr class="first_row">
@@ -568,7 +568,7 @@ working off an SD card.
 
 ### Wind summaries
 
-The daily summary for wind includes six additional fields. Here's what
+The daily summary for wind includes six additional fields. This is what
 they mean:
 
 <table class="no_indent">
