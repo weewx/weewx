@@ -2,9 +2,10 @@
 site_name: 'WeeWX Documentation'
 site_url: 'https://www.weewx.com'
 site_author: "Tom Keffer <tkeffer@gmail.com>"
-repo_url: https://github.com/weewx/weewx
-repo_name: WeeWX GitHub Repository
-# Shut off the edit on GitHub feature:
+# do not display github info since it is always obscured anyway
+#repo_url: https://github.com/weewx/weewx
+#repo_name: WeeWX GitHub Repository
+# Shut off the "edit on GitHub" feature:
 edit_uri: ''
 copyright: Copyright © 2009-2023 Thomas Keffer and Matthew Wall, all rights reserved
 theme:
@@ -107,7 +108,21 @@ nav:
     - wee_import: utilities/wee_import.md
     - wee_reports: utilities/wee_reports.md
 
-  - "Hardware guide": hardware.htm
+  - "Hardware guide":
+    - "Driver status": hardware/index.md
+    - AcuRite: hardware/acurite.md
+    - CC3000: hardware/cc3000.md
+    - FineOffset: hardware/fousb.md
+    - TE923: hardware/te923.md
+    - Ultimeter: hardware/ultimeter.md
+    - Vantage: hardware/vantage.md
+    - WMR100: hardware/wmr100.md
+    - WMR300: hardware/wmr300.md
+    - WMR9x8: hardware/wmr9x8.md
+    - WS1: hardware/ws1.md
+    - WS23xx: hardware/ws23xx.md
+    - WS28xx: hardware/ws28xx.md
+
   - "Notes for developers": devnotes.md
   - "Upgrade guide": upgrading.htm
   - "Change log": changes.md
