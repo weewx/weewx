@@ -1,10 +1,8 @@
 # weectl extension
 
-## `weectl extension`
-
-The subcommand `weectl extension` lists, installs, and uninstalls WeeWX extensions. Running `weectl
-extension --help` will give you more information about its three actions `list`, `install`, and
-`uninstall`:
+Use the subcommand `extension` to manage WeeWX extensions. Running
+`weectl extension --help` will give you information about its actions
+and options:
 
 ```shell
 % weectl extension --help
@@ -31,7 +29,8 @@ Which action to take:
     uninstall           Uninstall an extension
 ```
 
-## `weectl extension list`
+
+## weectl extension list
 
 This action will list all installed extensions.
 
@@ -48,14 +47,17 @@ optional arguments:
   --verbosity N         How much information to display {0-3}.
 ```
 
-#### --config
+### config
 
-The utility is pretty good about guessing where you configuration file. If it guesses wrong, use
-this option.
+The utility is pretty good about guessing where the WeeWX configuration file
+is located. If it guesses wrong, use this option to specify the configuration
+file.
 
-## `weectl extension install`
 
-This action will install an extension from a zipfile, tarball, directory, or URL.
+## weectl extension install
+
+This action will install an extension from a zipfile, tarball, directory, or
+URL.
 
 Running `weectl extension install --help` will show its options.
 
@@ -77,20 +79,24 @@ optional arguments:
   --dry-run             Print what would happen, but do not actually do it.
   --verbosity N         How much information to display {0-3}.
 ```
-#### --config
 
-The utility is pretty good about guessing where you configuration file. If it guesses wrong, use
-this option.
+### config
 
-#### --dry-run
+The utility is pretty good about guessing where the WeeWX configuration file
+is located. If it guesses wrong, use this option to specify the configuration
+file.
 
-This option will show you what the installer intends to do, but won't actually do it.
+### dry-run
 
-#### --verbosity=N
+This option will show you what the installer would do, but will not actually
+do it.
 
-This option selects how much information to show you as the installation proceeds.
+### verbosity=N
 
-## `weectl extension uninstall`
+This option selects how much information to show as the installation proceeds.
+
+
+## weectl extension uninstall
 
 This action uninstalls an extension.
 
@@ -113,24 +119,28 @@ optional arguments:
   --verbosity N         How much information to display {0-3}.
 ```
 
-#### --config
+### config
 
-The utility is pretty good about guessing where you configuration file. If it guesses wrong, use
-this option.
+The utility is pretty good about guessing where the WeeWX configuration file
+is located. If it guesses wrong, use this option to specify the configuration
+file.
 
-#### --dry-run
+### dry-run
 
-This option will show you what the installer intends to do, but won't actually do it.
+This option will show you what the installer would do, but will not actually
+do it.
 
-#### --verbosity=N
+### verbosity=N
 
-This option selects how much information to show you as the installation proceeds.
+This option selects how much information to show as the installation proceeds.
+
 
 ## Examples
 
-These examples exercise the installer. 
+These examples illustrate how to use the extension installer.
 
-Do a dry run of installing an uploader for the Windy website, maximum verbosity:
+Do a dry run of installing an uploader for the Windy website, maximum
+verbosity:
 
 ``` shell
 % weectl extension install https://github.com/matthewwall/weewx-windy/archive/master.zip --dry-run --verbosity=3
@@ -170,7 +180,7 @@ Extension Name    Version   Description
 windy             0.7       Upload weather data to Windy.
 ```
 
-Now uninstall it:
+Uninstall the extension:
 
 ```shell
 % weectl extension uninstall windy
