@@ -36,13 +36,13 @@ By default, the reports are generated as of the last timestamp in the database,
 however, an explicit time can be given by using either option `--epoch`, or by
 using options `--date` and `--time`.
 
-### `--config`
+### `--config=FILENAME`
 
 An optional path to the configuration file (usually, `weewx.conf`) can be given
 as either a positional argument, or by using option `--config` (but not both).
 If not given, the location of the configuration file will be inferred.
 
-### `--epoch`
+### `--epoch=EPOCH`
 
 Generate the reports so that they are current as of the given unix epoch time.
 
@@ -53,8 +53,8 @@ wee_reports --epoch=1652367600
 This would generate a report for unix epoch time 1652367600 (12-May-2022 at
 8AM PDT).
 
-### `--date`
-### `--time`
+### `--date=YYYY-MM-DD`
+### `--time=HH:MM`
 
 Generate the reports so that they are current as of the given date
 and time. The date should be given in the form `YYYY-MM-DD` and the time should
