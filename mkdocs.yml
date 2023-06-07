@@ -97,12 +97,11 @@ nav:
     - "Appendix": custom/appendix.md
 
   - Utilities:
-      - Overview: utilities/index.md
       - weectl:
           - Overview: weectl/index.md
           - weectl station: weectl/station.md
           - weectl extension: weectl/extension.md
-      - wee_database: utilities/utilities.htm#wee_database_utility
+      - wee_database: wee_database.md
       - wee_debug: utilities/utilities.htm#wee_debug_utility
       - wee_device: utilities/utilities.htm#wee_device_utility
       - wee_import: utilities/utilities.htm#wee_import_utility

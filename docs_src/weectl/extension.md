@@ -10,12 +10,12 @@ extension --help` will give you more information about its three actions `list`,
 % weectl extension --help
 usage: weectl extension list [--config=CONFIG-PATH]
 
-       weectl extension install {FILE|DIR|URL} \
-           [--config=CONFIG-PATH] \
+       weectl extension install {FILE|DIR|URL}
+           [--config=CONFIG-PATH]
            [--dry-run] [--verbosity=N]
 
-       weectl extension uninstall NAME \
-           [--config=CONFIG-PATH] \
+       weectl extension uninstall NAME
+           [--config=CONFIG-PATH]
            [--dry-run] [--verbosity=N]
 
 Manages WeeWX extensions
@@ -61,8 +61,8 @@ Running `weectl extension install --help` will show its options.
 
 ```shell
 % weectl extension install --help
-usage:   weectl extension install {FILE|DIR|URL} \
-           [--config=CONFIG-PATH] \
+usage:   weectl extension install {FILE|DIR|URL}
+           [--config=CONFIG-PATH]
            [--dry-run] [--verbosity=N]
 
 positional arguments:
@@ -98,8 +98,8 @@ Running `weectl extension uninstall --help` will show its options.
 
 ```shell
 % weectl extension uninstall --help
-usage:   weectl extension uninstall NAME \
-           [--config=CONFIG-PATH] \
+usage:   weectl extension uninstall NAME
+           [--config=CONFIG-PATH]
            [--dry-run] [--verbosity=N]
 
 positional arguments:

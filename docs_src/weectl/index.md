@@ -1,12 +1,13 @@
 # The utility **weectl**
 
-This is a guide to the utility `weectl`. As of version 5.0, this utility has two "subcommands",
-each with its own set of "actions". Eventually, it will subsume more and more of the functionality
-of the other utilities.
+This utility has two subcommands, each with its own set of actions.
 
-[`weectl station`](../weectl/station) : The creation, initialization, reconfiguration, and upgrading of "user data" areas.
+[`weectl station`](../weectl/station) : Create, initialize, reconfigure, and
+upgrade the configuration data that control how weewx interacts with the
+station hardware, manipulates data, and generates reports.
 
-[`weectl extension`](../weectl/extension) : The installation and uninstallation of extensions.
+[`weectl extension`](../weectl/extension) : List, install, and uninstall
+extensions to WeeWX.
 
 Running `weectl --help` will give an overview of its subcommands:
 
