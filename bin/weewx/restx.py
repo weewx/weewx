@@ -1231,7 +1231,7 @@ class CWOPThread(RESTThread):
         """Form the TNC2 packet used by CWOP."""
 
         # Preamble to the TNC packet:
-        _prefix = "%s>APRS,TCPIP*:" % self.station
+        _prefix = "%s>APWEE5,TCPIP*:" % self.station
 
         # Time:
         _time_tt = time.gmtime(record['dateTime'])
