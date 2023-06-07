@@ -31,3 +31,7 @@ command line option, others require `--config=`.
 Log to `~/weewx-data/log/weewx.log`.
 
 Update the logging wiki.
+
+## Website
+
+Change the forwarding `.htm` files in `weewx.com/docs` to point to the V5 versions.
