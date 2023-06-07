@@ -5,9 +5,9 @@ be used to install WeeWX on almost any operating system, including macOS.
 
 ## Prepare for install
 
-- WeeWX V5.x requires Python 3.7 or greater. It cannot be run with Python 2.x.
-  If you are constrained by this, install WeeWX V4.10, the last version to
-  support Python 2.7, Python 3.5, and Python 3.6.
+- WeeWX V5 requires Python 3.7 or greater. It cannot be run with Python 2.
+  If you are constrained by this, install WeeWX V4, which runs with Python 2.7,
+  Python 3.5, and Python 3.6.
 
 - You must also have a copy of pip. In most cases, your operating system will
   offer an [installation package](https://packaging.python.org/en/latest/guides/installing-using-linux-tools/).
@@ -57,22 +57,15 @@ your system:
     source ~/.profile
     ```
 
-## Install
-
-Installation is a two-step process:
-
-1. Install the WeeWX application using pip.
-2. Provision a new station using the tool `weectl`.
-
-
-### Step 1: Install the application using pip
+## Install WeeWX
 
 Once the preparatory steps are out of the way, you're ready to install WeeWX
 using pip.
 
 There are many ways to do this (see the wiki document [pip
 install strategies](https://github.com/weewx/weewx/wiki/pip-install-strategies)
-for a partial list), but the method below is one of the simplest and safest.
+for a partial list), but the method below is one of the simplest and safest,
+and does not require root privileges.
 
 ```shell
 python3 -m pip install weewx --user
@@ -96,14 +89,12 @@ When finished, the WeeWX executables will have been installed in
     ```
     If you do, log out, then log back in.
 
-### Step 2: Provision a new station
+## Provision a new station
 
-While the first step downloads everything into your local Python source tree,
-it does not set up the configuration specific to your station, nor does it set
-up the reporting skins. That is the job of the next step, which uses the tool
-`weectl`. 
-
-This step also does not require root privileges.
+While the first step downloads WeeWX and installs it into your local Python
+tree, it does not set up the configuration specific to your station, nor does
+it set up the reporting skins. That is done in the next step, which uses
+the tool `weectl`. This step also does not require root privileges.
 
 ```shell
 weectl station create
@@ -112,22 +103,15 @@ weectl station create
 The tool will ask you a series of questions, then create a directory
 `~/weewx-data` in your home directory with a new configuration file. It will
 also install skins, documentation, utilitiy files, and examples in the same
-directory. After running `weewxd`, the same directory will be used to hold
-the database file and any generated HTML pages.
-
-!!! Note
-    The directory `~/weewx-data` plays a role similar to `/home/weewx` in older
-    versions of WeeWX but, unlike `/home/weewx`, it does not hold any code.
-
-    If you already have a `/home/weewx` and wish to reuse it, see the
-    [Upgrading guide](../upgrading.htm) and the
-    [*Migrating setup.py installs to Version 5*](v5-upgrade.md).
+directory. The database and reports will also go into that directory, but
+only after you run `weewxd`, as shown in the following step.
 
 
 ## Run `weewxd`
 
 The program `weewxd` does the data collection, archiving, uploading, and report
 generation.  You can run it directly, or as a daemon.
+
 
 ### Run directly
 
@@ -141,7 +125,7 @@ weewxd
 ### Run as a daemon
 
 To make WeeWX start when the system is booted, run `weewxd` as a daemon.
-The steps to configure `weewxd` to run as a damone depend on your operating
+The steps to configure `weewxd` to run as a daemon depend on your operating
 system, and require root privileges.
 
 === "systemd"
@@ -295,7 +279,7 @@ You can also use pip to uninstall the dependencies, but first check that they
 are not being used by other programs!
 
 ```shell
-python3 -m pip uninstall pyserial pyusb CT3 Pillow configobj PyMySQL ephem ephem -y
+python3 -m pip uninstall pyserial pyusb configobj ephem CT3 Pillow PyMySQL -y
 ```
 
 Finally, if desired, delete the data directory:
