@@ -41,7 +41,7 @@ sudo zypper install weewx
 
 After 5 minutes, copy the following and paste into a web browser:
 
-    /var/www/html/index.html
+    /var/www/html/weewx/index.html
 
 You should see simulated data.
 

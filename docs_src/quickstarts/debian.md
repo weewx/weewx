@@ -46,7 +46,7 @@ sudo apt install weewx
 After about 5 minutes (the exact length of time depends on your archive
 interval), copy the following and paste into a web browser:
 
-    /var/www/html/index.html
+    /var/www/html/weewx/index.html
 
 You should see your station information and data.
 
@@ -73,8 +73,8 @@ sudo systemctl start weewx
 ## Customize
 
 To enable uploads or to customize reports, modify the configuration file
-`/etc/weewx/weewx.conf`. See the [*User Guide*](../usersguide) and
-[*Customization Guide*](../custom) for details.
+`/etc/weewx/weewx.conf`. See the [*User Guide*](../../usersguide) and
+[*Customization Guide*](../../custom) for details.
 
 WeeWX must be restarted for configuration file changes to take effect.
 
