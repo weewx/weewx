@@ -41,7 +41,7 @@ sudo apt install weewx
 ```
 
 
-### Verify
+## Verify
 
 After about 5 minutes (the exact length of time depends on your archive
 interval), copy the following and paste into a web browser:

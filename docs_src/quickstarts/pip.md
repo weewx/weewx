@@ -131,9 +131,8 @@ generation.  You can run it directly, or as a daemon.
 
 ### Run directly
 
-The main program `weewxd` can be run directly like any other program.  When
-you run weewx this way, it will print data to the screen, and weewx will stop
-when you log out.
+When you run WeeWX directly, it will print data to the screen, and WeeWX will
+stop when you either control-c or log out.
 
 ```shell
 weewxd
@@ -141,7 +140,7 @@ weewxd
 
 ### Run as a daemon
 
-To make weewx start when the system is booted, run `weewxd` as a daemon.
+To make WeeWX start when the system is booted, run `weewxd` as a daemon.
 The steps to configure `weewxd` to run as a damone depend on your operating
 system, and require root privileges.
 

@@ -37,7 +37,7 @@ sudo zypper install weewx
 ```
 
 
-### Verify
+## Verify
 
 After 5 minutes, copy the following and paste into a web browser:
 
