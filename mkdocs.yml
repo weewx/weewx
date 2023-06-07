@@ -47,7 +47,6 @@ site_dir: 'build/docs'
 
 nav:
   - "Quick starts":
-      - "Quick starts": ./quickstarts/index.md
       - Debian: ./quickstarts/debian.md
       - RedHat: ./quickstarts/redhat.md
       - SuSE: ./quickstarts/suse.md
