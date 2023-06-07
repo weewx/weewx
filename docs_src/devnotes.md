@@ -40,6 +40,7 @@ To meet these goals, the following strategies were used:
 -   A *micro-kernel* design. The WeeWX engine actually does very
     little. Its primary job is to load and run *services* at runtime,
     making it easy for users to add or subtract features.
+
 -   A largely stateless design style. For example, many of the
     processing routines read the data they need directly from the
     database, rather than caching it and sharing with other routines.
@@ -48,21 +49,25 @@ To meet these goals, the following strategies were used:
     database, where transactions are easily controlled. This greatly
     reduces the chances of corrupting the data, making it much easier to
     understand and modify the code base.
+
 -   Isolated data collection and archiving. The code for collecting and
     archiving data run in a single thread that is simple enough that it
     is unlikely to crash. The report processing is where most mistakes
     are likely to happen, so isolate that in a separate thread. If it
     crashes, it will not affect the main data thread.
+
 -   A powerful configuration parser. The
     [ConfigObj](https://configobj.readthedocs.io) module, by Michael
     Foord and Nicola Larosa, was chosen to read the configuration file.
     This allows many options that might otherwise have to go in the
     code, to be in a configuration file.
+
 -   A powerful templating engine. The
     [Cheetah](https://cheetahtemplate.org/) module was chosen for
     generating html and other types of files from templates. Cheetah
     allows *search list extensions* to be defined, making it easy to
     extend WeeWX with new template tags.
+
 -   Pure Python. The code base is 100% Python &mdash; no underlying C
     libraries need be built to install WeeWX. This also means no
     Makefiles are needed.
@@ -76,9 +81,7 @@ Conditions* page takes just under 2 seconds (compared with 0.4 seconds
 for wview).
 
 All writes to the databases are protected by transactions. You can kill
-the program at any time (either Control-C if run directly or
-`/etc/init.d/weewx stop` if run as a daemon) without fear of
-corrupting the databases.
+the program at any time without fear of corrupting the databases.
 
 The code makes ample use of exceptions to insure graceful recovery from
 problems such as network outages. It also monitors socket and console
@@ -106,7 +109,9 @@ a difference:
     use U.S. Customary units exclusively, Fine Offset and LaCrosse
     stations use metric, while Oregon Scientific, Peet Bros, and Hideki
     stations use a mishmash of US and metric.
+
 2.  In the database. Either US or Metric can be used.
+
 3.  In the presentation (i.e., html and image files).
 
 The general strategy is that measurements are converted by service
@@ -254,7 +259,7 @@ exception, and let the rest go by:
         pass
 ```
 
-WeeWX has a few specialized exception types, used to rationalized all
+WeeWX has a few specialized exception types, used to rationalize all
 the different types of exceptions that could be thrown by the underlying
 libraries. In particular, low-level I/O code can raise a myriad of
 exceptions, such as USB errors, serial errors, network connectivity
@@ -286,56 +291,43 @@ pressure_mbar = 990.1
 WeeWX uses a number of conventions to signal the variable type, although
 they are not used consistently.
 
-<html>
- <table style="width: 75%" class='indent'>
-            <caption>Variable suffix conventions</caption>
-            <tr class="first_row">
-                <td>Suffix</td>
-                <td>Example</td>
-                <td>Description</td>
-            </tr>
-            <tr>
-                <td class="code">_ts</td>
-                <td class="code">first_ts</td>
-                <td>Variable is a timestamp in <a href="https://en.wikipedia.org/wiki/Unix_time">unix epoch time</a>.
-                </td>
-            </tr>
-            <tr>
-                <td class="code">_dt</td>
-                <td class="code">start_dt</td>
-                <td>Variable is an instance of <a
-                    href="https://docs.python.org/3/library/datetime.html#datetime-objects"><span class="code">datetime.datetime</span></a>,
-                    usually in <em>local time</em>.
-                </td>
-            </tr>
-            <tr>
-                <td class="code">_d</td>
-                <td class="code">end_d</td>
-                <td>Variable is an instance of <a
-                    href="https://docs.python.org/3/library/datetime.html#date-objects"><span
-                    class="code">datetime.date</span></a>, usually in <em>local time</em>.
-                </td>
-            </tr>
-            <tr>
-                <td class="code">_tt</td>
-                <td class="code">sod_tt</td>
-                <td>Variable is an instance of <span class="code">time.struct_time</span> (a <a
-                    href="https://docs.python.org/3/library/time.html#time.struct_time"><em>time tuple</em>)</a>,
-                    usually in <em>local time</em>.
-                </td>
-            </tr>
-            <tr>
-                <td class="code">_vh</td>
-                <td class="code">pressure_vh</td>
-                <td>Variable is an instance of <span class="code">weewx.units.ValueHelper</span>.</td>
-            </tr>
-            <tr>
-                <td class="code">_vt</td>
-                <td class="code">speed_vt</td>
-                <td>Variable is an instance of <span class="code">weewx.units.ValueTuple</span>.</td>
-            </tr>
-        </table>
-
+<table class="no_indent">
+  <caption>Variable suffix conventions</caption>
+  <tr class="first_row">
+    <td>Suffix</td>
+    <td>Example</td>
+    <td>Description</td>
+  </tr>
+  <tr>
+    <td class="code">_ts</td>
+    <td class="code">first_ts</td>
+    <td>Variable is a timestamp in <a href="https://en.wikipedia.org/wiki/Unix_time">unix epoch time</a>.</td>
+  </tr>
+  <tr>
+    <td class="code">_dt</td>
+    <td class="code">start_dt</td>
+    <td>Variable is an instance of <a href="https://docs.python.org/3/library/datetime.html#datetime-objects"><span class="code">datetime.datetime</span></a>, usually in <em>local time</em>.</td>
+  </tr>
+  <tr>
+    <td class="code">_d</td>
+    <td class="code">end_d</td>
+    <td>Variable is an instance of <a href="https://docs.python.org/3/library/datetime.html#date-objects"><span class="code">datetime.date</span></a>, usually in <em>local time</em>.</td>
+  </tr>
+  <tr>
+    <td class="code">_tt</td>
+    <td class="code">sod_tt</td>
+    <td>Variable is an instance of <span class="code">time.struct_time</span> (a <a href="https://docs.python.org/3/library/time.html#time.struct_time"><em>time tuple</em>)</a>, usually in <em>local time</em>.</td>
+  </tr>
+  <tr>
+    <td class="code">_vh</td>
+    <td class="code">pressure_vh</td>
+    <td>Variable is an instance of <span class="code">weewx.units.ValueHelper</span>.</td>
+  </tr>
+  <tr>
+    <td class="code">_vt</td>
+    <td class="code">speed_vt</td>
+    <td>Variable is an instance of <span class="code">weewx.units.ValueTuple</span>.</td>
+  </tr>
 </table>
 
 ## Code style
@@ -352,6 +344,7 @@ feature!* Two reasons:
 
 -   Unless all developers use the same tool, using the same settings, we
     will just thrash back and forth between slightly different versions.
+
 -   Automatic formatters play a useful role, but some of what they do
     are really trivial changes, such as removing spaces in otherwise
     blank lines. Now if someone is trying to figure out what real,
@@ -399,6 +392,7 @@ on the text. In this model, there are two key branches:
     *hot fix* branches and, instead, just incorporate any fixes
     directly into the branch. Releases are tagged relative to this
     branch.
+
 -   'development' (called `develop` in Vince's article).
     This is where new features go. Before a release, they will be merged
     into the `master` branch.
@@ -415,9 +409,9 @@ The WeeWX GitHub repository is configured to use
 to run Continuous Integration (CI) workflows automatically if certain
 `git` operations are done on branches under active development.
 
-This means that CI workflows will also be run on any forks that you may have made if the configured
-`git` action is done. This can be confusing if you get an email from GitHub if these
-tasks fail for some reason on your fork.
+This means that CI workflows will also be run on any forks that you may have
+made if the configured `git` action is done. This can be confusing if you get
+an email from GitHub if these tasks fail for some reason on your fork.
 
 To control GitHub Actions for your fork, see the recommended solutions in this
 [GitHub discussion](https://github.com/orgs/community/discussions/26704#discussioncomment-3252979)
@@ -441,8 +435,8 @@ if you will be using a framework such as NodeJS or ExpressJS.
 
 ## Daily summaries {#Daily_summaries}
 
-This section builds on the discussion [*The database*](../custom/#the-database) in 
-the *Customization Guide*. Read it first.
+This section builds on the discussion [*The database*](../custom/#the-database)
+in the *Customization Guide*. Read it first.
 
 The big flat table in the database (usually called table
 `archive`) is the definitive table of record. While it includes a
@@ -456,138 +450,109 @@ holds a statistical summary for the day. For example, for outside
 temperature observation type `outTemp`, this table would be
 named `archive_day_outTemp`. Here's what it would look like:
 
-<html>
-  <table class="indent fixed_width">
-            <caption>
-                Structure of the <span class="code">archive_day_outTemp</span> daily summary
-            </caption>
-            <tr class="code first_row">
-                <td>dateTime</td>
-                <td>min</td>
-                <td>mintime</td>
-                <td>max</td>
-                <td>maxtime</td>
-                <td>sum</td>
-                <td>count</td>
-                <td>wsum</td>
-                <td>sumtime</td>
-            </tr>
-            <tr class="code">
-                <td>1652425200</td>
-                <td>44.7</td>
-                <td>1652511600</td>
-                <td>56.0</td>
-                <td>1652477640</td>
-                <td>38297.0</td>
-                <td>763</td>
-                <td>2297820.0</td>
-                <td>45780</td>
-            </tr>
-            <tr class="code">
-                <td>1652511600</td>
-                <td>44.1</td>
-                <td>1652531280</td>
-                <td>66.7</td>
-                <td>1652572500</td>
-                <td>76674.4</td>
-                <td>1433</td>
-                <td>4600464.0</td>
-                <td>85980</td>
-            </tr>
-            <tr class="code">
-                <td>1652598000</td>
-                <td>50.3</td>
-                <td>1652615220</td>
-                <td>59.8</td>
-                <td>1652674320</td>
-                <td>32903.0</td>
-                <td>611</td>
-                <td>1974180.0</td>
-                <td>36660</td>
-            </tr>
-            <tr class="code">
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-                <td>...</td>
-            </tr>
-        </table>
-</html> 
+<table class="fixed_width">
+  <caption>Structure of the <span class="code">archive_day_outTemp</span> daily summary</caption>
+  <tr class="code first_row">
+    <td>dateTime</td>
+    <td>min</td>
+    <td>mintime</td>
+    <td>max</td>
+    <td>maxtime</td>
+    <td>sum</td>
+    <td>count</td>
+    <td>wsum</td>
+    <td>sumtime</td>
+  </tr>
+  <tr class="code">
+  <td>1652425200</td>
+    <td>44.7</td>
+    <td>1652511600</td>
+    <td>56.0</td>
+    <td>1652477640</td>
+    <td>38297.0</td>
+    <td>763</td>
+    <td>2297820.0</td>
+    <td>45780</td>
+  </tr>
+  <tr class="code">
+    <td>1652511600</td>
+    <td>44.1</td>
+    <td>1652531280</td>
+    <td>66.7</td>
+    <td>1652572500</td>
+    <td>76674.4</td>
+    <td>1433</td>
+    <td>4600464.0</td>
+    <td>85980</td>
+  </tr>
+  <tr class="code">
+    <td>1652598000</td>
+    <td>50.3</td>
+    <td>1652615220</td>
+    <td>59.8</td>
+    <td>1652674320</td>
+    <td>32903.0</td>
+    <td>611</td>
+    <td>1974180.0</td>
+    <td>36660</td>
+  </tr>
+  <tr class="code">
+    <td>...</td>
+    <td>...</td>
+    <td>...</td>
+    <td>...</td>
+    <td>...</td>
+    <td>...</td>
+    <td>...</td>
+    <td>...</td>
+    <td>...</td>
+  </tr>
+</table>
 
 Here's what the table columns mean:
 
-<html>
-    <table class="indent">
-            <tr class="first_row">
-                <td>Name</td>
-                <td>Meaning</td>
-            </tr>
-            <tr>
-                <td class="first_col code">dateTime</td>
-                <td>The time of the start of day in <a href="https://en.wikipedia.org/wiki/Unix_time">unix epoch
-                    time</a>. This is the <em>primary key</em> in the database. It must be unique, and it cannot be
-                    null.
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col code">min</td>
-                <td>
-                    The minimum temperature seen for the day. The unit is whatever unit system the main archive table
-                    uses (generally given by the first record in the table).
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col code">mintime</td>
-                <td>
-                    The time in unix epoch time of the minimum temperature.
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col code">max</td>
-                <td>
-                    The maximum temperature seen for the day. The unit is whatever unit system the main archive table
-                    uses (generally given by the first record in the table).
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col code">maxtime</td>
-                <td>
-                    The time in unix epoch time of the maximum temperature.
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col code">sum</td>
-                <td>
-                    The sum of all the temperatures for the day.
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col code">count</td>
-                <td>
-                    The number of records in the day.
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col code">wsum</td>
-                <td>
-                    The weighted sum of all the temperatures for the day. The weight is the archive interval. That is,
-                    for each record, the temperature is multiplied by the length of the archive record, then summed up.
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col code">sumtime</td>
-                <td>
-                    The sum of all the archive intervals for the day. If the archive interval didn't change during the
-                    day, then this number would be <span class="code">interval * count</span>.
-                </td>
-            </tr>
-        </table>
-</html>
+<table class="no_indent">
+  <tr class="first_row">
+    <td>Name</td>
+    <td>Meaning</td>
+  </tr>
+  <tr>
+    <td class="first_col code">dateTime</td>
+    <td>The time of the start of day in <a href="https://en.wikipedia.org/wiki/Unix_time">unix epoch time</a>. This is the <em>primary key</em> in the database. It must be unique, and it cannot be null.</td>
+  </tr>
+  <tr>
+    <td class="first_col code">min</td>
+    <td>The minimum temperature seen for the day. The unit is whatever unit system the main archive table uses (generally given by the first record in the table).</td>
+  </tr>
+  <tr>
+    <td class="first_col code">mintime</td>
+    <td>The time in unix epoch time of the minimum temperature.</td>
+  </tr>
+  <tr>
+    <td class="first_col code">max</td>
+    <td>The maximum temperature seen for the day. The unit is whatever unit system the main archive table uses (generally given by the first record in the table).</td>
+  </tr>
+  <tr>
+    <td class="first_col code">maxtime</td>
+    <td>The time in unix epoch time of the maximum temperature.</td>
+  </tr>
+  <tr>
+    <td class="first_col code">sum</td>
+    <td>The sum of all the temperatures for the day.</td>
+  </tr>
+  <tr>
+    <td class="first_col code">count</td>
+    <td>The number of records in the day.</td>
+  </tr>
+  <tr>
+    <td class="first_col code">wsum</td>
+    <td>The weighted sum of all the temperatures for the day. The weight is the archive interval. That is, for each record, the temperature is multiplied by the length of the archive record, then summed up.</td>
+  </tr>
+  <tr>
+    <td class="first_col code">sumtime</td>
+    <td>The sum of all the archive intervals for the day. If the archive interval didn't change during the day, then this number would be <span class="code">interval * count</span>.</td>
+  </tr>
+</table>
 
 Note how the average temperature for the day can be calculated as `wsum
 / sumtime`. This will be true even if the archive interval
@@ -601,51 +566,40 @@ of thousands of records. This results in a dramatic speed up for report
 generation, particularly on slower machines such as the Raspberry Pi,
 working off an SD card.
 
-### Wind
+### Wind summaries
 
 The daily summary for wind includes six additional fields. Here's what
 they mean:
 
-<table>
-<table class="indent">
-            <tr class="first_row">
-                <td>Name</td>
-                <td>Meaning</td>
-            </tr>
-            <tr>
-                <td class="first_col code">max_dir</td>
-                <td>The direction of the maximum wind seen for the day.</td>
-            </tr>
-            <tr>
-                <td class="first_col code">xsum</td>
-                <td>The sum of the x-component (east-west) of the wind for the day.</td>
-            </tr>
-            <tr>
-                <td class="first_col code">ysum</td>
-                <td>The sum of the y-component (north-south) of the wind for the day.</td>
-            </tr>
-            <tr>
-                <td class="first_col code">dirsumtime</td>
-                <td>
-                    The sum of all the archive intervals for the day, <em>which contributed to <span
-                    class="code">xsum</span> and <span class="code">ysum</span></em>.
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col code">squaresum</td>
-                <td>
-                    The sum of the wind speed squared for the day.
-                </td>
-            </tr>
-            <tr>
-                <td class="first_col code">wsquaresum</td>
-                <td>
-                    The sum of the weighted wind speed squared for the day. That is the wind speed is squared, then
-                    multiplied by the archive interval, then summed for the day. This is useful for calculating RMS wind
-                    speed.
-                </td>
-            </tr>
-        </table>
+<table class="no_indent">
+  <tr class="first_row">
+    <td>Name</td>
+    <td>Meaning</td>
+  </tr>
+  <tr>
+    <td class="first_col code">max_dir</td>
+    <td>The direction of the maximum wind seen for the day.</td>
+  </tr>
+  <tr>
+    <td class="first_col code">xsum</td>
+    <td>The sum of the x-component (east-west) of the wind for the day.</td>
+  </tr>
+  <tr>
+    <td class="first_col code">ysum</td>
+    <td>The sum of the y-component (north-south) of the wind for the day.</td>
+  </tr>
+  <tr>
+    <td class="first_col code">dirsumtime</td>
+    <td>The sum of all the archive intervals for the day, <em>which contributed to <span class="code">xsum</span> and <span class="code">ysum</span></em>.</td>
+  </tr>
+  <tr>
+    <td class="first_col code">squaresum</td>
+    <td>The sum of the wind speed squared for the day.</td>
+  </tr>
+  <tr>
+    <td class="first_col code">wsquaresum</td>
+    <td>The sum of the weighted wind speed squared for the day. That is the wind speed is squared, then multiplied by the archive interval, then summed for the day. This is useful for calculating RMS wind speed.</td>
+  </tr>
 </table>
 
 Note that the RMS wind speed can be calculated as
@@ -658,120 +612,147 @@ math.sqrt(wsquaresum / sumtime)
 
 This is a glossary of terminology used throughout the code.
 
-<html>
-       <table style="width: 95%" class='indent'>
-            <caption>Terminology used in WeeWX</caption>
-            <tr class="first_row">
-                <td>Name</td>
-                <td>Description</td>
-            </tr>
-            <tr>
-                <td class="text_highlight">archive interval</td>
-                <td>WeeWX does not store the raw data that comes off a weather station. Instead, it aggregates the data
-                    over a length of time, the <em>archive interval</em>, and then stores that.
-                </td>
-            </tr>
-            <tr>
-                <td class="text_highlight">archive record</td>
-                <td>While <em>packets</em> are raw data that comes off the weather station, <em>records</em> are data
-                    aggregated by time. For example, temperature may be the average temperature over an <em>archive
-                        interval</em>. These are the data stored in the SQL database
-                </td>
-            </tr>
-            <tr>
-                <td class="text_highlight code">config_dict</td>
-                <td>All configuration information used by WeeWX is stored in the <em>configuration file</em>, usually
-                    with the name <span class="code">weewx.conf</span>. By convention, when this file is read into the
-                    program, it is called <span class="code">config_dict</span>, an instance of the class <span
-                        class="code">configobj.ConfigObj</span>.
-                </td>
-            </tr>
-            <tr>
-                <td class="text_highlight">datetime</td>
-                <td>An instance of the Python object <span class="code">datetime.datetime</span>. Variables of type
-                    datetime usually have a suffix <span class="code">_dt</span>.
-                </td>
-            </tr>
-            <tr>
-                <td class="text_highlight">db_dict</td>
-                <td>A dictionary with all the data necessary to bind to a database. An example for SQLite would be <span
-                    class="code">
-            {'driver':'db.sqlite',
-            'SQLITE_ROOT':'/home/weewx/archive',
-            'database_name':'weewx.sdb'}</span>, an example for MySQL would be <span class="code">{
-            'driver':'db.mysql',
-            'host':'localhost',
-            'user':'weewx',
-            'password':'mypassword',
-            'database_name':'weewx'}</span>.
-                </td>
-            </tr>
-            <tr>
-                <td class="text_highlight">epoch time</td>
-                <td>Sometimes referred to as &quot;unix time,&quot; or &quot;unix epoch time.&quot; The number of
-                    seconds since the epoch, which is 1 Jan 1970 00:00:00 UTC. Hence, it always represents UTC (well...
-                    after adding a few leap seconds... but, close enough). This is the time used in the databases and
-                    appears as type <span class="code">
-            dateTime</span> in the SQL schema, perhaps an unfortunate name because of the similarity to the completely
-                    unrelated Python type <span class="code">datetime</span>. Very easy to manipulate, but it is a big
-                    opaque number.
-                </td>
-            </tr>
-            <tr>
-                <td class="text_highlight">LOOP packet</td>
-                <td>The real-time data coming off the weather station. The terminology "LOOP" comes from the Davis
-                    series of weather stations. A LOOP packet can contain all observation types, or it may contain only some of them
-                    ("Partial packet").
-                </td>
-            </tr>
-            <tr>
-                <td class="text_highlight">observation&nbsp;type</td>
-                <td>A physical quantity measured by a weather station (<i>e.g.</i>, <span class="code">outTemp</span>)
-                    or something derived from it (<i>e.g.</i>, <span class="code">dewpoint</span>).
-                </td>
-            </tr>
-            <tr>
-                <td class="text_highlight code">skin_dict</td>
-                <td>All configuration information used by a particular skin is stored in the <em>skin configuration
-                    file</em>, usually with the name <span class="code">skin.conf</span>. By convention, when this file
-                    is read into the program, it is called <span class="code">skin_dict</span>, an instance of the class
-                    <span class="code">configobj.ConfigObj</span>.
-                </td>
-            </tr>
-            <tr>
-                <td class="text_highlight">SQL type</td>
-                <td>A type that appears in the SQL database. This usually looks something like <span class="code">outTemp</span>,
-                    <span class="code">barometer</span>, <span class="code">extraTemp1</span>, and so on.
-                </td>
-            </tr>
-            <tr>
-                <td class="text_highlight">standard unit system</td>
-                <td>A complete set of units used together. Either <span class="code">US</span>, <span class="code">METRIC</span>,
-                    or <span class="code">METRICWX</span>.
-                </td>
-            </tr>
-            <tr>
-                <td class="text_highlight">time stamp</td>
-                <td>A variable in unix epoch time. Always in UTC. Variables carrying a time stamp usually have a suffix
-                    <span class="code">_ts</span>.
-                </td>
-            </tr>
-            <tr>
-                <td class="text_highlight">tuple-time</td>
-                <td>An instance of the Python object <span class="code">
-            <a href="http://docs.python.org/2/library/time.html#time.struct_time">
-                time.struct_time</a></span>. This is a 9-way tuple that represent a time. It could be in either local
-                    time or UTC, though usually the former. See module <span class="code">
-            <a href="http://docs.python.org/2/library/time.html">time</a></span> for more information. Variables
-                    carrying tuple time usually have a suffix <span class="code">_tt</span>.
-                </td>
-            </tr>
-            <tr>
-                <td class="text_highlight">value tuple</td>
-                <td>A 3-way tuple. First element is a value, second element the unit type the value is in, the third the
-                    unit group. An example would be <span class="code">(21.2,
-            &#39;degree_C&#39;, &#39;group_temperature&#39;)</span>.
-                </td>
-            </tr>
-        </table>
-</html>
+<table class='no_indent'>
+  <caption>Terminology used in WeeWX</caption>
+  <tr class="first_row">
+    <td>Name</td>
+    <td>Description</td>
+  </tr>
+  <tr>
+    <td class="text_highlight">archive interval</td>
+    <td>
+WeeWX does not store the raw data that comes off a weather station. Instead,
+it aggregates the data over a length of time, the <em>archive interval</em>,
+and then stores that.
+    </td>
+  </tr>
+  <tr>
+    <td class="text_highlight">archive record</td>
+    <td>
+While <em>packets</em> are raw data that comes off the weather station,
+<em>records</em> are data aggregated by time. For example, temperature may be
+the average temperature over an <em>archive interval</em>. These are the data
+stored in the SQL database
+    </td>
+  </tr>
+  <tr>
+    <td class="text_highlight code">config_dict</td>
+    <td>
+All configuration information used by WeeWX is stored in the <em>configuration
+file</em>, usually with the name <span class="code">weewx.conf</span>. By
+convention, when this file is read into the program, it is called <span
+class="code">config_dict</span>, an instance of the class
+<span class="code">configobj.ConfigObj</span>.
+    </td>
+  </tr>
+  <tr>
+    <td class="text_highlight">datetime</td>
+    <td>
+An instance of the Python object <span class="code">datetime.datetime</span>.
+Variables of type datetime usually have a suffix <span class="code">_dt</span>.
+    </td>
+  </tr>
+  <tr>
+    <td class="text_highlight">db_dict</td>
+    <td>
+A dictionary with all the data necessary to bind to a database. An example for
+SQLite would be
+<pre>
+{
+  'driver':'db.sqlite',
+  'SQLITE_ROOT':'/home/weewx/archive',
+  'database_name':'weewx.sdb'
+ }</pre>
+ An example for MySQL would be
+ <pre>
+ {
+   'driver':'db.mysql',
+   'host':'localhost',
+   'user':'weewx',
+   'password':'mypassword',
+   'database_name':'weewx'
+ }</pre>
+    </td>
+  </tr>
+  <tr>
+    <td class="text_highlight">epoch time</td>
+    <td>
+Sometimes referred to as &quot;unix time,&quot; or &quot;unix epoch time.&quot;
+The number of seconds since the epoch, which is 1 Jan 1970 00:00:00 UTC. Hence,
+it always represents UTC (well... after adding a few leap seconds... but, close
+enough). This is the time used in the databases and appears as type
+<span class="code">dateTime</span> in the SQL schema, perhaps an unfortunate
+name because of the similarity to the completely unrelated Python type <span
+class="code">datetime</span>. Very easy to manipulate, but it is a big opaque
+number.
+    </td>
+  </tr>
+  <tr>
+    <td class="text_highlight">LOOP packet</td>
+    <td>
+The real-time data coming off the weather station. The terminology "LOOP" comes
+from the Davis series of weather stations. A LOOP packet can contain all
+observation types, or it may contain only some of them ("Partial packet").
+    </td>
+  </tr>
+  <tr>
+    <td class="text_highlight">observation&nbsp;type</td>
+    <td>
+A physical quantity measured by a weather station (<i>e.g.</i>,
+<span class="code">outTemp</span>) or something derived from it (<i>e.g.</i>,
+<span class="code">dewpoint</span>).
+    </td>
+  </tr>
+  <tr>
+    <td class="text_highlight code">skin_dict</td>
+    <td>
+All configuration information used by a particular skin is stored in the
+<em>skin configuration file</em>, usually with the name
+<span class="code">skin.conf</span>. By convention, when this file is read
+into the program, it is called <span class="code">skin_dict</span>, an
+instance of the class <span class="code">configobj.ConfigObj</span>.
+    </td>
+  </tr>
+  <tr>
+    <td class="text_highlight">SQL type</td>
+    <td>
+A type that appears in the SQL database. This usually looks something like
+<span class="code">outTemp</span>, <span class="code">barometer</span>,
+<span class="code">extraTemp1</span>, and so on.
+    </td>
+  </tr>
+  <tr>
+    <td class="text_highlight">standard unit system</td>
+    <td>
+A complete set of units used together. Either <span class="code">US</span>,
+<span class="code">METRIC</span>, or <span class="code">METRICWX</span>.
+    </td>
+  </tr>
+  <tr>
+    <td class="text_highlight">time stamp</td>
+    <td>
+A variable in unix epoch time. Always in UTC. Variables carrying a time stamp
+usually have a suffix <span class="code">_ts</span>.
+    </td>
+  </tr>
+  <tr>
+    <td class="text_highlight">tuple-time</td>
+    <td>
+An instance of the Python object <span class="code">
+<a href="http://docs.python.org/2/library/time.html#time.struct_time">
+time.struct_time</a></span>. This is a 9-way tuple that represent a time. It
+could be in either local time or UTC, though usually the former. See module
+<span class="code"><a href="http://docs.python.org/2/library/time.html">time</a></span>
+for more information. Variables carrying tuple time usually have a suffix
+<span class="code">_tt</span>.
+    </td>
+  </tr>
+  <tr>
+    <td class="text_highlight">value tuple</td>
+    <td>
+A 3-way tuple. First element is a value, second element the unit type the value
+is in, the third the unit group. An example would be <span class="code">(21.2,
+&#39;degree_C&#39;, &#39;group_temperature&#39;)</span>.
+    </td>
+  </tr>
+</table>

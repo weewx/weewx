@@ -21,10 +21,6 @@ body {
     .main {
         width: 100%;
     }
-
-    .tr {
-        font-size: 80%;
-    }
 }
 
 @media (min-width: 641px) {
@@ -36,10 +32,6 @@ body {
     .main {
         margin-left: 210px;
         width: auto;
-    }
-
-    .tr {
-        font-size: 80%;
     }
 }
 
@@ -224,7 +216,6 @@ caption {
     font-weight: bold;
 }
 
-
 .code {
     font-family: 'Inconsolata', monospace;
 }
@@ -249,6 +240,11 @@ p .symcode {
 .indent {
     margin-left: 30px;
     width: 95%;
+}
+
+.no_indent {
+    margin-left: 0px;
+    width: 98%;
 }
 
 .station_data {
@@ -382,7 +378,7 @@ p .symcode {
 }
 
 .version {
-    font-size: 60%;
+    font-size: 80%;
 }
 
 .logo {
@@ -476,7 +472,7 @@ ul.mc-list > li {
 
     .title {
         text-align: center;
-        font-size: 250%;
+        font-size: 180%;
     }
 
     .image {
