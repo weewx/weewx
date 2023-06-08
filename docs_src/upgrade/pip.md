@@ -13,7 +13,7 @@ pip install weewx --upgrade --user
 You may then wish to upgrade your configuration file, documentation, examples,
 and daemon utility files by using the tool `weectl`:
 
-````
+```
 weectl station upgrade
 ```
 

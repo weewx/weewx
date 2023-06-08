@@ -10,7 +10,7 @@ sudo apt install weewx
 ```
 
 Otherwise, download the latest X.Y.Z DEB package from the
-<a href="https://weewx.com/downloads/">Download page</a> on `weewx.com`, then
+<a href="https://weewx.com/downloads/">WeeWX downloads</a>, then
 upgrade like this:
 
 ```
