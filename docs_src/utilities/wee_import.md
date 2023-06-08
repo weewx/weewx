@@ -244,7 +244,7 @@ action, but they can consist of extensive output and thus make it difficult
 to follow the import progress. Irrespective of whether `--suppress-warnings`
 is used all warnings are sent to log.
 
-  ```
+```
 wee_import --import-config=/directory/import.conf --suppress-warnings
 ```
 
@@ -498,7 +498,7 @@ WeeWX records wind direction in degrees as a number from 0 to 360 inclusive (no 
   </tbody>
 </table>
 
->The default is <span class="code">0, 360</span>.
+The default is `0, 360`
 
 #### `[[FieldMap]]`
 
