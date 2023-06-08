@@ -48,7 +48,7 @@ should thoroughly check the generated output for personal/private information
 before posting the information publicly.
 ```
 
-### `--config`
+### `--config=FILENAME`
 
 The utility is pretty good about guessing where the configuration file is,
 but if you have an unusual installation or multiple stations, you may have to
@@ -74,7 +74,7 @@ debugging.
 wee_debug --info
 ```
 
-!!! Warning!
+!!! Warning
     The `wee_debug` output includes a copy of the WeeWX config file (typically
     `weewx.conf`) and whilst `wee_debug` attempts to obfuscate any personal or
     sensitive information, the user should carefully check the `wee_debug`
