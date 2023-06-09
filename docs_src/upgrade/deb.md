@@ -1,20 +1,13 @@
 # Upgrade DEB
 
-If you have specified the WeeWX apt repository in
-`/etc/apt/sources.list.d/weewx.list`, then upgrade to the latest version
-like this:
+These are the instructions for upgrading WeeWX that was installed from a
+deb package using `apt` on a system based on Debian.
+
+Upgrade to the latest version like this:
 
 ```
 sudo apt update
 sudo apt install weewx
-```
-
-Otherwise, download the latest X.Y.Z DEB package from the
-<a href="https://weewx.com/downloads/">WeeWX downloads</a>, then
-upgrade like this:
-
-```
-sudo apt install ./python3-weewx_X.Y.Z-R_all.deb
 ```
 
 The upgrade process will not modify the WeeWX databases.
@@ -29,8 +22,8 @@ something like this:
 
 ```
 Configuration file `/etc/weewx/weewx.conf'
-  ==&gt; Modified (by you or by a script) since installation.
-  ==&gt; Package distributor has shipped an updated version.
+  ==> Modified (by you or by a script) since installation.
+  ==> Package distributor has shipped an updated version.
   What would you like to do about it ?  Your options are:
             Y or I  : install the package maintainer's version
             N or O  : keep your currently-installed version
@@ -50,4 +43,4 @@ new version number. It can then be compared with your old version which
 will be in `/etc/weewx/weewx.conf`.
 
 !!! Note
-    In most cases you will want to choose `N` (the default).
+    In most cases you should choose `N` (the default).

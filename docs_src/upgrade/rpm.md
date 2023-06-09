@@ -1,18 +1,13 @@
 # Upgrade RPM
 
-If you have specified the WeeWX yum repository in
-`/etc/yum.repos.d/weewx.repo`, then upgrade to the latest version like this:
+These are the instructions for upgrading WeeWX that was installed from an
+rpm package using `yum` or `dnf` (systems based on Redhat) or `zypper`
+(systems based on SUSE).
+
+Upgrade to the latest version like this:
 
 ```
 sudo yum update weewx
-```
-
-Otherwise, download the latest X.Y.Z RPM package from the
-<a href="https://weewx.com/downloads/">WeeWX downloads</a>, then
-upgrade like this:
-
-```
-sudo rpm -U weewx-X.Y.Z-R.rpm
 ```
 
 The upgrade process will not modify the WeeWX databases.
