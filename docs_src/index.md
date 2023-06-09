@@ -69,9 +69,10 @@ consult the documentation first.  This documentation includes:
 
 ## Support
 
-Please first try to solve any problems yourself by reading the documentation
-listed above.  If that fails, try the answers to frequently-asked questions,
-the user contributions in the WeeWX Wiki, or the WeeWX user group.
+Please first try to solve any problems yourself by reading the documentation.
+If that fails, check the answers to frequently-asked questions, browse the
+latest guides and software in the WeeWX Wiki, or post a question to the WeeWX
+user group.
 
 
 ### FAQ
@@ -94,20 +95,18 @@ https://github.com/weewx/weewx/wiki
 
 ### Forums
 
-There are two forums. 
+[weewx-user](https://groups.google.com/group/weewx-user) is for general
+issues such as installation, sharing skins and templates, reporting
+unexpected behavior, and suggestions for improvement.
 
-- [weewx-user](https://groups.google.com/group/weewx-user) is for general
-  issues such as installation, sharing skins and templates, reporting
-  unexpected behavior, and suggestions for improvement.
-
-- [weewx-development](https://groups.google.com/group/weewx-development) is
-  for discussions about developing drivers, extensions, or working on the core
-  code.
+[weewx-development](https://groups.google.com/group/weewx-development) is
+for discussions about developing drivers, extensions, or working on the core
+code.
 
 
 ## Licensing and Copyright
 
 WeeWX is licensed under the GNU Public License v3.
 
-© [Copyright](copyright) 2009-2023 Thomas Keffer (<tkeffer@gmail.com>)
-and Matthew Wall
+© [Copyright](copyright) 2009-2023 Thomas Keffer, Matthew Wall, and Gary
+Roderick
