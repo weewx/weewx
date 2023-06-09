@@ -37,16 +37,17 @@ This is also a good approach if you plan to do a lot of customization, or if
 you are developing a driver, skin, or other extension.
 
 If you are working on the WeeWX core, or if you want to experiment with
-code that is under development, then you will probably want to run from
-a git clone of the source tree.
+code that is under development, then you will probably want to run directly
+from the source code.
+
+The [user guide](usersguide/installing-weewx) has more details, or you can
+jump right in and get started:
 
 * [Debian](quickstarts/debian) - Ubuntu, Mint, Raspian, Devuan
 * [Redhat](quickstarts/redhat) - Fedora, CentOS, Rocky
 * [SUSE](quickstarts/suse) - openSUSE
 * [pip](quickstarts/pip) - any operating system with Python 3.7+
 * [run from source](quickstarts/source)
-
-See the [user guide](usersguide/installing-weewx) for detailed instructions.
 
 
 ## Documentation

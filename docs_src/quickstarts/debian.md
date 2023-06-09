@@ -5,7 +5,7 @@ Debian, including Ubuntu, Mint, and Raspberry Pi OS.
 
 WeeWX V5 requires Python 3.7 or greater, which is only available on Debian 10
 or later.  For older Debian systems, either use WeeWX V4, or install Python 3.7
-then install WeeWX V5 using pip.
+then [install WeeWX V5 using pip](pip).
 
 
 ## Configure `apt`
@@ -16,13 +16,15 @@ trust weewx.com, and know where to find the WeeWX releases.
 1. Tell your system to trust weewx.com.
 
     ```shell
-    wget -qO - https://weewx.com/keys.html | sudo gpg --dearmor --output /etc/apt/trusted.gpg.d/weewx.gpg
+    wget -qO - https://weewx.com/keys.html | \
+        sudo gpg --dearmor --output /etc/apt/trusted.gpg.d/weewx.gpg
     ```
 
 2. Tell `apt` where to find the WeeWX repository.
 
     ```shell
-    echo "deb [arch=all] https://weewx.com/apt/python3 buster main" | sudo tee /etc/apt/sources.list.d/weewx.list
+    echo "deb [arch=all] https://weewx.com/apt/python3 buster main" | \
+        sudo tee /etc/apt/sources.list.d/weewx.list
     ```
 
 If you encounter errors, please consult the [FAQ](https://github.com/weewx/weewx/wiki/faq-apt-key-problems).
@@ -30,7 +32,7 @@ If you encounter errors, please consult the [FAQ](https://github.com/weewx/weewx
 
 ## Install
 
-Use `apt to install WeeWX. The installer will prompt for a location,
+Use `apt` to install WeeWX. The installer will prompt for a location,
 latitude/longitude, altitude, station type, and parameters specific to your
 station hardware.  When you are done, WeeWX will be running in the background
 as a daemon.

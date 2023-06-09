@@ -5,7 +5,7 @@ such as openSUSE Leap.
 
 WeeWX V5 requires Python 3.7 or greater, which is only available on SUSE-15 or
 later.  For older SUSE systems, either use WeeWX V4, or install Python 3.7 then
-install WeeWX V5 using pip.
+[install WeeWX V5 using pip](pip).
 
 
 ## Configure zypper
