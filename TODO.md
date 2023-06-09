@@ -35,3 +35,8 @@ Update the logging wiki.
 ## Website
 
 Change the forwarding `.htm` files in `weewx.com/docs` to point to the V5 versions.
+
+## Docs
+
+do a pass through the old docs for all of the 'id' references, and ensure that
+they have been inserted into the new markdown docs.
