@@ -4,7 +4,7 @@ This is a guide to installing WeeWX from an RPM package systems based on SUSE,
 such as openSUSE Leap.
 
 WeeWX V5 requires Python 3.7 or greater, which is only available on SUSE-15 or
-later.  For older SUSE systems, either use WeeWX V4, or install Python 3.7 then
+later.  For older systems, either use WeeWX V4, or install Python 3.7 then
 [install WeeWX V5 using pip](pip).
 
 

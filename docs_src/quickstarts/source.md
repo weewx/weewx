@@ -12,11 +12,13 @@ will need them to set up a daemon and, perhaps, to change device permissions.
 Ensure that Python 3.7 or later is installed on the system.
 
 Ensure that the following Python modules are installed:
+
 * ConfigObj
 * Cheetah
 * PIL
 
-You may also want the following modules:
+You may also want the following Python modules:
+
 * serial (if your hardware uses a serial port)
 * usb (if your hardware uses a USB port)
 * ephem (if you want extended celestial information)
@@ -30,6 +32,12 @@ called `weewx` in your home directory.
 ```shell
 git clone https://github.com/weewx/weewx ~/weewx
 ```
+
+For just a single WeeWX version, without the entire repository, download
+then expand a release tarball:
+
+    https://weewx.com/downloads/released_versions
+
 
 ## Provision a new station
 

@@ -4,8 +4,8 @@ This is a guide to installing WeeWX from an RPM package on systems based on
 Redhat, including Fedora, CentOS, or Rocky.
 
 WeeWX V5 requires Python 3.7 or greater, which is only available on Redhat 8 or
-later.  For older Redhat systems, either use WeeWX V4, or install Python 3.7
-then [install WeeWX V5 using pip](pip).
+later.  For older systems, either use WeeWX V4, or install Python 3.7 then
+[install WeeWX V5 using pip](pip).
 
 
 ## Install pre-requisites
