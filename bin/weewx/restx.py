@@ -88,6 +88,7 @@ import http.client
 import logging
 import platform
 import queue
+import random
 import re
 import socket
 import ssl
@@ -185,7 +186,8 @@ class RESTThread(threading.Thread):
                  retry_login=3600,
                  retry_ssl=3600,
                  softwaretype="weewx-%s" % weewx.__version__,
-                 skip_upload=False):
+                 skip_upload=False,
+                 delay_post=None):
         """Initializer for the class RESTThread
 
         Args:
@@ -206,21 +208,23 @@ class RESTThread(threading.Thread):
             Default is True.
           log_failure (bool): If True, log an unsuccessful post in the system log.
             Default is True.
-          timeout (int): How long to wait for the server to respond before giving up.
+          timeout (float): How long to wait for the server to respond before giving up.
             Default is 10 seconds.
           max_tries (int): How many times to try the post before giving up.
             Default is 3
-          retry_wait (int): How long to wait between retries when failures.
+          retry_wait (float): How long to wait between retries when failures.
             Default is 5 seconds.
-          retry_login (int): How long to wait before retrying a login. Default
+          retry_login (float): How long to wait before retrying a login. Default
             is 3600 seconds (one hour).
-          retry_ssl (int): How long to wait before retrying after an SSL error. Default
+          retry_ssl (float`): How long to wait before retrying after an SSL error. Default
             is 3600 seconds (one hour).
           softwaretype (str): Sent as field "softwaretype" in the Ambient post.
             Default is "weewx-x.y.z where x.y.z is the weewx version.
           skip_upload (bool): Do all record processing, but do not upload the result.
             Useful for diagnostic purposes when local debugging should not
             interfere with the downstream data service.  Default is False.
+          delay_post (float|None): How long to sleep before actually doing the post. Default
+            is None (no delay).
           """
         # Initialize my superclass:
         threading.Thread.__init__(self, name=protocol_name)
@@ -243,6 +247,7 @@ class RESTThread(threading.Thread):
         self.softwaretype = softwaretype
         self.lastpost = 0
         self.skip_upload = to_bool(skip_upload)
+        self.delay_post = to_float(delay_post)
 
     def get_record(self, record, dbmanager):
         """Augment record data with additional data from the archive.
@@ -455,11 +460,14 @@ class RESTThread(threading.Thread):
         
         Attempts to post the request object up to max_tries times. 
         Catches a set of generic exceptions.
-        
-        request: An instance of urllib.request.Request
-        
-        data: The body of the POST. If not given, the request will be done as a GET.
+
+        Args:
+            request (urllib.request.Request): An instance of urllib.request.Request
+            data (str|None): The body of the POST. If not given, the request will be done as a GET.
         """
+        if self.delay_post:
+            log.debug("%s: Delaying post by %.1f seconds", self.protocol_name, self.delay_post)
+            time.sleep(self.delay_post)
 
         # Retry up to max_tries times:
         for _count in range(self.max_tries):
@@ -1442,8 +1450,10 @@ class StdStationRegistry(StdRESTful):
         _registry_dict.setdefault('config_path', config_dict.get('config_path', 'Unknown'))
         # Find the top-level module. This is where the entry point will be.
         _registry_dict.setdefault('entry_path', getattr(sys.modules['__main__'], '__file__',
-                                                        'Unknown')
-)
+                                                        'Unknown'))
+        # Delay the registration by a random amount so all stations don't hit the server
+        # at the same time.
+        _registry_dict.setdefault('delay_post', random.randint(0, 45))
 
         self.archive_queue = queue.Queue()
         self.archive_thread = StationRegistryThread(self.archive_queue,
