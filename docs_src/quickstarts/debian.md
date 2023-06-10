@@ -65,7 +65,7 @@ probably want to switch to using real hardware. This is how to reconfigure.
 sudo systemctl stop weewx
 # Reconfigure to use your hardware:
 sudo weectl station reconfigure
-# Remove the old database:
+# Delete the old database:
 sudo rm /var/lib/weewx/weewx.sdb
 # Start the daemon:
 sudo systemctl start weewx
@@ -141,13 +141,13 @@ To uninstall WeeWX, but retain configuration files and data:
 sudo apt remove weewx
 ```
 
-To uninstall WeeWX, removing configuration files but retaining data:
+To uninstall WeeWX, deleting configuration files but retaining data:
 
 ```shell
 sudo apt purge weewx
 ```
 
-To remove data:
+To delete data:
 
 ```shell
 sudo rm -r /var/lib/weewx

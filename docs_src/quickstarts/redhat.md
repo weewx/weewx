@@ -71,7 +71,7 @@ To switch from the `Simulator` to real hardware, reconfigure the driver.
 sudo systemctl stop weewx
 # Reconfigure to use your hardware:
 sudo weectl station reconfigure
-# Remove the old database:
+# Delete the old database:
 sudo rm /var/lib/weewx/weewx.sdb
 # Start the daemon:
 sudo systemctl start weewx
@@ -120,13 +120,13 @@ warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew
 
 ## Uninstall
 
-To uninstall WeeWX, removing configuration files but retaining data:
+To uninstall WeeWX, deleting configuration files but retaining data:
 
 ```shell
 sudo yum remove weewx
 ```
 
-To remove data:
+To delete data:
 
 ```shell
 sudo rm -r /var/lib/weewx

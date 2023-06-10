@@ -321,7 +321,7 @@ Use pip to uninstall weewx.
 python3 -m pip uninstall weewx -y
 ```
 
-You can also use pip to uninstall the dependencies, but first check that they
+You can also use pip to uninstall the dependencies, but first be sure that they
 are not being used by other programs!
 
 ```shell
