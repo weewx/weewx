@@ -7,7 +7,7 @@ site_author: "Tom Keffer <tkeffer@gmail.com>"
 #repo_name: WeeWX GitHub Repository
 # Shut off the "edit on GitHub" feature:
 edit_uri: ''
-copyright: Copyright © 2009-2023 Thomas Keffer and Matthew Wall, all rights reserved
+copyright: Copyright © 2009-2023 Thomas Keffer, Matthew Wall, and Gary Roderick, all rights reserved
 theme:
   name: 'material'
   logo: 'images/logo-weewx.png'
@@ -48,6 +48,7 @@ site_dir: 'build/docs'
 
 nav:
   - "Quick starts":
+    - methods: ./quickstarts/index.md
     - Debian: ./quickstarts/debian.md
     - RedHat: ./quickstarts/redhat.md
     - SuSE: ./quickstarts/suse.md

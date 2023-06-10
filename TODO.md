@@ -49,3 +49,9 @@ need to verify the suse pip pre-requisite steps
 
 need to verify method for installing latest python in rocky 8.  default is
 python 3.6.8
+
+need a page that shows how to download, install, and configure a driver.
+
+need a page that shows how to download, install, and configure a skin.
+
+web browsers do not expand the tilde

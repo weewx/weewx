@@ -21,35 +21,6 @@ other extensions. After you install WeeWX, use the `weectl` utility to
 download and install drivers or other extensions listed in the wiki.
 
 
-## Installation
-
-Install WeeWX releases from repositories for Debian, Red Hat, and SuSE systems
-using `apt`, `yum/dnf`, or `zypper`, from pypi using `pip`, or run WeeWX
-directly from source.
-
-The installers for Debian, Red Hat, and SUSE use the conventions and software
-management tools for their respective operating system; these are the quickest
-way to get up and running.
-
-The pypi installer will work on any operating system; use this approach for
-macOS or one of the *BSDs, or if you are using an older operating system.
-This is also a good approach if you plan to do a lot of customization, or if
-you are developing a driver, skin, or other extension.
-
-If you are working on the WeeWX core, or if you want to experiment with
-code that is under development, then you will probably want to run directly
-from the source code.
-
-The [user guide](usersguide/installing-weewx) has more details, or you can
-jump right in and get started:
-
-* [Debian](quickstarts/debian) - Ubuntu, Mint, Raspian, Devuan
-* [Redhat](quickstarts/redhat) - Fedora, CentOS, Rocky
-* [SUSE](quickstarts/suse) - openSUSE
-* [pip](quickstarts/pip) - any operating system with Python 3.7+
-* [run from source](quickstarts/source)
-
-
 ## Documentation
 
 WeeWX includes extensive documentation, and the WeeWX developers work hard to
@@ -59,7 +30,13 @@ supported, how to translate WeeWX into your language, how to integrate WeeWX
 with other applications, how to make WeeWX work with new hardware, ... please
 consult the documentation first.  This documentation includes:
 
-* [User's guide](usersguide) - installation, getting started, troubleshooting
+* Quickstart - the fastest way to get up and running
+  * [Debian](quickstarts/debian) - Ubuntu, Mint, Raspian, Devuan
+  * [Redhat](quickstarts/redhat) - Fedora, CentOS, Rocky
+  * [SUSE](quickstarts/suse) - openSUSE
+  * [pip](quickstarts/pip) - any operating system
+  * [run from source](quickstarts/source) - any operating system
+* [User guide](usersguide) - installation, getting started, troubleshooting
 * [Customization guide](custom) - reports, plots, localization, formatting, extensions
 * [Utilities](utilities) - tools to manage stations, reports, and data
 * [Hardware guide](hardware) - how to configure hardware, features of supported hardware

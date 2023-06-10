@@ -34,7 +34,7 @@ git clone https://github.com/weewx/weewx ~/weewx
 ```
 
 !!! Note
-    For systems with very little space, download then expand the just a single
+    For systems with very little space, download then expand a single
     release from https://weewx.com/downloads
 
 
@@ -81,9 +81,13 @@ If you have problems, check the system log for entries from `weewxd`.
 
 ## Customize
 
-To enable uploads or to customize reports, modify the configuration file
-`~/weewx-data/weewx.conf`. WeeWX must be restarted for configuration file
-changes to take effect.
+To enable uploads or to customize reports, modify the configuration file.
+Use any text editor, such as `nano`:
+```shell
+nano ~/weewx-data/weewx.conf
+```
+
+WeeWX must be restarted for the changes to take effect.
 
 See the [*User Guide*](../../usersguide) and
 [*Customization Guide*](../../custom) for details.

@@ -53,8 +53,7 @@ wee_reports --epoch=1652367600
 This would generate a report for unix epoch time 1652367600 (12-May-2022 at
 8AM PDT).
 
-### `--date=YYYY-MM-DD`
-### `--time=HH:MM`
+### `--date=YYYY-MM-DD` and `--time=HH:MM`
 
 Generate the reports so that they are current as of the given date
 and time. The date should be given in the form `YYYY-MM-DD` and the time should

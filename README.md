@@ -81,9 +81,9 @@ The [hardware comparison](https://www.weewx.com/hwcmp.html) has specifications
 for many different types of hardware, including some not yet supported by
 WeeWX.
 
-## Installation
+## Install
 
-[https://weewx.com/install.html](https://weewx.com/install.html)
+[https://weewx.com/docs/quickstarts](https;//weewx.com/quickstarts)
 
 ## Download
 
@@ -115,4 +115,4 @@ WeeWX is licensed under the GNU Public License v3.
 
 ## Copyright
 
-© 2009-2023 Thomas Keffer (<tkeffer@gmail.com>) and Matthew Wall
+© 2009-2023 Thomas Keffer, Matthew Wall, and Gary Roderick
