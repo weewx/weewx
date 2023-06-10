@@ -171,13 +171,12 @@ system, and require root privileges.
 ## Verify
 
 After about 5 minutes (the exact length of time depends on your archive
-interval), copy the following and paste into a web browser:
+interval), copy the following and paste into a web browser. You should
+see your station information and data.
 
     ~/weewx-data/public_html/index.html
 
-You should see your station information and data.
-
-You may also want to check your system log for any problems.
+If there are problems, check the system log.
 
 
 ## Configure
@@ -228,19 +227,50 @@ probably want to switch to using real hardware. This is how to reconfigure.
     sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist
     ```
 
+
 ## Customize
 
 To enable uploads or to customize reports, modify the configuration file
-`~/weewx-data/weewx.conf`. See the [*User Guide*](../../usersguide) and
+`~/weewx-data/weewx.conf`. WeeWX must be restarted for configuration file
+changes to take effect.
+
+See the [*User Guide*](../../usersguide) and
 [*Customization Guide*](../../custom) for details.
 
-WeeWX must be restarted for configuration file changes to take effect.
+
+## Upgrade
+
+To upgrade a WeeWX installation that was installed using pip:
+```
+python3 -m pip install weewx --user --upgrade
+```
+then restart `weewxd`.
+
+Optional: You may want to upgrade your documentation and examples.
+```
+weectl station upgrade --what docs examples util
+```
+
+Optional: You may want to upgrade your skins, although this may break or
+remove modifications you have made to them. Your old skins will be saved
+in a timestamped directory.
+```
+weectl station upgrade --what skins
+```
+
+Optional: You may want to upgrade your configuration file.  This is only
+necessary in the rare case that a new WeeWX release is not backward
+compatible with older configuration files.
+```
+weectl station upgrade --what config
+```
 
 
 ## Uninstall
 
-Before you uninstall, be sure that `weewxd` is not running.  Then remove the
-daemon configuration.
+Before you uninstall, be sure that `weewxd` is not running.
+
+If you installed a daemon configuration, remove it.
 
 === "systemd"
 

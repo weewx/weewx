@@ -123,12 +123,7 @@ nav:
     - WS23xx: hardware/ws23xx.md
     - WS28xx: hardware/ws28xx.md
 
-  - "Upgrade guide":
-    - changes: upgrade/changes.md
-    - pip: upgrade/pip.md
-    - deb: upgrade/deb.md
-    - rpm: upgrade/rpm.md
- 
+  - "Upgrade guide": versions.md 
   - "Notes for developers": devnotes.md
   - "Change log": changes.md
 

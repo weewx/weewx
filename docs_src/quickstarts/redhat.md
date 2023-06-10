@@ -81,13 +81,33 @@ sudo systemctl start weewx
 ## Customize
 
 To enable uploads or to customize reports, modify the configuration file
-`/etc/weewx/weewx.conf`. See the [User Guide](../../usersguide) and
+`/etc/weewx/weewx.conf`. WeeWX must be restarted for configuration file
+changes to take effect.
+
+See the [User Guide](../../usersguide) and
 [Customization Guide](../../custom) for details.
 
-WeeWX must be restarted for configuration file changes to take effect.
 
+## Upgrade
+
+Upgrade to the latest version like this:
 ```shell
-sudo systemctl restart weewx
+sudo yum update weewx
+```
+
+The upgrade process will not modify the WeeWX databases.
+
+Unmodified files will be upgraded. If modifications have been made to the
+configuration, `rpm` will display a message about any differences between the
+changes and the new configuration. Any new changes from the upgrade will be
+noted as files with a `.rpmnew` extension and the modified files will be left
+untouched.
+
+For example, if `/etc/weewx/weewx.conf` was modified, `rpm` will present a
+message something like this:
+
+```
+warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew
 ```
 
 
