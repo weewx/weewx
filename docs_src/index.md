@@ -24,16 +24,13 @@ download and install drivers or other extensions listed in the wiki.
 ## Documentation
 
 WeeWX includes extensive documentation, and the WeeWX developers work hard to
-keep it relevant and up to date.  If you have questions about how WeeWX works,
-how to customize reports, how to change date/time formats, which units are
-supported, how to translate WeeWX into your language, how to integrate WeeWX
-with other applications, how to make WeeWX work with new hardware, ... please
-consult the documentation first.  This documentation includes:
+keep it relevant and up to date.  If you have questions, please consult the
+documentation first.
 
 ### Quickstart
-* [Debian](quickstarts/debian) - Ubuntu, Mint, Raspian, Devuan
-* [Redhat](quickstarts/redhat) - Fedora, CentOS, Rocky
-* [SUSE](quickstarts/suse) - openSUSE
+* [Debian](quickstarts/debian) - including Ubuntu, Mint, Raspberry Pi OS, Devuan
+* [Redhat](quickstarts/redhat) - including Fedora, CentOS, Rocky
+* [SUSE](quickstarts/suse) - including openSUSE
 * [pip](quickstarts/pip) - any operating system
 * [run from source](quickstarts/source) - any operating system
 
