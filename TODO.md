@@ -40,3 +40,12 @@ Change the forwarding `.htm` files in `weewx.com/docs` to point to the V5 versio
 
 do a pass through the old docs for all of the 'id' references, and ensure that
 they have been inserted into the new markdown docs.
+
+why install gcc for a pip install?  that is a massive dependency!
+same for the python-dev/devel.  should just use wheels.  only install gcc
+and the dev stuff it the os does not have wheels in pypi.
+
+need to verify the suse pip pre-requisite steps
+
+need to verify method for installing latest python in rocky 8.  default is
+python 3.6.8
