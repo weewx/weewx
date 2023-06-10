@@ -176,7 +176,6 @@ h4 {
 
 
 table {
-    background-color: white;
     border-collapse: collapse;
     border: 1px solid #cccccc;
     width: 98%;
@@ -705,5 +704,5 @@ a.toc-link:hover {
 }
 
 .md-typeset h1 {
-    color: teal;
+    color: teal; /* ensure that h1 looks ok in dark mode */
 }
