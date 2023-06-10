@@ -30,18 +30,20 @@ supported, how to translate WeeWX into your language, how to integrate WeeWX
 with other applications, how to make WeeWX work with new hardware, ... please
 consult the documentation first.  This documentation includes:
 
-* Quickstart - the fastest way to get up and running
-  * [Debian](quickstarts/debian) - Ubuntu, Mint, Raspian, Devuan
-  * [Redhat](quickstarts/redhat) - Fedora, CentOS, Rocky
-  * [SUSE](quickstarts/suse) - openSUSE
-  * [pip](quickstarts/pip) - any operating system
-  * [run from source](quickstarts/source) - any operating system
+### Quickstart
+* [Debian](quickstarts/debian) - Ubuntu, Mint, Raspian, Devuan
+* [Redhat](quickstarts/redhat) - Fedora, CentOS, Rocky
+* [SUSE](quickstarts/suse) - openSUSE
+* [pip](quickstarts/pip) - any operating system
+* [run from source](quickstarts/source) - any operating system
+
+### All about WeeWX
 * [User guide](usersguide) - installation, getting started, troubleshooting
 * [Customization guide](custom) - reports, plots, localization, formatting, extensions
 * [Utilities](utilities) - tools to manage stations, reports, and data
 * [Hardware guide](hardware) - how to configure hardware, features of supported hardware
-* [Notes for developers](devnotes)
-* [Upgrade guide](upgrading)
+* [Notes for developers](devnotes) - things you should know if you write drivers or skins
+* [Upgrade guide](upgrading) - detailed changes in each release
 
 
 ## Support
