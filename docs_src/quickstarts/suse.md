@@ -5,7 +5,7 @@ such as openSUSE Leap.
 
 WeeWX V5 requires Python 3.7 or greater, which is only available on SUSE-15 or
 later.  For older systems, either use WeeWX V4, or install Python 3.7 then
-[install WeeWX V5 using pip](pip).
+[install WeeWX V5 using pip](../pip).
 
 
 ## Configure zypper
@@ -66,9 +66,16 @@ sudo systemctl start weewx
 
 ## Customize
 
-To enable uploads or to customize reports, modify the configuration file
-`/etc/weewx/weewx.conf`. WeeWX must be restarted for configuration file
-changes to take effect.
+To enable uploads or to customize reports, modify the configuration file.
+Use any text editor, such as `nano`:
+```shell
+sudo nano /etc/weewx/weewx.conf
+```
+
+WeeWX must be restarted for the changes to take effect.
+```shell
+sudo systemctl restart weewx
+```
 
 See the [*User Guide*](../../usersguide) and
 [*Customization Guide*](../../custom) for details.

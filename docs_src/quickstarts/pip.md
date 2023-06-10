@@ -3,11 +3,12 @@
 This is a guide to installing WeeWX using [pip](https://pip.pypa.io). It can
 be used to install WeeWX on almost any operating system, including macOS.
 
-## Prepare for install
+WeeWX V5 requires Python 3.7 or greater. It cannot be run with Python 2.
+If you are constrained by this, install WeeWX V4, which runs with Python 2.7,
+Python 3.5, and Python 3.6.
 
-- WeeWX V5 requires Python 3.7 or greater. It cannot be run with Python 2.
-  If you are constrained by this, install WeeWX V4, which runs with Python 2.7,
-  Python 3.5, and Python 3.6.
+
+## Prepare for install
 
 - You must also have a copy of pip. In most cases, your operating system will
   offer an [installation package](https://packaging.python.org/en/latest/guides/installing-using-linux-tools/).
@@ -26,7 +27,6 @@ your system:
     sudo apt update && sudo apt upgrade
     sudo apt -y install gcc
     sudo apt -y install python3-dev
-    # This makes the install of ephem go more smoothly:
     python3 -m pip install wheel
     ```
 
@@ -36,7 +36,6 @@ your system:
     sudo yum update
     sudo yum install -y gcc
     sudo yum install -y python3-devel
-    # This makes the install of ephem go more smoothly:
     python3 -m pip install wheel
     ```
 
@@ -100,7 +99,7 @@ the tool `weectl`. This step also does not require root privileges.
 weectl station create
 ```
 
-The tool will ask you a series of questions, then create a directory
+The tool `weectl` will ask you a series of questions, then create a directory
 `~/weewx-data` in your home directory with a new configuration file. It will
 also install skins, documentation, utilitiy files, and examples in the same
 directory. The database and reports will also go into that directory, but
@@ -130,9 +129,8 @@ system, and require root privileges.
 
 === "systemd"
 
-    Systems that use systemd, e.g., Debian, Redhat, SUSE
-
     ```shell
+    # Systems that use systemd, e.g., Debian, Redhat, SUSE
     sudo cp ~/weewx-data/util/systemd/weewx.service /etc/systemd/system
     sudo systemctl daemon-reload
     sudo systemctl enable weewx
@@ -146,9 +144,8 @@ system, and require root privileges.
     
 === "sysV"
 
-    Systems that use SysV init, e.g., Slackware, Devuan, Puppy, DD-WRT
-
     ```shell
+    # Systems that use SysV init, e.g., Slackware, Devuan, Puppy, DD-WRT
     sudo cp ~/weewx-data/util/init.d/weewx.debian /etc/init.d/weewx
     sudo chmod +x /etc/init.d/weewx
     sudo update-rc.d weewx defaults 98
@@ -185,8 +182,6 @@ If you chose the simulator as your station type, then at some point you will
 probably want to switch to using real hardware. This is how to reconfigure.
 
 === "systemd"
-
-    Systems that use systemd, e.g., Debian, Redhat, SUSE
  
     ```shell
     # Stop the weewx daemon:
@@ -200,8 +195,6 @@ probably want to switch to using real hardware. This is how to reconfigure.
     ```
 
 === "sysV"
-
-    Systems that use SysV init, e.g., Slackware, Devuan, Puppy, DD-WRT
 
     ```shell
     # Stop the weewx daemon:
@@ -230,9 +223,33 @@ probably want to switch to using real hardware. This is how to reconfigure.
 
 ## Customize
 
-To enable uploads or to customize reports, modify the configuration file
-`~/weewx-data/weewx.conf`. WeeWX must be restarted for configuration file
-changes to take effect.
+To enable uploads or to customize reports, modify the configuration file.
+Use any text editor, such as `nano`:
+```shell
+nano ~/weewx-data/weewx.conf
+```
+
+WeeWX must be restarted for the changes to take effect.
+
+=== "systemd"
+ 
+    ```shell
+    sudo systemctl restart weewx
+    ```
+
+=== "sysV"
+
+    ```shell
+    sudo /etc/init.d/weewx stop
+    sudo /etc/init.d/weewx start
+    ```
+
+=== "macOS"
+
+    ```shell
+    sudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist
+    sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist
+    ```
 
 See the [*User Guide*](../../usersguide) and
 [*Customization Guide*](../../custom) for details.
@@ -240,11 +257,10 @@ See the [*User Guide*](../../usersguide) and
 
 ## Upgrade
 
-To upgrade a WeeWX installation that was installed using pip:
+Get the latest release using `pip`:
 ```
 python3 -m pip install weewx --user --upgrade
 ```
-then restart `weewxd`.
 
 Optional: You may want to upgrade your documentation and examples.
 ```

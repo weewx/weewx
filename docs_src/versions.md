@@ -12,10 +12,10 @@
 
 These are the instructions for upgrading WeeWX:
 
-* [Upgrading using DEB package](../../quickstarts/debian/#upgrade)
-* [Upgrading using Redhat RPM package](../../quickstarts/redhat/#upgrade)
-* [Upgrading using SUSE RPM package](../../quickstarts/suse/#upgrade)
-* [Upgrading using pip](../../quickstarts/pip/#upgrade)
+* [Upgrading using Debian DEB](../quickstarts/debian/#upgrade)
+* [Upgrading using Redhat RPM](../quickstarts/redhat/#upgrade)
+* [Upgrading using SUSE RPM](../quickstarts/suse/#upgrade)
+* [Upgrading using pip](../quickstarts/pip/#upgrade)
 * [Upgrading source](../quickstarts/source/#upgrade)
 
 

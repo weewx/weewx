@@ -9,7 +9,7 @@ will need them to set up a daemon and, perhaps, to change device permissions.
 
 ## Pre-requisites
 
-Ensure that Python 3.7 or later is installed on the system.
+Ensure that Python 3.7 or later is installed.
 
 Ensure that the following Python modules are installed:
 
@@ -24,19 +24,18 @@ You may also want the following Python modules:
 * ephem (if you want extended celestial information)
 
 
-## Get the WeeWX code
+## Get the code
 
-To get the latest code, use `git` to clone the repository into a directory
-called `weewx` in your home directory.
+Use `git` to clone the repository into a directory called `weewx` in your home
+directory.
 
 ```shell
 git clone https://github.com/weewx/weewx ~/weewx
 ```
 
-For just a single WeeWX version, without the entire repository, download
-then expand a release tarball:
-
-    https://weewx.com/downloads/released_versions
+!!! Note
+    For systems with very little space, download then expand the just a single
+    release from https://weewx.com/downloads
 
 
 ## Provision a new station
@@ -46,7 +45,7 @@ Now that you have the code, create a configuration file and skins:
 python3 ~/weewx/bin/weectl.py station create
 ```
 
-The tool will ask you a series of questions, then create a directory
+The tool `weectl` will ask you a series of questions, then create a directory
 `weewx-data` in your home directory with a new configuration file. It will
 also install skins, documentation, utilitiy files, and examples in the same
 directory. The database and reports will also go into that directory, but
@@ -64,6 +63,9 @@ stop when you either control-c or log out.
 ```shell
 python3 ~/weewx/bin/weewxd.py
 ```
+
+To run `weewxd` as a daemon, install an init file that is appropriate for your
+operating system.  Examples are included in the `util` directory.
 
 
 ## Verify
@@ -87,12 +89,23 @@ See the [*User Guide*](../../usersguide) and
 [*Customization Guide*](../../custom) for details.
 
 
+## Upgrade
+
+Update the code by pulling the latest:
+```shell
+cd ~/weewx && git pull
+```
+
+Then restart `weewxd`
+
+
 ## Uninstall
 
-Before you uninstall, be sure that `weewxd` is not running.  Then simply
-delete the source tree.
+Before you uninstall, be sure that `weewxd` is not running.
 
-```
+Then simply delete the code:
+
+```shell
 rm -r ~/weewx
 ```
 
