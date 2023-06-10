@@ -31,7 +31,7 @@ Which action to take:
 ```
 
 
-## `weectl extension list`
+## weectl extension list
 
 This action will list all installed extensions.
 
@@ -49,14 +49,14 @@ optional arguments:
   --verbosity N         How much information to display {0-3}.
 ```
 
-### `--config=FILENAME`
+### --config=FILENAME
 
 The utility is pretty good about guessing where the WeeWX configuration file
 is located. If it guesses wrong, use this option to specify the configuration
 file.
 
 
-## `weectl extension install`
+## weectl extension install
 
 This action will install an extension from a zipfile, tarball, directory, or
 URL.
@@ -83,23 +83,23 @@ optional arguments:
   --verbosity N         How much information to display {0-3}.
 ```
 
-### `--config=FILENAME`
+### --config=FILENAME
 
 The utility is pretty good about guessing where the WeeWX configuration file
 is located. If it guesses wrong, use this option to specify the configuration
 file.
 
-### `--dry-run`
+### --dry-run
 
 This option will show you what the installer would do, but will not actually
 do it.
 
-### `--verbosity=N`
+### --verbosity=N
 
 This option selects how much information to show as the installation proceeds.
 
 
-## `weectl extension uninstall`
+## weectl extension uninstall
 
 This action uninstalls an extension.
 
@@ -123,18 +123,18 @@ optional arguments:
   --verbosity N         How much information to display {0-3}.
 ```
 
-### `--config=FILENAME`
+### --config=FILENAME
 
 The utility is pretty good about guessing where the WeeWX configuration file
 is located. If it guesses wrong, use this option to specify the configuration
 file.
 
-### `--dry-run`
+### --dry-run
 
 This option will show you what the installer would do, but will not actually
 do it.
 
-### `--verbosity=N`
+### --verbosity=N
 
 This option selects how much information to show as the installation proceeds.
 

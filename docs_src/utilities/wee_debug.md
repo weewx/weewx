@@ -48,7 +48,7 @@ should thoroughly check the generated output for personal/private information
 before posting the information publicly.
 ```
 
-### `--config=FILENAME`
+### --config=FILENAME
 
 The utility is pretty good about guessing where the configuration file is,
 but if you have an unusual installation or multiple stations, you may have to
@@ -65,7 +65,7 @@ or by using option `--config`:
 wee_debug --config=/home/weewx/weewx.conf --info
 ```
 
-### `--info`
+### --info
 
 This action generates a debug report which can be sent off for remote
 debugging.
@@ -197,7 +197,7 @@ Parsed and obfuscated weewx.conf
 wee_debug report successfully generated
 ```
 
-### `--output[=FILENAME]`
+### --output[=FILENAME]
 
 By default, `wee_debug` sends its output to the system "standard output"
 (`stdout`) unless the `--output` option is used.
@@ -215,7 +215,7 @@ The option `--output` with a specified file will send it to that file.
 wee_debug --info --output /home/weewx/another.debug
 ```
 
-### `--verbosity=(0|1|2)`
+### --verbosity=(0|1|2)
 
 The amount of information included in the `wee_debug` output can be changed
 using the `--verbosity` option. The `--verbosity` option can be set to

@@ -135,7 +135,7 @@ h1 {
     border-radius: 3px;
     border: 1px solid #999999;
     clear:both;
-    color: black;
+    color:teal;
     font-family: 'Roboto', sans-serif;
     font-size: 160%;
     font-weight: bold;
@@ -698,4 +698,12 @@ a.toc-link:hover {
 
 .md-source__facts li {
     margin-right: 7%;   /* over 7% breaks the github banner */
+}
+
+.md-header__button.md-logo {
+    background-color: white; /* make logo fully visible */
+}
+
+.md-typeset h1 {
+    color: teal;
 }

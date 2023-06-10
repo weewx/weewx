@@ -68,7 +68,7 @@ In the documentation that follows,  the exact output will depend on your
 operating system and username. What is shown below is for Linux and user
 `tkeffer`.
 
-## `weectl station create`
+## weectl station create
 
 This action will create a new area for user data. After the command completes,
 the area will include
@@ -241,7 +241,7 @@ will cause HTML files to be put in the traditional system WWW directory
 `/var/www/html`.
 
 
-## `weectl station reconfigure`
+## weectl station reconfigure
 
 This action will reconfigure the contents of the configuration file
 `weewx.conf`. Unless option `--no-prompt` has been specified, it will prompt
@@ -340,7 +340,7 @@ Do not create a copy of the previous configuration file.
 Other options are as described in the [`weectl station create`](#weectl-station-create) section.
 
 
-## `weectl station upgrade`
+## weectl station upgrade
 
 This action can upgrade the configuration file, documentation, examples,
 daemon utility files, and skins.  When you upgrade the WeeWX software, that
