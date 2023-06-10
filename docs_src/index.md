@@ -6,15 +6,15 @@ stations and sensors, then generates plots, HTML pages, and monthly and
 yearly summary reports. It can push plots, pages, and reports to a web
 server, and data data to many different online weather services.
 
-The WeeWX distribution includes drivers for many types of hardware.  These
-are listed in the [hardware guide](../hardware/drivers). If your hardware
-is not in the core driver list, you should first install WeeWX, then download
-and install the driver for your hardware.
-
 See the [hardware list](https://weewx.com/hardware.html) for a complete list
 of supported stations, and for pictures to help identify your hardware!  The
 [hardware comparison](https://weewx.com/hwcmp.html) shows specifications for
 many different types of hardware, including some not yet supported by WeeWX.
+
+The WeeWX distribution includes drivers for many types of hardware.  These
+are listed in the [hardware guide](../hardware/drivers). If your hardware
+is not in the core driver list, you should first install WeeWX, then download
+and install the driver for your hardware.
 
 See the [WeeWX Wiki](https://github.com/weewx/weewx/wiki) for drivers and
 other extensions. After you install WeeWX, use the `weectl` utility to
