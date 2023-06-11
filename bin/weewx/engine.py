@@ -98,6 +98,8 @@ class StdEngine(object):
         # Get the hardware type from the configuration dictionary. This will be
         # a string such as "VantagePro"
         station_type = config_dict['Station']['station_type']
+        if not station_type:
+            raise ValueError("Need to define 'station_type' in configuration!")
 
         # Find the driver name for this type of hardware
         driver = config_dict[station_type]['driver']

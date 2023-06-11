@@ -74,7 +74,7 @@
 %define platform redhat
 %define initdir /etc/systemd/system
 # must install cheetah from epel-release or using pip3
-%define deps python3, python3-setuptools, python3-configobj, python3-pillow, python3-pyserial, python3-pyusb
+%define deps python3, python3-setuptools, python3-configobj, python3-pillow, python3-pyserial, python3-pyusb python3-cheetah
 %define python python3
 %define html_root /var/www/html/weewx
 # Disable Fedora's shebang mangling script,
@@ -147,9 +147,7 @@ cat weewx.conf | sed \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
  > %{buildroot}%{dst_cfg_dir}/weewx.conf
 %if "%{initdir}" == "/etc/systemd/system"
-cat util/systemd/weewx.service | sed \
- -e 's%ExecStart=.*%ExecStart=/usr/bin/weewxd /etc/weewx/weewx.conf%' \
- > %{buildroot}%{initdir}/weewx.service
+cp util/systemd/weewx.service-%{platform} %{buildroot}%{initdir}/weewx.service
 %else
 cp util/init.d/weewx.%{platform} %{buildroot}%{initdir}/weewx
 %endif
