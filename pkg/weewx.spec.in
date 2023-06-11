@@ -68,6 +68,21 @@
 %undefine __brp_mangle_shebangs
 %endif
 
+# rh9: python3 on redhat, fedora, centos
+%if "%{_vendor}" == "redhat" && "%{os_target}" == "9"
+%define relos .el9
+%define platform redhat
+%define initdir /etc/systemd/system
+# must install cheetah from epel-release or using pip3
+%define deps python3, python3-setuptools, python3-configobj, python3-pillow, python3-pyserial, python3-pyusb
+%define python python3
+%define html_root /var/www/html/weewx
+# Disable Fedora's shebang mangling script,
+# which errors out on any file with versionless `python` in its shebang
+# See: https://github.com/atom/atom/issues/21937
+%undefine __brp_mangle_shebangs
+%endif
+
 
 %global relnum RPMREVISION
 %global release %{relnum}%{?relos:%{relos}}
