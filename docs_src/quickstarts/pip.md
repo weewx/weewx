@@ -30,14 +30,14 @@ already been installed on your system. Follow the directions below for your syst
     sudo apt install python3-pip -y
     sudo apt install python3-venv -y
 
-    # Make sure pip is up to date
-    python3 -m pip install pip --upgrade
-
     # Create the virtual environment:
     python3 -m venv ~/weewx-venv
 
     # Activate the virtual environment:
     source ~/weewx-venv/bin/activate
+
+    # Make sure pip is up to date
+    python3 -m pip install pip --upgrade
 
     # Install WeeWX into the virtual environment:
     python3 -m pip install weewx
@@ -57,14 +57,14 @@ already been installed on your system. Follow the directions below for your syst
     sudo yum install python3.11 -y
     sudo yum install python3.11-pip -y
 
-    # Make sure pip is up to date
-    python3.11 -m pip install pip --upgrade
-
     # Create the virtual environment:
     python3.11 -m venv ~/weewx-venv
 
     # Activate the virtual environment:
     source ~/weewx-venv/bin/activate
+
+    # Make sure pip is up to date
+    python3.11 -m pip install pip --upgrade
 
     # Install WeeWX into the virtual environment:
     python3.11 -m pip install weewx
@@ -77,14 +77,14 @@ already been installed on your system. Follow the directions below for your syst
     sudo yum update
     sudo yum install python3-pip -y
 
-    # Make sure pip is up to date
-    python3 -m pip install pip --upgrade
-
     # Create the virtual environment:
     python3 -m venv ~/weewx-venv
 
     # Activate the virtual environment:
     source ~/weewx-venv/bin/activate
+
+    # Make sure pip is up to date
+    python3 -m pip install pip --upgrade
 
     # Install WeeWX into the virtual environment:
     python3 -m pip install weewx
@@ -103,14 +103,14 @@ already been installed on your system. Follow the directions below for your syst
     # Afterwards, you must remember to invoke Python using "python3.11", NOT "python3"
     sudo zypper install -y python311
 
-    # Make sure pip is up to date
-    python3.11 -m pip install pip --upgrade
-
     # Create the virtual environment:
     python3.11 -m venv ~/weewx-venv
 
     # Activate the virtual environment:
     source ~/weewx-venv/bin/activate
+
+    # Make sure pip is up to date
+    python3.11 -m pip install pip --upgrade
 
     # Install WeeWX into the virtual environment:
     python3.11 -m pip install weewx
