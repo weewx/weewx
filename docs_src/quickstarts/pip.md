@@ -3,90 +3,137 @@
 This is a guide to installing WeeWX using [pip](https://pip.pypa.io). It can
 be used to install WeeWX on almost any operating system, including macOS.
 
-WeeWX V5 requires Python 3.7 or greater. It cannot be run with Python 2.
-If you are constrained by this, install WeeWX V4, which runs with Python 2.7,
-Python 3.5, and Python 3.6.
+WeeWX V5 requires Python 3.7 or greater. Python 2, or earlier versions of Python 3, will not work.
+If you are constrained by this, you can install WeeWX V4, which runs with Python 2.7, 3.5,
+and 3.6, although it is not supported. You are best off installing Python 3.7+ on your system.
 
+Although you do not need root privileges to install and configure WeeWX, you will need them to set
+up a daemon and, perhaps, to change device permissions.
 
-## Prepare for install
+While there are many ways to install WeeWX using pip (see the wiki document [pip install
+strategies](https://github.com/weewx/weewx/wiki/pip-install-strategies) for a partial list), we
+recommend creating a _virtual environment_ using `venv`, because it is the least likely to disturb
+the rest of your system. It's worth reading about
+[`venv`](https://docs.python.org/3/library/venv.html) in the Python3 documentation.
 
-- You must also have a copy of pip. In most cases, your operating system will
-  offer an [installation package](https://packaging.python.org/en/latest/guides/installing-using-linux-tools/).
-  Otherwise, [see the directions on the pip website](https://pip.pypa.io/en/stable/installation/).
+## Install in a virtual environment
 
-- Although you do not need root privileges to install and configure WeeWX, you
-  will need them to set up a daemon and, perhaps, to change device permissions.
-
-Depending on your operating system and what has already been installed, you may
-have to install some tools before beginning. Follow the directions below for
-your system:
+To install WeeWX in a virtual environment, you will need a few tools, which may or may not have
+already been installed on your system. Follow the directions below for your system:
 
 === "Debian"
 
+    _Tested with Debian 10, Ubuntu 20.04, and 22.04._
+
     ```shell
     sudo apt update && sudo apt upgrade
-    sudo apt -y install gcc
-    sudo apt -y install python3-dev
-    python3 -m pip install wheel
+    sudo apt install python3-pip -y
+    sudo apt install python3-venv -y
+
+    # Make sure pip is up to date
+    python3 -m pip install pip --upgrade
+
+    # Create the virtual environment:
+    python3 -m venv ~/weewx-venv
+
+    # Activate the virtual environment:
+    source ~/weewx-venv/bin/activate
+
+    # Install WeeWX into the virtual environment:
+    python3 -m pip install weewx
     ```
 
-=== "Redhat"
+=== "Rocky 8"
 
+    _Tested with Rocky 8.7._
     ```shell
     sudo yum update
-    sudo yum install -y gcc
-    sudo yum install -y python3-devel
-    python3 -m pip install wheel
-    ```
-
-=== "SUSE"
-
-    ```shell
-    # Check to see what version of Python you have:
+    # Check your version of Python. You must have 3.7 or later
     python3 -V
 
-    # If it is less than Python 3.7, you will have to upgrade to a later
-    # version. The following installs 3.9. Afterwards, you must invoke Python
-    # by using "python3.9", NOT "python3"
-    sudo zypper install -y python39 python39-devel
-    python3.9 -m pip install wheel
+    # If it is less than Python 3.7, install a later version of Python.
+    # For example, this would install Python 3.11.
+    # Afterwards, you must remember to invoke Python using "python3.11", NOT "python3"
+    sudo yum install python3.11 -y
+    sudo yum install python3.11-pip -y
 
-    # Finally, you may have to add ~/.local/bin to your path:
-    echo 'export PATH="$PATH:$HOME/.local/bin"' >> ~/.profile
-    source ~/.profile
+    # Make sure pip is up to date
+    python3.11 -m pip install pip --upgrade
+
+    # Create the virtual environment:
+    python3.11 -m venv ~/weewx-venv
+
+    # Activate the virtual environment:
+    source ~/weewx-venv/bin/activate
+
+    # Install WeeWX into the virtual environment:
+    python3.11 -m pip install weewx
     ```
 
-## Install WeeWX
+=== "Rocky 9"
 
-Once the preparatory steps are out of the way, you're ready to install WeeWX
-using pip.
+    _Tested with Rocky 9.1 and 9.2._
+    ```shell
+    sudo yum update
+    sudo yum install python3-pip -y
 
-There are many ways to do this (see the wiki document [pip
-install strategies](https://github.com/weewx/weewx/wiki/pip-install-strategies)
-for a partial list), but the method below is one of the simplest and safest,
-and does not require root privileges.
+    # Make sure pip is up to date
+    python3 -m pip install pip --upgrade
 
-```shell
-python3 -m pip install weewx --user
-```
+    # Create the virtual environment:
+    python3 -m venv ~/weewx-venv
 
-!!! Note
-    While not strictly necessary, it's a good idea to invoke pip using
-    `python3 -m pip`, rather than simply `pip`. This way you can be sure which
-    version of Python is being used.
+    # Activate the virtual environment:
+    source ~/weewx-venv/bin/activate
 
-When finished, the WeeWX executables will have been installed in
-`~/.local/bin`, and the libraries in your Python "user" area, generally
-`~/.local/lib/python3.x/site-packages/`, where `3.x` is your version of Python.
-
-!!! Note
-    You may get a warning to the effect:
+    # Install WeeWX into the virtual environment:
+    python3 -m pip install weewx
     ```
-    WARNING: The script wheel is installed in '/home/ubuntu/.local/bin' which
-    is not on PATH.  Consider adding this directory to PATH or, if you prefer
-    to suppress this warning, use --no-warn-script-location.
+
+=== "openSUSE"
+
+    _Tested with openSUSE Leap 15.5._
+    ```shell
+    sudo zypper refresh
+    # Check your version of Python. You must have 3.7 or later
+    python3 -V
+
+    # If it is less than Python 3.7, install a later version of Python.
+    # For example, this would install Python 3.11.
+    # Afterwards, you must remember to invoke Python using "python3.11", NOT "python3"
+    sudo zypper install -y python311
+
+    # Make sure pip is up to date
+    python3.11 -m pip install pip --upgrade
+
+    # Create the virtual environment:
+    python3.11 -m venv ~/weewx-venv
+
+    # Activate the virtual environment:
+    source ~/weewx-venv/bin/activate
+
+    # Install WeeWX into the virtual environment:
+    python3.11 -m pip install weewx
     ```
-    If you do, log out, then log back in.
+
+=== "macOS"
+
+    TBD
+
+
+=== "Other"
+
+    For other operating systems, you will have to figure out how to install pip and `venv`. See
+    [Installing pip with Linux Package
+    Managers](https://packaging.python.org/en/latest/guides/installing-using-linux-tools/). The
+    [installation directions of the pip website](https://pip.pypa.io/en/stable/installation/) may
+    also be useful.
+
+
+When finished, the WeeWX executables will have been installed in `~/weewx-venv/bin`, while the
+WeeWX libraries and dependencies will have been installed in `~/weewx-venv/lib/python3.x/site-packages`,
+where `3.x` is the version of Python you used.
+
 
 ## Provision a new station
 

@@ -11,8 +11,7 @@ install instructions should become
 
 ## Pip install
 
-In anticipation of Debian 12, default pip install should use a virtual environment, not a `--user` 
-flag.
+Test the pip install instructions on various OS.
 
 ## Upgrade guide
 
