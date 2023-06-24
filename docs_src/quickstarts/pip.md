@@ -18,134 +18,135 @@ the rest of your system. It's worth reading about
 
 ## Install in a virtual environment
 
-To install WeeWX in a virtual environment, you will need a few tools, which may or may not have
-already been installed on your system. Follow the directions below for your system:
+To install WeeWX in a virtual environment, follow the directions below for your system:
 
-=== "Debian"
+!!! Install
 
-    _Tested with Debian 10, Ubuntu 20.04, and 22.04._
-
-    ```shell
-    sudo apt update && sudo apt upgrade
-    sudo apt install python3-pip -y
-    sudo apt install python3-venv -y
-
-    # Create the virtual environment:
-    python3 -m venv ~/weewx-venv
-
-    # Activate the virtual environment:
-    source ~/weewx-venv/bin/activate
-
-    # Make sure pip is up to date
-    python3 -m pip install pip --upgrade
-
-    # Install WeeWX into the virtual environment:
-    python3 -m pip install weewx
-    ```
-
-=== "Rocky 8"
-
-    _Tested with Rocky 8.7._
-    ```shell
-    sudo yum update
-    # Check your version of Python. You must have 3.7 or later
-    python3 -V
-
-    # If it is less than Python 3.7, install a later version of Python.
-    # For example, this would install Python 3.11.
-    # Afterwards, you must remember to invoke Python using "python3.11", NOT "python3"
-    sudo yum install python3.11 -y
-    sudo yum install python3.11-pip -y
-
-    # Create the virtual environment:
-    python3.11 -m venv ~/weewx-venv
-
-    # Activate the virtual environment:
-    source ~/weewx-venv/bin/activate
-
-    # Make sure pip is up to date
-    python3.11 -m pip install pip --upgrade
-
-    # Install WeeWX into the virtual environment:
-    python3.11 -m pip install weewx
-    ```
-
-=== "Rocky 9"
-
-    _Tested with Rocky 9.1 and 9.2._
-    ```shell
-    sudo yum update
-    sudo yum install python3-pip -y
-
-    # Create the virtual environment:
-    python3 -m venv ~/weewx-venv
-
-    # Activate the virtual environment:
-    source ~/weewx-venv/bin/activate
-
-    # Make sure pip is up to date
-    python3 -m pip install pip --upgrade
-
-    # Install WeeWX into the virtual environment:
-    python3 -m pip install weewx
-    ```
-
-=== "openSUSE"
-
-    _Tested with openSUSE Leap 15.5._
-    ```shell
-    sudo zypper refresh
-    # Check your version of Python. You must have 3.7 or later
-    python3 -V
-
-    # If it is less than Python 3.7, install a later version of Python.
-    # For example, this would install Python 3.11.
-    # Afterwards, you must remember to invoke Python using "python3.11", NOT "python3"
-    sudo zypper install -y python311
-
-    # Create the virtual environment:
-    python3.11 -m venv ~/weewx-venv
-
-    # Activate the virtual environment:
-    source ~/weewx-venv/bin/activate
-
-    # Make sure pip is up to date
-    python3.11 -m pip install pip --upgrade
-
-    # Install WeeWX into the virtual environment:
-    python3.11 -m pip install weewx
-    ```
-
-=== "macOS"
-
-    _Tested on macOS 13.4 (Ventura)_
-    ```shell
-    # Create the virtual environment:
-    python3 -m venv ~/weewx-venv
-
-    # Activate the virtual environment:
-    source ~/weewx-venv/bin/activate
-
-    # Make sure pip is up to date
-    python3 -m pip install pip --upgrade
-
-    # Install WeeWX into the virtual environment:
-    python3 -m pip install weewx
-    ```
-
-
-=== "Other"
-
-    Generally, WeeWX can be installed on any operating system that offers a version of
-    Python 3.7 or later. 
-
-    You may need to install pip See [Installing pip with Linux Package
-    Managers](https://packaging.python.org/en/latest/guides/installing-using-linux-tools/). The
-    [installation directions of the pip website](https://pip.pypa.io/en/stable/installation/) may also
-    be useful.
-
-    You will also need `venv`. If it is not on your system, and your Linux Package Manager does
-    not offer a version, then you can substitute `virtualenv`, which can be installed using pip.
+    === "Debian"
+    
+        _Tested with Debian 10, 12, Ubuntu 20.04, and 22.04._
+    
+        ```{ .shell .copy }
+        sudo apt update && sudo apt upgrade
+        sudo apt install python3-pip -y
+        sudo apt install python3-venv -y
+    
+        # Create the virtual environment:
+        python3 -m venv ~/weewx-venv
+    
+        # Activate the virtual environment:
+        source ~/weewx-venv/bin/activate
+    
+        # Make sure pip is up to date
+        python3 -m pip install pip --upgrade
+    
+        # Install WeeWX into the virtual environment:
+        python3 -m pip install weewx
+        ```
+    
+    === "Rocky 8"
+    
+        _Tested with Rocky 8.7._
+        ```{ .shell .copy }
+        sudo yum update
+        # Check your version of Python. You must have 3.7 or later
+        python3 -V
+    
+        # If it is less than Python 3.7, install a later version of Python.
+        # For example, this would install Python 3.11.
+        # Afterwards, you must remember to invoke Python using "python3.11", NOT "python3"
+        sudo yum install python3.11 -y
+        sudo yum install python3.11-pip -y
+    
+        # Create the virtual environment:
+        python3.11 -m venv ~/weewx-venv
+    
+        # Activate the virtual environment:
+        source ~/weewx-venv/bin/activate
+    
+        # Make sure pip is up to date
+        python3.11 -m pip install pip --upgrade
+    
+        # Install WeeWX into the virtual environment:
+        python3.11 -m pip install weewx
+        ```
+    
+    === "Rocky 9"
+    
+        _Tested with Rocky 9.1 and 9.2._
+        ```{ .shell .copy }
+        sudo yum update
+        sudo yum install python3-pip -y
+    
+        # Create the virtual environment:
+        python3 -m venv ~/weewx-venv
+    
+        # Activate the virtual environment:
+        source ~/weewx-venv/bin/activate
+    
+        # Make sure pip is up to date
+        python3 -m pip install pip --upgrade
+    
+        # Install WeeWX into the virtual environment:
+        python3 -m pip install weewx
+        ```
+    
+    === "openSUSE"
+    
+        _Tested with openSUSE Leap 15.5._
+        ```{ .shell .copy }
+        sudo zypper refresh
+        # Check your version of Python. You must have 3.7 or later
+        python3 -V
+    
+        # If it is less than Python 3.7, install a later version of Python.
+        # For example, this would install Python 3.11.
+        # Afterwards, you must remember to invoke Python using "python3.11", NOT "python3"
+        sudo zypper install -y python311
+    
+        # Create the virtual environment:
+        python3.11 -m venv ~/weewx-venv
+    
+        # Activate the virtual environment:
+        source ~/weewx-venv/bin/activate
+    
+        # Make sure pip is up to date
+        python3.11 -m pip install pip --upgrade
+    
+        # Install WeeWX into the virtual environment:
+        python3.11 -m pip install weewx
+        ```
+    
+    === "macOS"
+    
+        _Tested on macOS 13.4 (Ventura)_
+        ```{ .shell .copy }
+        # Create the virtual environment:
+        python3 -m venv ~/weewx-venv
+    
+        # Activate the virtual environment:
+        source ~/weewx-venv/bin/activate
+    
+        # Make sure pip is up to date
+        python3 -m pip install pip --upgrade
+    
+        # Install WeeWX into the virtual environment:
+        python3 -m pip install weewx
+        ```
+    
+    
+    === "Other"
+    
+        Generally, WeeWX can be installed on any operating system that offers a version of
+        Python 3.7 or later. 
+    
+        You may need to install pip. See [Installing pip with Linux Package
+        Managers](https://packaging.python.org/en/latest/guides/installing-using-linux-tools/). The
+        [installation directions](https://pip.pypa.io/en/stable/installation/) on the pip website 
+        may also be useful.
+    
+        You will also need `venv`. If it is not on your system, and your Linux Package Manager does
+        not offer a version, then you can substitute `virtualenv`, which can be installed using pip.
 
 
 When finished, the WeeWX executables will have been installed in `~/weewx-venv/bin`, while the
@@ -155,11 +156,11 @@ where `3.x` is the version of Python you used.
 
 ## Provision a new station
 
-While the first step downloads WeeWX and installs it in a virtual environment, it does not set up
-the configuration specific to your station, nor does it set up the reporting skins. That is done in
-the next step, which uses the tool `weectl`. This step also does not require root privileges.
+While the installation instructions above download WeeWX and install it in a virtual environment,
+they do not set up the configuration specific to your station, nor do they set up the reporting
+skins. That is the job of the tool `weectl`. This step also does not require root privileges.
 
-```shell
+```{ .shell .copy }
 # Make sure your virtual environment is still active
 source ~/weewx-venv/bin/activate
 # Then create the station data
@@ -184,7 +185,7 @@ generation.  You can run it directly, or as a daemon.
 When you run WeeWX directly, it will print data to the screen, and WeeWX will
 stop when you either control-c or log out.
 
-```shell
+```{ .shell .copy }
 # Make sure your virtual environment is still active
 source ~/weewx-venv/bin/activate
 # Then run weewxd:
@@ -199,7 +200,7 @@ system, and require root privileges.
 
 === "systemd"
 
-    ```shell
+    ```{ .shell .copy }
     # Systems that use systemd, e.g., Debian, Redhat, SUSE
     sudo cp ~/weewx-data/util/systemd/weewx.service /etc/systemd/system
     sudo systemctl daemon-reload
@@ -214,7 +215,7 @@ system, and require root privileges.
     
 === "sysV"
 
-    ```shell
+    ```{ .shell .copy }
     # Systems that use SysV init, e.g., Slackware, Devuan, Puppy, DD-WRT
     sudo cp ~/weewx-data/util/init.d/weewx.debian /etc/init.d/weewx
     sudo chmod +x /etc/init.d/weewx
@@ -229,7 +230,7 @@ system, and require root privileges.
 
 === "macOS"
 
-    ```shell
+    ```{ .shell .copy }
     sudo cp ~/weewx-data/util/launchd/com.weewx.weewxd.plist /Library/LaunchDaemons
     sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist
     ```
@@ -253,7 +254,7 @@ probably want to switch to using real hardware. This is how to reconfigure.
 
 === "systemd"
  
-    ```shell
+    ```{ .shell .copy }
     # Stop the weewx daemon:
     sudo systemctl stop weewx
     # Make sure the WeeWX virtual environment is active
@@ -268,7 +269,7 @@ probably want to switch to using real hardware. This is how to reconfigure.
 
 === "sysV"
 
-    ```shell
+    ```{ .shell .copy }
     # Stop the weewx daemon:
     sudo /etc/init.d/weewx stop
     # Make sure the WeeWX virtual environment is active
@@ -283,7 +284,7 @@ probably want to switch to using real hardware. This is how to reconfigure.
 
 === "macOS"
 
-    ```shell
+    ```{ .shell .copy }
     # Stop the weewx daemon:
     sudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist
     # Make sure the WeeWX virtual environment is active
@@ -309,20 +310,20 @@ WeeWX must be restarted for the changes to take effect.
 
 === "systemd"
  
-    ```shell
+    ```{ .shell .copy }
     sudo systemctl restart weewx
     ```
 
 === "sysV"
 
-    ```shell
+    ```{ .shell .copy }
     sudo /etc/init.d/weewx stop
     sudo /etc/init.d/weewx start
     ```
 
 === "macOS"
 
-    ```shell
+    ```{ .shell .copy }
     sudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist
     sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist
     ```
@@ -334,7 +335,8 @@ See the [*User Guide*](../../usersguide) and
 ## Upgrade
 
 Get the latest release using `pip`:
-```
+
+```{ .shell .copy }
 # Make sure the WeeWX virtual environment is active
 source ~/weewx-venv/bin/activate
 # Upgrade the code base
@@ -369,9 +371,9 @@ If you installed a daemon configuration, remove it.
 
 === "systemd"
 
-    Systems that use systemd, e.g., Debian, Redhat, SUSE
+    _Systems that use systemd, e.g., Debian, Redhat, SUSE_
 
-    ```shell
+    ```{ .shell .copy }
     sudo systemctl stop weewx
     sudo systemctl disable weewx
     sudo rm /etc/systemd/system/weewx.service
@@ -379,9 +381,9 @@ If you installed a daemon configuration, remove it.
 
 === "sysV"
 
-    Systems that use SysV init, e.g., Slackware, Devuan, Puppy, DD-WRT
+    _Systems that use SysV init, e.g., Slackware, Devuan, Puppy, DD-WRT_
 
-    ```shell
+    ```{ .shell .copy }
     sudo /etc/rc.d/init.d/weewx stop
     sudo update-rc.d weewx remove
     sudo rm /etc/init.d/weewx
@@ -389,19 +391,19 @@ If you installed a daemon configuration, remove it.
 
 === "macOS"
 
-    ```shell
+    ```{ .shell .copy }
     sudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist
     sudo rm /Library/LaunchDaemons/com.weewx.weewxd.plist
     ```
 
 To delete the applications and code, simply remove the WeeWX virtual environment:
 
-```shell
+```{ .shell .copy }
 rm -r ~/weewx-venv
 ```
 
 Finally, if desired, to delete the database, skins, and other utilities, remove the data directory:
 
-```shell
+```{ .shell .copy }
 rm -r ~/weewx-data
 ```
