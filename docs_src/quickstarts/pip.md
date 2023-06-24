@@ -118,16 +118,34 @@ already been installed on your system. Follow the directions below for your syst
 
 === "macOS"
 
-    TBD
+    _Tested on macOS 13.4 (Ventura)_
+    ```shell
+    # Create the virtual environment:
+    python3 -m venv ~/weewx-venv
+
+    # Activate the virtual environment:
+    source ~/weewx-venv/bin/activate
+
+    # Make sure pip is up to date
+    python3 -m pip install pip --upgrade
+
+    # Install WeeWX into the virtual environment:
+    python3 -m pip install weewx
+    ```
 
 
 === "Other"
 
-    For other operating systems, you will have to figure out how to install pip and `venv`. See
-    [Installing pip with Linux Package
+    Generally, WeeWX can be installed on any operating system that offers a version of
+    Python 3.7 or later. 
+
+    You may need to install pip See [Installing pip with Linux Package
     Managers](https://packaging.python.org/en/latest/guides/installing-using-linux-tools/). The
-    [installation directions of the pip website](https://pip.pypa.io/en/stable/installation/) may
-    also be useful.
+    [installation directions of the pip website](https://pip.pypa.io/en/stable/installation/) may also
+    be useful.
+
+    You will also need `venv`. If it is not on your system, and your Linux Package Manager does
+    not offer a version, then you can substitute `virtualenv`, which can be installed using pip.
 
 
 When finished, the WeeWX executables will have been installed in `~/weewx-venv/bin`, while the
@@ -137,12 +155,14 @@ where `3.x` is the version of Python you used.
 
 ## Provision a new station
 
-While the first step downloads WeeWX and installs it into your local Python
-tree, it does not set up the configuration specific to your station, nor does
-it set up the reporting skins. That is done in the next step, which uses
-the tool `weectl`. This step also does not require root privileges.
+While the first step downloads WeeWX and installs it in a virtual environment, it does not set up
+the configuration specific to your station, nor does it set up the reporting skins. That is done in
+the next step, which uses the tool `weectl`. This step also does not require root privileges.
 
 ```shell
+# Make sure your virtual environment is still active
+source ~/weewx-venv/bin/activate
+# Then create the station data
 weectl station create
 ```
 
@@ -165,6 +185,9 @@ When you run WeeWX directly, it will print data to the screen, and WeeWX will
 stop when you either control-c or log out.
 
 ```shell
+# Make sure your virtual environment is still active
+source ~/weewx-venv/bin/activate
+# Then run weewxd:
 weewxd
 ```
 
@@ -233,6 +256,8 @@ probably want to switch to using real hardware. This is how to reconfigure.
     ```shell
     # Stop the weewx daemon:
     sudo systemctl stop weewx
+    # Make sure the WeeWX virtual environment is active
+    source ~/weewx-venv/bin/activate
     # Reconfigure to use your hardware:
     weectl station reconfigure
     # Remove the old database:
@@ -246,6 +271,8 @@ probably want to switch to using real hardware. This is how to reconfigure.
     ```shell
     # Stop the weewx daemon:
     sudo /etc/init.d/weewx stop
+    # Make sure the WeeWX virtual environment is active
+    source ~/weewx-venv/bin/activate
     # Reconfigure to use your hardware:
     weectl station reconfigure
     # Remove the old database:
@@ -259,6 +286,8 @@ probably want to switch to using real hardware. This is how to reconfigure.
     ```shell
     # Stop the weewx daemon:
     sudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist
+    # Make sure the WeeWX virtual environment is active
+    source ~/weewx-venv/bin/activate
     # Reconfigure to use your hardware:
     weectl station reconfigure
     # Remove the old database:
@@ -306,7 +335,10 @@ See the [*User Guide*](../../usersguide) and
 
 Get the latest release using `pip`:
 ```
-python3 -m pip install weewx --user --upgrade
+# Make sure the WeeWX virtual environment is active
+source ~/weewx-venv/bin/activate
+# Upgrade the code base
+python3 -m pip install weewx --upgrade
 ```
 
 Optional: You may want to upgrade your documentation and examples.
@@ -362,20 +394,13 @@ If you installed a daemon configuration, remove it.
     sudo rm /Library/LaunchDaemons/com.weewx.weewxd.plist
     ```
 
-Use pip to uninstall weewx.
+To delete the applications and code, simply remove the WeeWX virtual environment:
 
 ```shell
-python3 -m pip uninstall weewx -y
+rm -r ~/weewx-venv
 ```
 
-You can also use pip to uninstall the dependencies, but first be sure that they
-are not being used by other programs!
-
-```shell
-python3 -m pip uninstall pyserial pyusb configobj ephem CT3 Pillow PyMySQL -y
-```
-
-Finally, if desired, delete the data directory:
+Finally, if desired, to delete the database, skins, and other utilities, remove the data directory:
 
 ```shell
 rm -r ~/weewx-data

@@ -14,7 +14,7 @@ RequiresMountsFor=/home
 [Service]
 ExecStart=/home/weewx/bin/weewxd /home/weewx/weewx.conf
 StandardOutput=null
-# To run as a non-root user, uncomment and set username and group here:
+# To run as a non-root user, set the username and group here:
 #User=weewx
 #Group=weewx
 
