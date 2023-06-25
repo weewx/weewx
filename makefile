@@ -114,14 +114,10 @@ realclean: clean
 
 ###############################################################################
 # update the version in all relevant places
-VDOCS=usersguide/index.md custom/index.md
 VCONFIGS=weewx.conf bin/weecfg/tests/expected/weewx43_user_expected.conf
 VSKINS=Ftp/skin.conf Mobile/skin.conf Rsync/skin.conf Seasons/skin.conf Smartphone/skin.conf Standard/skin.conf
 version:
-	for f in $(VDOCS); do \
-  sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' $(DOC_SRC)/$$f > $(DOC_SRC)/$$f.tmp; \
-  mv $(DOC_SRC)/$$f.tmp $(DOC_SRC)/$$f; \
-done
+	sed -e "s/^site_name.*/site_name: \'WeeWX $(MMVERSION)\'/" mkdocs.yml > mkdocs.yml.tmp; mv mkdocs.yml.tmp mkdocs.yml
 	for f in $(VCONFIGS); do \
   sed -e 's/version = [0-9].*/version = $(VERSION)/' $$f > $$f.tmp; \
   mv $$f.tmp $$f; \
