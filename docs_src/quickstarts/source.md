@@ -1,28 +1,49 @@
 # Running WeeWX from source
 
-This is a guide to running WeeWX directly from the code.  This approach is
-perhaps most appropriate for developers, but it is also useful on older
-operating systems or on platforms with tight memory and/or storage constraints.
+Because WeeWX is pure-Python and does not need to be compiled, it can be run directly from
+a source repository. This approach is perhaps most appropriate for developers, but it is also
+useful on older operating systems or on platforms with tight memory and/or storage constraints.
 
 Although you do not need root privileges to install and configure WeeWX, you
 will need them to set up a daemon and, perhaps, to change device permissions.
 
-## Pre-requisites
+## Install pre-requisites
 
-Ensure that Python 3.7 or later is installed.
+1. Ensure that Python 3.7 or later is installed. You will also need pip and `venv`.
 
-Ensure that the following Python modules are installed:
+2. Set up and activate a virtual environment in your home directory
 
-* ConfigObj
-* Cheetah
-* PIL
+    ``` {.shell .copy}
+    python3 -m venv ~/weewx-venv
+    source ~/weewx-venv/bin/activate
+    ```
 
-You may also want the following Python modules:
+3. Make sure pip is up-to-date
 
-* serial (if your hardware uses a serial port)
-* usb (if your hardware uses a USB port)
-* ephem (if you want extended celestial information)
+    ``` {.shell .copy}
+    python3 -m pip install pip --upgrade
+    ```
+   
+4. Install the minimum dependencies
 
+    ``` {.shell .copy}
+    python3 -m pip install CT3 -y
+    python3 -m pip install configobj -y
+    python3 -m pip install Pillow -y
+    ```
+
+5. Depending on your situation, you may want to install these additional dependencies:
+
+    ``` {.shell .copy}
+    # If your hardware uses a serial port
+    python3 -m pip install pyserial -y
+    # If your hardware uses a USB port
+    python3 -m pip install pyusb -y
+    # If you want extended celestial information:
+    python3 -m pip install ephem -y
+    # If you use MySQL or Maria
+    python3 -m pip install PyMySQL[rsa]
+    ```
 
 ## Get the code
 
@@ -34,14 +55,19 @@ git clone https://github.com/weewx/weewx ~/weewx
 ```
 
 !!! Note
-    For systems with very little space, download then expand a single
-    release from https://weewx.com/downloads
+    For systems with very little space, you may want to create a *shallow* clone:
+    ``` {.shell .copy}
+    git clone --depth 1 https://github.com/weewx/weewx ~/weewx
+    ```
 
 
 ## Provision a new station
 
 Now that you have the code, create a configuration file and skins:
-```shell
+```{.shell .copy}
+# Make sure your virtual environment is still active:
+source ~/weewx-venv/bin/activate
+# Then create the station data
 python3 ~/weewx/bin/weectl.py station create
 ```
 
@@ -60,12 +86,16 @@ generation.  You can run it directly, or as a daemon.
 When you run WeeWX directly, it will print data to the screen, and WeeWX will
 stop when you either control-c or log out.
 
-```shell
+```{.shell .copy}
+# Make sure your virtual environment is still active:
+source ~/weewx-venv/bin/activate
+# Run weewxd
 python3 ~/weewx/bin/weewxd.py
 ```
 
-To run `weewxd` as a daemon, install an init file that is appropriate for your
-operating system.  Examples are included in the `util` directory.
+To run `weewxd` as a daemon, install a systemd or init file that is appropriate for your operating
+system. Be sure to use the full path in the virtual environment to the Python interpreter and
+`weewx.py`. Examples are included in the `util` directory.
 
 
 ## Verify
@@ -83,14 +113,12 @@ If you have problems, check the system log for entries from `weewxd`.
 
 To enable uploads or to customize reports, modify the configuration file.
 Use any text editor, such as `nano`:
-```shell
-nano ~/weewx-data/weewx.conf
-```
+
+    nano ~/weewx-data/weewx.conf
 
 WeeWX must be restarted for the changes to take effect.
 
-See the [*User Guide*](../../usersguide) and
-[*Customization Guide*](../../custom) for details.
+See the [*User Guide*](../../usersguide) and [*Customization Guide*](../../custom) for details.
 
 
 ## Upgrade
@@ -107,10 +135,10 @@ Then restart `weewxd`
 
 Before you uninstall, be sure that `weewxd` is not running.
 
-Then simply delete the code:
+Then simply delete the git clone:
 
 ```shell
-rm -r ~/weewx
+rm -rf ~/weewx
 ```
 
 If desired, delete the data directory:
