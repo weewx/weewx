@@ -1,4 +1,4 @@
-# AcuRite
+# AcuRite {id=acurite_notes}
 
 According to Acurite, the wind speed updates every 18 seconds.
 The wind direction updates every 30 seconds. Other sensors update
@@ -196,8 +196,10 @@ hardware and which are calculated by WeeWX.
 
 <p class='station_data_key'>
 Each packet contains a subset of all possible readings. For example, one type
-of packet contains `windSpeed`, `windDir` and `rain`. A different type of
-packet contains `windSpeed`, `outTemp` and `outHumidity`.
+of packet contains <span class='code'>windSpeed</span>,
+<span class='code'>windDir</span> and <span class='code'>rain</span>.
+A different type of packet contains <span class='code'>windSpeed</span>,
+<span class='code'>outTemp</span> and <span class='code'>outHumidity</span>.
 </p>
 
 <p class='station_data_key'>
