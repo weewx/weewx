@@ -7,10 +7,10 @@ every 60 seconds.
 In fact, because of the message structure and the data logging
 design, these are the actual update frequencies:
 
-<table class='station_data'>
+<table class='indent'>
 <caption>AcuRite transmission periods</caption>
 <tbody>
-<tr><th>sensor</th><th>period</th></tr>
+<tr class='first_row'><td>sensor</td><td>period</td></tr>
 <tr><td>Wind speed</td><td>18 seconds</td></tr>
 <tr><td>Outdoor temperature, outdoor humidity</td><td>36 seconds</td></tr>
 <tr><td>Wind direction, rain total</td><td>36 seconds</td></tr>
