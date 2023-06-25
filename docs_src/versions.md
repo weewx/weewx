@@ -56,15 +56,15 @@ install it.
 
 ### setup.py installs no longer possible
 
-The package <span class="code">distutils</span>, and the imperative approach on which the WeeWX <span class="code">setup.py</span> install method depends, <a href="https://peps.python.org/pep-0632/">has been deprecated</a> and will ultimately be removed. The future is clearly pip installs using <span class="code">pyproject.toml</span>. See the wiki article on <a href="https://github.com/weewx/weewx/wiki/Version-5">Version 5</a> for the technical reasons why.
+The package `distutils`, and the imperative approach on which the WeeWX `setup.py` install method depends, <a href="https://peps.python.org/pep-0632/">has been deprecated</a> and will ultimately be removed. The future is clearly pip installs using `pyproject.toml`. See the wiki article on <a href="https://github.com/weewx/weewx/wiki/Version-5">Version 5</a> for the technical reasons why.
 
 ### pip installs to new location
 
-The <span class="code">setup.py</span> install method generally installed to <span class="code">/home/weewx</span>. The new pip install method installs to <span class="code">~/weewx-data</span> in your home directory. However, old installations can continue to use <span class="code">/home/weewx</span> by following the guide <a href="https://github.com/weewx/weewx/wiki/v5-upgrade"><em>Migrating setup.py installs to Version 5.0</em></a>.
+The `setup.py` install method generally installed to `/home/weewx`. The new pip install method installs to `~/weewx-data` in your home directory. However, old installations can continue to use `/home/weewx` by following the guide <a href="https://github.com/weewx/weewx/wiki/v5-upgrade"><em>Migrating setup.py installs to Version 5.0</em></a>.
 
-### <span class="code">SQLITE_ROOT</span> is now relative to <span class="code">WEEWX_ROOT</span>
+### `SQLITE_ROOT` is now relative to `WEEWX_ROOT`
 
-Previously, <span class="code">SQLITE_ROOT</span> was expected to be an absolute path, but now it is relative to <span class="code">WEEWX_ROOT</span>. Because this is <em>less restrictive</em>, it is not expected to affect any users.
+Previously, `SQLITE_ROOT` was expected to be an absolute path, but now relative paths are accepted.  A relative path is considered relative to `WEEWX_ROOT`. Because this is <em>less restrictive</em>, it is not expected to affect any users.
 
 
 ## Upgrading to V4.10
