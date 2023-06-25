@@ -60,7 +60,7 @@ The package `distutils`, and the imperative approach on which the WeeWX `setup.p
 
 ### pip installs to new location
 
-The `setup.py` install method generally installed to `/home/weewx`. The new pip install method installs to `~/weewx-data` in your home directory. However, old installations can continue to use `/home/weewx` by following the guide <a href="https://github.com/weewx/weewx/wiki/v5-upgrade"><em>Migrating setup.py installs to Version 5.0</em></a>.
+The default location for a `setup.py` install was `/home/weewx`. The new pip install method installs to a directory called `weewx-data` in home directory of the user doing the install. However, old installations can continue to use `/home/weewx` by following the guide <a href="https://github.com/weewx/weewx/wiki/v5-upgrade"><em>Migrating setup.py installs to Version 5.0</em></a>.
 
 ### `SQLITE_ROOT` is now relative to `WEEWX_ROOT`
 

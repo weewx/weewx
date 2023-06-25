@@ -32,38 +32,35 @@ This is an outline of the process to install, configure, and run WeeWX:
 
 ## Installation methods
 
-There are two general ways of installing WeeWX: using a package installer, or by using pip.
+There are two general ways of installing WeeWX: using a package installer,
+or by using pip.
 
-### Install using a package
-
-Installing WeeWX from a package is the fastest and simplest way to get started.
-
-- Available only for systems based on Debian, Redhat, or SUSE
-- One-step install - when install completes, WeeWX is up and running
-- Requires root privileges to install and modify
-- Installs into locations that are standard for the operating system
-- Configuration, database, and reports are stored in different locations
-
-These are the instructions for installing from a package:
-
-[Debian DEB](../quickstarts/debian) : For systems based on Debian, including Ubuntu, Mint, Raspberry Pi
-
-[Redhat RPM](../quickstarts/redhat): For systems based on Redhat, including Fedora, CentOS, and Rocky
-
-[SuSE RPM](../quickstarts/suse): For SuSE and OpenSUSE
-
-### Install using pip
+Installing WeeWX from a package is the fastest and simplest way to get started,
+but this method is not available for every operating system.
 
 Installing WeeWX using pip is often preferred by those who do a lot of
 customization or those who develop WeeWX extensions.
 
-- Works on every operating system, including macOS
-- Multi-step install - WeeWX, data, and daemon
-- Does not require root privileges to install or modify
-- Requires root privileges and separate steps to run as a daemon
-- Installs into locations that are standard for Python
-- Configuration, database, and reports are stored in a single directory
+| package | pip |
+|---|---|
+| Only systems based on Debian, Redhat, or SUSE | Any operating system, including macOS |
+| Single step | Multiple steps |
+| Requires root | Does not require root to install, configure, or upgrade, but requires root to run as a daemon |
+| Installs into locations that are standard for the operating system | Installs into locations that are standard for Python |
+| Configuration, database, and reports are stored in different locations | Configuration, database, and reports are stored in a single direcctory |
+
+### Install using a package
+
+These are the instructions for installing from a package:
+
+[Debian DEB](../../quickstarts/debian) : For systems based on Debian, including Ubuntu, Mint, Raspberry Pi
+
+[Redhat RPM](../../quickstarts/redhat): For systems based on Redhat, including Fedora, CentOS, and Rocky
+
+[SuSE RPM](../../quickstarts/suse): For SuSE and OpenSUSE
+
+### Install using pip
 
 These are the instructions for installing with pip:
 
-[Installation using pip](../quickstarts/pip): For any operating system
+[Installation using pip](../../quickstarts/pip): For any operating system

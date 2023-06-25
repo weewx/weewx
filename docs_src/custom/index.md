@@ -1,7 +1,5 @@
 # The Customization Guide
 
-Version: 5.0
-
 This document covers the customization of WeeWX. It assumes that you have read, and are reasonably familiar with, the [Users Guide](../usersguide/).
 
 The introduction contains an overview of the architecture. If you are only interested in customizing the generated reports you can probably skip the introduction and proceed directly to the section [_Customizing reports_](custom_reports). With this approach you can easily add new plot images, change the titles of images, change the units used in the reports, and so on.
