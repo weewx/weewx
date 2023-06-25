@@ -1,11 +1,11 @@
 # AcuRite
 
-<p>According to Acurite, the wind speed updates every 18 seconds.
+According to Acurite, the wind speed updates every 18 seconds.
 The wind direction updates every 30 seconds. Other sensors update
-every 60 seconds.</p>
+every 60 seconds.
 
-<p>In fact, because of the message structure and the data logging
-design, these are the actual update frequencies:</p>
+In fact, because of the message structure and the data logging
+design, these are the actual update frequencies:
 
 <table class='station_data'>
 <caption>AcuRite transmission periods</caption>
@@ -19,24 +19,24 @@ design, these are the actual update frequencies:</p>
 </tbody>
 </table>
 
-<p>The station emits partial packets, which may confuse some online
-services.</p>
+The station emits partial packets, which may confuse some online
+services.
 
-<p>The AcuRite stations do not record wind gusts.</p>
+The AcuRite stations do not record wind gusts.
 
-<p>Some consoles have a small internal logger.  Data in the logger
-are erased when power is removed from the station.</p>
+Some consoles have a small internal logger.  Data in the logger
+are erased when power is removed from the station.
 
-<p>The console has a sensor for inside humidity, but the values from
+The console has a sensor for inside humidity, but the values from
 that sensor are available only by reading from the console logger.
 Due to instability of the console firmware, the
 WeeWX driver does not read the console
-logger.</p>
+logger.
 
-<h2 id="acurite_usb_mode">USB Mode</h2>
+## USB Mode {id=acurite_usb_mode}
 
-<p>Some AcuRite consoles have a setting called "USB Mode" that controls
-how data are saved and communicated:</p>
+Some AcuRite consoles have a setting called "USB Mode" that controls
+how data are saved and communicated:
 
 <table id='usbmode' class='station_data'>
 <caption>AcuRite USB mode</caption>
@@ -54,35 +54,31 @@ how data are saved and communicated:</p>
 </tbody>
 </table>
 
-<p>If the AcuRite console has multiple USB modes, it must be set to
-USB mode 3 or 4 in order to work with the WeeWX driver.</p>
+If the AcuRite console has multiple USB modes, it must be set to
+USB mode 3 or 4 in order to work with the WeeWX driver.
 
-<p>Communication
-via USB is disabled in modes 1 and 2. Mode 4 is more reliable than
-mode 3; mode 3 enables logging of data, mode 4 does not. When the
+Communication via USB is disabled in modes 1 and 2. Mode 4 is more reliable
+than mode 3; mode 3 enables logging of data, mode 4 does not. When the
 console is logging it frequently causes USB communication
-problems.</p>
+problems.
 
-<p>The default mode is 2, so after a power failure one must use the
+The default mode is 2, so after a power failure one must use the
 console controls to change the mode before
-WeeWX can resume data collection.</p>
+WeeWX can resume data collection.
 
-<p>The 01025, 01035, 01036, 01525, and 02032 consoles have a USB mode
-setting.</p>
+The 01025, 01035, 01036, 01525, and 02032 consoles have a USB mode setting.
 
-<p>The 02064 and 01536 consoles do not have a mode setting; these
-consoles are always in USB mode 4.</p>
+The 02064 and 01536 consoles do not have a mode setting; these
+consoles are always in USB mode 4.
 
-<h2 id='acurite_configuration'>Configuring with <span class="code">wee_device</span></h2>
+## Configuring with `wee_device` {id=acurite_configuration}
 
-<p>The <a href="../utilities/utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> utility
-cannot be used to configure AcuRite stations.</p>
+The `wee_device` utility cannot be used to configure AcuRite stations.
 
-<h2 id="acurite_data">Station data</h2>
+## Station data {id=acurite_data}
 
-<p>The following table shows which data are provided by the station
+The following table shows which data are provided by the station
 hardware and which are calculated by WeeWX.
-</p>
 
 <table class='station_data'>
 <caption>AcuRite station data</caption>
@@ -197,11 +193,11 @@ hardware and which are calculated by WeeWX.
 </tr>
 </tbody>
 </table>
+
 <p class='station_data_key'>
-Each packet contains a subset of all possible readings. For example, one type of packet contains <span
-class='code'>windSpeed</span>, <span class='code'>windDir</span> and <span class='code'>rain</span>. A
-different type of packet contains <span class='code'>windSpeed</span>, <span class='code'>outTemp</span> and
-<span class='code'>outHumidity</span>.
+Each packet contains a subset of all possible readings. For example, one type
+of packet contains `windSpeed`, `windDir` and `rain`. A different type of
+packet contains `windSpeed`, `outTemp` and `outHumidity`.
 </p>
 
 <p class='station_data_key'>
@@ -209,3 +205,4 @@ different type of packet contains <span class='code'>windSpeed</span>, <span cla
 <b>D</b> indicates data calculated by the <b>D</b>river<br/>
 <b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
 </p>
+
