@@ -42,7 +42,7 @@ The data source to be used for the reports. It should match a binding given in s
 
 #### report_timing
 
-This parameter uses a cron-like syntax that determines when a report will be run. The setting can be overridden in individual reports, so it is possible to run each report with a different schedule. Refer to the separate document [_Scheduling report generation_](../../../report_scheduling) for how to control when reports are run. Optional. By default, a value is missing, which causes each report to run on each archive interval.
+This parameter uses a cron-like syntax that determines when a report will be run. The setting can be overridden in individual reports, so it is possible to run each report with a different schedule. Refer to the separate document [_Scheduling report generation_](../../../custom/report_scheduling) for how to control when reports are run. Optional. By default, a value is missing, which causes each report to run on each archive interval.
 
 ## Standard WeeWX reports
 

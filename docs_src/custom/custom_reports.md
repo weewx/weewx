@@ -370,7 +370,3 @@ However, let's say that we have actually located our outside temperature sensor 
 ```        
 
 This will cause the default label Outside Temperature to be replaced with the new label "Barn Temperature" everywhere in your report. The label for type `inTemp` will be untouched.
-
-## Scheduling report generation
-
-See the separate document [_Scheduling report generation_](../report_scheduling.md) for how to control when reports are run.

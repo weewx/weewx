@@ -6,7 +6,7 @@ The introduction contains an overview of the architecture. If you are only inter
 
 However, if your goal is a specialized application, such as adding alarms, RSS feeds, _etc._, then it would be worth your while to read about the internal architecture.
 
-Most of the guide applies to any hardware, but the exact data types are hardware-specific. See the [_WeeWX Hardware Guide_](../hardware.htm) for details of how different observation types are handled by different types hardware.
+Most of the guide applies to any hardware, but the exact data types are hardware-specific. See the [_WeeWX Hardware Guide_](../hardware) for details of how different observation types are handled by different types hardware.
 
 !!! Warning
     WeeWX is still an experimental system and, as such, its internal design is subject to change. Future upgrades may break any customizations you have done, particularly if they involve the API (skin customizations tend to be more stable).

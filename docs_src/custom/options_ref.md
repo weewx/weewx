@@ -495,7 +495,7 @@ runs.
     available through use of the `report_timing` option in
     `weewx.conf`. The `report_timing` option uses a CRON-like
     setting to control precisely when a report is run. See the guide *[Scheduling
-    report generation](../../report_scheduling)* for details.
+    report generation](../report_scheduling)* for details.
 
 `[[SummaryByDay]]`
 

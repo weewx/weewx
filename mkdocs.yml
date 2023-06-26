@@ -89,6 +89,7 @@ nav:
   - Customization guide:
     - "Introduction": custom/index.md
     - "Customizing reports": custom/custom_reports.md
+    - "Scheduling reports": custom/report_scheduling.md
     - "The Cheetah generator": custom/cheetah.md
     - "The Image generator": custom/image_generator.md
     - "Multiple data bindings": custom/multiple_bindings.md

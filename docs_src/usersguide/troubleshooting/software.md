@@ -243,7 +243,7 @@ This is frequently caused by the necessary Truetype fonts not being installed on
 
 ## Data is archived but some/all reports do not run
 
-If WeeWX appears to be running normally but some or all reports are not being run, either all the time or periodically, the problem could be the inadvertant use or incorrect setting of the `report_timing` option in `weewx.conf`. The `report_timing` option allows the user to specify when some or all reports are run (see [*Scheduling report generation*](../../../report_scheduling)). By default, the [_`report_timing`_](../../weewx-config-file/stdreport-config/#report_timing) option is disabled and all reports are run each archive period.
+If WeeWX appears to be running normally but some or all reports are not being run, either all the time or periodically, the problem could be the inadvertant use or incorrect setting of the `report_timing` option in `weewx.conf`. The `report_timing` option allows the user to specify when some or all reports are run (see [*Scheduling report generation*](../../../custom/report_scheduling)). By default, the [_`report_timing`_](../../weewx-config-file/stdreport-config/#report_timing) option is disabled and all reports are run each archive period.
 
 To see if the `report_timing` option is causing reports to be skipped inspect the [log file](../../running-weewx#monitoring-weewx). Any reports that are skipped due to the `report_timing` option will be logged as follows:
 ``` log
@@ -253,6 +253,6 @@ If reports are being incorrectly skipped due to `report_timing`, then edit `weew
 
 
 ## The wrong reports are being skipped by report_timing
-If the [_`report_timing`_](../../weewx-config-file/stdreport-config/#report_timing) option is being used, and the results are not as expected, there may be an error in the `report_timing` option. If there are errors in the `report_timing` parameter, the report will be run on each archive interval. First check the `report_timing` option parameters to ensure they are valid and there are no additonal spaces or other unwanted characters. Then check that the parameters are correctly set for the desired report generation times. For example, is the correct day of the week number being used if limiting the day of the week parameter. Refer to [*Scheduling report generation*](../../../report_scheduling).
+If the [_`report_timing`_](../../weewx-config-file/stdreport-config/#report_timing) option is being used, and the results are not as expected, there may be an error in the `report_timing` option. If there are errors in the `report_timing` parameter, the report will be run on each archive interval. First check the `report_timing` option parameters to ensure they are valid and there are no additonal spaces or other unwanted characters. Then check that the parameters are correctly set for the desired report generation times. For example, is the correct day of the week number being used if limiting the day of the week parameter. Refer to [*Scheduling report generation*](../../../custom/report_scheduling).
 
 Check the [log file](../../usersguide/running-weewx#monitoring-weewx) for any entries relating to the reports concerned. Errors in the `report_timing` parameter and skipped reports are logged only when `debug=1` in `weewx.conf`.

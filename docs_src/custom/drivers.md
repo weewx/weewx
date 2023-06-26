@@ -210,5 +210,4 @@ service.
 
 Naturally, there are a lot of subtleties that have been glossed over in
 this high-level description. If you run into trouble, look for help in
-the `[weewx-development`
-forum](https://groups.google.com/forum/#!forum/weewx-development).
+the [weewx-development](https://groups.google.com/g/weewx-development) group.
