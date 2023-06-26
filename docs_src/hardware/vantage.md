@@ -1,30 +1,23 @@
+# Vantage {id=vantage_notes}
 
+The Davis Vantage stations include a variety of models and configurations.  The WeeWX driver can
+communicate with a console or envoy using serial, USB, or TCP/IP interface.
 
-        <h1 id='vantage_notes'>Vantage</h1>
+## Configuring with `wee_device` {id=vantage_configuration}
 
-        <p>The Davis Vantage stations include a variety of models and
-            configurations.  The WeeWX driver
-            can communicate with a console or envoy using serial, USB,
-            or TCP/IP interface.</p>
+!!! NOTE
 
-        <h2 id="vantage_configuration">Configuring with <span class="code">wee_device</span></h2>
+    Make sure you stop `weewxd` before running `wee_device`
 
-        <p class="note">
-            Make sure you stop <span class="code">weewxd</span> before running
-            <span class="code">wee_device</span>.
-        </p>
+### Action `--help` {id=vantage_help}
 
-        <h3 id="vantage_help">
-            Action <span class="code">--help</span></h3>
+Invoking `wee_device` with the `--help` option
 
-        <p>Invoking <a href="../utilities/utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a> with the
-            <span class='code'>--help</span> option</p>
+    wee_device /home/weewx/weewx.conf --help
 
-<pre class="tty cmd">wee_device /home/weewx/weewx.conf --help</pre>
+will produce something like this:
 
-        <p>will produce something like this:</p>
-
-    <pre class="tty">
+```
 Using configuration file /home/weewx/weewx.conf
 Using driver weewx.drivers.vantage.
 Using Vantage driver version 3.6.2 (weewx.drivers.vantage)
@@ -125,15 +118,18 @@ Options:
 
 Be sure to stop weewx first before using. Mutating actions will request
 confirmation before proceeding.
-</pre>
+```
 
-        <h3 id="vantage_info">
-            Action <span class="code">--info</span></h3>
+### Action `--info` {id=vantage_info}
 
-        <p>Use the <span class="code">--info</span> option to display the current EEPROM settings: </p>
-        <pre class="tty cmd">wee_device --info</pre>
-        <p>This will result in something like:</p>
-    <pre class="tty">Using configuration file /home/weewx/weewx.conf
+Use the `--info` option to display the current EEPROM settings:
+
+    wee_device --info
+
+This will result in something like:
+
+<pre class=tty>
+Using configuration file /home/weewx/weewx.conf
 Using driver weewx.drivers.vantage.
 Using Vantage driver version 3.6.2 (weewx.drivers.vantage)
 Querying...
@@ -208,520 +204,527 @@ Davis Vantage EEPROM settings:
       <span class="highlight">Extra Temperature 4:          +0.0 F</span>
       <span class="highlight">Extra Humidity 1:             +0.0 F</span>
 </pre>
-        <p>The console version number is available only on consoles with firmware dates after about 2006.</p>
 
-        <p><span class="highlight">Highlighted</span> values can be modified using the
-            various <a href="../utilities/utilities.htm#wee_device_utility"><span class='code'>wee_device</span></a>
-            commands below.</p>
+The console version number is available only on consoles with firmware dates after about 2006.
 
-        <h3 id="vantage_current">
-            Action <span class="code">--current</span></h3>
-        <p>This command will print a single LOOP packet.</p>
+<span class="highlight">Highlighted</span> values can be modified using the
+            various `wee_device` commands below.
 
-        <h3 id="vantage_clear_console_memory">
-            Action <span class="code">--clear-memory</span></h3>
-        <p>This command will clear the logger memory after asking for confirmation.</p>
+### Action `--current` {id=vantage_current}
+This command will print a single LOOP packet.
 
-        <h3 id="vantage_archive_interval">
-            Action <span class="code">--set-interval</span></h3>
+### Action `--clear-memory` {id=vantage_clear_console_memory}
 
-        <p>Use this command to change the archive interval of the internal logger. Valid intervals are 1, 5, 10,
-            15, 30, 60, or 120 minutes. However, if you are ftp&#39;ing lots of files to a server, setting it to
-            one minute may not give enough time to have them all uploaded before the next archive record is due. If this
-            is the case, you should pick a longer archive interval, or trim the number of files you
-            are using.</p>
+This command will clear the logger memory after asking for confirmation.
 
-        <p>An archive interval of five minutes works well for the Vantage stations. Because of the large
-            amount of onboard memory they carry, going to a larger interval does not have any real advantages. </p>
+### Action `--set-interval` {id=vantage_archive_interval}
 
-        <p>Example: to change the archive interval to 10 minutes:</p>
-        <pre class="tty cmd">wee_device --set-interval=10</pre>
+Use this command to change the archive interval of the internal logger. Valid intervals are 1, 5,
+10, 15, 30, 60, or 120 minutes. However, if you are ftp'ing lots of files to a server, setting it
+to one minute may not give enough time to have them all uploaded before the next archive record is
+due. If this is the case, you should pick a longer archive interval, or trim the number of files
+you are using.
 
-        <h3>Action <span class="code">--set-altitude</span></h3>
+An archive interval of five minutes works well for the Vantage stations. Because of the large
+amount of onboard memory they carry, going to a larger interval does not have any real advantages.
 
-        <p>Use this command to set the console's stored altitude. The altitude must be in <em>feet</em>. Example:</p>
-        <pre class="tty cmd">wee_device --set-altitude=700</pre>
+Example: to change the archive interval to 10 minutes:
 
-        <h3>Action <span class="code">--set-barometer</span></h3>
+    wee_device --set-interval=10
 
-        <p>Use this command to calibrate the barometer in your Vantage weather station. To use it, you must have a known
-            correct barometer reading <em>for your altitude</em>. In practice, you will either have to move your console
-            to a known-correct station (perhaps a nearby airport) and perform the calibration there, or reduce the
-            barometer reading to your altitude. Otherwise, specify the value zero and the station will pick a sensible
-            value.</p>
+### Action `--set-altitude`
 
-        <h3 id="vantage_rain_bucket_type">
-            Action <span class="code">--set-bucket</span></h3>
+Use this command to set the console's stored altitude. The altitude must be in <em>feet</em>. Example:
 
-        <p>Normally, this is set by Davis, but if you have replaced your bucket with a different kind, you might want to
-            reconfigure. For example, to change to a 0.1 mm bucket (bucket code &quot;2&quot;), use the following:</p>
-        <pre class="tty cmd">wee_device --set-bucket=2</pre>
+    wee_device --set-altitude=700
 
-        <h3>Action <span class="code">--set-rain-year-start</span></h3>
+### Action `--set-barometer`
 
-        <p>The Davis Vantage series allows the start of the rain year to be something other than 1 January. For example,
-            to set it to 1 October:</p>
-        <pre class="tty cmd">wee_device --set-rain-year-start=10</pre>
+Use this command to calibrate the barometer in your Vantage weather station. To use it, you must
+have a known correct barometer reading _for your altitude_. In practice, you will either
+have to move your console to a known-correct station (perhaps a nearby airport) and perform the
+calibration there, or reduce the barometer reading to your altitude. Otherwise, specify the value
+zero and the station will pick a sensible value.
 
-        <h3 id="vantage_setting_offsets">
-            Action <span class="code">--set-offset</span></h3>
+### Action `--set-bucket` {id=vantage_rain_bucket_type}
 
-        <p>The Davis instruments can correct sensor errors by adding an <em>offset</em> to their emitted values. This is
-            particularly useful for Southern Hemisphere users. Davis fits the wind vane to the Integrated Sensor Suite
-            (ISS) in a position optimized for Northern Hemisphere users, who face the solar panel to the south. Users
-            south of the equator must orient the ISS's solar panel to the north to get maximal insolation, resulting in
-            a 180&deg; error in the wind direction. The solution is to add a 180&deg; offset correction. You can do this
-            with the following command:</p>
+Normally, this is set by Davis, but if you have replaced your bucket with a different kind, you
+might want to reconfigure. For example, to change to a 0.1 mm bucket (bucket code `2`), use the
+following:
 
-        <pre class="tty cmd">wee_device --set-offset=windDir,180</pre>
+    wee_device --set-bucket=2
 
-        <h3 id="vantage_configuring_additional_sensors">
-            Action <span class="code">--set-transmitter-type</span></h3>
+### Action `--set-rain-year-start`
 
-        <p>If you have additional sensors and/or repeaters for your Vantage station, you can configure them using your console.
-           However, if you have a
-           <a href="https://www.davisinstruments.com/product/wireless-weather-envoy/">Davis Weather Envoy receiver</a>,
-           it will not have a console! As an alternative,
-           <span class="code">wee_device</span> can do this using the command <span class="code">--set-transmitter-type</span>.
-        </p>
+The Davis Vantage series allows the start of the rain year to be something other than 1 January.
+For example, to set it to 1 October:
 
-        <p>For example, to add an extra temperature sensor to channel 3 and no repeater is used, do the following:</p>
-        <pre class="tty cmd">wee_device --set-transmitter-type=3,1,2</pre>
-        <p>This says to turn on channel 3, set its type to 1 ("Temperature only"), without repeater use and it will show up in the database
-            as <span class="code">extraTemp2</span>.</p>
-        <p class="note">If you omit the repeater id, repeater id will be: 'no repeater'.</p>
+    wee_device --set-rain-year-start=10
 
-        <p>Here's another example, this time for a combined temperature /
-            humidity sensor retransmitted via repeater A:</p>
-        <pre class="tty cmd">wee_device --set-transmitter-type=5,3,2,4,a</pre>
-        <p>This will add the combined sensor to channel 5, set its type to 3 ("Temperature and humidity"), via Repeater A and it will
-            show up in the database as <span class="code">extraTemp2</span> and <span class="code">extraHumid4</span>.
-        </p>
+### Action `--set-offset` {id=vantage_setting_offsets}
 
-        <p>The <span class="code">--help</span> option will give you the code for each sensor type and repeater id.</p>
-        <p>If you have to use repeaters with your Vantage Pro2 station, please take a look at
-            <a href="http://www.davisnet.com/product_documents/weather/app_notes/AN_25-data-repeater-network.pdf">
-                Installing Repeater Networks for Vantage Pro2</a> how to setup.</p>
+The Davis instruments can correct sensor errors by adding an _offset_ to their emitted values. This
+is particularly useful for Southern Hemisphere users. Davis fits the wind vane to the Integrated
+Sensor Suite (ISS) in a position optimized for Northern Hemisphere users, who face the solar panel
+to the south. Users south of the equator must orient the ISS's solar panel to the north to get
+maximal insolation, resulting in a 180° error in the wind direction. The solution is to add a 180°
+offset correction. You can do this with the following command:
 
-        <p class="warning">You can only use channels not actively used for retransmission. The command checks for this and will not
-            accept channel numbers actively used for retransmission.</p>
+    wee_device --set-offset=windDir,180
 
-        <h3 id="vantage_retransmit">
-            Action <span class="code">--set-retransmit</span></h3>
+<h3 id="vantage_configuring_additional_sensors">
+Action <span class="code">--set-transmitter-type</span></h3>
 
-        <p>Use this command to tell your console whether or not to act as a retransmitter.</p>
-        <p>Example: Tell your console to turn retransmission 'ON' and let the software select the first available channel:</p>
-        <pre class="tty cmd">wee_device --set-retransmit=on</pre>
+If you have additional sensors and/or repeaters for your Vantage station, you can configure them
+using your console. However, if you have a [Davis Weather Envoy
+receiver](https://www.davisinstruments.com/product/wireless-weather-envoy/), it will not have a
+console! As an alternative, `wee_device` can do this using the command `--set-transmitter-type`.
 
-        <p>Another example: Tell your console to turn retransmission 'OFF':</p>
-        <pre class="tty cmd">wee_device --set-retransmit=off</pre>
+For example, to add an extra temperature sensor to channel 3 and no repeater is used, do the following:
 
-        <p>Last example: Tell your console to turn retransmission 'ON' at channel 4:</p>
-        <pre class="tty cmd">wee_device --set-retransmit=on,4</pre>
-        <p class="warning">You only can use channels not actively used for reception. The command checks for this and will not accept channel numbers actively used for reception of senor stations.</p>
+    wee_device --set-transmitter-type=3,1,2
 
-        <h3>Action <span class="code">--set-dst</span></h3>
+This says to turn on channel 3, set its type to 1 ("Temperature only"), and it will show up in the
+database as `extraTemp2`. No repeater id was specified, so it defaults to "no repeater."
 
-        <p>Use the command to tell your console whether or not daylight savings time is in effect, or to have it set
-            automatically based on the time zone.</p>
 
-        <h3 id="vantage_time_zone">
-            Action <span class="code">--set-tz-code</span></h3>
+Here's another example, this time for a combined temperature /
+humidity sensor retransmitted via repeater A:
 
-        <p>This command can be used to change the time zone. Consult the
-            Vantage manual for the code that corresponds to
-            your time zone.</p>
+    wee_device --set-transmitter-type=5,3,2,4,a
 
-        <p class="warning">You can set either the time zone code <em>or</em>
-            the time zone offset, but not both. </p>
+This will add the combined sensor to channel 5, set its type to 3 ("Temperature and humidity"), via Repeater A, and it will
+show up in the database as `extraTemp2` and `extraHumid4`.
 
-        <p>For example, to set the time zone code to Central European Time
-            (code 20):</p>
-        <pre class="tty cmd">wee_device --set-tz-code=20</pre>
 
-        <h3>Action <span class="code">--set-tz-offset</span></h3>
+The `--help` option will give you the code for each sensor type and repeater id.
 
-        <p>If you live in an odd time zone that is perhaps not covered by the
-            "canned" Davis time zones, you can set the
-            offset from UTC using this command.</p>
+If you have to use repeaters with your Vantage Pro2 station, please take a look at [Installing
+Repeater Networks for Vantage
+Pro2](https://support.davisinstruments.com/article/t9nvrc8c1u-app-notes-installing-repeater-networks-for-vantage-pro-2)
+for how to set them up.
 
-        <p class="warning">You can set either the time zone code <em>or</em>
-            the time zone offset, but not both. </p>
+!!! Warning
 
-        <p>For example, to set the time zone offset for Newfoundland Standard
-            Time (UTC-03:30), use the following:</p>
-        <pre class="tty cmd">wee_device --set-tz-offset=-0330</pre>
+    You can only use channels not actively used for retransmission. The command checks for this and
+    will not accept channel numbers actively used for retransmission.
 
-        <h3>Action <span class="code">--set-lamp</span></h3>
+<h3 id="vantage_retransmit">
+Action <span class="code">--set-retransmit</span></h3>
 
-        <p>Use this command to turn the console lamp on or off.</p>
+<p>Use this command to tell your console whether or not to act as a retransmitter.</p>
+<p>Example: Tell your console to turn retransmission 'ON' and let the software select the first available channel:</p>
+<pre class="tty cmd">wee_device --set-retransmit=on</pre>
 
-        <h3 id="vantage_dumping_the_logger_memory">
-            Action <span class="code">--dump</span></h3>
+<p>Another example: Tell your console to turn retransmission 'OFF':</p>
+<pre class="tty cmd">wee_device --set-retransmit=off</pre>
 
-        <p>
-            Generally, WeeWX downloads only new archive records from the on-board logger in the Vantage. However,
-            occasionally the memory in the Vantage will get corrupted, making this impossible. See the section <em><a
-            href="https://github.com/weewx/weewx/wiki/Troubleshooting-the-Davis-Vantage-station#weewx-generates-html-pages-but-it-does-not-update-them">WeeWX
-            generates HTML pages, but it does not update them</a></em> in the Wiki. The fix involves clearing the memory
-            but, unfortunately, this means you may lose any data which might have accumulated in the logger memory, but
-            not yet downloaded. By using the <span class="code">--dump</span> command before clearing the memory, you
-            might be able to save these data. Stop WeeWX first, then
-        </p>
-        <pre class="tty cmd">wee_device --dump</pre>
-        <p>This will dump all data archived in the Vantage memory directly to the database, without regard to whether or
-            not they have been seen before. Because the command dumps <em>all</em> data, it may result in many duplicate
-            primary key errors. These can be ignored.</p>
+<p>Last example: Tell your console to turn retransmission 'ON' at channel 4:</p>
+<pre class="tty cmd">wee_device --set-retransmit=on,4</pre>
+<p class="warning">You only can use channels not actively used for reception. The command checks for this and will not accept channel numbers actively used for reception of senor stations.</p>
 
-        <h3>Action <span class="code">--logger-summary FILE</span></h3>
-        <p>This command is useful for debugging the console logger. It will scan the logger memory, recording the
-            timestamp in each page and index slot to the file <span class="code">FILE</span>.</p>
-        <p>Example:</p>
-        <pre class="tty cmd">wee_device --logger-summary=/var/tmp/summary.txt</pre>
+<h3>Action <span class="code">--set-dst</span></h3>
 
-        <h3>Action <span class="code">--start</span></h3>
+<p>Use the command to tell your console whether or not daylight savings time is in effect, or to have it set
+automatically based on the time zone.</p>
 
-        <p>Use this command to start the logger. There are occasions when an
-            out-of-the-box logger needs this command.</p>
+<h3 id="vantage_time_zone">
+Action <span class="code">--set-tz-code</span></h3>
 
-        <h3>Action <span class="code">--stop</span></h3>
+<p>This command can be used to change the time zone. Consult the
+Vantage manual for the code that corresponds to
+your time zone.</p>
 
-        <p>Use this command to stop the logger. I can't think of a good reason
-            why you would need to do this, but the
-            command is included for completeness.</p>
+<p class="warning">You can set either the time zone code <em>or</em>
+the time zone offset, but not both. </p>
 
-        <h2 id="vantage_data">Station data</h2>
+<p>For example, to set the time zone code to Central European Time
+(code 20):</p>
+<pre class="tty cmd">wee_device --set-tz-code=20</pre>
 
-        <p>The following table shows which data are provided by the station
-            hardware and which are calculated by WeeWX.
-        </p>
+<h3>Action <span class="code">--set-tz-offset</span></h3>
 
-        <table class='station_data'>
-            <caption>Vantage station data</caption>
-            <tbody class='code'>
-            <tr class="first_row">
-                <td style='width:200px'>Database Field</td>
-                <td>Observation</td>
-                <td>Loop</td>
-                <td>Archive</td>
-            </tr>
-            <tr>
-                <td class='first_col'>barometer</td>
-                <td>barometer</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>pressure</td>
-                <td></td>
-                <td>S</td>
-                <td>S</td>
-            </tr>
-            <tr>
-                <td class='first_col'>altimeter</td>
-                <td></td>
-                <td>S</td>
-                <td>S</td>
-            </tr>
-            <tr>
-                <td class='first_col'>inTemp</td>
-                <td>inTemp</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>outTemp</td>
-                <td>outTemp</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>inHumidity</td>
-                <td>inHumidity</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>outHumidity</td>
-                <td>outHumidity</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>windSpeed</td>
-                <td>windSpeed</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>windDir</td>
-                <td>windDir</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>windGust</td>
-                <td>windGust</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>windGustDir</td>
-                <td>windGustDir</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>rain</td>
-                <td>rain</td>
-                <td>D</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'></td>
-                <td>monthRain</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>rainRate</td>
-                <td>rainRate</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>dewpoint</td>
-                <td></td>
-                <td>S</td>
-                <td>S</td>
-            </tr>
-            <tr>
-                <td class='first_col'>windchill</td>
-                <td></td>
-                <td>S</td>
-                <td>S</td>
-            </tr>
-            <tr>
-                <td class='first_col'>heatindex</td>
-                <td></td>
-                <td>S</td>
-                <td>S</td>
-            </tr>
-            <tr>
-                <td class='first_col'>radiation</td>
-                <td>radiation</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>UV</td>
-                <td>UV</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraTemp1</td>
-                <td>extraTemp1</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraTemp2</td>
-                <td>extraTemp2</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraTemp3</td>
-                <td>extraTemp3</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraTemp4</td>
-                <td>extraTemp4</td>
-                <td>H</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraTemp5</td>
-                <td>extraTemp5</td>
-                <td>H</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraTemp6</td>
-                <td>extraTemp6</td>
-                <td>H</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraTemp7</td>
-                <td>extraTemp7</td>
-                <td>H</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>soilTemp1</td>
-                <td>soilTemp1</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>soilTemp2</td>
-                <td>soilTemp2</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>soilTemp3</td>
-                <td>soilTemp3</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>soilTemp4</td>
-                <td>soilTemp4</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>leafTemp1</td>
-                <td>leafTemp1</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>leafTemp2</td>
-                <td>leafTemp2</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>leafTemp3</td>
-                <td>leafTemp3</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>leafTemp4</td>
-                <td>leafTemp4</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraHumid1</td>
-                <td>extraHumid1</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraHumid2</td>
-                <td>extraHumid2</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraHumid3</td>
-                <td>extraHumid3</td>
-                <td>H</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraHumid4</td>
-                <td>extraHumid4</td>
-                <td>H</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraHumid5</td>
-                <td>extraHumid5</td>
-                <td>H</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraHumid6</td>
-                <td>extraHumid6</td>
-                <td>H</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>extraHumid7</td>
-                <td>extraHumid7</td>
-                <td>H</td>
-                <td></td>
-            </tr>
-            <tr>
-                <td class='first_col'>soilMoist1</td>
-                <td>soilMoist1</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>soilMoist2</td>
-                <td>soilMoist2</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>soilMoist3</td>
-                <td>soilMoist3</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>soilMoist4</td>
-                <td>soilMoist4</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>leafWet1</td>
-                <td>leafWet1</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>leafWet2</td>
-                <td>leafWet2</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>leafWet3</td>
-                <td>leafWet3</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>leafWet4</td>
-                <td>leafWet4</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>txBatteryStatus</td>
-                <td>txBatteryStatus</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'>consBatteryVoltage</td>
-                <td>consBatteryVoltage</td>
-                <td>H</td>
-                <td>H</td>
-            </tr>
-            <tr>
-                <td class='first_col'></td>
-                <td>wind_samples</td>
-                <td></td>
-                <td>H</td>
-            </tr>
-            </tbody>
-        </table>
+<p>If you live in an odd time zone that is perhaps not covered by the
+"canned" Davis time zones, you can set the
+offset from UTC using this command.</p>
 
-        <p class='station_data_key'>
-            <b>H</b> indicates data provided by <b>H</b>ardware<br/>
-            <b>D</b> indicates data calculated by the <b>D</b>river<br/>
-            <b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
-        </p>
+<p class="warning">You can set either the time zone code <em>or</em>
+the time zone offset, but not both. </p>
+
+<p>For example, to set the time zone offset for Newfoundland Standard
+Time (UTC-03:30), use the following:</p>
+<pre class="tty cmd">wee_device --set-tz-offset=-0330</pre>
+
+<h3>Action <span class="code">--set-lamp</span></h3>
+
+<p>Use this command to turn the console lamp on or off.</p>
+
+<h3 id="vantage_dumping_the_logger_memory">
+Action <span class="code">--dump</span></h3>
+
+<p>
+Generally, WeeWX downloads only new archive records from the on-board logger in the Vantage. However,
+occasionally the memory in the Vantage will get corrupted, making this impossible. See the section <em><a
+href="https://github.com/weewx/weewx/wiki/Troubleshooting-the-Davis-Vantage-station#weewx-generates-html-pages-but-it-does-not-update-them">WeeWX
+generates HTML pages, but it does not update them</a></em> in the Wiki. The fix involves clearing the memory
+but, unfortunately, this means you may lose any data which might have accumulated in the logger memory, but
+not yet downloaded. By using the <span class="code">--dump</span> command before clearing the memory, you
+might be able to save these data. Stop WeeWX first, then
+</p>
+<pre class="tty cmd">wee_device --dump</pre>
+<p>This will dump all data archived in the Vantage memory directly to the database, without regard to whether or
+not they have been seen before. Because the command dumps <em>all</em> data, it may result in many duplicate
+primary key errors. These can be ignored.</p>
+
+<h3>Action <span class="code">--logger-summary FILE</span></h3>
+<p>This command is useful for debugging the console logger. It will scan the logger memory, recording the
+timestamp in each page and index slot to the file <span class="code">FILE</span>.</p>
+<p>Example:</p>
+<pre class="tty cmd">wee_device --logger-summary=/var/tmp/summary.txt</pre>
+
+<h3>Action <span class="code">--start</span></h3>
+
+<p>Use this command to start the logger. There are occasions when an
+out-of-the-box logger needs this command.</p>
+
+<h3>Action <span class="code">--stop</span></h3>
+
+<p>Use this command to stop the logger. I can't think of a good reason
+why you would need to do this, but the
+command is included for completeness.</p>
+
+<h2 id="vantage_data">Station data</h2>
+
+<p>The following table shows which data are provided by the station
+hardware and which are calculated by WeeWX.
+</p>
+
+<table class='station_data'>
+<caption>Vantage station data</caption>
+<tbody class='code'>
+<tr class="first_row">
+    <td style='width:200px'>Database Field</td>
+    <td>Observation</td>
+    <td>Loop</td>
+    <td>Archive</td>
+</tr>
+<tr>
+    <td class='first_col'>barometer</td>
+    <td>barometer</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>pressure</td>
+    <td></td>
+    <td>S</td>
+    <td>S</td>
+</tr>
+<tr>
+    <td class='first_col'>altimeter</td>
+    <td></td>
+    <td>S</td>
+    <td>S</td>
+</tr>
+<tr>
+    <td class='first_col'>inTemp</td>
+    <td>inTemp</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>outTemp</td>
+    <td>outTemp</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>inHumidity</td>
+    <td>inHumidity</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>outHumidity</td>
+    <td>outHumidity</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>windSpeed</td>
+    <td>windSpeed</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>windDir</td>
+    <td>windDir</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>windGust</td>
+    <td>windGust</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>windGustDir</td>
+    <td>windGustDir</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>rain</td>
+    <td>rain</td>
+    <td>D</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'></td>
+    <td>monthRain</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>rainRate</td>
+    <td>rainRate</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>dewpoint</td>
+    <td></td>
+    <td>S</td>
+    <td>S</td>
+</tr>
+<tr>
+    <td class='first_col'>windchill</td>
+    <td></td>
+    <td>S</td>
+    <td>S</td>
+</tr>
+<tr>
+    <td class='first_col'>heatindex</td>
+    <td></td>
+    <td>S</td>
+    <td>S</td>
+</tr>
+<tr>
+    <td class='first_col'>radiation</td>
+    <td>radiation</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>UV</td>
+    <td>UV</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>extraTemp1</td>
+    <td>extraTemp1</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>extraTemp2</td>
+    <td>extraTemp2</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>extraTemp3</td>
+    <td>extraTemp3</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>extraTemp4</td>
+    <td>extraTemp4</td>
+    <td>H</td>
+    <td></td>
+</tr>
+<tr>
+    <td class='first_col'>extraTemp5</td>
+    <td>extraTemp5</td>
+    <td>H</td>
+    <td></td>
+</tr>
+<tr>
+    <td class='first_col'>extraTemp6</td>
+    <td>extraTemp6</td>
+    <td>H</td>
+    <td></td>
+</tr>
+<tr>
+    <td class='first_col'>extraTemp7</td>
+    <td>extraTemp7</td>
+    <td>H</td>
+    <td></td>
+</tr>
+<tr>
+    <td class='first_col'>soilTemp1</td>
+    <td>soilTemp1</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>soilTemp2</td>
+    <td>soilTemp2</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>soilTemp3</td>
+    <td>soilTemp3</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>soilTemp4</td>
+    <td>soilTemp4</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>leafTemp1</td>
+    <td>leafTemp1</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>leafTemp2</td>
+    <td>leafTemp2</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>leafTemp3</td>
+    <td>leafTemp3</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>leafTemp4</td>
+    <td>leafTemp4</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>extraHumid1</td>
+    <td>extraHumid1</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>extraHumid2</td>
+    <td>extraHumid2</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>extraHumid3</td>
+    <td>extraHumid3</td>
+    <td>H</td>
+    <td></td>
+</tr>
+<tr>
+    <td class='first_col'>extraHumid4</td>
+    <td>extraHumid4</td>
+    <td>H</td>
+    <td></td>
+</tr>
+<tr>
+    <td class='first_col'>extraHumid5</td>
+    <td>extraHumid5</td>
+    <td>H</td>
+    <td></td>
+</tr>
+<tr>
+    <td class='first_col'>extraHumid6</td>
+    <td>extraHumid6</td>
+    <td>H</td>
+    <td></td>
+</tr>
+<tr>
+    <td class='first_col'>extraHumid7</td>
+    <td>extraHumid7</td>
+    <td>H</td>
+    <td></td>
+</tr>
+<tr>
+    <td class='first_col'>soilMoist1</td>
+    <td>soilMoist1</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>soilMoist2</td>
+    <td>soilMoist2</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>soilMoist3</td>
+    <td>soilMoist3</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>soilMoist4</td>
+    <td>soilMoist4</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>leafWet1</td>
+    <td>leafWet1</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>leafWet2</td>
+    <td>leafWet2</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>leafWet3</td>
+    <td>leafWet3</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>leafWet4</td>
+    <td>leafWet4</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>txBatteryStatus</td>
+    <td>txBatteryStatus</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'>consBatteryVoltage</td>
+    <td>consBatteryVoltage</td>
+    <td>H</td>
+    <td>H</td>
+</tr>
+<tr>
+    <td class='first_col'></td>
+    <td>wind_samples</td>
+    <td></td>
+    <td>H</td>
+</tr>
+</tbody>
+</table>
+
+<p class='station_data_key'>
+<b>H</b> indicates data provided by <b>H</b>ardware<br/>
+<b>D</b> indicates data calculated by the <b>D</b>river<br/>
+<b>S</b> indicates data calculated by the StdWXCalculate <b>S</b>ervice<br/>
+</p>
