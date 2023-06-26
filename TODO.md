@@ -11,7 +11,6 @@ install instructions should become
 
 ## Pip install
 
-Test the pip install instructions on various OS.
 
 ## Upgrade guide
 

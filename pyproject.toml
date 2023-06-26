@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "weewx"
-version = "5.0.0b4"
+version = "5.0.0b5"
 description = "The WeeWX weather software system. This is an BETA release, and may have many bugs!"
 authors = ["Tom Keffer <tkeffer@gmail.com>"]
 license = "GPL3"
@@ -65,7 +65,7 @@ configobj = "^5.0"
 CT3 = "^3.1"
 Pillow = ">=5.2"
 ephem = "^4.1"
-PyMySQL = {extras = ["rsa"], version = "^1.0"}
+PyMySQL = "^1.0"
 pyserial = "^3.4"
 pyusb = "^1.0.2"
 

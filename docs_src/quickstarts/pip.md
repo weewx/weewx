@@ -24,10 +24,10 @@ To install WeeWX in a virtual environment, follow the directions below for your 
 
     === "Debian"
     
-        _Tested with Debian 10, 12, Ubuntu 20.04, and 22.04._
+        _Tested with Debian 10, 12, RPi OS 32-bit, Ubuntu 20.04, and 22.04._
     
         ```{ .shell .copy }
-        sudo apt update && sudo apt upgrade
+        sudo apt update
         sudo apt install python3-pip -y
         sudo apt install python3-venv -y
     
@@ -36,9 +36,6 @@ To install WeeWX in a virtual environment, follow the directions below for your 
     
         # Activate the virtual environment:
         source ~/weewx-venv/bin/activate
-    
-        # Make sure pip is up to date
-        python3 -m pip install pip --upgrade
     
         # Install WeeWX into the virtual environment:
         python3 -m pip install weewx
@@ -64,9 +61,6 @@ To install WeeWX in a virtual environment, follow the directions below for your 
         # Activate the virtual environment:
         source ~/weewx-venv/bin/activate
     
-        # Make sure pip is up to date
-        python3.11 -m pip install pip --upgrade
-    
         # Install WeeWX into the virtual environment:
         python3.11 -m pip install weewx
         ```
@@ -83,9 +77,6 @@ To install WeeWX in a virtual environment, follow the directions below for your 
     
         # Activate the virtual environment:
         source ~/weewx-venv/bin/activate
-    
-        # Make sure pip is up to date
-        python3 -m pip install pip --upgrade
     
         # Install WeeWX into the virtual environment:
         python3 -m pip install weewx
@@ -110,9 +101,6 @@ To install WeeWX in a virtual environment, follow the directions below for your 
         # Activate the virtual environment:
         source ~/weewx-venv/bin/activate
     
-        # Make sure pip is up to date
-        python3.11 -m pip install pip --upgrade
-    
         # Install WeeWX into the virtual environment:
         python3.11 -m pip install weewx
         ```
@@ -126,9 +114,6 @@ To install WeeWX in a virtual environment, follow the directions below for your 
     
         # Activate the virtual environment:
         source ~/weewx-venv/bin/activate
-    
-        # Make sure pip is up to date
-        python3 -m pip install pip --upgrade
     
         # Install WeeWX into the virtual environment:
         python3 -m pip install weewx
@@ -148,6 +133,22 @@ To install WeeWX in a virtual environment, follow the directions below for your 
         You will also need `venv`. If it is not on your system, and your Linux Package Manager does
         not offer a version, then you can substitute `virtualenv`, which can be installed using pip.
 
+
+    === "MySQL"
+
+        If you plan on using MySQL or MariaDB with `sha256_password` or `caching_sha2_password`
+        authentication, you will also need to install the module `cryptography`. On some operating
+        systems this can be a bit of a struggle, but the following usually works. The key step
+        is to update pip before trying the install.
+        
+        ```{.shell .copy}
+        # Make sure your virtual environment is still active
+        source ~/weewx-venv/bin/activate
+        # Make sure pip is up-to-date
+        python3 -m pip install pip --upgrade
+        # Install cryptography
+        python3 -m pip install cryptography
+        ```
 
 When finished, the WeeWX executables will have been installed in `~/weewx-venv/bin`, while the
 WeeWX libraries and dependencies will have been installed in `~/weewx-venv/lib/python3.x/site-packages`,
