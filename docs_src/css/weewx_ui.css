@@ -266,12 +266,15 @@ p .symcode {
 
 .tty {
     font-family: 'Inconsolata', monospace;
-    background-color: #ecf3f3;
+    background-color: var(--md-code-bg-color), #f5f5f5;
     border: 1px solid #ccd3d3;
     padding: 3px 8px 3px 8px;
     margin: 5px 15px 5px 15px;
     white-space: pre;
     line-height: normal;
+    font-weight: bold;
+    color: var(--md-code-fg-color), #36464e;
+    overflow: auto;
 }
 
 .config_section {
