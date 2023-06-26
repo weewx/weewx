@@ -5,6 +5,9 @@ communicate with a console or envoy using serial, USB, or TCP/IP interface.
 
 ## Configuring with `wee_device` {id=vantage_configuration}
 
+The Vantage stations can be configured with the utility
+[`wee_device`](../../utilities/wee_device/).
+
 !!! NOTE
 
     Make sure you stop `weewxd` before running `wee_device`
@@ -18,7 +21,7 @@ Invoking `wee_device` with the `--help` option
 will produce something like this:
 
 ```
-Using configuration file /home/weewx/weewx.conf
+Using configuration file /home/weewx-user/weewx-data/weewx.conf
 Using driver weewx.drivers.vantage.
 Using Vantage driver version 3.6.2 (weewx.drivers.vantage)
 Usage: wee_device --help
@@ -116,7 +119,7 @@ Options:
   --start               Start the logger.
   --stop                Stop the logger.
 
-Be sure to stop weewx first before using. Mutating actions will request
+Be sure to stop weewxd first before using. Mutating actions will request
 confirmation before proceeding.
 ```
 

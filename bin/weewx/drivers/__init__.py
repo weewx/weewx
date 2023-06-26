@@ -55,7 +55,7 @@ class AbstractConfigurator(object):
 
     @property
     def epilog(self):
-        return "Be sure to stop weewx first before using. Mutating actions will"\
+        return "Be sure to stop weewxd first before using. Mutating actions will"\
             " request confirmation before proceeding.\n"
 
     def configure(self, config_dict):
