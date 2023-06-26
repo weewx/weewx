@@ -304,100 +304,108 @@ Repeater Networks for Vantage
 Pro2](https://support.davisinstruments.com/article/t9nvrc8c1u-app-notes-installing-repeater-networks-for-vantage-pro-2)
 for how to set them up.
 
+
+### Action `--set-retransmit` {id=vantage_retransmit}
+
+Use this command to tell your console whether to act as a retransmitter.
+
+Example: Tell your console to turn retransmission 'ON' and let the software select the first available channel:
+
+    wee_device --set-retransmit=on
+
+Another example: Tell your console to turn retransmission 'OFF':
+
+    wee_device --set-retransmit=off
+
+Last example: Tell your console to turn retransmission 'ON' at channel 4:
+
+    wee_device --set-retransmit=on,4
+
 !!! Warning
 
-    You can only use channels not actively used for retransmission. The command checks for this and
-    will not accept channel numbers actively used for retransmission.
+    You only can use channels not actively used for reception. The command checks for
+    this and will not accept channel numbers actively used for reception of sensor
+    stations.
 
-<h3 id="vantage_retransmit">
-Action <span class="code">--set-retransmit</span></h3>
+### Action `--set-dst`
 
-<p>Use this command to tell your console whether or not to act as a retransmitter.</p>
-<p>Example: Tell your console to turn retransmission 'ON' and let the software select the first available channel:</p>
-<pre class="tty cmd">wee_device --set-retransmit=on</pre>
+Use the command to tell your console whether daylight savings time is in effect, or to have it set
+automatically based on the time zone.
 
-<p>Another example: Tell your console to turn retransmission 'OFF':</p>
-<pre class="tty cmd">wee_device --set-retransmit=off</pre>
+### Action `--set-tz-code` {id=vantage_time_zone}
 
-<p>Last example: Tell your console to turn retransmission 'ON' at channel 4:</p>
-<pre class="tty cmd">wee_device --set-retransmit=on,4</pre>
-<p class="warning">You only can use channels not actively used for reception. The command checks for this and will not accept channel numbers actively used for reception of senor stations.</p>
+This command can be used to change the time zone. Consult the Vantage manual for the code that
+corresponds to your time zone.
 
-<h3>Action <span class="code">--set-dst</span></h3>
+For example, to set the time zone code to Central European Time
+(code 20):
 
-<p>Use the command to tell your console whether or not daylight savings time is in effect, or to have it set
-automatically based on the time zone.</p>
+    wee_device --set-tz-code=20
 
-<h3 id="vantage_time_zone">
-Action <span class="code">--set-tz-code</span></h3>
+!!! Warning
 
-<p>This command can be used to change the time zone. Consult the
-Vantage manual for the code that corresponds to
-your time zone.</p>
+    You can set either the time zone code _or_ the time zone offset, but not both.
 
-<p class="warning">You can set either the time zone code <em>or</em>
-the time zone offset, but not both. </p>
+### Action `--set-tz-offset`
 
-<p>For example, to set the time zone code to Central European Time
-(code 20):</p>
-<pre class="tty cmd">wee_device --set-tz-code=20</pre>
-
-<h3>Action <span class="code">--set-tz-offset</span></h3>
-
-<p>If you live in an odd time zone that is perhaps not covered by the
+If you live in an odd time zone that is perhaps not covered by the
 "canned" Davis time zones, you can set the
-offset from UTC using this command.</p>
+offset from UTC using this command.
 
-<p class="warning">You can set either the time zone code <em>or</em>
-the time zone offset, but not both. </p>
+For example, to set the time zone offset for Newfoundland Standard
+Time (UTC-03:30), use the following:
 
-<p>For example, to set the time zone offset for Newfoundland Standard
-Time (UTC-03:30), use the following:</p>
-<pre class="tty cmd">wee_device --set-tz-offset=-0330</pre>
+    wee_device --set-tz-offset=-0330
 
-<h3>Action <span class="code">--set-lamp</span></h3>
+!!! Warning
 
-<p>Use this command to turn the console lamp on or off.</p>
+    You can set either the time zone code _or_ the time zone offset, but not both.
 
-<h3 id="vantage_dumping_the_logger_memory">
-Action <span class="code">--dump</span></h3>
+### Action `--set-lamp`
 
-<p>
-Generally, WeeWX downloads only new archive records from the on-board logger in the Vantage. However,
-occasionally the memory in the Vantage will get corrupted, making this impossible. See the section <em><a
-href="https://github.com/weewx/weewx/wiki/Troubleshooting-the-Davis-Vantage-station#weewx-generates-html-pages-but-it-does-not-update-them">WeeWX
-generates HTML pages, but it does not update them</a></em> in the Wiki. The fix involves clearing the memory
-but, unfortunately, this means you may lose any data which might have accumulated in the logger memory, but
-not yet downloaded. By using the <span class="code">--dump</span> command before clearing the memory, you
-might be able to save these data. Stop WeeWX first, then
-</p>
-<pre class="tty cmd">wee_device --dump</pre>
-<p>This will dump all data archived in the Vantage memory directly to the database, without regard to whether or
-not they have been seen before. Because the command dumps <em>all</em> data, it may result in many duplicate
-primary key errors. These can be ignored.</p>
+Use this command to turn the console lamp on or off.
 
-<h3>Action <span class="code">--logger-summary FILE</span></h3>
-<p>This command is useful for debugging the console logger. It will scan the logger memory, recording the
-timestamp in each page and index slot to the file <span class="code">FILE</span>.</p>
-<p>Example:</p>
-<pre class="tty cmd">wee_device --logger-summary=/var/tmp/summary.txt</pre>
+### Action `--dump` {id=vantage_dumping_the_logger_memory}
 
-<h3>Action <span class="code">--start</span></h3>
+Generally, WeeWX downloads only new archive records from the on-board logger in the Vantage.
+However, occasionally the memory in the Vantage will get corrupted, making this impossible. See the
+section [_WeeWX generates HTML pages, but it does not update
+them_](https://github.com/weewx/weewx/wiki/Troubleshooting-the-Davis-Vantage-station#weewx-generates-html-pages-but-it-does-not-update-them)
+in the Wiki. The fix involves clearing the memory but, unfortunately, this means you may lose any
+data which might have accumulated in the logger memory, but not yet downloaded. By using the
+`--dump` command before clearing the memory, you might be able to save these data. 
 
-<p>Use this command to start the logger. There are occasions when an
-out-of-the-box logger needs this command.</p>
+Stop WeeWX first, then
 
-<h3>Action <span class="code">--stop</span></h3>
+    wee_device --dump
 
-<p>Use this command to stop the logger. I can't think of a good reason
-why you would need to do this, but the
-command is included for completeness.</p>
+This will dump all data archived in the Vantage memory directly to the database, without regard to
+whether or not they have been seen before. Because the command dumps _all_ data, it may result in
+many duplicate primary key errors. These can be ignored.
 
-<h2 id="vantage_data">Station data</h2>
+### Action `--logger-summary FILE`
 
-<p>The following table shows which data are provided by the station
-hardware and which are calculated by WeeWX.
-</p>
+This command is useful for debugging the console logger. It will scan the logger memory, recording the
+timestamp in each page and index slot to the file `FILE`.
+
+Example:
+
+    wee_device --logger-summary=/var/tmp/summary.txt
+
+### Action `--start`
+
+Use this command to start the logger. There are occasions when an out-of-the-box logger needs this
+command.
+
+### Action `--stop`
+
+Use this command to stop the logger. This can be useful when servicing your weather station,
+and you don't want any bad data to be stored in the logger.
+
+## Station data {id=vantage_data}
+
+The following table shows which data are provided by the station hardware and which are calculated
+by WeeWX.
 
 <table class='station_data'>
 <caption>Vantage station data</caption>
