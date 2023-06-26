@@ -64,7 +64,11 @@ nav:
     - "Web server integration": ./usersguide/webserver-integration.md
     - "Backup & restore": ./usersguide/backing-up-weewx.md
     - "Configuring MySQL": ./usersguide/mysql-mariadb-config.md
-    - "Troubleshooting": ./usersguide/troubleshooting-guide.md
+    - "Troubleshooting":
+      - "Overview": ./usersguide/troubleshooting/index.md
+      - "Hardware Problems": ./usersguide/troubleshooting/hardware.md
+      - "Software Problems": ./usersguide/troubleshooting/software.md
+      - "Meteorological Problems": ./usersguide/troubleshooting/meteo.md
     - "Reference: options":
       - "Overview": ./usersguide/weewx-config-file/index.md
       - "General options": ./usersguide//weewx-config-file/general.md

@@ -4,7 +4,7 @@ This section applies only to those who wish to use the MySQL database, instead o
 
 1. Install the client libraries. How to do this depends on your operating system. Use the table below as a guide.
 
-    === "Debian | Raspbian | Ubuntu | Mint"
+    === "Debian"
         ```
         sudo apt install mysql-client
         sudo apt install python3-mysqldb

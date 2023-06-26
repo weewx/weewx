@@ -1,37 +1,40 @@
 # Backup and restore
 
+## Backup
+
 To back up a WeeWX installation, you will need to make a copy of
 
- * The configuration information (`weewx.conf`);
- * skins and templates;
- * any custom code or extensions you have installed; and
+ * the configuration information (`weewx.conf`),
+ * skins and templates,
+ * custom code and/or extensions, and
  * the WeeWX database.
 
 It is not necessary to back up the generated images, HTML files, or NOAA reports, because WeeWX can easily regenerate them.
 
-It is also not necessary to back up the WeeWX code, because it can be installed again. However,
-it doesn't hurt to do so.
+It is also not necessary to back up the WeeWX code, because it can be installed again. However, it doesn't hurt to do so.
 
 !!! Note
-    Do not make the copy of the SQLite database while in the middle of a transaction! Schedule the backup for immediately after an archive record is written, and then make sure the backup completes before the next archive record arrives. Alternatively, stop WeeWX, perform the backup, then restart WeeWX.
+    For a SQLite configuration, do not make the copy of the database file while in the middle of a transaction! Schedule the backup for immediately after an archive record is written, and then make sure the backup completes before the next archive record arrives. Alternatively, stop WeeWX, perform the backup, then start WeeWX.
 
-For a MySQL configuration, save a dump of the archive database.
+!!! Note
+    For a MySQL configuration, save a dump of the archive database.
 
 
-## Pip installs
+### Pip installs
 
-For pip installs, simply back up the directory `~/weewx-data`.
+For pip installs, create a backup by saving the contents of the directory `~/weewx-data`.
 
-## Package installs
+### Package installs
 
-For package installs, save the following items:
+For DEB and RPM installs, create a backup by saving the following items:
 
-| Item                       | Where                      |
+| Item                       | Location                   |
 |----------------------------|----------------------------|
-| User data and skins        | `/etc/weewx`               |
+| Configuration and skins    | `/etc/weewx`               |
 | Custom code and extensions | `/usr/share/weewx/user`    |
 | Database                   | `/var/lib/weewx/weewx.sdb` |
 
 
-# Restoring from backup
-To restore from backup, do a fresh install of WeeWX, replace the default files with those from a backup, then start WeeWX.
+## Restore
+
+To restore from backup, do a fresh install of WeeWX, replace the configuration file, skins, and database with those from a backup, then start WeeWX.
