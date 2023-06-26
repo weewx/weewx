@@ -155,7 +155,7 @@ At a high-level, WeeWX consists of an engine class called `StdEngine`. It is res
     </tbody>
 </table>
 
-It is easy to extend old services or to add new ones. The source distribution includes an example new service called MyAlarm, which sends an email when an arbitrary expression evaluates True. These advanced topics are covered later in the section _[Customizing the WeeWX service engine](service_engine)_.
+It is easy to extend old services or to add new ones. The source distribution includes an example new service called MyAlarm, which sends an email when an arbitrary expression evaluates True. These advanced topics are covered later in the section _[Customizing the WeeWX service engine](service-engine)_.
 
 ## The standard reporting service `StdReport`
 

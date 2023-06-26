@@ -66,7 +66,7 @@ schemas as a starting point, then modify it. Put the results in the
 `user` subdirectory, where it will be safe from upgrades. For
 example, suppose you like the `schemas.wview_small` schema, but
 you need to store the type `electricity` from the example
-[*Adding a second data source*](../service_engine/#Adding_2nd_source). The type
+[*Adding a second data source*](../service-engine/#Adding_2nd_source). The type
 `electricity` does not appear in the schema, so you'll have to
 add it before starting up WeeWX. We will call the resulting new schema
 `user.myschema.schema`.
@@ -179,7 +179,7 @@ details.
 
 Suppose you have an existing database and you want to add a type, such
 as the type `electricity` from the example
-[*Adding a second data source*](../service_engine/#Adding_2nd_source). 
+[*Adding a second data source*](../service-engine/#Adding_2nd_source). 
 This can be done in one easy
 step using the tool `wee_database` with the option
 `--add-column`:

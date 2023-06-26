@@ -69,7 +69,7 @@ nav:
       - "Hardware Problems": ./usersguide/troubleshooting/hardware.md
       - "Software Problems": ./usersguide/troubleshooting/software.md
       - "Meteorological Problems": ./usersguide/troubleshooting/meteo.md
-    - "Reference: options":
+    - "Configuration options":
       - "Overview": ./usersguide/weewx-config-file/index.md
       - "General options": ./usersguide//weewx-config-file/general.md
       - "[Station]": ./usersguide/weewx-config-file/stations-config.md
@@ -88,19 +88,19 @@ nav:
 
   - Customization guide:
     - "Introduction": custom/index.md
-    - "Customizing reports": custom/custom_reports.md
-    - "Scheduling reports": custom/report_scheduling.md
+    - "Customizing reports": custom/custom-reports.md
+    - "Scheduling reports": custom/report-scheduling.md
     - "The Cheetah generator": custom/cheetah.md
-    - "The Image generator": custom/image_generator.md
-    - "Multiple data bindings": custom/multiple_bindings.md
+    - "The Image generator": custom/image-generator.md
+    - "Multiple data bindings": custom/multiple-bindings.md
     - "Localization": custom/localization.md
-    - "Customizing the service engine": custom/service_engine.md
+    - "Customizing the service engine": custom/service-engine.md
     - "Customizing the database": custom/database.md
     - "Customizing units": custom/units.md
     - "Derived types": custom/derived.md
     - "Custom drivers": custom/drivers.md
     - "Extensions": custom/extensions.md
-    - "Reference: options": custom/options_ref.md
+    - "Report options": custom/report-options.md
     - "Appendix": custom/appendix.md
 
   - Utilities:

@@ -108,7 +108,7 @@ If you see dots instead of lines in the daily plots, you might want to change th
 
 In a default configuration, a time period greater than 1% of the displayed timespan is considered to be a gap in data. So when the interval between data points is greater than about 10 minutes, the daily plots show dots instead of connected points.
 
-Change the [line_gap_fraction](../../../custom/image_generator#line_gaps) option in `skin.conf` to control how much time is considered a break in data.
+Change the [line_gap_fraction](../../../custom/image-generator#line_gaps) option in `skin.conf` to control how much time is considered a break in data.
 
 As for the archive interval, check the log file for an entry like this soon after WeeWX starts up:
 

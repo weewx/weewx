@@ -2,7 +2,7 @@
 
 This section is used to configure the internal service engine in WeeWX. It is for advanced
 customization. Details on how to do this can be found in the section [*Customizing the WeeWX
-service engine*](../../../custom/service_engine/) of the [*Customization Guide*](../../../custom/).
+service engine*](../../../custom/service-engine/) of the [*Customization Guide*](../../../custom/).
 
 ## [[Services]]
 

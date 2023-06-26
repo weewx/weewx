@@ -134,7 +134,7 @@ uses the default binding, `wx_binding`, and will be labeled
 (`inTemp`) as the first line, we had to explicitly specify it
 using option `data_type`, in order to avoid using the same
 sub-section name twice (see the section *[Including a type more than
-once in a plot](../image_generator/#including_same_sql_type_2x)* for details). It will be
+once in a plot](../image-generator/#including_same_sql_type_2x)* for details). It will be
 labeled `WMR100 inTemp`. The results look like this:
 
 ![Comparing temperatures](../images/daycompare.png)

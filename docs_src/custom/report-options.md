@@ -1,4 +1,4 @@
-# Reference: report options {#report_options}
+# Report options {#report_options}
 
 This section contains the options available in the skin configuration
 file, `skin.conf`. The same options apply to the language files
@@ -821,7 +821,7 @@ Default is to use the color in [`chart_line_colors`](#chart_line_colors).
 
 The SQL data type to be used for this plot line. For more information,
 see the section *[Including a type more than once in a
-plot](../image_generator#including_same_sql_type_2x)*. Optional. The default is to use the
+plot](../image-generator#including_same_sql_type_2x)*. Optional. The default is to use the
 section name.
 
 #### fill_color
@@ -838,7 +838,7 @@ default is to use the SQL variable name.
 
 If there is a gap between data points bigger than this fractional amount
 of the x-axis, then a gap will be drawn, rather than a connecting line.
-See Section *[Line gaps](../image_generator/#line_gaps)*. Optional. The default is to
+See Section *[Line gaps](../image-generator/#line_gaps)*. Optional. The default is to
 always draw the line.
 
 #### line_type
