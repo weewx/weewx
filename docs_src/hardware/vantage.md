@@ -92,7 +92,7 @@ Options:
                         as extra TEMP station and extra HUM station (both 1-7,
                         if applicable), REPEATER_ID (A-H, or 0=OFF)
   --set-retransmit=OFF|ON|ON,CHANNEL
-                        Turn console retransmit function 'ON' or 'OFF'.
+                        Turn ISS retransmit 'ON' or 'OFF', using optional CHANNEL.
   --set-temperature-logging=LAST|AVERAGE
                         Set console temperature logging to either 'LAST' or
                         'AVERAGE'.
@@ -310,17 +310,13 @@ for how to set them up.
 
 ### Action `--set-retransmit` {id=vantage_retransmit}
 
-Use this command to tell your console whether to act as a retransmitter.
+Use this command to tell your console whether to act as a retransmitter of ISS data.
 
-Example: Tell your console to turn retransmission 'ON' and let the software select the first available channel:
+Example: Tell your console to retransmit ISS data using the first available channel:
 
     wee_device --set-retransmit=on
 
-Another example: Tell your console to turn retransmission 'OFF':
-
-    wee_device --set-retransmit=off
-
-Last example: Tell your console to turn retransmission 'ON' at channel 4:
+Example: Tell your console to retransmit ISS data on channel 4:
 
     wee_device --set-retransmit=on,4
 
@@ -329,6 +325,10 @@ Last example: Tell your console to turn retransmission 'ON' at channel 4:
     You only can use channels not actively used for reception. The command checks for
     this and will not accept channel numbers actively used for reception of sensor
     stations.
+
+Example: Tell your console to turn retransmission 'OFF':
+
+    wee_device --set-retransmit=off
 
 ### Action `--set-dst`
 

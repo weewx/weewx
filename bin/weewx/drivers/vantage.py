@@ -2189,7 +2189,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
                                "station (both 1-7, if applicable), REPEATER_ID (A-H, or 0=OFF)")
         parser.add_option("--set-retransmit", type=str, dest="set_retransmit",
                           metavar="OFF|ON|ON,CHANNEL",
-                          help="Turn console retransmit function 'ON' or 'OFF'.")
+                          help="Turn ISS retransmit 'ON' or 'OFF', using optional CHANNEL.")
         parser.add_option("--set-temperature-logging", dest="set_temp_logging",
                           metavar="LAST|AVERAGE",
                           help="Set console temperature logging to either 'LAST' or 'AVERAGE'.")
