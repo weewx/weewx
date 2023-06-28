@@ -234,17 +234,21 @@ How long to wait in seconds before retrying a bad login. Default is `3600` (one 
 The interval in seconds between posts. Setting this value to zero will cause every archive record to be posted. Optional. Default is zero.
 
 
-## [[Wunderground]]
-WeeWX can send your current data to the [Weather Underground](https://www.wunderground.com/). If you wish to do this, set the option `enable` to `true`, then set the options `station` and `password` appropriately. When you are done, it will look something like this:
+## [[Wunderground]] 
+
+WeeWX can send your current data to the [Weather Underground](https://www.wunderground.com/). If
+you wish to post to do this, set the option `enable` to `true`,  then specify a station (e.g.,
+`KORBURNS99`). Use the station key for the password.
+
+When you are done, it will look something like this:
 
 ```
 [StdRestful]
     [[Wunderground]]
         enable = true
-        station = KCASANFRA11
-        password = XXX
-        rapidfire = False
-        api_key = 04255779e9aa45b6e4579938630e67b
+        station = KORBURNS99
+        password = A331D1SIm
+        rapidfire = false
 ```
 
 #### enable
@@ -253,27 +257,36 @@ Set to `true` to enable posting to the Weather Underground. Optional. Default is
 
 #### station
 
-Set to your Weather Underground station ID (e.g., `KCASANFRA11`). Required.
+Set to your Weather Underground station ID (e.g., `KORBURNS99`). Required.
 
 #### password
 
-Set to your Weather Underground password. Required.
+Set to the station "key". You can find this at https://www.wunderground.com/member/devices.
 
 #### rapidfire
 
-Set to `true` to have WeeWX post using the [Weather Underground's "Rapidfire" protocol](https://www.wunderground.com/weatherstation/rapidfirehelp.asp). This will send a post to the WU site with every LOOP packet, which can be as often as every 2.5 seconds in the case of the Vantage instruments. Not all instruments support this. Optional. Default is `false`.
+Set to `true` to have WeeWX post using the [Weather Underground's "Rapidfire"
+protocol](https://www.wunderground.com/weatherstation/rapidfirehelp.asp). This will send a post to
+the WU site with every LOOP packet, which can be as often as every 2.5 seconds in the case of the
+Vantage instruments. Not all instruments support this. Optional. Default is `false`.
 
 #### rtfreq
 
-When rapidfire is set, the `rtfreq` parameter is sent, and should correspond to "the frequency of updates in seconds". Optional. Default is `2.5`.
+When rapidfire is set, the `rtfreq` parameter is sent, and should correspond to "the frequency of
+updates in seconds". Optional. Default is `2.5`.
 
 #### archive_post
 
-This option tells WeeWX to post on every archive record, which is the normal "PWS" mode for the Weather Underground. Because they prefer that you either use their "Rapidfire" protocol, or their PWS mode, but not both, the default for this option is the opposite for whatever you choose above for option rapidfire. However, if for some reason you want to do both, then you may set both options to `true`.
+This option tells WeeWX to post on every archive record, which is the normal "PWS" mode for the
+Weather Underground. Because they prefer that you either use their "Rapidfire" protocol, or their
+PWS mode, but not both, the default for this option is the opposite for whatever you choose above
+for option rapidfire. However, if for some reason you want to do both, then you may set both
+options to `true`.
 
 #### post_indoor_observations
 
-In the interest of respecting your privacy, WeeWX does not post indoor temperature or humidity to the Weather Underground unless you set this option to `true`. Default is `false`.
+In the interest of respecting your privacy, WeeWX does not post indoor temperature or humidity to
+the Weather Underground unless you set this option to `true`. Default is `false`.
 
 #### log_success
 
@@ -289,15 +302,21 @@ How long to wait in seconds before retrying a bad login. Default is `3600` (one 
 
 #### post_interval
 
-The interval in seconds between posts. Setting this value to zero will cause every archive record to be posted. Optional. Default is zero.
+The interval in seconds between posts. Setting this value to zero will cause every archive record
+to be posted. Optional. Default is zero.
 
 #### force_direction
 
-The Weather Underground has a bug where they will claim that a station is "unavailable" if it sends a null wind direction, even when the wind speed is zero. Setting this option to `true` causes the software to cache the last non-null wind direction and use that instead of sending a null value. Default is `False`.
+The Weather Underground has a bug where they will claim that a station is "unavailable" if it sends
+a null wind direction, even when the wind speed is zero. Setting this option to `true` causes the
+software to cache the last non-null wind direction and use that instead of sending a null value.
+Default is `False`.
 
 #### [[[Essentials]]]
 
-Occasionally (but not always!) when the Weather Underground is missing a data point it will substitute the value zero (0.0), thus messing up statistics and plots. For all observation types listed in this section, the post will be skipped if that type is missing. For example:
+Occasionally (but not always!) when the Weather Underground is missing a data point it will
+substitute the value zero (0.0), thus messing up statistics and plots. For all observation types
+listed in this section, the post will be skipped if that type is missing. For example:
 
 ``` ini
 [StdRestful]
