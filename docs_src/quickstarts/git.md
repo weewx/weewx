@@ -1,4 +1,4 @@
-# Running WeeWX from source
+# Running WeeWX from a git repository
 
 Because WeeWX is pure-Python and does not need to be compiled, it can be run directly from
 a source repository. This approach is perhaps most appropriate for developers, but it is also
@@ -8,6 +8,9 @@ Although you do not need root privileges to install and configure WeeWX, you
 will need them to set up a daemon and, perhaps, to change device permissions.
 
 ## Install pre-requisites
+
+Unlike the other install methods, running WeeWX directly from a git clone will require you to
+install the pre-requisites manually. Here's how.
 
 1. Ensure that Python 3.7 or later is installed. You will also need pip and `venv`.
 
@@ -83,8 +86,8 @@ only after you run `weewxd`, as shown in the following step.
 The program `weewxd` does the data collection, archiving, uploading, and report
 generation.  You can run it directly, or as a daemon.
 
-When you run WeeWX directly, it will print data to the screen, and WeeWX will
-stop when you either control-c or log out.
+When you run `weewxd` directly, it will print data to the screen. It will stop when you either 
+control-c or log out.
 
 ```{.shell .copy}
 # Make sure your virtual environment is still active:
@@ -116,7 +119,7 @@ Use any text editor, such as `nano`:
 
     nano ~/weewx-data/weewx.conf
 
-WeeWX must be restarted for the changes to take effect.
+The executable `weewxd` must be restarted for the changes to take effect.
 
 See the [*User Guide*](../../usersguide) and [*Customization Guide*](../../custom) for details.
 

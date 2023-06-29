@@ -53,7 +53,7 @@ nav:
     - RedHat: ./quickstarts/redhat.md
     - SuSE: ./quickstarts/suse.md
     - pip: ./quickstarts/pip.md
-    - source: ./quickstarts/source.md
+    - git: ./quickstarts/git.md
 
   - "User's guide":
     - "Introduction": ./usersguide/index.md

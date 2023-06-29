@@ -18,7 +18,8 @@ the rest of your system. It's worth reading about
 
 ## Install in a virtual environment
 
-To install WeeWX in a virtual environment, follow the directions below for your system:
+To install WeeWX in a virtual environment, follow the directions below for your system. If you
+are using MySQL or MariaDB, be sure to see the additional tab labeled `MySQL`.
 
 !!! Install
 

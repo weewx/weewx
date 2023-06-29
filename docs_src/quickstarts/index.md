@@ -19,7 +19,7 @@ you are developing a driver, skin, or other extension.
 * [pip](pip) - any operating system
 
 If you want to install WeeWX on a system with very little storage, or if you
-want to experiment with code that is under development, then you will probably
-want to run directly from the source code.
+want to experiment with code that is under development, then you may
+want to run directly from a clone of the git repository.
 
-* [run from source](source) - any operating system
+* [Run from a git repository](git) - any operating system

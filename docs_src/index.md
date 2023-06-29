@@ -32,7 +32,7 @@ documentation first.
 * [Redhat](quickstarts/redhat) - including Fedora, CentOS, Rocky
 * [SUSE](quickstarts/suse) - including openSUSE
 * [pip](quickstarts/pip) - any operating system
-* [run from source](quickstarts/source) - any operating system
+* [run from source](quickstarts/git) - any operating system
 
 ### All about WeeWX
 * [User guide](usersguide) - installation, getting started, troubleshooting
