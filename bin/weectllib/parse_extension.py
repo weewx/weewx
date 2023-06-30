@@ -1,13 +1,9 @@
-#!/usr/bin/env python
 #
 #    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com> and Matthew Wall
 #
 #    See the file LICENSE.txt for your rights.
 #
 """Install and remove extensions."""
-import os.path
-import sys
-
 import weecfg
 import weecfg.extension
 import weecfg.extension
@@ -43,6 +39,7 @@ def add_subparser(subparsers):
 
     # ---------- Action 'list' ----------
     list_extension_parser = action_parser.add_parser('list',
+                                                     description="List all installed extensions",
                                                      usage=extension_list_usage,
                                                      help='List all installed extensions')
     list_extension_parser.add_argument('--config',
@@ -56,9 +53,12 @@ def add_subparser(subparsers):
     # ---------- Action 'install' ----------
     install_extension_parser = \
         action_parser.add_parser('install',
+                                 description="Install an extension contained in FILE "
+                                      " (such as pmon.tar.gz), directory (DIR), or from "
+                                      " an URL.",
                                  usage=extension_install_usage,
-                                 help="Install an extension contained in FILENAME "
-                                      " (such as pmon.tar.gz), or from a DIRECTORY, or from "
+                                 help="Install an extension contained in FILE "
+                                      " (such as pmon.tar.gz), directory (DIR), or from "
                                       " an URL.")
     install_extension_parser.add_argument('source',
                                           help="Location of the extension. It can be a path to a "
@@ -80,6 +80,7 @@ def add_subparser(subparsers):
     # ---------- Action uninstall' ----------
     uninstall_extension_parser = \
         action_parser.add_parser('uninstall',
+                                 description="Uninstall an extension",
                                  usage=extension_uninstall_usage,
                                  help="Uninstall an extension")
     uninstall_extension_parser.add_argument('name',
