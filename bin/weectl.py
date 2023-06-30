@@ -19,7 +19,7 @@ usagestr = """weectl -v|--version
        weectl extension --help
 """
 
-SUBCOMMANDS = ['station', 'extension']
+SUBCOMMANDS = ['station', 'extension', 'database']
 
 
 # ===============================================================================
