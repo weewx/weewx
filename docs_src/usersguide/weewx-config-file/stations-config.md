@@ -26,7 +26,16 @@ longitude = -77.0366
 
 #### ==altitude==
 
-Normally the station altitude is downloaded from your hardware, but not all stations support this. Set to the altitude of the station and the unit used for the altitude. Example:
+Normally the altitude is downloaded from your hardware, but not all stations support this. Set to
+the altitude of your console and the unit used to measure that altitude.
+
+!!! Note
+
+    If you live in a
+    high-rise building, the altitude of the console (which is where the pressure gauge is located), can
+    be considerably different from the ground altitude. You want the altitude of the console.
+
+Example:
 
 ``` ini
 altitude = 700, foot
