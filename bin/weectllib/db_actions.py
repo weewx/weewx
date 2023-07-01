@@ -219,6 +219,125 @@ def drop_columns(config_path,
         print("This was a dry run. Nothing was actually done.")
 
 
+def transfer_database(config_path, db_binding='wx_binding', dest_binding=None, dry_run=False):
+    """Transfer 'archive' data from one database to another"""
+
+    # do we have enough to go on, must have a dest binding
+    if not dest_binding:
+        print("Destination binding not specified. Nothing Done. Aborting.", file=sys.stderr)
+        return
+
+    if dry_run:
+        print("This is a dry run. Nothing will actually be done.")
+
+    config_path, config_dict = weecfg.read_config(config_path)
+
+    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
+
+    # get manager dict for our source binding
+    src_manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
+                                                                  db_binding)
+    # get manager dict for our dest binding
+    try:
+        dest_manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
+                                                                       dest_binding)
+    except weewx.UnknownBinding:
+        # if we can't find the binding display a message then return
+        print(f"Unknown destination binding '{dest_binding}'. "
+              f"Please confirm the destination binding.")
+        print("Nothing Done. Aborting.", file=sys.stderr)
+        return
+    except weewx.UnknownDatabase as e:
+        # if we can't find the database display a message then return
+        print(f"Error accessing destination database: {e}", file=sys.stderr)
+        print("Nothing Done. Aborting.", file=sys.stderr)
+        return
+    except (ValueError, AttributeError):
+        # maybe a schema issue
+        print("Error accessing destination database.", file=sys.stderr)
+        print("Maybe the destination schema is incorrectly specified "
+              "in binding '%s' in weewx.conf?" % dest_binding, file=sys.stderr)
+        print("Nothing Done. Aborting.", file=sys.stderr)
+        return
+    except weewx.UnknownDatabaseType:
+        # maybe a [Databases] issue
+        print("Error accessing destination database.", file=sys.stderr)
+        print("Maybe the destination database is incorrectly defined in weewx.conf?",
+              file=sys.stderr)
+        print("Nothing Done. Aborting.", file=sys.stderr)
+        return
+
+    # All looks good. Get a manager for our source
+    with weewx.manager.Manager.open(src_manager_dict['database_dict']) as src_manager:
+        # How many source records?
+        num_recs = src_manager.getSql("SELECT COUNT(dateTime) from %s;"
+                                      % src_manager.table_name)[0]
+        if not num_recs:
+            # we have no source records to transfer so abort with a message
+            print(f"No records found in source database '{src_manager.database_name}'.")
+            print("Nothing done. Aborting.")
+            return
+
+        # not a dry run, actually do the transfer
+        ans = y_or_n("Transfer %s records from source database '%s' "
+                     "to destination database '%s'? (y/n) "
+                     % (num_recs, src_manager.database_name,
+                        dest_manager_dict['database_dict']['database_name']))
+        if ans == 'n':
+            print("Nothing done.")
+            return
+
+        t1 = time.time()
+        nrecs = 0
+        # wrap in a try..except in case we have an error
+        try:
+            with weewx.manager.Manager.open_with_create(
+                    dest_manager_dict['database_dict'],
+                    table_name=dest_manager_dict['table_name'],
+                    schema=dest_manager_dict['schema']) as dest_manager:
+                print("Transferring, this may take a while.... ")
+                sys.stdout.flush()
+
+                if not dry_run:
+                    # This could generate a *lot* of log entries. Temporarily disable logging
+                    # for events at or below INFO
+                    logging.disable(logging.INFO)
+
+                    # do the transfer, should be quick as it's done as a
+                    # single transaction
+                    nrecs = dest_manager.addRecord(src_manager.genBatchRecords(),
+                                                   progress_fn=weewx.manager.show_progress)
+
+                    # Remove the temporary restriction
+                    logging.disable(logging.NOTSET)
+
+                tdiff = time.time() - t1
+                print("\nCompleted.")
+                print("%s records transferred from source database '%s' to "
+                      "destination database '%s' in %.2f seconds."
+                      % (nrecs, src_manager.database_name,
+                         dest_manager.database_name, tdiff))
+        except ImportError as e:
+            # Probably when trying to load db driver
+            print("Error accessing destination database '%s'."
+                  % (dest_manager_dict['database_dict']['database_name'],),
+                  file=sys.stderr)
+            print("Nothing done. Aborting.", file=sys.stderr)
+            raise
+        except (OSError, weedb.OperationalError):
+            # probably a weewx.conf typo or MySQL db not created
+            print("Error accessing destination database '%s'."
+                  % dest_manager_dict['database_dict']['database_name'], file=sys.stderr)
+            print("Maybe it does not exist (MySQL) or is incorrectly "
+                  "defined in weewx.conf?", file=sys.stderr)
+            print("Nothing done. Aborting.", file=sys.stderr)
+            raise
+
+    if dry_run:
+        print("This was a dry run. Nothing was actually done.")
+
+
+# --------------------- UTILITIES -------------------- #
 def _prepare(config_path, db_binding, dry_run):
     """Common preamble, used by most of the action functions."""
 
