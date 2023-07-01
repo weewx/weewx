@@ -5,7 +5,6 @@
 #
 """Various high-level, interactive, database actions"""
 
-import datetime
 import logging
 import sys
 import time
@@ -44,15 +43,8 @@ def create_database(config_path, db_binding='wx_binding', dry_run=False):
 
 def drop_daily(config_path, db_binding='wx_binding', dry_run=False):
     """Drop the daily summary from a WeeWX database."""
-    if dry_run:
-        print("This is a dry run. Nothing will actually be done.")
 
-    config_path, config_dict = weecfg.read_config(config_path)
-
-    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
-
-    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, db_binding)
-    database_name = manager_dict['database_dict']['database_name']
+    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
 
     print(f"Proceeding will delete all your daily summaries from database '{database_name}'")
     ans = y_or_n("Are you sure you want to proceed (y/n)? ")
@@ -86,19 +78,10 @@ def rebuild_daily(config_path,
                   date=None,
                   from_date=None,
                   to_date=None,
-                  dry_run = False):
+                  dry_run=False):
     """Rebuild the daily summaries."""
 
-    if dry_run:
-        print("This is a dry run. Nothing will actually be done.")
-
-    config_path, config_dict = weecfg.read_config(config_path)
-
-    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
-
-    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
-                                                              db_binding)
-    database_name = manager_dict['database_dict']['database_name']
+    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
 
     # Get any dates the user might have specified.
     from_d, to_d = weectllib.parse_dates(date, from_date, to_date)
@@ -134,11 +117,11 @@ def rebuild_daily(config_path,
     # Open up the database. This will create the tables necessary for the daily
     # summaries if they don't already exist:
     with weewx.manager.open_manager_with_config(config_dict,
-                                                db_binding, initialize=True) as dbmanager:
+                                                db_binding, initialize=True) as dbm:
         # Do the actual rebuild
-        nrecs, ndays = dbmanager.backfill_day_summary(start_d=from_d,
-                                                      stop_d=to_d,
-                                                      trans_days=20)
+        nrecs, ndays = dbm.backfill_day_summary(start_d=from_d,
+                                                stop_d=to_d,
+                                                trans_days=20)
     tdiff = time.time() - t1
     # advise the user/log what we did
     log.info("Rebuild of daily summaries in database '%s' complete." % database_name)
@@ -151,9 +134,103 @@ def rebuild_daily(config_path,
         if ndays == 1:
             msg = f"Processed {nrecs} records to rebuild 1 daily summary in {tdiff:.2f} seconds."
         else:
-            msg = f"Processed {nrecs} records to rebuild {ndays} daily summaries in "\
-                    "{tdiff:.2f} seconds."
+            msg = f"Processed {nrecs} records to rebuild {ndays} daily summaries in " \
+                  f"{tdiff:.2f} seconds."
         print(msg)
         print(f"Rebuild of daily summaries in database '{database_name}' complete.")
     else:
         print(f"Daily summaries up to date in '{database_name}'.")
+
+
+def add_column(config_path,
+               db_binding='wx_binding',
+               column_name=None,
+               column_type=None,
+               dry_run=False):
+    """Add a single column to the database.
+    column_name: The name of the new column.
+    column_type: The type ("REAL"|"INTEGER") of the new column.
+    """
+    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
+
+    column_type = column_type or 'REAL'
+    ans = y_or_n(
+        f"Add new column '{column_name}' of type '{column_type}' "
+        f"to database '{database_name}'? (y/n) ")
+    if ans == 'y':
+        with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbm:
+            if not dry_run:
+                dbm.add_column(column_name, column_type)
+        print(f'New column {column_name} of type {column_type} added to database.')
+    else:
+        print("Nothing done.")
+
+    if dry_run:
+        print("This was a dry run. Nothing was actually done.")
+
+
+def rename_column(config_path,
+                  db_binding='wx_binding',
+                  column_name=None,
+                  new_name=None,
+                  dry_run=False):
+    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
+
+    ans = y_or_n(f"Rename column '{column_name}' to '{new_name}' "
+                 f"in database {database_name}? (y/n) ")
+    if ans == 'y':
+        with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbm:
+            if not dry_run:
+                dbm.rename_column(column_name, new_name)
+        print(f"Column '{column_name}' renamed to '{new_name}'.")
+    else:
+        print("Nothing done.")
+
+    if dry_run:
+        print("This was a dry run. Nothing was actually done.")
+
+
+def drop_columns(config_path,
+                 db_binding='wx_binding',
+                 column_names=None,
+                 dry_run=False):
+    """Drop a set of columns from the database"""
+    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
+
+    ans = y_or_n(f"Drop column(s) '{', '.join(column_names)}' from the database? (y/n) ")
+    if ans == 'y':
+        drop_set = set(column_names)
+        # Now drop the columns. If one is missing, a NoColumnError will be raised. Be prepared
+        # to catch it.
+        print("This may take a while...")
+        if not dry_run:
+            with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbm:
+                try:
+                    dbm.drop_columns(drop_set)
+                except weedb.NoColumnError as e:
+                    print(e, file=sys.stderr)
+                    print("Nothing done.")
+                else:
+                    print(f"Column(s) '{', '.join(column_names)}' dropped from the database.")
+    else:
+        print("Nothing done.")
+
+    if dry_run:
+        print("This was a dry run. Nothing was actually done.")
+
+
+def _prepare(config_path, db_binding, dry_run):
+    """Common preamble, used by most of the action functions."""
+
+    if dry_run:
+        print("This is a dry run. Nothing will actually be done.")
+
+    config_path, config_dict = weecfg.read_config(config_path)
+
+    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
+
+    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
+                                                              db_binding)
+    database_name = manager_dict['database_dict']['database_name']
+
+    return config_path, config_dict, database_name
