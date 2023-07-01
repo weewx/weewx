@@ -219,6 +219,82 @@ def drop_columns(config_path,
         print("This was a dry run. Nothing was actually done.")
 
 
+def reconfigure_database(config_path,
+                         db_binding='wx_binding',
+                         dry_run=False):
+    """Create a new database, then populate it with the contents of an old database, but use
+    the current configuration options."""
+
+    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
+
+    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
+                                                              db_binding)
+    # Make a copy for the new database (we will be modifying it)
+    new_database_dict = dict(manager_dict['database_dict'])
+
+    # Now modify the database name
+    new_database_dict['database_name'] = manager_dict['database_dict']['database_name'] + '_new'
+
+    # First check and see if the new database already exists. If it does, check
+    # with the user whether it's ok to delete it.
+    try:
+        if not dry_run:
+            weedb.create(new_database_dict)
+    except weedb.DatabaseExists:
+        ans = y_or_n("New database '%s' already exists. "
+                     "Delete it first? (y/n) " % new_database_dict['database_name'])
+        if ans == 'y':
+            weedb.drop(new_database_dict)
+        else:
+            print("Nothing done.")
+            return
+
+    # Get the unit system of the old archive:
+    with weewx.manager.Manager.open(manager_dict['database_dict']) as old_dbmanager:
+        old_unit_system = old_dbmanager.std_unit_system
+
+    if old_unit_system is None:
+        print("Old database has not been initialized. Nothing to be done.")
+        return
+
+    # Get the unit system of the new archive:
+    try:
+        target_unit_nickname = config_dict['StdConvert']['target_unit']
+    except KeyError:
+        target_unit_system = None
+    else:
+        target_unit_system = weewx.units.unit_constants[target_unit_nickname.upper()]
+
+    print("Copying database '%s' to '%s'" % (manager_dict['database_dict']['database_name'],
+                                             new_database_dict['database_name']))
+    if target_unit_system is None or old_unit_system == target_unit_system:
+        print("The new database will use the same unit system as the old ('%s')." %
+              weewx.units.unit_nicknames[old_unit_system])
+    else:
+        print("Units will be converted from the '%s' system to the '%s' system." %
+              (weewx.units.unit_nicknames[old_unit_system],
+               weewx.units.unit_nicknames[target_unit_system]))
+
+    ans = y_or_n("Are you sure you wish to proceed? (y/n) ")
+    if ans == 'y':
+        t1 = time.time()
+        weewx.manager.reconfig(manager_dict['database_dict'],
+                               new_database_dict,
+                               new_unit_system=target_unit_system,
+                               new_schema=manager_dict['schema'],
+                               dry_run=dry_run)
+        tdiff = time.time() - t1
+        print("Database '%s' copied to '%s' in %.2f seconds."
+              % (manager_dict['database_dict']['database_name'],
+                 new_database_dict['database_name'],
+                 tdiff))
+    else:
+        print("Nothing done.")
+
+    if dry_run:
+        print("This was a dry run. Nothing was actually done.")
+
+
 def transfer_database(config_path, db_binding='wx_binding', dest_binding=None, dry_run=False):
     """Transfer 'archive' data from one database to another"""
 

@@ -29,6 +29,8 @@ rename_column_usage = f"""{bcolors.BOLD}weectl database rename-column FROM-NAME 
 drop_columns_usage = f"""{bcolors.BOLD}weectl database drop-columns NAME NAME ... \\
             [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
             [--dry-run]{bcolors.ENDC}"""
+reconfigure_usage = f"""{bcolors.BOLD}weectl database reconfigure 
+            [--config=CONFIG-PATH] [--binding=BINDING-NAME] [--dry-run]{bcolors.ENDC}"""
 transfer_usage = f"""{bcolors.BOLD}weectl database transfer --dest-binding=BINDING-NAME\\
             [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
             [--dry-run]{bcolors.ENDC}"""
@@ -39,6 +41,7 @@ database_usage = '\n       '.join((create_usage,
                                    add_column_usage,
                                    rename_column_usage,
                                    drop_columns_usage,
+                                   reconfigure_usage,
                                    transfer_usage,
                                    ))
 
@@ -50,6 +53,11 @@ This command allows you to drop more than one column at once.
 For example:
     weectl database drop-columns soilTemp1 batteryStatus5 leafWet1
 """
+
+reconfigure_description = """Create a new database using the current configuration information 
+found in the configuration file. This can be used to change the unit system of a 
+database. The new database will have the same name as the old database, with a '_new' 
+on the end."""
 
 transfer_description = """Copy a database to a new database.
 The option "--dest-binding" should hold a database binding
@@ -226,6 +234,24 @@ def add_subparser(subparsers):
                                         'do it.')
     add_column_parser.set_defaults(func=drop_columns)
 
+    # ---------- Action 'reconfigure' ----------
+    reconfigure_parser = action_parser.add_parser('reconfigure',
+                                                  description=reconfigure_description,
+                                                  usage=reconfigure_usage,
+                                                  help="Reconfigure a database.",
+                                                  epilog=epilog)
+    reconfigure_parser.add_argument('--config',
+                                    metavar='CONFIG-PATH',
+                                    help=f'Path to configuration file. '
+                                         f'Default is "{weecfg.default_config_path}".')
+    reconfigure_parser.add_argument("--binding", metavar="BINDING-NAME", default='wx_binding',
+                                    help="The data binding to use. Default is 'wx_binding'.")
+    reconfigure_parser.add_argument('--dry-run',
+                                    action='store_true',
+                                    help='Print what would happen, but do not actually '
+                                         'do it.')
+    reconfigure_parser.set_defaults(func=reconfigure_database)
+
     # ---------- Action 'transfer' ----------
     transfer_parser = action_parser.add_parser('transfer',
                                                description=transfer_description,
@@ -300,6 +326,12 @@ def drop_columns(namespace):
                                       db_binding=namespace.binding,
                                       column_names=namespace.column_names,
                                       dry_run=namespace.dry_run)
+
+
+def reconfigure_database(namespace):
+    weectllib.db_actions.reconfigure_database(namespace.config,
+                                              db_binding=namespace.binding,
+                                              dry_run=namespace.dry_run)
 
 
 def transfer_database(namespace):
