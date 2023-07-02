@@ -17,6 +17,7 @@ usagestr = """weectl -v|--version
        weectl -h|--help
        weectl station --help
        weectl extension --help
+       weectl database --help
 """
 
 SUBCOMMANDS = ['station', 'extension', 'database']
