@@ -577,9 +577,19 @@ def get_font_handle(fontpath_str, *args):
                 # 2. Specifying the basic layout engine is necessary to avoid a segmentation
                 #    fault in Pillow versions earlier than 8.2.
                 #    See https://github.com/python-pillow/Pillow/issues/3066
-                font = ImageFont.truetype(fontpath_str,                         # See note 1 above
-                                          layout_engine=ImageFont.LAYOUT_BASIC, # See note 2 above
-                                          *args)
+                # 3. But, unfortunately, the means for specifying the Layout engine changed
+                #    with Pillow V9.1. The old way was deprecated in Pillow 10.0,
+                #    so if we want to support versions older than 9.1, we have to try it both ways
+                try:
+                    # First, try it the modern way (see note 3 above)
+                    font = ImageFont.truetype(fontpath_str,                         # See note 1
+                                              layout_engine=ImageFont.Layout.BASIC, # See note 2
+                                              *args)
+                except AttributeError:
+                    # That didn't work. Try it the old way (see note 3)
+                    font = ImageFont.truetype(fontpath_str,                         # See note 1
+                                              layout_engine=ImageFont.LAYOUT_BASIC, # See note 2
+                                              *args)
             else:
                 font = ImageFont.load_path(fontpath_str)
         except IOError:
