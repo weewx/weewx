@@ -8,10 +8,10 @@
       <sourceFolder url="file://$MODULE_DIR$/bin/weeplot/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/bin/weeutil/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/bin/weewx/tests" isTestSource="true" />
-      <excludeFolder url="file://$MODULE_DIR$/build" />
       <excludeFolder url="file://$MODULE_DIR$/dist" />
-      <excludeFolder url="file://$MODULE_DIR$/html_docs" />
       <excludeFolder url="file://$MODULE_DIR$/bin/wee_resources" />
+      <excludeFolder url="file://$MODULE_DIR$/html_docs" />
+      <excludeFolder url="file://$MODULE_DIR$/build" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.7 (weewx)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
