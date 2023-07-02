@@ -17,11 +17,11 @@ create_usage = f"""{bcolors.BOLD}weectl database create \\
 drop_daily_usage = f"""{bcolors.BOLD}weectl database drop-daily \\
             [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
             [--dry-run]{bcolors.ENDC}"""
-rebuild_usage = f"""{bcolors.BOLD}weectl database rebuild-daily " \\
+rebuild_usage = f"""{bcolors.BOLD}weectl database rebuild-daily \\
             [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]] \\
             [--config=CONFIG-PATH] [--binding=BINDING-NAME]  \\
             [--dry-run]{bcolors.ENDC}"""
-add_column_usage = f"""{bcolors.BOLD}weectl database add-column NAME " \\
+add_column_usage = f"""{bcolors.BOLD}weectl database add-column NAME \\
             [--type=(REAL|INTEGER)] \\
             [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
             [--dry-run]{bcolors.ENDC}"""
@@ -41,6 +41,10 @@ calc_missing_usage = f"""{bcolors.BOLD}weectl database calc-missing
             [--date=YYYY-mm-dd | [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
             [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
             [--dry-run]{bcolors.ENDC}"""
+reweight_usage = f"""{bcolors.BOLD}weectl database reweight \\
+            [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]] \\
+            [--config=CONFIG-PATH] [--binding=BINDING-NAME]  \\
+            [--dry-run]{bcolors.ENDC}"""
 
 database_usage = '\n       '.join((create_usage,
                                    drop_daily_usage,
@@ -50,7 +54,8 @@ database_usage = '\n       '.join((create_usage,
                                    drop_columns_usage,
                                    reconfigure_usage,
                                    transfer_usage,
-                                   calc_missing_usage
+                                   calc_missing_usage,
+                                   reweight_usage
                                    ))
 
 database_schema_description = "Change the schema of an existing WeeWX database. You must also " \
@@ -293,16 +298,16 @@ def add_subparser(subparsers):
                                                         "derived observations.",
                                                    epilog=epilog)
     calc_missing_parser.add_argument("--date",
-                                metavar="YYYY-mm-dd",
-                                help="Calculate for this date only.")
+                                     metavar="YYYY-mm-dd",
+                                     help="Calculate for this date only.")
     calc_missing_parser.add_argument("--from",
-                                metavar="YYYY-mm-ddTHH:MM:SS",
-                                dest='from_date',
-                                help="Calculate starting with this datetime.")
+                                     metavar="YYYY-mm-ddTHH:MM:SS",
+                                     dest='from_date',
+                                     help="Calculate starting with this datetime.")
     calc_missing_parser.add_argument("--to",
-                                metavar="YYYY-mm-ddTHH:MM:SS",
-                                dest='to_date',
-                                help="Calculate ending with this datetime.")
+                                     metavar="YYYY-mm-ddTHH:MM:SS",
+                                     dest='to_date',
+                                     help="Calculate ending with this datetime.")
     calc_missing_parser.add_argument('--config',
                                      metavar='CONFIG-PATH',
                                      help=f'Path to configuration file. '
@@ -314,6 +319,37 @@ def add_subparser(subparsers):
                                      help='Print what would happen, but do not actually '
                                           'do it.')
     calc_missing_parser.set_defaults(func=calc_missing)
+
+    reweight_parser = action_parser.add_parser('reweight',
+                                               description="Recalculate the weighted sums in "
+                                                           "the daily summaries.",
+                                               usage=reweight_usage,
+                                               help="Recalculate the weighted sums in "
+                                                    "the daily summaries.",
+                                               epilog=epilog)
+
+    reweight_parser.add_argument("--date",
+                                 metavar="YYYY-mm-dd",
+                                 help="Reweight for this date only.")
+    reweight_parser.add_argument("--from",
+                                 metavar="YYYY-mm-dd",
+                                 dest='from_date',
+                                 help="Reweight starting with this date.")
+    reweight_parser.add_argument("--to",
+                                 metavar="YYYY-mm-dd",
+                                 dest='to_date',
+                                 help="Reweight ending with this date.")
+    reweight_parser.add_argument('--config',
+                                 metavar='CONFIG-PATH',
+                                 help=f'Path to configuration file. '
+                                      f'Default is "{weecfg.default_config_path}".')
+    reweight_parser.add_argument("--binding", metavar="BINDING-NAME", default='wx_binding',
+                                 help="The data binding to use. Default is 'wx_binding'.")
+    reweight_parser.add_argument('--dry-run',
+                                 action='store_true',
+                                 help='Print what would happen, but do not actually '
+                                      'do it.')
+    reweight_parser.set_defaults(func=reweight_daily)
 
 
 def create_database(namespace):
@@ -379,6 +415,7 @@ def transfer_database(namespace):
                                            db_binding=namespace.binding,
                                            dry_run=namespace.dry_run)
 
+
 def calc_missing(namespace):
     weectllib.db_actions.calc_missing(namespace.config,
                                       date=namespace.date,
@@ -386,3 +423,13 @@ def calc_missing(namespace):
                                       to_date=namespace.to_date,
                                       db_binding=namespace.binding,
                                       dry_run=namespace.dry_run)
+
+
+def reweight_daily(namespace):
+    """Rebuild the daily summary in a WeeWX database"""
+    weectllib.db_actions.reweight(namespace.config,
+                                  date=namespace.date,
+                                  from_date=namespace.from_date,
+                                  to_date=namespace.to_date,
+                                  db_binding=namespace.binding,
+                                  dry_run=namespace.dry_run)

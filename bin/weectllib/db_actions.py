@@ -473,14 +473,14 @@ def calc_missing(config_path,
     else:
         _tail = "from %s through to %s inclusive." % (timestamp_to_string(start_ts),
                                                       timestamp_to_string(stop_ts))
-    _msg = "%s%s" % (_head, _tail)
-    log.info(_msg)
-    print(_msg)
+    msg = "%s%s" % (_head, _tail)
+    log.info(msg)
+    print(msg)
     ans = y_or_n("Proceed? (y/n) ")
     if ans == 'n':
-        _msg = "Nothing done."
-        log.info(_msg)
-        print(_msg)
+        msg = "Nothing done."
+        log.info(msg)
+        print(msg)
         return
 
     t1 = time.time()
@@ -507,9 +507,9 @@ def calc_missing(config_path,
         # non-default binding and StdWXCalculate has not been told (via
         # weewx.conf) to use the same binding. Log it and notify the user then
         # exit.
-        _msg = "Error: '%s'" % e
-        print(_msg)
-        log.error(_msg)
+        msg = "Error: '%s'" % e
+        print(msg)
+        log.error(msg)
         print("Perhaps StdWXCalculate is using a different binding. Check "
               "configuration file [StdWXCalculate] stanza")
         sys.exit("Nothing done. Aborting.")
@@ -517,6 +517,62 @@ def calc_missing(config_path,
         msg = "Missing derived observations calculated in %0.2f seconds" % (time.time() - t1)
         log.info(msg)
         print(msg)
+
+
+def reweight(config_path,
+             date=None,
+             from_date=None,
+             to_date=None,
+             db_binding='wx_binding',
+             dry_run=False):
+    """Recalculate the weighted sums in the daily summaries."""
+
+    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
+
+    # Determine the period over which we are rebuilding from any command line date parameters
+    from_d, to_d = weectllib.parse_dates(date,
+                                         from_date=from_date, to_date=to_date)
+
+    # advise the user/log what we will do
+    if from_d is None and to_d is None:
+        msg = "The weighted sums in all the daily summaries will be recalculated."
+    elif from_d and not to_d:
+        msg = "The weighted sums in the daily summaries from %s through the end " \
+              "will be recalculated." % from_d
+    elif not from_d and to_d:
+        msg = "The weighted sums in the daily summaries from the beginning through %s" \
+              "will be recalculated." % to_d
+    elif from_d == to_d:
+        msg = "The weighted sums in the daily summary for %s will be recalculated." % from_d
+    else:
+        msg = "The weighted sums in the daily summaries from %s through %s, " \
+              "inclusive, will be recalculated." % (from_d, to_d)
+
+    log.info(msg)
+    print(msg)
+    ans = y_or_n("Proceed (y/n)? ")
+    if ans == 'n':
+        log.info("Nothing done.")
+        print("Nothing done.")
+        return
+
+    t1 = time.time()
+
+    # Open up the database.
+    with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
+        msg = f"Recalculating the weighted summaries in database '{database_name}' ..."
+        log.info(msg)
+        print(msg)
+        if not dry_run:
+            # Do the actual recalculations
+            dbmanager.recalculate_weights(start_d=from_d, stop_d=to_d)
+
+    msg = "Finished reweighting in %.1f seconds." % (time.time() - t1)
+    log.info(msg)
+    print()
+    print(msg)
+    if dry_run:
+        print("This was a dry run. Nothing was actually done.")
 
 
 # --------------------- UTILITIES -------------------- #
