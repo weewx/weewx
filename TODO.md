@@ -1,5 +1,8 @@
 # To do
 
+## Pillow
+
+Test on the new Pillow V10.0. See https://groups.google.com/g/weewx-development/c/REFP7rzyYTo
 
 ## Debian packaging
 
@@ -9,20 +12,15 @@ install instructions should become
 
     echo "deb [arch=all] http://weewx.com/apt/python3 stable main" | sudo tee /etc/apt/sources.list.d/weewx.list
 
-## Pip install
-
-
-## Upgrade guide
-
-How to switch from init.d to systemd.
-
-How to upgrade from V4 using Python 2, to V5 using Python 3.
-
-
 ## Utilities
 
 Lot of inconsistencies in how the path to the config file is handled. Some utilities accept a
 command line option, others require `--config=`.
+
+Finish migrating `wee_database` to `weectl database` (see the branch `weectl_database`)
+- Finish functionality
+- Edit documentation to show `weectl database` instead.
+- Remove old `wee_database` references.
 
 ## Logging
 
@@ -41,15 +39,15 @@ they have been inserted into the new markdown docs.
 
 why install gcc for a pip install?  that is a massive dependency!
 same for the python-dev/devel.  should just use wheels.  only install gcc
-and the dev stuff it the os does not have wheels in pypi.
+and the dev stuff it the os does not have wheels in pypi. [Fixed by no longer requiring rsa].
 
-need to verify the suse pip pre-requisite steps
+need to verify the suse pip pre-requisite steps. [Done by tk]
 
 need to verify method for installing latest python in rocky 8.  default is
-python 3.6.8
+python 3.6.8. [Done by tk]
 
 need a page that shows how to download, install, and configure a driver.
 
 need a page that shows how to download, install, and configure a skin.
 
-web browsers do not expand the tilde
+web browsers do not expand the tilde [Chrome does; Firefox does not.]
