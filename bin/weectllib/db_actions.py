@@ -13,12 +13,14 @@ import weecfg
 import weectllib
 import weedb
 import weewx.manager
-from weeutil.weeutil import bcolors, y_or_n
+from weeutil.weeutil import bcolors, y_or_n, timestamp_to_string
 
 log = logging.getLogger(__name__)
 
 
-def create_database(config_path, db_binding='wx_binding', dry_run=False):
+def create_database(config_path,
+                    db_binding='wx_binding',
+                    dry_run=False):
     """Create a new database."""
     if dry_run:
         print("This is a dry run. Nothing will actually be done.")
@@ -41,7 +43,9 @@ def create_database(config_path, db_binding='wx_binding', dry_run=False):
                 print(f"Created database '{dbmanager.database_name}'.")
 
 
-def drop_daily(config_path, db_binding='wx_binding', dry_run=False):
+def drop_daily(config_path,
+               db_binding='wx_binding',
+               dry_run=False):
     """Drop the daily summary from a WeeWX database."""
 
     config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
@@ -74,10 +78,10 @@ def drop_daily(config_path, db_binding='wx_binding', dry_run=False):
 
 
 def rebuild_daily(config_path,
-                  db_binding='wx_binding',
                   date=None,
                   from_date=None,
                   to_date=None,
+                  db_binding='wx_binding',
                   dry_run=False):
     """Rebuild the daily summaries."""
 
@@ -143,9 +147,9 @@ def rebuild_daily(config_path,
 
 
 def add_column(config_path,
-               db_binding='wx_binding',
                column_name=None,
                column_type=None,
+               db_binding='wx_binding',
                dry_run=False):
     """Add a single column to the database.
     column_name: The name of the new column.
@@ -170,9 +174,9 @@ def add_column(config_path,
 
 
 def rename_column(config_path,
-                  db_binding='wx_binding',
                   column_name=None,
                   new_name=None,
+                  db_binding='wx_binding',
                   dry_run=False):
     config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
 
@@ -191,8 +195,8 @@ def rename_column(config_path,
 
 
 def drop_columns(config_path,
-                 db_binding='wx_binding',
                  column_names=None,
+                 db_binding='wx_binding',
                  dry_run=False):
     """Drop a set of columns from the database"""
     config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
@@ -295,7 +299,10 @@ def reconfigure_database(config_path,
         print("This was a dry run. Nothing was actually done.")
 
 
-def transfer_database(config_path, db_binding='wx_binding', dest_binding=None, dry_run=False):
+def transfer_database(config_path,
+                      dest_binding=None,
+                      db_binding='wx_binding',
+                      dry_run=False):
     """Transfer 'archive' data from one database to another"""
 
     # do we have enough to go on, must have a dest binding
@@ -411,6 +418,105 @@ def transfer_database(config_path, db_binding='wx_binding', dest_binding=None, d
 
     if dry_run:
         print("This was a dry run. Nothing was actually done.")
+
+
+def calc_missing(config_path,
+                 date=None,
+                 from_date=None,
+                 to_date=None,
+                 db_binding='wx_binding',
+                 dry_run=False):
+    """Calculate any missing derived observations and save to database."""
+    import weecfg.database
+
+    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
+
+    log.info("Preparing to calculate missing derived observations...")
+
+    # get a db manager dict given the config dict and binding
+    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
+                                                              db_binding)
+    # Get the table_name used by the binding, it could be different to the
+    # default 'archive'. If for some reason it is not specified then fail hard.
+    table_name = manager_dict['table_name']
+    # get the first and last good timestamps from the archive, these represent
+    # our overall bounds for calculating missing derived obs
+    with weewx.manager.Manager.open(manager_dict['database_dict'],
+                                    table_name=table_name) as dbmanager:
+        first_ts = dbmanager.firstGoodStamp()
+        last_ts = dbmanager.lastGoodStamp()
+    # process any command line options that may limit the period over which
+    # missing derived obs are calculated
+    start_dt, stop_dt = weectllib.parse_dates(date,
+                                              from_date=from_date, to_date=to_date,
+                                              as_datetime=True)
+    # we now have a start and stop date for processing, we need to obtain those
+    # as epoch timestamps, if we have no start and/or stop date then use the
+    # first or last good timestamp instead
+    start_ts = time.mktime(start_dt.timetuple()) if start_dt is not None else first_ts - 1
+    stop_ts = time.mktime(stop_dt.timetuple()) if stop_dt is not None else last_ts
+    # notify if this is a dry run
+    if dry_run:
+        msg = "This is a dry run, missing derived observations will be calculated but not saved"
+        log.info(msg)
+        print(msg)
+    _head = "Missing derived observations will be calculated "
+    # advise the user/log what we will do
+    if start_dt is None and stop_dt is None:
+        _tail = "for all records."
+    elif start_dt and not stop_dt:
+        _tail = "from %s through to the end (%s)." % (timestamp_to_string(start_ts),
+                                                      timestamp_to_string(stop_ts))
+    elif not start_dt and stop_dt:
+        _tail = "from the beginning (%s) through to %s." % (timestamp_to_string(start_ts),
+                                                            timestamp_to_string(stop_ts))
+    else:
+        _tail = "from %s through to %s inclusive." % (timestamp_to_string(start_ts),
+                                                      timestamp_to_string(stop_ts))
+    _msg = "%s%s" % (_head, _tail)
+    log.info(_msg)
+    print(_msg)
+    ans = y_or_n("Proceed? (y/n) ")
+    if ans == 'n':
+        _msg = "Nothing done."
+        log.info(_msg)
+        print(_msg)
+        return
+
+    t1 = time.time()
+
+    # construct a CalcMissing config dict
+    calc_missing_config_dict = {'name': 'Calculate Missing Derived Observations',
+                                'binding': db_binding,
+                                'start_ts': start_ts,
+                                'stop_ts': stop_ts,
+                                'trans_days': 20,
+                                'dry_run': dry_run}
+
+    # obtain a CalcMissing object
+    calc_missing_obj = weecfg.database.CalcMissing(config_dict,
+                                                   calc_missing_config_dict)
+    log.info("Calculating missing derived observations...")
+    print("Calculating missing derived observations...")
+    # Calculate and store any missing observations. Be prepared to
+    # catch any exceptions from CalcMissing.
+    try:
+        calc_missing_obj.run()
+    except weewx.UnknownBinding as e:
+        # We have an unknown binding, this could occur if we are using a
+        # non-default binding and StdWXCalculate has not been told (via
+        # weewx.conf) to use the same binding. Log it and notify the user then
+        # exit.
+        _msg = "Error: '%s'" % e
+        print(_msg)
+        log.error(_msg)
+        print("Perhaps StdWXCalculate is using a different binding. Check "
+              "configuration file [StdWXCalculate] stanza")
+        sys.exit("Nothing done. Aborting.")
+    else:
+        msg = "Missing derived observations calculated in %0.2f seconds" % (time.time() - t1)
+        log.info(msg)
+        print(msg)
 
 
 # --------------------- UTILITIES -------------------- #
