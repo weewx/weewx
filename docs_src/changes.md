@@ -30,9 +30,9 @@ location `/var/log/` on start up would cause crashes, even if it was never used.
 
 MacOS now logs to `syslog` like any other system, rather than `rotate`.
 
-Method `ImageDraw.textsize()` was deprecated in Pillow 9.2 (1-Jul-2022), and
-will be removed in Pillow 10.0 (due 1-Jul-2023). Replaced it with workaround
-methods.
+Method `ImageDraw.textsize()` and constant `ImageFont.LAYOUT_BASIC` were
+deprecated in Pillow 9.2 (1-Jul-2022), then removed in Pillow 10.0 (1-Jul-2023).
+Replaced them with alternatives.
 
 The *Standard* skin now uses the font `DejaVuSansMono-Bold` and includes a
 copy. Before, it had to rely on hardwired font paths, which were less reliable.
