@@ -1861,7 +1861,11 @@ def _loop_date(p, k):
 
 
 def _decode_rain(p, k):
-    if p['bucket_type'] == 0:
+    # The Davis documentation makes no mention that rain can have a "dash" value,
+    # but we've seen them. Detect them.
+    if p[k] == 0xFFFF:
+        return None
+    elif p['bucket_type'] == 0:
         # 0.01 inch bucket
         return p[k] / 100.0
     elif p['bucket_type'] == 1:

@@ -56,6 +56,8 @@ Add retransmit information for Vantage `wee_device --info` query.
 
 Fix problem when setting Vantage repeater. Fixes issue #863.
 
+Detect "dash" values for rain-related measurements.
+
 Change `minsumtime` and `maxsumtime` to return start-of-day, rather than the
 time of max rainfall during the day.
 
