@@ -519,12 +519,34 @@ def calc_missing(config_path,
         print(msg)
 
 
-def reweight(config_path,
-             date=None,
-             from_date=None,
-             to_date=None,
-             db_binding='wx_binding',
-             dry_run=False):
+def check(config_path, db_binding='wx_binding'):
+    """Check the database for any issues."""
+
+    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run=False)
+
+    print("Checking daily summary tables version...")
+    with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbm:
+        daily_summary_version = dbm._read_metadata('Version')
+
+    msg = f"Daily summary tables are at version {daily_summary_version}."
+    log.info(msg)
+    print(msg)
+
+    if daily_summary_version is not None and daily_summary_version >= '2.0':
+        # interval weighting fix has been applied
+        msg = "Interval Weighting Fix is not required."
+        log.info(msg)
+        print(msg)
+    else:
+        print("Recommend running --update to recalculate interval weightings.")
+
+
+def reweight_daily(config_path,
+                   date=None,
+                   from_date=None,
+                   to_date=None,
+                   db_binding='wx_binding',
+                   dry_run=False):
     """Recalculate the weighted sums in the daily summaries."""
 
     config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)

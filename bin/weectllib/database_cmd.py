@@ -41,6 +41,8 @@ calc_missing_usage = f"""{bcolors.BOLD}weectl database calc-missing
             [--date=YYYY-mm-dd | [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
             [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
             [--dry-run]{bcolors.ENDC}"""
+check_usage = f"""{bcolors.BOLD}weectl database check \\
+            [--config=CONFIG-PATH] [--binding=BINDING-NAME]{bcolors.ENDC}"""
 reweight_usage = f"""{bcolors.BOLD}weectl database reweight \\
             [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]] \\
             [--config=CONFIG-PATH] [--binding=BINDING-NAME]  \\
@@ -320,6 +322,22 @@ def add_subparser(subparsers):
                                           'do it.')
     calc_missing_parser.set_defaults(func=calc_missing)
 
+    # ---------- Action 'check' ----------
+    check_parser = action_parser.add_parser('check',
+                                            description="Check the database for any issues.",
+                                            usage=check_usage,
+                                            help="Check the database for any issues.")
+
+    check_parser.add_argument('--config',
+                              metavar='CONFIG-PATH',
+                              help=f'Path to configuration file. '
+                                   f'Default is "{weecfg.default_config_path}".')
+    check_parser.add_argument("--binding", metavar="BINDING-NAME",
+                              default='wx_binding',
+                              help="The data binding to use. Default is 'wx_binding'.")
+    check_parser.set_defaults(func=check)
+
+    # ---------- Action 'reweight' ----------
     reweight_parser = action_parser.add_parser('reweight',
                                                description="Recalculate the weighted sums in "
                                                            "the daily summaries.",
@@ -378,6 +396,7 @@ def rebuild_daily(namespace):
 
 
 def add_column(namespace):
+    """Add a column to a WeeWX database"""
     column_type = namespace.column_type.upper()
     if column_type == 'INT':
         column_type = "INTEGER"
@@ -389,6 +408,7 @@ def add_column(namespace):
 
 
 def rename_column(namespace):
+    """Rename a column in a WeeWX database."""
     weectllib.db_actions.rename_column(namespace.config,
                                        column_name=namespace.column_name,
                                        new_name=namespace.new_name,
@@ -397,6 +417,7 @@ def rename_column(namespace):
 
 
 def drop_columns(namespace):
+    """Drop (remove) one or more columns in a WeeWX database."""
     weectllib.db_actions.drop_columns(namespace.config,
                                       column_names=namespace.column_names,
                                       db_binding=namespace.binding,
@@ -404,12 +425,14 @@ def drop_columns(namespace):
 
 
 def reconfigure_database(namespace):
+    """Replicate a database, using current configuration settings."""
     weectllib.db_actions.reconfigure_database(namespace.config,
                                               db_binding=namespace.binding,
                                               dry_run=namespace.dry_run)
 
 
 def transfer_database(namespace):
+    """Copy a database to a new database."""
     weectllib.db_actions.transfer_database(namespace.config,
                                            dest_binding=namespace.dest_binding,
                                            db_binding=namespace.binding,
@@ -417,6 +440,7 @@ def transfer_database(namespace):
 
 
 def calc_missing(namespace):
+    """Calculate derived variables in a database."""
     weectllib.db_actions.calc_missing(namespace.config,
                                       date=namespace.date,
                                       from_date=namespace.from_date,
@@ -425,11 +449,17 @@ def calc_missing(namespace):
                                       dry_run=namespace.dry_run)
 
 
+def check(namespace):
+    """Check the integrity of a WeeWX database."""
+    weectllib.db_actions.check(namespace.config,
+                               namespace.binding)
+
+
 def reweight_daily(namespace):
-    """Rebuild the daily summary in a WeeWX database"""
-    weectllib.db_actions.reweight(namespace.config,
-                                  date=namespace.date,
-                                  from_date=namespace.from_date,
-                                  to_date=namespace.to_date,
-                                  db_binding=namespace.binding,
-                                  dry_run=namespace.dry_run)
+    """Recalculate the weights in a WeeWX database."""
+    weectllib.db_actions.reweight_daily(namespace.config,
+                                        date=namespace.date,
+                                        from_date=namespace.from_date,
+                                        to_date=namespace.to_date,
+                                        db_binding=namespace.binding,
+                                        dry_run=namespace.dry_run)
