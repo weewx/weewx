@@ -12,8 +12,8 @@ With pip installs, user data is stored in `~/weewx-data` by default,
 instead of `/home/weewx`. This allows pip installs to be done without
 root privileges. However, `/home/weewx` can still be used.
 
-The new utility `weectl` is now used for extensions and station configuration.
-With time, it will probably take on other responsibilities.
+The new utility `weectl` is now used for configuring stations, extensions, and
+the databases. With time, it will probably take on other responsibilities.
 
 Package installs now use systemd instead of the old System V `/etc/init.d`.
 
@@ -56,10 +56,10 @@ Add retransmit information for Vantage `wee_device --info` query.
 
 Fix problem when setting Vantage repeater. Fixes issue #863.
 
-Detect "dash" values for rain-related measurements.
+Detect "dash" values for rain-related measurements on Vantage stations.
 
-Change `minsumtime` and `maxsumtime` to return start-of-day, rather than the
-time of max rainfall during the day.
+Change aggregations `minsumtime` and `maxsumtime` to return start-of-day, 
+rather than the time of max rainfall during the day.
 
 Relax requirement that column `dateTime` be the first column in the database.
 Fixes issue #855.

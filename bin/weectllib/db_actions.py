@@ -541,6 +541,99 @@ def check(config_path, db_binding='wx_binding'):
         print("Recommend running --update to recalculate interval weightings.")
 
 
+def update_database(config_path,
+                    db_binding='wx_binding',
+                    dry_run=False):
+    """Apply any required database fixes.
+
+    Applies the following fixes:
+    -   checks if database version is 3.0, if not interval weighting fix is
+        applied
+    -   recalculates windSpeed daily summary max and maxtime fields from
+        archive
+    """
+
+    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
+
+    ans = y_or_n("The update process does not affect archive data, "
+                 "but does alter the database.\nContinue (y/n)? ")
+    if ans == 'n':
+        log.info("Update cancelled.")
+        print("Update cancelled.")
+        return
+
+    log.info("Preparing interval weighting fix...")
+    print("Preparing interval weighting fix...")
+
+    # Get a database manager object
+    with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbm:
+        # check the daily summary version
+        msg = f"Daily summary tables are at version {dbm.version}."
+        log.info(msg)
+        print(msg)
+
+        if dbm.version is not None and dbm.version >= '4.0':
+            # interval weighting fix has been applied
+            log.info("Interval weighting fix is not required.")
+            print("Interval weighting fix is not required.")
+        else:
+            # apply the interval weighting
+            log.info("Calculating interval weights...")
+            print("Calculating interval weights. This could take awhile.")
+            t1 = time.time()
+            if not dry_run:
+                dbm.update()
+            msg = "Interval Weighting Fix completed in %0.2f seconds." % (time.time() - t1)
+            print()
+            print(msg)
+            sys.stdout.flush()
+            log.info(msg)
+
+    # recalc the max/maxtime windSpeed values
+    _fix_wind(config_dict, db_binding, dry_run)
+
+
+def _fix_wind(config_dict, db_binding, dry_run):
+    """Recalculate the windSpeed daily summary max and maxtime fields.
+
+    Create a WindSpeedRecalculation object and call its run() method to
+    recalculate the max and maxtime fields from archive data. This process is
+    idempotent so it can be called repeatedly with no ill effect.
+    """
+    import weecfg.database
+
+    msg = "Preparing maximum windSpeed fix..."
+    log.info(msg)
+    print(msg)
+
+    # notify if this is a dry run
+    if dry_run:
+        print("This is a dry run: maximum windSpeed will be calculated but not saved.")
+
+    # construct a windSpeed recalculation config dict
+    wind_config_dict = {'name': 'Maximum windSpeed fix',
+                        'binding': db_binding,
+                        'trans_days': 100,
+                        'dry_run': dry_run}
+
+    # create a windSpeedRecalculation object
+    wind_obj = weecfg.database.WindSpeedRecalculation(config_dict,
+                                                      wind_config_dict)
+    # perform the recalculation, wrap in a try..except to catch any db errors
+    t1 = time.time()
+
+    try:
+        wind_obj.run()
+    except weedb.NoTableError:
+        msg = "Maximum windSpeed fix applied: no windSpeed found"
+        log.info(msg)
+        print(msg)
+    else:
+        msg = "Maximum windSpeed fix completed in %0.2f seconds" % (time.time() - t1)
+        log.info(msg)
+        print(msg)
+
+
 def reweight_daily(config_path,
                    date=None,
                    from_date=None,

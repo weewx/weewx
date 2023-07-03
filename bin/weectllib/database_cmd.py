@@ -34,15 +34,18 @@ drop_columns_usage = f"""{bcolors.BOLD}weectl database drop-columns NAME NAME ..
 reconfigure_usage = f"""{bcolors.BOLD}weectl database reconfigure 
             [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
             [--dry-run]{bcolors.ENDC}"""
-transfer_usage = f"""{bcolors.BOLD}weectl database transfer --dest-binding=BINDING-NAME\\
+transfer_usage = f"""{bcolors.BOLD}weectl database transfer --dest-binding=BINDING-NAME \\
             [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
             [--dry-run]{bcolors.ENDC}"""
 calc_missing_usage = f"""{bcolors.BOLD}weectl database calc-missing
-            [--date=YYYY-mm-dd | [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
+            [--date=YYYY-mm-dd | [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]] \\
             [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
             [--dry-run]{bcolors.ENDC}"""
 check_usage = f"""{bcolors.BOLD}weectl database check \\
             [--config=CONFIG-PATH] [--binding=BINDING-NAME]{bcolors.ENDC}"""
+update_usage = f"""{bcolors.BOLD}weectl database update \\
+            [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
+            [--dry-run]{bcolors.ENDC}"""
 reweight_usage = f"""{bcolors.BOLD}weectl database reweight \\
             [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]] \\
             [--config=CONFIG-PATH] [--binding=BINDING-NAME]  \\
@@ -57,6 +60,8 @@ database_usage = '\n       '.join((create_usage,
                                    reconfigure_usage,
                                    transfer_usage,
                                    calc_missing_usage,
+                                   check_usage,
+                                   update_usage,
                                    reweight_usage
                                    ))
 
@@ -77,6 +82,10 @@ on the end."""
 transfer_description = """Copy a database to a new database.
 The option "--dest-binding" should hold a database binding
 to the target database."""
+
+update_description = """Update the database to the current version. This is only necessary for 
+databases created before v3.7 and never updated. Before updating, this utility will check 
+whether it is necessary."""
 
 epilog = "Before taking a mutating action, make a backup!"
 
@@ -337,6 +346,26 @@ def add_subparser(subparsers):
                               help="The data binding to use. Default is 'wx_binding'.")
     check_parser.set_defaults(func=check)
 
+    # ---------- Action 'update' ----------
+    update_parser = action_parser.add_parser('update',
+                                             description=update_description,
+                                             usage=update_usage,
+                                             help="Update the database to the current version.",
+                                             epilog=epilog)
+
+    update_parser.add_argument('--config',
+                               metavar='CONFIG-PATH',
+                               help=f'Path to configuration file. '
+                                    f'Default is "{weecfg.default_config_path}".')
+    update_parser.add_argument("--binding", metavar="BINDING-NAME",
+                               default='wx_binding',
+                               help="The data binding to use. Default is 'wx_binding'.")
+    update_parser.add_argument('--dry-run',
+                               action='store_true',
+                               help='Print what would happen, but do not actually '
+                                    'do it.')
+    update_parser.set_defaults(func=update_database)
+
     # ---------- Action 'reweight' ----------
     reweight_parser = action_parser.add_parser('reweight',
                                                description="Recalculate the weighted sums in "
@@ -453,6 +482,12 @@ def check(namespace):
     """Check the integrity of a WeeWX database."""
     weectllib.db_actions.check(namespace.config,
                                namespace.binding)
+
+
+def update_database(namespace):
+    weectllib.db_actions.update_database(namespace.config,
+                                         db_binding=namespace.binding,
+                                         dry_run=namespace.dry_run)
 
 
 def reweight_daily(namespace):

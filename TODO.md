@@ -15,7 +15,6 @@ command line option, others require `--config=`.
 
 Finish migrating `wee_database` to `weectl database`
 - I think we can do without `check-strings` and `fix-strings`.
-- Implement `update`.
 - Allow rebuild daily summaries for only selected types.
 - Edit documentation to show `weectl database` instead.
 - Remove old `wee_database` references.
