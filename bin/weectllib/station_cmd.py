@@ -10,45 +10,45 @@ import weecfg.station_config
 import weewx
 from weeutil.weeutil import bcolors
 
-station_create_usage = f"""{bcolors.BOLD}weectl station create [--config=CONFIG-PATH] \\
-                             [--dist-config=DIST-CONFIG-PATH]] \\
-                             [--driver=DRIVER] \\
-                             [--location=LOCATION] \\
-                             [--altitude=ALTITUDE,{{foot|meter}}] \\
-                             [--latitude=LATITUDE] [--longitude=LONGITUDE] \\
-                             [--register={{y,n}} [--station-url=STATION_URL]] \\
-                             [--units={{us,metricwx,metric}}] \\
-                             [--skin-root=SKIN_ROOT] \\
-                             [--sqlite-root=SQLITE_ROOT] \\
-                             [--html-root=HTML_ROOT] \\
-                             [--user-root=USER_ROOT] \\
-                             [--docs-root=DOCS_ROOT] \\
-                             [--examples-root=EXAMPLES_ROOT] \\
-                             [--no-prompt] \\
+station_create_usage = f"""{bcolors.BOLD}weectl station create [--config=CONFIG-PATH]
+                             [--dist-config=DIST-CONFIG-PATH]
+                             [--driver=DRIVER]
+                             [--location=LOCATION]
+                             [--altitude=ALTITUDE,{{foot|meter}}]
+                             [--latitude=LATITUDE] [--longitude=LONGITUDE]
+                             [--register={{y,n}} [--station-url=STATION_URL]]
+                             [--units={{us,metricwx,metric}}]
+                             [--skin-root=SKIN_ROOT]
+                             [--sqlite-root=SQLITE_ROOT]
+                             [--html-root=HTML_ROOT]
+                             [--user-root=USER_ROOT]
+                             [--docs-root=DOCS_ROOT]
+                             [--examples-root=EXAMPLES_ROOT]
+                             [--no-prompt]
                              [--dry-run]{bcolors.ENDC}
 """
-station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure [--config=CONFIG-PATH] \\ 
-                                  [--driver=DRIVER] \\
-                                  [--location=LOCATION] \\
-                                  [--altitude=ALTITUDE,{{foot|meter}}] \\
-                                  [--latitude=LATITUDE] [--longitude=LONGITUDE] \\
-                                  [--register={{y,n}} [--station-url=STATION_URL]] \\
-                                  [--units={{us,metricwx,metric}}] \\
-                                  [--skin-root=SKIN_ROOT] \\
-                                  [--sqlite-root=SQLITE_ROOT] \\
-                                  [--html-root=HTML_ROOT] \\
-                                  [--no-prompt] \\
-                                  [--no-backup] \\
+station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure [--config=CONFIG-PATH] 
+                                  [--driver=DRIVER]
+                                  [--location=LOCATION]
+                                  [--altitude=ALTITUDE,{{foot|meter}}]
+                                  [--latitude=LATITUDE] [--longitude=LONGITUDE]
+                                  [--register={{y,n}} [--station-url=STATION_URL]]
+                                  [--units={{us,metricwx,metric}}]
+                                  [--skin-root=SKIN_ROOT]
+                                  [--sqlite-root=SQLITE_ROOT]
+                                  [--html-root=HTML_ROOT]
+                                  [--no-prompt]
+                                  [--no-backup]
                                   [--dry-run]{bcolors.ENDC}
 """
-station_upgrade_usage = f"""{bcolors.BOLD}weectl station upgrade [--config=CONFIG-PATH] \\
-                              [--dist-config=DIST-CONFIG-PATH]] \\
-                              [--docs-root=DOCS_ROOT] \\
-                              [--examples-root=EXAMPLES_ROOT] \\
-                              [--skin-root=SKIN_ROOT] \\
-                              [--what [{{config,docs,examples,util,skins}} ... ] \\
-                              [--no-prompt] \\
-                              [--no-backup] \\
+station_upgrade_usage = f"""{bcolors.BOLD}weectl station upgrade [--config=CONFIG-PATH]
+                              [--dist-config=DIST-CONFIG-PATH]]
+                              [--docs-root=DOCS_ROOT]
+                              [--examples-root=EXAMPLES_ROOT]
+                              [--skin-root=SKIN_ROOT]
+                              [--what [{{config,docs,examples,util,skins}} ... ]
+                              [--no-prompt]
+                              [--no-backup]
                               [--dry-run]{bcolors.ENDC}
 """
 

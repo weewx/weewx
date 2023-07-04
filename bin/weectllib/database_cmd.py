@@ -11,44 +11,44 @@ import weecfg.database
 import weectllib.db_actions
 from weeutil.weeutil import bcolors
 
-create_usage = f"""{bcolors.BOLD}weectl database create \\
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
+create_usage = f"""{bcolors.BOLD}weectl database create
+            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
-drop_daily_usage = f"""{bcolors.BOLD}weectl database drop-daily \\
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
+drop_daily_usage = f"""{bcolors.BOLD}weectl database drop-daily
+            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
-rebuild_usage = f"""{bcolors.BOLD}weectl database rebuild-daily \\
-            [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]] \\
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME]  \\
+rebuild_usage = f"""{bcolors.BOLD}weectl database rebuild-daily
+            [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
+            [--config=CONFIG-PATH] [--binding=BINDING-NAME] 
             [--dry-run]{bcolors.ENDC}"""
-add_column_usage = f"""{bcolors.BOLD}weectl database add-column NAME \\
-            [--type=(REAL|INTEGER)] \\
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
+add_column_usage = f"""{bcolors.BOLD}weectl database add-column NAME
+            [--type=(REAL|INTEGER)]
+            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
-rename_column_usage = f"""{bcolors.BOLD}weectl database rename-column FROM-NAME --to-name=NEW-NAME \\
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
+rename_column_usage = f"""{bcolors.BOLD}weectl database rename-column FROM-NAME --to-name=NEW-NAME
+            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
-drop_columns_usage = f"""{bcolors.BOLD}weectl database drop-columns NAME NAME ... \\
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
+drop_columns_usage = f"""{bcolors.BOLD}weectl database drop-columns NAME NAME ...
+            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
 reconfigure_usage = f"""{bcolors.BOLD}weectl database reconfigure 
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
+            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
-transfer_usage = f"""{bcolors.BOLD}weectl database transfer --dest-binding=BINDING-NAME \\
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
+transfer_usage = f"""{bcolors.BOLD}weectl database transfer --dest-binding=BINDING-NAME
+            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
 calc_missing_usage = f"""{bcolors.BOLD}weectl database calc-missing
-            [--date=YYYY-mm-dd | [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]] \\
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
+            [--date=YYYY-mm-dd | [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
+            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
-check_usage = f"""{bcolors.BOLD}weectl database check \\
+check_usage = f"""{bcolors.BOLD}weectl database check
             [--config=CONFIG-PATH] [--binding=BINDING-NAME]{bcolors.ENDC}"""
-update_usage = f"""{bcolors.BOLD}weectl database update \\
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME] \\
+update_usage = f"""{bcolors.BOLD}weectl database update
+            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
-reweight_usage = f"""{bcolors.BOLD}weectl database reweight \\
-            [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]] \\
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME]  \\
+reweight_usage = f"""{bcolors.BOLD}weectl database reweight
+            [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
+            [--config=CONFIG-PATH] [--binding=BINDING-NAME] 
             [--dry-run]{bcolors.ENDC}"""
 
 database_usage = '\n       '.join((create_usage,
@@ -108,16 +108,7 @@ def add_subparser(subparsers):
                                              usage=create_usage,
                                              help='Create a new WeeWX database.',
                                              epilog=epilog)
-    create_parser.add_argument('--config',
-                               metavar='CONFIG-PATH',
-                               help=f'Path to configuration file. '
-                                    f'Default is "{weecfg.default_config_path}".')
-    create_parser.add_argument("--binding", metavar="BINDING-NAME", default='wx_binding',
-                               help="The data binding to use. Default is 'wx_binding'.")
-    create_parser.add_argument('--dry-run',
-                               action='store_true',
-                               help='Print what would happen, but do not actually '
-                                    'do it.')
+    _add_common_args(create_parser)
     create_parser.set_defaults(func=create_database)
 
     # ---------- Action 'drop-daily' ----------
@@ -128,18 +119,7 @@ def add_subparser(subparsers):
                                                  help="Drop the daily summary from a "
                                                       "WeeWX database.",
                                                  epilog=epilog)
-
-    drop_daily_parser.add_argument('--config',
-                                   metavar='CONFIG-PATH',
-                                   help=f'Path to configuration file. '
-                                        f'Default is "{weecfg.default_config_path}".')
-    drop_daily_parser.add_argument("--binding", metavar="BINDING-NAME",
-                                   default='wx_binding',
-                                   help="The data binding to use. Default is 'wx_binding'.")
-    drop_daily_parser.add_argument('--dry-run',
-                                   action='store_true',
-                                   help='Print what would happen, but do not actually '
-                                        'do it.')
+    _add_common_args(drop_daily_parser)
     drop_daily_parser.set_defaults(func=drop_daily)
 
     # ---------- Action 'rebuild-daily' ----------
@@ -150,7 +130,6 @@ def add_subparser(subparsers):
                                               help="Rebuild the daily summary in "
                                                    "a WeeWX database.",
                                               epilog=epilog)
-
     rebuild_parser.add_argument("--date",
                                 metavar="YYYY-mm-dd",
                                 help="Rebuild for this date only.")
@@ -162,16 +141,7 @@ def add_subparser(subparsers):
                                 metavar="YYYY-mm-dd",
                                 dest='to_date',
                                 help="Rebuild ending with this date.")
-    rebuild_parser.add_argument('--config',
-                                metavar='CONFIG-PATH',
-                                help=f'Path to configuration file. '
-                                     f'Default is "{weecfg.default_config_path}".')
-    rebuild_parser.add_argument("--binding", metavar="BINDING-NAME", default='wx_binding',
-                                help="The data binding to use. Default is 'wx_binding'.")
-    rebuild_parser.add_argument('--dry-run',
-                                action='store_true',
-                                help='Print what would happen, but do not actually '
-                                     'do it.')
+    _add_common_args(rebuild_parser)
     rebuild_parser.set_defaults(func=rebuild_daily)
 
     # ---------- Action 'add-column' ----------
@@ -182,7 +152,6 @@ def add_subparser(subparsers):
                                                  help="Add a column to an "
                                                       "existing WeeWX database.",
                                                  epilog=epilog)
-
     add_column_parser.add_argument('column_name',
                                    metavar='NAME',
                                    help="Add new column NAME to database.")
@@ -191,72 +160,43 @@ def add_subparser(subparsers):
                                    default='REAL',
                                    dest='column_type',
                                    help="Type of the new column. Default is 'REAL'.")
-    add_column_parser.add_argument('--config',
-                                   metavar='CONFIG-PATH',
-                                   help=f'Path to configuration file. '
-                                        f'Default is "{weecfg.default_config_path}".')
-    add_column_parser.add_argument("--binding", metavar="BINDING-NAME", default='wx_binding',
-                                   help="The data binding to use. Default is 'wx_binding'.")
-    add_column_parser.add_argument('--dry-run',
-                                   action='store_true',
-                                   help='Print what would happen, but do not actually '
-                                        'do it.')
+    _add_common_args(add_column_parser)
     add_column_parser.set_defaults(func=add_column)
 
     # ---------- Action 'rename-column' ----------
-    add_column_parser = action_parser.add_parser('rename-column',
-                                                 description="Rename a column in an "
-                                                             "existing WeeWX database.",
-                                                 usage=rename_column_usage,
-                                                 help="Rename a column in an "
-                                                      "existing WeeWX database.",
-                                                 epilog=epilog)
-
-    add_column_parser.add_argument('column_name',
-                                   metavar='FROM-NAME',
-                                   help="Column to be renamed.")
-    add_column_parser.add_argument('--to-name',
-                                   metavar='NEW-NAME',
-                                   dest='new_name',
-                                   required=True,
-                                   help="New name of the column. Required.")
-    add_column_parser.add_argument('--config',
-                                   metavar='CONFIG-PATH',
-                                   help=f'Path to configuration file. '
-                                        f'Default is "{weecfg.default_config_path}".')
-    add_column_parser.add_argument("--binding", metavar="BINDING-NAME", default='wx_binding',
-                                   help="The data binding to use. Default is 'wx_binding'.")
-    add_column_parser.add_argument('--dry-run',
-                                   action='store_true',
-                                   help='Print what would happen, but do not actually '
-                                        'do it.')
-    add_column_parser.set_defaults(func=rename_column)
+    rename_column_parser = action_parser.add_parser('rename-column',
+                                                    description="Rename a column in an "
+                                                                "existing WeeWX database.",
+                                                    usage=rename_column_usage,
+                                                    help="Rename a column in an "
+                                                         "existing WeeWX database.",
+                                                    epilog=epilog)
+    rename_column_parser.add_argument('column_name',
+                                      metavar='FROM-NAME',
+                                      help="Column to be renamed.")
+    rename_column_parser.add_argument('--to-name',
+                                      metavar='NEW-NAME',
+                                      dest='new_name',
+                                      required=True,
+                                      help="New name of the column. Required.")
+    _add_common_args(rename_column_parser)
+    rename_column_parser.set_defaults(func=rename_column)
 
     # ---------- Action 'drop-columns' ----------
-    add_column_parser = action_parser.add_parser('drop-columns',
-                                                 description=drop_columns_description,
-                                                 usage=drop_columns_usage,
-                                                 help="Drop (remove) one or more columns "
-                                                      "from a WeeWX database.",
-                                                 formatter_class=argparse.RawDescriptionHelpFormatter,
-                                                 epilog=epilog)
-
-    add_column_parser.add_argument('column_names',
-                                   nargs="+",
-                                   metavar='NAME',
-                                   help="Column to be dropped. "
-                                        "More than one NAME can be specified.")
-    add_column_parser.add_argument('--config',
-                                   metavar='CONFIG-PATH',
-                                   help=f'Path to configuration file. '
-                                        f'Default is "{weecfg.default_config_path}".')
-    add_column_parser.add_argument("--binding", metavar="BINDING-NAME", default='wx_binding',
-                                   help="The data binding to use. Default is 'wx_binding'.")
-    add_column_parser.add_argument('--dry-run',
-                                   action='store_true',
-                                   help='Print what would happen, but do not actually '
-                                        'do it.')
-    add_column_parser.set_defaults(func=drop_columns)
+    drop_columns_parser = action_parser.add_parser('drop-columns',
+                                                   description=drop_columns_description,
+                                                   usage=drop_columns_usage,
+                                                   help="Drop (remove) one or more columns "
+                                                        "from a WeeWX database.",
+                                                   formatter_class=argparse.RawDescriptionHelpFormatter,
+                                                   epilog=epilog)
+    drop_columns_parser.add_argument('column_names',
+                                     nargs="+",
+                                     metavar='NAME',
+                                     help="Column to be dropped. "
+                                          "More than one NAME can be specified.")
+    _add_common_args(drop_columns_parser)
+    drop_columns_parser.set_defaults(func=drop_columns)
 
     # ---------- Action 'reconfigure' ----------
     reconfigure_parser = action_parser.add_parser('reconfigure',
@@ -264,16 +204,7 @@ def add_subparser(subparsers):
                                                   usage=reconfigure_usage,
                                                   help="Reconfigure a database.",
                                                   epilog=epilog)
-    reconfigure_parser.add_argument('--config',
-                                    metavar='CONFIG-PATH',
-                                    help=f'Path to configuration file. '
-                                         f'Default is "{weecfg.default_config_path}".')
-    reconfigure_parser.add_argument("--binding", metavar="BINDING-NAME", default='wx_binding',
-                                    help="The data binding to use. Default is 'wx_binding'.")
-    reconfigure_parser.add_argument('--dry-run',
-                                    action='store_true',
-                                    help='Print what would happen, but do not actually '
-                                         'do it.')
+    _add_common_args(reconfigure_parser)
     reconfigure_parser.set_defaults(func=reconfigure_database)
 
     # ---------- Action 'transfer' ----------
@@ -282,22 +213,12 @@ def add_subparser(subparsers):
                                                usage=transfer_usage,
                                                help="Copy a database to a new database.",
                                                epilog=epilog)
-
     transfer_parser.add_argument('--dest-binding',
                                  metavar='BINDING-NAME',
                                  required=True,
                                  help="A database binding pointing to the destination "
                                       "database. Required.")
-    transfer_parser.add_argument('--config',
-                                 metavar='CONFIG-PATH',
-                                 help=f'Path to configuration file. '
-                                      f'Default is "{weecfg.default_config_path}".')
-    transfer_parser.add_argument("--binding", metavar="BINDING-NAME", default='wx_binding',
-                                 help="The data binding to use. Default is 'wx_binding'.")
-    transfer_parser.add_argument('--dry-run',
-                                 action='store_true',
-                                 help='Print what would happen, but do not actually '
-                                      'do it.')
+    _add_common_args(transfer_parser)
     transfer_parser.set_defaults(func=transfer_database)
 
     # ---------- Action 'calc-missing' ----------
@@ -319,16 +240,7 @@ def add_subparser(subparsers):
                                      metavar="YYYY-mm-ddTHH:MM:SS",
                                      dest='to_date',
                                      help="Calculate ending with this datetime.")
-    calc_missing_parser.add_argument('--config',
-                                     metavar='CONFIG-PATH',
-                                     help=f'Path to configuration file. '
-                                          f'Default is "{weecfg.default_config_path}".')
-    calc_missing_parser.add_argument("--binding", metavar="BINDING-NAME", default='wx_binding',
-                                     help="The data binding to use. Default is 'wx_binding'.")
-    calc_missing_parser.add_argument('--dry-run',
-                                     action='store_true',
-                                     help='Print what would happen, but do not actually '
-                                          'do it.')
+    _add_common_args(calc_missing_parser)
     calc_missing_parser.set_defaults(func=calc_missing)
 
     # ---------- Action 'check' ----------
@@ -336,7 +248,6 @@ def add_subparser(subparsers):
                                             description="Check the database for any issues.",
                                             usage=check_usage,
                                             help="Check the database for any issues.")
-
     check_parser.add_argument('--config',
                               metavar='CONFIG-PATH',
                               help=f'Path to configuration file. '
@@ -353,17 +264,7 @@ def add_subparser(subparsers):
                                              help="Update the database to the current version.",
                                              epilog=epilog)
 
-    update_parser.add_argument('--config',
-                               metavar='CONFIG-PATH',
-                               help=f'Path to configuration file. '
-                                    f'Default is "{weecfg.default_config_path}".')
-    update_parser.add_argument("--binding", metavar="BINDING-NAME",
-                               default='wx_binding',
-                               help="The data binding to use. Default is 'wx_binding'.")
-    update_parser.add_argument('--dry-run',
-                               action='store_true',
-                               help='Print what would happen, but do not actually '
-                                    'do it.')
+    _add_common_args(update_parser)
     update_parser.set_defaults(func=update_database)
 
     # ---------- Action 'reweight' ----------
@@ -374,7 +275,6 @@ def add_subparser(subparsers):
                                                help="Recalculate the weighted sums in "
                                                     "the daily summaries.",
                                                epilog=epilog)
-
     reweight_parser.add_argument("--date",
                                  metavar="YYYY-mm-dd",
                                  help="Reweight for this date only.")
@@ -386,19 +286,11 @@ def add_subparser(subparsers):
                                  metavar="YYYY-mm-dd",
                                  dest='to_date',
                                  help="Reweight ending with this date.")
-    reweight_parser.add_argument('--config',
-                                 metavar='CONFIG-PATH',
-                                 help=f'Path to configuration file. '
-                                      f'Default is "{weecfg.default_config_path}".')
-    reweight_parser.add_argument("--binding", metavar="BINDING-NAME", default='wx_binding',
-                                 help="The data binding to use. Default is 'wx_binding'.")
-    reweight_parser.add_argument('--dry-run',
-                                 action='store_true',
-                                 help='Print what would happen, but do not actually '
-                                      'do it.')
+    _add_common_args(reweight_parser)
     reweight_parser.set_defaults(func=reweight_daily)
 
 
+# ------------------ Shims for calling database action functions ---------------- #
 def create_database(namespace):
     """Create the WeeWX database"""
 
@@ -498,3 +390,16 @@ def reweight_daily(namespace):
                                         to_date=namespace.to_date,
                                         db_binding=namespace.binding,
                                         dry_run=namespace.dry_run)
+
+
+def _add_common_args(subparser):
+    """Add options used by most of the subparsers"""
+    subparser.add_argument('--config',
+                           metavar='CONFIG-PATH',
+                           help='Path to configuration file. '
+                                f'Default is "{weecfg.default_config_path}".')
+    subparser.add_argument("--binding", metavar="BINDING-NAME", default='wx_binding',
+                           help="The data binding to use. Default is 'wx_binding'.")
+    subparser.add_argument('--dry-run',
+                           action='store_true',
+                           help='Print what would happen, but do not actually do it.')

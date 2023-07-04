@@ -13,12 +13,12 @@ from weeutil.weeutil import bcolors, to_int
 
 extension_list_usage = f"""{bcolors.BOLD}weectl extension list [--config=CONFIG-PATH]{bcolors.ENDC}
 """
-extension_install_usage = f"""  {bcolors.BOLD}weectl extension install {{FILE|DIR|URL}} \\
-           [--config=CONFIG-PATH] \\
+extension_install_usage = f"""  {bcolors.BOLD}weectl extension install {{FILE|DIR|URL}}
+           [--config=CONFIG-PATH]
            [--dry-run] [--verbosity=N]{bcolors.ENDC}
 """
-extension_uninstall_usage = f"""  {bcolors.BOLD}weectl extension uninstall NAME \\
-           [--config=CONFIG-PATH] \\
+extension_uninstall_usage = f"""  {bcolors.BOLD}weectl extension uninstall NAME
+           [--config=CONFIG-PATH]
            [--dry-run] [--verbosity=N]{bcolors.ENDC}
 """
 extension_usage = '\n     '.join((extension_list_usage,
