@@ -174,19 +174,19 @@ def add_column(config_path,
 
 
 def rename_column(config_path,
-                  column_name=None,
-                  new_name=None,
+                  from_name=None,
+                  to_name=None,
                   db_binding='wx_binding',
                   dry_run=False):
     config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
 
-    ans = y_or_n(f"Rename column '{column_name}' to '{new_name}' "
+    ans = y_or_n(f"Rename column '{from_name}' to '{to_name}' "
                  f"in database {database_name}? (y/n) ")
     if ans == 'y':
         with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbm:
             if not dry_run:
-                dbm.rename_column(column_name, new_name)
-        print(f"Column '{column_name}' renamed to '{new_name}'.")
+                dbm.rename_column(from_name, to_name)
+        print(f"Column '{from_name}' renamed to '{to_name}'.")
     else:
         print("Nothing done.")
 
@@ -598,7 +598,7 @@ def _fix_wind(config_dict, db_binding, dry_run):
 
     Create a WindSpeedRecalculation object and call its run() method to
     recalculate the max and maxtime fields from archive data. This process is
-    idempotent so it can be called repeatedly with no ill effect.
+    idempotent, so it can be called repeatedly with no ill effect.
     """
     import weecfg.database
 

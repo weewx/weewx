@@ -19,6 +19,10 @@ Finish migrating `wee_database` to `weectl database`
   E.g., compare `weectl station --help` with `weectl database --help`
 - Allow rebuild daily summaries for only selected types.
 - Edit documentation to show `weectl database` instead.
+- Check semantics of specifying a time for `--from` and/or `--to` 
+  in `weectl database calc-missing`.
+- Change `weectl station` and `weectl extension` documentation to follow
+  the style of `weectl database`.
 - Remove old `wee_database` references.
 
 ## Logging
@@ -50,3 +54,8 @@ need a page that shows how to download, install, and configure a driver.
 need a page that shows how to download, install, and configure a skin.
 
 web browsers do not expand the tilde [Chrome does; Firefox does not.]
+
+## Wiki
+
+Update the wiki entries for going from MySQL to SQLite and for SQLite to MySQL, this time
+by using `weectl database transfer`.

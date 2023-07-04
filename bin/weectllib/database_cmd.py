@@ -25,10 +25,10 @@ add_column_usage = f"""{bcolors.BOLD}weectl database add-column NAME
             [--type=(REAL|INTEGER)]
             [--config=CONFIG-PATH] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
-rename_column_usage = f"""{bcolors.BOLD}weectl database rename-column FROM-NAME --to-name=NEW-NAME
+rename_column_usage = f"""{bcolors.BOLD}weectl database rename-column FROM-NAME TO-NAME
             [--config=CONFIG-PATH] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
-drop_columns_usage = f"""{bcolors.BOLD}weectl database drop-columns NAME NAME ...
+drop_columns_usage = f"""{bcolors.BOLD}weectl database drop-columns NAME...
             [--config=CONFIG-PATH] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
 reconfigure_usage = f"""{bcolors.BOLD}weectl database reconfigure 
@@ -64,9 +64,6 @@ database_usage = '\n       '.join((create_usage,
                                    update_usage,
                                    reweight_usage
                                    ))
-
-database_schema_description = "Change the schema of an existing WeeWX database. You must also " \
-                              "specify either --add-column, --rename-column, or --drop-columns."
 
 drop_columns_description = """Drop (remove) one or more columns from a WeeWX database.
 This command allows you to drop more than one column at once.
@@ -171,14 +168,12 @@ def add_subparser(subparsers):
                                                     help="Rename a column in an "
                                                          "existing WeeWX database.",
                                                     epilog=epilog)
-    rename_column_parser.add_argument('column_name',
+    rename_column_parser.add_argument('from_name',
                                       metavar='FROM-NAME',
                                       help="Column to be renamed.")
-    rename_column_parser.add_argument('--to-name',
-                                      metavar='NEW-NAME',
-                                      dest='new_name',
-                                      required=True,
-                                      help="New name of the column. Required.")
+    rename_column_parser.add_argument('to_name',
+                                      metavar='TO-NAME',
+                                      help="New name of the column.")
     _add_common_args(rename_column_parser)
     rename_column_parser.set_defaults(func=rename_column)
 
@@ -193,7 +188,7 @@ def add_subparser(subparsers):
     drop_columns_parser.add_argument('column_names',
                                      nargs="+",
                                      metavar='NAME',
-                                     help="Column to be dropped. "
+                                     help="Column(s) to be dropped. "
                                           "More than one NAME can be specified.")
     _add_common_args(drop_columns_parser)
     drop_columns_parser.set_defaults(func=drop_columns)
@@ -331,8 +326,8 @@ def add_column(namespace):
 def rename_column(namespace):
     """Rename a column in a WeeWX database."""
     weectllib.db_actions.rename_column(namespace.config,
-                                       column_name=namespace.column_name,
-                                       new_name=namespace.new_name,
+                                       from_name=namespace.from_name,
+                                       to_name=namespace.to_name,
                                        db_binding=namespace.binding,
                                        dry_run=namespace.dry_run)
 
