@@ -1,11 +1,15 @@
 # Running WeeWX from a git repository
 
-Because WeeWX is pure-Python and does not need to be compiled, it can be run directly from
-a source repository. This approach is perhaps most appropriate for developers, but it is also
-useful on older operating systems or on platforms with tight memory and/or storage constraints.
+Because WeeWX is pure-Python and does not need to be compiled, it can be run directly from a source
+repository without "installing" it first. This approach is perhaps most appropriate for developers,
+but it is also useful on older operating systems or on platforms with tight memory and/or storage
+constraints.
 
-Although you do not need root privileges to install and configure WeeWX, you
-will need them to set up a daemon and, perhaps, to change device permissions.
+The same technique can be used to run from a source directory downloaded as a zip file from
+the WeeWX GitHub repository.
+
+Although you do not need root privileges to run WeeWX this way, you will need them to set up a
+daemon and, perhaps, to change device permissions.
 
 ## Install pre-requisites
 
@@ -108,6 +112,10 @@ interval), copy the following and paste into a web browser. You should see
 your station information and data.
 
     ~/weewx-data/public_html/index.html
+
+!!! Note
+    Not all browsers understand the tilde ("`~`") mark. You may
+    have to substitute an explicit path to your home directory.
 
 If you have problems, check the system log for entries from `weewxd`.
 
