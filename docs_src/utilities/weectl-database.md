@@ -12,7 +12,7 @@ These are options used by most of the actions.
 
 ### --config
 
-Path to the configuration file, `weewx.conf`. Default is `~/weewx-data/weewx.conf`.
+Path to the configuration file. Default is `~/weewx-data/weewx.conf`.
 
 ### --binding
 
@@ -24,7 +24,8 @@ Show what would happen if the action was run, but do not actually make any writa
 
 ## Create a new database
 
-    weectl database create [--config=CONFIG-PATH] [--binding=BINDING] [--dry-run]
+    weectl database create
+        [--config=CONFIG-PATH] [--binding=BINDING] [--dry-run]
 
 This action is used to create a new database by using the specifications in the configuration
 file, `weewx.conf`. It is rarely needed, as `weewxd` will do this automatically on startup.
@@ -37,7 +38,8 @@ weectl database create --help
 
 ## Drop the daily summaries
 
-    weectl database drop-daily [--config=CONFIG-PATH] [--binding=BINDING] [--dry-run]
+    weectl database drop-daily
+        [--config=CONFIG-PATH] [--binding=BINDING] [--dry-run]
 
 In addition to the regular archive data, every WeeWX database also includes a daily summary table
 for each observation type. Because there can be dozens of observation types, there can be dozens of
@@ -71,7 +73,7 @@ being retained for unaffected days.
 
 Use this form to rebuild the daily summaries for a specific date.
 
-### Rebuild for a stretch of dates
+### Rebuild for a range of dates
 
     weectl database rebuild-daily --from=YYYY-mm-dd --to=YYYY-mm-dd
 
@@ -228,6 +230,8 @@ in the Upgrade Guide.
 ## Recalculate daily summary weights
 
     weectl database reweight
+        [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]] 
+        [--config=CONFIG-PATH] [--binding=BINDING] [--dry-run]
 
 As an alternative to dropping and rebuilding the daily summaries, this action simply rebuilds the
 weighted daily sums (used to calculate averages) from the archive data. It does not touch the highs

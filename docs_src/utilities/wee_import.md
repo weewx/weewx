@@ -57,7 +57,7 @@ Options:
 wee_import will import data from an external source into a WeeWX
 archive. Daily summaries are updated as each archive record is
 imported so there should be no need to separately rebuild the daily
-summaries using the wee_database utility.
+summaries.
 ```
 
 ## Options

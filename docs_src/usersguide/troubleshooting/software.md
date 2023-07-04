@@ -156,7 +156,7 @@ sqlite> update archive set outTemp=NULL where outTemp > 1000;
 ```
 6. Delete the aggregate statistics so that WeeWX can regenerate them without the anomalies
 ``` bash
-sudo wee_database --drop-daily
+weectl database drop-daily
 ```
 7. Start WeeWX
 
