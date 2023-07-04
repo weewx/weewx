@@ -11,7 +11,7 @@ and easiest way to get up and running.
 * [Redhat](redhat) - Fedora, CentOS, Rocky
 * [SUSE](suse) - openSUSE
 
-The pypi installer will work on any operating system; use this approach for
+The pip installer will work on any operating system; use this approach for
 macOS or one of the BSDs, or if you are using an older operating system.
 This is also a good approach if you plan to do a lot of customization, or if
 you are developing a driver, skin, or other extension.

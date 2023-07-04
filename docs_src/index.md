@@ -27,7 +27,7 @@ WeeWX includes extensive documentation, and the WeeWX developers work hard to
 keep it relevant and up to date.  If you have questions, please consult the
 documentation first.
 
-### Quickstart
+### Quickstart installs
 * [Debian](quickstarts/debian) - including Ubuntu, Mint, Raspberry Pi OS, Devuan
 * [Redhat](quickstarts/redhat) - including Fedora, CentOS, Rocky
 * [SUSE](quickstarts/suse) - including openSUSE

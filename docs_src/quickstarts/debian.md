@@ -100,7 +100,7 @@ sudo apt install weewx
 The upgrade process will not modify the WeeWX databases.
 
 Unmodified files will be upgraded. If modifications have been made to the
-WeeWX configuration, you will be prompted as to whether you want to keep the
+WeeWX configuration, you will be prompted whether you want to keep the
 existing configuration or accept the new configuration. Either way, a copy of
 the option you did not choose will be saved.
 

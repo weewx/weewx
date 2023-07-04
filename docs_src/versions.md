@@ -8,7 +8,7 @@
 
 !!! Warning
     If you are upgrading from an old `setup.py` installation, see the
-    instructions <a href="https://github.com/weewx/weewx/wiki/v5-upgrade"><em>Migrating setup.py installs to Version 5.0</em></a>.
+    instructions [_Migrating setup.py installs to Version 5.0_](https://github.com/weewx/weewx/wiki/v5-upgrade).
 
 These are the instructions for upgrading WeeWX:
 
@@ -16,13 +16,13 @@ These are the instructions for upgrading WeeWX:
 * [Upgrading using Redhat RPM](../quickstarts/redhat/#upgrade)
 * [Upgrading using SUSE RPM](../quickstarts/suse/#upgrade)
 * [Upgrading using pip](../quickstarts/pip/#upgrade)
-* [Upgrading source](../quickstarts/source/#upgrade)
+* [Upgrading git repository](../quickstarts/git/#upgrade)
 
 
 ## Upgrading the WeeWX configuration file
 
 It does not happen very often, but occasionally a new release will
-<em>require</em> changes to the WeeWX configuration file. When this happens,
+_require_ changes to the WeeWX configuration file. When this happens,
 the installer takes care of upgrading the file, and you do not need to worry
 about it.
 
@@ -56,15 +56,23 @@ install it.
 
 ### setup.py installs no longer possible
 
-The package `distutils`, and the imperative approach on which the WeeWX `setup.py` install method depends, <a href="https://peps.python.org/pep-0632/">has been deprecated</a> and will ultimately be removed. The future is clearly pip installs using `pyproject.toml`. See the wiki article on <a href="https://github.com/weewx/weewx/wiki/Version-5">Version 5</a> for the technical reasons why.
+The package `distutils`, and the imperative approach on which the WeeWX `setup.py` install method
+depends, [has been deprecated](https://peps.python.org/pep-0632/) and will ultimately be
+removed. The future is clearly pip installs using `pyproject.toml`. See the wiki article on 
+[Version 5](https://github.com/weewx/weewx/wiki/Version-5) for the technical reasons why.
 
 ### pip installs to new location
 
-The default location for a `setup.py` install was `/home/weewx`. The new pip install method installs to a directory called `weewx-data` in home directory of the user doing the install. However, old installations can continue to use `/home/weewx` by following the guide <a href="https://github.com/weewx/weewx/wiki/v5-upgrade"><em>Migrating setup.py installs to Version 5.0</em></a>.
+The default location for a `setup.py` install was `/home/weewx`. The new pip install method
+installs to a directory called `weewx-data` in home directory of the user doing the install.
+However, old installations can continue to use `/home/weewx` by following the guide 
+[_Migrating setup.py installs to Version 5.0_](https://github.com/weewx/weewx/wiki/v5-upgrade).
 
 ### `SQLITE_ROOT` is now relative to `WEEWX_ROOT`
 
-Previously, `SQLITE_ROOT` was expected to be an absolute path, but now relative paths are accepted.  A relative path is considered relative to `WEEWX_ROOT`. Because this is <em>less restrictive</em>, it is not expected to affect any users.
+Previously, `SQLITE_ROOT` was expected to be an absolute path, but now relative paths are accepted.
+A relative path is considered relative to `WEEWX_ROOT`. Because this is _less restrictive_, it is
+not expected to affect any users.
 
 
 ## Upgrading to V4.10
