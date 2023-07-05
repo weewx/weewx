@@ -10,46 +10,49 @@ import weecfg.station_config
 import weewx
 from weeutil.weeutil import bcolors
 
-station_create_usage = f"""{bcolors.BOLD}weectl station create [--config=CONFIG-PATH]
-                             [--dist-config=DIST-CONFIG-PATH]
-                             [--driver=DRIVER]
-                             [--location=LOCATION]
-                             [--altitude=ALTITUDE,{{foot|meter}}]
-                             [--latitude=LATITUDE] [--longitude=LONGITUDE]
-                             [--register={{y,n}} [--station-url=STATION_URL]]
-                             [--units={{us,metricwx,metric}}]
-                             [--skin-root=SKIN_ROOT]
-                             [--sqlite-root=SQLITE_ROOT]
-                             [--html-root=HTML_ROOT]
-                             [--user-root=USER_ROOT]
-                             [--docs-root=DOCS_ROOT]
-                             [--examples-root=EXAMPLES_ROOT]
-                             [--no-prompt]
-                             [--dry-run]{bcolors.ENDC}
+station_create_usage = f"""{bcolors.BOLD}weectl station create
+            [--driver=DRIVER]
+            [--location=LOCATION]
+            [--altitude=ALTITUDE,(foot|meter)]
+            [--latitude=LATITUDE] [--longitude=LONGITUDE]
+            [--register=(y,n) [--station-url=STATION_URL]]
+            [--units=(us|metricwx|metric)]
+            [--skin-root=SKIN_ROOT]
+            [--sqlite-root=SQLITE_ROOT]
+            [--html-root=HTML_ROOT]
+            [--user-root=USER_ROOT]
+            [--docs-root=DOCS_ROOT]
+            [--examples-root=EXAMPLES_ROOT]
+            [--no-prompt]
+            [--config=CONFIG-PATH]
+            [--dist-config=DIST-CONFIG-PATH]
+            [--dry-run]{bcolors.ENDC}
 """
-station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure [--config=CONFIG-PATH] 
-                                  [--driver=DRIVER]
-                                  [--location=LOCATION]
-                                  [--altitude=ALTITUDE,{{foot|meter}}]
-                                  [--latitude=LATITUDE] [--longitude=LONGITUDE]
-                                  [--register={{y,n}} [--station-url=STATION_URL]]
-                                  [--units={{us,metricwx,metric}}]
-                                  [--skin-root=SKIN_ROOT]
-                                  [--sqlite-root=SQLITE_ROOT]
-                                  [--html-root=HTML_ROOT]
-                                  [--no-prompt]
-                                  [--no-backup]
-                                  [--dry-run]{bcolors.ENDC}
+station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure
+            [--driver=DRIVER]
+            [--location=LOCATION]
+            [--altitude=ALTITUDE,(foot|meter)]
+            [--latitude=LATITUDE] [--longitude=LONGITUDE]
+            [--register=(y,n) [--station-url=STATION_URL]]
+            [--units=(us|metricwx|metric)]
+            [--skin-root=SKIN_ROOT]
+            [--sqlite-root=SQLITE_ROOT]
+            [--html-root=HTML_ROOT]
+            [--no-backup]
+            [--no-prompt]
+            [--config=CONFIG-PATH] 
+            [--dry-run]{bcolors.ENDC}
 """
-station_upgrade_usage = f"""{bcolors.BOLD}weectl station upgrade [--config=CONFIG-PATH]
-                              [--dist-config=DIST-CONFIG-PATH]]
-                              [--docs-root=DOCS_ROOT]
-                              [--examples-root=EXAMPLES_ROOT]
-                              [--skin-root=SKIN_ROOT]
-                              [--what [{{config,docs,examples,util,skins}} ... ]
-                              [--no-prompt]
-                              [--no-backup]
-                              [--dry-run]{bcolors.ENDC}
+station_upgrade_usage = f"""{bcolors.BOLD}weectl station upgrade
+            [--docs-root=DOCS_ROOT]
+            [--examples-root=EXAMPLES_ROOT]
+            [--skin-root=SKIN_ROOT]
+            [--what (config|docs|examples|util|skins)...]
+            [--no-backup]
+            [--no-prompt]
+            [--config=CONFIG-PATH]
+            [--dist-config=DIST-CONFIG-PATH]]
+            [--dry-run]{bcolors.ENDC}
 """
 
 station_usage = '\n       '.join((station_create_usage, station_reconfigure_usage,
@@ -71,7 +74,7 @@ def add_subparser(subparsers):
     station_parser = subparsers.add_parser('station',
                                            usage=station_usage,
                                            description='Manages the user data area, including the '
-                                                       'configuration file and skins',
+                                                       'configuration file and skins.',
                                            help='Create, modify, or upgrade a user data area.')
     # In the following, the 'prog' argument is necessary to get a proper error message.
     # See Python issue https://bugs.python.org/issue42297
@@ -83,18 +86,8 @@ def add_subparser(subparsers):
     station_create_parser = action_parser.add_parser('create',
                                                      description=CREATE_DESCRIPTION,
                                                      usage=station_create_usage,
-                                                     help='Create a user data area, including a '
-                                                          'configuration file.')
-    station_create_parser.add_argument('--config',
-                                       metavar='CONFIG-PATH',
-                                       help=f'Path to configuration file. It must not already '
-                                            f'exist. Default is "{weecfg.default_config_path}".')
-    station_create_parser.add_argument('--dist-config',
-                                       metavar='DIST-CONFIG-PATH',
-                                       help='Use configuration file DIST-CONFIG-PATH as the '
-                                            'new configuration file. Default is to retrieve it '
-                                            'from package resources. The average user is '
-                                            'unlikely to need this option.')
+                                                     help='Create a new user data area, including '
+                                                          'a configuration file.')
     _add_common_args(station_create_parser)
     station_create_parser.add_argument('--user-root',
                                        help='Where to put the "user" directory, relative to '
@@ -107,6 +100,16 @@ def add_subparser(subparsers):
                                             'WEEWX_ROOT. Default is "examples".')
     station_create_parser.add_argument('--no-prompt', action='store_true',
                                        help='Do not prompt. Use default values.')
+    station_create_parser.add_argument('--config',
+                                       metavar='CONFIG-PATH',
+                                       help=f'Path to configuration file. It must not already '
+                                            f'exist. Default is "{weecfg.default_config_path}".')
+    station_create_parser.add_argument('--dist-config',
+                                       metavar='DIST-CONFIG-PATH',
+                                       help='Use configuration file DIST-CONFIG-PATH as the '
+                                            'new configuration file. Default is to retrieve it '
+                                            'from package resources. The average user is '
+                                            'unlikely to need this option.')
     station_create_parser.add_argument('--dry-run',
                                        action='store_true',
                                        help='Print what would happen, but do not actually '
@@ -119,15 +122,15 @@ def add_subparser(subparsers):
                                  usage=station_reconfigure_usage,
                                  help='Reconfigure a station configuration file.')
 
+    _add_common_args(station_reconfigure_parser)
+    station_reconfigure_parser.add_argument('--no-backup', action='store_true',
+                                            help='Do not backup the old configuration file.')
+    station_reconfigure_parser.add_argument('--no-prompt', action='store_true',
+                                            help='Do not prompt. Use default values.')
     station_reconfigure_parser.add_argument('--config',
                                             metavar='CONFIG-PATH',
                                             help=f'Path to configuration file. '
                                                  f'Default is "{weecfg.default_config_path}"')
-    _add_common_args(station_reconfigure_parser)
-    station_reconfigure_parser.add_argument('--no-prompt', action='store_true',
-                                            help='Do not prompt. Use default values.')
-    station_reconfigure_parser.add_argument('--no-backup', action='store_true',
-                                            help='Do not backup the old configuration file.')
     station_reconfigure_parser.add_argument('--dry-run',
                                             action='store_true',
                                             help='Print what would happen, but do not actually '
@@ -142,16 +145,6 @@ def add_subparser(subparsers):
                                  help='Upgrade any combination of the configuration file, docs, '
                                       'examples, daemon utility files, and skins.')
 
-    station_upgrade_parser.add_argument('--config',
-                                        metavar='CONFIG-PATH',
-                                        help=f'Path to configuration file. '
-                                             f'Default is "{weecfg.default_config_path}"')
-    station_upgrade_parser.add_argument('--dist-config',
-                                        metavar='DIST-CONFIG-PATH',
-                                        help='Use configuration file DIST-CONFIG-PATH as the '
-                                             'new configuration file. Default is to retrieve it '
-                                             'from package resources. The average user is '
-                                             'unlikely to need this option.')
     station_upgrade_parser.add_argument('--docs-root',
                                         help='Where to put the new documentation, relative to '
                                              'WEEWX_ROOT. Default is "docs".')
@@ -168,10 +161,20 @@ def add_subparser(subparsers):
                                         help='What to upgrade. Default is to upgrade the '
                                              'configuration file, documentation, examples, and '
                                              'daemon utility files.')
-    station_upgrade_parser.add_argument('--no-prompt', action='store_true',
-                                        help='Do not prompt. Use default values.')
     station_upgrade_parser.add_argument('--no-backup', action='store_true',
                                         help='Do not backup the old configuration file.')
+    station_upgrade_parser.add_argument('--no-prompt', action='store_true',
+                                        help='Do not prompt. Use default values.')
+    station_upgrade_parser.add_argument('--config',
+                                        metavar='CONFIG-PATH',
+                                        help=f'Path to configuration file. '
+                                             f'Default is "{weecfg.default_config_path}"')
+    station_upgrade_parser.add_argument('--dist-config',
+                                        metavar='DIST-CONFIG-PATH',
+                                        help='Use configuration file DIST-CONFIG-PATH as the '
+                                             'new configuration file. Default is to retrieve it '
+                                             'from package resources. The average user is '
+                                             'unlikely to need this option.')
     station_upgrade_parser.add_argument('--dry-run',
                                         action='store_true',
                                         help='Print what would happen, but do not actually '

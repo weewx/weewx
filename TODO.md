@@ -12,11 +12,7 @@ install instructions should become
 
 - Lot of inconsistencies in how the path to the config file is handled. Some utilities accept a
   command line option, others require `--config=`.
-- "Usage" strings are inconsistent between the commands. 
-  E.g., compare `weectl station --help` with `weectl database --help`. We should follow
-  `docopt` http://docopt.org/
-- Change `weectl station` and `weectl extension` documentation to follow
-  the style of `weectl database`.
+- Finish changing `weectl station` documentation to follow the style of `weectl database`.
 - Allow rebuild daily summaries for only selected types.
 - Check semantics of specifying a time for `--from` and/or `--to` 
   in `weectl database calc-missing`.
