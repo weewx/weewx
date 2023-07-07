@@ -253,6 +253,12 @@ class TWxUtils(object):
             geopElevationM = TWxUtils.GeopotentialAltitude(elevationM)
             Result = Exp(geopElevationM * 6.1454E-2 / (CToF(meanTempC) + 459.7 + (geopElevationM * TWxUtils.manBarLapseRate / 2) + hCorr))
 
+        elif algorithm == 'paDWD':
+            # German Weather Service DWD
+            # https://www.dwd.de/DE/leistungen/pbfb_verlag_vub/pdf_einzelbaende/vub_2_binaer_barrierefrei.pdf?__blob=publicationFile&v=4
+            vp = TWxUtils.ActualVaporPressure(currentTempC,humidity,'vaDWD')
+            Result = math.exp(TWxUtils.gravity/TWxUtils.gasConstantAir*elevationM/(CToK(currentTempC)+vp*0.12+TWxUtils.standardLapseRate*elevationM/2))
+
         else:
             raise ValueError("Unknown PressureReductionRatio algorithm '%s'" %
                              algorithm)
@@ -291,6 +297,10 @@ class TWxUtils(object):
             # Magnus Teten
             # www.vivoscuola.it/US/RSIGPP3202/umidita/attivita/relhumONA.htm
             Result = 6.1078 * Power(10, (7.5 * tempC / (tempC + 237.3)))
+        elif algorithm == 'vaDWD':
+            # German Weather Service DWD
+            # https://www.dwd.de/DE/leistungen/pbfb_verlag_vub/pdf_einzelbaende/vub_2_binaer_barrierefrei.pdf?__blob=publicationFile&v=4
+            Result = 6.11213*math.exp(17.5043*tempC/(241.2+tempC))
         else:
             raise ValueError("Unknown SaturationVaporPressure algorithm '%s'" %
                              algorithm)

@@ -18,6 +18,7 @@ import weewx.wxformulas
 import weewx.xtypes
 from weeutil.weeutil import to_int, to_float, to_bool
 from weewx.units import ValueTuple, mps_to_mph, kph_to_mph, METER_PER_FOOT, CtoF
+import weewx.uwxutils
 
 log = logging.getLogger(__name__)
 
@@ -407,8 +408,13 @@ class PressureCooker(weewx.xtypes.XType):
             return self.altimeter(record)
         elif key == 'barometer':
             return self.barometer(record)
-        else:
-            raise weewx.UnknownType(key)
+        elif key.startswith('barometer'):
+            algorithm = key[9:]
+            if algorithm:
+                if not algorithm.startswith('pa'):
+                    algorithm = 'pa'+algorithm
+                return self.barometer(record, dbmanager, algorithm)
+        raise weewx.UnknownType(key)
 
     def pressure(self, record, dbmanager):
         """Calculate the observation type 'pressure'."""
@@ -466,7 +472,7 @@ class PressureCooker(weewx.xtypes.XType):
 
         return ValueTuple(altimeter, u, 'group_pressure')
 
-    def barometer(self, record):
+    def barometer(self, record, dbmanager=None, algorithm=None):
         """Calculate the observation type 'barometer'"""
 
         if 'pressure' not in record or 'outTemp' not in record:
@@ -474,6 +480,22 @@ class PressureCooker(weewx.xtypes.XType):
 
         # Convert altitude to same unit system of the incoming record
         altitude = weewx.units.convertStd(self.altitude_vt, record['usUnits'])
+        
+        if algorithm is not None:
+            if record['usUnits'] == weewx.US:
+                formula = weewx.uwxutils.TWxUtilsUS.StationToSeaLevelPressure
+                u = 'inHg'
+            else:
+                formula = weewx.uwxutils.TWxUtils.StationToSeaLevelPressure
+                u = 'mbar'
+            temp_12h_vt = self._get_temperature_12h(record['dateTime'], dbmanager)
+            temp_12h = weewx.units.convertStd(temp_12h_vt,record['usUnits'])[0]
+            meanTemp = (record['outTemp']+temp_12h)/2.0
+            try:
+                barometer = formula(record['pressure'],altitude[0],record['outTemp'],meanTemp,record.get('outHumidity',50.0),algorithm)
+            except ValueError as e:
+                raise weewx.UnknownType(str(e))
+            return ValueTuple(barometer, u, 'group_pressure')
 
         # Figure out what barometer formula to use:
         if record['usUnits'] == weewx.US:
