@@ -109,6 +109,10 @@ obs_group_dict = ListOfDicts({
     "appTemp"                   : "group_temperature",
     "appTemp1"                  : "group_temperature",
     "barometer"                 : "group_pressure",
+    "barometerDWD"              : "group_pressure",
+    "barometerManBar"           : "group_pressure",
+    "barometerDavisVp"          : "group_pressure",
+    "barometerUnivie"           : "group_pressure",
     "barometerRate"             : "group_pressurerate",
     "beaufort"                  : "group_count",           # DEPRECATED
     "cloudbase"                 : "group_altitude",
