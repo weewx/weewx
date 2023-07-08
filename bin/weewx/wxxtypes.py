@@ -385,7 +385,7 @@ class PressureCooker(weewx.xtypes.XType):
         # or we don't have a usable temperature, or the old temperature is too stale.
         if self.ts_12h is None \
                 or self.temp_12h_vt is None \
-                or abs(self.ts_12h - ts_12h) < self.max_delta_12h:
+                or abs(self.ts_12h - ts_12h) > self.max_delta_12h:
             # Hit the database to get a newer temperature.
             record = dbmanager.getRecord(ts_12h, max_delta=self.max_delta_12h)
             if record and 'outTemp' in record:
