@@ -86,6 +86,9 @@ obey local formatting conventions (in particular, decimal separators). To
 avoid breaking old skins, these properties now have new names. For example,
 use `$almanac.venus.altitude` instead of `$almanac.venus.alt`. 
 
+Fix problem that prevented database from getting hit when calculating 
+`pressure`. Fixes issue #875.
+
 
 ### 4.10.2 02/22/2023
 
