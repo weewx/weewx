@@ -8,6 +8,10 @@ install instructions should become
 
     echo "deb [arch=all] http://weewx.com/apt/python3 stable main" | sudo tee /etc/apt/sources.list.d/weewx.list
 
+## Pip packaging
+
+When doing `weectl station create`, install everything under the `util` subdirectory.
+
 ## Utilities
 
 - Lot of inconsistencies in how the path to the config file is handled. Some utilities accept a
