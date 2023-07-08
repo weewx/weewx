@@ -155,6 +155,7 @@ class TestPressureCooker(unittest.TestCase):
             mock_mgr.assert_called_once_with(self.record['dateTime'] - 12 * 3600, max_delta=1800)
             self.assertEqual(t, (80.3, 'degree_F', 'group_temperature'))
 
+        pc = weewx.wxxtypes.PressureCooker(altitude_vt)
         # Mock a database in METRICWX units
         with mock.patch.object(db_manager, 'getRecord',
                                return_value={'usUnits': weewx.METRICWX,
@@ -163,6 +164,7 @@ class TestPressureCooker(unittest.TestCase):
             mock_mgr.assert_called_once_with(self.record['dateTime'] - 12 * 3600, max_delta=1800)
             self.assertEqual(t, (30.0, 'degree_C', 'group_temperature'))
 
+        pc = weewx.wxxtypes.PressureCooker(altitude_vt)
         # Mock a database missing a record from 12h ago
         with mock.patch.object(db_manager, 'getRecord',
                                return_value=None) as mock_mgr:
@@ -170,6 +172,7 @@ class TestPressureCooker(unittest.TestCase):
             mock_mgr.assert_called_once_with(self.record['dateTime'] - 12 * 3600, max_delta=1800)
             self.assertEqual(t, None)
 
+        pc = weewx.wxxtypes.PressureCooker(altitude_vt)
         # Mock a database that has a record from 12h ago, but it's missing outTemp
         with mock.patch.object(db_manager, 'getRecord',
                                return_value={'usUnits': weewx.METRICWX}) as mock_mgr:
