@@ -153,16 +153,34 @@ class TestPressureCooker(unittest.TestCase):
             t = pc._get_temperature_12h(self.record['dateTime'], db_manager)
             # Make sure the mocked database manager got called with a time 12h ago
             mock_mgr.assert_called_once_with(self.record['dateTime'] - 12 * 3600, max_delta=1800)
+            # The results should be in US units
             self.assertEqual(t, (80.3, 'degree_F', 'group_temperature'))
 
+        # Make sure the value has been cached:
+        with mock.patch.object(db_manager, 'getRecord',
+                               return_value={'usUnits': weewx.US, 'outTemp': 80.3}) as mock_mgr:
+            t = pc._get_temperature_12h(self.record['dateTime'], db_manager)
+            # The cached value should have been used
+            mock_mgr.assert_not_called()
+            self.assertEqual(t, (80.3, 'degree_F', 'group_temperature'))
+
+    def test_get_temperature_12h_metric(self):
+        pc = weewx.wxxtypes.PressureCooker(altitude_vt)
+
         # Mock a database in METRICWX units
+        db_manager = mock.Mock()
         with mock.patch.object(db_manager, 'getRecord',
                                return_value={'usUnits': weewx.METRICWX,
                                              'outTemp': 30.0}) as mock_mgr:
             t = pc._get_temperature_12h(self.record['dateTime'], db_manager)
+            # Make sure the mocked database manager got called with a time 12h ago
             mock_mgr.assert_called_once_with(self.record['dateTime'] - 12 * 3600, max_delta=1800)
             self.assertEqual(t, (30.0, 'degree_C', 'group_temperature'))
 
+    def test_get_temperature_12h_missing(self):
+        pc = weewx.wxxtypes.PressureCooker(altitude_vt)
+
+        db_manager = mock.Mock()
         # Mock a database missing a record from 12h ago
         with mock.patch.object(db_manager, 'getRecord',
                                return_value=None) as mock_mgr:

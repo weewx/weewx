@@ -374,8 +374,8 @@ class PressureCooker(weewx.xtypes.XType):
         self.temp_12h_vt = None
 
     def _get_temperature_12h(self, ts, dbmanager):
-        """Get the temperature as a ValueTuple from 12 hours ago.  The value will
-         be None if no temperature is available.
+        """Get the temperature as a ValueTuple from 12 hours ago. The ValueTuple will use the same
+         unit system as the database. The value will be None if no temperature is available.
          """
 
         ts_12h = ts - 12 * 3600
