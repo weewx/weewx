@@ -374,7 +374,10 @@ class AlmanacBinder(object):
     body to be observed."""
 
     pyephem_map = {'azimuth': 'az', 'altitude': 'alt', 'astro_ra': 'a_ra', 'astro_dec': 'a_dec',
-                   'geo_ra': 'g_ra', 'geo_dec': 'g_dec', 'topo_ra': 'ra', 'topo_dec': 'dec'}
+                   'geo_ra': 'g_ra', 'topo_ra': 'ra', 'geo_dec': 'g_dec','topo_dec': 'dec',
+                   'elongation':'elong', 'radius_size': 'radius',
+                   'hlongitude': 'hlon', 'hlatitude': 'hlat',
+                   'sublatitude': 'sublat', 'sublongitude': 'sublong'}
 
     def __init__(self, almanac, heavenly_body):
         self.almanac = almanac
@@ -483,15 +486,14 @@ class AlmanacBinder(object):
             # V5.0 changed the name of some attributes, so they could be returned as
             # a ValueHelper, instead of a floating point number. This would break existing skins,
             # so new attribute names are being used.
-            if attr in {'azimuth', 'altitude', 'astro_ra', 'astro_dec',
-                        'geo_ra', 'geo_dec', 'topo_ra', 'topo_dec', 'elong', 'radius',
-                        'hlon', 'hlat', 'sublat', 'sublong'}:
+            if attr in AlmanacBinder.pyephem_map:
                 # Map the name to the name pyephem uses...
-                pyephem_name = AlmanacBinder.pyephem_map.get(attr, attr)
+                pyephem_name = AlmanacBinder.pyephem_map[attr]
                 # ... then calculate the value in radians ...
                 val = getattr(ephem_body, pyephem_name)
                 # ... form the proper ValueTuple ...
-                if attr in {'azimuth', 'astro_ra', 'geo_ra', 'topo_ra', 'hlon', 'sublong'}:
+                if attr in {'azimuth', 'astro_ra', 'geo_ra', 'topo_ra',
+                            'hlongitude', 'sublongitude'}:
                     vt = ValueTuple(math.degrees(val), 'degree_compass', 'group_direction')
                 else:
                     vt = ValueTuple(val, 'radian', 'group_angle')
@@ -500,7 +502,11 @@ class AlmanacBinder(object):
                                                context="ephem_day",
                                                formatter=self.almanac.formatter,
                                                converter=self.almanac.converter)
-            elif attr in {'az', 'alt', 'a_ra', 'a_dec', 'g_ra', 'ra', 'g_dec', 'dec',}:
+            elif attr in {'az', 'alt', 'a_ra', 'a_dec',
+                          'g_ra', 'ra', 'g_dec', 'dec',
+                          'elong', 'radius',
+                          'hlong', 'hlat',
+                          'sublat', 'sublong'}:
                 # These are the old names, which return a floating point number in decimal degrees.
                 return math.degrees(getattr(ephem_body, attr))
             elif attr == 'moon_fullness':

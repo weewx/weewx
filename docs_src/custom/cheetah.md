@@ -1499,7 +1499,7 @@ The `[Texts]` section of the language file should then contain a subsection for 
 
 ## Almanac
 
-If module [pyephem](https://rhodesmill.org/pyephem) has been installed, then WeeWX can generate extensive almanac information for the Sun, Moon, Venus, Mars, Jupiter, and other heavenly bodies, including their rise, transit and set times, as well as their azimuth and altitude. Other information is also available.
+If module [`ephem`](https://rhodesmill.org/pyephem) has been installed, then WeeWX can generate extensive almanac information for the Sun, Moon, Venus, Mars, Jupiter, and other heavenly bodies, including their rise, transit and set times, as well as their azimuth and altitude. Other information is also available.
 
 Here is an example template:
 
@@ -1517,7 +1517,7 @@ Current time is $current.dateTime
 #end if
 ```
 
-If pyephem is installed this would result in:
+If `ephem` is installed this would result in:
 
 <div class="example_output">
 Current time is 03-Sep-2010 11:00
@@ -1630,7 +1630,7 @@ or
 
     $almanac.sun.transit
 
-To accurately calculate these times, WeeWX automatically uses the present temperature and pressure to calculate refraction effects. However, you can override these values, which will be necessary if you wish to match the almanac times published by the Naval Observatory [as explained in the pyephem documentation](https://rhodesmill.org/pyephem/rise-set.html). For example, to match the sunrise time as published by the Observatory, instead of
+To accurately calculate these times, WeeWX automatically uses the present temperature and pressure to calculate refraction effects. However, you can override these values, which will be necessary if you wish to match the almanac times published by the Naval Observatory [as explained in the PyEphem documentation](https://rhodesmill.org/pyephem/rise-set.html). For example, to match the sunrise time as published by the Observatory, instead of
 
     $almanac.sun.rise
 
@@ -1670,67 +1670,122 @@ _`heavenly_body`_ tag. All the planets and many stars are in the
 list.
 
 The possible values for the _`attribute`_ tag are listed in the
-following table:
+following table, along with the corresponding name used in the PyEphem documentation.
 
 <table class="indent" style="width: 80%">
-    <caption>Attributes that can be used with heavenly bodies
-    </caption>
-    <tbody class="code">
-    <tr>
+    <caption>Attributes that can be used with heavenly bodies</caption>
+    <tbody>
+    <tr class="first_row">
+        <td>WeeWX name</td>
+        <td>PyEphem name</td>
+    </tr>
+    <tr class="code">
         <td>azimuth</td>
+        <td>az</td>
+    </tr>
+    <tr class="code">
         <td>altitude</td>
+        <td>alt</td>
     </tr>
-    <tr>
+    <tr class="code">
         <td>astro_ra</td>
+        <td>a_ra</td>
+    </tr>
+    <tr class="code">
         <td>astro_dec</td>
+        <td>a_dec</td>
     </tr>
-    <tr>
+    <tr class="code">
         <td>geo_ra</td>
+        <td>g_ra</td>
+    </tr>
+    <tr class="code">
         <td>topo_ra</td>
+        <td>ra</td>
     </tr>
-    <tr>
+    <tr class="code">
         <td>geo_dec</td>
-        <td>topo_dec</td>
+        <td>g_dec</td>
     </tr>
-    <tr>
+    <tr class="code">
+        <td>topo_dec</td>
+        <td>dec</td>
+    </tr>
+    <tr class="code">
+        <td>elongation</td>
         <td>elong</td>
+    </tr>
+    <tr class="code">
+        <td>radius_size</td>
         <td>radius</td>
     </tr>
-    <tr>
+    <tr class="code">
+        <td>hlongitude</td>
         <td>hlon</td>
+    </tr>
+    <tr class="code">
+        <td>hlatitude</td>
         <td>hlat</td>
     </tr>
-    <tr>
+    <tr class="code">
+        <td>sublatitude</td>
         <td>sublat</td>
-        <td>sublong</td>
     </tr>
-    <tr>
+    <tr class="code">
+        <td>sublongitude</td>
+        <td>sublon</td>
+    </tr>
+    <tr class="code">
         <td>next_rising</td>
+        <td>next_rising</td>
+    </tr>
+    <tr class="code">
+        <td>next_setting</td>
         <td>next_setting</td>
     </tr>
-    <tr>
+    <tr class="code">
         <td>next_transit</td>
+        <td>next_transit</td>
+    </tr>
+    <tr class="code">
+        <td>next_antitransit</td>
         <td>next_antitransit</td>
     </tr>
-    <tr>
+    <tr class="code">
         <td>previous_rising</td>
+        <td>previous_rising</td>
+    </tr>
+    <tr class="code">
+        <td>previous_setting</td>
         <td>previous_setting</td>
     </tr>
-    <tr>
+    <tr class="code">
         <td>previous_transit</td>
+        <td>previous_transit</td>
+    </tr>
+    <tr class="code">
+        <td>previous_antitransit</td>
         <td>previous_antitransit</td>
     </tr>
-    <tr>
+    <tr class="code">
         <td>rise</td>
+        <td>next_rising</td>
+    </tr>
+    <tr class="code">
         <td>set</td>
+        <td>next_setting</td>
     </tr>
-    <tr>
+    <tr class="code">
         <td>transit</td>
-        <td>visible</td>
+        <td>next_transit</td>
     </tr>
     <tr>
-        <td>visible_change</td>
-        <td> </td>
+        <td class="code">visible</td>
+        <td>N/A</td>
+    </tr>
+    <tr>
+        <td class="code">visible_change</td>
+        <td>N/A</td>
     </tr>
     </tbody>
 </table>
@@ -1773,7 +1828,7 @@ visited by a spacecraft. Here is the process:
     ```
 
     This does two things: it adds orbital information about *433 Eros*
-    to the internal pyephem database, and it makes that data available
+    to the internal PyEphem database, and it makes that data available
     under the name `Eros` (note the capital letter).
 
 2.  You can then use *433 Eros* like any other body in your templates.
