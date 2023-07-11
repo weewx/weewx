@@ -613,6 +613,7 @@ def copy_util(config_path, config_dict, dry_run=False):
     weewxd_path = weewxd.__file__
     username = getpass.getuser()
     groupname = grp.getgrgid(os.getgid()).gr_name
+    weewx_root = config_dict['WEEWX_ROOT']
     # This is the set of substitutions to be performed. The key is a regular expression. If a
     # match is found, the value will be substituted for the matched expression.
     re_dict = {
@@ -638,13 +639,15 @@ def copy_util(config_path, config_dict, dry_run=False):
         r"<string>/Users/Shared/weewx/bin/weewxd</string>": rf"<string>{weewxd_path}<//string>",
         # For macOS:
         r"<string>/Users/Shared/weewx/weewx.conf</string>": rf"<string>{config_path}<//string>",
+        # For Apache
+        r"/home/weewx/public_html": rf"{os.path.join(weewx_root, 'public_html')}",
     }
     # Convert to a list of two-way tuples.
     re_list = [(re.compile(key), re_dict[key]) for key in re_dict]
 
     with weeutil.weeutil.path_to_resource('wee_resources', 'util') as util_resources:
         dstdir = os.path.join(config_dict['WEEWX_ROOT'], 'util')
-        print(f"Creating daemon utility files in {dstdir}.")
+        print(f"Creating utility files in {dstdir}.")
         if not dry_run:
             _process_files(util_resources, dstdir, re_list)
 
