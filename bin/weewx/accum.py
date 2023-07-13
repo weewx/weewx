@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -104,31 +104,84 @@ accum_dict = ListOfDicts(defaults_dict['Accumulator'].dict())
 
 
 class OutOfSpan(ValueError):
-    """Raised when attempting to add a record outside of the timespan held by an accumulator"""
+    """Raised when attempting to add a record outside the timespan held by an accumulator"""
+
+
+# ===============================================================================
+#                             FirstLastAccum
+# ===============================================================================
+
+class FirstLastAccum(object):
+    """Minimal accumulator, suitable for strings.
+    It can only return the first and last value it has seen, along with their timestamps.
+    """
+
+    default_init = (None, None, None, None, 0.0, 0, 0.0, 0)
+
+    def __init__(self, stats_tuple=None):
+        self.first = None
+        self.firsttime = None
+        self.last = None
+        self.lasttime = None
+
+    def setStats(self, stats_tuple=None):
+        pass
+
+    def getStatsTuple(self):
+        """Return a stats-tuple. That is, a tuple containing the gathered statistics.
+        This tuple can be used to update the stats database"""
+        return FirstLastAccum.default_init
+
+    def mergeHiLo(self, x_stats):
+        """Merge the highs and lows of another accumulator into myself."""
+        if x_stats.firsttime is not None:
+            if self.firsttime is None or x_stats.firsttime < self.firsttime:
+                self.firsttime = x_stats.firsttime
+                self.first = x_stats.first
+        if x_stats.lasttime is not None:
+            if self.lasttime is None or x_stats.lasttime >= self.lasttime:
+                self.lasttime = x_stats.lasttime
+                self.last = x_stats.last
+
+    def mergeSum(self, x_stats):
+        """Merge the count of another accumulator into myself."""
+        pass
+
+    def addHiLo(self, val, ts):
+        """Include a value in my stats.
+        val: A value of almost any type.
+        ts:  The timestamp.
+        """
+        if val is not None:
+            if self.firsttime is None or ts < self.firsttime:
+                self.first = val
+                self.firsttime = ts
+            if self.lasttime is None or ts >= self.lasttime:
+                self.last = val
+                self.lasttime = ts
+
+    def addSum(self, val, weight=1):
+        """Add a scalar value to my running count."""
+        pass
 
 
 # ===============================================================================
 #                             ScalarStats
 # ===============================================================================
 
-class ScalarStats(object):
-    """Accumulates statistics (min, max, average, etc.) for a scalar value.
-    
-    Property 'last' is the last non-None value seen. Property 'lasttime' is
-    the time it was seen. """
-
-    default_init = (None, None, None, None, 0.0, 0, 0.0, 0)
+class ScalarStats(FirstLastAccum):
+    """Accumulates statistics (min, max, average, etc.) for a scalar value."""
 
     def __init__(self, stats_tuple=None):
+        # Call my superclass's version
+        FirstLastAccum.__init__(self, stats_tuple)
         self.setStats(stats_tuple)
-        self.last = None
-        self.lasttime = None
 
     def setStats(self, stats_tuple=None):
         (self.min, self.mintime,
          self.max, self.maxtime,
          self.sum, self.count,
-         self.wsum, self.sumtime) = stats_tuple if stats_tuple else ScalarStats.default_init
+         self.wsum, self.sumtime) = stats_tuple if stats_tuple else FirstLastAccum.default_init
 
     def getStatsTuple(self):
         """Return a stats-tuple. That is, a tuple containing the gathered statistics.
@@ -138,6 +191,10 @@ class ScalarStats(object):
 
     def mergeHiLo(self, x_stats):
         """Merge the highs and lows of another accumulator into myself."""
+
+        # Call my superclass's version
+        FirstLastAccum.mergeHiLo(self, x_stats)
+
         if x_stats.min is not None:
             if self.min is None or x_stats.min < self.min:
                 self.min = x_stats.min
@@ -146,10 +203,6 @@ class ScalarStats(object):
             if self.max is None or x_stats.max > self.max:
                 self.max = x_stats.max
                 self.maxtime = x_stats.maxtime
-        if x_stats.lasttime is not None:
-            if self.lasttime is None or x_stats.lasttime >= self.lasttime:
-                self.lasttime = x_stats.lasttime
-                self.last = x_stats.last
 
     def mergeSum(self, x_stats):
         """Merge the sum and count of another accumulator into myself."""
@@ -162,6 +215,9 @@ class ScalarStats(object):
         """Include a scalar value in my highs and lows.
         val: A scalar value
         ts:  The timestamp. """
+
+        # Call my superclass's version:
+        FirstLastAccum.addHiLo(self, val, ts)
 
         # If necessary, convert to float. Be prepared to catch an exception if not possible.
         try:
@@ -177,9 +233,6 @@ class ScalarStats(object):
             if self.max is None or val > self.max:
                 self.max = val
                 self.maxtime = ts
-            if self.lasttime is None or ts >= self.lasttime:
-                self.last = val
-                self.lasttime = ts
 
     def addSum(self, val, weight=1):
         """Add a scalar value to my running sum and count."""
@@ -201,6 +254,10 @@ class ScalarStats(object):
     def avg(self):
         return self.wsum / self.sumtime if self.count else None
 
+
+# ===============================================================================
+#                             VecStats
+# ===============================================================================
 
 class VecStats(object):
     """Accumulates statistics for a vector value.
@@ -345,66 +402,6 @@ class VecStats(object):
             return _result
         # Return the last known direction when our vector sum is 0
         return self.last[1]
-
-
-# ===============================================================================
-#                             FirstLastAccum
-# ===============================================================================
-
-class FirstLastAccum(object):
-    """Minimal accumulator, suitable for strings.
-    It can only return the first and last strings it has seen, along with their timestamps.
-    """
-
-    default_init = (None, None, None, None)
-
-    def __init__(self, stats_tuple=None):
-        self.first = None
-        self.firsttime = None
-        self.last = None
-        self.lasttime = None
-
-    def setStats(self, stats_tuple=None):
-        self.first, self.firsttime, self.last, self.lasttime = stats_tuple \
-            if stats_tuple else FirstLastAccum.default_init
-
-    def getStatsTuple(self):
-        """Return a stats-tuple. That is, a tuple containing the gathered statistics.
-        This tuple can be used to update the stats database"""
-        return self.first, self.firsttime, self.last, self.lasttime
-
-    def mergeHiLo(self, x_stats):
-        """Merge the highs and lows of another accumulator into myself."""
-        if x_stats.firsttime is not None:
-            if self.firsttime is None or x_stats.firsttime < self.firsttime:
-                self.firsttime = x_stats.firsttime
-                self.first = x_stats.first
-        if x_stats.lasttime is not None:
-            if self.lasttime is None or x_stats.lasttime >= self.lasttime:
-                self.lasttime = x_stats.lasttime
-                self.last = x_stats.last
-
-    def mergeSum(self, x_stats):
-        """Merge the count of another accumulator into myself."""
-        pass
-
-    def addHiLo(self, val, ts):
-        """Include a value in my stats.
-        val: A value of almost any type. It will be converted to a string before being accumulated.
-        ts:  The timestamp.
-        """
-        if val is not None:
-            string_val = val
-            if self.firsttime is None or ts < self.firsttime:
-                self.first = string_val
-                self.firsttime = ts
-            if self.lasttime is None or ts >= self.lasttime:
-                self.last = string_val
-                self.lasttime = ts
-
-    def addSum(self, val, weight=1):
-        """Add a scalar value to my running count."""
-        pass
 
 
 # ===============================================================================

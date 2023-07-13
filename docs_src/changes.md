@@ -89,6 +89,9 @@ use `$almanac.venus.altitude` instead of `$almanac.venus.alt`.
 Fix problem that prevented database from getting hit when calculating 
 `pressure`. Fixes issue #875.
 
+Fix problem that caused crashes with `firstlast` accumulator type.
+Fixes issue #876.
+
 
 ### 4.10.2 02/22/2023
 

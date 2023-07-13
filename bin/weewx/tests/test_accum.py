@@ -46,9 +46,10 @@ class StatsTest(unittest.TestCase):
                     tmin = record['outTemp']
                     tmintime = record['dateTime']
 
-            # Every once in a while, try to insert a string.
+            # Every once in a while, try to insert a string. How often should not be divisible into
+            # the number of records, otherwise the last value will be a string.
             N += 1
-            if N % 20 == 0 and record['outTemp'] is not None:
+            if N % 17 == 0 and record['outTemp'] is not None:
                 record['outTemp'] = str(record['outTemp'])
 
             ss.addHiLo(record['outTemp'], record['dateTime'])
