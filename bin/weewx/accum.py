@@ -580,6 +580,9 @@ class Accum(dict):
     def extract_sum(self, record, obs_type):
         record[obs_type] = self[obs_type].sum if self[obs_type].count else None
 
+    def extract_first(self, record, obs_type):
+        record[obs_type] = self[obs_type].first
+
     def extract_last(self, record, obs_type):
         record[obs_type] = self[obs_type].last
 
@@ -654,6 +657,7 @@ MERGE_FUNCTIONS = {
 EXTRACT_FUNCTIONS = {
     'avg': Accum.extract_avg,
     'count': Accum.extract_count,
+    'first' : Accum.extract_first,
     'last': Accum.extract_last,
     'max': Accum.extract_max,
     'min': Accum.extract_min,
