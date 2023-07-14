@@ -35,19 +35,19 @@ class TimeBinder(object):
                  **option_dict):
         """Initialize an instance of DatabaseBinder.
 
-        db_lookup: A function with call signature db_lookup(data_binding), which returns a database
-        manager and where data_binding is an optional binding name. If not given, then a default
-        binding will be used.
-
-        report_time: The time for which the report should be run.
-
-        formatter: An instance of weewx.units.Formatter() holding the formatting information to be
-        used. [Optional. If not given, the default Formatter will be used.]
-
-        converter: An instance of weewx.units.Converter() holding the target unit information to be
-        used. [Optional. If not given, the default Converter will be used.]
-
-        option_dict: Other options which can be used to customize calculations. [Optional.]
+        Args:
+            db_lookup (function|None): A function with call signature db_lookup(data_binding),
+                which returns a database manager and where data_binding is an optional binding
+                name. If not given, then a default binding will be used.
+            report_time(float): The time for which the report should be run.
+            formatter (weewx.units.Formatter|None): An instance of weewx.units.Formatter() holding
+                the formatting information to be used. [Optional. If not given, the default
+                Formatter will be used.]
+            converter (weewx.units.Converter|None): An instance of weewx.units.Converter() holding
+                the target unit information to be used. [Optional. If not given, the default
+                Converter will be used.]
+            option_dict (dict|None): Other options which can be used to customize calculations.
+                [Optional.]
         """
         self.db_lookup = db_lookup
         self.report_time = report_time
@@ -318,26 +318,25 @@ class ObservationBinder(object):
                  **option_dict):
         """ Initialize an instance of ObservationBinder
 
-        obs_type: A string with the stats type (e.g., 'outTemp') for which the query is to be done.
-
-        timespan: An instance of TimeSpan holding the time period over which the query is to be run
-
-        db_lookup: A function with call signature db_lookup(data_binding), which returns a database
-        manager and where data_binding is an optional binding name. If not given, then a default
-        binding will be used.
-
-        data_binding: If non-None, then use this data binding.
-
-        context: A tag name for the timespan. This is something like 'current', 'day', 'week', etc.
-        This is used to find an appropriate label, if necessary.
-
-        formatter: An instance of weewx.units.Formatter() holding the formatting information to be
-        used. [Optional. If not given, the default Formatter will be used.]
-
-        converter: An instance of weewx.units.Converter() holding the target unit information to be
-        used. [Optional. If not given, the default Converter will be used.]
-
-        option_dict: Other options which can be used to customize calculations. [Optional.]
+        Args:
+            obs_type (str): A string with the stats type (e.g., 'outTemp') for which the query is
+                to be done.
+            timespan (weeutil.weeutil.TimeSpan): An instance of TimeSpan holding the time period
+                over which the query is to be run.
+            db_lookup (function|None): A function with call signature db_lookup(data_binding),
+                which returns a database manager and where data_binding is an optional binding
+                name. If not given, then a default binding will be used.
+            data_binding (str): If non-None, then use this data binding.
+            context (str): A tag name for the timespan. This is something like 'current', 'day',
+                'week', etc. This is used to find an appropriate label, if necessary.
+            formatter (weewx.units.Formatter|None): An instance of weewx.units.Formatter() holding
+                the formatting information to be used. [Optional. If not given, the default
+                Formatter will be used.]
+            converter (weewx.units.Converter|None): An instance of weewx.units.Converter() holding
+                the target unit information to be used. [Optional. If not given, the default
+                Converter will be used.]
+            option_dict (dict|None): Other options which can be used to customize calculations.
+                [Optional.]
         """
 
         self.obs_type = obs_type
@@ -352,14 +351,17 @@ class ObservationBinder(object):
     def __getattr__(self, aggregate_type):
         """Use the specified aggregation type
 
-        aggregate_type: The type of aggregation over which the summary is to be done. This is
-        normally something like 'sum', 'min', 'mintime', 'count', etc. However, there are two
-        special aggregation types that can be used to determine the existence of data:
-          'exists':   Return True if the observation type exists in the database.
-          'has_data': Return True if the type exists and there is a non-zero number of entries over
-                      the aggregation period.
+        Args:
+            aggregate_type(str): The type of aggregation over which the summary is to be done.
+                This is normally something like 'sum', 'min', 'mintime', 'count', etc. However,
+                there are two special aggregation types that can be used to determine the
+                existence of data:
+                    'exists':   Return True if the observation type exists in the database.
+                    'has_data': Return True if the type exists and there is a non-zero number of
+                        entries over the aggregation period.
 
-        returns: An instance of AggTypeBinder, which is bound to the aggregation type.
+        Returns:
+             AggTypeBinder: An instance of AggTypeBinder, which is bound to the aggregation type.
         """
         if aggregate_type in IGNORE_ATTR:
             raise AttributeError(aggregate_type)
@@ -476,11 +478,6 @@ class AggTypeBinder(object):
         """Need a string representation. Force the query, return as string."""
         vh = self._do_query()
         return str(vh)
-
-    def __unicode__(self):
-        """Used only Python 2. Force the query, return as a unicode string."""
-        vh = self._do_query()
-        return unicode(vh)
 
     def _do_query(self):
         """Run a query against the databases, using the given aggregation type."""

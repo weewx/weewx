@@ -646,7 +646,7 @@ def copy_util(config_path, config_dict, dry_run=False):
     re_list = [(re.compile(key), re_dict[key]) for key in re_dict]
 
     with weeutil.weeutil.path_to_resource('wee_resources', 'util') as util_resources:
-        dstdir = os.path.join(config_dict['WEEWX_ROOT'], 'util')
+        dstdir = os.path.join(weewx_root, 'util')
         print(f"Creating utility files in {dstdir}.")
         if not dry_run:
             _process_files(util_resources, dstdir, re_list)
@@ -703,7 +703,7 @@ def station_upgrade(config_path, dist_config_path=None, docs_root=None, examples
 
     abbrev = {'config': 'configuration file',
               'docs': 'documentation',
-              'util': 'daemon utility files'}
+              'util': 'utility files'}
     choices = ', '.join([abbrev.get(p, p) for p in what])
     msg = f"\nUpgrade {choices} at {config_path}? (Y/n) "
 
