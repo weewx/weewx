@@ -1678,114 +1678,142 @@ following table, along with the corresponding name used in the PyEphem documenta
     <tr class="first_row">
         <td>WeeWX name</td>
         <td>PyEphem name</td>
+        <td>Meaning</td>
     </tr>
-    <tr class="code">
-        <td>azimuth</td>
-        <td>az</td>
+    <tr>
+        <td class="code">azimuth</td>
+        <td class="code">az</td>
+        <td>Azimuth</td>
     </tr>
-    <tr class="code">
-        <td>altitude</td>
-        <td>alt</td>
+    <tr>
+        <td class="code">altitude</td>
+        <td class="code">alt</td>
+        <td>Altitude</td>
     </tr>
-    <tr class="code">
-        <td>astro_ra</td>
-        <td>a_ra</td>
+    <tr>
+        <td class="code">astro_ra</td>
+        <td class="code">a_ra</td>
+        <td>Astrometric geocentric right ascension</td>
     </tr>
-    <tr class="code">
-        <td>astro_dec</td>
-        <td>a_dec</td>
+    <tr>
+        <td class="code">astro_dec</td>
+        <td class="code">a_dec</td>
+        <td>Astrometric geocentric declination</td>
     </tr>
-    <tr class="code">
-        <td>geo_ra</td>
-        <td>g_ra</td>
+    <tr>
+        <td class="code">geo_ra</td>
+        <td class="code">g_ra</td>
+        <td>Apparent geocentric right ascension</td>
     </tr>
-    <tr class="code">
-        <td>topo_ra</td>
-        <td>ra</td>
+    <tr>
+        <td class="code">topo_ra</td>
+        <td class="code">ra</td>
+        <td>Apparent topocentric right ascension</td>
     </tr>
-    <tr class="code">
-        <td>geo_dec</td>
-        <td>g_dec</td>
+    <tr>
+        <td class="code">geo_dec</td>
+        <td class="code">g_dec</td>
+        <td>Apparent geocentric declination</td>
     </tr>
-    <tr class="code">
-        <td>topo_dec</td>
-        <td>dec</td>
+    <tr>
+        <td class="code">topo_dec</td>
+        <td class="code">dec</td>
+        <td>Apparent topocentric declination</td>
     </tr>
-    <tr class="code">
-        <td>elongation</td>
-        <td>elong</td>
+    <tr>
+        <td class="code">elongation</td>
+        <td class="code">elong</td>
+        <td>Angle with sun</td>
     </tr>
-    <tr class="code">
-        <td>radius_size</td>
-        <td>radius</td>
+    <tr>
+        <td class="code">radius_size</td>
+        <td class="code">radius</td>
+        <td>Size as an angle</td>
     </tr>
-    <tr class="code">
-        <td>hlongitude</td>
-        <td>hlon</td>
+    <tr>
+        <td class="code">hlongitude</td>
+        <td class="code">hlon</td>
+        <td>Astrometric heliocentric longitude</td>
     </tr>
-    <tr class="code">
-        <td>hlatitude</td>
-        <td>hlat</td>
+    <tr>
+        <td class="code">hlatitude</td>
+        <td class="code">hlat</td>
+        <td>Astrometric heliocentric latitude</td>
     </tr>
-    <tr class="code">
-        <td>sublatitude</td>
-        <td>sublat</td>
+    <tr>
+        <td class="code">sublatitude</td>
+        <td class="code">sublat</td>
+        <td>Geocentric latitude</td>
     </tr>
-    <tr class="code">
-        <td>sublongitude</td>
-        <td>sublon</td>
+    <tr>
+        <td class="code">sublongitude</td>
+        <td class="code">sublon</td>
+        <td>Geocentric longitude</td>
     </tr>
-    <tr class="code">
-        <td>next_rising</td>
-        <td>next_rising</td>
+    <tr>
+        <td class="code">next_rising</td>
+        <td class="code">next_rising</td>
+        <td>Time body will rise next</td>
     </tr>
-    <tr class="code">
-        <td>next_setting</td>
-        <td>next_setting</td>
+    <tr>
+        <td class="code">next_setting</td>
+        <td class="code">next_setting</td>
+        <td>Time body will set next</td>
     </tr>
-    <tr class="code">
-        <td>next_transit</td>
-        <td>next_transit</td>
+    <tr>
+        <td class="code">next_transit</td>
+        <td class="code">next_transit</td>
+        <td>Time body will transit next</td>
     </tr>
-    <tr class="code">
-        <td>next_antitransit</td>
-        <td>next_antitransit</td>
+    <tr>
+        <td class="code">next_antitransit</td>
+        <td class="code">next_antitransit</td>
+        <td>Time body will anti-transit next</td>
     </tr>
-    <tr class="code">
-        <td>previous_rising</td>
-        <td>previous_rising</td>
+    <tr>
+        <td class="code">previous_rising</td>
+        <td class="code">previous_rising</td>
+        <td>Previous time the body rose</td>
     </tr>
-    <tr class="code">
-        <td>previous_setting</td>
-        <td>previous_setting</td>
+    <tr>
+        <td class="code">previous_setting</td>
+        <td class="code">previous_setting</td>
+        <td>Previous time the body sat</td>
     </tr>
-    <tr class="code">
-        <td>previous_transit</td>
-        <td>previous_transit</td>
+    <tr>
+        <td class="code">previous_transit</td>
+        <td class="code">previous_transit</td>
+        <td>Previous time the body transited</td>
     </tr>
-    <tr class="code">
-        <td>previous_antitransit</td>
-        <td>previous_antitransit</td>
+    <tr>
+        <td class="code">previous_antitransit</td>
+        <td class="code">previous_antitransit</td>
+        <td>Previous time the body anti-transited</td>
     </tr>
-    <tr class="code">
-        <td>rise</td>
-        <td>next_rising</td>
+    <tr>
+        <td class="code">rise</td>
+        <td class="code">next_rising</td>
+        <td>Time body will rise next</td>
     </tr>
-    <tr class="code">
-        <td>set</td>
-        <td>next_setting</td>
+    <tr>
+        <td class="code">set</td>
+        <td class="code">next_setting</td>
+        <td>Time body will set next</td>
     </tr>
-    <tr class="code">
-        <td>transit</td>
-        <td>next_transit</td>
+    <tr>
+        <td class="code">transit</td>
+        <td class="code">next_transit</td>
+        <td>Time body will transit next</td>
     </tr>
     <tr>
         <td class="code">visible</td>
         <td>N/A</td>
+        <td>How long body will be visible</td>
     </tr>
     <tr>
         <td class="code">visible_change</td>
         <td>N/A</td>
+        <td>Change in visibility from previous day</td>
     </tr>
     </tbody>
 </table>
