@@ -387,6 +387,8 @@ def _skip_this_plot(time_ts, plot_options, img_file):
                 log.debug("Skip '%s': last_mod=%s age=%s stale=%s",
                           img_file, last_mod, t_now - last_mod, stale)
                 return True
+            else:
+                return False
         except os.error:
             pass
     return True
