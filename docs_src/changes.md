@@ -92,6 +92,9 @@ Fix problem that prevented database from getting hit when calculating
 Fix problem that caused crashes with `firstlast` accumulator type.
 Fixes issue #876.
 
+Fix problem that prevented option `stale` from being honored in image
+generation. Thanks to user Ian for PR #879!
+
 
 ### 4.10.2 02/22/2023
 
