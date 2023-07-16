@@ -66,7 +66,7 @@ CREATE_DESCRIPTION = """Create a new user data area, including a configuration f
                      + WEEWX_ROOT_DESCRIPTION
 
 UPGRADE_DESCRIPTION = """Upgrade an existing user data area, including any combination of the 
-configuration file, docs, examples, daemon utility files, and skins. """ + WEEWX_ROOT_DESCRIPTION
+configuration file, docs, examples, utility files, and skins. """ + WEEWX_ROOT_DESCRIPTION
 
 
 def add_subparser(subparsers):
@@ -143,7 +143,7 @@ def add_subparser(subparsers):
                                  usage=station_upgrade_usage,
                                  description=UPGRADE_DESCRIPTION,
                                  help='Upgrade any combination of the configuration file, docs, '
-                                      'examples, daemon utility files, and skins.')
+                                      'examples, utility files, and skins.')
 
     station_upgrade_parser.add_argument('--docs-root',
                                         help='Where to put the new documentation, relative to '
@@ -160,7 +160,7 @@ def add_subparser(subparsers):
                                         nargs='+',
                                         help='What to upgrade. Default is to upgrade the '
                                              'configuration file, documentation, examples, and '
-                                             'daemon utility files.')
+                                             'utility files.')
     station_upgrade_parser.add_argument('--no-backup', action='store_true',
                                         help='Do not backup the old configuration file.')
     station_upgrade_parser.add_argument('--no-prompt', action='store_true',

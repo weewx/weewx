@@ -3,11 +3,10 @@
 Use the `weectl` subcommand `station` to manage the user data for a
 station, including its configuration file.
 
-Specify `--help` to see the actions and options.
+Specify `--help` to see the actions and options. 
 
-In the documentation that follows,  the exact output will depend on your
-operating system and username. What is shown below is for Linux and user
-`tkeffer`.
+See the section [_Options used by `weectl station`_](#options) below for details of the various
+options.
 
 ## Create a new user data area
 
@@ -60,8 +59,6 @@ example,
 will create a station with the indicated values. If a value is not specified, a default will
 be used.
 
-See the section [_Common options_](#common-options) for details of the various options.
-
 ## Reconfigure an existing station
 
     weectl station reconfigure
@@ -113,29 +110,36 @@ For example, to keep all settings, but change to the Vantage driver you would us
         [--dry-run]
 
 
-If you installed using pip, then do an upgrade using pip, it will only upgrade the code base. It
-does not touch the user data area. Use this action to upgrade all or part of the user data area.
+### Upgrade a pip install
 
-It can also be useful for upgrading a package install. While these generally 
+If you [upgrade a pip install](/quickstarts/pip/#upgrade), it will only upgrade the code base. It
+does not touch the user data area. Use this action to do that.
 
-
-### --what
-
-By default, `weectl station upgrade` will upgrade the configuration file, documentation, examples,
-and utility files. However, you can customize exactly what gets upgraded.
-
-!!! Note
-    The `--what` option does not take an equal sign (`=`). Just list the
-    desired things to be upgraded, without commas between them.
-
-For example, to upgrade the configuration file and skins only, you would
-specify
+By default, the action will upgrade the configuration file, documentation, examples, and utility files. It
+will not upgrade your skins.
 
 ```
-weectl station upgrade --what config skins
+# Make sure your virtual environment is still active:
+source ~/weewx-venv/bin/activate
+# Upgrade configuration file, documentation, examples, and utility files:
+weectl station upgrade
 ```
 
-## Common options {#common-options}
+If you wish to upgrade the skins, specify it using the  `--what` command:
+
+```
+weectl station upgrade --what skins
+```
+
+This will copy in the current version of the skins, leaving timestamped backups of your old skins.
+
+### Upgrade of package installs
+
+
+TODO
+
+
+## Options used by `weectl station` {#options}
 
 In what follows, `WEEWX_ROOT` is the directory holding the configuration file. For a pip
 install, this is typically `~/weewx-data/`. For package installs, it is usually `/etc/weewx/`.
@@ -213,6 +217,23 @@ path, if the option starts with a slash (`/`), it becomes an absolute path. Defa
 
 Where the WeeWX examples can be found, *relative to `WEEWX_ROOT`*. Of course, like any other path,
 if the option starts with a slash (`/`), it becomes an absolute path. Default is `examples`.
+
+### --what
+
+By default, `weectl station upgrade` will upgrade the configuration file, documentation, examples,
+and utility files. However, you can customize exactly what gets upgraded by using the `--what`
+option.
+
+!!! Note
+    The `--what` option does not take an equal sign (`=`). Just list the
+    desired things to be upgraded, without commas between them.
+
+For example, to upgrade the configuration file and skins only, you would
+specify
+
+```
+weectl station upgrade --what config skins
+```
 
 ### --no-backup
 

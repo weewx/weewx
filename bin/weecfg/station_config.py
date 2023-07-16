@@ -705,7 +705,7 @@ def station_upgrade(config_path, dist_config_path=None, docs_root=None, examples
               'docs': 'documentation',
               'util': 'utility files'}
     choices = ', '.join([abbrev.get(p, p) for p in what])
-    msg = f"\nUpgrade {choices} at {config_path}? (Y/n) "
+    msg = f"\nUpgrade {choices} in {config_dict['WEEWX_ROOT']}? (Y/n) "
 
     ans = weeutil.weeutil.y_or_n(msg, noprompt=no_prompt, default='y')
 
