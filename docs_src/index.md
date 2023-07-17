@@ -34,7 +34,7 @@ system and needs.
 * [Redhat](quickstarts/redhat) - including Fedora, CentOS, Rocky
 * [SUSE](quickstarts/suse) - including openSUSE
 * [pip](quickstarts/pip) - any operating system
-* [source](quickstarts/git) - any operating system
+* [git](quickstarts/git) - any operating system
 
 The Debian, Redhat, and SUSE installers use the conventions and software
 management tools for their respective operating systems; these are the fastest
