@@ -1,37 +1,27 @@
 # Running WeeWX from a git repository
 
-Because WeeWX is pure-Python and does not need to be compiled, it can be run directly from a source
-repository without "installing" it first. This approach is perhaps most appropriate for developers,
-but it is also useful on older operating systems or on platforms with tight memory and/or storage
-constraints.
+Because WeeWX is pure-Python and does not need to be compiled, it can be run directly from source without "installing" it first. This approach is perhaps most appropriate for developers, but it is also useful on older operating systems or on platforms with tight memory and/or storage constraints.
 
-The same technique can be used to run from a source directory downloaded as a zip file from
-the WeeWX GitHub repository.
+This technique can be used to run from a clone of the WeeWX repository, or from a source directory from a zip/tar file.
 
-Although you do not need root privileges to run WeeWX this way, you will need them to set up a
-daemon and, perhaps, to change device permissions.
+Although you do not need root privileges to run WeeWX this way, you will need them to set up a daemon and, perhaps, to change device permissions.
 
 ## Install pre-requisites
 
-Unlike the other install methods, running WeeWX directly from a git clone will require you to
-install the pre-requisites manually. Here's how.
+Before you run from source, you must install the pre-requisite Python and Python modules.
 
-1. Ensure that Python 3.7 or later is installed. You will also need pip and `venv`.
+1. Ensure that Python 3.7 or later is installed.
 
-2. Set up and activate a virtual environment in your home directory
+2. Ensure that `pip` and `venv` are installed.
+
+3. Create and activate a virtual environment in your home directory
 
     ``` {.shell .copy}
     python3 -m venv ~/weewx-venv
     source ~/weewx-venv/bin/activate
     ```
 
-3. Make sure pip is up-to-date
-
-    ``` {.shell .copy}
-    python3 -m pip install pip --upgrade
-    ```
-   
-4. Install the minimum dependencies
+4. Install the minimum WeeWX dependencies
 
     ``` {.shell .copy}
     python3 -m pip install CT3 -y
@@ -54,8 +44,7 @@ install the pre-requisites manually. Here's how.
 
 ## Get the code
 
-Use `git` to clone the repository into a directory called `weewx` in your home
-directory.
+Use `git` to clone the WeeWX repository into a directory called `weewx` in your home directory.
 
 ```shell
 git clone https://github.com/weewx/weewx ~/weewx
@@ -72,7 +61,7 @@ git clone https://github.com/weewx/weewx ~/weewx
 
 Now that you have the code, create a configuration file and skins:
 ```{.shell .copy}
-# Make sure your virtual environment is still active:
+# Activate the WeeWX virtual environment
 source ~/weewx-venv/bin/activate
 # Then create the station data
 python3 ~/weewx/bin/weectl.py station create
@@ -90,19 +79,20 @@ only after you run `weewxd`, as shown in the following step.
 The program `weewxd` does the data collection, archiving, uploading, and report
 generation.  You can run it directly, or as a daemon.
 
-When you run `weewxd` directly, it will print data to the screen. It will stop when you either 
-control-c or log out.
+When you run WeeWX directly, it will print data to the screen. WeeWX will
+stop when you log out, or when you terminate it with `control-c`.
 
 ```{.shell .copy}
-# Make sure your virtual environment is still active:
+# Activate the WeeWX virtual environment
 source ~/weewx-venv/bin/activate
 # Run weewxd
 python3 ~/weewx/bin/weewxd.py
 ```
 
-To run `weewxd` as a daemon, install a systemd or init file that is appropriate for your operating
-system. Be sure to use the full path in the virtual environment to the Python interpreter and
-`weewx.py`. Examples are included in the `util` directory.
+To run `weewxd` as a daemon, install a systemd or init file that is
+appropriate for your operating system. Be sure to use the full path in the
+virtual environment to the Python interpreter and `weewx.py`. Examples are
+included in the `util` directory.
 
 
 ## Verify
@@ -115,7 +105,8 @@ your station information and data.
 
 !!! Note
     Not all browsers understand the tilde ("`~`") mark. You may
-    have to substitute an explicit path to your home directory.
+    have to substitute an explicit path to your home directory,
+    for example, `file:///home/jackhandy` instead of `~`.
 
 If you have problems, check the system log for entries from `weewxd`.
 
