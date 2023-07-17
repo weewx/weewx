@@ -1,7 +1,5 @@
 # Software problems
 
-This section covers some common software configuration problems.
-
 ## Nothing in the log file
 As it is running, WeeWX periodically sends status information, failures, and other things to your system's logging facility. They typically look something like this (the first line is not actually part of the log):
 
