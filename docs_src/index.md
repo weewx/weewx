@@ -12,14 +12,37 @@ of supported stations, and for pictures to help identify your hardware!  The
 many different types of hardware, including some not yet supported by WeeWX.
 
 The WeeWX distribution includes drivers for many types of hardware.  These
-are listed in the [hardware guide](../hardware/drivers). If your hardware
-is not in the core driver list, you should first install WeeWX, then download
-and install the driver for your hardware.
+are listed in the [hardware guide](../hardware/drivers).
+See the [WeeWX Wiki](https://github.com/weewx/weewx/wiki) for additional
+drivers and other extensions. If your hardware is not in the core driver
+list, you should first install WeeWX, then download and install the driver
+for your hardware.
 
-See the [WeeWX Wiki](https://github.com/weewx/weewx/wiki) for drivers and
-other extensions. After you install WeeWX, use the `weectl` utility to
-download and install drivers or other extensions listed in the wiki.
 
+## Quickstart Guides
+
+Each quickstart guide shows how to install, run, monitor, upgrade, and
+uninstall WeeWX.  Choose the guide that is appropriate for your operating
+system and needs.
+
+* [Debian](quickstarts/debian) - including Ubuntu, Mint, Raspberry Pi OS, Devuan
+* [Redhat](quickstarts/redhat) - including Fedora, CentOS, Rocky
+* [SUSE](quickstarts/suse) - including openSUSE
+* [pip](quickstarts/pip) - any operating system
+* [source](quickstarts/git) - any operating system
+
+The Debian, Redhat, and SUSE installers use the conventions and software
+management tools for their respective operating systems; these are the fastest
+and easiest way to get up and running.
+
+The pip installer will work on any operating system; use this approach
+for macOS or one of the BSDs, or if you are using an older operating system.
+This is also a good approach if you plan to do a lot of customization, or if
+you are developing a driver, skin, or other extension.
+
+If you want to install WeeWX on a system with very little storage, or if you
+want to experiment with code that is under dev elopment, then you may want to
+run directly from the WeeWX sources.
 
 ## Documentation
 
@@ -27,20 +50,12 @@ WeeWX includes extensive documentation, and the WeeWX developers work hard to
 keep it relevant and up to date.  If you have questions, please consult the
 documentation first.
 
-### Quickstart installs
-* [Debian](quickstarts/debian) - including Ubuntu, Mint, Raspberry Pi OS, Devuan
-* [Redhat](quickstarts/redhat) - including Fedora, CentOS, Rocky
-* [SUSE](quickstarts/suse) - including openSUSE
-* [pip](quickstarts/pip) - any operating system
-* [Git repository](quickstarts/git) - any operating system
-
-### All about WeeWX
 * [User guide](usersguide) - installation, getting started, troubleshooting
 * [Customization guide](custom) - reports, plots, localization, formatting, extensions
 * [Utilities](utilities) - tools to manage stations, reports, and data
 * [Hardware guide](hardware) - how to configure hardware, features of supported hardware
-* [Notes for developers](devnotes) - things you should know if you write drivers or skins
 * [Upgrade guide](upgrading) - detailed changes in each release
+* [Notes for developers](devnotes) - things you should know if you write drivers or skins
 
 
 ## Support

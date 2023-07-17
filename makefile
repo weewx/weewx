@@ -186,7 +186,7 @@ check-docs:
 
 # upload docs to the web site
 upload-docs: $(DOC_BUILT)
-	rsync -Orv $(DOC_BUILT)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/docs/$(MMVERSION)
+	rsync -Orv --exclude *~ $(DOC_BUILT)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/docs/$(MMVERSION)
 
 
 ###############################################################################
