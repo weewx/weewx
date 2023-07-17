@@ -1,8 +1,8 @@
-# The weewx.conf configuration file
+# The WeeWX configuration file
 
 ## Overview
 
-The configuration file `weewx.conf` is a big text file that holds the configuration information about your installation of WeeWX. This includes things such as:
+The configuration file, nominally called `weewx.conf`, is a big text file that holds the configuration information about your installation of WeeWX. This includes things such as:
 
 * The type of hardware you have.
 * The name of your station.
@@ -12,14 +12,14 @@ The configuration file `weewx.conf` is a big text file that holds the configurat
 [application layout table]: ../where
 
 !!! note
-    The location of `weewx.conf` will depend on your installation method. For example, if you installed using pip, then the nominal location is `~/weewx-data/weewx.conf`. For other installation methods, the location depends on your operating system. See the section [*Where to find things*][application layout table].
+    The location of the configuration file will depend on your installation method. For example, if you installed using pip, then the nominal location is `~/weewx-data/weewx.conf`. For other installation methods, the location depends on your operating system. See the section [*Where to find things*][application layout table].
 
 
 !!! note
-    There is another type of configuration file, `skin.conf`, for presentation-specific options. It is described in the [*Customization Guide*](../../custom/), under the section [*Reference: report options*](../../custom/options_ref/).
+    There is another configuration file for presentation-specific options. This file is called `skin.conf`, and there is one for each skin. It is described in the [*Customization Guide*](../../custom/), under the section [*Reference: report options*](../../custom/report-options/).
 
 
-The following sections are the definitive guide to the many configuration options available in `weewx.conf`. They contain many more options than you are likely to need &mdash; you can safely ignore most of them. The truly important ones, the ones you are likely to have to customize for your station, are ==highlighted==.
+The following sections are the definitive guide to the many configuration options available. There are many more options than you are likely to need &mdash; you can safely ignore most of them. The truly important ones, the ones you are likely to have to customize for your station, are ==highlighted==.
 
 Default values are provided for many options, meaning that if they are not listed in the configuration file at all, WeeWX will pick sensible values. When the documentation below gives a "default value" this is what it means.
 

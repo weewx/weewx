@@ -61,7 +61,7 @@ nav:
     - "Running WeeWX": ./usersguide/running-weewx.md
     - "Web server integration": ./usersguide/webserver-integration.md
     - "Backup & restore": ./usersguide/backing-up-weewx.md
-    - "Configuring MySQL": ./usersguide/mysql-mariadb-config.md
+    - "MySQL/MariaDB": ./usersguide/mysql-mariadb-config.md
     - "Troubleshooting":
       - "Overview": ./usersguide/troubleshooting/index.md
       - "Hardware Problems": ./usersguide/troubleshooting/hardware.md

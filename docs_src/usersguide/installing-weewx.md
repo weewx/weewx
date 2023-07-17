@@ -74,7 +74,7 @@ The quick start guides contain installation instructions for each method:
 If your hardware requires a driver that is not included with WeeWX, use the
 WeeWX extension management utility to download and install the driver.
 
-First locate the driver for your hardware - start by looking in the drivers section of the [WeeWX Wiki](https://github.com/weewx/weewx/wiki#drivers). You will need the URL for the driver release (a `zip` or `tgz` file).
+First locate the driver for your hardware - start by looking in the drivers section of the [WeeWX Wiki](https://github.com/weewx/weewx/wiki#drivers). You will need the URL for the driver release; the URL will refer to a `zip` or `tgz` file.
 
 Then install the driver, using the driver's URL:
 ```
