@@ -55,7 +55,6 @@ nav:
     - git: ./quickstarts/git.md
 
   - "User's guide":
-    - "Introduction": ./usersguide/index.md
     - "System requirements": ./usersguide/system-requirements.md
     - "Installing WeeWX": ./usersguide/installing-weewx.md
     - "Where to find things" : ./usersguide/where.md

@@ -10,13 +10,15 @@
     If you are upgrading from an old `setup.py` installation, see the
     instructions [_Migrating setup.py installs to Version 5.0_](https://github.com/weewx/weewx/wiki/v5-upgrade).
 
-These are the instructions for upgrading WeeWX:
+The instructions for upgrading WeeWX are in the quick start guides:
 
 * [Upgrading using Debian DEB](../quickstarts/debian/#upgrade)
 * [Upgrading using Redhat RPM](../quickstarts/redhat/#upgrade)
 * [Upgrading using SUSE RPM](../quickstarts/suse/#upgrade)
 * [Upgrading using pip](../quickstarts/pip/#upgrade)
-* [Upgrading git repository](../quickstarts/git/#upgrade)
+* [Upgrading using git](../quickstarts/git/#upgrade)
+
+The rest of this document describes the changes in each WeeWX release.
 
 
 ## Upgrading the WeeWX configuration file
@@ -39,11 +41,6 @@ upgrade the configuration file `/etc/weewx/other.conf`:
 ```
 sudo weectl station upgrade --config=/etc/weewx/other.conf
 ```
-
-
-## Instructions for specific versions
-
-The rest of this document describes the changes in each WeeWX release.
 
 ## Upgrading to V5.0
 
