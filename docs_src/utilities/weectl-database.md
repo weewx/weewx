@@ -223,9 +223,9 @@ process is irreversible and users are advised to back up their database before p
 action.
 
 For further information on interval weighting and recalculation of daily `windSpeed` maximum
-values, see the sections [_Changes to daily summaries_](/versions/#changes-to-daily-summaries) and
-[_Recalculation of wind speed maximum values_](/versions/#recalculation-of-windspeed-maximum-values)
-in the Upgrade Guide.
+values, see the sections [_Changes to daily summaries_](/upgrade/#changes-to-daily-summaries) and
+[_Recalculation of wind speed maximum values_](/upgrade/#recalculation-of-windspeed-maximum-values)
+in the [_Upgrade Guide_](/upgrade).
 
 ## Recalculate daily summary weights
 

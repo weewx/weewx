@@ -25,14 +25,18 @@ allow posting past-dated records.
 
 Documentation now uses [MkDocs](https://www.mkdocs.org/).
 
-Logging handler `rotate` has been removed. Its need to access a privileged
+Logging handler `rotate` has been removed. Its need to access the privileged
 location `/var/log/` on start up would cause crashes, even if it was never used.
+Users can opt to add it back in by following the wiki on 
+[Logging](https://github.com/weewx/weewx/wiki/WeeWX-v4-and-logging).
 
 MacOS now logs to `syslog` like any other system, rather than `rotate`.
 
 Method `ImageDraw.textsize()` and constant `ImageFont.LAYOUT_BASIC` were
 deprecated in Pillow 9.2 (1-Jul-2022), then removed in Pillow 10.0 (1-Jul-2023).
-Replaced them with alternatives.
+V5.0 replaces them with alternatives.
+
+Fix bug when using Pillow v9.5.0. Fixes issue #862.
 
 The *Standard* skin now uses the font `DejaVuSansMono-Bold` and includes a
 copy. Before, it had to rely on hardwired font paths, which were less reliable.
@@ -64,8 +68,6 @@ rather than the time of max rainfall during the day.
 Relax requirement that column `dateTime` be the first column in the database.
 Fixes issue #855.
 
-Fix bug when using Pillow v9.5.0. Fixes issue #862.
-
 Allow aggregation of xtypes that are not in the database schema.
 Fixes issue #864.
 
@@ -74,6 +76,9 @@ example, '3h' for three hours.
 
 Accumulator `firstlast` no longer coerces values to a string. Thanks to user
 "Karen" for spotting this!
+
+Fix problem that caused crashes with `firstlast` accumulator type.
+Fixes issue #876.
 
 Fixed problem that prevented the astrometric heliocentric longitude of a body
 from being calculated properly.
@@ -88,9 +93,6 @@ use `$almanac.venus.altitude` instead of `$almanac.venus.alt`.
 
 Fix problem that prevented database from getting hit when calculating 
 `pressure`. Fixes issue #875.
-
-Fix problem that caused crashes with `firstlast` accumulator type.
-Fixes issue #876.
 
 Fix problem that prevented option `stale` from being honored in image
 generation. Thanks to user Ian for PR #879!

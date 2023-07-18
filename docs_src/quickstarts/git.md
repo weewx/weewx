@@ -1,10 +1,15 @@
 # Running WeeWX from a git repository
 
-Because WeeWX is pure-Python and does not need to be compiled, it can be run directly from source without "installing" it first. This approach is perhaps most appropriate for developers, but it is also useful on older operating systems or on platforms with tight memory and/or storage constraints.
+Because WeeWX is pure-Python and does not need to be compiled, it can be run directly from source
+without "installing" it first. This approach is perhaps most appropriate for developers, but it is
+also useful on older operating systems or on platforms with tight memory and/or storage
+constraints.
 
-This technique can be used to run from a clone of the WeeWX repository, or from a source directory from a zip/tar file.
+This technique can be used to run from a clone of the WeeWX repository, or from a source directory
+expanded from a zip/tar file.
 
-Although you do not need root privileges to run WeeWX this way, you will need them to set up a daemon and, perhaps, to change device permissions.
+Although you do not need root privileges to run WeeWX this way, you will need them to set up a
+daemon and, perhaps, to change device permissions.
 
 ## Install pre-requisites
 

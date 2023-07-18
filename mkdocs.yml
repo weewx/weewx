@@ -128,7 +128,7 @@ nav:
     - WS23xx: hardware/ws23xx.md
     - WS28xx: hardware/ws28xx.md
 
-  - "Upgrade guide": versions.md 
+  - "Upgrade guide": upgrade.md
   - "Notes for developers": devnotes.md
   - "Change log": changes.md
 

@@ -76,9 +76,17 @@ not expected to affect any users.
 
 ### Breaking changes for skins that use delta times
 
-A "delta time" is the difference between two times, for example the amount of uptime (difference between start and current time), or the amount of daylight (difference between sunrise and sunset). In previous versions, delta times were treated as a special case, which limited their flexibility. With <a href="https://github.com/weewx/weewx/pull/807">PR #807</a>, a delta time is treated like any other scalar, which gives you access to all the regular formatting tools. However, a side effect is that if you want to format the time in the "long form", that is, so the results look like <span class="code">4 hours, 15 minutes</span>, rather than <span class="code">15300 seconds</span>, then you will have to say so explicitly.
+A "delta time" is the difference between two times, for example the amount of uptime (difference
+between start and current time), or the amount of daylight (difference between sunrise and sunset).
+In previous versions, delta times were treated as a special case, which limited their flexibility.
+With <a href="https://github.com/weewx/weewx/pull/807">PR #807</a>, a delta time is treated like
+any other scalar, which gives you access to all the regular formatting tools. However, a side
+effect is that if you want to format the time in the "long form", that is, so the results look like
+<span class="code">4 hours, 15 minutes</span>, rather than <span class="code">15300 seconds</span>,
+then you will have to say so explicitly.
 
-If you use the <em>Seasons</em> skin, you will have to make these four changes. Add the text in <span class="added">green</span>:
+If you use the <em>Seasons</em> skin, you will have to make these four changes. Add the text in
+<span class="added">green</span>:
 
 <div class="wide-table">
   <table>

@@ -9,27 +9,39 @@ Python 3, will not work.
 Although you do not need root privileges to install and configure WeeWX, you
 will need them to set up a daemon and, perhaps, to change device permissions.
 
-While there are many ways to install WeeWX using pip (see the wiki document [pip install strategies](https://github.com/weewx/weewx/wiki/pip-install-strategies) for a partial list), we recommend creating a _Python virtual environment_, because it is the least likely to disturb the rest of your system. It is worth reading about [`venv`](https://docs.python.org/3/library/venv.html) in the Python3 documentation.
+While there are many ways to install WeeWX using pip (see the wiki document [_pip install
+strategies_](https://github.com/weewx/weewx/wiki/pip-install-strategies) for a partial list), we
+recommend creating a _Python virtual environment_, because it is the least likely to disturb the
+rest of your system. It is worth reading about
+[`venv`](https://docs.python.org/3/library/venv.html), the module used to create a virtual
+environment, in the Python3 documentation.
 
 !!! Note
     WeeWX can be installed on any operating system that offers Python 3.7 or later.
     
-    However, you may need to install `pip`. See [Installing pip with Linux Package Managers](https://packaging.python.org/en/latest/guides/installing-using-linux-tools/). The [installation directions](https://pip.pypa.io/en/stable/installation/) on the pip website may also be useful.
+    However, you may need to install `pip` first. See [Installing pip with Linux Package
+    Managers](https://packaging.python.org/en/latest/guides/installing-using-linux-tools/). The
+    [installation directions](https://pip.pypa.io/en/stable/installation/) on the pip website may 
+    also be useful.
     
-    You will also need `venv`. If `venv` is not available, you may substitute `virtualenv`, which can be installed using pip.
+    You will also need `venv`. If `venv` is not available, you may substitute 
+    [`virtualenv`](https://virtualenv.pypa.io), which can be installed using pip.
 
 ## Install in a virtual environment
 
 To install WeeWX in a virtual environment, follow the directions below for
 your system. If you plan to use MySQL or MariaDB, be sure to see the
-`MySQL/MariaDB` tab.
+`MySQL/MariaDB` tab as well.
 
-When finished, the WeeWX executables will have been installed in `~/weewx-venv/bin`, while the WeeWX libraries and dependencies will have been installed in `~/weewx-venv/lib/python3.x/site-packages`, where `3.x` is the version of Python you used.
+When finished, the WeeWX executables will have been installed in `~/weewx-venv/bin`, while the
+WeeWX libraries and dependencies will have been installed in
+`~/weewx-venv/lib/python3.x/site-packages`, where `3.x` is the version of Python you used.
 
 === "Debian"
     
     ```{ .shell .copy }
     sudo apt update
+    # If necessary, install pip and venv:
     sudo apt install python3-pip -y
     sudo apt install python3-venv -y
     
@@ -156,7 +168,8 @@ When finished, the WeeWX executables will have been installed in `~/weewx-venv/b
 
 ## Provision a new station
 
-While the instructions above install WeeWX, they do not set up the configuration specific to your station, nor do they set up the reporting skins. That is the job of the tool `weectl`.
+While the instructions above install WeeWX, they do not set up the configuration specific to your
+station, nor do they set up the reporting skins. That is the job of the tool `weectl`.
 
 The tool `weectl` will ask you a series of questions, then create a directory
 `~/weewx-data` in your home directory with a new configuration file. It will
