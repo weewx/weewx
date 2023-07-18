@@ -48,7 +48,7 @@ This is also a good approach if you plan to do a lot of customization, or if
 you are developing a driver, skin, or other extension.
 
 If you want to install WeeWX on a system with very little storage, or if you
-want to experiment with code that is under dev elopment, then you may want to
+want to experiment with code that is under development, then you may want to
 run directly from the WeeWX sources.
 
 ## Documentation
