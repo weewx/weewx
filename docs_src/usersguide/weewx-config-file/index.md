@@ -1,8 +1,10 @@
-# The WeeWX configuration file
+# WeeWX configuration options
 
 ## Overview
 
-The configuration file, nominally called `weewx.conf`, is a big text file that holds the configuration information about your installation of WeeWX. This includes things such as:
+WeeWX options are specified in a configuration file, nominally called
+`weewx.conf`, is a big text file that holds the configuration information
+about your installation of WeeWX. This includes things such as:
 
 * The type of hardware you have.
 * The name of your station.
@@ -12,20 +14,34 @@ The configuration file, nominally called `weewx.conf`, is a big text file that h
 [application layout table]: ../where
 
 !!! note
-    The location of the configuration file will depend on your installation method. For example, if you installed using pip, then the nominal location is `~/weewx-data/weewx.conf`. For other installation methods, the location depends on your operating system. See the section [*Where to find things*][application layout table].
+    The location of the configuration file will depend on your installation
+    method. For example, if you installed using pip, then the nominal location
+    is `~/weewx-data/weewx.conf`. For other installation methods, the location
+    depends on your operating system. See the section
+    [*Where to find things*][application layout table].
 
 
 !!! note
-    There is another configuration file for presentation-specific options. This file is called `skin.conf`, and there is one for each skin. It is described in the [*Customization Guide*](../../custom/), under the section [*Reference: report options*](../../custom/report-options/).
+    There is another configuration file for presentation-specific options.
+    This file is called `skin.conf`, and there is one for each skin. It is
+    described in the [*Customization Guide*](../../custom/), under the section
+    [*Reference: report options*](../../custom/report-options/).
 
 
-The following sections are the definitive guide to the many configuration options available. There are many more options than you are likely to need &mdash; you can safely ignore most of them. The truly important ones, the ones you are likely to have to customize for your station, are ==highlighted==.
+The following sections are the definitive guide to the many configuration
+options available. There are many more options than you are likely to need
+&mdash; you can safely ignore most of them. The truly important ones, the
+ones you are likely to have to customize for your station, are ==highlighted==.
 
-Default values are provided for many options, meaning that if they are not listed in the configuration file at all, WeeWX will pick sensible values. When the documentation below gives a "default value" this is what it means.
+Default values are provided for many options, meaning that if they are not
+listed in the configuration file at all, WeeWX will pick sensible values. When
+the documentation below gives a "default value" this is what it means.
 
 
 ## Option hierarchy
-In general, options closer to the "root" of weewx.conf are overridden by options closer to the leaves. Here's an example:
+
+In general, options closer to the "root" of weewx.conf are overridden by
+options closer to the leaves. Here's an example:
 
 ```
 log_success = false
@@ -44,7 +60,11 @@ log_success = false
         ...
 ```
 
-In this example, at the top level, `log_success` is set to false. So, unless set otherwise, successful operations will not be logged. However, for `StdRESTful` operations, it is set to true, so for these services, successful operations _will_ be logged, unless set otherwise by an individual service. Looking at the individual services, successful operations for
+In this example, at the top level, `log_success` is set to false. So, unless
+set otherwise, successful operations will not be logged. However, for
+`StdRESTful` operations, it is set to true, so for these services, successful
+operations _will_ be logged, unless set otherwise by an individual service.
+Looking at the individual services, successful operations for
 
 * `Wunderground` will not be logged (set explicitly)
 * `WOW` will be logged (set explicitly)
