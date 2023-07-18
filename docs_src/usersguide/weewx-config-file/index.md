@@ -3,15 +3,13 @@
 ## Overview
 
 WeeWX options are specified in a configuration file, nominally called
-`weewx.conf`, is a big text file that holds the configuration information
+`weewx.conf`. This is a big text file that holds the configuration information
 about your installation of WeeWX. This includes things such as:
 
 * The type of hardware you have.
 * The name of your station.
 * What kind of database to use and where is it located.
 * How to recognize out-of-range observations, etc.
-
-[application layout table]: ../where
 
 !!! note
     The location of the configuration file will depend on your installation
