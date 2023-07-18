@@ -57,7 +57,7 @@ WeeWX includes extensive documentation, and the WeeWX developers work hard to
 keep it relevant and up to date.  If you have questions, please consult the
 documentation first.
 
-* [User guide](usersguide) - installation, getting started, troubleshooting
+* [User guide](usersguide) - installation, getting started, configuration options, troubleshooting
 * [Customization guide](custom) - reports, plots, localization, formatting, extensions
 * [Utilities](utilities) - tools to manage stations, reports, and data
 * [Hardware guide](hardware) - how to configure hardware, features of supported hardware
