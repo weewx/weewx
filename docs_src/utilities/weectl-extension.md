@@ -46,44 +46,68 @@ Path to the configuration file. Default is `~/weewx-data/weewx.conf`.
 
 ### --dry-run
 
-Show what would happen if the action was run, but do not actually make any writable changes.
+Show what would happen if the action was run, but do not actually make any
+writable changes.
 
-### --verbosity (0|1|2|3)
+### --verbosity=(0|1|2|3)
 
 How much information to display (0-3).
 
-## List all installed extensions 
+
+## List installed extensions
 
     weectl extension list
         [--config=CONFIG-PATH] [--dry-run]
 
-This action will list all the extensions that you have installed. See [below](#install-examples)
-for examples.
+This action will list all the extensions that you have installed.
 
 
 ## Install an extension
 
-    weectl extension install
+    weectl extension install (FILE|DIR|URL)
 
-This action will install an extension from a zipfile, tarball, directory, or
-URL. See [below](#install-examples) for examples.
+This action will install an extension from a zip file, tar file, directory, or
+URL.
+
+For example, this would install the `windy` extension from the latest zip file
+located at `github.com`:
+```shell
+weectl extension install https://github.com/matthewwall/weewx-windy/archive/master.zip
+```
+
+This would install the `windy` extension from a compressed tar archive in the
+current directory:
+```shell
+weectl extension install windy-0.1.tgz
+```
+
+This would install the `windy` extension from a zip file in the `Downloads`
+directory:
+```shell
+weectl extension install ~/Downloads/windy-0.1.zip
+```
 
 
 ## Uninstall an extension 
 
     weectl extension uninstall NAME
 
-This action uninstalls an extension. It can be useful to use the `weectl extension list` action
-to see what to use for `NAME`. 
+This action uninstalls an extension. Use the `list` action to see what to use
+for `NAME`. 
 
-See [below](#install-examples) for examples.
+For example, this would uninstall the extension called `windy`:
+```shell
+weectl extension uninstall windy
+```
 
 
 ## Examples {#install-examples}
 
-These examples illustrate how to use the extension installer.
+These examples illustrate how to use the extension installer to install, list,
+and uninstall the `windy` extension.
 
-Do a dry run of installing an uploader for the Windy website, maximum verbosity:
+Do a dry run of installing an uploader for the Windy website, maximum
+verbosity:
 
 ``` shell
 % weectl extension install https://github.com/matthewwall/weewx-windy/archive/master.zip --dry-run --verbosity=3
@@ -118,7 +142,7 @@ Finished installing extension windy from https://github.com/matthewwall/weewx-wi
 List the results:
 
 ```
-% weectl extension list                                                                 
+% weectl extension list
 Extension Name    Version   Description
 windy             0.7       Upload weather data to Windy.
 ```
