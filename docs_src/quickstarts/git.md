@@ -30,9 +30,9 @@ Python modules.
 4. Install the minimum WeeWX dependencies
 
     ``` {.shell .copy}
-    python3 -m pip install CT3 -y
-    python3 -m pip install configobj -y
-    python3 -m pip install Pillow -y
+    python3 -m pip install CT3
+    python3 -m pip install configobj
+    python3 -m pip install Pillow
     ```
 
 5. Depending on your situation, you may want to install these additional
@@ -40,11 +40,11 @@ dependencies:
 
     ``` {.shell .copy}
     # If your hardware uses a serial port
-    python3 -m pip install pyserial -y
+    python3 -m pip install pyserial
     # If your hardware uses a USB port
-    python3 -m pip install pyusb -y
+    python3 -m pip install pyusb
     # If you want extended celestial information:
-    python3 -m pip install ephem -y
+    python3 -m pip install ephem
     # If you use MySQL or Maria
     python3 -m pip install PyMySQL[rsa]
     ```
