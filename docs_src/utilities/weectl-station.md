@@ -1,6 +1,6 @@
 # weectl station
 
-Use the `weectl` subcommand `station` to manage the user data for a station,
+Use the `weectl` subcommand `station` to manage the data for a station,
 including its configuration file.
 
 Specify `--help` to see the actions and options. 
@@ -235,6 +235,14 @@ Default is `examples`.
 By default, the `upgrade` action will upgrade the documentation, examples,
 and utility files. However, you can specify exactly what gets upgraded by
 using the `--what` option.
+
+The `--what` option understands the following:
+
+* config - the configuration file
+* docs - the documentation
+* examples - the example extensions
+* util - the system utility files
+* skins - the report templates
 
 For example, to upgrade the configuration file and skins only, you would
 specify
