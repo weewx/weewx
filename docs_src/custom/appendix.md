@@ -658,22 +658,19 @@ station_altitude_vt = ValueTuple(120.0, "meter", "group_altitude")
 
 ## Class `ValueHelper` {#ValueHelper}
 
-Class `ValueHelper` contains all the information necessary to do
-the proper formatting of a value, including a unit label.
+A `ValueHelper`  contains all the information necessary to do the proper
+formatting of a value, including a unit label.
 
-### Instance attribute
+A `ValueHelper` instance contains a member `value_t`, which is the
+`ValueTuple` instance held internally to the helper.
 
-#### ValueHelper.value_t
+The `__str__()` method for a `ValueHelper` formats the value as a string,
+including a unit label, and returns it.  This uses the `format` method,
+which is defined as follows:
 
-Returns the `ValueTuple` instance held internally.
-
-### Instance methods
-
-#### ValueHelper.__str__()
-
-Formats the value as a string, including a unit label, and returns it.
-
-#### ValueHelper.format(format_string=None, None_string=None, add_label=True, localize=True)
+```
+ValueHelper.format(format_string=None, None_string=None, add_label=True, localize=True)
+```
 
 Format the value as a string, using various specified options, and
 return it. Unless otherwise specified, a label is included.
