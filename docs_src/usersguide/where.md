@@ -91,9 +91,7 @@ This is where to find the system log for each platform.
 
 === "Debian"
 
-    ```
-    /var/log/syslog
-    ```
+    `/var/log/syslog`
 
     !!! Note
         You need root permission to view the log.
