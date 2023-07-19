@@ -12,43 +12,43 @@ import weectllib.db_actions
 from weeutil.weeutil import bcolors
 
 create_usage = f"""{bcolors.BOLD}weectl database create
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
 drop_daily_usage = f"""{bcolors.BOLD}weectl database drop-daily
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
 rebuild_usage = f"""{bcolors.BOLD}weectl database rebuild-daily
             [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME] 
+            [--config=FILENAME] [--binding=BINDING-NAME] 
             [--dry-run]{bcolors.ENDC}"""
 add_column_usage = f"""{bcolors.BOLD}weectl database add-column NAME
             [--type=(REAL|INTEGER)]
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
 rename_column_usage = f"""{bcolors.BOLD}weectl database rename-column FROM-NAME TO-NAME
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
 drop_columns_usage = f"""{bcolors.BOLD}weectl database drop-columns NAME...
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
 reconfigure_usage = f"""{bcolors.BOLD}weectl database reconfigure 
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
 transfer_usage = f"""{bcolors.BOLD}weectl database transfer --dest-binding=BINDING-NAME
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
 calc_missing_usage = f"""{bcolors.BOLD}weectl database calc-missing
             [--date=YYYY-mm-dd | [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
 check_usage = f"""{bcolors.BOLD}weectl database check
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME]{bcolors.ENDC}"""
+            [--config=FILENAME] [--binding=BINDING-NAME]{bcolors.ENDC}"""
 update_usage = f"""{bcolors.BOLD}weectl database update
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME]
             [--dry-run]{bcolors.ENDC}"""
 reweight_usage = f"""{bcolors.BOLD}weectl database reweight
             [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
-            [--config=CONFIG-PATH] [--binding=BINDING-NAME] 
+            [--config=FILENAME] [--binding=BINDING-NAME] 
             [--dry-run]{bcolors.ENDC}"""
 
 database_usage = '\n       '.join((create_usage,
@@ -244,7 +244,7 @@ def add_subparser(subparsers):
                                             usage=check_usage,
                                             help="Check the database for any issues.")
     check_parser.add_argument('--config',
-                              metavar='CONFIG-PATH',
+                              metavar='FILENAME',
                               help=f'Path to configuration file. '
                                    f'Default is "{weecfg.default_config_path}".')
     check_parser.add_argument("--binding", metavar="BINDING-NAME",
@@ -390,7 +390,7 @@ def reweight_daily(namespace):
 def _add_common_args(subparser):
     """Add options used by most of the subparsers"""
     subparser.add_argument('--config',
-                           metavar='CONFIG-PATH',
+                           metavar='FILENAME',
                            help='Path to configuration file. '
                                 f'Default is "{weecfg.default_config_path}".')
     subparser.add_argument("--binding", metavar="BINDING-NAME", default='wx_binding',

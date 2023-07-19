@@ -8,14 +8,14 @@ weectl extension --help
 ```
 ```
 usage: weectl extension list
-            [--config=CONFIG-PATH]
+            [--config=FILENAME]
 
        weectl extension install (FILE|DIR|URL)
-            [--config=CONFIG-PATH]
+            [--config=FILENAME]
             [--dry-run] [--verbosity=N]
 
        weectl extension uninstall NAME
-            [--config=CONFIG-PATH]
+            [--config=FILENAME]
             [--dry-run] [--verbosity=N]
 
 Manages WeeWX extensions
@@ -57,7 +57,7 @@ How much information to display (0-3).
 ## List installed extensions
 
     weectl extension list
-        [--config=CONFIG-PATH] [--dry-run]
+        [--config=FILENAME] [--dry-run]
 
 This action will list all the extensions that you have installed.
 

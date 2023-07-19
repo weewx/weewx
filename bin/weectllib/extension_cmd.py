@@ -12,14 +12,14 @@ import weewx
 from weeutil.weeutil import bcolors, to_int
 
 extension_list_usage = f"""{bcolors.BOLD}weectl extension list
-            [--config=CONFIG-PATH]{bcolors.ENDC}
+            [--config=FILENAME]{bcolors.ENDC}
 """
 extension_install_usage = f"""  {bcolors.BOLD}weectl extension install (FILE|DIR|URL)
-            [--config=CONFIG-PATH]
+            [--config=FILENAME]
             [--dry-run] [--verbosity=N]{bcolors.ENDC}
 """
 extension_uninstall_usage = f"""  {bcolors.BOLD}weectl extension uninstall NAME
-            [--config=CONFIG-PATH]
+            [--config=FILENAME]
             [--dry-run] [--verbosity=N]{bcolors.ENDC}
 """
 extension_usage = '\n     '.join((extension_list_usage,
@@ -44,7 +44,7 @@ def add_subparser(subparsers):
                                                      usage=extension_list_usage,
                                                      help='List all installed extensions')
     list_extension_parser.add_argument('--config',
-                                       metavar='CONFIG-PATH',
+                                       metavar='FILENAME',
                                        help=f'Path to configuration file. '
                                             f'Default is "{weecfg.default_config_path}".')
     list_extension_parser.add_argument('--verbosity', type=int, default=1, metavar='N',
@@ -67,7 +67,7 @@ def add_subparser(subparsers):
                                                "directory, or an URL pointing to a zipfile "
                                                "or tarball.")
     install_extension_parser.add_argument('--config',
-                                          metavar='CONFIG-PATH',
+                                          metavar='FILENAME',
                                           help=f'Path to configuration file. '
                                                f'Default is "{weecfg.default_config_path}".')
     install_extension_parser.add_argument('--dry-run',
@@ -88,7 +88,7 @@ def add_subparser(subparsers):
                                             metavar='NAME',
                                             help="Name of the extension to uninstall.")
     uninstall_extension_parser.add_argument('--config',
-                                            metavar='CONFIG-PATH',
+                                            metavar='FILENAME',
                                             help=f'Path to configuration file. '
                                                  f'Default is "{weecfg.default_config_path}".')
     uninstall_extension_parser.add_argument('--dry-run',

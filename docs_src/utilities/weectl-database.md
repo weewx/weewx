@@ -25,7 +25,7 @@ Show what would happen if the action was run, but do not actually make any writa
 ## Create a new database
 
     weectl database create
-        [--config=CONFIG-PATH] [--binding=BINDING] [--dry-run]
+        [--config=FILENAME] [--binding=BINDING] [--dry-run]
 
 This action is used to create a new database by using the specifications in the configuration
 file, `weewx.conf`. It is rarely needed, as `weewxd` will do this automatically on startup.
@@ -39,7 +39,7 @@ weectl database create --help
 ## Drop the daily summaries
 
     weectl database drop-daily
-        [--config=CONFIG-PATH] [--binding=BINDING] [--dry-run]
+        [--config=FILENAME] [--binding=BINDING] [--dry-run]
 
 In addition to the regular archive data, every WeeWX database also includes a daily summary table
 for each observation type. Because there can be dozens of observation types, there can be dozens of
@@ -55,7 +55,7 @@ Use the `--help` option to see how to use this action:
 
     weectl database rebuild-daily 
         [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]] 
-        [--config=CONFIG-PATH] [--binding=BINDING] [--dry-run]
+        [--config=FILENAME] [--binding=BINDING] [--dry-run]
 
 This action is the inverse of action `weectk database drop-daily` in that it rebuilds the daily
 summaries from the archive data.
@@ -87,7 +87,7 @@ the first day in the database. The default value for `--to` is the last day in t
 ## Add a new observation type to the database
 
     weectl database add-column NAME --type=COLUMN-DEF
-        [--config=CONFIG-PATH] [--binding=BINDING] [--dry-run]
+        [--config=FILENAME] [--binding=BINDING] [--dry-run]
 
 This action adds a new database observation type (column), given by `NAME`, to the database. The
 option `--type` is any valid SQL column definition. It defaults to `REAL`.
@@ -100,7 +100,7 @@ value is zero:
 ## Rename an observation type
 
     weectl database rename-column FROM-NAME TO-NAME
-        [--config=CONFIG-PATH] [--binding=BINDING] [--dry-run]
+        [--config=FILENAME [--binding=BINDING] [--dry-run]
 
 Use this action to rename a database observation type (column) to a new name.
 
@@ -111,7 +111,7 @@ For example, to rename the column `luminosity` in your database to `illuminance`
 ## Drop (remove) observation types
 
     weectl database drop-columns NAME...
-        [--config=CONFIG-PATH] [--binding=BINDING] [--dry-run]
+        [--config=FILENAME] [--binding=BINDING] [--dry-run]
 
 This action will drop one or more observation types (columns) from the database. If more than one
 column name is given, they should be separated by spaces.
@@ -127,7 +127,7 @@ column name is given, they should be separated by spaces.
 ## Reconfigure a database
 
     weectl database reconfigure
-        [--config=CONFIG-PATH] [--binding=BINDING] [--dry-run]
+        [--config=FILENAME] [--binding=BINDING] [--dry-run]
 
 This action is useful for changing the schema or unit system in your database.
 
@@ -143,7 +143,7 @@ instructions that use this option.
 ## Transfer (copy) a database
 
     weectl database transfer --dest-binding=BINDING-NAME
-        [--config=CONFIG-PATH] [--binding=BINDING] [--dry-run]
+        [--config=FILENAME] [--binding=BINDING] [--dry-run]
 
 This action is useful for moving your database from one type of database to another, such as from
 SQLite to MySQL. To use it, you must have two bindings specified in your `weewx.conf` configuration
@@ -161,7 +161,7 @@ by using `weectl database transfer`.
 
     weectl database calc-missing
         [--date=YYYY-mm-dd | [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
-        [--config=CONFIG-PATH] [--binding=BINDING-NAME]
+        [--config=FILENAME] [--binding=BINDING-NAME]
         [--dry-run]
 
 This action calculates derived observations for archive records in the database and then stores the
@@ -203,7 +203,7 @@ weectl database calc-missing --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]
 ## Check a database
 
     weectl database check
-        [--config=CONFIG-PATH] [--binding=BINDING-NAME]
+        [--config=FILENAME] [--binding=BINDING-NAME]
 
 Databases created earlier than 3.7.0 (released 11-March-2017) have a flaw that prevents them
 from being used with archive intervals that change with time. This utility check whether your
@@ -212,7 +212,7 @@ database is affected. See [Issue #61](https://github.com/weewx/weewx/issues/61).
 ## Update a database
 
     weectl database update
-        [--config=CONFIG-PATH] [--binding=BINDING-NAME]
+        [--config=FILENAME] [--binding=BINDING-NAME]
         [--dry-run]
 
 This action updates the daily summary tables to use interval weighted calculations (see 
@@ -231,7 +231,7 @@ in the [_Upgrade Guide_](/upgrade).
 
     weectl database reweight
         [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]] 
-        [--config=CONFIG-PATH] [--binding=BINDING] [--dry-run]
+        [--config=FILENAME] [--binding=BINDING] [--dry-run]
 
 As an alternative to dropping and rebuilding the daily summaries, this action simply rebuilds the
 weighted daily sums (used to calculate averages) from the archive data. It does not touch the highs

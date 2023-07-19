@@ -15,17 +15,17 @@ station_create_usage = f"""{bcolors.BOLD}weectl station create
             [--location=LOCATION]
             [--altitude=ALTITUDE,(foot|meter)]
             [--latitude=LATITUDE] [--longitude=LONGITUDE]
-            [--register=(y,n) [--station-url=STATION_URL]]
+            [--register=(y,n) [--station-url=URL]]
             [--units=(us|metricwx|metric)]
-            [--skin-root=SKIN_ROOT]
-            [--sqlite-root=SQLITE_ROOT]
-            [--html-root=HTML_ROOT]
-            [--user-root=USER_ROOT]
-            [--docs-root=DOCS_ROOT]
-            [--examples-root=EXAMPLES_ROOT]
+            [--skin-root=DIRECTORY]
+            [--sqlite-root=DIRECTORY]
+            [--html-root=DIRECTORY]
+            [--user-root=DIRECTORY]
+            [--docs-root=DIRECTORY]
+            [--examples-root=DIRECTORY]
             [--no-prompt]
-            [--config=CONFIG-PATH]
-            [--dist-config=DIST-CONFIG-PATH]
+            [--config=FILENAME]
+            [--dist-config=FILENAME]
             [--dry-run]{bcolors.ENDC}
 """
 station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure
@@ -33,25 +33,25 @@ station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure
             [--location=LOCATION]
             [--altitude=ALTITUDE,(foot|meter)]
             [--latitude=LATITUDE] [--longitude=LONGITUDE]
-            [--register=(y,n) [--station-url=STATION_URL]]
+            [--register=(y,n) [--station-url=URL]]
             [--units=(us|metricwx|metric)]
-            [--skin-root=SKIN_ROOT]
-            [--sqlite-root=SQLITE_ROOT]
-            [--html-root=HTML_ROOT]
+            [--skin-root=DIRECTORY]
+            [--sqlite-root=DIRECTORY]
+            [--html-root=DIRECTORY]
             [--no-backup]
             [--no-prompt]
-            [--config=CONFIG-PATH] 
+            [--config=FILENAME] 
             [--dry-run]{bcolors.ENDC}
 """
 station_upgrade_usage = f"""{bcolors.BOLD}weectl station upgrade
-            [--docs-root=DOCS_ROOT]
-            [--examples-root=EXAMPLES_ROOT]
-            [--skin-root=SKIN_ROOT]
-            [--what (config|docs|examples|util|skins)...]
+            [--docs-root=DIRECTORY]
+            [--examples-root=DIRECTORY]
+            [--skin-root=DIRECTORY]
+            [--what (docs|examples|util|config|skins)...]
             [--no-backup]
             [--no-prompt]
-            [--config=CONFIG-PATH]
-            [--dist-config=DIST-CONFIG-PATH]]
+            [--config=FILENAME]
+            [--dist-config=FILENAME]]
             [--dry-run]{bcolors.ENDC}
 """
 
@@ -90,22 +90,25 @@ def add_subparser(subparsers):
                                                           'a configuration file.')
     _add_common_args(station_create_parser)
     station_create_parser.add_argument('--user-root',
+                                       metavar='DIRECTORY',
                                        help='Where to put the "user" directory, relative to '
                                             'WEEWX_ROOT. Default is "bin/user"')
     station_create_parser.add_argument('--docs-root',
+                                       metavar='DIRECTORY',
                                        help='Where to put the documentation, relative to '
                                             'WEEWX_ROOT. Default is "docs".')
     station_create_parser.add_argument('--examples-root',
+                                       metavar='DIRECTORY',
                                        help='Where to put the examples, relative to '
                                             'WEEWX_ROOT. Default is "examples".')
     station_create_parser.add_argument('--no-prompt', action='store_true',
                                        help='Do not prompt. Use default values.')
     station_create_parser.add_argument('--config',
-                                       metavar='CONFIG-PATH',
+                                       metavar='FILENAME',
                                        help=f'Path to configuration file. It must not already '
                                             f'exist. Default is "{weecfg.default_config_path}".')
     station_create_parser.add_argument('--dist-config',
-                                       metavar='DIST-CONFIG-PATH',
+                                       metavar='FILENAME',
                                        help='Use configuration file DIST-CONFIG-PATH as the '
                                             'new configuration file. Default is to retrieve it '
                                             'from package resources. The average user is '
@@ -128,7 +131,7 @@ def add_subparser(subparsers):
     station_reconfigure_parser.add_argument('--no-prompt', action='store_true',
                                             help='Do not prompt. Use default values.')
     station_reconfigure_parser.add_argument('--config',
-                                            metavar='CONFIG-PATH',
+                                            metavar='FILENAME',
                                             help=f'Path to configuration file. '
                                                  f'Default is "{weecfg.default_config_path}"')
     station_reconfigure_parser.add_argument('--dry-run',
@@ -146,16 +149,19 @@ def add_subparser(subparsers):
                                       'examples, utility files, and skins.')
 
     station_upgrade_parser.add_argument('--docs-root',
+                                        metavar='DIRECTORY',
                                         help='Where to put the new documentation, relative to '
                                              'WEEWX_ROOT. Default is "docs".')
     station_upgrade_parser.add_argument('--examples-root',
+                                        metavar='DIRECTORY',
                                         help='Where to put the new examples, relative to '
                                              'WEEWX_ROOT. Default is "examples".')
     station_upgrade_parser.add_argument('--skin-root',
+                                        metavar='DIRECTORY',
                                         help='Where to put the skins, relative to '
                                              'WEEWX_ROOT. Default is "skins".')
     station_upgrade_parser.add_argument('--what',
-                                        choices=['config', 'docs', 'examples', 'util', 'skins'],
+                                        choices=['docs', 'examples', 'util', 'config', 'skins'],
                                         default=['docs', 'examples', 'util'],
                                         nargs='+',
                                         help='What to upgrade. Default is to upgrade the '
@@ -165,12 +171,12 @@ def add_subparser(subparsers):
     station_upgrade_parser.add_argument('--no-prompt', action='store_true',
                                         help='Do not prompt. Use default values.')
     station_upgrade_parser.add_argument('--config',
-                                        metavar='CONFIG-PATH',
+                                        metavar='FILENAME',
                                         help=f'Path to configuration file. '
                                              f'Default is "{weecfg.default_config_path}"')
     station_upgrade_parser.add_argument('--dist-config',
-                                        metavar='DIST-CONFIG-PATH',
-                                        help='Use configuration file DIST-CONFIG-PATH as the '
+                                        metavar='FILENAME',
+                                        help='Use configuration file FILENAME as the '
                                              'new configuration file. Default is to retrieve it '
                                              'from package resources. The average user is '
                                              'unlikely to need this option.')
@@ -269,6 +275,7 @@ def _add_common_args(parser):
                         help='Register this station in the weewx registry? '
                              'Default is "n" (do not register).')
     parser.add_argument('--station-url',
+                        metavar='URL',
                         help='Unique URL to be used if registering the station. '
                              'Required if the station is to be registered.')
     parser.add_argument('--units', choices=['us', 'metricwx', 'metric'],
@@ -276,10 +283,13 @@ def _add_common_args(parser):
                         help='Set display units to us, metricwx, or metric. '
                              'Default is "us".')
     parser.add_argument('--skin-root',
+                        metavar='DIRECTORY',
                         help='Where to put the skins, relatve to WEEWX_ROOT. Default is "skins".')
     parser.add_argument('--sqlite-root',
+                        metavar='DIRECTORY',
                         help='Where to put the SQLite database, relative to WEEWX_ROOT. '
                              'Default is "archive".')
     parser.add_argument('--html-root',
+                        metavar='DIRECTORY',
                         help='Where to put the generated HTML and images, relative to WEEWX_ROOT. '
                              'Default is "public_html".')
