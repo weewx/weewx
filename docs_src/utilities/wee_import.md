@@ -3199,7 +3199,7 @@ Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 0
                 database. The simplicity of this process will depend on your ability to use SQL, the amount of data
                 imported, and whether the imported data was dispersed amongst existing. Once contaminated data have been
                 removed the daily summary tables will need to be rebuilt using the <span
-                    class="code">wee_database</span> utility.
+                    class="code">weectl database rebuild-daily</span> utility.
             </li>
 
             <li>Delete the database and start over. For SQLite, simply delete the database file. For MySQL, drop the

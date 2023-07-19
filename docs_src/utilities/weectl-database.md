@@ -6,22 +6,6 @@ Specify `--help` to see the various actions and options:
 
     weectl database --help
 
-## Common options
-
-These are options used by most of the actions.
-
-### --config
-
-Path to the configuration file. Default is `~/weewx-data/weewx.conf`.
-
-### --binding
-
-The database binding to use. Default is `wx_binding`.
-
-### --dry-run
-
-Show what would happen if the action was run, but do not actually make any writable changes.
-
 ## Create a new database
 
     weectl database create
@@ -239,6 +223,22 @@ and lows. It is much faster than `weectl database rebuild-daily`, and has the ad
 highs and lows remain unchanged.
 
 Other options are as in `weectl database rebuild-daily`.
+
+## Options
+
+These are options used by most of the actions.
+
+### --config
+
+Path to the configuration file. Default is `~/weewx-data/weewx.conf`.
+
+### --binding
+
+The database binding to use. Default is `wx_binding`.
+
+### --dry-run
+
+Show what would happen if the action was run, but do not actually make any writable changes.
 
 
 

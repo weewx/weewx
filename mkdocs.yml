@@ -108,7 +108,6 @@ nav:
       - weectl station: utilities/weectl-station.md
       - weectl extension: utilities/weectl-extension.md
       - weectl database: utilities/weectl-database.md
-    - wee_database: utilities/wee_database.md
     - wee_debug: utilities/wee_debug.md
     - wee_device: utilities/wee_device.md
     - wee_import: utilities/wee_import.md

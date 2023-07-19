@@ -35,7 +35,6 @@ packages = [
     { include = "weeplot", from = "bin" },
     { include = "weeutil", from = "bin" },
     { include = "weewx", from = "bin" },
-    { include = "wee_database.py", from = "bin" },
     { include = "wee_debug.py", from = "bin" },
     { include = "wee_device.py", from = "bin" },
     { include = "wee_import.py", from = "bin" },
@@ -71,7 +70,6 @@ pyserial = "^3.4"
 pyusb = "^1.0.2"
 
 [tool.poetry.scripts]
-wee_database = 'wee_database:main'
 wee_debug = 'wee_debug:main'
 wee_device = 'wee_device:main'
 wee_import = 'wee_import:main'

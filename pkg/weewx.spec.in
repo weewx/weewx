@@ -62,7 +62,7 @@
 %global cfg_file     %{dst_cfg_dir}/weewx.conf
 %global dst_user_dir %{dst_bin_dir}/user
 
-%define entry_points weewxd wee_config wee_database wee_debug wee_device wee_extension wee_import wee_reports
+%define entry_points weewxd weectl wee_debug wee_device wee_import wee_reports
 
 Summary: weather software
 Name: weewx
@@ -213,11 +213,9 @@ rm -rf %{buildroot}
 %{_sysconfdir}/default/weewx
 %{dst_bin_dir}/
 %{_bindir}/weewxd
-%{_bindir}/wee_config
-%{_bindir}/wee_database
+%{_bindir}/weectl
 %{_bindir}/wee_debug
 %{_bindir}/wee_device
-%{_bindir}/wee_extension
 %{_bindir}/wee_import
 %{_bindir}/wee_reports
 %doc %{dst_doc_dir}/

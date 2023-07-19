@@ -233,7 +233,8 @@ def reconfigure_database(config_path,
                          db_binding='wx_binding',
                          dry_run=False):
     """Create a new database, then populate it with the contents of an old database, but use
-    the current configuration options."""
+    the current configuration options. The reconfigure action will create a new database with the
+     same name as the old, except with the suffix _new attached to the end."""
 
     config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
     weectllib.initialize(config_dict)
