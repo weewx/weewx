@@ -189,10 +189,10 @@ have a file suffix of `.html.tmpl`). This is most easily done by
 opening the template and the language file in different editor windows.
 It is much easier if you can change both files simultaneously.
 
-#### Change the `html lang` attribute
+#### Change the HTML `lang` attribute
 
-At the top of the template, change the HTML "lang" attribute to a
-configurable value.
+At the top of the template, change the HTML `lang` attribute to a
+configurable value, `$lang`.
 
 ``` html
 <!DOCTYPE html>
@@ -202,11 +202,12 @@ configurable value.
     ...
 ```
 
-The value `$lang` will get replaced by the actual language to be
-used.
+The value `$lang` will get replaced by the actual language to be used.
 
-[language codes](https://www.w3schools.com/tags/ref_language_codes.asp)<br/>
-[country codes](https://www.w3schools.com/tags/ref_country_codes.asp)
+For reference, here are the ISO language and country codes:
+
+* [language codes](https://www.w3schools.com/tags/ref_language_codes.asp)<br/>
+* [country codes](https://www.w3schools.com/tags/ref_country_codes.asp)
 
 #### Change the body text
 
@@ -268,12 +269,10 @@ replace HTML tags and HTML options.
 ### Think about time
 
 Whenever a time is used in a template, it will need a format. WeeWX
-comes with the following set of defaults, defined in
-`defaults.py`:
+comes with the following set of defaults:
 
 ``` ini
 [Units]
-    ...
     [[TimeFormats]]
         day        = %X
         week       = %X (%A)
@@ -283,6 +282,20 @@ comes with the following set of defaults, defined in
         current    = %x %X
         ephem_day  = %X
         ephem_year = %x %X
+```
+
+The times for images are defined with the following defaults:
+
+``` ini
+[ImageGenerator]
+    [[day_images]]
+        bottom_label_format = %x %X
+    [[week_images]]
+        bottom_label_format = %x %X
+    [[month_images]]
+        bottom_label_format = %x %X
+    [[year_images]]
+        bottom_label_format = %x %X
 ```
 
 These defaults will give something readable in every locale, but they
@@ -298,13 +311,9 @@ would add the following to your Spanish localization file
 `es.conf`:
 
 ``` ini
-...
-
 [Units]
     [[TimeFormats]]
         current = %d-%B-%Y %H:%M
-
-...     
 ```
 
 ### Set the environment variable `LANG` {#environment_variable_LANG}
