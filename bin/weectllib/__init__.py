@@ -6,8 +6,24 @@
 """The 'weectllib' package."""
 
 import datetime
+import importlib
 
+import weeutil.logger
 import weewx
+from weeutil.weeutil import to_int
+
+
+def initialize(config_dict):
+    # Set weewx.debug as necessary:
+    weewx.debug = to_int(config_dict.get('debug', 0))
+
+    # Customize the logging with user settings.
+    weeutil.logger.setup('weectl', config_dict)
+
+    # Add the 'user' package to PYTHONPATH
+    weewx.add_user_path(config_dict)
+    # Now we can import user.extensions
+    importlib.import_module('user.extensions')
 
 
 def parse_dates(date=None, from_date=None, to_date=None, as_datetime=False):
