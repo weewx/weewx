@@ -1,16 +1,18 @@
 # The Image generator {#image_generator}
 
-This section gives an overview of the Image generator. For details about each of its various
-options, see the section [`[ImageGenerator]`](../options_ref/#ImageGenerator) in the [*Reference: report
-options*](../options_ref).
+This section gives an overview of the Image generator. For details about each
+of its various options, see the section
+[`[ImageGenerator]`](../report-options/#ImageGenerator)
+in the [*report options*](../report-options).
 
-The installed version of WeeWX is configured to generate a set of useful plots. But, what if you
-don't like how they look, or you want to generate different plots, perhaps with different
-aggregation types? This section covers how to do this.
+The installed version of WeeWX is configured to generate a set of useful plots.
+But, what if you don't like how they look, or you want to generate different
+plots, perhaps with different aggregation types? This section covers how to do
+this.
 
-Image generation is controlled by the section [`[ImageGenerator]`](../options_ref/#ImageGenerator) in the skin
-configuration file `skin.conf`. Let's take a look at the beginning part of this section. It looks
-like this:
+Image generation is controlled by the section `[ImageGenerator]` in the skin
+configuration file `skin.conf`. Let's take a look at the beginning part of
+this section. It looks like this:
 
 ``` ini
 [ImageGenerator]
@@ -24,20 +26,22 @@ like this:
     ...
 ```
 
-The options directly under the section name `[ImageGenerator]` will apply to *all* plots, unless
-overridden in subsections. So, unless otherwise changed, all plots will be 500 pixels in width, 180
-pixels in height, and will have an RGB background color of #f5f5f5, a very light gray (HTML color
-"WhiteSmoke"). The chart itself will have a background color of #d8d8d8 (a little darker gray),
-and the gridlines will be #a0a0a0 (still darker). The other options farther down (not shown) will
-also apply to all plots.
+The options directly under the section name `[ImageGenerator]` will apply to
+*all* plots, unless overridden in subsections. So, unless otherwise changed,
+all plots will be 500 pixels in width, 180 pixels in height, and will have an
+RGB background color of `#f5f5f5`, a very light gray (HTML color "WhiteSmoke").
+The chart itself will have a background color of `#d8d8d8` (a little darker
+gray), and the gridlines will be `#a0a0a0` (still darker). The other options
+farther down (not shown) will also apply to all plots.
 
 ## Time periods
 
-After the "global" options at the top of section `[ImageGenerator]`, comes a set of sub-sections,
-one for each time period (day, week, month, and year). These sub-sections define the nature of
-aggregation and plot types for that time period. For example, here is a typical set of options for
-sub-section `[[month_images]]`. It controls which "monthly" images will get generated, and what
-they will look like:
+After the "global" options at the top of section `[ImageGenerator]`, comes a
+set of sub-sections, one for each time period (day, week, month, and year).
+These sub-sections define the nature of aggregation and plot types for that
+time period. For example, here is a typical set of options for sub-section
+`[[month_images]]`. It controls which "monthly" images will get generated,
+and what they will look like:
 
 ``` ini
     [[month_images]]
@@ -132,8 +136,8 @@ includes a line plot of both outside temperature and dewpoint:
 
 ### Including a type more than once in a plot {#including_same_sql_type_2x}
 
-Another example. Suppose that you want a plot of the day's temperature, overlaid
-with hourly averages. Here, you are using the same data type
+Another example. Suppose that you want a plot of the day's temperature,
+overlaid with hourly averages. Here, you are using the same data type
 (`outTemp`) for both plot lines, the first with averages, the
 second without. If you do the obvious it won't work:
 
@@ -172,7 +176,8 @@ will use data type ` outTemp` and that it will use averaging over
 a one hour period. The second also uses `outTemp`, but will not
 use averaging.
 
-The result is a nice plot of the day's temperature, overlaid with a one-hour smoothed average:
+The result is a nice plot of the day's temperature, overlaid with a one-hour
+smoothed average:
 
 ![Daytime temperature with running average](../images/daytemp_with_avg.png)
 
@@ -234,8 +239,8 @@ today's outside temperature and dewpoint:
 ```
 
 Both `outTemp` and `dewpoint` belong to unit group
-`group_temperature`, so this plot will use whatever unit has been
-specified for that group. See the section [*Mixed units*](../custom_reports/#mixed-units)
+`group_temperature`, so this plot will use whatever unit has been specified
+for that group. See the section [*Mixed units*](../custom_reports/#mixed-units)
 for details.
 
 However, supposed you'd like to offer both Metric and US Customary
