@@ -156,11 +156,10 @@ def add_subparser(subparsers):
                                              'WEEWX_ROOT. Default is "skins".')
     station_upgrade_parser.add_argument('--what',
                                         choices=['config', 'docs', 'examples', 'util', 'skins'],
-                                        default=['config', 'docs', 'examples', 'util'],
+                                        default=['docs', 'examples', 'util'],
                                         nargs='+',
                                         help='What to upgrade. Default is to upgrade the '
-                                             'configuration file, documentation, examples, and '
-                                             'utility files.')
+                                             'documentation, examples, and utility files.')
     station_upgrade_parser.add_argument('--no-backup', action='store_true',
                                         help='Do not backup the old configuration file.')
     station_upgrade_parser.add_argument('--no-prompt', action='store_true',

@@ -3,7 +3,7 @@
 ## Overview
 
 WeeWX options are specified in a configuration file, nominally called
-`weewx.conf`. This is a big text file that holds the configuration information
+`weewx.conf`. This is a big text file, which holds the configuration information
 about your installation of WeeWX. This includes things such as:
 
 * The type of hardware you have.
@@ -16,7 +16,7 @@ about your installation of WeeWX. This includes things such as:
     method. For example, if you installed using pip, then the nominal location
     is `~/weewx-data/weewx.conf`. For other installation methods, the location
     depends on your operating system. See the section
-    [*Where to find things*][application layout table].
+    [*Where to find things*](../where).
 
 
 !!! note
