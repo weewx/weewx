@@ -21,6 +21,7 @@ theme:
     - search.highlight
     - search.share
     - search.suggest
+    - content.tabs.link
 
   font:
     text: 'Noto Sans'
