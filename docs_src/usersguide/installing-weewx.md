@@ -78,16 +78,16 @@ If you want to install WeeWX on a system with very little storage, or if you
 want to experiment with code that is under development, then you may want to
 run directly from the WeeWX sources.
 
-| | apt/yum/zypper | pip | git |
-|---|---|---|---|
-| Operating system | Only systems based on Debian, Redhat, or SUSE | Any operating system | Any operating system |
-| Installation steps | Single | Multiple | Multiple |
-| Privileges required | root | Install, configure, or upgrade does not require root | Install, configure, or upgrade does not require root |
-| Software location | Installs into locations that are standard for the operating system | Installs into locations that are standard for Python | No files are installed |
-| Configuration location | /etc/weewx | ~/weewx-data | ~/weewx-data |
-| Database location | /var/lib/weewx | ~/weewx-data | ~/weewx-data |
-| Report location | /var/www/html/weewx | ~/weewx-data | ~/weewx-data |
-| Log location | syslog | syslog | syslog |
+|                        | apt/yum/zypper                                                     | pip                                                  | git                                                  |
+|------------------------|--------------------------------------------------------------------|------------------------------------------------------|------------------------------------------------------|
+| Operating system       | Only systems based on Debian, Redhat, or SUSE                      | Any operating system                                 | Any operating system                                 |
+| Installation steps     | Single                                                             | Multiple                                             | Multiple                                             |
+| Privileges required    | root                                                               | Install, configure, or upgrade does not require root | Install, configure, or upgrade does not require root |
+| Software location      | Installs into locations that are standard for the operating system | Installs into locations that are standard for Python | No files are installed                               |
+| Configuration location | /etc/weewx                                                         | ~/weewx-data                                         | ~/weewx-data                                         |
+| Database location      | /var/lib/weewx                                                     | ~/weewx-data                                         | ~/weewx-data                                         |
+| Report location        | /var/www/html/weewx                                                | ~/weewx-data                                         | ~/weewx-data                                         |
+| Log location           | syslog                                                             | syslog                                               | syslog                                               |
 
 The quick start guides contain installation instructions for each method:
 

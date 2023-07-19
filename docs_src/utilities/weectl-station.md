@@ -30,25 +30,24 @@ See the section [_Options_](#options) below for details of the various options.
 The `create` action will create a directory and populate it with station data.
 After the command completes, the directory will contain:
 
-- a configuration file called `weewx.conf`
-- documentation
-- examples
-- utility files
-- skins
+- a configuration file called `weewx.conf`;
+- documentation;
+- examples;
+- utility files; and
+- skins.
 
 This action is typically used to create the initial station configuration when
 installing WeeWX for the first time.  It can also be used to create
 configurations for multiple stations.
 
-If invoked without any options, `create` will prompt you for various settings,
-such as the type of hardware you are using, the station altitude and location,
-etc.
+If invoked without any options, the `create` action will prompt you for
+various settings, such as the type of hardware you are using, the station
+altitude and location, etc.
 
 Use the option `--no-prompt` to create a configuration without prompts. This
 will use settings specified as options, and default values for any setting
-not specified.
-
-This is useful when creating a station with an automated script. For example,
+not specified. This is useful when creating a station with an automated script.
+For example,
 
     weectl station create --no-prompt --driver=weewx.drivers.vantage \
         --altitude="400,foot" --latitude=45.1 --longitude=-105.9 \ 
@@ -107,16 +106,16 @@ When you upgrade WeeWX, only the code is upgraded; upgrades to WeeWX
 do not modify the station data, specifically configuration file, database,
 or skins.
 
-Use the `upgrade` action to upgrade these items.  When invoked with no
-options, the `upgrade` action upgrades only the documentation, examples,
-and utility files.
+Use the `upgrade` action to upgrade one or more of these items.
 
 ```
 weectl station upgrade
 ```
 
-By default, skins are intentionally not upgraded. This is to avoid overwriting
-any changes you might have made to your skins.
+When invoked with no options, the `upgrade` action upgrades only the
+documentation, examples, and utility files. By default, the configuration file
+and skins are not upgraded. This is to avoid overwriting any changes you might
+have made.
 
 If you wish to upgrade the skins, you must specify `--what skins`. This will
 put the current version of the skins into `WEEWX_ROOT`, leaving timestamped

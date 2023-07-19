@@ -73,13 +73,13 @@ documentation.
 If you use a pip install, the location of the executables will depend on the
 how the pip installation was done.
 
-| Install method                            | Commands                                                                     | Location of executables |
-|-------------------------------------------|------------------------------------------------------------------------------|-------------------------|
-| pip, no sudo, with `--user` (recommended) | `pip3 install weewx --user`                                                  | `~/.local/bin/`         |
-| pip, no sudo, no `--user`                 | `pip3 install weewx`                                                         | `~/.local/bin/`         |
-| pip with sudo (not recommended)           | `sudo pip3 install weewx`                                                    | `/usr/local/bin/` (1)   |
-| Virtual environment                       | `python3 -m venv ve`<br/>`. ve/bin/activate`<br/>`pip3 install weewx`        | `./ve/bin/`             |
-| Virtual environment with `--user`         | `python3 -m venv ve`<br/>`. ve/bin/activate`<br/>`pip3 install weewx --user` | Not allowed             |
+| Install method                    | Commands                                                                     | Location of executables |
+|-----------------------------------|------------------------------------------------------------------------------|-------------------------|
+| Virtual environment (recommended) | `python3 -m venv ve`<br/>`. ve/bin/activate`<br/>`pip3 install weewx`        | `./ve/bin/`             |
+| pip, no sudo, with `--user`       | `pip3 install weewx --user`                                                  | `~/.local/bin/`         |
+| pip, no sudo, no `--user`         | `pip3 install weewx`                                                         | `~/.local/bin/`         |
+| pip with sudo (not recommended)   | `sudo pip3 install weewx`                                                    | `/usr/local/bin/` (1)   |
+| Virtual environment with `--user` | `python3 -m venv ve`<br/>`. ve/bin/activate`<br/>`pip3 install weewx --user` | Not allowed             |
 
 (1) Checked on Ubuntu 22.02 and Rocky v9.1
 

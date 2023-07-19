@@ -21,6 +21,7 @@ When doing `weectl station create`, install everything under the `util` subdirec
 - Check semantics of specifying a time for `--from` and/or `--to` 
   in `weectl database calc-missing`.
 - Remove the old `wee_database` application and any references to it.
+- Make sure output of `--help` matches documentation.
 
 ## Logging
 

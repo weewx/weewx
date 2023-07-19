@@ -4,7 +4,7 @@ The WeeWX weather system is written in Python and runs on Linux, MacOSX,
 Solaris, and *BSD.  It collects data from many different types of weather
 stations and sensors, then generates plots, HTML pages, and monthly and
 yearly summary reports. It can push plots, pages, and reports to a web
-server, and data to many different online weather services.
+server, and data to many online weather services.
 
 Initial development began in the winter of 2008-2009, with the first release
 in 2009.
