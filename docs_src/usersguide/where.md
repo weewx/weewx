@@ -1,18 +1,19 @@
 # Where to find things
 
-## Locations
+## Location of WeeWX components
 
-Here is a summary of the layout for the different install methods, along with the symbolic names used for each role. These names are used throughout the documentation.
+Here is a summary of the layout for the different install methods, along with
+the symbolic names used for each component. These names are used throughout the
+documentation.
 
 !!! Note
-    The install locations below are *relative to _`WEEWX_ROOT`_*. See Python's documentation on
-    [`os.path.join()`](https://docs.python.org/3.7/library/os.path.html#os.path.join) for the 
-    results of joining two absolute paths (summary: the 2nd path wins).
+    In the locations below, relative paths are *relative to _`WEEWX_ROOT`_*.
+    Absolute paths begin with a forward slash (`/`).
 
 
 === "Debian"
 
-    | Role                    | Symbolic name    | Nominal value                   |
+    | Component               | Symbolic name    | Nominal value                   |
     |-------------------------|------------------|---------------------------------|
     | WeeWX root directory    | _`WEEWX_ROOT`_   | `/`                             |
     | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`             |
@@ -24,9 +25,9 @@ Here is a summary of the layout for the different install methods, along with th
     | Examples                | _`EXAMPLE_ROOT`_ | `/usr/share/doc/weewx/examples/`|
     | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user`         |
 
-=== "RedHat/openSUSE"
+=== "RedHat"
 
-    | Role                    | Symbolic name    | Nominal value                          |
+    | Component               | Symbolic name    | Nominal value                          |
     |-------------------------|------------------|----------------------------------------|
     | WeeWX root directory    | _`WEEWX_ROOT`_   | `/`                                    |
     | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`                    |
@@ -38,24 +39,39 @@ Here is a summary of the layout for the different install methods, along with th
     | Examples                | _`EXAMPLE_ROOT`_ | `/usr/share/doc/weewx-x.y.z/examples/` |
     | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user`                |
 
-=== "Pip (including macOS)"
+=== "openSUSE"
 
-    | Role                    | Symbolic name    | Nominal value        |
+    | Component               | Symbolic name    | Nominal value                          |
+    |-------------------------|------------------|----------------------------------------|
+    | WeeWX root directory    | _`WEEWX_ROOT`_   | `/`                                    |
+    | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`                    |
+    | Configuration directory | _`CONFIG_ROOT`_  | `/etc/weewx/`                          |
+    | Skins and templates     | _`SKIN_ROOT`_    | `/etc/weewx/skins/`                    |
+    | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`                      |
+    | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`                 |
+    | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx-x.y.z/`          |
+    | Examples                | _`EXAMPLE_ROOT`_ | `/usr/share/doc/weewx-x.y.z/examples/` |
+    | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user`                |
+
+=== "pip"
+
+    | Component               | Symbolic name    | Nominal value        |
     |-------------------------|------------------|----------------------|
     | WeeWX root directory    | _`WEEWX_ROOT`_   | `~/weewx-data`       |
-    | Executables             | _`BIN_ROOT`_     | see below            |
+    | Executables             | _`BIN_ROOT`_     | varies               |
     | Configuration directory | _`CONFIG_ROOT`_  | `./`                 |
-    | Skins and templates     | _`SKIN_ROOT`_    | `./skins/`           |
-    | SQLite databases        | _`SQLITE_ROOT`_  | `./archive/`         |
-    | Web pages and images    | _`HTML_ROOT`_    | `./public_html/`     |
-    | Documentation           | _`DOC_ROOT`_     | `./docs`             |
-    | Examples                | _`EXAMPLE_ROOT`_ | `./examples/`        |
-    | User directory          | _`USER_ROOT`_    | `./bin/user`         |
+    | Skins and templates     | _`SKIN_ROOT`_    | `skins/`             |
+    | SQLite databases        | _`SQLITE_ROOT`_  | `archive/`           |
+    | Web pages and images    | _`HTML_ROOT`_    | `public_html/`       |
+    | Documentation           | _`DOC_ROOT`_     | `docs/`              |
+    | Examples                | _`EXAMPLE_ROOT`_ | `examples/`          |
+    | User directory          | _`USER_ROOT`_    | `bin/user/`          |
 
 
-## Location of pip-installed executables
+## Location of executables in a `pip` install
 
-If you use a pip install, the location of the executables will depend on the details:
+If you use a pip install, the location of the executables will depend on the
+how the pip installation was done.
 
 | Install method                            | Commands                                                                     | Location of executables |
 |-------------------------------------------|------------------------------------------------------------------------------|-------------------------|
@@ -70,18 +86,39 @@ If you use a pip install, the location of the executables will depend on the det
 
 ## Log files
 
-Where to find your log file. You may require root permissions to read them.
+In the default configuration, WeeWX writes its status to the system log.
+This is where to find the system log for each platform.
 
 === "Debian"
 
-    `/var/log/syslog`
+    ```
+    /var/log/syslog
+    ```
 
-=== "RedHat/openSUSE"
+    !!! Note
+        You need root permission to view the log.
+
+=== "RedHat"
 
     `/var/log/messages`
 
+    !!! Note
+        You need root permission to view the log.
+
+=== "openSUSE"
+
+    `/var/log/messages`
+
+    !!! Note
+        You need root permission to view the log.
+
 === "macOS"
 
-    The macOS log file is nominally found at `/var/log/syslog`. However, it is likely to contain
-    only severe log messages. You may want to consider logging to a rotating file. See the
-    wiki article [*Logging to rotating files*](https://github.com/weewx/weewx/wiki/WeeWX-v4-and-logging#logging-to-rotating-files).
+    `/var/log/syslog`
+
+    !!! note
+        The log file is likely to contain only severe log messages.
+
+If the default for your system is inconvenient, or does not provide the logging
+fidelity that you require, then you may want to consider logging to a separate,
+rotating log file. See the wiki article [*Logging to rotating files*](https://github.com/weewx/weewx/wiki/WeeWX-v4-and-logging#logging-to-rotating-files).
