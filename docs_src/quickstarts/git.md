@@ -1,19 +1,20 @@
-# Running WeeWX from a git repository
+# Running WeeWX from source
 
-Because WeeWX is pure-Python and does not need to be compiled, it can be run directly from source
-without "installing" it first. This approach is perhaps most appropriate for developers, but it is
-also useful on older operating systems or on platforms with tight memory and/or storage
-constraints.
+Because WeeWX is pure-Python and does not need to be compiled, it can be run
+directly from source without "installing" it first. This approach is perhaps
+most appropriate for developers, but it is also useful on older operating
+systems or on platforms with tight memory and/or storage constraints.
 
-This technique can be used to run from a clone of the WeeWX repository, or from a source directory
-expanded from a zip/tar file.
+This technique can be used to run from a clone of the WeeWX repository, or
+from a source directory expanded from a zip/tar file.
 
-Although you do not need root privileges to run WeeWX this way, you will need them to set up a
-daemon and, perhaps, to change device permissions.
+Although you do not need root privileges to run WeeWX this way, you will need
+them to set up a daemon and, perhaps, to change device permissions.
 
 ## Install pre-requisites
 
-Before you run from source, you must install the pre-requisite Python and Python modules.
+Before you run from source, you must install the pre-requisite Python and
+Python modules.
 
 1. Ensure that Python 3.7 or later is installed.
 
@@ -34,7 +35,8 @@ Before you run from source, you must install the pre-requisite Python and Python
     python3 -m pip install Pillow -y
     ```
 
-5. Depending on your situation, you may want to install these additional dependencies:
+5. Depending on your situation, you may want to install these additional
+dependencies:
 
     ``` {.shell .copy}
     # If your hardware uses a serial port
@@ -49,14 +51,16 @@ Before you run from source, you must install the pre-requisite Python and Python
 
 ## Get the code
 
-Use `git` to clone the WeeWX repository into a directory called `weewx` in your home directory.
+Use `git` to clone the WeeWX repository into a directory called `weewx` in
+your home directory.
 
 ```shell
 git clone https://github.com/weewx/weewx ~/weewx
 ```
 
 !!! Note
-    For systems with very little space, you may want to create a *shallow* clone:
+    For systems with very little space, you may want to create a *shallow*
+    clone:
     ``` {.shell .copy}
     git clone --depth 1 https://github.com/weewx/weewx ~/weewx
     ```
