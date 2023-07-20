@@ -1,7 +1,8 @@
 # Vantage {id=vantage_notes}
 
-The Davis Vantage stations include a variety of models and configurations.  The WeeWX driver can
-communicate with a console or envoy using serial, USB, or TCP/IP interface.
+The Davis Vantage stations include a variety of models and configurations.
+The WeeWX driver can communicate with a console or envoy using serial, USB,
+or TCP/IP interface.
 
 ## Configuring with `wee_device` {id=vantage_configuration}
 
@@ -12,7 +13,7 @@ The Vantage stations can be configured with the utility
 
     Make sure you stop `weewxd` before running `wee_device`
 
-### Action `--help` {id=vantage_help}
+### `--help` {id=vantage_help}
 
 Invoking `wee_device` with the `--help` option
 
@@ -123,7 +124,7 @@ Be sure to stop weewxd first before using. Mutating actions will request
 confirmation before proceeding.
 ```
 
-### Action `--info` {id=vantage_info}
+### `--info` {id=vantage_info}
 
 Use the `--info` option to display the current EEPROM settings:
 
@@ -208,111 +209,128 @@ Davis Vantage EEPROM settings:
       <span class="highlight">Extra Humidity 1:             +0.0 F</span>
 </pre>
 
-The console version number is available only on consoles with firmware dates after about 2006.
+The console version number is available only on consoles with firmware dates
+after about 2006.
 
 <span class="highlight">Highlighted</span> values can be modified using the
-            various `wee_device` commands below.
+various `wee_device` commands below.
 
-### Action `--current` {id=vantage_current}
+### `--current` {id=vantage_current}
+
 This command will print a single LOOP packet.
 
-### Action `--clear-memory` {id=vantage_clear_console_memory}
+### `--clear-memory` {id=vantage_clear_console_memory}
 
 This command will clear the logger memory after asking for confirmation.
 
-### Action `--set-interval` {id=vantage_archive_interval}
+### `--set-interval=N` {id=vantage_archive_interval}
 
-Use this command to change the archive interval of the internal logger. Valid intervals are 1, 5,
-10, 15, 30, 60, or 120 minutes. However, if you are ftp'ing lots of files to a server, setting it
-to one minute may not give enough time to have them all uploaded before the next archive record is
-due. If this is the case, you should pick a longer archive interval, or trim the number of files
-you are using.
+Use this command to change the archive interval of the internal logger. Valid
+intervals are 1, 5, 10, 15, 30, 60, or 120 minutes. However, if you are
+ftp'ing lots of files to a server, setting it to one minute may not give
+enough time to have them all uploaded before the next archive record is
+due. If this is the case, you should pick a longer archive interval, or
+trim the number of files you are using.
 
-An archive interval of five minutes works well for the Vantage stations. Because of the large
-amount of onboard memory they carry, going to a larger interval does not have any real advantages.
+An archive interval of five minutes works well for the Vantage stations.
+Because of the large amount of onboard memory they carry, going to a larger
+interval does not have any real advantages.
 
-Example: to change the archive interval to 10 minutes:
+Example: change the archive interval to 10 minutes:
 
     wee_device --set-interval=10
 
-### Action `--set-altitude`
+### `--set-altitude=N`
 
-Use this command to set the console's stored altitude. The altitude must be in <em>feet</em>. Example:
+Use this command to set the console's stored altitude. The altitude must be in
+_feet_.
+
+Example: change the altitude to 700 feet:
 
     wee_device --set-altitude=700
 
-### Action `--set-barometer`
+### `--set-barometer=N`
 
-Use this command to calibrate the barometer in your Vantage weather station. To use it, you must
-have a known correct barometer reading _for your altitude_. In practice, you will either
-have to move your console to a known-correct station (perhaps a nearby airport) and perform the
-calibration there, or reduce the barometer reading to your altitude. Otherwise, specify the value
+Use this command to calibrate the barometer in your Vantage weather station.
+To use it, you must have a known correct barometer reading _for your altitude_.
+In practice, you will either have to move your console to a known-correct
+station (perhaps a nearby airport) and perform the calibration there, or
+reduce the barometer reading to your altitude. Otherwise, specify the value
 zero and the station will pick a sensible value.
 
-### Action `--set-bucket` {id=vantage_rain_bucket_type}
+The barometer value must be in _inches of Mercury_.
 
-Normally, this is set by Davis, but if you have replaced your bucket with a different kind, you
-might want to reconfigure. For example, to change to a 0.1 mm bucket (bucket code `2`), use the
-following:
+### `--set-bucket` {id=vantage_rain_bucket_type}
+
+Normally, this is set by Davis, but if you have replaced your bucket with a
+different kind, you might want to reconfigure. For example, to change to a
+0.1 mm bucket (bucket code `2`), use the following:
 
     wee_device --set-bucket=2
 
-### Action `--set-rain-year-start`
+### `--set-rain-year-start`
 
-The Davis Vantage series allows the start of the rain year to be something other than 1 January.
+The Davis Vantage series allows the start of the rain year to be something
+other than 1 January.
+
 For example, to set it to 1 October:
 
     wee_device --set-rain-year-start=10
 
-### Action `--set-offset` {id=vantage_setting_offsets}
+### `--set-offset` {id=vantage_setting_offsets}
 
-The Davis instruments can correct sensor errors by adding an _offset_ to their emitted values. This
-is particularly useful for Southern Hemisphere users. Davis fits the wind vane to the Integrated
-Sensor Suite (ISS) in a position optimized for Northern Hemisphere users, who face the solar panel
-to the south. Users south of the equator must orient the ISS's solar panel to the north to get
-maximal insolation, resulting in a 180° error in the wind direction. The solution is to add a 180°
-offset correction. You can do this with the following command:
+The Davis instruments can correct sensor errors by adding an _offset_ to their
+emitted values. This is particularly useful for Southern Hemisphere users.
+Davis fits the wind vane to the Integrated Sensor Suite (ISS) in a position
+optimized for Northern Hemisphere users, who face the solar panel to the south.
+Users south of the equator must orient the ISS's solar panel to the north to
+get maximal insolation, resulting in a 180° error in the wind direction. The
+solution is to add a 180° offset correction. You can do this with the
+following command:
 
     wee_device --set-offset=windDir,180
 
-<h3 id="vantage_configuring_additional_sensors">
-Action <span class="code">--set-transmitter-type</span></h3>
+### `--set-transmitter-type` {id=vantage_configuring_additional_sensors}
 
-If you have additional sensors and/or repeaters for your Vantage station, you can configure them
-using your console. However, if you have a [Davis Weather Envoy
-receiver](https://www.davisinstruments.com/product/wireless-weather-envoy/), it will not have a
-console! As an alternative, `wee_device` can do this using the command `--set-transmitter-type`.
+If you have additional sensors and/or repeaters for your Vantage station, you
+can configure them using your console. However, if you have a [Davis Weather
+Envoy](https://www.davisinstruments.com/product/wireless-weather-envoy/),
+it will not have a console! As an alternative, `wee_device` can do this using
+the command `--set-transmitter-type`.
 
-For example, to add an extra temperature sensor to channel 3 and no repeater is used, do the following:
+For example, to add an extra temperature sensor to channel 3 and no repeater
+is used, do the following:
 
     wee_device --set-transmitter-type=3,1,2
 
-This says to turn on channel 3, set its type to 1 ("Temperature only"), and it will show up in the
-database as `extraTemp2`. No repeater id was specified, so it defaults to "no repeater."
+This says to turn on channel 3, set its type to 1 ("Temperature only"), and it
+will show up in the database as `extraTemp2`. No repeater id was specified, so
+it defaults to "no repeater."
 
-
-Here's another example, this time for a combined temperature /
-humidity sensor retransmitted via repeater A:
+Here's another example, this time for a combined temperature / humidity sensor
+retransmitted via repeater A:
 
     wee_device --set-transmitter-type=5,3,2,4,a
 
-This will add the combined sensor to channel 5, set its type to 3 ("Temperature and humidity"), via Repeater A, and it will
+This will add the combined sensor to channel 5, set its type to 3
+("Temperature and humidity"), via Repeater A, and it will
 show up in the database as `extraTemp2` and `extraHumid4`.
 
+The `--help` option will give you the code for each sensor type and repeater
+id.
 
-The `--help` option will give you the code for each sensor type and repeater id.
-
-If you have to use repeaters with your Vantage Pro2 station, please take a look at [Installing
-Repeater Networks for Vantage
+If you have to use repeaters with your Vantage Pro2 station, please take a
+look at [Installing Repeater Networks for Vantage
 Pro2](https://support.davisinstruments.com/article/t9nvrc8c1u-app-notes-installing-repeater-networks-for-vantage-pro-2)
 for how to set them up.
 
+### `--set-retransmit` {id=vantage_retransmit}
 
-### Action `--set-retransmit` {id=vantage_retransmit}
+Use this command to tell your console whether to act as a retransmitter of ISS
+data.
 
-Use this command to tell your console whether to act as a retransmitter of ISS data.
-
-Example: Tell your console to retransmit ISS data using the first available channel:
+Example: Tell your console to retransmit ISS data using the first available
+channel:
 
     wee_device --set-retransmit=on
 
@@ -322,38 +340,37 @@ Example: Tell your console to retransmit ISS data on channel 4:
 
 !!! Warning
 
-    You only can use channels not actively used for reception. The command checks for
-    this and will not accept channel numbers actively used for reception of sensor
-    stations.
+    You can use only channels not actively used for reception. The command
+    checks for this and will not accept channel numbers actively used for
+    reception of sensor stations.
 
 Example: Tell your console to turn retransmission 'OFF':
 
     wee_device --set-retransmit=off
 
-### Action `--set-dst`
+### `--set-dst`
 
-Use the command to tell your console whether daylight savings time is in effect, or to have it set
-automatically based on the time zone.
+Use the command to tell your console whether daylight savings time is in
+effect, or to have it set automatically based on the time zone.
 
-### Action `--set-tz-code` {id=vantage_time_zone}
+### `--set-tz-code` {id=vantage_time_zone}
 
-This command can be used to change the time zone. Consult the Vantage manual for the code that
-corresponds to your time zone.
+This command can be used to change the time zone. Consult the Vantage manual
+for the code that corresponds to your time zone.
 
-For example, to set the time zone code to Central European Time
-(code 20):
+For example, to set the time zone code to Central European Time (code 20):
 
     wee_device --set-tz-code=20
 
 !!! Warning
 
-    You can set either the time zone code _or_ the time zone offset, but not both.
+    You can set either the time zone code _or_ the time zone offset, but
+    not both.
 
-### Action `--set-tz-offset`
+### `--set-tz-offset`
 
-If you live in an odd time zone that is perhaps not covered by the
-"canned" Davis time zones, you can set the
-offset from UTC using this command.
+If you live in an odd time zone that is perhaps not covered by the "canned"
+Davis time zones, you can set the offset from UTC using this command.
 
 For example, to set the time zone offset for Newfoundland Standard
 Time (UTC-03:30), use the following:
@@ -362,53 +379,57 @@ Time (UTC-03:30), use the following:
 
 !!! Warning
 
-    You can set either the time zone code _or_ the time zone offset, but not both.
+    You can set either the time zone code _or_ the time zone offset, but
+    not both.
 
-### Action `--set-lamp`
+### `--set-lamp`
 
 Use this command to turn the console lamp on or off.
 
-### Action `--dump` {id=vantage_dumping_the_logger_memory}
+### `--dump` {id=vantage_dumping_the_logger_memory}
 
-Generally, WeeWX downloads only new archive records from the on-board logger in the Vantage.
-However, occasionally the memory in the Vantage will get corrupted, making this impossible. See the
-section [_WeeWX generates HTML pages, but it does not update
-them_](https://github.com/weewx/weewx/wiki/Troubleshooting-the-Davis-Vantage-station#weewx-generates-html-pages-but-it-does-not-update-them)
-in the Wiki. The fix involves clearing the memory but, unfortunately, this means you may lose any
-data which might have accumulated in the logger memory, but not yet downloaded. By using the
-`--dump` command before clearing the memory, you might be able to save these data. 
+Generally, WeeWX downloads only new archive records from the on-board logger
+in the Vantage. However, occasionally the memory in the Vantage will get
+corrupted, making this impossible. See the section [_WeeWX generates HTML
+pages, but it does not update them_](https://github.com/weewx/weewx/wiki/Troubleshooting-the-Davis-Vantage-station#weewx-generates-html-pages-but-it-does-not-update-them)
+in the Wiki. The fix involves clearing the memory but, unfortunately, this
+means you may lose any data which might have accumulated in the logger memory,
+but not yet downloaded. By using the `--dump` command before clearing the
+memory, you might be able to save these data. 
 
 Stop WeeWX first, then
 
     wee_device --dump
 
-This will dump all data archived in the Vantage memory directly to the database, without regard to
-whether or not they have been seen before. Because the command dumps _all_ data, it may result in
-many duplicate primary key errors. These can be ignored.
+This will dump all data archived in the Vantage memory directly to thee
+database, without regard to whether or not they have been seen before.
+Because the command dumps _all_ data, it may result in many duplicate primary
+key errors. These can be ignored.
 
-### Action `--logger-summary FILE`
+### `--logger-summary`
 
-This command is useful for debugging the console logger. It will scan the logger memory, recording the
-timestamp in each page and index slot to the file `FILE`.
+This command is useful for debugging the console logger. It will scan the
+logger memory, recording the timestamp in each page and index slot to the
+file `FILE`.
 
 Example:
 
     wee_device --logger-summary=/var/tmp/summary.txt
 
-### Action `--start`
+### `--start`
 
-Use this command to start the logger. There are occasions when an out-of-the-box logger needs this
-command.
+Use this command to start the logger. There are occasions when an
+out-of-the-box logger needs this command.
 
-### Action `--stop`
+### `--stop`
 
-Use this command to stop the logger. This can be useful when servicing your weather station,
-and you don't want any bad data to be stored in the logger.
+Use this command to stop the logger. This can be useful when servicing your
+weather station, and you don't want any bad data to be stored in the logger.
 
 ## Station data {id=vantage_data}
 
-The following table shows which data are provided by the station hardware and which are calculated
-by WeeWX.
+The following table shows which data are provided by the station hardware and
+which are calculated by WeeWX.
 
 <table class='station_data'>
 <caption>Vantage station data</caption>
