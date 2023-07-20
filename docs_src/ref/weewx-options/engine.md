@@ -1,12 +1,21 @@
 # [Engine] 
 
-This section is used to configure the internal service engine in WeeWX. It is for advanced
-customization. Details on how to do this can be found in the section [*Customizing the WeeWX
-service engine*](../../../custom/service-engine/) of the [*Customization Guide*](../../../custom/).
+This section is used to configure the internal service engine in WeeWX. It is
+for advanced customization. Details on how to do this can be found in the
+[*Customizing the WeeWX service engine*](../../../custom/service-engine/)
+section of the [*Customization Guide*](../../../custom/).
 
 ## [[Services]]
 
-Internally, WeeWX consists of many services, each responsible for some aspect of the program's functionality. After an event happens, such as the arrival of a new LOOP packet, any interested service gets a chance to do some useful work on the event. For example, a service might manipulate the packet, print it out, store it in a database, *etc*. This section controls which services are loaded and in what order they get their opportunity to do that work. Before WeeWX v2.6, this section held one, long, option called `service_list`, which held the names of all the services that should be run. Since then, this list has been broken down into smaller lists.
+Internally, WeeWX consists of many services, each responsible for some aspect
+of the program's functionality. After an event happens, such as the arrival of
+a new LOOP packet, any interested service gets a chance to do some useful work
+on the event. For example, a service might manipulate the packet, print it
+out, store it in a database, *etc*. This section controls which services are
+loaded and in what order they get their opportunity to do that work. Before
+WeeWX v2.6, this section held one, long, option called `service_list`, which
+held the names of all the services that should be run. Since then, this list
+has been broken down into smaller lists.
 
 Service lists are run in the order given below.
 
@@ -20,7 +29,8 @@ Service lists are run in the order given below.
 | `restful_services` | Upload processed data to an external RESTful service. |
 | `report_services`  | Run any reports.                                      |
 
-For reference, here is the standard set of services that are run with the default distribution.
+For reference, here is the standard set of services that are run with the
+default distribution.
 
 | Service list       | Function                                                                                                                                 |
 |--------------------|------------------------------------------------------------------------------------------------------------------------------------------|
@@ -32,23 +42,34 @@ For reference, here is the standard set of services that are run with the defaul
 | `restful_services` | `weewx.restx.StdStationRegistry` <br>`weewx.restx.StdWunderground` <br>`weewx.restx.StdPWSweather` <br>`weewx.restx.StdCWOP` <br>`weewx.restx.StdWOW` <br>`weewx.restx.StdAWEKAS` |
 | `report_services`  | `weewx.engine.StdPrint` <br> `weewx.engine.StdReport`                                                                                                                             |
 
-If you're the type who likes to clean out your car trunk after every use, then you may also be the type who wants to pare this down to the bare minimum. However, this will only make a slight difference in execution speed and memory use.
+If you're the type who likes to clean out your car trunk after every use, then
+you may also be the type who wants to pare this down to the bare minimum.
+However, this will only make a slight difference in execution speed and memory
+use.
 
 #### prep_services
 
-These services get called before any others. They are typically used to prepare the console. For example, the service `weewx.wxengine.StdTimeSynch`, which is responsible for making sure the console's clock is up-to-date, is a member of this group.
+These services get called before any others. They are typically used to
+prepare the console. For example, the service `weewx.wxengine.StdTimeSynch`,
+which is responsible for making sure the console's clock is up-to-date, is a
+member of this group.
 
 #### data_services
 
-Augment data before processing. Typically, this means adding fields to a LOOP packet or archive record.
+Augment data before processing. Typically, this means adding fields to a LOOP
+packet or archive record.
 
 #### process_services
 
-Services in this group tend to process any incoming data. They typically do things like quality control, or unit conversion, or sensor calibration.
+Services in this group tend to process any incoming data. They typically do
+things like quality control, or unit conversion, or sensor calibration.
 
 #### xtype_services
 
-These are services that use the [WeeWX XTypes](https://github.com/weewx/weewx/wiki/xtypes) system to augment the data. Typically, they calculate derived variables such as `dewpoint`, `ET`, `rainRate`, *etc*.
+These are services that use the
+[WeeWX XTypes](https://github.com/weewx/weewx/wiki/xtypes) system to augment
+the data. Typically, they calculate derived variables such as `dewpoint`,
+`ET`, `rainRate`, *etc*.
 
 #### archive_services
 
@@ -56,8 +77,11 @@ Once data have been processed, services in this group archive them.
 
 #### restful_services
 
-RESTful services, such as the Weather Underground, or CWOP, are in this group. They need processed data that have been archived, hence they are run after the preceeding groups.
+RESTful services, such as the Weather Underground, or CWOP, are in this group.
+They need processed data that have been archived, hence they are run after the
+preceeding groups.
 
 #### report_services
 
-The various reporting services run in this group, including the standard reporting engine.
+The various reporting services run in this group, including the standard
+reporting engine.
