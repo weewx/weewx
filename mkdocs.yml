@@ -64,26 +64,26 @@ nav:
     - "Backup & restore": ./usersguide/backing-up-weewx.md
     - "MySQL/MariaDB": ./usersguide/mysql-mariadb-config.md
     - "Troubleshooting":
-      - "Overview": ./usersguide/troubleshooting/index.md
+      - "Troubleshooting": ./usersguide/troubleshooting/index.md
       - "Hardware Problems": ./usersguide/troubleshooting/hardware.md
       - "Software Problems": ./usersguide/troubleshooting/software.md
       - "Meteorological Problems": ./usersguide/troubleshooting/meteo.md
-    - "Configuration options":
-      - "Overview": ./usersguide/weewx-config-file/index.md
-      - "General options": ./usersguide//weewx-config-file/general.md
-      - "[Station]": ./usersguide/weewx-config-file/stations-config.md
-      - "[StdRESTful]": ./usersguide/weewx-config-file/stdrestful-config.md
-      - "[StdReport]": ./usersguide/weewx-config-file/stdreport-config.md
-      - "[StdConvert]": ./usersguide/weewx-config-file/stdconvert-config.md
-      - "[StdCalibrate]": ./usersguide/weewx-config-file/stdcalibrate-config.md
-      - "[StdQC]": ./usersguide/weewx-config-file/stdqc-config.md
-      - "[StdWXCalculate]": ./usersguide/weewx-config-file/stdwxcalculate-config.md
-      - "[StdArchive]": ./usersguide/weewx-config-file/stdarchive.md
-      - "[StdTimeSynch]": ./usersguide/weewx-config-file/stdtimesynch.md
-      - "[DataBindings]": ./usersguide/weewx-config-file/data-bindings.md
-      - "[Databases]": ./usersguide/weewx-config-file/databases.md
-      - "[DatabaseTypes]": ./usersguide/weewx-config-file/databasetypes.md
-      - "[Engine]": ./usersguide/weewx-config-file/engine.md
+    - "WeeWX options":
+      - "WeeWX options": ./usersguide/weewx-options/index.md
+      - "General options": ./usersguide/weewx-options/general.md
+      - "[Station]": ./usersguide/weewx-options/stations-config.md
+      - "[StdRESTful]": ./usersguide/weewx-options/stdrestful-config.md
+      - "[StdReport]": ./usersguide/weewx-options/stdreport-config.md
+      - "[StdConvert]": ./usersguide/weewx-options/stdconvert-config.md
+      - "[StdCalibrate]": ./usersguide/weewx-options/stdcalibrate-config.md
+      - "[StdQC]": ./usersguide/weewx-options/stdqc-config.md
+      - "[StdWXCalculate]": ./usersguide/weewx-options/stdwxcalculate-config.md
+      - "[StdArchive]": ./usersguide/weewx-options/stdarchive.md
+      - "[StdTimeSynch]": ./usersguide/weewx-options/stdtimesynch.md
+      - "[DataBindings]": ./usersguide/weewx-options/data-bindings.md
+      - "[Databases]": ./usersguide/weewx-options/databases.md
+      - "[DatabaseTypes]": ./usersguide/weewx-options/databasetypes.md
+      - "[Engine]": ./usersguide/weewx-options/engine.md
 
   - Customization guide:
     - "Introduction": custom/index.md
@@ -99,7 +99,17 @@ nav:
     - "Derived types": custom/derived.md
     - "Custom drivers": custom/drivers.md
     - "Extensions": custom/extensions.md
-    - "Report options": custom/report-options.md
+    - "Skin options":
+      - "Skin options": custom/skin-options/index.md
+      - "[Extras]": custom/skin-options/extras.md
+      - "[Labels]": custom/skin-options/labels.md
+      - "[Almanac]": custom/skin-options/almanac.md
+      - "[Units]": custom/skin-options/units.md
+      - "[Texts]": custom/skin-options/texts.md
+      - "[CheetahGenerator]": custom/skin-options/cheetahgenerator.md
+      - "[ImageGenerator]": custom/skin-options/imagegenerator.md
+      - "[CopyGenerator]": custom/skin-options/copygenerator.md
+      - "[Generators]": custom/skin-options/generators.md
     - "Appendix": custom/appendix.md
 
   - Utilities:
