@@ -19,11 +19,13 @@ of supported stations, and for pictures to help identify your hardware!  The
 many different types of hardware, including some not yet supported by WeeWX.
 
 The WeeWX distribution includes drivers for many types of hardware.  These
-are listed in the [hardware guide](../hardware/drivers).
+are listed in the driver list in the [Hardware Guide](hardware/drivers).
 See the [WeeWX Wiki](https://github.com/weewx/weewx/wiki) for additional
-drivers and other extensions. If your hardware is not in the core driver
-list, you should first install WeeWX, then download and install the driver
-for your hardware.
+drivers and other extensions.
+
+If your hardware is not in the core driver list, you should first install
+WeeWX, then download and install the driver for your hardware.  The
+[installation instructions](usersguide/installing) tell you how to do it.
 
 
 ## Quickstart Guides
@@ -57,11 +59,12 @@ WeeWX includes extensive documentation, and the WeeWX developers work hard to
 keep it relevant and up to date.  If you have questions, please consult the
 documentation first.
 
-* [User guide](usersguide) - installation, getting started, configuration options, troubleshooting
-* [Customization guide](custom) - reports, plots, localization, formatting, extensions
-* [Utilities](utilities) - tools to manage stations, reports, and data
-* [Hardware guide](hardware) - how to configure hardware, features of supported hardware
-* [Upgrade guide](upgrading) - detailed changes in each release
+* [User's Guide](usersguide/installing) - installation, getting started, where to find things, backup/restore, troubleshooting
+* [Customization Guide](custom/introduction) - instructions for customizing reports and plots, localization, formatting, writing extensions
+* [Utilities Guide](utilities/weewxd) - tools to manage stations, reports, and data
+* [Hardware Guide](hardware/drivers) - how to configure hardware, features of supported hardware
+* [Upgrade Guide](upgrade) - detailed changes in each release
+* [Reference](reference/weewx-options/introduction) - application options, skin options, definition of units and unit systems
 * [Notes for developers](devnotes) - things you should know if you write drivers or skins
 
 
