@@ -25,7 +25,8 @@ What follows is more detailed information about each of the binding options.
 The actual database to be used &mdash; it should match one of the sections in
 [`[Databases]`](../databases). Should you decide to use a MySQL database,
 instead of the default SQLite database, this is the place to change it. See
-the section [*Configuring MySQL*](../../mysql-mariadb-config/) for details.
+the section [*Configuring MySQL/MariaDB*](../../../usersguide/mysql-mariadb)
+for details.
 
 Required.
 

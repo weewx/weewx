@@ -1,6 +1,6 @@
 # [DatabaseTypes]
 
-This section defines defaults for the various kinds of databases.
+This section defines default parameters for various databases.
 
 ## [[SQLite]]
 
@@ -13,8 +13,8 @@ The sqlite driver name. Required.
 
 #### SQLITE_ROOT
 
-The location of the directory holding the SQLite databases, relative to
-[`WEEWX_ROOT`](../general#weewx_root).
+The location of the directory that contains the SQLite database files. If this
+is a relative path, it is relative to [`WEEWX_ROOT`](../general#weewx_root).
 
 #### timeout
 
@@ -27,7 +27,10 @@ The default is `5`.
 
 #### isolation_level
 
-Set the current isolation level. See the pysqlite documentation on [isolation levels](https://docs.python.org/2.7/library/sqlite3.html#sqlite3.Connection.isolation_level) for more information. There is no reason to change this, but it is here for completeness.
+Set the current isolation level. See the pysqlite documentation on
+[isolation levels](https://docs.python.org/2.7/library/sqlite3.html#sqlite3.Connection.isolation_level)
+for more information. There is no reason to change this, but it is here for
+completeness.
 
 Default is `None` (autocommit).
 
@@ -40,7 +43,6 @@ overridden by individual databases.
     If you choose the [MySQL](https://www.mysql.com/) database, it is assumed
     that you know how to administer it. In particular, you will have to set
     up a user with appropriate create and modify privileges.
-
 
 !!! Tip
     In what follows, if you wish to connect to a MySQL server using a Unix
