@@ -62,20 +62,20 @@ WEEWX_ROOT_DESCRIPTION = f"""In what follows, {bcolors.BOLD}WEEWX_ROOT{bcolors.E
 directory that contains the configuration file. For example, if 
 "--config={weecfg.default_config_path}", then WEEWX_ROOT will be "{weecfg.default_weewx_root}"."""
 
-CREATE_DESCRIPTION = """Create a new user data area, including a configuration file. """ \
+CREATE_DESCRIPTION = """Create a new station data area, including a configuration file. """ \
                      + WEEWX_ROOT_DESCRIPTION
 
-UPGRADE_DESCRIPTION = """Upgrade an existing user data area, including any combination of the 
-configuration file, docs, examples, utility files, and skins. """ + WEEWX_ROOT_DESCRIPTION
+UPGRADE_DESCRIPTION = """Upgrade an existing station data area, including any combination of the 
+docs, examples, utility files, configuration file, and skins. """ + WEEWX_ROOT_DESCRIPTION
 
 
 def add_subparser(subparsers):
     """Add the parsers used to implement the 'station' command. """
     station_parser = subparsers.add_parser('station',
                                            usage=station_usage,
-                                           description='Manages the user data area, including the '
-                                                       'configuration file and skins.',
-                                           help='Create, modify, or upgrade a user data area.')
+                                           description='Manages the station data area, including '
+                                                       'the configuration file and skins.',
+                                           help='Create, modify, or upgrade a station data area.')
     # In the following, the 'prog' argument is necessary to get a proper error message.
     # See Python issue https://bugs.python.org/issue42297
     action_parser = station_parser.add_subparsers(dest='action',
@@ -86,8 +86,8 @@ def add_subparser(subparsers):
     station_create_parser = action_parser.add_parser('create',
                                                      description=CREATE_DESCRIPTION,
                                                      usage=station_create_usage,
-                                                     help='Create a new user data area, including '
-                                                          'a configuration file.')
+                                                     help='Create a new station data area, '
+                                                          'including a configuration file.')
     _add_common_args(station_create_parser)
     station_create_parser.add_argument('--user-root',
                                        metavar='DIRECTORY',
@@ -145,8 +145,8 @@ def add_subparser(subparsers):
         action_parser.add_parser('upgrade',
                                  usage=station_upgrade_usage,
                                  description=UPGRADE_DESCRIPTION,
-                                 help='Upgrade any combination of the configuration file, docs, '
-                                      'examples, utility files, and skins.')
+                                 help='Upgrade any combination of the docs, examples, utility '
+                                      'files, configuration file, and skins.')
 
     station_upgrade_parser.add_argument('--docs-root',
                                         metavar='DIRECTORY',

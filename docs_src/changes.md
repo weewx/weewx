@@ -8,7 +8,7 @@ May 2018) or greater.
 
 WeeWX can now be installed using pip.
 
-With pip installs, user data is stored in `~/weewx-data` by default, 
+With pip installs, station data is stored in `~/weewx-data` by default, 
 instead of `/home/weewx`. This allows pip installs to be done without
 root privileges. However, `/home/weewx` can still be used.
 
