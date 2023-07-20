@@ -34,24 +34,44 @@ Each quickstart guide shows how to install, run, monitor, upgrade, and
 uninstall WeeWX.  Choose the guide that is appropriate for your operating
 system and needs.
 
-* [Debian](quickstarts/debian) - including Ubuntu, Mint, Raspberry Pi OS, Devuan
-* [Redhat](quickstarts/redhat) - including Fedora, CentOS, Rocky
-* [SUSE](quickstarts/suse) - including openSUSE
-* [pip](quickstarts/pip) - any operating system
-* [git](quickstarts/git) - any operating system
-
+<table>
+  <tr><td>Installer</td><td>Systems</td><td>Best for...</td></tr>
+  <tr>
+    <td><a href="quickstarts/debian">Debian</a></td>
+    <td>including Ubuntu, Mint, Raspberry Pi OS, Devuan</td>
+    <td rowspan=3>
 The Debian, Redhat, and SUSE installers use the conventions and software
-management tools for their respective operating systems; these are the fastest
-and easiest way to get up and running.
-
+management tools for their respective operating systems; these are the
+fastest and easiest way to get up and running.</td>
+  </tr>
+  <tr>
+    <td><a href="quickstarts/redhat">Redhat</a></td>
+    <td>including Fedora, CentOS, Rocky</td>
+  </tr>
+  <tr>
+    <td><a href="quickstarts/suse">SUSE</a></td>
+    <td>including openSUSE</td>
+  </tr>
+  <tr>
+    <td><a href="quickstarts/pip">pip</a></td>
+    <td>any operating system</td>
+    <td>
 The pip installer will work on any operating system; use this approach
 for macOS or one of the BSDs, or if you are using an older operating system.
 This is also a good approach if you plan to do a lot of customization, or if
 you are developing a driver, skin, or other extension.
-
+    </td>
+  </tr>
+  <tr>
+    <td><a href="quickstarts/git">source</td>
+    <td>any operating system</td>
+    <td>
 If you want to install WeeWX on a system with very little storage, or if you
 want to experiment with code that is under development, then you may want to
 run directly from the WeeWX sources.
+    </td.
+  </tr>
+</table>
 
 ## Documentation
 
