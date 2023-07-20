@@ -1,10 +1,8 @@
 # Application configuration options
 
-## Overview
-
-WeeWX options are specified in a configuration file, nominally called
-`weewx.conf`. This is a big text file, which holds the configuration information
-about your installation of WeeWX. This includes things such as:
+Application options are specified in a configuration file, nominally called
+`weewx.conf`. This is a big text file, which holds the configuration
+information about your installation of WeeWX. This includes things such as:
 
 * The type of hardware you have.
 * The name of your station.
@@ -33,7 +31,7 @@ ones you are likely to have to customize for your station, are ==highlighted==.
 
 Default values are provided for many options, meaning that if they are not
 listed in the configuration file at all, WeeWX will pick sensible values. When
-the documentation below gives a "default value" this is what it means.
+the documentation gives a "default value" this is what it means.
 
 
 ## Option hierarchy

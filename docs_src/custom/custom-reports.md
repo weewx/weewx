@@ -1,12 +1,14 @@
 # Customizing reports
 
-There are two general mechanisms for customizing reports: change options in one or more configuration files, or change the template files. The former is generally easier, but occasionally the latter is necessary.
+There are two general mechanisms for customizing reports: change options in
+one or more configuration files, or change the template files. The former is
+generally easier, but occasionally the latter is necessary.
 
-## How options work
+## How to specify options
 
-Options are used to specify how reports will look and what they will contain. For example, they control which units to use, how to format dates and times, which data should be in each plot, the colors of plot elements, _etc_.
-
-For a complete listing of the report options, see the section [_Reference: report options_](../options_ref).
+Options are used to control how reports will look and what they will contain.
+For example, they determine which units to use, how to format dates and times,
+which data should be in each plot, the colors of plot elements, _etc_.
 
 Options are read from three different types of _configuration files:_
 

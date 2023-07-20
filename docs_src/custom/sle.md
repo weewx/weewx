@@ -1,7 +1,5 @@
 # Writing search list extensions
 
-## Overview
-
 The intention of this document is to help you write new Search List
 Extensions (SLE). Here's the plan:
 

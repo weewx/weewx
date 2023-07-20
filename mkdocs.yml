@@ -73,15 +73,16 @@ nav:
     - "Introduction to customization": custom/introduction.md
     - "Customizing reports": custom/custom-reports.md
     - "Scheduling reports": custom/report-scheduling.md
+    - "Localization": custom/localization.md
     - "The Cheetah generator": custom/cheetah.md
     - "The Image generator": custom/image-generator.md
-    - "Multiple data bindings": custom/multiple-bindings.md
-    - "Localization": custom/localization.md
-    - "Customizing the service engine": custom/service-engine.md
     - "Customizing the database": custom/database.md
     - "Customizing units": custom/units.md
+    - "Multiple data bindings": custom/multiple-bindings.md
+    - "Search lists": custom/sle.md
+    - "Services": custom/service-engine.md
     - "Derived types": custom/derived.md
-    - "Custom drivers": custom/drivers.md
+    - "Drivers": custom/drivers.md
     - "Extensions": custom/extensions.md
 
   - Utilities guide:

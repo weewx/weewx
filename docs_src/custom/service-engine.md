@@ -1,11 +1,12 @@
-# Customizing the WeeWX service engine {#service_engine}
+# Customizing the service engine {#service_engine}
 
 This is an advanced topic intended for those who wish to try their hand
 at extending the internal engine in WeeWX. Before attempting these
 examples, you should be reasonably proficient with Python.
 
 !!! Warning
-    Please note that the API to the service engine may change in future versions!
+    Please note that the API to the service engine may change in future
+    versions!
 
 At a high level, WeeWX consists of an *engine* that is responsible for
 managing a set of *services*. A service consists of a Python class which
@@ -19,13 +20,14 @@ stanza of the configuration file. The `[[Services]]` section
 lists all the services to be run, broken up into different *service
 lists*.
 
-These lists are designed to orchestrate the data as it flows through the WeeWX engine. For example,
-you want to make sure that data has been processed by the quality control service, `StdQC`, before
-putting them in the database. Similarly, the reporting system must come *after* the data has been
-put in the database. These groups ensure that things happen in the proper sequence.
+These lists are designed to orchestrate the data as it flows through the WeeWX
+engine. For example, you want to make sure that data has been processed by the
+quality control service, `StdQC`, before putting them in the database.
+Similarly, the reporting system must come *after* the data has been put in the
+database. These groups ensure that things happen in the proper sequence.
 
-See the table [The standard WeeWX services](../../custom/#the-weewx-service-architecture) for a list of the
-services that are normally run.
+See the table [The standard WeeWX services](../../custom/#the-weewx-service-architecture)
+for a list of the services that are normally run.
 
 ## Modifying an existing service {#Customizing_a_service}
 
@@ -36,8 +38,8 @@ distracting information and can be rather messy. Suppose you do not like
 this, and want it to print out only the time, barometer reading, and the
 outside temperature whenever a new LOOP packet arrives. 
 
-This could be done by subclassing the default print service `StdPrint` and overriding member
-function `new_loop_packet()`.
+This could be done by subclassing the default print service `StdPrint` and
+overriding member function `new_loop_packet()`.
 
 Create the file `user/myprint.py`:
 
@@ -328,10 +330,11 @@ approaches for how to handle this:
 -   Run two instances of WeeWX, each using its own database and
     `weewx.conf` configuration file. The results are then
     combined in a final report, using WeeWX's ability [to use more than
-    one database](../../custom/multiple_bindings/). See the Wiki entry [*How to
-    run multiple instances of
+    one database](../../custom/multiple_bindings/). See the Wiki entry
+    [*How to run multiple instances of
     WeeWX*](https://github.com/weewx/weewx/wiki/weewx-multi) for details
     on how to do this.
+
 -   Run one instance, but use a custom WeeWX service to augment the
     records coming from your weather station with data from the other
     device.

@@ -1,12 +1,21 @@
 # The Cheetah generator
 
-This section gives an overview of the Cheetah generator. For details about each of its various options, see the section [_[CheetahGenerator]_](../options_ref#CheetahGenerator) in [_Reference: report options_](../options_ref).
+File generation is done using the [Cheetah](https://cheetahtemplate.org/)
+templating engine, which processes a _template_, replacing any symbolic _tags_,
+then produces an output file. Typically, it runs after each new archive record
+(usually about every five minutes), but it can also run on demand using the
+utility `wee_reports`.
 
-File generation is done using the [Cheetah](https://cheetahtemplate.org/) templating engine, which processes a _template_, replacing any symbolic _tags_, then produces an output file. Typically, it runs after each new archive record (usually about every five minutes), but it can also run on demand using the utility `wee_reports`.
+The Cheetah engine is very powerful, essentially letting you have the full
+semantics of Python available in your templates. As this would make the
+templates incomprehensible to anyone but a Python programmer, WeeWX adopts
+a very small subset of its power.
 
-The Cheetah engine is very powerful, essentially letting you have the full semantics of Python available in your templates. As this would make the templates incomprehensible to anyone but a Python programmer, WeeWX adopts a very small subset of its power.
+The Cheetah generator is controlled by the configuration options in the
+reference [_[CheetahGenerator]_](../../reference/skin-options/cheetahgenerator).
 
-The Cheetah generator is controlled by the section  [_[CheetahGenerator]_](../options_ref#CheetahGenerator). Let's take a look at how this works.
+These options are specified in the `[CheetahGenerator]` section of a skin
+configuration file. Let's take a look at how this works.
 
 ## Which files get processed?
 

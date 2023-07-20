@@ -1,18 +1,15 @@
 # The Image generator {#image_generator}
 
-This section gives an overview of the Image generator. For details about each
-of its various options, see the section
-[`[ImageGenerator]`](../report-options/#ImageGenerator)
-in the [*report options*](../report-options).
+WeeWX is configured to generate a set of useful plots. But, what if you don't
+like how they look, or you want to generate different plots, perhaps with
+different aggregation types?
 
-The installed version of WeeWX is configured to generate a set of useful plots.
-But, what if you don't like how they look, or you want to generate different
-plots, perhaps with different aggregation types? This section covers how to do
-this.
+The Image generator is controlled by the configuration options in the
+reference [_[ImageGenerator]_](../../reference/skin-options/imagegenerator).
 
-Image generation is controlled by the section `[ImageGenerator]` in the skin
-configuration file `skin.conf`. Let's take a look at the beginning part of
-this section. It looks like this:
+These options are specified in the `[ImageGenerator]` section of a skin
+configuration file. Let's take a look at the beginning part of this section.
+It looks like this:
 
 ``` ini
 [ImageGenerator]
