@@ -115,37 +115,37 @@ nav:
 
   - Reference:
     - "Application options":
-      - "How options work": ref/weewx-options/introduction.md
-      - "General options": ref/weewx-options/general.md
-      - "[Station]": ref/weewx-options/stations-config.md
-      - "[StdRESTful]": ref/weewx-options/stdrestful-config.md
-      - "[StdReport]": ref/weewx-options/stdreport-config.md
-      - "[StdConvert]": ref/weewx-options/stdconvert-config.md
-      - "[StdCalibrate]": ref/weewx-options/stdcalibrate-config.md
-      - "[StdQC]": ref/weewx-options/stdqc-config.md
-      - "[StdWXCalculate]": ref/weewx-options/stdwxcalculate-config.md
-      - "[StdArchive]": ref/weewx-options/stdarchive.md
-      - "[StdTimeSynch]": ref/weewx-options/stdtimesynch.md
-      - "[DataBindings]": ref/weewx-options/data-bindings.md
-      - "[Databases]": ref/weewx-options/databases.md
-      - "[DatabaseTypes]": ref/weewx-options/databasetypes.md
-      - "[Engine]": ref/weewx-options/engine.md
+      - "How options work": reference/weewx-options/introduction.md
+      - "General options": reference/weewx-options/general.md
+      - "[Station]": reference/weewx-options/stations.md
+      - "[StdRESTful]": reference/weewx-options/stdrestful.md
+      - "[StdReport]": reference/weewx-options/stdreport.md
+      - "[StdConvert]": reference/weewx-options/stdconvert.md
+      - "[StdCalibrate]": reference/weewx-options/stdcalibrate.md
+      - "[StdQC]": reference/weewx-options/stdqc.md
+      - "[StdWXCalculate]": reference/weewx-options/stdwxcalculate.md
+      - "[StdArchive]": reference/weewx-options/stdarchive.md
+      - "[StdTimeSynch]": reference/weewx-options/stdtimesynch.md
+      - "[DataBindings]": reference/weewx-options/data-bindings.md
+      - "[Databases]": reference/weewx-options/databases.md
+      - "[DatabaseTypes]": reference/weewx-options/database-types.md
+      - "[Engine]": reference/weewx-options/engine.md
     - "Skin options":
-      - "How skin options work": ref/skin-options/introduction.md
-      - "[Extras]": ref/skin-options/extras.md
-      - "[Labels]": ref/skin-options/labels.md
-      - "[Almanac]": ref/skin-options/almanac.md
-      - "[Units]": ref/skin-options/units.md
-      - "[Texts]": ref/skin-options/texts.md
-      - "[CheetahGenerator]": ref/skin-options/cheetahgenerator.md
-      - "[ImageGenerator]": ref/skin-options/imagegenerator.md
-      - "[CopyGenerator]": ref/skin-options/copygenerator.md
-      - "[Generators]": ref/skin-options/generators.md
-    - "Aggregation types": ref/aggtypes.md
-    - "Durations": ref/durations.md
-    - "Units": ref/units.md
-    - "ValueTuple": ref/valuetuple.md
-    - "ValueHelper": ref/valuehelper.md
+      - "How skin options work": reference/skin-options/introduction.md
+      - "[Extras]": reference/skin-options/extras.md
+      - "[Labels]": reference/skin-options/labels.md
+      - "[Almanac]": reference/skin-options/almanac.md
+      - "[Units]": reference/skin-options/units.md
+      - "[Texts]": reference/skin-options/texts.md
+      - "[CheetahGenerator]": reference/skin-options/cheetahgenerator.md
+      - "[ImageGenerator]": reference/skin-options/imagegenerator.md
+      - "[CopyGenerator]": reference/skin-options/copygenerator.md
+      - "[Generators]": reference/skin-options/generators.md
+    - "Aggregation types": reference/aggtypes.md
+    - "Durations": reference/durations.md
+    - "Units": reference/units.md
+    - "ValueTuple": reference/valuetuple.md
+    - "ValueHelper": reference/valuehelper.md
 
   - "Notes for developers": devnotes.md
   - "Change log": changes.md
