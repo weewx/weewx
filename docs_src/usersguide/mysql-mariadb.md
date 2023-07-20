@@ -1,8 +1,11 @@
 # Configuring MySQL / MariaDB
 
-This section applies only to those who wish to use the MySQL database, instead of the default SQLite database. It assumes that you have installed a working version of MySQL or MariaDB.
+This section applies only to those who wish to use the MySQL database, instead
+of the default SQLite database. It assumes that you have installed a working
+version of MySQL or MariaDB.
 
-1. Install the client libraries. How to do this depends on your operating system. Use the table below as a guide.
+1. Install the client libraries. How to do this depends on your operating
+system and how you installed WeeWX.
 
     === "Debian"
         ```
@@ -18,10 +21,14 @@ This section applies only to those who wish to use the MySQL database, instead o
         sudo zypper install python3-mysqlclient
         ```
     === "pip"
+        The MySQL libraries are included as part of a normal pip install, so
+        you should not have to install any Python components. However, you
+        might want to install a standalone MySQL or MariaDB client to help
+        with testing.
 
-        Nothing needs to be done: the MySQL libraries are included as part of the normal pip install.
-
-2. Change the WeeWX configuration to use MySQL instead of SQLite. In the WeeWX configuration file, change the `[[wx_binding]]` section to point to the MySQL database, `archive_mysql`, instead of the SQLite database `archive_sqlite`.
+2. Change the WeeWX configuration to use MySQL instead of SQLite. In the WeeWX
+configuration file, change the `[[wx_binding]]` section to point to the MySQL
+database, `archive_mysql`, instead of the SQLite database `archive_sqlite`.
 
     After the change, it will look something like this (change ==Highlighted== ):
     ```ini hl_lines="3"
@@ -39,7 +46,9 @@ This section applies only to those who wish to use the MySQL database, instead o
             schema = schemas.wview_extended.schema
     ```
 
-3. Configure the MySQL host and credentials. Assuming that you want to use the default database configuration, the `[[MySQL]]` section should look something like this:
+3. Configure the MySQL host and credentials. Assuming that you want to use the
+default database configuration, the `[[MySQL]]` section should look something
+like this:
 
     ```
         [[MySQL]]
@@ -51,7 +60,9 @@ This section applies only to those who wish to use the MySQL database, instead o
     
     This assumes user `weewx` has the password `weewx`. Adjust as necessary.
 
-4. Configure MySQL to give the necessary permissions for the database `weewx` to whatever MySQL user you choose. Here are the necessary minimum permissions, again assuming user `weewx` with password `weewx`. Adjust as necessary.:
+4. Configure MySQL to give the necessary permissions for the database `weewx`
+to whatever MySQL user you choose. Here are the necessary minimum permissions,
+again assuming user `weewx` with password `weewx`. Adjust as necessary.
 
     ``` sql
     mysql> CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';

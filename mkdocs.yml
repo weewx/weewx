@@ -73,9 +73,9 @@ nav:
     - "Introduction to customization": custom/introduction.md
     - "Customizing reports": custom/custom-reports.md
     - "Scheduling reports": custom/report-scheduling.md
-    - "Localization": custom/localization.md
-    - "The Cheetah generator": custom/cheetah.md
+    - "The Cheetah generator": custom/cheetah-generator.md
     - "The Image generator": custom/image-generator.md
+    - "Localization": custom/localization.md
     - "Customizing the database": custom/database.md
     - "Customizing units": custom/units.md
     - "Multiple data bindings": custom/multiple-bindings.md
