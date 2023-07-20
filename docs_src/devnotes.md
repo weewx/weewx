@@ -546,11 +546,16 @@ This is what the table columns mean:
   </tr>
   <tr>
     <td class="first_col code">wsum</td>
-    <td>The weighted sum of all the temperatures for the day. The weight is the archive interval. That is, for each record, the temperature is multiplied by the length of the archive record, then summed up.</td>
+    <td>The weighted sum of all the temperatures for the day. The weight is the
+        archive interval in seconds. That is, for each record, the temperature
+        is multiplied by the length of the archive record in seconds, then 
+        summed up.</td>
   </tr>
   <tr>
     <td class="first_col code">sumtime</td>
-    <td>The sum of all the archive intervals for the day. If the archive interval didn't change during the day, then this number would be <span class="code">interval * count</span>.</td>
+    <td>The sum of all the archive intervals for the day in seconds. If the 
+        archive interval didn't change during the day, then this number would
+        be <span class="code">interval * 60 * count</span>.</td>
   </tr>
 </table>
 
@@ -590,7 +595,9 @@ they mean:
   </tr>
   <tr>
     <td class="first_col code">dirsumtime</td>
-    <td>The sum of all the archive intervals for the day, <em>which contributed to <span class="code">xsum</span> and <span class="code">ysum</span></em>.</td>
+    <td>The sum of all the archive intervals for the day in seconds,
+        <em>which contributed to <span class="code">xsum</span> 
+        and <span class="code">ysum</span></em>.</td>
   </tr>
   <tr>
     <td class="first_col code">squaresum</td>
@@ -598,7 +605,10 @@ they mean:
   </tr>
   <tr>
     <td class="first_col code">wsquaresum</td>
-    <td>The sum of the weighted wind speed squared for the day. That is the wind speed is squared, then multiplied by the archive interval, then summed for the day. This is useful for calculating RMS wind speed.</td>
+    <td>The sum of the weighted wind speed squared for the day. That is the
+        wind speed is squared, then multiplied by the archive interval in 
+        seconds, then summed for the day. This is useful for calculating
+        RMS wind speed.</td>
   </tr>
 </table>
 
@@ -640,8 +650,8 @@ stored in the SQL database
     <td>
 All configuration information used by WeeWX is stored in the <em>configuration
 file</em>, usually with the name <span class="code">weewx.conf</span>. By
-convention, when this file is read into the program, it is called <span
-class="code">config_dict</span>, an instance of the class
+convention, when this file is read into the program, it is called 
+<span class="code">config_dict</span>, an instance of the class
 <span class="code">configobj.ConfigObj</span>.
     </td>
   </tr>

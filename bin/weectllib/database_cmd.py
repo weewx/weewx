@@ -72,9 +72,8 @@ For example:
 """
 
 reconfigure_description = """Create a new database using the current configuration information 
-found in the configuration file. This can be used to change the unit system of a 
-database. The new database will have the same name as the old database, with a '_new' 
-on the end."""
+found in the configuration file. This can be used to change the unit system of a database. The new
+ database will have the same name as the old database, except with a '_new' on the end."""
 
 transfer_description = """Copy a database to a new database.
 The option "--dest-binding" should hold a database binding
@@ -197,7 +196,9 @@ def add_subparser(subparsers):
     reconfigure_parser = action_parser.add_parser('reconfigure',
                                                   description=reconfigure_description,
                                                   usage=reconfigure_usage,
-                                                  help="Reconfigure a database.",
+                                                  help="Reconfigure a database, using the current "
+                                                       "configuration information in the config "
+                                                       "file.",
                                                   epilog=epilog)
     _add_common_args(reconfigure_parser)
     reconfigure_parser.set_defaults(func=reconfigure_database)
