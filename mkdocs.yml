@@ -57,14 +57,14 @@ nav:
 
   - "User's guide":
     - "System requirements": usersguide/system-requirements.md
-    - "Installing WeeWX": usersguide/installing-weewx.md
+    - "Installing WeeWX": usersguide/installing.md
     - "Where to find things" : usersguide/where.md
-    - "Running WeeWX": usersguide/running-weewx.md
-    - "Web server integration": usersguide/webserver-integration.md
-    - "Backup & restore": usersguide/backing-up-weewx.md
-    - "MySQL/MariaDB": usersguide/mysql-mariadb-config.md
+    - "Running WeeWX": usersguide/running.md
+    - "Web server integration": usersguide/webserver.md
+    - "Backup & restore": usersguide/backup.md
+    - "MySQL/MariaDB": usersguide/mysql-mariadb.md
     - "Troubleshooting":
-      - "Troubleshooting": usersguide/troubleshooting/index.md
+      - "What to do": usersguide/troubleshooting/what-to-do.md
       - "Hardware Problems": usersguide/troubleshooting/hardware.md
       - "Software Problems": usersguide/troubleshooting/software.md
       - "Meteorological Problems": usersguide/troubleshooting/meteo.md
