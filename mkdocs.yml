@@ -49,44 +49,28 @@ site_dir: 'build/docs'
 
 nav:
   - "Quick start":
-    - Debian: ./quickstarts/debian.md
-    - RedHat: ./quickstarts/redhat.md
-    - SuSE: ./quickstarts/suse.md
-    - pip: ./quickstarts/pip.md
-    - git: ./quickstarts/git.md
+    - Debian: quickstarts/debian.md
+    - RedHat: quickstarts/redhat.md
+    - SuSE: quickstarts/suse.md
+    - pip: quickstarts/pip.md
+    - git: quickstarts/git.md
 
   - "User's guide":
-    - "System requirements": ./usersguide/system-requirements.md
-    - "Installing WeeWX": ./usersguide/installing-weewx.md
-    - "Where to find things" : ./usersguide/where.md
-    - "Running WeeWX": ./usersguide/running-weewx.md
-    - "Web server integration": ./usersguide/webserver-integration.md
-    - "Backup & restore": ./usersguide/backing-up-weewx.md
-    - "MySQL/MariaDB": ./usersguide/mysql-mariadb-config.md
+    - "System requirements": usersguide/system-requirements.md
+    - "Installing WeeWX": usersguide/installing-weewx.md
+    - "Where to find things" : usersguide/where.md
+    - "Running WeeWX": usersguide/running-weewx.md
+    - "Web server integration": usersguide/webserver-integration.md
+    - "Backup & restore": usersguide/backing-up-weewx.md
+    - "MySQL/MariaDB": usersguide/mysql-mariadb-config.md
     - "Troubleshooting":
-      - "Troubleshooting": ./usersguide/troubleshooting/index.md
-      - "Hardware Problems": ./usersguide/troubleshooting/hardware.md
-      - "Software Problems": ./usersguide/troubleshooting/software.md
-      - "Meteorological Problems": ./usersguide/troubleshooting/meteo.md
-    - "WeeWX options":
-      - "WeeWX options": ./usersguide/weewx-options/index.md
-      - "General options": ./usersguide/weewx-options/general.md
-      - "[Station]": ./usersguide/weewx-options/stations-config.md
-      - "[StdRESTful]": ./usersguide/weewx-options/stdrestful-config.md
-      - "[StdReport]": ./usersguide/weewx-options/stdreport-config.md
-      - "[StdConvert]": ./usersguide/weewx-options/stdconvert-config.md
-      - "[StdCalibrate]": ./usersguide/weewx-options/stdcalibrate-config.md
-      - "[StdQC]": ./usersguide/weewx-options/stdqc-config.md
-      - "[StdWXCalculate]": ./usersguide/weewx-options/stdwxcalculate-config.md
-      - "[StdArchive]": ./usersguide/weewx-options/stdarchive.md
-      - "[StdTimeSynch]": ./usersguide/weewx-options/stdtimesynch.md
-      - "[DataBindings]": ./usersguide/weewx-options/data-bindings.md
-      - "[Databases]": ./usersguide/weewx-options/databases.md
-      - "[DatabaseTypes]": ./usersguide/weewx-options/databasetypes.md
-      - "[Engine]": ./usersguide/weewx-options/engine.md
+      - "Troubleshooting": usersguide/troubleshooting/index.md
+      - "Hardware Problems": usersguide/troubleshooting/hardware.md
+      - "Software Problems": usersguide/troubleshooting/software.md
+      - "Meteorological Problems": usersguide/troubleshooting/meteo.md
 
   - Customization guide:
-    - "Introduction": custom/index.md
+    - "Introduction to customization": custom/introduction.md
     - "Customizing reports": custom/custom-reports.md
     - "Scheduling reports": custom/report-scheduling.md
     - "The Cheetah generator": custom/cheetah.md
@@ -99,20 +83,8 @@ nav:
     - "Derived types": custom/derived.md
     - "Custom drivers": custom/drivers.md
     - "Extensions": custom/extensions.md
-    - "Skin options":
-      - "Skin options": custom/skin-options/index.md
-      - "[Extras]": custom/skin-options/extras.md
-      - "[Labels]": custom/skin-options/labels.md
-      - "[Almanac]": custom/skin-options/almanac.md
-      - "[Units]": custom/skin-options/units.md
-      - "[Texts]": custom/skin-options/texts.md
-      - "[CheetahGenerator]": custom/skin-options/cheetahgenerator.md
-      - "[ImageGenerator]": custom/skin-options/imagegenerator.md
-      - "[CopyGenerator]": custom/skin-options/copygenerator.md
-      - "[Generators]": custom/skin-options/generators.md
-    - "Appendix": custom/appendix.md
 
-  - Utilities:
+  - Utilities guide:
     - weewxd: utilities/weewxd.md
     - weectl:
       - weectl station: utilities/weectl-station.md
@@ -139,6 +111,41 @@ nav:
     - WS28xx: hardware/ws28xx.md
 
   - "Upgrade guide": upgrade.md
+
+  - Reference:
+    - "Application options":
+      - "How options work": ref/weewx-options/introduction.md
+      - "General options": ref/weewx-options/general.md
+      - "[Station]": ref/weewx-options/stations-config.md
+      - "[StdRESTful]": ref/weewx-options/stdrestful-config.md
+      - "[StdReport]": ref/weewx-options/stdreport-config.md
+      - "[StdConvert]": ref/weewx-options/stdconvert-config.md
+      - "[StdCalibrate]": ref/weewx-options/stdcalibrate-config.md
+      - "[StdQC]": ref/weewx-options/stdqc-config.md
+      - "[StdWXCalculate]": ref/weewx-options/stdwxcalculate-config.md
+      - "[StdArchive]": ref/weewx-options/stdarchive.md
+      - "[StdTimeSynch]": ref/weewx-options/stdtimesynch.md
+      - "[DataBindings]": ref/weewx-options/data-bindings.md
+      - "[Databases]": ref/weewx-options/databases.md
+      - "[DatabaseTypes]": ref/weewx-options/databasetypes.md
+      - "[Engine]": ref/weewx-options/engine.md
+    - "Skin options":
+      - "How skin options work": ref/skin-options/introduction.md
+      - "[Extras]": ref/skin-options/extras.md
+      - "[Labels]": ref/skin-options/labels.md
+      - "[Almanac]": ref/skin-options/almanac.md
+      - "[Units]": ref/skin-options/units.md
+      - "[Texts]": ref/skin-options/texts.md
+      - "[CheetahGenerator]": ref/skin-options/cheetahgenerator.md
+      - "[ImageGenerator]": ref/skin-options/imagegenerator.md
+      - "[CopyGenerator]": ref/skin-options/copygenerator.md
+      - "[Generators]": ref/skin-options/generators.md
+    - "Aggregation types": ref/aggtypes.md
+    - "Durations": ref/durations.md
+    - "Units": ref/units.md
+    - "ValueTuple": ref/valuetuple.md
+    - "ValueHelper": ref/valuehelper.md
+
   - "Notes for developers": devnotes.md
   - "Change log": changes.md
 

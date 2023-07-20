@@ -1,4 +1,4 @@
-# WeeWX configuration options
+# Application configuration options
 
 ## Overview
 

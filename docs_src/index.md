@@ -1,4 +1,4 @@
-# Introduction
+# Introduction to WeeWX
 
 The WeeWX weather system is written in Python and runs on Linux, MacOSX,
 Solaris, and *BSD.  It collects data from many different types of weather

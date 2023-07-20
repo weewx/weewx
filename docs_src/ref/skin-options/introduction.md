@@ -1,4 +1,4 @@
-# Skin options {#skin_options}
+# Skin configuration options {#skin_options}
 
 This section contains the options available in the skin configuration
 file, `skin.conf`. The same options apply to the language files
