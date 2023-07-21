@@ -4,9 +4,9 @@ If you are having problems, first look at the hardware, software, and
 meteorological problems pages. You might be experiencing a problem that
 someone else has already solved.
 
-[Hardware Problems](../hardware)<br/>
-[Software Problems](../software)<br/>
-[Meteorological Problems](../meteo)
+[Hardware problems](../hardware)<br/>
+[Software problems](../software)<br/>
+[Meteorological problems](../meteo)
 
 Be sure to search the
 [weewx-user group](https://groups.google.com/g/weewx-user), especially
@@ -14,7 +14,7 @@ if you are using a driver or skin that is not part of the WeeWX core.
 
 If you still have problems, here are a few things to try on your system:
 
-1. Look at the [log file](../../usersguide/running-weewx#monitoring-weewx). We
+1. Look at the [log file](/usersguide/running/#monitoring-weewx). We
 are always happy to take questions, but the first thing someone will ask is,
 "What did you find in the log file?"
 

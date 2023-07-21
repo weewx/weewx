@@ -22,6 +22,11 @@ go with type `SQLite` are defined in section
 The path to the SQLite file. If the path is relative, it is relative to
 [`SQLITE_ROOT`](../database-types#sqlite_root). Default is `weewx.sdb`.
 
+#### timeout
+
+How many seconds to wait before raising an error when a table is locked.
+Default is `5`.
+
 ## [[archive_mysql]]
 
 This definition uses the MySQL database engine to store data. It is free,

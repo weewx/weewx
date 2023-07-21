@@ -65,9 +65,9 @@ nav:
     - "MySQL/MariaDB": usersguide/mysql-mariadb.md
     - "Troubleshooting":
       - "What to do": usersguide/troubleshooting/what-to-do.md
-      - "Hardware Problems": usersguide/troubleshooting/hardware.md
-      - "Software Problems": usersguide/troubleshooting/software.md
-      - "Meteorological Problems": usersguide/troubleshooting/meteo.md
+      - "Hardware problems": usersguide/troubleshooting/hardware.md
+      - "Software problems": usersguide/troubleshooting/software.md
+      - "Meteorological problems": usersguide/troubleshooting/meteo.md
 
   - Customization guide:
     - "Introduction to customization": custom/introduction.md
