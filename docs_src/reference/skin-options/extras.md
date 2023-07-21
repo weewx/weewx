@@ -35,9 +35,9 @@ For me in Oregon, setting the two options to:
 
 results in a nice image of a radar centered on Portland, Oregon. When
 you click on it, it gives you a detailed, animated view. If you live in
-the USA, take a look at the [NOAA radar
-website](http://radar.weather.gov/) to find a nice one that will work
-for you. In other countries, you will have to consult your local weather
+the USA, take a look at the [NOAA radar website](http://radar.weather.gov/)
+to find a nice one that will work for you. In other countries, you will have
+to consult your local weather
 service.
 
 #### googleAnalyticsId

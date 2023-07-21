@@ -7,10 +7,9 @@ to `skin.conf` only.
 
 This is the list of search list objects that will be scanned by the
 template engine, looking for tags. See the section *[Defining new
-tags](../cheetah/#defining_new_tags)* and the [Cheetah
+tags](../../../custom/cheetah-generator/#defining_new_tags)* and the [Cheetah
 documentation](https://cheetahtemplate.org/) for details on search
-lists. If no `search_list` is specified, a default list
-will be used.
+lists. If no `search_list` is specified, a default list will be used.
 
 #### search_list_extensions
 
@@ -40,8 +39,9 @@ are available, as well as these WeeWX-specific encodings:
     </tr>
     <tr>
         <td class="code first_col">html_entities</td>
-        <td>Non 7-bit characters will be represented as HTML entities (<i>e.g.</i>, the degree sign will be
-            represented as "<span class="code">&amp;#176;</span>")
+        <td>
+Non 7-bit characters will be represented as HTML entities (<i>e.g.</i>, the
+degree sign will be represented as "<span class="code">&amp;#176;</span>")
         </td>
     </tr>
     <tr>
@@ -50,24 +50,25 @@ are available, as well as these WeeWX-specific encodings:
     </tr>
     <tr>
         <td class="code first_col">normalized_ascii</td>
-        <td>Replace accented characters with non-accented analogs (<i>e.g.</i>, 'ö' will be replaced with 'o').</td>
+        <td>
+Replace accented characters with non-accented analogs (<i>e.g.</i>, 'ö' will
+be replaced with 'o').
+        </td>
     </tr>
     </tbody>
 </table>
 
-The encoding `html_entities` is the default. Other common choices
-are `utf8`, `cp1252` (*a.k.a.* Windows-1252), and
-`latin1`.
+The encoding `html_entities` is the default. Other common choices are `utf8`,
+`cp1252` (*a.k.a.* Windows-1252), and `latin1`.
 
 #### template
 
-The name of a template file. A template filename must end with
-`.tmpl`. Filenames are case-sensitive. If the template filename
-has the letters `YYYY`, `MM`, `WW` or `DD`
-in its name, these will be substituted for the year, month, week and day
-of month, respectively. So, a template with the name
-`summary-YYYY-MM.html.tmpl` would have name
-`summary-2010-03.html` for the month of March, 2010.
+The name of a template file. A template filename must end with `.tmpl`.
+Filenames are case-sensitive. If the template filename has the letters `YYYY`,
+`MM`, `WW` or `DD` in its name, these will be substituted for the year, month,
+week and day of month, respectively. So, a template with the name
+`summary-YYYY-MM.html.tmpl` would have name `summary-2010-03.html` for the
+month of March, 2010.
 
 #### generate_once
 
@@ -84,11 +85,11 @@ specified, then the file will be generated every time the generator
 runs.
 
 !!! Note
-    Precise control over when a *[report](../../usersguide/weewx-config-file/stdreport-config/)* is run is
-    available through use of the `report_timing` option in
-    `weewx.conf`. The `report_timing` option uses a CRON-like
-    setting to control precisely when a report is run. See the guide *[Scheduling
-    report generation](../report_scheduling)* for details.
+    Precise control over when a is run is available through use of the
+    `report_timing` option. The `report_timing` option uses a CRON-like
+    syntax to specify precisely when a report should be run. See the guide
+    *[Scheduling report generation](../../../custom/report-scheduling)*
+    for details.
 
 ## [[SummaryByDay]]
 

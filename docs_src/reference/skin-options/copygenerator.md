@@ -1,11 +1,10 @@
 # [CopyGenerator] {#copygenerator}
 
-This section is used by generator
-`weewx.reportengine.CopyGenerator` and controls which files are
-to be copied over from the skin directory to the destination directory.
-Think of it as "file generation," except that rather than going
-through the template engine, the files are simply copied over. It is
-useful for making sure CSS and Javascript files are in place.
+This section is used by generator `weewx.reportengine.CopyGenerator` and
+controls which files are to be copied over from the skin directory to the
+destination directory. Think of it as "file generation," except that rather
+than going through the template engine, the files are simply copied over.
+It is useful for making sure CSS and Javascript files are in place.
 
 #### copy_once
 

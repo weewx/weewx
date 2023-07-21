@@ -82,8 +82,8 @@ then the image file will be generated every time the generator runs.
 #### unit
 
 Normally, the unit used in a plot is set by whatever [unit group the
-types are in](../custom_reports/#mixed-units). However, this option allows
-overriding the unit used in a specific plot.
+types are in](../../../custom/custom-reports/#mixed-units). However,
+this option allows overriding the unit used in a specific plot.
 
 ## Label options
 
@@ -197,19 +197,17 @@ The nominal number of ticks along the y-axis. The default is
 #### time_length
 
 The nominal length of the time period to be covered in seconds. Alternatively,
-a [duration notation](../appendix#Durations) can be used. The
-exact length of the x-axis is chosen by the plotting engine to cover
-this period. Optional. Default is `86400` (one day).
+a [duration notation](../../durations) can be used. The exact length of the
+x-axis is chosen by the plotting engine to cover this period. Optional.
+Default is `86400` (one day).
 
 #### yscale
 
-A 3-way tuple (`ylow`, `yhigh`, `min_interval`),
-where `ylow` and `yhigh` are the minimum and maximum
-y-axis values, respectively, and `min_interval` is the minimum
-tick interval. If set to `None`, the corresponding value will be
-automatically chosen. Optional. Default is `None, None, None`.
-(Choose the y-axis minimum, maximum, and minimum increment
-automatically.)
+A 3-way tuple (`ylow`, `yhigh`, `min_interval`), where `ylow` and `yhigh` are
+the minimum and maximum y-axis values, respectively, and `min_interval` is the
+minimum tick interval. If set to `None`, the corresponding value will be
+automatically chosen. Optional. Default is `None, None, None`. (Choose the
+y-axis minimum, maximum, and minimum increment automatically.)
 
 ## Compass rose options
 
@@ -280,7 +278,7 @@ These are options that are set for individual lines.
 #### aggregate_interval
 
 The time period over which the data should be aggregated, in seconds. 
-Alternatively, a [duration notation](../appendix#Durations) can be used. 
+Alternatively, a [duration notation](../../durations) can be used. 
 Required if `aggregate_type` has been set. 
 
 #### aggregate_type
@@ -300,8 +298,8 @@ Default is to use the color in [`chart_line_colors`](#chart_line_colors).
 
 The SQL data type to be used for this plot line. For more information,
 see the section *[Including a type more than once in a
-plot](../image-generator#including_same_sql_type_2x)*. Optional. The default is to use the
-section name.
+plot](../../../custom/image-generator#including_same_sql_type_2x)*.
+Optional. The default is to use the section name.
 
 #### fill_color
 
@@ -317,8 +315,8 @@ default is to use the SQL variable name.
 
 If there is a gap between data points bigger than this fractional amount
 of the x-axis, then a gap will be drawn, rather than a connecting line.
-See Section *[Line gaps](../image-generator/#line_gaps)*. Optional. The
-default is to always draw the line.
+See Section *[Line gaps](../../../custom/image-generator/#line_gaps)*.
+Optional. The default is to always draw the line.
 
 #### line_type
 

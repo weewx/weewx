@@ -1,13 +1,18 @@
 # Skin configuration options {#skin_options}
 
-This section contains the options available in the skin configuration
-file, `skin.conf`. The same options apply to the language files
-found in the subdirectory `lang`, such as `lang/en.conf` for English.
+The skin configuration options that control report behavior such as:
 
-We recommend to put
+* how files and plots are generated
+* how files and plots look
+* how data are displayed
+* how units are displayed
+* which language is used
 
--   options that control the behavior of the skin into `skin.conf`; and
--   language dependent labels and texts into the language files.
+Options that control the behavior of a skin should be in the skin configuration
+file `skin.conf`.
 
-It is worth noting that UTF-8 is used throughout the skin configuration file,
-just as it is throughout the WeeWX configuration file.
+Language-dependent labels and texts should be in the language files, located
+in a skin's `lang` directory.
+
+UTF-8 is used throughout the skin configuration file, just as it is
+throughout the WeeWX configuration file.
