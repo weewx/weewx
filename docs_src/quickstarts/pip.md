@@ -7,25 +7,30 @@ WeeWX V5 requires Python 3.7 or greater. Python 2, or earlier versions of
 Python 3, will not work.
 
 Although you do not need root privileges to install and configure WeeWX, you
-will need them to set up a daemon and, perhaps, to change device permissions.
+may need them to configure pip, you will need them to set up a daemon and
+you may need them to change device permissions.
 
-While there are many ways to install WeeWX using pip (see the wiki document [_pip install
-strategies_](https://github.com/weewx/weewx/wiki/pip-install-strategies) for a partial list), we
-recommend creating a _Python virtual environment_, because it is the least likely to disturb the
-rest of your system. It is worth reading about
-[`venv`](https://docs.python.org/3/library/venv.html), the module used to create a virtual
-environment, in the Python3 documentation.
+While there are many ways to install WeeWX using pip (see the wiki document
+[_pip install strategies_](https://github.com/weewx/weewx/wiki/pip-install-strategies)
+for a partial list), we recommend creating a _Python virtual environment_,
+because it is the least likely to disturb the rest of your system. It is
+worth reading about
+[`venv`](https://docs.python.org/3/library/venv.html),
+the module used to create a virtual environment, in the Python3 documentation.
 
 !!! Note
-    WeeWX can be installed on any operating system that offers Python 3.7 or later.
+    WeeWX can be installed on any operating system that offers Python 3.7
+    or later.
     
-    However, you may need to install `pip` first. See [Installing pip with Linux Package
-    Managers](https://packaging.python.org/en/latest/guides/installing-using-linux-tools/). The
-    [installation directions](https://pip.pypa.io/en/stable/installation/) on the pip website may 
-    also be useful.
+    However, you may need to install `pip` first. See [Installing pip with
+    Linux Package Managers](https://packaging.python.org/en/latest/guides/installing-using-linux-tools/). The
+    [installation directions](https://pip.pypa.io/en/stable/installation/)
+    on the pip website may also be useful.
     
     You will also need `venv`. If `venv` is not available, you may substitute 
-    [`virtualenv`](https://virtualenv.pypa.io), which can be installed using pip.
+    [`virtualenv`](https://virtualenv.pypa.io), which can be installed using
+    pip.
+
 
 ## Install in a virtual environment
 
@@ -33,25 +38,23 @@ To install WeeWX in a virtual environment, follow the directions below for
 your system. If you plan to use MySQL or MariaDB, be sure to see the
 `MySQL/MariaDB` tab as well.
 
-When finished, the WeeWX executables will have been installed in `~/weewx-venv/bin`, while the
-WeeWX libraries and dependencies will have been installed in
-`~/weewx-venv/lib/python3.x/site-packages`, where `3.x` is the version of Python you used.
+When finished, the WeeWX executables will have been installed in
+`~/weewx-venv/bin`, while the WeeWX libraries and dependencies will have been
+installed in `~/weewx-venv/lib/python3.x/site-packages`, where `3.x` is the
+version of Python you used.
 
 === "Debian"
     
     ```{ .shell .copy }
     sudo apt update
-    # If necessary, install pip and venv:
+    # If necessary, install pip and venv
     sudo apt install python3-pip -y
     sudo apt install python3-venv -y
-    
-    # Create the virtual environment:
+    # Create the virtual environment
     python3 -m venv ~/weewx-venv
-    
-    # Activate the WeeWX virtual environment:
+    # Activate the WeeWX virtual environment
     source ~/weewx-venv/bin/activate
-    
-    # Install WeeWX into the virtual environment:
+    # Install WeeWX into the virtual environment
     python3 -m pip install weewx
     ```
     _Tested with Debian 10, 12, RPi OS 32-bit, Ubuntu 20.04, and 22.04._
@@ -60,23 +63,18 @@ WeeWX libraries and dependencies will have been installed in
 
     ```{ .shell .copy }
     sudo yum update
-
     # Check your version of Python. You must have 3.7 or later
     python3 -V
-    
     # If it is less than Python 3.7, install a later version of Python.
-    # For example, this would install Python 3.11.
-    # Afterwards, you must remember to invoke Python using "python3.11", NOT "python3"
+    # For example, this would install Python 3.11. Afterwards, you must
+    # remember to invoke Python using "python3.11", NOT "python3"
     sudo yum install python3.11 -y
     sudo yum install python3.11-pip -y
-    
-    # Create the virtual environment:
+    # Create the virtual environment
     python3.11 -m venv ~/weewx-venv
-    
-    # Activate the WeeWX virtual environment:
+    # Activate the WeeWX virtual environment
     source ~/weewx-venv/bin/activate
-    
-    # Install WeeWX into the virtual environment:
+    # Install WeeWX into the virtual environment
     python3.11 -m pip install weewx
     ```
     _Tested with Rocky 8.7._
@@ -86,14 +84,11 @@ WeeWX libraries and dependencies will have been installed in
     ```{ .shell .copy }
     sudo yum update
     sudo yum install python3-pip -y
-    
-    # Create the virtual environment:
+    # Create the virtual environment
     python3 -m venv ~/weewx-venv
-    
-    # Activate the WeeWX virtual environment:
+    # Activate the WeeWX virtual environment
     source ~/weewx-venv/bin/activate
-    
-    # Install WeeWX into the virtual environment:
+    # Install WeeWX into the virtual environment
     python3 -m pip install weewx
     ```
     _Tested with Rocky 9.1 and 9.2._
@@ -102,22 +97,17 @@ WeeWX libraries and dependencies will have been installed in
 
     ```{ .shell .copy }
     sudo zypper refresh
-
     # Check your version of Python. You must have 3.7 or later
     python3 -V
-    
     # If it is less than Python 3.7, install a later version of Python.
-    # For example, this would install Python 3.11.
-    # Afterwards, you must remember to invoke Python using "python3.11", NOT "python3"
+    # For example, this would install Python 3.11. Afterwards, you must
+    # remember to invoke Python using "python3.11", NOT "python3"
     sudo zypper install -y python311
-    
-    # Create the virtual environment:
+    # Create the virtual environment
     python3.11 -m venv ~/weewx-venv
-    
-    # Activate the WeeWX virtual environment:
+    # Activate the WeeWX virtual environment
     source ~/weewx-venv/bin/activate
-    
-    # Install WeeWX into the virtual environment:
+    # Install WeeWX into the virtual environment
     python3.11 -m pip install weewx
     ```
     _Tested with openSUSE Leap 15.5._
@@ -125,13 +115,11 @@ WeeWX libraries and dependencies will have been installed in
 === "macOS"
 
     ```{ .shell .copy }
-    # Create the virtual environment:
+    # Create the virtual environment
     python3 -m venv ~/weewx-venv
-    
-    # Activate the WeeWX virtual environment:
+    # Activate the WeeWX virtual environment
     source ~/weewx-venv/bin/activate
-    
-    # Install WeeWX into the virtual environment:
+    # Install WeeWX into the virtual environment
     python3 -m pip install weewx
     ```
     _Tested on macOS 13.4 (Ventura)_    
@@ -139,22 +127,21 @@ WeeWX libraries and dependencies will have been installed in
 === "Other"
 
     ```{ .shell .copy }
-    # Create the virtual environment:
+    # Create the virtual environment
     python3 -m venv ~/weewx-venv
-    
-    # Activate the WeeWX virtual environment:
+    # Activate the WeeWX virtual environment
     source ~/weewx-venv/bin/activate
-    
-    # Install WeeWX into the virtual environment:
+    # Install WeeWX into the virtual environment
     python3 -m pip install weewx
     ```
 
 === "MySQL/MariaDB"
 
-    If you plan on using MySQL or MariaDB with `sha256_password` or `caching_sha2_password`
-    authentication, you will also need to install the module `cryptography`. On some operating
-    systems this can be a bit of a struggle, but the following usually works. The key step
-    is to update pip before trying the install.
+    If you plan on using MySQL or MariaDB with `sha256_password` or
+    `caching_sha2_password` authentication, you will also need to install
+    the module `cryptography`. On some operating systems this can be a bit
+    of a struggle, but the following usually works. The key step is to update
+    pip before trying the install.
     
     ```{.shell .copy}
     # Activate the WeeWX virtual environment
@@ -168,21 +155,22 @@ WeeWX libraries and dependencies will have been installed in
 
 ## Provision a new station
 
-While the instructions above install WeeWX, they do not set up the configuration specific to your
-station, nor do they set up the reporting skins. That is the job of the tool `weectl`.
-
-The tool `weectl` will ask you a series of questions, then create a directory
-`~/weewx-data` in your home directory with a new configuration file. It will
-also install skins, documentation, utilitiy files, and examples in the same
-directory. The database and reports will also go into that directory, but
-only after you run `weewxd`, as shown in the following step.
+While the instructions above install WeeWX, they do not set up the
+configuration specific to your station, nor do they set up the reporting
+skins. That is the job of the tool `weectl`.
 
 ```{ .shell .copy }
 # Activate the WeeWX virtual environment
 source ~/weewx-venv/bin/activate
-# Then create the station data
+# Create the station data
 weectl station create
 ```
+
+The tool `weectl` will ask you a series of questions, then create a directory
+`weewx-data` in your home directory with a new configuration file. It will
+also install skins, documentation, utilitiy files, and examples in the same
+directory. The database and reports will also go into that directory, but
+only after you run `weewxd`, as shown in the following step.
 
 
 ## Run `weewxd`
@@ -199,7 +187,7 @@ stop when you log out, or when you terminate it with `control-c`.
 ```{ .shell .copy }
 # Activate the WeeWX virtual environment
 source ~/weewx-venv/bin/activate
-# Then run weewxd:
+# Run weewxd
 weewxd
 ```
 
@@ -275,11 +263,11 @@ probably want to switch to using real hardware. This is how to reconfigure.
     sudo systemctl stop weewx
     # Activate the WeeWX virtual environment
     source ~/weewx-venv/bin/activate
-    # Reconfigure to use your hardware:
+    # Reconfigure to use your hardware
     weectl station reconfigure
-    # Remove the old database:
+    # Remove the old database
     rm ~/weewx-data/archive/weewx.sdb
-    # Start the weewx daemon:
+    # Start the weewx daemon
     sudo systemctl start weewx
     ```
 
@@ -290,11 +278,11 @@ probably want to switch to using real hardware. This is how to reconfigure.
     sudo /etc/init.d/weewx stop
     # Activate the WeeWX virtual environment
     source ~/weewx-venv/bin/activate
-    # Reconfigure to use your hardware:
+    # Reconfigure to use your hardware
     weectl station reconfigure
-    # Remove the old database:
+    # Remove the old database
     rm ~/weewx-data/archive/weewx.sdb
-    # Start the weewx daemon:
+    # Start the weewx daemon
     sudo /etc/init.d/weewx start
     ```
 
@@ -305,11 +293,11 @@ probably want to switch to using real hardware. This is how to reconfigure.
     sudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist
     # Activate the WeeWX virtual environment
     source ~/weewx-venv/bin/activate
-    # Reconfigure to use your hardware:
+    # Reconfigure to use your hardware
     weectl station reconfigure
-    # Remove the old database:
+    # Remove the old database
     rm ~/weewx-data/archive/weewx.sdb
-    # Start the weewx daemon:
+    # Start the weewx daemon
     sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist
     ```
 
@@ -317,7 +305,13 @@ probably want to switch to using real hardware. This is how to reconfigure.
 ## Customize
 
 To enable uploads or to customize reports, modify the configuration file.
+See the [*Customization Guide*](../../custom/introduction) for instructions,
+and the [application](../../reference/weewx-options/introduction) and
+[skin](../../reference/skin-options/introduction) references for all of
+the options.
+
 Use any text editor, such as `nano`:
+
 ```shell
 nano ~/weewx-data/weewx.conf
 ```
@@ -344,9 +338,6 @@ WeeWX must be restarted for the changes to take effect.
     sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist
     ```
 
-See the [*User Guide*](../../usersguide) and
-[*Customization Guide*](../../custom) for details.
-
 
 ## Upgrade
 
@@ -355,7 +346,7 @@ Get the latest release using `pip`:
 ```{ .shell .copy }
 # Activate the WeeWX virtual environment
 source ~/weewx-venv/bin/activate
-# Upgrade the code base
+# Upgrade the WeeWX code
 python3 -m pip install weewx --upgrade
 ```
 

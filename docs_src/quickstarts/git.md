@@ -54,7 +54,7 @@ dependencies:
 Use `git` to clone the WeeWX repository into a directory called `weewx` in
 your home directory.
 
-```shell
+```{.shell .copy}
 git clone https://github.com/weewx/weewx ~/weewx
 ```
 
@@ -69,10 +69,11 @@ git clone https://github.com/weewx/weewx ~/weewx
 ## Provision a new station
 
 Now that you have the code, create a configuration file and skins:
+
 ```{.shell .copy}
 # Activate the WeeWX virtual environment
 source ~/weewx-venv/bin/activate
-# Then create the station data
+# Create the station data
 python3 ~/weewx/bin/weectl.py station create
 ```
 
@@ -123,19 +124,21 @@ If you have problems, check the system log for entries from `weewxd`.
 ## Customize
 
 To enable uploads or to customize reports, modify the configuration file.
-Use any text editor, such as `nano`:
+See the [*Customization Guide*](../../custom/introduction) for instructions,
+and the [application](../../reference/weewx-options/introduction) and
+[skin](../../reference/skin-options/introduction) references for all of
+the options.
 
     nano ~/weewx-data/weewx.conf
 
 The executable `weewxd` must be restarted for the changes to take effect.
 
-See the [*User Guide*](../../usersguide) and [*Customization Guide*](../../custom) for details.
-
 
 ## Upgrade
 
 Update the code by pulling the latest:
-```shell
+
+```{.shell .copy}
 cd ~/weewx && git pull
 ```
 

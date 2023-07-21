@@ -15,19 +15,20 @@ trust weewx.com, and know where to find the WeeWX releases.
 
 1. Tell your system to trust weewx.com.
 
-    ```shell
+    ```{.shell .copy}
     wget -qO - https://weewx.com/keys.html | \
         sudo gpg --dearmor --output /etc/apt/trusted.gpg.d/weewx.gpg
     ```
 
 2. Tell `apt` where to find the WeeWX repository.
 
-    ```shell
+    ```{.shell .copy}
     echo "deb [arch=all] https://weewx.com/apt/python3 buster main" | \
         sudo tee /etc/apt/sources.list.d/weewx.list
     ```
 
-If you encounter errors, please consult the [FAQ](https://github.com/weewx/weewx/wiki/faq-apt-key-problems).
+If you encounter errors, please consult the
+[FAQ](https://github.com/weewx/weewx/wiki/faq-apt-key-problems).
 
 
 ## Install
@@ -37,7 +38,7 @@ latitude/longitude, altitude, station type, and parameters specific to your
 station hardware.  When you are done, WeeWX will be running in the background
 as a daemon.
 
-```shell
+```{.shell .copy}
 sudo apt update
 sudo apt install weewx
 ```
@@ -60,14 +61,14 @@ Check the system log `/var/log/syslog` for problems.
 If you chose the simulator as your station type, then at some point you will
 probably want to switch to using real hardware. This is how to reconfigure.
 
-```shell
-# Stop the daemon:
+```{.shell .copy}
+# Stop the daemon
 sudo systemctl stop weewx
-# Reconfigure to use your hardware:
+# Reconfigure to use your hardware
 sudo weectl station reconfigure
-# Delete the old database:
+# Delete the old database
 sudo rm /var/lib/weewx/weewx.sdb
-# Start the daemon:
+# Start the daemon
 sudo systemctl start weewx
 ```
 
@@ -75,24 +76,28 @@ sudo systemctl start weewx
 ## Customize
 
 To enable uploads or to customize reports, modify the configuration file.
+See the [*Customization Guide*](../../custom/introduction) for instructions,
+and the [application](../../reference/weewx-options/introduction) and
+[skin](../../reference/skin-options/introduction) references for all of
+the options.
+
 Use any text editor, such as `nano`:
+
 ```shell
 sudo nano /etc/weewx/weewx.conf
 ```
 
 WeeWX must be restarted for the changes to take effect.
-```shell
+```{.shell .copy}
 sudo systemctl restart weewx
 ```
-
-See the [*User Guide*](../../usersguide) and
-[*Customization Guide*](../../custom) for details.
 
 
 ## Upgrade
 
 Upgrade to the latest version like this:
-```shell
+
+```{.shell .copy}
 sudo apt update
 sudo apt install weewx
 ```
@@ -137,19 +142,19 @@ will be in `/etc/weewx/weewx.conf`.
 
 To uninstall WeeWX, but retain configuration files and data:
 
-```shell
+```{.shell .copy}
 sudo apt remove weewx
 ```
 
 To uninstall WeeWX, deleting configuration files but retaining data:
 
-```shell
+```{.shell .copy}
 sudo apt purge weewx
 ```
 
 To delete data:
 
-```shell
+```{.shell .copy}
 sudo rm -r /var/lib/weewx
 sudo rm -r /var/www/html/weewx
 ```

@@ -15,13 +15,13 @@ trust weewx.com, and know where to find the WeeWX releases.
 
 1. Tell your system to trust weewx.com:
 
-    ```shell
+    ```{.shell .copy}
     sudo rpm --import https://weewx.com/keys.html
     ```
 
 2. Tell `zypper` where to find the WeeWX repository.
 
-    ```shell
+    ```{.shell .copy}
     curl -s https://weewx.com/suse/weewx-suse15.repo | \
         sudo tee /etc/zypp/repos.d/weewx.repo
     ```
@@ -52,14 +52,14 @@ Check the system log `/var/log/messages` for problems.
 
 To switch from the `Simulator` to real hardware, reconfigure the driver.
 
-```shell
-# Stop the daemon:
+```{.shell .copy}
+# Stop the daemon
 sudo systemctl stop weewx
-# Reconfigure to use your hardware:
+# Reconfigure to use your hardware
 sudo weectl station reconfigure
-# Delete the old database:
+# Delete the old database
 sudo rm /var/lib/weewx/weewx.sdb
-# Start the daemon:
+# Start the daemon
 sudo systemctl start weewx
 ```
 
@@ -67,24 +67,26 @@ sudo systemctl start weewx
 ## Customize
 
 To enable uploads or to customize reports, modify the configuration file.
+See the [*Customization Guide*](../../custom/introduction) for instructions,
+and the [application](../../reference/weewx-options/introduction) and
+[skin](../../reference/skin-options/introduction) references for all of
+the options.
+
 Use any text editor, such as `nano`:
 ```shell
 sudo nano /etc/weewx/weewx.conf
 ```
 
 WeeWX must be restarted for the changes to take effect.
-```shell
+```{.shell .copy}
 sudo systemctl restart weewx
 ```
-
-See the [*User Guide*](../../usersguide) and
-[*Customization Guide*](../../custom) for details.
 
 
 ## Upgrade
 
 Upgrade to the latest version like this:
-```shell
+```{.shell .copy}
 sudo zypper update weewx
 ```
 
@@ -108,12 +110,12 @@ warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew
 
 To uninstall WeeWX, deleting configuration files but retaining data:
 
-```shell
+```{.shell .copy}
 sudo zypper remove weewx
 ```
 To delete data:
 
-```shell
+```{.shell .copy}
 sudo rm -r /var/lib/weewx
 sudo rm -r /var/www/html/weewx
 ```
