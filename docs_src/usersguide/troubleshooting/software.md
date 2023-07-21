@@ -131,7 +131,7 @@ points is greater than about 10 minutes, the daily plots show dots instead of
 connected points.
 
 Change the option
-[`line_gap_fraction`](/reference/skin-options/imagegenerator/#line_gap_fraction)
+[`line_gap_fraction`](../../../reference/skin-options/imagegenerator/#line_gap_fraction)
 in `skin.conf` to control how much time is considered a break in data.
 
 As for the archive interval, check the log file for an entry like this soon
@@ -148,7 +148,7 @@ interval specified in the station hardware is 30 minutes. When the interval in
 `weewx.conf` does not match the station's hardware interval, WeeWX defers to the
 station's interval.
 
-Use the [`wee_device`](/utilities/wee_device) utility to change the
+Use the [`wee_device`](../../../utilities/wee_device) utility to change the
 station's interval.
 
 
@@ -168,8 +168,8 @@ years in wet environments.
 If you frequently see anomalous data, first check the hardware.
 
 To keep bad data from the database, add a quality control (QC) rule such as
-Min/Max bounds. See the section [`[StdQC]`](/reference/weewx-options/stdqc/) for
-details.
+Min/Max bounds. See the section
+[`[StdQC]`](../../../reference/weewx-options/stdqc/) for details.
 
 To remove bad data from the database, see the Wiki article [_Cleaning up old 
 "bad" data_](https://github.com/weewx/weewx/wiki/Cleaning-up-old-'bad'-data).
@@ -194,14 +194,15 @@ Feb 12 07:11:06 rpi weewx[20930]: ****  OperationalError: database is locked
 We are still trying to decipher exactly what the problem is, but it seems that
 (many? most? all?) implementations of the SQLite 'C' access libraries on the RPi
 sleep for a full second if they find the database locked. This gives them only
-five chances within the 5 second timeout period before an exception is raised.
+five chances within the 5-second timeout period before an exception is raised.
 
 Not all Raspberry Pis have this problem. It seems to be most acute when running
 big templates with lots of queries, such as the forecast extension.
 
 There are a few possible fixes:
 
-* Increase the option [`timeout`](/reference/weewx-options/databases/#timeout).
+* Increase the option
+  [`timeout`](../../../reference/weewx-options/databases/#timeout).
  
 * Use a high quality SD card in your RPi. There seems to be some evidence that
   faster SD cards are more immune to this problem.
@@ -287,9 +288,9 @@ If WeeWX appears to be running normally but some or all reports are not being
 run, either all the time or periodically, the problem could be the inadvertant
 use or incorrect setting of the `report_timing` option in `weewx.conf`. The
 `report_timing` option allows the user to specify when some or all reports are
-run (see [_Scheduling report generation_](/custom/report-scheduling/)).
+run (see [_Scheduling report generation_](../../../custom/report-scheduling/)).
 By default, the option
-[_`report_timing`_](/reference/weewx-options/stdreport/#report_timing)
+[_`report_timing`_](../../../reference/weewx-options/stdreport/#report_timing)
 is disabled and all reports are run each archive period.
 
 To see if the `report_timing` option is causing reports to be skipped, inspect
@@ -309,15 +310,15 @@ period, or confirm the correct use and setting of the `report_timing` option.
 ## The wrong reports are being skipped by report_timing
 
 If the option
-[_`report_timing`_](/reference/weewx-options/stdreport/#report_timing) is being
-used, and the results are not as expected, there may be an error in the
+[_`report_timing`_](../../../reference/weewx-options/stdreport/#report_timing)
+is being used, and the results are not as expected, there may be an error in the
 `report_timing` option. If there are errors in the `report_timing` parameter,
 the report will be run on each archive interval. First check the `report_timing`
 option parameters to ensure they are valid and there are no additonal spaces or
 other unwanted characters. Then check that the parameters are correctly set for
 the desired report generation times. For example, is the correct day of the week
 number being used if limiting the day of the week parameter. Refer to the
-section [_Scheduling report generation_](/custom/report-scheduling/).
+section [_Scheduling report generation_](../../../custom/report-scheduling/).
 
 
 Check the log file for any entries relating to the reports concerned. Errors in

@@ -71,8 +71,8 @@ properly added and recorded.
 This is by design &mdash; if there is no wind, then the wind direction is
 undefined, represented by NULL in the database or `None` in Python. This policy
 is enforced by the `StdWXCalculate` service. If necessary, it can be overridden.
-See option [force_null](/reference/weewx-options/stdwxcalculate/#force_null)
-in the [[StdWXCalculate]](http://localhost:8000/reference/weewx-options/stdwxcalculate/)
+See option [force_null](../../../reference/weewx-options/stdwxcalculate/#force_null)
+in the [[StdWXCalculate]](../../../reference/weewx-options/stdwxcalculate/)
 section.
 
 WeeWX distinguishes between a value of zero and no value (NULL or None).

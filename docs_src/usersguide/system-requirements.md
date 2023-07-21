@@ -11,12 +11,12 @@ WeeWX includes support for many types of weather stations. In addition to
 hardware support, WeeWX comes with a software simulator, useful for testing
 and evaluation.
 
-The [driver compatibility table](/hardware/drivers/) in the _Hardware guide_ has
-a detailed list of the manufacturers and models supported by the drivers that
-come with WeeWX. If you do not see your hardware in this table, check the list
-of [supported hardware](https://weewx.com/hardware.html); the pictures may help
-you identify the manufacturer and/or model. Compatibility for some hardware is
-provided by 3rd party drivers, available at the
+The [driver compatibility table](../../../hardware/drivers/) in the _Hardware
+guide_ has a detailed list of the manufacturers and models supported by the
+drivers that come with WeeWX. If you do not see your hardware in this table,
+check the list of [supported hardware](https://weewx.com/hardware.html); the
+pictures may help you identify the manufacturer and/or model. Compatibility for
+some hardware is provided by 3rd party drivers, available at the
 [Wiki](https://github.com/weewx/weewx/wiki). Finally, check the [hardware
 comparison](https://weewx.com/hwcmp.html) to see if your hardware is known, but
 not yet supported.

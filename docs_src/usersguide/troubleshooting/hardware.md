@@ -40,7 +40,7 @@ Most hardware with data-logging includes a parameter to specify the archive
 interval used by the logger. If the hardware and driver support it, WeeWX will
 use this interval as the archive interval. If not, WeeWX will fall back to using
 option `archive_interval` specified in
-[[StdArchive]](/reference/weewx-options/stdarchive/). The default fallback value
+[[StdArchive]](../../../reference/weewx-options/stdarchive/). The default fallback value
 is 300 seconds (5 minutes).
 
 If the hardware archive interval is large, it will take a long time before
