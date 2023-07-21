@@ -44,7 +44,7 @@ If you use a packaged installer, this is done automatically. The installer
 finishes with a daemon running in the background.
 
 For a pip install, you will have to do this yourself. See the section [_Run as a
-daemon_](../../../quickstarts/pip/#run-as-a-daemon) in the pip quick start
+daemon_](../../quickstarts/pip/#run-as-a-daemon) in the pip quick start
 guide.
 
 ## Monitoring WeeWX
@@ -59,7 +59,7 @@ To watch the log as it is generated, use the tail command with the `-f` option:
 tail -f /var/log/syslog
 ```
 
-Set the [`debug`](../../../reference/weewx-options/general/#debug) option in
+Set the [`debug`](../../reference/weewx-options/general/#debug) option in
 `weewx.conf` to generate many more checks and output more information. This can
 be useful for diagnosing problems and debugging.
 

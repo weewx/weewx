@@ -30,7 +30,7 @@ If you get stuck, there is a very active
 
 This is an outline of the process to install, configure, and run WeeWX:
 
-* Check the [_Hardware guide_](../../../hardware/drivers).  This will let you
+* Check the [_Hardware guide_](../../hardware/drivers).  This will let you
   know of any features, limitations, or quirks of your hardware. If your weather
   station is not in the guide, you will have to download the driver after you
   install WeeWX.
@@ -53,11 +53,11 @@ This is an outline of the process to install, configure, and run WeeWX:
 
 * Customize the installation. Typically this is done by changing settings in
   the WeeWX [application configuration
-  file](../../../reference/weewx-options/introduction/). For example, you might
+  file](../../reference/weewx-options/introduction/). For example, you might
   want to [register your
-  station](../../../reference/weewx-options/stdrestful/#stationregistry), so it
+  station](../../reference/weewx-options/stdrestful/#stationregistry), so it
   shows up on a world-wide map of WeeWX installations. To make changes to reports,
-  see the [_Customization guide_](../../../custom/introduction/).
+  see the [_Customization guide_](../../custom/introduction/).
 
 
 ## Installation methods
@@ -93,12 +93,12 @@ run directly from a git clone of the WeeWX sources.
 
 The quick start guides contain installation instructions for each method:
 
-* [Debian](../../../quickstarts/debian) - including Ubuntu, Mint, Raspberry Pi 
+* [Debian](../../quickstarts/debian) - including Ubuntu, Mint, Raspberry Pi 
   OS, Devuan
-* [Redhat](../../../quickstarts/redhat) - including Fedora, CentOS, Rocky
-* [SUSE](../../../quickstarts/suse) - including openSUSE
-* [pip](../../../quickstarts/pip) - any operating system
-* [git](../../../quickstarts/git) - any operating system
+* [Redhat](../../quickstarts/redhat) - including Fedora, CentOS, Rocky
+* [SUSE](../../quickstarts/suse) - including openSUSE
+* [pip](../../quickstarts/pip) - any operating system
+* [git](../../quickstarts/git) - any operating system
 
 
 ## Installing a driver
@@ -122,4 +122,4 @@ weectl station reconfigure
 ```
 
 See the documentation for [`weectl
-extension`](../../../utilities/weectl-extension) for details.
+extension`](../../utilities/weectl-extension) for details.

@@ -27,7 +27,7 @@ system and how you installed WeeWX.
 
 2. Change the WeeWX configuration to use MySQL instead of SQLite. In the WeeWX
    configuration file, change the
-   [`[[wx_binding]]`](../../../reference/weewx-options/data-bindings/#wx_binding)
+   [`[[wx_binding]]`](../../reference/weewx-options/data-bindings/#wx_binding)
    section to point to the MySQL database, `archive_mysql`, instead of the
    SQLite database `archive_sqlite`.
 
@@ -49,7 +49,7 @@ system and how you installed WeeWX.
 
 3. Configure the MySQL host and credentials. Assuming that you want to use the
 default database configuration, the
-[`[[MySQL]]`](../../../reference/weewx-options/database-types/#mysql) section
+[`[[MySQL]]`](../../reference/weewx-options/database-types/#mysql) section
 should look something like this:
 
     ```
