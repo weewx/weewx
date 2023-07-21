@@ -213,7 +213,7 @@ The console version number is available only on consoles with firmware dates
 after about 2006.
 
 <span class="highlight">Highlighted</span> values can be modified using the
-various `wee_device` commands below.
+commands below.
 
 ### `--current` {id=vantage_current}
 

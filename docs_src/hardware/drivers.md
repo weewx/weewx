@@ -20,7 +20,7 @@ Drivers for these stations are included in the core WeeWX distribution.
   <tr>
     <td><a href="../fousb">FineOffset</a></td>
     <td><a href="../vantage">Vantage</a></td>
-    <td><a href="../wmr9x6">WMR9x8</a></td>
+    <td><a href="../wmr9x8">WMR9x8</a></td>
     <td><a href="../ws28xx">WS28xx</a></td>
   </tr>
  </table>
