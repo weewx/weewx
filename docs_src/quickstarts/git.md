@@ -1,4 +1,4 @@
-# Running WeeWX from source
+# Running WeeWX from a git repository
 
 Because WeeWX is pure-Python and does not need to be compiled, it can be run
 directly from source without "installing" it first. This approach is perhaps

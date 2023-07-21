@@ -8,27 +8,28 @@ version of MySQL or MariaDB.
 system and how you installed WeeWX.
 
     === "Debian"
-        ```
+        ``` {.shell .copy}
         sudo apt install mysql-client
         sudo apt install python3-mysqldb
         ```
     === "Redhat"
-        ```
+        ``` {.shell .copy}
         sudo yum install MySQL-python
         ```
     === "openSUSE"
-        ```
+        ``` {.shell .copy}
         sudo zypper install python3-mysqlclient
         ```
     === "pip"
-        The MySQL libraries are included as part of a normal pip install, so
-        you should not have to install any Python components. However, you
-        might want to install a standalone MySQL or MariaDB client to help
-        with testing.
+        The base MySQL libraries are included as part of a normal pip install. 
+        However, you might want to install a standalone MySQL or MariaDB client
+        to help with testing.
 
 2. Change the WeeWX configuration to use MySQL instead of SQLite. In the WeeWX
-configuration file, change the `[[wx_binding]]` section to point to the MySQL
-database, `archive_mysql`, instead of the SQLite database `archive_sqlite`.
+   configuration file, change the
+   [`[[wx_binding]]`](/reference/weewx-options/data-bindings/#wx_binding)
+   section to point to the MySQL database, `archive_mysql`, instead of the
+   SQLite database `archive_sqlite`.
 
     After the change, it will look something like this (change ==Highlighted== ):
     ```ini hl_lines="3"
@@ -47,8 +48,9 @@ database, `archive_mysql`, instead of the SQLite database `archive_sqlite`.
     ```
 
 3. Configure the MySQL host and credentials. Assuming that you want to use the
-default database configuration, the `[[MySQL]]` section should look something
-like this:
+default database configuration, the
+[`[[MySQL]]`](/reference/weewx-options/database-types/#mysql) section should
+look something like this:
 
     ```
         [[MySQL]]
@@ -64,7 +66,7 @@ like this:
 to whatever MySQL user you choose. Here are the necessary minimum permissions,
 again assuming user `weewx` with password `weewx`. Adjust as necessary.
 
-    ``` sql
+    ``` {.sql .copy}
     mysql> CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
     mysql> GRANT select, update, create, delete, insert, alter, drop ON weewx.* TO weewx@localhost;
     ```

@@ -30,7 +30,7 @@ If you get stuck, there is a very active
 
 This is an outline of the process to install, configure, and run WeeWX:
 
-* Check the [hardware guide](../../hardware/drivers).  This will let you know
+* Check the [_Hardware guide_](/hardware/drivers).  This will let you know
   of any features, limitations, or quirks of your hardware. If your weather
   station is not in the guide, you will have to download the driver after you
   install WeeWX.
@@ -48,14 +48,15 @@ This is an outline of the process to install, configure, and run WeeWX:
   [wee_device](../../utilities/wee_device).
 
 * Run WeeWX by launching the `weewxd` program, either
-  [directly](../running-weewx/#running-directly), or as a
-  [daemon](../running-weewx/#running-as-a-daemon).
+  [directly](../running/#running-directly), or as a
+  [daemon](../running/#running-as-a-daemon).
 
 * Customize the installation. Typically this is done by changing settings in
-  the WeeWX [configuration file](../weewx-config-file). For example, you might
-  want to [register your station](../weewx-config-file/stdrestful-config/#stationregistry),
-  so it shows up on a world-wide map of WeeWX installations. To make changes
-  to reports, see the [Customization Guide](../../custom/).
+  the WeeWX [application configuration
+  file](/reference/weewx-options/introduction/). For example, you might want to
+  [register your station](/reference/weewx-options/stdrestful/#stationregistry),
+  so it shows up on a world-wide map of WeeWX installations. To make changes to
+  reports, see the [_Customization guide_](/custom/introduction/).
 
 
 ## Installation methods
@@ -76,7 +77,7 @@ you are developing a driver, skin, or other extension.
 
 If you want to install WeeWX on a system with very little storage, or if you
 want to experiment with code that is under development, then you may want to
-run directly from the WeeWX sources.
+run directly from a git clone of the WeeWX sources.
 
 |                        | apt/yum/zypper                                                     | pip                                                  | git                                                  |
 |------------------------|--------------------------------------------------------------------|------------------------------------------------------|------------------------------------------------------|
@@ -84,18 +85,18 @@ run directly from the WeeWX sources.
 | Installation steps     | Single                                                             | Multiple                                             | Multiple                                             |
 | Privileges required    | root                                                               | Install, configure, or upgrade does not require root | Install, configure, or upgrade does not require root |
 | Software location      | Installs into locations that are standard for the operating system | Installs into locations that are standard for Python | No files are installed                               |
-| Configuration location | /etc/weewx                                                         | ~/weewx-data                                         | ~/weewx-data                                         |
-| Database location      | /var/lib/weewx                                                     | ~/weewx-data                                         | ~/weewx-data                                         |
-| Report location        | /var/www/html/weewx                                                | ~/weewx-data                                         | ~/weewx-data                                         |
+| Configuration location | `/etc/weewx`                                                       | `~/weewx-data`                                       | `~/weewx-data`                                       |
+| Database location      | `/var/lib/weewx`                                                   | `~/weewx-data`                                       | `~/weewx-data`                                       |
+| Report location        | `/var/www/html/weewx`                                              | `~/weewx-data`                                       | `~/weewx-data`                                       |
 | Log location           | syslog                                                             | syslog                                               | syslog                                               |
 
 The quick start guides contain installation instructions for each method:
 
-* [Debian](../../quickstarts/debian) - including Ubuntu, Mint, Raspberry Pi OS, Devuan
-* [Redhat](../../quickstarts/redhat) - including Fedora, CentOS, Rocky
-* [SUSE](../../quickstarts/suse) - including openSUSE
-* [pip](../../quickstarts/pip) - any operating system
-* [git](../../quickstarts/git) - any operating system
+* [Debian](/quickstarts/debian) - including Ubuntu, Mint, Raspberry Pi OS, Devuan
+* [Redhat](/quickstarts/redhat) - including Fedora, CentOS, Rocky
+* [SUSE](/quickstarts/suse) - including openSUSE
+* [pip](/quickstarts/pip) - any operating system
+* [git](/quickstarts/git) - any operating system
 
 
 ## Installing a driver
@@ -118,4 +119,5 @@ Finally, reconfigure WeeWX to use the driver:
 weectl station reconfigure
 ```
 
-See the [extension utility](../../utilities/weectl-extension) for details.
+See the documentation for [`weectl extension`](/utilities/weectl-extension) for
+details.

@@ -65,4 +65,5 @@ installed again. However, it doesn't hurt to do so.
 
 ## Restore
 
-To restore from backup, do a fresh install of WeeWX, replace the configuration file, skins, and database with those from a backup, then start WeeWX.
+To restore from backup, do a fresh install of WeeWX, replace the configuration
+file, skins, and database with those from a backup, then start `weewxd`.

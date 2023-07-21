@@ -68,10 +68,10 @@ documentation.
     | User directory          | _`USER_ROOT`_    | `bin/user/`          |
 
 
-## Location of executables in a `pip` install
+## Location of executables in a pip install
 
-If you use a pip install, the location of the executables will depend on the
-how the pip installation was done.
+If you use a pip install, the location of the executables will depend on how the
+pip installation was done.
 
 | Install method                    | Commands                                                                     | Location of executables |
 |-----------------------------------|------------------------------------------------------------------------------|-------------------------|
@@ -119,4 +119,5 @@ This is where to find the system log for each platform.
 
 If the default for your system is inconvenient, or does not provide the logging
 fidelity that you require, then you may want to consider logging to a separate,
-rotating log file. See the wiki article [*Logging to rotating files*](https://github.com/weewx/weewx/wiki/WeeWX-v4-and-logging#logging-to-rotating-files).
+rotating log file. See the wiki article 
+[_Logging to rotating files_](https://github.com/weewx/weewx/wiki/WeeWX-v4-and-logging#logging-to-rotating-files).
