@@ -7,11 +7,11 @@ group.
 
 Customizations typically fall into one of these categories:
 
--   search list extension
--   template
--   skin
--   service
--   generator
+* search list extension
+* template
+* skin
+* service
+* generator
 -   driver
 
 Take a look at the [WeeWX wiki](https://github.com/weewx/weewx/wiki) for
@@ -25,12 +25,13 @@ extension to make installation, removal, and distribution easier.
 
 Here are a few guidelines for creating extensions:
 
--   Extensions should not modify or depend upon existing skins. An
-    extension should include its own, standalone skin to illustrate any
-    templates, search list extension, or generator features.
--   Extensions should not modify the database schemas. If it requires
-    data not found in the default databases, an extension should provide
-    its own database and schema.
+* Extensions should not modify or depend upon existing skins. An
+extension should include its own, standalone skin to illustrate any
+templates, search list extension, or generator features.
+
+* Extensions should not modify the database schemas. If it requires
+data not found in the default databases, an extension should provide
+its own database and schema.
 
 Although one extension might use another extension, take care to write
 the dependent extension so that it fails gracefully. For example, a skin
@@ -47,12 +48,12 @@ have a `bin/user` directory.
 
 Each extension should also include:
 
--   `readme.txt` - a summary of what the extension does, list of
-    pre-requisites (if any), and instructions for installing the
-    extension manually
--   `changelog` - an enumeration of changes in each release
--   `install.py` - python code used by the WeeWX
-    ExtensionInstaller
+* `readme.txt` - a summary of what the extension does, list of pre-requisites
+(if any), and instructions for installing the extension manually
+
+* `changelog` - an enumeration of changes in each release
+
+* `install.py` - python code used by the WeeWX ExtensionInstaller
 
 For example, here is the structure of a skin called `basic`:
 

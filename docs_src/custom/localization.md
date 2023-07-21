@@ -8,8 +8,8 @@ specific to a locale.
 
 All the skins that come with WeeWX have been *internationalized*,
 that is, they are capable of being *localized*, although there may or may not
-be a localization available for your specific language.
-See the section [Internationalized skins](../custom_reports/#internationalized-skins) for
+be a localization available for your specific language. See the section
+[Internationalized skins](../custom-reports/#internationalized-skins) for
 how to tell.
 
 ### Internationalized, your language is available
@@ -20,17 +20,14 @@ locale in `weewx.conf`. For example, to select German (code
 `de`) for the *Seasons* skin, just add the highlighted line (or
 change, if it's already there):
 
-``` ini hl_lines="9"
-...
+``` ini hl_lines="7"
 [StdReport]
-    ...
     [[SeasonsReport]]
         # The SeasonsReport uses the 'Seasons' skin, which contains the
         # images, templates and plots for the report.
         skin = Seasons
         enable = true
         lang = de
-        ...
 ```
 
 ### Internationalized, but your language is missing {#internationalized-missing-language}
@@ -51,27 +48,23 @@ cp en.conf fr.conf
 Then change things that look like this:
 
 ``` ini
-...
 [Texts]
     "Language" = "English"
 
     "7-day" = "7-day"
     "24h" = "24h"
     "About this weather station" = "About this weather station"
-    ...
 ```
 
 to something that looks like this:
 
 ``` ini
-...
 [Texts]
     Language = French
 
     "7-day" = "7-jours"
     "24h" = "24h"
     "About this weather station" = "A propos de cette station"
-    ...
 ```
 
 And so on. When you're done, the skin author may be interested in your
@@ -82,9 +75,9 @@ group](https://groups.google.com/forum/#!forum/weewx-user) and, with
 your permission, we may include your localization file in a future WeeWX
 release.
 
-Finally, set the option `lang` in `weewx.conf` to your
-language code (`fr` in this example) as described in the [User's
-Guide](../../usersguide/weewx-config-file/stdreport-config/#lang).
+Finally, set the option `lang` in `weewx.conf` to your language code (`fr` in
+this example) as described in the
+[User's Guide](../../reference/weewx-options/stdreport/#lang).
 
 ## How to internationalize a skin
 
@@ -93,16 +86,16 @@ been internationalized? This section explains how to convert the report
 to local formats and language.
 
 Internationalization of WeeWX templates uses a pattern very similar to
-the well-known GNU
-"[`gettext`](https://www.gnu.org/software/gettext/)" approach.
-The only difference is that we have leveraged the `ConfigObj`
+the well-known GNU "[`gettext`](https://www.gnu.org/software/gettext/)"
+approach. The only difference is that we have leveraged the `ConfigObj`
 configuration library used throughout WeeWX.
 
 ### Create the localization file
 
-Create a subdirectory called `lang` in the skin directory. Then create a file named by the language
-code with the suffix `.conf` in this subdirectory. For example, if you want to translate to
-Spanish, name the file `lang/es.conf`. Include the following in the file:
+Create a subdirectory called `lang` in the skin directory. Then create a file
+named by the language code with the suffix `.conf` in this subdirectory. For
+example, if you want to translate to Spanish, name the file `lang/es.conf`.
+Include the following in the file:
 
 ``` ini
 [Units]

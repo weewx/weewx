@@ -60,15 +60,15 @@ default.
 
 ### Modifying a starting schema {#modify_starting_schema}
 
-If none of the three starting schemas that come with WeeWX suits your
-purposes, you can easily create your own. Just pick one of the three
-schemas as a starting point, then modify it. Put the results in the
-`user` subdirectory, where it will be safe from upgrades. For
-example, suppose you like the `schemas.wview_small` schema, but
-you need to store the type `electricity` from the example
+If none of the three starting schemas that come with WeeWX suits your purposes,
+you can easily create your own. Just pick one of the three schemas as a
+starting point, then modify it. Put the results in the `user` subdirectory,
+where it will be safe from upgrades. For example, suppose you like the
+`schemas.wview_small` schema, but you need to store the type `electricity`
+from the example
 [*Adding a second data source*](../service-engine/#Adding_2nd_source). The type
-`electricity` does not appear in the schema, so you'll have to
-add it before starting up WeeWX. We will call the resulting new schema
+`electricity` does not appear in the schema, so you'll have to add it before
+starting up WeeWX. We will call the resulting new schema
 `user.myschema.schema`.
 
 If you did a Debian install, here's how you would do this:
@@ -81,9 +81,9 @@ sudo cp /usr/share/weewx/schemas/wview_small.py /usr/share/weewx/user/myschema.p
 sudo nano /usr/share/weewx/user/myschema.py
 ```
 
-If you did a pip install, it can be difficult to find the starting schema because it can be
-buried deep in the Python library tree. It's easier to just download from the git repository and
-start with that:
+If you did a pip install, it can be difficult to find the starting schema
+because it can be buried deep in the Python library tree. It's easier to
+just download from the git repository and start with that:
 
 ``` shell
  # Download the wview_small schema and rename it to myschema.py
@@ -120,11 +120,11 @@ to this
          ]
 ```
 
-The only change was the addition (==highlighted==)  of
-`electricity` to the list of observation names.
+The only change was the addition (==highlighted==) of `electricity` to the
+list of observation names.
 
-Now change option `schema` under `[DataBindings]` in
-`weewx.conf` to use your new schema:
+Now change option `schema` under `[DataBindings]` in `weewx.conf` to use
+your new schema:
 
 ``` tty hl_lines="6"
 [DataBindings]
@@ -143,18 +143,21 @@ schema instead of the default.
     Thereafter, WeeWX reads the schema directly from the database and your
     changes will have no effect!
 
+
 ## Modify the schema of an existing database
 
-The previous section covers the case where you do not have an existing database,
-so you modify a starting schema, then use it to initialize the database. But,
-what if you already have a database, and you want to modify its schema, perhaps
-by adding a column or two? Creating a new starting schema is not going to work
-because it is only used when the database is first created. Here is where the
-command [`weectl database`](/utilities/weectl-database) can be useful.
+The previous section covers the case where you do not have an existing
+database, so you modify a starting schema, then use it to initialize the
+database. But, what if you already have a database, and you want to modify
+its schema, perhaps by adding a column or two? Creating a new starting schema
+is not going to work because it is only used when the database is first
+created. Here is where the command
+[`weectl database`](../../utilities/weectl-database) can be useful.
 
 There are two ways to do this. Both are covered below.
 
 1.  Modify the database *in situ*. This choice works best for small changes.
+
 2.  Reconfigure the old database to a new one while modifying it along the
     way, This choice is best for large modifications.
 
@@ -169,7 +172,7 @@ If you want to make some minor modifications to an existing database, perhaps
 adding or removing a column, then this can easily be done using the command
 `weectl database` with an appropriate action. We will cover the cases of
 adding, removing, and renaming a type. See the documentation for [`weectl
-database`](/utilities/weectl-database) for more details.
+database`](../../utilities/weectl-database) for more details.
 
 #### Adding a type {#add_archive_type}
 
@@ -189,18 +192,18 @@ daily summaries.
 
 In a similar manner, the tool can remove any unneeded types from an existing
 database. For example, suppose you are using the `schemas.wview` schema, but
-you're pretty sure you're not going to need to store soil moisture. You can drop
-the unnecessary types this way:
+you're pretty sure you're not going to need to store soil moisture. You can
+drop the unnecessary types this way:
 
 ``` shell
 weectl database drop-columns soilMoist1 soilMoist2 soilMoist3 soilMoist4 
 ```
 
-Unlike the action `add-column`, the action `drop-columns` can take more than one
-type. This is done in the interest of efficiency: adding new columns is easy and
-fast with the SQLite database, but dropping columns requires copying the whole
-database. By specifying more than one type, you can amortize the cost over a
-single invocation of the utility.
+Unlike the action `add-column`, the action `drop-columns` can take more than
+one type. This is done in the interest of efficiency: adding new columns is
+easy and fast with the SQLite database, but dropping columns requires copying
+the whole database. By specifying more than one type, you can amortize the
+cost over a single invocation of the utility.
 
 !!! Warning
     Dropping types from a database means *you will lose any data
@@ -231,13 +234,16 @@ exactly the schema you are using.
 Here is the general strategy to do this.
 
 1.  Create a new schema that includes exactly the types that you want.
+
 2.  Specify this schema as the starting schema for the database.
-3.  Make sure you have the necessary permissions to create the new
-    database.
+
+3.  Make sure you have the necessary permissions to create the new database.
+
 4.  Use the action
-    [`weectl database reconfigure`](/utilities/weectl-database/#reconfigure-a-database)
+    [`weectl database reconfigure`](../../utilities/weectl-database/#reconfigure-a-database)
     to create the new database and populate it with data from the old
     database.
+
 5.  Shuffle databases around so WeeWX will use the new database.
 
 Here are the details:
@@ -274,9 +280,9 @@ Here are the details:
     weectl database reconfigure
     ```
 
-    This will create a new database (nominally, `weewx.sdb_new` if you are using
-    SQLite, `weewx_new` if you are using MySQL), using the schema found in
-    `user.myschema.schema`, and populate it with data from the old database.
+    This will create a new database (nominally, `weewx.sdb_new` if you are
+    using SQLite, `weewx_new` if you are using MySQL), using the schema found
+    in `user.myschema.schema`, and populate it with data from the old database.
 
 5.  **Shuffle the databases.** Now arrange things so WeeWX can find the
     new database.
@@ -284,9 +290,9 @@ Here are the details:
     !!! Warning
         Make a backup of the data before doing any of the next steps!
 
-    You can either shuffle the databases around so the new database has the same
-    name as the old database, or edit `weewx.conf` to use the new database name.
-    To do the former:
+    You can either shuffle the databases around so the new database has the
+    same name as the old database, or edit `weewx.conf` to use the new
+    database name.  To do the former:
 
     === "SQLite"
 
@@ -308,7 +314,7 @@ Here are the details:
     rebuilding the daily summaries inside the new database. This will be
     done automatically by `weewxd` at the next startup. Alternatively, it
     can be done manually using the
-    [`weectl database rebuild-daily`](/utilities/weectl-database/) action:
+    [`weectl database rebuild-daily`](../../utilities/weectl-database/) action:
 
     ``` shell
     weectl database rebuild-daily
@@ -319,7 +325,7 @@ Here are the details:
 Normally, data are stored in the databases using US Customary units, and you
 shouldn't care; it is an "implementation detail". Data can always be displayed
 using any set of units you want &mdash; the section [*Changing unit
-systems*](/custom/custom-reports/#changing-unit-systems) explains how to change
+systems*](../custom-reports/#changing-unit-systems) explains how to change
 the reporting units. Nevertheless, there may be special situations where you
 wish to store the data in Metric units. For example, you may need to allow
 direct programmatic access to the database from another piece of software that
@@ -328,7 +334,7 @@ expects metric units.
 You should not change the database unit system midstream. That is, do
 not start with one unit system then, some time later, switch to another.
 WeeWX cannot handle databases with mixed unit systems &mdash; see the
-section [`[StdConvert]`](../../usersguide/weewx-config-file/stdconvert-config/) in the
+section [`[StdConvert]`](../../reference/weewx-options/stdconvert) in the
 WeeWX User's Guide. However, you can reconfigure the database by
 copying it to a new database, performing the unit conversion along the
 way. You then use this new database.
@@ -339,7 +345,7 @@ schema*](#reconfigure_database_using_new_schema). The only difference is that
 instead of specifying a new starting schema, you specify a different database
 unit system. This means that instead of steps 1 and 2 above, you edit the
 configuration file and change option `target_unit` in section
-[`[StdConvert]`](../../usersguide/weewx-config-file/stdconvert-config/) to
+[`[StdConvert]`](../../reference/weewx-options/stdconvert) to
 reflect your choice. For example, if you are switching to metric units, the
 option will look like:
 
@@ -348,8 +354,9 @@ option will look like:
     target_unit = METRICWX
 ```
 
-After changing `target_unit`, you then go ahead with the rest of the steps. That
-is run the action `weectl database reconfigure`, then shuffle the databases.
+After changing `target_unit`, you then go ahead with the rest of the steps.
+That is run the action `weectl database reconfigure`, then shuffle the
+databases.
 
 ## Rebuilding the daily summaries
 
@@ -360,8 +367,9 @@ summaries:
 weectl database rebuild-daily
 ```
 
-In most cases this will be sufficient; however, if anomalies remain in the daily
-summaries the daily summary tables may be dropped first before rebuilding:
+In most cases this will be sufficient; however, if anomalies remain in the
+daily summaries the daily summary tables may be dropped first before
+rebuilding:
 
 ``` shell
 weectl database drop-daily

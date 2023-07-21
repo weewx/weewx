@@ -1054,7 +1054,8 @@ pressure. Here are some examples:
 
 Note how you can explicitly specify a time interval in the tag itself (2nd row
 in the table above). If you do not specify a value, then a default time
-interval, set by option [time_delta](../options_ref/#trend) in the skin
+interval, set by option
+[time_delta](../../reference/skin-options/units/#time_delta) in the skin
 configuration file, will be used. This value can be retrieved by using the
 syntax `$trend.time_delta` (4th row in the table).
 

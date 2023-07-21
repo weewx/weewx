@@ -68,19 +68,17 @@ would look on the Dell:
     
 ```
 
-The two additions have been ==highlighted==. The first,
-`[[wmr100_binding]]`, adds a new binding called
-`wmr100_binding`. It links ("binds") to the new database, called
-`rpi_mysql`, through the option `database`. It also
-defines some characteristics of the binding, such as which manager is to
-be used and what its schema looks like.
+The two additions have been ==highlighted==. The first, `[[wmr100_binding]]`,
+adds a new binding called `wmr100_binding`. It links ("binds") to the new
+database, called `rpi_mysql`, through the option `database`. It also defines
+some characteristics of the binding, such as which manager is to be used and
+what its schema looks like.
 
-The second addition, `[[rpi-mysql]]`, defines the new
-database. Option `database_type` is set to `MySQL`,
-indicating that it is a MySQL database. Defaults for MySQL databases are
-defined in the section `[[MySQL]]`. The new database accepts
-all of them, except for `host`, which as been set to the remote
-host `rpi-bug`, the name of my Raspberry Pi.
+The second addition, `[[rpi-mysql]]`, defines the new database. Option
+`database_type` is set to `MySQL`, indicating that it is a MySQL database.
+Defaults for MySQL databases are defined in the section `[[MySQL]]`. The new
+database accepts all of them, except for `host`, which as been set to the
+remote host `rpi-bug`, the name of my Raspberry Pi.
 
 ## Explicit binding in tags
 
@@ -100,10 +98,9 @@ using tags. Here's what our template looks like:
 </table>
 ```
 
-The explicit binding to `wmr100_binding` is highlighted. This
-tells the reporting engine to override the default binding specifed in
-`[StdReport]`, generally `wx_binding`, and use
-`wmr100_binding` instead.
+The explicit binding to `wmr100_binding` is highlighted. This tells the
+reporting engine to override the default binding specifed in `[StdReport]`,
+generally `wx_binding`, and use `wmr100_binding` instead.
 
 <div class="example_output">
   Inside Temperature, Vantage   68.7°F<br/>
@@ -126,28 +123,24 @@ like.
        label = WMR100 inTemp
 ```
 
-This will produce an image with name `daycompare.png`, with two
-plot lines. The first will be of the temperature from the Vantage. It
-uses the default binding, `wx_binding`, and will be labeled
-`Vantage inTemp`. The second line explicitly uses the
-`wmr100_binding`. Because it uses the same variable name
-(`inTemp`) as the first line, we had to explicitly specify it
-using option `data_type`, in order to avoid using the same
-sub-section name twice (see the section *[Including a type more than
-once in a plot](../image-generator/#including_same_sql_type_2x)* for details). It will be
-labeled `WMR100 inTemp`. The results look like this:
+This will produce an image with name `daycompare.png`, with two plot lines.
+The first will be of the temperature from the Vantage. It uses the default
+binding, `wx_binding`, and will be labeled `Vantage inTemp`. The second line
+explicitly uses the `wmr100_binding`. Because it uses the same variable name
+(`inTemp`) as the first line, we had to explicitly specify it using option
+`data_type`, in order to avoid using the same sub-section name twice (see
+the section *[Including a type more than once in a plot](../image-generator/#including_same_sql_type_2x)*
+for details). It will be labeled `WMR100 inTemp`. The results look like this:
 
 ![Comparing temperatures](../images/daycompare.png)
 
 
 ## Stupid detail {#stupid_detail}
 
-At first, I could not get this example to work. The problem turned out
-to be that the RPi was processing things just a beat behind the Dell, so
-the temperature for the "current" time wasn't ready when the Dell
-needed it. I kept getting `N/A`. To avoid this, I introduced the
-tag `$latest`, which uses the last available timestamp in the
-binding, which may or may not be the same as what `$current`
-uses. That's why the example above uses `$latest` instead of
-`$current`.
-
+At first, I could not get this example to work. The problem turned out to be
+that the RPi was processing things just a beat behind the Dell, so the
+temperature for the "current" time wasn't ready when the Dell needed it.
+I kept getting `N/A`. To avoid this, I introduced the tag `$latest`, which
+uses the last available timestamp in the binding, which may or may not be
+the same as what `$current` uses. That's why the example above uses `$latest`
+instead of `$current`.

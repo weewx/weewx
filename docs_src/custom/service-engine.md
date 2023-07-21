@@ -15,7 +15,7 @@ have the bound member function called when a specific event happens,
 such as a new LOOP packet arriving.
 
 The services are specified in lists in the
-[`[Engine][[Services]]`](../../usersguide/weewx-config-file/engine/#services)
+[`[Engine][[Services]]`](../../reference/weewx-options/engine/#services)
 stanza of the configuration file. The `[[Services]]` section
 lists all the services to be run, broken up into different *service
 lists*.
@@ -26,7 +26,7 @@ quality control service, `StdQC`, before putting them in the database.
 Similarly, the reporting system must come *after* the data has been put in the
 database. These groups ensure that things happen in the proper sequence.
 
-See the table [The standard WeeWX services](../../custom/#the-weewx-service-architecture)
+See the table [The standard WeeWX services](../../custom/introduction/#the-weewx-service-architecture)
 for a list of the services that are normally run.
 
 ## Modifying an existing service {#Customizing_a_service}
@@ -233,10 +233,9 @@ class MyAlarm(StdService):
         syslog.syslog(syslog.LOG_INFO, "alarm: email sent to: %s" % self.TO)
 ```
 
-This service expects all the information it needs to be in the
-configuration file `weewx.conf` in a new section called
-`[Alarm]`. So, add the following lines to your configuration
-file:
+This service expects all the information it needs to be in the configuration
+file `weewx.conf` in a new section called `[Alarm]`. So, add the following
+lines to your configuration file:
 
 ``` ini
 [Alarm]
@@ -250,26 +249,25 @@ file:
     subject = "Alarm message from WeeWX!"
 ```
 
-There are three important points to be noted in this example, each
-marked with a `NOTE` flag in the code.
+There are three important points to be noted in this example, each marked with
+a `NOTE` flag in the code.
 
 1.  (Line 40) Here is where the binding happens between an event,
-    `weewx.NEW_ARCHIVE_RECORD` in this example, and a member
-    function, `self.new_archive_record`. When the event
-    `NEW_ARCHIVE_RECORD` occurs, the function
-    `self.new_archive_record` will be called. There are many
-    other events that can be intercepted. Look in the file
-    `weewx/_init_.py`.
+`weewx.NEW_ARCHIVE_RECORD` in this example, and a member function,
+`self.new_archive_record`. When the event `NEW_ARCHIVE_RECORD` occurs, the
+function `self.new_archive_record` will be called. There are many other events
+that can be intercepted. Look in the file `weewx/_init_.py`.
+
 2.  (Line 56) Some hardware do not emit all possible observation types in every
-    record, so it's possible that a record may be missing some types
-    that are used in the expression. This try block will catch the
-    `NameError` exception that would be raised should this occur.
-3.  (Line 59) This is where the test is done for whether to sound the
-    alarm. The `[Alarm]` configuration options specify that the
-    alarm be sounded when `outTemp < 40.0` evaluates
-    `True`, that is when the outside temperature is below 40.0
-    degrees. Any valid Python expression can be used, although the only
-    variables available are those in the current archive record.
+record, so it's possible that a record may be missing some types that are used
+in the expression. This try block will catch the `NameError` exception that
+would be raised should this occur.
+
+3.  (Line 59) This is where the test is done for whether to sound the alarm.
+The `[Alarm]` configuration options specify that the alarm be sounded when
+`outTemp < 40.0` evaluates `True`, that is when the outside temperature is
+below 40.0 degrees. Any valid Python expression can be used, although the only
+variables available are those in the current archive record.
 
 Another example expression could be:
 
@@ -282,29 +280,27 @@ below freezing and the wind speed is greater than 10.0.
 
 Note that units must be the same as whatever is being used in your
 database, that is, the same as what you specified in option
-[`target_unit`](../../usersguide/weewx-config-file/stdconvert-config/#target_unit).
+[`target_unit`](../../reference/weewx-options/stdconvert/#target_unit).
 
 Option `time_wait` is used to avoid a flood of nearly identical
 emails. The new service will wait this long before sending another email
 out.
 
-Email will be sent through the SMTP host specified by option
-`smtp_host`. The recipient(s) are specified by the comma
-separated option `mailto`.
+Email will be sent through the SMTP host specified by option `smtp_host`. The
+recipient(s) are specified by the comma separated option `mailto`.
 
 Many SMTP hosts require user login. If this is the case, the user and
-password are specified with options `smtp_user` and
-`smtp_password`, respectively.
+password are specified with options `smtp_user` and `smtp_password`,
+respectively.
 
-The last two options, `from` and `subject` are optional.
-If not supplied, WeeWX will supply something sensible. Note, however,
-that some mailers require a valid "from" email address and the one
-WeeWX supplies may not satisfy its requirements.
+The last two options, `from` and `subject` are optional. If not supplied,
+WeeWX will supply something sensible. Note, however, that some mailers require
+a valid "from" email address and the one WeeWX supplies may not satisfy its
+requirements.
 
-To make this all work, you must first copy the `alarm.py` file to
-the `user` directory. Then tell the engine to load this new
-service by adding the service name to the list `report_services`,
-located in `[Engine]/[[Services]]`:
+To make this all work, you must first copy the `alarm.py` file to the `user`
+directory. Then tell the engine to load this new service by adding the service
+name to the list `report_services`, located in `[Engine]/[[Services]]`:
 
 ``` ini
 [Engine]
@@ -312,13 +308,13 @@ located in `[Engine]/[[Services]]`:
         report_services = weewx.engine.StdPrint, weewx.engine.StdReport, user.alarm.MyAlarm
 ```
 
-Again, note that the option `report_services` must be all on one
-line &mdash; the `ConfigObj` parser does not allow options to be
-continued on to following lines.
+Again, note that the option `report_services` must be all on one line &mdash;
+the `ConfigObj` parser does not allow options to be continued on to following
+lines.
 
-In addition to this example, the distribution also includes a
-low-battery alarm (`lowBattery.py`), which is similar, except
-that it intercepts LOOP events instead of archiving events.
+In addition to this example, the distribution also includes a low-battery
+alarm (`lowBattery.py`), which is similar, except that it intercepts LOOP
+events instead of archiving events.
 
 
 ## Adding a second data source {#Adding_2nd_source}

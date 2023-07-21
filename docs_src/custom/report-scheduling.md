@@ -1,6 +1,6 @@
 # Scheduling report generation
 
-Normal WeeWX operation is to run each _[report](../../usersguide/weewx-config-file/stdreport-config)_
+Normal WeeWX operation is to run each _[report](../../reference/weewx-options/stdreport)_
 defined in `weewx.conf` every archive period. While this may suit most
 situations, there may be occasions when it is desirable to run a report less
 frequently than every archive period. For example, the archive interval might
@@ -29,22 +29,12 @@ your customizations worked.
 
 ## The stale_age option
 
-When `stale_age` is specified, the report will be run only when it is older
-than the indicated age. The age is specified in seconds.
+The `stale_age` option is specified for each file in a report. When `stale_age`
+is specified, the file will be (re)generaed only when it is older than the
+indicated age. The age is specified in seconds.
 
-For example, the following configuration would make the report `AnotherReport`
-run only once per day, whereas `AReport` would run on each archive interval.
-
-```
-[StdReport]
-
-    [[AReport]]
-        skin = SomeSkin
-
-    [[AnotherReport]]
-        skin = SomeOtherSkin
-        stale_age = 86400
-```
+Details and examples for the `stale_age` option are in the
+[`[CheetahGenerator]`](../../reference/skin-options/cheetahgenerator/#stale_age) reference.
 
 ## The report_timing option
 

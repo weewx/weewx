@@ -3,22 +3,23 @@
 The intention of this document is to help you write new Search List
 Extensions (SLE). Here's the plan:
 
--   We start by explaining how SLEs work.
+* We start by explaining how SLEs work.
 
--   Then we will look at an example that implements an extension
-    `$seven_day()`.
+* Then we will look at an example that implements an extension `$seven_day()`.
 
--   Then we will look at another example, `$colorize()`, which
-    allows you to pick background colors on the basis of a value (for
-    example, low temperatures could show blue, while high temperatures
-    show red). It will be implemented using 3 different, increasingly
-    sophisticated, ways:
+* Then we will look at another example, `$colorize()`, which allows you to
+pick background colors on the basis of a value (for example, low temperatures
+could show blue, while high temperatures show red). It will be implemented
+using 3 different, increasingly sophisticated, ways:
 
--   -   A simple, hardwired version that works in only one unit system.
-    -   A version that can handle any unit system, but with the colors
+    * A simple, hardwired version that works in only one unit system.
+
+    * A version that can handle any unit system, but with the colors
         still hardwared.
-    -   Finally, a version that can handle any unit system, and takes
+
+    * Finally, a version that can handle any unit system, and takes
         its color bands from the configuration file.
+
 
 ## How the search list works
 
@@ -45,21 +46,20 @@ as the tag
 $station.altitude
 ```
 
-As we saw in the previous section, Cheetah will run down the search
-list, looking for an object with a key or attribute `station`. In
-the default search list, WeeWX includes one such object, an instance of
-the class `weewx.cheetahgenerator.Station`, which has an
-attribute `station`, so it gets a hit on this object.
+As we saw in the previous section, Cheetah will run down the search list,
+looking for an object with a key or attribute `station`. In the default
+search list, WeeWX includes one such object, an instance of the class
+`weewx.cheetahgenerator.Station`, which has an attribute `station`, so
+it gets a hit on this object.
 
-Cheetah will then try to evaluate the attribute `altitude` on
-this object. Class `Station` has such an attribute, so Cheetah
-evaluates it.
+Cheetah will then try to evaluate the attribute `altitude` on this object.
+Class `Station` has such an attribute, so Cheetah evaluates it.
 
 #### Return value
 
 What this attribute returns is not a raw value, say `700`, nor
 even a string. Instead, it returns an instance of the class
-[`ValueHelper`](custom/appendix.md#ValueHelper), a special class defined in module
+[`ValueHelper`](../../reference/valuehelper), a special class defined in module
 `weewx.units`. Internally, it holds not only the raw value, but
 also references to the formats, labels, and conversion targets you
 specified in your configuration file. Its job is to make sure that the
@@ -113,8 +113,8 @@ Cheetah then continues on down the chain and tries to find the next
 attribute, `outTemp`. There is no such hard coded attribute (hard
 coding all the conceivable different observation types would be
 impossible!). Instead, class `TimespanBinder` defines the Python
-special method [
-`__getattr__`](https://docs.python.org/3/reference/datamodel.html#object.__getattr__).
+special method
+[`__getattr__`](https://docs.python.org/3/reference/datamodel.html#object.__getattr__).
 If Python cannot find a hard coded version of an attribute, and the
 method `__getattr__` exists, it will try it. The definition
 provided by `TimespanBinder` returns an instance of the next
@@ -122,13 +122,12 @@ class in the chain, `weewx.tags.ObservationBinder`, which not
 only remembers all the previous stuff, but also adds the observation
 type, `outTemp`.
 
-Cheetah then tries to evaluate an attribute `max` of this class,
-and the pattern repeats. Class `weewx.tags.ObservationBinder`
-does not have an attribute `max`, but it does have a method
-`__getattr__`. This method returns an instance of the next
-class in the chain, class `AggTypeBinder`, which not only
-remembers all the previous information, but adds the aggregation type,
-`max`.
+Cheetah then tries to evaluate an attribute `max` of this class, and the
+pattern repeats. Class `weewx.tags.ObservationBinder` does not have an
+attribute `max`, but it does have a method `__getattr__`. This method
+returns an instance of the next class in the chain, class `AggTypeBinder`,
+which not only remembers all the previous information, but adds the
+aggregation type, `max`.
 
 One final step needs to occur: Cheetah has an instance of
 `AggTypeBinder` in hand, but what it really needs is a string to
@@ -280,7 +279,7 @@ Going through the example, line by line:
         to be used. We simply pass in `db_lookup`.
     -   The third, `context`, is the time *context* to be used
         when formatting times. The set of possible choices is given by
-        sub-section [`[[TimeFormats]]`](/custom/options_ref/#Units_TimeFormats)
+        sub-section [`[[TimeFormats]]`](../../reference/skin-options/units/#timeformats)
         in the configuration file. Our new tag, `$seven_day`
         is pretty similar to `$week`, so we will just use
         `'week'`, indicating that we want a time format that is
@@ -304,6 +303,8 @@ Going through the example, line by line:
     whose value will be the `TimespanBinder` that we just
     constructed.
 8.  Return the dictionary in a list
+
+#### Registering {#register_seven_day}
 
 The final step that we need to do is to tell the template engine where
 to find our extension. You do that by going into the skin configuration
@@ -456,7 +457,7 @@ the implementation line-by-line.
     against a `None` value. If `None` is found, then the color `#00000000` is
     returned, which is transparent and will have no effect.
 
-##### Registering
+#### Registering {#register_colorize}
 
 As before, we must register our extension with the Cheetah engine. We do
 this by copying the extension to the user directory, then adding its
@@ -469,7 +470,7 @@ location to option `search_list_extensions`:
     ...
 ```
 
-##### Where is `get_extension_list()`?
+#### Where is `get_extension_list()`?
 
 You might wonder, "What happened to the member function
 `get_extension_list()`? We needed it in the first example; why
@@ -502,7 +503,7 @@ database at all, and everything it needs it can get from its single
 function argument. So, it has no need for the information in
 `get_extension_list()`.
 
-##### Review
+#### Review
 
 Let's review the whole process. When the WeeWX Cheetah generator starts
 up to evaluate a template, it first creates a search list. It does this
@@ -531,7 +532,7 @@ under the name `t_c`.
 As described above, the function `colorize()` then uses the
 argument to choose an appropriate color, returning it as a string.
 
-##### Limitation
+#### Limitation
 
 This example has an obvious limitation: the argument to
 `$colorize()` must be in degrees Celsius. We can guard against
@@ -710,7 +711,7 @@ Although `[Colorize]` is in `skin.conf`, there is
 nothing special about it, and it can be overridden in
 `weewx.conf`, just like any other configuration information.
 
-##### Annotated code
+#### Annotated code
 
 Here's the alternative version of `colorize()`, which will use
 the values in the configuration file. It can also be found in

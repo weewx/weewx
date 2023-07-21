@@ -49,8 +49,8 @@ WeeWX engine.
 
 #### hardware_name
 
-This is an attribute that should return a string with a short nickname for the hardware, such as
-`"ACME X90"`
+This is an attribute that should return a string with a short nickname for the
+hardware, such as `"ACME X90"`
 
 #### genLoopPackets()
 
@@ -71,11 +71,14 @@ time and for the units used within the packet.
     <tr>
         <td class="code first_col">usUnits</td>
         <td>
-            The unit system used. <span class="code">weewx.US</span> for US customary, <span
-            class="code">weewx.METRICWX</span>, or <span class="code">weewx.METRIC</span> for metric. See the
-            Appendix <a href="../appendix/#units"><em>Units</em></a> for their exact definitions. The dictionaries <span
-            class="code">USUnits</span>, <span class="code">MetricWXUnits</span>, and <span
-            class="code">MetricUnits</span> in file <span class="code">units.py</span>, can also be useful.
+The unit system used. <span class="code">weewx.US</span> for US customary,
+<span class="code">weewx.METRICWX</span>, or
+<span class="code">weewx.METRIC</span> for metric. See the
+<a href="../../reference/units"><em>Units</em></a> for their exact definitions.
+The dictionaries <span class="code">USUnits</span>,
+<span class="code">MetricWXUnits</span>, and
+<span class="code">MetricUnits</span> in file
+<span class="code">units.py</span>, can also be useful.
         </td>
     </tr>
     </tbody>
@@ -112,25 +115,30 @@ calculate and report sea level pressures.
     <tbody>
     <tr>
         <td class="code first_col">pressure</td>
-        <td>The <em>Station Pressure</em> (SP), which is the raw, absolute pressure measured by the station.
-            This is the true barometric pressure for the station.
+        <td>
+The <em>Station Pressure</em> (SP), which is the raw, absolute pressure
+measured by the station. This is the true barometric pressure for the station.
         </td>
     </tr>
     <tr>
         <td class="code first_col">barometer</td>
-        <td>The <em>Sea Level Pressure</em> (SLP) obtained by correcting the <em>Station Pressure</em> for
-            altitude and local temperature. This is the pressure reading most commonly used by meteorologist to
-            track weather systems at the surface, and this is the pressure that is uploaded to weather services
-            by WeeWX. It is the station pressure reduced to mean sea level using local altitude and local
-            temperature.
+        <td>
+The <em>Sea Level Pressure</em> (SLP) obtained by correcting the <em>Station
+Pressure</em> for altitude and local temperature. This is the pressure reading
+most commonly used by meteorologist to track weather systems at the surface,
+and this is the pressure that is uploaded to weather services by WeeWX. It is
+the station pressure reduced to mean sea level using local altitude and local
+temperature.
         </td>
     </tr>
     <tr>
         <td class="code first_col">altimeter</td>
-        <td>The <em>Altimeter Setting</em> (AS) obtained by correcting the <em>Station Pressure</em> for
-            altitude. This is the pressure reading most commonly heard in weather reports. It is not the true
-            barometric pressure of a station, but rather the station pressure reduced to mean sea level using
-            altitude and an assumed temperature average.
+        <td>
+The <em>Altimeter Setting</em> (AS) obtained by correcting the <em>Station
+Pressure</em> for altitude. This is the pressure reading most commonly heard
+in weather reports. It is not the true barometric pressure of a station, but
+rather the station pressure reduced to mean sea level using altitude and an
+assumed temperature average.
         </td>
     </tr>
     </tbody>

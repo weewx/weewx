@@ -237,13 +237,13 @@ today's outside temperature and dewpoint:
 
 Both `outTemp` and `dewpoint` belong to unit group
 `group_temperature`, so this plot will use whatever unit has been specified
-for that group. See the section [*Mixed units*](../custom_reports/#mixed-units)
+for that group. See the section [*Mixed units*](../custom-reports/#mixed-units)
 for details.
 
 However, supposed you'd like to offer both Metric and US Customary
 versions of the same plot? You can do this by using option
-[`unit`](../options_ref/#unit) to override the unit used for
-individual plots:
+[`unit`](../../reference/skin-options/imagegenerator/#unit)
+to override the unit used for individual plots:
 
 ``` ini hl_lines="4 9"
     [[day_images]]
@@ -266,9 +266,8 @@ degrees Celsius.
 ## Line gaps {#line_gaps}
 
 If there is a time gap in the data, the option
-[`line_gap_fraction`](../options_ref/#line_gap_fraction) controls how line plots will be drawn.
-Here's what a plot looks like without and with this option being
-specified:
+[`line_gap_fraction`](../../reference/skin-options/imagegenerator/#line_gap_fraction) controls how line plots will be drawn.
+Here's what a plot looks like without and with this option being specified:
 
 | ![Gap not shown](../images/day-gap-not-shown.png) |
 |---------------------------------------------------|
