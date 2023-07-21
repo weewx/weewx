@@ -106,7 +106,7 @@ The measurement unit to be used for temperatures. Options are
 The measurement unit to be used for voltages. The only option is
 `volt`.
 
-## [[StringFormats]] {#Units_StringFormats}
+## [[StringFormats]] {#stringformats}
 
 This section is used to specify what string format is to be used for
 each unit when a quantity needs to be converted to a string. Typically,
@@ -132,7 +132,7 @@ measurement (value `None`). For example,
 NONE = " N/A "
 ```
 
-## [[Labels]] {#Units_Labels}
+## [[Labels]] {#labels}
 
 This section specifies what label is to be used for each measurement
 unit type. For example, the options
@@ -160,7 +160,7 @@ minute = " minute", " minutes"
 second = " second", " seconds"
 ```
 
-## [[TimeFormats]] {#Units_TimeFormats}
+## [[TimeFormats]] {#timeformats}
 
 This section specifies what time format to use for different time
 *contexts*. For example, you might want to use a different format when
@@ -210,7 +210,7 @@ the formatting to be set for almanac times The first,
 sunrise or sunset. The second, `ephem_year`, is used for almanac
 times within the year, such as the next equinox or full moon.
 
-## [[Ordinates]] {#Units_Ordinates}
+## [[Ordinates]] {#ordinates}
 
 #### directions
 
