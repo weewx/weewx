@@ -248,8 +248,8 @@ Going through the example, line by line:
         `TimeSpan`. This will contain the valid start and ending
         times used by the template. Normally, this is all valid times,
         but if your template appears under one of the
-        ["Summary By"](/custom/cheetah/#specifying-template-files) sections in the
-        `[CheetahGenerator]` section of `skin.conf`, then
+        ["Summary By"](../../reference/skin-options/cheetahgenerator/#summarybyday)
+        sections in the `[CheetahGenerator]` section of `skin.conf`, then
         it will contain the timespan of that time period.
     -   `db_lookup` This is a function supplied by the generator.
         It takes a single argument, a name of a binding. When called, it
@@ -596,7 +596,7 @@ Going through the example, line by line:
 
 2.  However, in this example, notice that the argument to
     `colorize()` is an instance of class
-    [`ValueHelper`](custom/appendix.md#ValueHelper), instead of a
+    [`ValueHelper`](../../reference/valuehelper), instead of a
     simple float.
 
     As before, we do not define an initializer, `__init__()`,
@@ -604,7 +604,7 @@ Going through the example, line by line:
 
 3.  The argument `value_vh` will contain many things, including
     formatting and preferred units, but, for now, we are only interested
-    in the [`ValueTuple`](custom/appendix.md#ValueTuple) contained
+    in the [`ValueTuple`](../../reference/valuetuple) contained
     within, which can be extracted with the attribute `value_t`.
 
 4.  The variable `value_vt` could be in any unit that measures
@@ -638,13 +638,12 @@ float. How do we call it? Here's an example:
 </table>
 ```
 
-This time, we call the function with a simple `$current.outTemp`
-(without the `.raw` suffix), which is actually an instance of
-class `ValueHelper`. When we met this class earlier, the Cheetah engine needed a string to
-put in the template, so it called the special member function
-`__str__()`. However, in this case, the results are going to
-be used as an argument to a function, not as a string, so the engine
-simply passes in the `ValueHelper` unchanged to
+This time, we call the function with a simple `$current.outTemp` (without the
+`.raw` suffix), which is actually an instance of class `ValueHelper`. When we
+met this class earlier, the Cheetah engine needed a string to put in the
+template, so it called the special member function `__str__()`. However, in this
+case, the results are going to be used as an argument to a function, not as a
+string, so the engine simply passes in the `ValueHelper` unchanged to
 `colorize()`, where it appears as argument `value_vh`.
 
 Our new version is better than the original because it can take a
@@ -684,7 +683,7 @@ for this version:
 
 Here's what the various lines in the configuration stanza mean:
 
-1.  All of the configuration information needed by the SLE
+1.  All the configuration information needed by the SLE
     `Colorize` can be found in a stanza with the heading
     `[Colorize]`. Linking facility with a stanza of the same
     name is a very common pattern in WeeWX.
