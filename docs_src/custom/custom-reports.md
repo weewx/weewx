@@ -357,7 +357,7 @@ For example, this would result in a date/time string such as
 Each _unit system_ is a set of units. For example, the `METRIC` unit system
 uses centimeters for rain, kilometers per hour for wind speed, and degree
 Celsius for temperature. The option
-[unit_system](../../reference/weewx-options/stdreport/#unit_system)
+[`unit_system`](../../reference/weewx-options/stdreport/#unit_system)
 controls which unit system will be used in your reports. The available choices
 are `US`, `METRIC`, or `METRICWX`. The option is case-insensitive. See
 [_Units_](../../reference/units) for the units defined in each of these unit

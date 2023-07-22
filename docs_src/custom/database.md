@@ -340,14 +340,13 @@ copying it to a new database, performing the unit conversion along the
 way. You then use this new database.
 
 The general strategy is identical to the strategy outlined above in the section
-[*Reconfigure database using new
-schema*](#reconfigure_database_using_new_schema). The only difference is that
-instead of specifying a new starting schema, you specify a different database
-unit system. This means that instead of steps 1 and 2 above, you edit the
-configuration file and change option `target_unit` in section
-[`[StdConvert]`](../../reference/weewx-options/stdconvert) to
-reflect your choice. For example, if you are switching to metric units, the
-option will look like:
+[*Reconfigure database using new schema*](#reconfigure-using-new-schema). The
+only difference is that instead of specifying a new starting schema, you specify
+a different database unit system. This means that instead of steps 1 and 2
+above, you edit the configuration file and change option `target_unit` in
+section [`[StdConvert]`](../../reference/weewx-options/stdconvert) to reflect
+your choice. For example, if you are switching to metric units, the option will
+look like:
 
 ``` ini
 [StdConvert]

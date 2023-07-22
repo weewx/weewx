@@ -360,7 +360,7 @@ Where:
 
 _`period`_ is the _aggregation period_ over which the aggregation is to be
 done. Possible choices are listed in the
-[aggregation periods table](#aggregation_periods).
+[aggregation periods table](#aggregation-periods).
 
 _`data_binding`_ is a _binding name_ to a database. An example would be
 `wx_binding`. See the section
@@ -399,7 +399,7 @@ value will appear. See the section _[Formatting options](#formatting-options)_.
 
 There are several _aggregation periods_ that can be used:
 
-<table id="aggregation_periods" class="indent">
+<table id="aggregation-periods" class="indent">
     <caption>Aggregation periods</caption>
     <tbody>
     <tr class="first_row">
@@ -1055,7 +1055,7 @@ pressure. Here are some examples:
 Note how you can explicitly specify a time interval in the tag itself (2nd row
 in the table above). If you do not specify a value, then a default time
 interval, set by option
-[time_delta](../../reference/skin-options/units/#time_delta) in the skin
+[`time_delta`](../../reference/skin-options/units/#time_delta) in the skin
 configuration file, will be used. This value can be retrieved by using the
 syntax `$trend.time_delta` (4th row in the table).
 

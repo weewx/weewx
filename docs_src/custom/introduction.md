@@ -542,7 +542,7 @@ the type, such as the minimum and maximum value seen during the day, and at
 what time. These tables have names such as `archive_day_outTemp` or
 `archive_day_barometer`. They are there to optimize certain types of queries
 &mdash; their existence is generally transparent to the user. For more details,
-see the section [_Daily summaries_](../../devnotes#Daily_summaries) in the
+see the section [_Daily summaries_](../../devnotes#daily-summaries) in the
 _Developer's Notes_.
 
 ### Binding names

@@ -15,7 +15,7 @@ save up to 3264 historical readings.
 When WeeWX starts up it will attempt to download all records from the console
 since the last record in the archive database.
 
-## Polling mode and interval {id=polling_mode_and_the_polling_interval}
+## Polling mode and interval
 
 When reading 'live' data, WeeWX can read as fast as possible, or at a
 user-defined period. This is controlled by the option `polling_mode` in the

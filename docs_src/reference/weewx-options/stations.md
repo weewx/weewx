@@ -263,7 +263,7 @@ One of `PERIODIC` or `ADAPTIVE`. In `PERIODIC` mode, WeeWX queries the console
 at regular intervals determined by the polling_interval. In `ADAPTIVE` mode,
 WeeWX attempts to query the console at times when it is not reading data from
 the sensors or writing data to memory. See the section [*Polling mode and
-interval*](../../../hardware/fousb/#polling_mode_and_the_polling_interval)
+interval*](../../../hardware/fousb/#polling-mode-and-interval)
 in the *Hardware Guide* for more details. The default is `PERIODIC`.
 
 
