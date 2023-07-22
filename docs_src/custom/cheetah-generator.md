@@ -12,8 +12,8 @@ templates incomprehensible to anyone but a Python programmer, WeeWX adopts
 a very small subset of its power.
 
 The Cheetah generator is controlled by the configuration options in the
-reference [_[CheetahGenerator]_](../../reference/skin-options/cheetahgenerator). These options are specified in the `[CheetahGenerator]` section of a skin
-configuration file.
+section [`[CheetahGenerator]`](../../reference/skin-options/cheetahgenerator)
+of the skin configuration file.
 
 Let's take a look at how this works.
 
@@ -310,7 +310,7 @@ _`data_binding`_ is a _binding name_ to a database. An example would be
 _[Binding names](../../reference/weewx-options/data-bindings)_
 for more details.
 
-_`obstype`_ is an observation type, such as `barometer`. This type must appear
+_`obstype`_ is an _observation type_, such as `barometer`. This type must appear
 either as a field in the database, or in the current (usually, the latest)
 record.
 
@@ -349,7 +349,7 @@ The most general tag for an aggregation over time looks like:
 
 ```
 $period(data_binding=binding_name[, ago=delta])
-    .statstype
+    .obstype
     .aggregation
     [.unit_conversion]
     [.rounding]
@@ -360,7 +360,7 @@ Where:
 
 _`period`_ is the _aggregation period_ over which the aggregation is to be
 done. Possible choices are listed in the
-[aggregation periods table](#aggregation-periods).
+[aggregation periods table](#aggregation-periods-table).
 
 _`data_binding`_ is a _binding name_ to a database. An example would be
 `wx_binding`. See the section
@@ -375,31 +375,31 @@ example `$week(weeks_ago=1)` indicates last week, `$day(days_ago=2)` would be
 the day-before-yesterday, _etc_. The default is zero: that is, this
 aggregation period.
 
-_`statstype`_ is a _statistical type_. This is generally any observation type
+_`obstype`_ is a _observation type_. This is generally any observation type
 that appears in the database (such as `outTemp` or `windSpeed`), as well as a
 few synthetic types (such as heating and cooling degree-days). Not all
 aggregations are supported for all types.
 
 _`aggregation`_ is an _aggregation type_. If you ask for `$month.outTemp.avg`
 you are asking for the _average_ outside temperature for the month. Possible
-aggregation types are given in the reference _[Aggregation types](../../reference/aggtypes)_.
+aggregation types are given in the reference [_Aggregation
+types_](../../reference/aggtypes).
 
-_`unit_conversion`_ is an optional unit conversion tag. If provided,
-the results will be converted into the specified units, otherwise the default
-units specified in the skin configuration file (in section `[Units][[Groups]]`)
-will be used. See the section
-_[Unit conversion options](#unit-conversion-options)_.
+_`unit_conversion`_ is an optional unit conversion tag. If provided, the results
+will be converted into the specified units, otherwise the default units
+specified in the skin configuration file (in section `[Units][[Groups]]`) will
+be used. See the section _[Unit conversion options](#unit-conversion-options)_.
 
-_`rounding`_ is an optional rounding tag.  If provided, it rounds the result
-to a fixed number of decimal digits. See the section
-_[Rounding options](#rounding-options)_.
+_`rounding`_ is an optional rounding tag.  If provided, it rounds the result to
+a fixed number of decimal digits. See the section _[Rounding
+options](#rounding-options)_.
 
 _`formatting`_ is an optional formatting tag. If provided, it controls how the
 value will appear. See the section _[Formatting options](#formatting-options)_.
 
 There are several _aggregation periods_ that can be used:
 
-<table id="aggregation-periods" class="indent">
+<table id="aggregation-periods-table" class="indent">
     <caption>Aggregation periods</caption>
     <tbody>
     <tr class="first_row">
@@ -563,7 +563,7 @@ be a better choice).
 
 The structure of the option is
 
-    round(ndigits=None)
+    .round(ndigits=None)
 
 where `ndigits` is the number of decimal digits to retain. If `None` (the
 default), then all digits will be retained.
@@ -1100,7 +1100,7 @@ time boundary. If set to 'midnight', then the starting time will be at the
 previous midnight. If left out, then the start time will be the sum of the
 optional deltas.
 
-_`obstype`_ is a observation type, such as `outTemp`.
+_`obstype`_ is an _observation type_, such as `outTemp`.
 
 _`aggregation`_ is an _aggregation type_. If you ask for `$month.outTemp.avg`
 you are asking for the _average_ outside temperature for the month. Possible
