@@ -12,10 +12,10 @@ templates incomprehensible to anyone but a Python programmer, WeeWX adopts
 a very small subset of its power.
 
 The Cheetah generator is controlled by the configuration options in the
-reference [_[CheetahGenerator]_](../../reference/skin-options/cheetahgenerator).
+reference [_[CheetahGenerator]_](../../reference/skin-options/cheetahgenerator). These options are specified in the `[CheetahGenerator]` section of a skin
+configuration file.
 
-These options are specified in the `[CheetahGenerator]` section of a skin
-configuration file. Let's take a look at how this works.
+Let's take a look at how this works.
 
 ## Which files get processed?
 
@@ -23,7 +23,7 @@ Each template file is named something like `D/F.E.tmpl`, where `D` is the
 (optional) directory the template sits in and will also be the directory the
 results will be put in, and `F.E` is the generated file name. So, given a
 template file with name `Acme/index.html.tmpl`, the results will be put in
-`_HTML_ROOT_/Acme/index.html`.
+`HTML_ROOT/Acme/index.html`.
 
 The configuration for a group of templates will look something like this:
 
@@ -47,7 +47,7 @@ are four block names that have special meaning: `SummaryByDay`,
 By way of example, here is the `[CheetahGenerator]` section from the
 `skin.conf` for the skin _`Seasons`_.
 
-```ini linenums="1"
+```{ini linenums=1}
 [CheetahGenerator]
     # The CheetahGenerator creates files from templates.  This section
     # specifies which files will be generated from which template.
@@ -1047,7 +1047,7 @@ pressure. Here are some examples:
 | Tag                                  | Results    |
 |--------------------------------------|------------|
 | `$trend.barometer`                   | -.05 inHg  |
-| `$trend(time_delta=3600).barometer` | -.02 inHg  |
+| `$trend(time_delta=3600).barometer`  | -.02 inHg  |
 | `$trend.outTemp`                     | 1.1 °C     |
 | `$trend.time_delta`                  | 10800 secs |
 | `$trend.time_delta.hour`             | 3 hrs      |
@@ -1975,7 +1975,7 @@ This would result in:
 The separation between Venus and Mars is 55:55:31.8
 </div>
 
-### Adding new bodies to the almanac
+### Adding new bodies
 
 It is possible to extend the WeeWX almanac, adding new bodies that it was not
 previously aware of. For example, say we wanted to add

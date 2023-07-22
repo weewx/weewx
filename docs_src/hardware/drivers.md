@@ -2,7 +2,10 @@
 
 ## Core hardware
 
-Drivers for these stations are included in the core WeeWX distribution.
+Drivers for these stations are included in the core WeeWX distribution.  Each
+station type provides a different set of observations, at different sampling
+rates. These are enumerated in a *Station data* table in the page for each
+station.
 
 <table class="no_indent">
   <tr>

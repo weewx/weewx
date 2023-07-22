@@ -12,7 +12,7 @@ Customizations typically fall into one of these categories:
 * skin
 * service
 * generator
--   driver
+* driver
 
 Take a look at the [WeeWX wiki](https://github.com/weewx/weewx/wiki) for
 a sampling of some of the extensions that are available.

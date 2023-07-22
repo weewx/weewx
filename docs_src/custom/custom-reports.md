@@ -231,7 +231,7 @@ example, if you used a package installer and are using the _Seasons_ skin, you
 will want to look in `/etc/weewx/skins/Seasons/lang`. Inside, you will see
 something like this:
 
-```bash
+```
 ls -l /etc/weewx/skins/Seasons/lang
 total 136
 -rw-rw-r-- 1 tkeffer tkeffer  9447 Jul  1 11:11 cn.conf

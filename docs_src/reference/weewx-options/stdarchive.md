@@ -44,14 +44,14 @@ emits lots of spiky data, setting to `false` may help. Default is `true`.
 #### log_success
 
 If you set a value for `log_success` here, it will override the value set at
-the [top-level](../../weewx-config-file/general/#log_success)  and will apply
-only to archiving operations.
+the [top-level](../general/#log_success)  and will apply only to archiving
+operations.
 
 #### log_failure
 
 If you set a value for `log_failure` here, it will override the value set at
-the [top-level](../../weewx-config-file/general/#log_failure)  and will apply
-only to archiving operations.
+the [top-level](../general/#log_failure)  and will apply only to archiving
+operations.
 
 #### data_binding
 

@@ -29,60 +29,52 @@ your customizations worked.
 
 ## The stale_age option
 
-The `stale_age` option is specified for each file in a report. When `stale_age`
+The `stale_age` option applies to each file in a report. When `stale_age`
 is specified, the file will be (re)generaed only when it is older than the
 indicated age. The age is specified in seconds.
 
-Details and examples for the `stale_age` option are in the
+Details for the `stale_age` option are in the
 [`[CheetahGenerator]`](../../reference/skin-options/cheetahgenerator/#stale_age) reference.
 
 ## The report_timing option
 
-The report_timing option uses a CRON-like format to control when a report is
-to be run. While a CRON-like format is used, the control of WeeWX report
-generation using the report_timing option is confined completely to WeeWX
-and has no interraction with the system CRON service.
+The `report_timing` option applies to each report. It uses a CRON-like
+format to control when a report is to be run. While a CRON-like format is used,
+the control of WeeWX report generation using the report_timing option is
+confined completely to WeeWX and has no interraction with the system CRON
+service.
 
-The report_timing option consists of five parameters separated by white-space:
+The `report_timing` option consists of five parameters separated by
+white-space:
 
 ```
 report_timing = minutes hours day_of_month months day_of_week
 ```
 
-The report_timing parameters are summarised in the following table:
+The parameters are summarised in the following table:
 
 <table>
 <tr><th>Parameter</th><th>Function</th><th>Allowable values</th></tr>
 <tr>
 <td>minutes</td>
 <td>Specifies the minutes of the hour when the report will be run</td>
-<td>
-\*, or  
-numbers in the range 0..59 inclusive
-</td>
+<td>*, or numbers in the range 0..59 inclusive</td>
 </tr>
 <tr>
 <td>hours</td>
 <td>Specifies the hours of the day when the report will be run</td>
-<td>
-\*, or  
-numbers in the range 0..23 inclusive
-</td>
+<td>*, or numbers in the range 0..23 inclusive</td>
 </tr>
 <tr>
 <td>day_of_month</td>
 <td>Specifies the days of the month when the report will be run</td>
-<td>
-\*, or  
-numbers in the range 1..31 inclusive
-</td>
+<td>*, or numbers in the range 1..31 inclusive</td>
 </tr>
 <tr>
 <td>months</td>
 <td>Specifies the months of the year when the report will be run</td>
 <td>
-\*, or  
-numbers in the range 1..12 inclusive, or  
+*, or numbers in the range 1..12 inclusive, or  
 abbreviated names in the range jan..dec inclusive
 </td>
 </tr>
@@ -90,19 +82,19 @@ abbreviated names in the range jan..dec inclusive
 <td>day_of_week</td>
 <td>Specifies the days of the week when the report will be run</td>
 <td>
-\*, or  
+*, or
 numbers in the range 0..7 inclusive (0,7 = Sunday, 1 = Monday etc), or  
 abbreviated names in the range sun..sat inclusive
 </td>
 </tr>
 </table>
 
-The report_timing option may only be used in `weewx.conf`. When set in the
-[StdReport] section of `weewx.conf` the option will apply to all reports
-listed under [StdReport]. When specified within a report section, the option
-will override any setting in [StdReport] for that report. In this manner it
+The `report_timing` option may only be used in `weewx.conf`. When set in the
+`[StdReport]` section, the option will apply to all reports listed under
+`[StdReport]`. When specified within a report section, the option will
+override any setting in `[StdReport]`, for that report. In this manner it
 is possible to have different reports run at different times. The following
-sample `weewx.conf` excerpt illustrates this:
+excerpt illustrates this:
 
 ```
 [StdReport]
@@ -185,7 +177,7 @@ described through some examples:
 <td>The report will be run only during the report cycle commencing on the hour.</td>
 </tr>
 <tr>
-<td>5 * * * *</td.
+<td>5 * * * *</td>
 <td>5 minutes</td>
 <td>The report will be run only during the report cycle commencing at 5 minutes past the hour.</td>
 </tr>

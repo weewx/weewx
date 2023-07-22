@@ -16,18 +16,16 @@ services such as:
 #### log_success
 
 If you set a value for `log_success` here, it will override the value set at
-the [top-level](../../weewx-config-file/general/#log_success) and will apply
-only to RESTful services. In addition, `log_success` can be set for individual
-services by putting them under the appropriate subsection (*e.g.*, under
-`[[CWOP]]`).
+the [top-level](../general/#log_success) and will apply only to RESTful
+services. In addition, `log_success` can be set for individual services by
+putting them under the appropriate subsection (*e.g.*, under `[[CWOP]]`).
 
 #### log_failure
 
 If you set a value for `log_failure` here, it will override the value set at
-the [top-level](../../weewx-config-file/general/#log_failure) and will apply
-only to RESTful services. In addition, `log_failure` can be set for individual
-services by putting them under the appropriate subsection (*e.g.*, under
-`[[CWOP]]`).
+the [top-level](../general/#log_failure) and will apply only to RESTful
+services. In addition, `log_failure` can be set for individual services by
+putting them under the appropriate subsection (*e.g.*, under `[[CWOP]]`).
 
 
 ## [[StationRegistry]]
