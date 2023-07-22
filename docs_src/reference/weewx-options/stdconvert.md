@@ -13,7 +13,7 @@ chose a unit system and then stick with it. This means that users coming from
 wview (which uses US Customary) should not change the default setting. Having
 said this, there is a way of reconfiguring the database to use another unit
 system. See the section [*Changing the unit system in an existing
-database*](../../../custom/database/#Changing_the_unit_system) in the
+database*](../../../custom/database/#change-unit-system) in the
 *Customization Guide*.
 
 !!! note

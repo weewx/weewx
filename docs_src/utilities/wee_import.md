@@ -956,7 +956,7 @@ This mapping allows <span class="code">wee_import</span> to take a source data f
             Default is <span class="code">'.'</span>.
         </p>
 
-        <h4 class='config_option' id='wd_ignore_missing_log'>ignore_Missing_log</h4>
+        <h4 class='config_option' id='wd_ignore_missing_log'>ignore_missing_log</h4>
 
         <p>Determines whether missing log files are to be ignored or the import aborted. Weather Display log files are
             complete in themselves and a missing log file will have no effect other than there will be no imported data

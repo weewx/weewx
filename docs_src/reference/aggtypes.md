@@ -1,4 +1,4 @@
-# Aggregation types {#aggregation_types}
+# Aggregation types
 
 <table>
     <caption>Aggregation types</caption>

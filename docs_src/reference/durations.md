@@ -1,4 +1,4 @@
-# Durations {#Durations}
+# Durations
 
 Rather than give a value in seconds, many durations can be expressed using a shorthand notation.
 For example, in a skin configuration file `skin.conf`, a value for `aggregate_interval` can be 

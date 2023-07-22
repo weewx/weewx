@@ -1,4 +1,4 @@
-# The Image generator {#image_generator}
+# The Image generator
 
 WeeWX is configured to generate a set of useful plots. But, what if you don't
 like how they look, or you want to generate different plots, perhaps with
@@ -131,7 +131,7 @@ includes a line plot of both outside temperature and dewpoint:
 
 ![Monthly temperature and dewpoint](../images/sample_monthtempdew.png)
 
-### Including a type more than once in a plot {#including_same_sql_type_2x}
+### Including a type more than once in a plot {#inclue-same-sql-type-2x}
 
 Another example. Suppose that you want a plot of the day's temperature,
 overlaid with hourly averages. Here, you are using the same data type
@@ -199,7 +199,7 @@ This results in the plot `yearhilow.png`:
 ![Daily highs and lows](../images/yearhilow.png)
 
 
-## Including arbitrary expressions {#arbitrary_expressions_in_plot}
+## Including arbitrary expressions {#arbitrary-expressions}
 
 The option `data_type` can actually be *any arbitrary SQL
 expression* that is valid in the context of the available types in the
@@ -263,7 +263,7 @@ This will produce two plots: file `daytempdewUS.png` will be in
 degrees Fahrenheit, while file `dayTempMetric.png` will use
 degrees Celsius.
 
-## Line gaps {#line_gaps}
+## Line gaps {#line-gaps}
 
 If there is a time gap in the data, the option
 [`line_gap_fraction`](../../reference/skin-options/imagegenerator/#line_gap_fraction) controls how line plots will be drawn.

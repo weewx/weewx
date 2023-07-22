@@ -30,7 +30,7 @@ change, if it's already there):
         lang = de
 ```
 
-### Internationalized, but your language is missing {#internationalized-missing-language}
+### Internationalized, but your language is missing {#missing-language}
 
 If the `lang` subdirectory is present in the skin directory, then
 the skin has been internationalized. However, if your language code is
@@ -309,7 +309,7 @@ would add the following to your Spanish localization file
         current = %d-%B-%Y %H:%M
 ```
 
-### Set the environment variable `LANG` {#environment_variable_LANG}
+### Set the environment variable `LANG` {#environment-variable-LANG}
 
 Finally, you will need to set the environment variable `LANG` to
 reflect your locale. For example, assuming you set

@@ -226,7 +226,7 @@ max_temp = weewx.xtypes.get_aggregate('outTemp',
 
 It will not only make sure the limits of the query are correct, but will
 also decide whether or not the daily summary optimization can be used
-([details below](#Daily_summaries)). If not, it will use the regular
+([details below](#daily-summaries)). If not, it will use the regular
 archive table.
 
 ## Internationalization
@@ -433,7 +433,7 @@ For Javascript, [JetBrain's
 WebStorm](http://www.jetbrains.com/webstorm/) is excellent, particularly
 if you will be using a framework such as NodeJS or ExpressJS.
 
-## Daily summaries {#Daily_summaries}
+## Daily summaries {#daily-summaries}
 
 This section builds on the discussion [*The database*](../custom/database)
 in the *Customization Guide*. Read it first.

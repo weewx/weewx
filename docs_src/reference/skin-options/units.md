@@ -106,7 +106,7 @@ The measurement unit to be used for temperatures. Options are
 The measurement unit to be used for voltages. The only option is
 `volt`.
 
-## [[StringFormats]] {#stringformats}
+## [[StringFormats]]
 
 This section is used to specify what string format is to be used for
 each unit when a quantity needs to be converted to a string. Typically,
@@ -132,7 +132,7 @@ measurement (value `None`). For example,
 NONE = " N/A "
 ```
 
-## [[Labels]] {#labels}
+## [[Labels]]
 
 This section specifies what label is to be used for each measurement
 unit type. For example, the options
@@ -160,7 +160,7 @@ minute = " minute", " minutes"
 second = " second", " seconds"
 ```
 
-## [[TimeFormats]] {#timeformats}
+## [[TimeFormats]]
 
 This section specifies what time format to use for different time
 *contexts*. For example, you might want to use a different format when
@@ -185,7 +185,7 @@ The specifiers `%x`, `%X`, and `%A` code locale
 dependent date, time, and weekday names, respectively. Hence, if you set
 an appropriate environment variable `LANG`, then the date and
 times should follow local conventions (see section [Environment variable
-LANG](../localization/#environment_variable_LANG) for details on how to do this).
+LANG](../localization/#environment-variable-LANG) for details on how to do this).
 However, the results may not look particularly nice, and you may want to
 change them. For example, I use this in the U.S.:
 
@@ -210,7 +210,7 @@ the formatting to be set for almanac times The first,
 sunrise or sunset. The second, `ephem_year`, is used for almanac
 times within the year, such as the next equinox or full moon.
 
-## [[Ordinates]] {#ordinates}
+## [[Ordinates]]
 
 #### directions
 
@@ -218,7 +218,7 @@ Set to the abbreviations to be used for ordinal directions. By default,
 this is `N, NNE, NE, ENE, E, ESE, SE, SSE, S, SSW, SW, WSW, W, WNW, NW,
 NNW, N`.
 
-## [[DegreeDays]] {#degreedays}
+## [[DegreeDays]]
 
 #### heating_base
 #### cooling_base
@@ -233,7 +233,7 @@ cooling_base = 20.0, degree_C
 growing_base = 50.0, degree_F
 ```
 
-## [[Trend]] {#trend}
+## [[Trend]]
 
 #### time_delta
 

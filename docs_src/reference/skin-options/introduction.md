@@ -1,4 +1,4 @@
-# Skin configuration options {#skin_options}
+# Skin configuration options
 
 The skin configuration options that control report behavior such as:
 

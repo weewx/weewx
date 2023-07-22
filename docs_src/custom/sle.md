@@ -36,7 +36,7 @@ exception, then it moves on to the next item in the list. The first
 match that does not raise an exception is used. If no match is found,
 Cheetah raises a `NameMapper.NotFound` exception.
 
-### A simple tag {#how_tags_work}
+### A simple tag {#simple-tag}
 
 Now let's take a look at how the search list interacts with WeeWX tags.
 Let's start by looking at a simple example: station altitude, available
@@ -85,7 +85,7 @@ they need, but don't do the final evaluation until the last final
 moment, when the most context is understood. WeeWX uses this technique
 extensively.
 
-### A slightly more complex tag {#A_slightly_more_complex_tag}
+### A slightly more complex tag {#complex-tag}
 
 Now let's look at a more complicated example, say the maximum
 temperature since midnight:
@@ -154,7 +154,8 @@ are put in the generated HTML file. As you can see, a lot of machinery
 is hidden behind the deceptively simple expression
 `$day.outTemp.max`!
 
-## Extending the list {#extending_the_list}
+
+## Extending the list {#extending-the-list}
 
 As mentioned, WeeWX comes with a number of objects already in the search
 list, but you can extend it.
@@ -265,11 +266,10 @@ Going through the example, line by line:
     of `datetime.date`.
 5.  We convert it to unix epoch time and assign it to variable
     `week_ts`.
-6.  The class `TimespanBinder` represents a statistical
-    calculation over a time period. We have [already met
-    it](#A_slightly_more_complex_tag) in the introduction. In our case, we will set it up to represent
-    the statistics over the last seven days. The class takes 6
-    parameters.
+6.  The class `TimespanBinder` represents a statistical calculation over a
+    time period. We have [already met it](#complex-tag) in the introduction.
+    In our case, we will set it up to represent the statistics over the last
+    seven days. The class takes 6 parameters.
     -   The first is the timespan over which the calculation is to be
         done, which, in our case, is the last seven days. In step 5, we
         calculated the start of the seven days. The end is "now", that
@@ -304,7 +304,7 @@ Going through the example, line by line:
     constructed.
 8.  Return the dictionary in a list
 
-#### Registering {#register_seven_day}
+#### Registering {#register-seven-day}
 
 The final step that we need to do is to tell the template engine where
 to find our extension. You do that by going into the skin configuration
@@ -457,7 +457,7 @@ the implementation line-by-line.
     against a `None` value. If `None` is found, then the color `#00000000` is
     returned, which is transparent and will have no effect.
 
-#### Registering {#register_colorize}
+#### Registering {#register-colorize}
 
 As before, we must register our extension with the Cheetah engine. We do
 this by copying the extension to the user directory, then adding its

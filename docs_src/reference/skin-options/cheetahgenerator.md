@@ -1,4 +1,4 @@
-# [CheetahGenerator] {#CheetahGenerator}
+# [CheetahGenerator]
 
 This section contains the options for the Cheetah generator. It applies
 to `skin.conf` only.
@@ -7,7 +7,7 @@ to `skin.conf` only.
 
 This is the list of search list objects that will be scanned by the
 template engine, looking for tags. See the section *[Defining new
-tags](../../../custom/cheetah-generator/#defining_new_tags)* and the [Cheetah
+tags](../../../custom/cheetah-generator/#defining-new-tags)* and the [Cheetah
 documentation](https://cheetahtemplate.org/) for details on search
 lists. If no `search_list` is specified, a default list will be used.
 

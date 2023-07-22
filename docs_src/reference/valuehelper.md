@@ -1,4 +1,4 @@
-# Class `ValueHelper` {#ValueHelper}
+# Class ValueHelper
 
 Class `ValueHelper` contains all the information necessary to do
 the proper formatting of a value, including a unit label.

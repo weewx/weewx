@@ -1,4 +1,4 @@
-# [Texts] {#texts}
+# [Texts]
 
 The section `[Texts]` holds static texts that are used in the
 templates. Generally there are multiple language files, one for each

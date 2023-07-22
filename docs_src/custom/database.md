@@ -1,4 +1,4 @@
-# Customizing the database {#archive_database}
+# Customizing the database
 
 For most users the database defaults will work just fine. However, there
 may be occasions when you may want to add a new observation type to your
@@ -58,7 +58,7 @@ default.
     WeeWX reads the schema directly from the database. Changing this option
     will have no effect!
 
-### Modifying a starting schema {#modify_starting_schema}
+### Modifying a starting schema {#modify-starting-schema}
 
 If none of the three starting schemas that come with WeeWX suits your purposes,
 you can easily create your own. Just pick one of the three schemas as a
@@ -66,7 +66,7 @@ starting point, then modify it. Put the results in the `user` subdirectory,
 where it will be safe from upgrades. For example, suppose you like the
 `schemas.wview_small` schema, but you need to store the type `electricity`
 from the example
-[*Adding a second data source*](../service-engine/#Adding_2nd_source). The type
+[*Adding a second data source*](../service-engine/#add-data-source). The type
 `electricity` does not appear in the schema, so you'll have to add it before
 starting up WeeWX. We will call the resulting new schema
 `user.myschema.schema`.
@@ -174,11 +174,11 @@ adding or removing a column, then this can easily be done using the command
 adding, removing, and renaming a type. See the documentation for [`weectl
 database`](../../utilities/weectl-database) for more details.
 
-#### Adding a type {#add_archive_type}
+#### Adding a type {#add-archive-type}
 
 Suppose you have an existing database, to which you want to add a type, such as
 the type `electricity` from the example [*Adding a second data
-source*](../service-engine/#Adding_2nd_source). This can be done in one easy
+source*](../service-engine/#add-data-source). This can be done in one easy
 step using the action `weectl database add-column`:
 
 ``` shell
@@ -188,7 +188,7 @@ weectl database add-column electricity
 The tool not only adds `electricity` to the main archive table, but also to the
 daily summaries.
 
-#### Removing a type {#remove_archive_type}
+#### Removing a type {#remove-archive-type}
 
 In a similar manner, the tool can remove any unneeded types from an existing
 database. For example, suppose you are using the `schemas.wview` schema, but
@@ -209,7 +209,7 @@ cost over a single invocation of the utility.
     Dropping types from a database means *you will lose any data
     associated with them!* The data cannot be recovered.
 
-#### Renaming a type {#rename_archive_type}
+#### Renaming a type {#rename-archive-type}
 
 Suppose you just want to rename a type? This can be done using the action
 `rename-column`. Here's an example where you rename `soilMoist1` to
@@ -222,7 +222,7 @@ weectl database rename-column soilMoist1 soilMoistGarden
 Note how the action `rename-column` requires _two_ positional arguments:
 the column being renamed, and its final name.
 
-### Reconfigure database using a new schema {#reconfigure_database_using_new_schema}
+### Reconfigure database using a new schema {#reconfigure-using-new-schema}
 
 If you are making major changes to your database, you may find it easier
 to create a brand-new database using the schema you want, then transfer
@@ -250,7 +250,7 @@ Here are the details:
 
 1.  **Create a new schema.** First step is to create a new schema with
     exactly the types you want. See the instructions above [*Modify a
-    starting schema*](#modify_starting_schema). As an example, suppose
+    starting schema*](#modify-starting-schema). As an example, suppose
     your new schema is called `user.myschema.schema`.
 
 2.  **Set as starting schema.** Set your new schema as the starting
@@ -320,7 +320,7 @@ Here are the details:
     weectl database rebuild-daily
     ```
 
-## Changing the unit system in an existing database {#Changing_the_unit_system}
+## Changing the unit system in an existing database {#change-unit-system}
 
 Normally, data are stored in the databases using US Customary units, and you
 shouldn't care; it is an "implementation detail". Data can always be displayed

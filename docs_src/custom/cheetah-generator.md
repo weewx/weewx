@@ -2137,7 +2137,7 @@ be 180&deg; &mdash; probably not what you expect, nor want.
 </table>
 
 
-## Defining new tags {#defining_new_tags}
+## Defining new tags {#defining-new-tags}
 
 We have seen how you can change a template and make use of the various tags
 available such as `$day.outTemp.max` for the maximum outside temperature for

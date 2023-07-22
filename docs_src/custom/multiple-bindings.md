@@ -1,4 +1,4 @@
-# Using multiple bindings {#Using_multiple_bindings}
+# Using multiple bindings
 
 It's easy to use more than one database in your reports. Here's an
 example. In my office I have two consoles: a VantagePro2 connected to a
@@ -129,13 +129,13 @@ binding, `wx_binding`, and will be labeled `Vantage inTemp`. The second line
 explicitly uses the `wmr100_binding`. Because it uses the same variable name
 (`inTemp`) as the first line, we had to explicitly specify it using option
 `data_type`, in order to avoid using the same sub-section name twice (see
-the section *[Including a type more than once in a plot](../image-generator/#including_same_sql_type_2x)*
+the section *[Including a type more than once in a plot](../image-generator/#include-same-sql-type-2x)*
 for details). It will be labeled `WMR100 inTemp`. The results look like this:
 
 ![Comparing temperatures](../images/daycompare.png)
 
 
-## Stupid detail {#stupid_detail}
+## Stupid detail {#stupid-detail}
 
 At first, I could not get this example to work. The problem turned out to be
 that the RPi was processing things just a beat behind the Dell, so the

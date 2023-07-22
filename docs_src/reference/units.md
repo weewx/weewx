@@ -1,4 +1,4 @@
-# Units {#units}
+# Units
 
 WeeWX offers three different *unit systems*:
 

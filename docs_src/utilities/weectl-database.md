@@ -132,7 +132,7 @@ schema specified in `weewx.conf`. Finally, it copies over the data from your
 old database into the new database.
 
 See the section [_Changing the database unit system in an existing
-database_](../../custom/database/#changing-unit-system) in the _Customization
+database_](../../custom/database/#change-unit-system) in the _Customization
 Guide_ for step-by-step instructions that use this option.
 
 

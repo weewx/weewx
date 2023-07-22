@@ -1,4 +1,4 @@
-# Customizing the service engine {#service_engine}
+# Customizing the service engine
 
 This is an advanced topic intended for those who wish to try their hand
 at extending the internal engine in WeeWX. Before attempting these
@@ -29,7 +29,8 @@ database. These groups ensure that things happen in the proper sequence.
 See the table [The standard WeeWX services](../../custom/introduction/#the-weewx-service-architecture)
 for a list of the services that are normally run.
 
-## Modifying an existing service {#Customizing_a_service}
+
+## Modifying an existing service {#modify-service}
 
 The service `weewx.engine.StdPrint` prints out new LOOP and
 archive packets to the console when they arrive. By default, it prints
@@ -78,7 +79,8 @@ Note that the `report_services` must be all on one line.
 Unfortunately, the parser `ConfigObj` does not allow options to
 be continued on to following lines.
 
-## Creating a new service {#Adding_a_service}
+
+## Creating a new service {#create-service}
 
 Suppose there is no service that can be easily customized for your
 needs. In this case, a new one can easily be created by subclassing off
@@ -317,7 +319,7 @@ alarm (`lowBattery.py`), which is similar, except that it intercepts LOOP
 events instead of archiving events.
 
 
-## Adding a second data source {#Adding_2nd_source}
+## Adding a second data source {#add-data-source}
 
 A very common problem is wanting to augment the data from your weather
 station with data from some other device. Generally, you have two

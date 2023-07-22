@@ -132,7 +132,7 @@ is rarely necessary, since WeeWX is usually backward compatible.
 weectl station upgrade --what config
 ```
 
-## Options {#options}
+## Options
 
 In what follows, `WEEWX_ROOT` is the directory holding the configuration file.
 For a pip install, this is typically `~/weewx-data`. For a Debian, Redhat, or

@@ -1,4 +1,4 @@
-# Class `ValueTuple` {#ValueTuple}
+# Class ValueTuple
 
 A value, along with the unit it is in, can be represented by a 3-way
 tuple called a "value tuple". They are used throughout WeeWX. All

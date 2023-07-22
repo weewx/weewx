@@ -1,4 +1,4 @@
-# [CopyGenerator] {#copygenerator}
+# [CopyGenerator]
 
 This section is used by generator `weewx.reportengine.CopyGenerator` and
 controls which files are to be copied over from the skin directory to the

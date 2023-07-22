@@ -101,7 +101,7 @@ weectl extension uninstall windy
 ```
 
 
-## Examples {#install-examples}
+## Examples
 
 These examples illustrate how to use the extension installer to install, list,
 and uninstall the `windy` extension.

@@ -1,4 +1,4 @@
-# [Generators] {#generators_section }
+# [Generators]
 
 This section defines the list of generators that should be run.
 

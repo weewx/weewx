@@ -1,4 +1,4 @@
-# [ImageGenerator] {#ImageGenerator}
+# [ImageGenerator]
 
 This section describes the various options available to the image
 generator.
@@ -298,7 +298,7 @@ Default is to use the color in [`chart_line_colors`](#chart_line_colors).
 
 The SQL data type to be used for this plot line. For more information,
 see the section *[Including a type more than once in a
-plot](../../../custom/image-generator#including_same_sql_type_2x)*.
+plot](../../../custom/image-generator#include-same-sql-type-2x)*.
 Optional. The default is to use the section name.
 
 #### fill_color
@@ -315,7 +315,7 @@ default is to use the SQL variable name.
 
 If there is a gap between data points bigger than this fractional amount
 of the x-axis, then a gap will be drawn, rather than a connecting line.
-See Section *[Line gaps](../../../custom/image-generator/#line_gaps)*.
+See Section *[Line gaps](../../../custom/image-generator/#line-gaps)*.
 Optional. The default is to always draw the line.
 
 #### line_type

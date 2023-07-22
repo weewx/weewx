@@ -1,4 +1,4 @@
-# Customizing units and unit groups {#customizing_units}
+# Customizing units and unit groups
 
 !!! Warning
     This is an area that is changing rapidly in WeeWX. Presently, new units
