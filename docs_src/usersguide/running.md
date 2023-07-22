@@ -1,24 +1,30 @@
 # Running WeeWX
 
-WeeWX can be run either directly, or as a daemon. When first trying WeeWX, it is
-best to run it directly because you will be able to see sensor output and
+WeeWX can be run either directly, or as a daemon. When first trying WeeWX, it
+is best to run it directly because you will be able to see sensor output and
 diagnostics, as well as log messages. Once everything is working properly, run
 it as a daemon.
 
 ## Running directly
 
-To run WeeWX directly, invoke the main program, `weewxd`. Depending on device
-permissions, you may or may not have to use `sudo`.
+To run WeeWX directly, invoke the main program, `weewxd`.
 
 ```shell
 weewxd
 ```
 
 !!! note
+    Depending on device permissions, you may need root permissions to
+    communicate with the station hardware.  If this is the case, use `sudo`:
+    ```shell
+    sudo weewxd
+    ```
+
+!!! note
     
-    If your configuration file is named something other than `weewx.conf`, or if
-    it is in a non-standard place, then you will have to specify it explicitly
-    on the command line. For example:
+    If your configuration file is named something other than `weewx.conf`, or
+    if it is in a non-standard place, then you will have to specify it
+    explicitly on the command line. For example:
 
     ```
     weewxd /some/path/to/weewx.conf
@@ -43,15 +49,15 @@ automatically when the server is rebooted.
 If you use a packaged installer, this is done automatically. The installer
 finishes with a daemon running in the background.
 
-For a pip install, you will have to do this yourself. See the section [_Run as a
-daemon_](../../quickstarts/pip/#run-as-a-daemon) in the pip quick start
+For a pip install, you will have to do this yourself. See the section [_Run as
+a daemon_](../../quickstarts/pip/#run-as-a-daemon) in the pip quick start
 guide.
 
 ## Monitoring WeeWX
 
 WeeWX logs many events to the system log. On Debian systems, this is
-`/var/log/syslog`, on SuSE, `/var/log/messages`. Your system may use yet another
-place. When troubleshooting the system, be sure to check it!
+`/var/log/syslog`, on SuSE, `/var/log/messages`. Your system may use yet
+another place. When troubleshooting the system, be sure to check it!
 
 To watch the log as it is generated, use the tail command with the `-f` option:
 

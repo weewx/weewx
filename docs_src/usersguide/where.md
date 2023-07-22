@@ -6,11 +6,6 @@ Here is a summary of the layout for the different install methods, along with
 the symbolic names used for each component. These names are used throughout the
 documentation.
 
-!!! Note
-    In the locations below, relative paths are *relative to _`WEEWX_ROOT`_*.
-    Absolute paths begin with a forward slash (`/`).
-
-
 === "Debian"
 
     | Component               | Symbolic name    | Nominal value                   |
@@ -23,7 +18,7 @@ documentation.
     | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`          |
     | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx/`         |
     | Examples                | _`EXAMPLE_ROOT`_ | `/usr/share/doc/weewx/examples/`|
-    | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user`         |
+    | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user/`        |
 
 === "RedHat"
 
@@ -37,7 +32,7 @@ documentation.
     | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`                 |
     | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx-x.y.z/`          |
     | Examples                | _`EXAMPLE_ROOT`_ | `/usr/share/doc/weewx-x.y.z/examples/` |
-    | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user`                |
+    | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user/`               |
 
 === "openSUSE"
 
@@ -51,7 +46,7 @@ documentation.
     | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`                 |
     | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx-x.y.z/`          |
     | Examples                | _`EXAMPLE_ROOT`_ | `/usr/share/doc/weewx-x.y.z/examples/` |
-    | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user`                |
+    | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user/`               |
 
 === "pip"
 
@@ -67,11 +62,15 @@ documentation.
     | Examples                | _`EXAMPLE_ROOT`_ | `examples/`          |
     | User directory          | _`USER_ROOT`_    | `bin/user/`          |
 
+!!! Note
+    In the locations above, relative paths are *relative to _`WEEWX_ROOT`_*.
+    Absolute paths begin with a forward slash (`/`).
+
 
 ## Location of executables in a pip install
 
-If you use a pip install, the location of the executables will depend on how the
-pip installation was done.
+If you use a pip install, the location of the executables will depend on how
+the pip installation was done.
 
 | Install method                    | Commands                                                                     | Location of executables |
 |-----------------------------------|------------------------------------------------------------------------------|-------------------------|
@@ -115,7 +114,7 @@ This is where to find the system log for each platform.
     `/var/log/syslog`
 
     !!! note
-        The log file is likely to contain only severe log messages.
+        On macOS, the log file is likely to contain only severe log messages.
 
 If the default for your system is inconvenient, or does not provide the logging
 fidelity that you require, then you may want to consider logging to a separate,
