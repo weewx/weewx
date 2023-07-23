@@ -53,40 +53,45 @@ install it.
 
 ### setup.py installs no longer possible
 
-The package `distutils`, and the imperative approach on which the WeeWX `setup.py` install method
-depends, [has been deprecated](https://peps.python.org/pep-0632/) and will ultimately be
-removed. The future is clearly pip installs using `pyproject.toml`. See the wiki article on 
-[Version 5](https://github.com/weewx/weewx/wiki/Version-5) for the technical reasons why.
+The package `distutils`, and the imperative approach on which the WeeWX
+`setup.py` install method depends, [has been
+deprecated](https://peps.python.org/pep-0632/) and will ultimately be removed.
+The future is clearly pip installs using `pyproject.toml`. See the wiki article
+on [Version 5](https://github.com/weewx/weewx/wiki/Version-5) for the technical
+reasons why.
 
 ### pip installs to new location
 
-The default location for a `setup.py` install was `/home/weewx`. The new pip install method
-installs to a directory called `weewx-data` in home directory of the user doing the install.
-However, old installations can continue to use `/home/weewx` by following the guide 
-[_Migrating setup.py installs to Version 5.0_](https://github.com/weewx/weewx/wiki/v5-upgrade).
+The default location for a `setup.py` install was `/home/weewx`. The new pip
+install method installs to a directory called `weewx-data` in home directory of
+the user doing the install. However, old installations can continue to use
+`/home/weewx` by following the guide [_Migrating setup.py installs to Version
+5.0_](https://github.com/weewx/weewx/wiki/v5-upgrade).
 
 ### `SQLITE_ROOT` is now relative to `WEEWX_ROOT`
 
-Previously, `SQLITE_ROOT` was expected to be an absolute path, but now relative paths are accepted.
-A relative path is considered relative to `WEEWX_ROOT`. Because this is _less restrictive_, it is
-not expected to affect any users.
+Previously, `SQLITE_ROOT` was expected to be an absolute path, but now relative
+paths are accepted. A relative path is considered relative to `WEEWX_ROOT`.
+Because this is _less restrictive_, it is not expected to affect any users.
 
 
 ## Upgrading to V4.10
 
 ### Breaking changes for skins that use delta times
 
-A "delta time" is the difference between two times, for example the amount of uptime (difference
-between start and current time), or the amount of daylight (difference between sunrise and sunset).
-In previous versions, delta times were treated as a special case, which limited their flexibility.
-With <a href="https://github.com/weewx/weewx/pull/807">PR #807</a>, a delta time is treated like
-any other scalar, which gives you access to all the regular formatting tools. However, a side
-effect is that if you want to format the time in the "long form", that is, so the results look like
-<span class="code">4 hours, 15 minutes</span>, rather than <span class="code">15300 seconds</span>,
+A "delta time" is the difference between two times, for example the amount of
+uptime (difference between start and current time), or the amount of daylight
+(difference between sunrise and sunset). In previous versions, delta times were
+treated as a special case, which limited their flexibility. With <a
+href="https://github.com/weewx/weewx/pull/807">PR #807</a>, a delta time is
+treated like any other scalar, which gives you access to all the regular
+formatting tools. However, a side effect is that if you want to format the time
+in the "long form", that is, so the results look like <span class="code">4
+hours, 15 minutes</span>, rather than <span class="code">15300 seconds</span>,
 then you will have to say so explicitly.
 
-If you use the <em>Seasons</em> skin, you will have to make these four changes. Add the text in
-<span class="added">green</span>:
+If you use the <em>Seasons</em> skin, you will have to make these four changes.
+Add the text in <span class="added">green</span>:
 
 <div class="wide-table">
   <table>
@@ -126,8 +131,8 @@ If you use the <em>Seasons</em> skin, you will have to make these four changes. 
       </td>
     </tr>
     <tr>
-      <td colspan="2" style="text-align: center"><span class="code">Seasons/celestial.inc</span> starting
-        at line 94
+      <td colspan="2" style="text-align: center"><span class="code">Seasons/celestial.inc</span>
+        starting at line 94
       </td>
     </tr>
     <tr>
@@ -152,8 +157,10 @@ If you use the <em>Seasons</em> skin, you will have to make these four changes. 
 </div>
 
 <p>
-  In a similar manner, if you use the <em>Standard</em> skin, you will have to make these two changes.
+  In a similar manner, if you use the <em>Standard</em> skin, you will have to
+  make these two changes. 
 </p>
+
 <div class="wide-table">
   <table>
     <tr class="first_row">
@@ -183,10 +190,12 @@ If you use the <em>Seasons</em> skin, you will have to make these four changes. 
 </div>
 
 <p>
-  In both cases, the new formatting directive <span class="code">.long_form</span> has been used to explicitly
-  request that the delta time be formatted into its constituent components. The advantage of this approach is
-  that the delta time can be treated like any other scalar. Here are some examples:
+  In both cases, the new formatting directive <span class="code">.long_form</span>
+  has been used to explicitly request that the delta time be formatted into its
+  constituent components. The advantage of this approach is that the delta time
+  can be treated like any other scalar. Here are some examples: 
 </p>
+
 <table>
   <tr class="first_row">
     <td style='width:50%'>Tag</td>
@@ -227,15 +236,21 @@ If you use the <em>Seasons</em> skin, you will have to make these four changes. 
 </table>
 
 ### Changes for custom delta time formats
+
 <p>
-  Fixing issue <a href="https://github.com/weewx/weewx/issues/808">#808</a> required introducing a separate
-  dictionary for members of group <span class="code">group_deltatime</span>. This means that if you specified
-  custom formats under <span class="code">[Units]/[[TimeFormats]]</span>, then you will have to move them to
-  the new section <span class="code">[Units]/[[DeltaTimeFormats]]</span>. Very few users should be affected by
-  this change because the ability to set custom delta time formats is an undocumented feature.
+  Fixing issue <a href="https://github.com/weewx/weewx/issues/808">#808</a>
+  required introducing a separate dictionary for members of group <span
+  class="code">group_deltatime</span>. This means that if you specified custom
+  formats under <span class="code">[Units]/[[TimeFormats]]</span>, then you will
+  have to move them to the new section <span
+  class="code">[Units]/[[DeltaTimeFormats]]</span>. Very few users should be
+  affected by this change because the ability to set custom delta time formats is
+  an undocumented feature. 
 </p>
+
 <p>
-  The good news is that the contexts they now use have more standard names. The table below summarizes:
+  The good news is that the contexts they now use have more standard names. The 
+  table below summarizes:
 </p>
 
 <div class="wide-table">
@@ -247,7 +262,6 @@ If you use the <em>Seasons</em> skin, you will have to make these four changes. 
     <tr>
       <td>
         <pre class='tty'>
-	  def __init__(self, altitude_vt, latitude_f, longitude_f,
 	  [[TimeFormats]]
           ...
           current     = %x %X
@@ -714,7 +728,7 @@ If you use the <em>Seasons</em> skin, you will have to make these four changes. 
     If you are upgrading, then the three new skins, <em>Seasons</em>, <em>Mobile</em>, and
     <em>Smartphone</em> will be installed, but none will be activated. Your existing <em>Standard</em> will
     be left untouched and activated. For most people, your website will continue to look as expected (the
-    exception is explained below in section <a href="#v39_effects"><em>Do you need to change anything?</em></a>).
+    exception is explained below in section <a href="#do-you-need-to-change-anything"><em>Do you need to change anything?</em></a>).
   </li>
 </ul>
 
@@ -738,12 +752,15 @@ If you use the <em>Seasons</em> skin, you will have to make these four changes. 
 </p>
 
 ### Do you need to change anything?
+
 <p>
-  The introduction of the new section, <span class="code">[StdReport]/[[Defaults]]</span> in <span
-											       class="code">weewx.conf</span>, can change which units are applied to reports because it has a higher
-  precedence than what is in <span class="code">skin.conf</span>. See the section <a
-										    href="../custom/custom_reports/#how-options-work"><em>How options work</em></a> for details of the ordering in which
-  an option is considered.
+  The introduction of the new section, <span
+  class="code">[StdReport]/[[Defaults]]</span> in <span
+  class="code">weewx.conf</span>, can change which units are applied to reports
+  because it has a higher precedence than what is in <span
+  class="code">skin.conf</span>. See the section <a
+  href="../custom/custom-reports/#how-to-specify-options"><em>How to specify options</em></a> for
+  details of the ordering in which an option is considered. 
 </p>
 
 <p>
@@ -755,11 +772,13 @@ If you use the <em>Seasons</em> skin, you will have to make these four changes. 
   If your installation does not use overrides, and you changed to metric units in your <span class="code">skin.conf</span>
   file, you will be affected.
 </p>
+
 <p>
-  Your reports will start appearing in U.S. Customary units. The reason is that the new section, <span
-												   class="code">[StdReport]/[[Defaults]]</span> has higher priority than options in <span class="code">skin.conf</span>,
-  and thus will start asserting themselves.
-</p>
+  Your reports will start appearing in U.S. Customary units. The reason is that
+  the new section, <span class="code">[StdReport]/[[Defaults]]</span> has higher
+  priority than options in <span class="code">skin.conf</span>, and thus will
+  start asserting itself. </p>
+
 <p>
   The fix is simple: modify the <span class="code">[StdReport]/[[Defaults]]</span> to suit your preferences.
 </p>
@@ -803,14 +822,14 @@ If you use the <em>Seasons</em> skin, you will have to make these four changes. 
   contains data from more than one type of hardware.
 </p>
 
-<p>The <a href="../utilities/utilities.htm#wee_database_utility"><span class="code">wee_database</span></a> utility, with
-  option <a href="../utilities/utilities.htm#wee_database_utility_update"><span class="code">--update</span></a>, can fix
-  this problem by recalculating the weights in the daily summary, on the basis of the actual archive interval
-  lengths. On a Raspberry Pi 1, model B, it takes about 10 minutes to fix a database with 10 years of data. On
-  faster machines, it takes much less time.
+<p>The <a href="../utilities/weectl-database/#update"><span class="code">weectl
+database update</span></a> utility can fix this problem by recalculating the
+weights in the daily summary, on the basis of the actual archive interval
+lengths. On a Raspberry Pi 1, model B, it takes about 10 minutes to fix a
+database with 10 years of data. On faster machines, it takes much less time.
 </p>
 
-<pre class="tty cmd">wee_database /etc/weewx/weewx.conf --update</pre>
+<pre class="tty cmd">weectl database update</pre>
 
 <p>
   If you have multiple databases, consider recalculating the weights in each database. Interval weighting will
@@ -819,10 +838,9 @@ If you use the <em>Seasons</em> skin, you will have to make these four changes. 
 <pre class="tty">manager = weewx.wxmanager.WXDaySummaryManager</pre>
 <p>
   To apply interval weighting to a database other than the default <span class="code">wx_binding</span>, use
-  the <span class="code">--binding=BINDING_NAME</span> option in conjunction with the <span class="code">--update</span>
-  action.
+  the <span class="code">--binding=BINDING_NAME</span> option.
 </p>
-<pre class="tty cmd">wee_database /etc/weewx/weewx.conf --update --binding=cmon_binding</pre>
+<pre class="tty cmd">weectl database update --binding=cmon_binding</pre>
 
 ### Recalculation of <span class="code">windSpeed</span> maximum values
 
@@ -836,24 +854,12 @@ If you use the <em>Seasons</em> skin, you will have to make these four changes. 
 <pre class="tty">$day.windSpeed.max
   $day.windGust.max</pre>
 
-<p>In Version 3.7, this has been changed so the maximum <span class="code">windSpeed</span> is now set to the
+<p>
+In Version 3.7, this has been changed so the maximum <span class="code">windSpeed</span> is now set to the
   maximum <em>archive</em> value seen during the day &mdash; usually a slightly smaller number. However, older
   daily max values will still contain the max LOOP packet values. If you wish to update your older values and
-  have them use the max archive record value, use the utility <a
-								href="../utilities/utilities.htm#wee_database_utility"><span class="code">wee_database</span></a>, with option <a
-																						 href="../utilities/utilities.htm#wee_database_utility_update"><span class="code">--update</span></a>.
-</p>
-
-### Changes to <span class="code">wee_database</span>
-<p>
-  The <span class="code">wee_database</span> utility has been revised. Whilst the v3.6 functionality has been
-  retained, a number of the <span class="code">wee_database</span> actions have been renamed and new options
-  have been added to support the weighting of daily summaries and the recalculation of portions of the
-  windSpeed daily summary table. The rebuilding of the daily summaries (formerly backfilling the daily
-  summaries) now supports selective rebuilding. Full details on the revised <span
-									      class="code">wee_database</span> utility can be found in the <a
-																	     href="../utilities/utilities.htm#wee_database_utility"><i><span class="code">wee_database</span></i></a> section in the
-  <i>Utilities Guide</i>.
+  have them use the max archive record value, use the utility <a href="../utilities/weectl-database/#update"><span class="code">weectl
+  database update</span></a> .
 </p>
 
 
