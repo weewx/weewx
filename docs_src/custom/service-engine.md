@@ -328,7 +328,7 @@ approaches for how to handle this:
 -   Run two instances of WeeWX, each using its own database and
     `weewx.conf` configuration file. The results are then
     combined in a final report, using WeeWX's ability [to use more than
-    one database](../../custom/multiple_bindings/). See the Wiki entry
+    one database](../../custom/multiple-bindings/). See the Wiki entry
     [*How to run multiple instances of
     WeeWX*](https://github.com/weewx/weewx/wiki/weewx-multi) for details
     on how to do this.
