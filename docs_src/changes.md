@@ -1202,17 +1202,17 @@ records in daily summaries. Fixed issue #239.
 
 ### 3.7.0 03/11/2017
 
-The tag $current now uses the record included in the event NEW_ARCHIVE_RECORD,
+The tag `$current` now uses the record included in the event `NEW_ARCHIVE_RECORD`,
 rather than retrieve the last record from the database. This means you can
-use the tag $current for observation types that are in the record, but not
+use the tag `$current` for observation types that are in the record, but not
 necessarily in the database. Fixes issue #13.
 
 Most aggregation periods now allow you to go farther in the past. For
-example, the tag $week($weeks_ago=1) would give you last week. You
+example, the tag `$week($weeks_ago=1)` would give you last week. You
 can also now specify the start and end of an aggregation period, such
-as $week.start and $week.end.
+as `$week.start` and `$week.end`.
 
-Can now do SummaryByDay (as well as SummaryByMonth and SummaryByYear).
+Can now do `SummaryByDay` (as well as `SummaryByMonth` and `SummaryByYear`).
 NB: This can generate *lots* of files --- one for every day in your database!
 Leaving this undocumented for now. Fixes issue #185.
 
@@ -1229,12 +1229,15 @@ wmr100, wmr200, wmr9x8
 
 Simplified sensor mapping implementation for wmr100 and wmr200 drivers.  For
 recent weewx releases, these are the default mappings for wmr200:
-  3.6.0: in:0, out:1, e2:2, e3:3, ..., e8:8   hard-coded
-  3.6.1: in:0, out:1, e1:2, e2:3, ..., e7:8   hard-coded
-  3.7.0: in:0, out:1, e1:2, e2:3, ..., e7:8   sensor_map
+
+  - 3.6.0: in:0, out:1, e2:2, e3:3, ..., e8:8   hard-coded
+  - 3.6.1: in:0, out:1, e1:2, e2:3, ..., e7:8   hard-coded
+  - 3.7.0: in:0, out:1, e1:2, e2:3, ..., e7:8   sensor_map
+
 and these are default mappings for wmr100:
-  3.6.2: in:0, out:1, e1:2, e2:3, ..., e7:8   hard-coded
-  3.7.0: in:0, out:1, e1:2, e2:3, ..., e7:8   sensor_map
+
+  - 3.6.2: in:0, out:1, e1:2, e2:3, ..., e7:8   hard-coded
+  - 3.7.0: in:0, out:1, e1:2, e2:3, ..., e7:8   sensor_map
 
 Enabled battery status for every remote T/H and T sensor in wmr100 driver.
 
@@ -1248,7 +1251,7 @@ Fixed usb initialization issues in the wmr300 driver.
 
 Added warning in wmr300 driver when rain counter reaches maximum value.
 
-Decode heatindex and windchill from wmr300 sensor outputs.
+Decode `heatindex` and `windchill` from wmr300 sensor outputs.
 
 Report the firmware version when initializing the cc3000 driver.
 
@@ -1260,7 +1263,7 @@ As a result, LOOP and archive packets are now much smaller. If this works
 out, other drivers will follow suit. Partial fix of issue #175.
 
 The vantage driver now emits the barometer trend in LOOP packets as
-field 'trendIcon'.
+field `trendIcon`.
 
 The engine now logs locale. Additional information if a TERM signal is
 received.
@@ -1270,79 +1273,79 @@ Removed the site-specific "Pond" extensions from the Standard skin.
 The Standard skin now includes plots of outside humidity. Fixes 
 issue #181.
 
-Fixed reference to index.html.tmpl in the xstats example.
+Fixed reference to `index.html.tmpl` in the xstats example.
 
 Changed algorithm for calculating ET to something more appropriate for
 hourly values (former algorithm assumed daily values). Fixes issue #160.
 
 Fixed bug in Celsius to Fahrenheit conversion that affected pressure
-conversions in uwxutils.py, none of which were actually used.
+conversions in `uwxutils.py`, none of which were actually used.
 
-Fixed bug that was introduced in v3.6.0, which prevented wee_reports from
+Fixed bug that was introduced in v3.6.0, which prevented `wee_reports` from
 working for anything other than the current time.
 
 Documented the experimental anti-alias feature, which has been in weewx
 since v3.1.0. Fixes issue #6.
 
-Fixed problem where multiple subsections under [SummaryBy...] stanzas could
+Fixed problem where multiple subsections under `[SummaryBy...]` stanzas could
 cause multiple copies of their target date to be included in the Cheetah
-variable $SummaryByYear and $SummaryByMonth. Fixes issue #187.
+variable `$SummaryByYear` and `$SummaryByMonth`. Fixes issue #187.
 
-Moved examples out of bin directory.  Eliminated experimental directory.
-Reinforce the use of user directory, eliminate use of examples directory.
-Renamed xsearch.py to stats.py.
+Moved examples out of `bin` directory.  Eliminated experimental directory.
+Reinforce the use of `user` directory, eliminate use of `examples` directory.
+Renamed `xsearch.py` to `stats.py`.
 
 OS uptime now works for freeBSD. Thanks to user Bill Richter!
 PR #188.
 
 Broke out developer's notes into a separate document.
 
-Added @media CSS for docs to improve printed/PDF formatting.  Thanks to user
+Added `@media` CSS for docs to improve printed/PDF formatting.  Thanks to user
 Tiouck!
 
-Added a 0.01 second delay after each read_byte in ws23xx driver to reduce
+Added a 0.01 second delay after each `read_byte` in ws23xx driver to reduce
 chance of data spikes caused by RS232 line contention.  Thanks lionel.sylvie!
 
-The observation windGustDir has been removed from wmr100, wmr200, te923, and
-fousb drivers.  These drivers were simply assigning windGustDir to windDir,
-since none of the hardware reports an actual windGustDir.
+The observation `windGustDir` has been removed from wmr100, wmr200, te923, and
+fousb drivers.  These drivers were simply assigning `windGustDir` to `windDir`,
+since none of the hardware reports an actual wind gust.
 
-Calculation of aggregates over a period of one day or longer can now
-respect any change in archive interval. To take advantage of this
-feature, you will have to apply an update to your daily
-summaries. This can be done using the tool wee_database, option
---update. Refer to the ‘Changes to daily summaries’ section in the
-Upgrade Guide to determine whether you should update or not. Fixes issue #61.
+Calculation of aggregates over a period of one day or longer can now respect any
+change in archive interval. To take advantage of this feature, you will have to
+apply an update to your daily summaries. This can be done using the tool
+`wee_database`, option `--update`. Refer to the _Changes to daily summaries_
+section in the Upgrade Guide to determine whether you should update or not.
+Fixes issue #61.
 
-Max value of windSpeed for the day is now the max archive value of windSpeed.
-Formerly, it was the max LOOP value. If you wish to patch your older
-daily summaries to interpret max windSpeed this way, use the tool wee_database
-with option --update. Fixes issue #195.
+Max value of `windSpeed` for the day is now the max archive value of
+`windSpeed`. Formerly, it was the max LOOP value. If you wish to patch your
+older daily summaries to interpret max windSpeed this way, use the tool
+`wee_database` with option `--update`. Fixes issue #195.
 
 The types of accumulators, and the strategies to put and extract records 
 out of them, can now be specified by config stanzas. This will be of
 interest to extension writers. See issue #115.
 
-Fixed battery status label in acurite driver: changed from txTempBatteryStatus
-to outTempBatteryStatus.  Thanks to user manos!
+Fixed battery status label in acurite driver: changed from `txTempBatteryStatus`
+to `outTempBatteryStatus`.  Thanks to user manos!
 
 Made the lowBattery example more robust - it now checks for any known low
-battery status, not just txBatteryStatus.  Thanks to user manos!
+battery status, not just `txBatteryStatus`.  Thanks to user manos!
 
-Added info-level log message to calculate_rain so that any rain counter reset
+Added info-level log message to `calculate_rain` so that any rain counter reset
 will be logged.
 
 Added better logging for cc3000 when the cc3000 loses contact with sensors
 for extended periods of time.
 
 How long to wait before retrying after a bad uploader login is now settable
-with option retry_login. Fixes issue #212. 
+with option `retry_login`. Fixes issue #212. 
 
-The test suites now use dedicated users 'weewx1' and 'weewx2'. A shell script
+The test suites now use dedicated users `weewx1` and `weewx2`. A shell script
 has been included to setup these users.
 
 A more formal exception hierarchy has been adopted for the internal
-database library weedb. See weedb/NOTES.md.
+database library `weedb`. See `weedb/NOTES.md`.
 
 The weedb Connection and Cursor objects can now be used in a "with" clause.
 
@@ -1353,7 +1356,7 @@ Slightly more robust mechanism for decoding last time a file was FTP'd.
 
 Fixed incorrect WU daily rain field name
 
-Fixed bug that crashed Cheetah if the weewx.conf configuration file included
+Fixed bug that crashed Cheetah if the `weewx.conf` configuration file included
 a BOM. Fixes issue #172.
 
 
@@ -1361,7 +1364,7 @@ a BOM. Fixes issue #172.
 
 Fixed bug in wunderfixer.
 
-Fixed handling of StdWXCalculate.Calculations in modify_config in the wmr100,
+Fixed handling of `StdWXCalculate.Calculations` in `modify_config` in the wmr100,
 wmr200, wmr300, and wmr9x8 drivers.
 
 Eliminate the apache2, ftp, and rsync suggested dependencies from the deb
@@ -1369,10 +1372,10 @@ package.  This keeps the weewx dependencies to a bare minimum.
 
 Added retries to usb read in wmr300 driver.
 
-Remapped sensor identifiers in wmr200 driver so that extraTemp1 and
-extraHumid1 are usable.
+Remapped sensor identifiers in wmr200 driver so that `extraTemp1` and
+`extraHumid1` are usable.
 
-Standardized format to be used for times to YYYY-mm-ddTHH:MM.
+Standardized format to be used for times to `YYYY-mm-ddTHH:MM`.
 
 
 ### 3.6.0 10/07/2016
@@ -1642,12 +1645,13 @@ old one in the non-standard location.
 ### 3.2.0 07/15/15
 
 There are now five command-line utilities, some new, some old
- - wee_config:    (New) For configuring weewx.conf, in particular, 
-                  selecting a new device driver.
- - wee_extension: (New) For adding and removing extensions.
- - wee_database:  (Formerly called wee_config_database)
- - wee_device:    (Formerly called wee_config_device)
- - wee_reports:   No changes.
+
+ - `wee_config`:    (New) For configuring weewx.conf, in particular, 
+                    selecting a new device driver.
+ - `wee_extension`: (New) For adding and removing extensions.
+ - `wee_database`:  (Formerly called wee_config_database)
+ - `wee_device`:    (Formerly called wee_config_device)
+ - `wee_reports`:   No changes.
  
 The script setup.py is no longer used to install or uninstall extensions.
 Instead, use the new utility wee_extension.
