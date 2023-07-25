@@ -49,7 +49,7 @@ def drop_daily(config_path,
                dry_run=False):
     """Drop the daily summary from a WeeWX database."""
 
-    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
+    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
     weectllib.initialize(config_dict)
 
     print(f"Proceeding will delete all your daily summaries from database '{database_name}'")
@@ -87,7 +87,7 @@ def rebuild_daily(config_path,
                   dry_run=False):
     """Rebuild the daily summaries."""
 
-    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
+    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
     weectllib.initialize(config_dict)
 
     # Get any dates the user might have specified.
@@ -158,7 +158,7 @@ def add_column(config_path,
     column_name: The name of the new column.
     column_type: The type ("REAL"|"INTEGER") of the new column.
     """
-    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
+    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
     weectllib.initialize(config_dict)
 
     column_type = column_type or 'REAL'
@@ -182,7 +182,7 @@ def rename_column(config_path,
                   to_name=None,
                   db_binding='wx_binding',
                   dry_run=False):
-    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
+    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
     weectllib.initialize(config_dict)
 
     ans = y_or_n(f"Rename column '{from_name}' to '{to_name}' "
@@ -204,7 +204,7 @@ def drop_columns(config_path,
                  db_binding='wx_binding',
                  dry_run=False):
     """Drop a set of columns from the database"""
-    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
+    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
     weectllib.initialize(config_dict)
 
     ans = y_or_n(f"Drop column(s) '{', '.join(column_names)}' from the database? (y/n) ")
@@ -236,7 +236,7 @@ def reconfigure_database(config_path,
     the current configuration options. The reconfigure action will create a new database with the
      same name as the old, except with the suffix _new attached to the end."""
 
-    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
+    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
     weectllib.initialize(config_dict)
 
     manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
@@ -438,7 +438,7 @@ def calc_missing(config_path,
     """Calculate any missing derived observations and save to database."""
     import weecfg.database
 
-    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
+    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
     weectllib.initialize(config_dict)
 
     log.info("Preparing to calculate missing derived observations...")
@@ -532,7 +532,7 @@ def calc_missing(config_path,
 def check(config_path, db_binding='wx_binding'):
     """Check the database for any issues."""
 
-    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run=False)
+    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run=False)
     weectllib.initialize(config_dict)
 
     print("Checking daily summary tables version...")
@@ -564,7 +564,7 @@ def update_database(config_path,
         archive
     """
 
-    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
+    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
     weectllib.initialize(config_dict)
 
     ans = y_or_n("The update process does not affect archive data, "
@@ -654,7 +654,7 @@ def reweight_daily(config_path,
                    dry_run=False):
     """Recalculate the weighted sums in the daily summaries."""
 
-    config_path, config_dict, database_name = _prepare(config_path, db_binding, dry_run)
+    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
     weectllib.initialize(config_dict)
 
     # Determine the period over which we are rebuilding from any command line date parameters
@@ -702,20 +702,3 @@ def reweight_daily(config_path,
     if dry_run:
         print("This was a dry run. Nothing was actually done.")
 
-
-# --------------------- UTILITIES -------------------- #
-def _prepare(config_path, db_binding, dry_run):
-    """Common preamble, used by most of the action functions."""
-
-    if dry_run:
-        print("This is a dry run. Nothing will actually be done.")
-
-    config_path, config_dict = weecfg.read_config(config_path)
-
-    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
-
-    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
-                                                              db_binding)
-    database_name = manager_dict['database_dict']['database_name']
-
-    return config_path, config_dict, database_name

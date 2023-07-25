@@ -8,9 +8,10 @@
 import datetime
 import importlib
 
+import weecfg
 import weeutil.logger
 import weewx
-from weeutil.weeutil import to_int
+from weeutil.weeutil import to_int, bcolors
 
 
 def initialize(config_dict):
@@ -85,3 +86,20 @@ def parse_dates(date=None, from_date=None, to_date=None, as_datetime=False):
                 raise weewx.ViolatedPrecondition("--from value is later than --to value.")
 
     return from_val, to_val
+
+
+def prepare(config_path, db_binding, dry_run):
+    """Common preamble, used by most of the action functions."""
+
+    if dry_run:
+        print("This is a dry run. Nothing will actually be done.")
+
+    config_path, config_dict = weecfg.read_config(config_path)
+
+    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
+
+    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
+                                                              db_binding)
+    database_name = manager_dict['database_dict']['database_name']
+
+    return config_path, config_dict, database_name

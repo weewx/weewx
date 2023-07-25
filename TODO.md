@@ -13,6 +13,9 @@ install instructions should become
 
 ## Utilities
 
+- Finish migrating `wee_debug` to `weectl debug`.
+- Write documentation for `weectl debug`.
+- Remove `wee_debug` and its documentation.
 - Lot of inconsistencies in how the path to the config file is handled. Some utilities accept a
   command line option, others require `--config=`.
 - Allow rebuild daily summaries for only selected types.

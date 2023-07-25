@@ -34,12 +34,13 @@ class ExtensionError(IOError):
 
 
 class Logger(object):
-    def __init__(self, verbosity=0):
+    def __init__(self, verbosity=0, fd=sys.stdout):
         self.verbosity = verbosity
+        self.fd = fd
 
     def log(self, msg, level=0):
         if self.verbosity >= level:
-            print("%s%s" % ('  ' * (level - 1), msg))
+            print("%s%s" % ('  ' * (level - 1), msg), file=self.fd)
 
     def set_verbosity(self, verbosity):
         self.verbosity = verbosity
