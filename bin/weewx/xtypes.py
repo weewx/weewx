@@ -14,7 +14,7 @@ import weeutil.weeutil
 import weewx
 import weewx.units
 import weewx.wxformulas
-from weeutil.weeutil import isStartOfDay
+from weeutil.weeutil import isStartOfDay, to_float
 from weewx.units import ValueTuple
 
 # A list holding the type extensions. Each entry should be a subclass of XType, defined below.
@@ -171,7 +171,8 @@ class ArchiveTable(XType):
                     break
                 try:
                     # Get the aggregate as a ValueTuple
-                    agg_vt = get_aggregate(obs_type, stamp, do_aggregate, db_manager)
+                    agg_vt = get_aggregate(obs_type, stamp, do_aggregate, db_manager,
+                                           **option_dict)
                 except weewx.CannotCalculate:
                     agg_vt = ValueTuple(None, unit, unit_group)
                 if unit:
@@ -541,6 +542,8 @@ class DailySummaries(XType):
                     val += ("group_temperature",)
                 elif val[1] in ['inch', 'mm', 'cm']:
                     val += ("group_rain",)
+            # Make sure the first element is a float (and not a string).
+            val = ValueTuple(to_float(val[0]), val[1], val[2])
             target_val = weewx.units.convertStd(val, db_manager.std_unit_system)[0]
 
         # Form the interpolation dictionary
