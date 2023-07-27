@@ -46,22 +46,17 @@ class ExtensionEngine(object):
         'skins': 'SKIN_DIR'}
 
     def __init__(self, config_path, config_dict, dry_run=False, logger=None):
-        """
-        Initializer for ExtensionEngine.
+        """Initializer for ExtensionEngine.
 
         Args:
-        
             config_path (str): Path to the configuration file.  For example, something
-                         like /home/weewx/weewx.conf)
-
-            config_dict (str): The configuration dictionary, i.e., the contents of the
-                         file at config_path.
-
+                like /home/weewx/weewx.conf)
+            config_dict (dict): The configuration dictionary, i.e., the contents of the
+                file at config_path.
             dry_run (bool): If Truthy, all the steps will be printed out, but nothing will
-                     actually be done.
-
+                actually be done.
             logger (weecfg.Logger): An instance of weecfg.Logger. This will be used to print
-                    things to the console.
+                things to the console.
         """
         self.config_path = config_path
         self.config_dict = config_dict

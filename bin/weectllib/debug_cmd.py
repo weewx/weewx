@@ -20,7 +20,7 @@ debug_description = """
 Generate a standard suite of system/weewx information to aid in remote
 debugging. The debug output consists of two parts, the first part containing
 a snapshot of relevant system/weewx information and the second part a parsed and
-obfuscated copy of weewx.conf. This output can be redirected to file and posted
+obfuscated copy of weewx.conf. This output can be redirected to a file and posted
 when seeking assistance via forums or email.
 """
 
