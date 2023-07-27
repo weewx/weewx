@@ -13,9 +13,6 @@ install instructions should become
 
 ## Utilities
 
-- Finish migrating `wee_debug` to `weectl debug`.
-- Write documentation for `weectl debug`.
-- Remove `wee_debug` and its documentation.
 - Lot of inconsistencies in how the path to the config file is handled. Some utilities accept a
   command line option, others require `--config=`.
 - Allow rebuild daily summaries for only selected types.
@@ -34,6 +31,8 @@ Update the logging wiki.
 Change the forwarding `.htm` files in `weewx.com/docs` to point to the V5 versions.
 
 ## Docs
+
+Need a page "About `weectl`".
 
 need a page that shows how to download, install, and configure a driver.
 

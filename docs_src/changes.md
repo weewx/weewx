@@ -13,7 +13,8 @@ instead of `/home/weewx`. This allows pip installs to be done without
 root privileges. However, `/home/weewx` can still be used.
 
 The new utility `weectl` is now used for configuring stations, extensions, and
-the databases. With time, it will probably take on other responsibilities.
+the databases, as well as providing debug information. With time, it will
+probably take on other responsibilities.
 
 Package installs now use systemd instead of the old System V `/etc/init.d`.
 
