@@ -6,53 +6,6 @@ Specify `--help` to see the actions and options:
 ```
 weectl extension --help
 ```
-```
-usage: weectl extension list
-            [--config=FILENAME]
-
-       weectl extension install (FILE|DIR|URL)
-            [--config=FILENAME]
-            [--dry-run] [--verbosity=N]
-
-       weectl extension uninstall NAME
-            [--config=FILENAME]
-            [--dry-run] [--verbosity=N]
-
-Manages WeeWX extensions
-
-optional arguments:
-  -h, --help            show this help message and exit
-
-Which action to take:
-  {list,install,uninstall}
-    list                List all installed extensions
-    install             Install an extension contained in FILE (such as
-                        pmon.tar.gz), directory (DIR), or from an URL.
-    uninstall           Uninstall an extension
-```
-
-
-## Common options
-
-These are options used by most of the actions.
-
-### --help
-
-Show the help message, then exit.
-
-### --config
-
-Path to the configuration file. Default is `~/weewx-data/weewx.conf`.
-
-### --dry-run
-
-Show what would happen if the action was run, but do not actually make any
-writable changes.
-
-### --verbosity=(0|1|2|3)
-
-How much information to display (0-3).
-
 
 ## List installed extensions
 
@@ -154,3 +107,27 @@ Uninstall the extension:
 Request to remove extension 'windy'
 Finished removing extension 'windy'
 ```
+
+
+## Options
+
+These are options used by most of the actions.
+
+### --help
+
+Show the help message, then exit.
+
+### --config
+
+Path to the configuration file. Default is `~/weewx-data/weewx.conf`.
+
+### --dry-run
+
+Show what would happen if the action was run, but do not actually make any
+writable changes.
+
+### --verbosity=(0|1|2|3)
+
+How much information to display (0-3).
+
+

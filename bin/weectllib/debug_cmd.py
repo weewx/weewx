@@ -24,11 +24,19 @@ obfuscated copy of weewx.conf. This output can be redirected to a file and poste
 when seeking assistance via forums or email.
 """
 
+debug_epilog = """
+weectl debug will attempt to obfuscate obvious personal/private information in
+weewx.conf such as user names, passwords and API keys; however, the user
+should thoroughly check the generated output for personal/private information
+before posting the information publicly.
+"""
+
 
 def add_subparser(subparsers):
     debug_parser = subparsers.add_parser('debug',
                                          usage=debug_usage,
                                          description=debug_description,
+                                         epilog=debug_epilog,
                                          help="Generate debug info.")
 
     debug_parser.add_argument('--config',
