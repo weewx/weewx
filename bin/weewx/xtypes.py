@@ -64,6 +64,26 @@ class XType(object):
 
 # ##################### Retrieval functions ###########################
 
+def exists(obs_type):
+    """Checks whether the observation type is known to the xtype system.
+
+        Args:
+            obs_type(str): The observation type to check for existence.
+
+        Returns:
+            bool: True if the observation type is known to the xtyoe system. False otherwise.
+        """
+
+    # Search the list, looking for a exists() method that does not raise an AttributeError or
+    # UnknownType exception
+    for xtype in xtypes:
+        try:
+            return xtype.exists(obs_type)
+        except (AttributeError, weewx.UnknownType):
+            pass
+
+    return False
+
 def get_scalar(obs_type, record, db_manager=None, **option_dict):
     """Return a scalar value"""
 

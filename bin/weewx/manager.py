@@ -344,7 +344,7 @@ class Manager(object):
         """
 
         # Check to see if this is a valid observation type:
-        return obs_type in self.obskeys
+        return obs_type in self.obskeys or weewx.xtypes.exists(obs_type)
 
     def has_data(self, obs_type, timespan):
         """Checks whether the observation type exists in the database and whether it has any
