@@ -15,13 +15,13 @@ log = logging.getLogger(__name__)
 
 usagestr = """weectl -v|--version
        weectl -h|--help
-       weectl station --help
-       weectl extension --help
        weectl database --help
        weectl debug --help
+       weectl extension --help
+       weectl station --help
 """
 
-SUBCOMMANDS = ['station', 'extension', 'database', 'debug']
+SUBCOMMANDS = ['database', 'debug', 'extension', 'station', ]
 
 
 # ===============================================================================

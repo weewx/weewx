@@ -466,7 +466,7 @@ class RESTThread(threading.Thread):
             data (str|None): The body of the POST. If not given, the request will be done as a GET.
         """
         if self.delay_post:
-            log.debug("%s: Delaying post by %.1f seconds", self.protocol_name, self.delay_post)
+            log.debug("%s: Delaying post by %d seconds", self.protocol_name, self.delay_post)
             time.sleep(self.delay_post)
 
         # Retry up to max_tries times:

@@ -8,7 +8,7 @@ import argparse
 
 import weecfg
 import weecfg.database
-import weectllib.db_actions
+import weectllib.database_actions
 from weeutil.weeutil import bcolors
 
 create_usage = f"""{bcolors.BOLD}weectl database create
@@ -290,26 +290,26 @@ def add_subparser(subparsers):
 def create_database(namespace):
     """Create the WeeWX database"""
 
-    weectllib.db_actions.create_database(namespace.config,
-                                         db_binding=namespace.binding,
-                                         dry_run=namespace.dry_run)
+    weectllib.database_actions.create_database(namespace.config,
+                                               db_binding=namespace.binding,
+                                               dry_run=namespace.dry_run)
 
 
 def drop_daily(namespace):
     """Drop the daily summary from a WeeWX database"""
-    weectllib.db_actions.drop_daily(namespace.config,
-                                    db_binding=namespace.binding,
-                                    dry_run=namespace.dry_run)
+    weectllib.database_actions.drop_daily(namespace.config,
+                                          db_binding=namespace.binding,
+                                          dry_run=namespace.dry_run)
 
 
 def rebuild_daily(namespace):
     """Rebuild the daily summary in a WeeWX database"""
-    weectllib.db_actions.rebuild_daily(namespace.config,
-                                       date=namespace.date,
-                                       from_date=namespace.from_date,
-                                       to_date=namespace.to_date,
-                                       db_binding=namespace.binding,
-                                       dry_run=namespace.dry_run)
+    weectllib.database_actions.rebuild_daily(namespace.config,
+                                             date=namespace.date,
+                                             from_date=namespace.from_date,
+                                             to_date=namespace.to_date,
+                                             db_binding=namespace.binding,
+                                             dry_run=namespace.dry_run)
 
 
 def add_column(namespace):
@@ -317,75 +317,75 @@ def add_column(namespace):
     column_type = namespace.column_type.upper()
     if column_type == 'INT':
         column_type = "INTEGER"
-    weectllib.db_actions.add_column(namespace.config,
-                                    column_name=namespace.column_name,
-                                    column_type=column_type,
-                                    db_binding=namespace.binding,
-                                    dry_run=namespace.dry_run)
+    weectllib.database_actions.add_column(namespace.config,
+                                          column_name=namespace.column_name,
+                                          column_type=column_type,
+                                          db_binding=namespace.binding,
+                                          dry_run=namespace.dry_run)
 
 
 def rename_column(namespace):
     """Rename a column in a WeeWX database."""
-    weectllib.db_actions.rename_column(namespace.config,
-                                       from_name=namespace.from_name,
-                                       to_name=namespace.to_name,
-                                       db_binding=namespace.binding,
-                                       dry_run=namespace.dry_run)
+    weectllib.database_actions.rename_column(namespace.config,
+                                             from_name=namespace.from_name,
+                                             to_name=namespace.to_name,
+                                             db_binding=namespace.binding,
+                                             dry_run=namespace.dry_run)
 
 
 def drop_columns(namespace):
     """Drop (remove) one or more columns in a WeeWX database."""
-    weectllib.db_actions.drop_columns(namespace.config,
-                                      column_names=namespace.column_names,
-                                      db_binding=namespace.binding,
-                                      dry_run=namespace.dry_run)
+    weectllib.database_actions.drop_columns(namespace.config,
+                                            column_names=namespace.column_names,
+                                            db_binding=namespace.binding,
+                                            dry_run=namespace.dry_run)
 
 
 def reconfigure_database(namespace):
     """Replicate a database, using current configuration settings."""
-    weectllib.db_actions.reconfigure_database(namespace.config,
-                                              db_binding=namespace.binding,
-                                              dry_run=namespace.dry_run)
+    weectllib.database_actions.reconfigure_database(namespace.config,
+                                                    db_binding=namespace.binding,
+                                                    dry_run=namespace.dry_run)
 
 
 def transfer_database(namespace):
     """Copy a database to a new database."""
-    weectllib.db_actions.transfer_database(namespace.config,
-                                           dest_binding=namespace.dest_binding,
-                                           db_binding=namespace.binding,
-                                           dry_run=namespace.dry_run)
+    weectllib.database_actions.transfer_database(namespace.config,
+                                                 dest_binding=namespace.dest_binding,
+                                                 db_binding=namespace.binding,
+                                                 dry_run=namespace.dry_run)
 
 
 def calc_missing(namespace):
     """Calculate derived variables in a database."""
-    weectllib.db_actions.calc_missing(namespace.config,
-                                      date=namespace.date,
-                                      from_date=namespace.from_date,
-                                      to_date=namespace.to_date,
-                                      db_binding=namespace.binding,
-                                      dry_run=namespace.dry_run)
+    weectllib.database_actions.calc_missing(namespace.config,
+                                            date=namespace.date,
+                                            from_date=namespace.from_date,
+                                            to_date=namespace.to_date,
+                                            db_binding=namespace.binding,
+                                            dry_run=namespace.dry_run)
 
 
 def check(namespace):
     """Check the integrity of a WeeWX database."""
-    weectllib.db_actions.check(namespace.config,
-                               namespace.binding)
+    weectllib.database_actions.check(namespace.config,
+                                     namespace.binding)
 
 
 def update_database(namespace):
-    weectllib.db_actions.update_database(namespace.config,
-                                         db_binding=namespace.binding,
-                                         dry_run=namespace.dry_run)
+    weectllib.database_actions.update_database(namespace.config,
+                                               db_binding=namespace.binding,
+                                               dry_run=namespace.dry_run)
 
 
 def reweight_daily(namespace):
     """Recalculate the weights in a WeeWX database."""
-    weectllib.db_actions.reweight_daily(namespace.config,
-                                        date=namespace.date,
-                                        from_date=namespace.from_date,
-                                        to_date=namespace.to_date,
-                                        db_binding=namespace.binding,
-                                        dry_run=namespace.dry_run)
+    weectllib.database_actions.reweight_daily(namespace.config,
+                                              date=namespace.date,
+                                              from_date=namespace.from_date,
+                                              to_date=namespace.to_date,
+                                              db_binding=namespace.binding,
+                                              dry_run=namespace.dry_run)
 
 
 def _add_common_args(subparser):

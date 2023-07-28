@@ -7,7 +7,7 @@
 
 import weecfg
 import weecfg.extension
-import weectllib.db_actions
+import weectllib.database_actions
 import weectllib.debug_actions
 from weeutil.weeutil import bcolors
 

@@ -13,8 +13,6 @@ install instructions should become
 
 ## Utilities
 
-- Lot of inconsistencies in how the path to the config file is handled. Some utilities accept a
-  command line option, others require `--config=`.
 - Allow rebuild daily summaries for only selected types.
 - Check semantics of specifying a time for `--from` and/or `--to` 
   in `weectl database calc-missing`.
@@ -25,10 +23,6 @@ install instructions should become
 Log to `~/weewx-data/log/weewx.log`.
 
 Update the logging wiki.
-
-## Website
-
-Change the forwarding `.htm` files in `weewx.com/docs` to point to the V5 versions.
 
 ## Docs
 
@@ -45,3 +39,13 @@ Check usersguide/troubleshooting/software.md.
 
 Update the wiki entries for going from MySQL to SQLite and for SQLite to MySQL, this time
 by using `weectl database transfer`.
+
+# Before release
+
+## Website
+
+Change the forwarding `.htm` files in `weewx.com/docs` to point to the V5 versions.
+
+## `pyproject.toml`
+Change parameter `description`.
+
