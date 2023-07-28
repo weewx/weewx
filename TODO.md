@@ -26,13 +26,9 @@ Update the logging wiki.
 
 ## Docs
 
-Need a page "About `weectl`".
-
 need a page that shows how to download, install, and configure a driver.
 
 need a page that shows how to download, install, and configure a skin.
-
-Check usersguide/troubleshooting/software.md.
 
 
 ## Wiki

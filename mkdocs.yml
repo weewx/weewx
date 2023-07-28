@@ -88,6 +88,7 @@ nav:
   - Utilities guide:
     - weewxd: utilities/weewxd.md
     - weectl:
+      - weectl: utilities/weectl-about.md
       - weectl database: utilities/weectl-database.md
       - weectl debug: utilities/weectl-debug.md
       - weectl extension: utilities/weectl-extension.md
