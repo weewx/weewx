@@ -176,6 +176,7 @@ log_failure = False
         inch_per_hour     = " in/h"
         inHg              = " inHg"
         inHg_per_hour     = " inHg/h"
+        kilowatt          = " kW"
         kilowatt_hour     = " kWh"
         km                = " km"
         km_per_hour       = " km/h"
