@@ -74,8 +74,8 @@ def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
     exception will be raised.
 
     Args:
-        file_path (str): A candidate path to the file.
-        args (list[str]): command-line arguments. If the file cannot be found in file_path,
+        file_path (str|None): A candidate path to the file.
+        args (list[str]|None): command-line arguments. If the file cannot be found in file_path,
             then the members of args will be tried.
         locations (list[str]): A list of directories to be searched. If they do not
             start with a slash ('/'), then they will be treated as relative to
@@ -130,8 +130,8 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
 
     Args:
 
-        config_path (str): configuration filename.
-        args (list[str]): command-line arguments.
+        config_path (str|None): configuration filename.
+        args (list[str]|None): command-line arguments.
         locations (list[str]): A list of directories to search.
         file_name (str): The name of the config file. Default is 'weewx.conf'
         interpolation (str): The type of interpolation to use when reading the config file.

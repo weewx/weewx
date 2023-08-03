@@ -1,11 +1,12 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Device drivers for the weewx weather system."""
 
-from __future__ import absolute_import
+import sys
+
 import weewx
 
 
@@ -43,7 +44,10 @@ class AbstractConfigurator(object):
     """The configurator class defines an interface for configuring devices.
     Inherit from this class to provide a comman-line interface for setting
     up a device, querying device status, and other setup/maintenance
-    operations."""
+    operations.
+
+    Used by 'wee_device' and 'weectl device'.
+    """
 
     @property
     def description(self):
@@ -55,8 +59,8 @@ class AbstractConfigurator(object):
 
     @property
     def epilog(self):
-        return "Be sure to stop weewxd first before using. Mutating actions will"\
-            " request confirmation before proceeding.\n"
+        return "Be sure to stop weewxd first before using. Mutating actions will request " \
+               "confirmation before proceeding.\n"
 
     def configure(self, config_dict):
         parser = self.get_parser()
@@ -69,7 +73,9 @@ class AbstractConfigurator(object):
     def get_parser(self):
         import optparse
         return optparse.OptionParser(description=self.description,
-                                     usage=self.usage, epilog=self.epilog)
+                                     usage=self.usage,
+                                     epilog=self.epilog,
+                                     prog=f"{sys.argv[0]} device")
 
     def add_options(self, parser):
         """Add command line options.  Derived classes should override this
