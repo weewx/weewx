@@ -17,7 +17,7 @@ DST_SYSTEMDDIR=$(DST)/etc/systemd/system
 DST_CFGDIR =$(DST)/etc/weewx
 
 # these are the entry points
-ENTRIES=weewxd weectl wee_device wee_import wee_reports
+ENTRIES=weewxd weectl wee_import wee_reports
 
 %:
 	dh $@ --with python3

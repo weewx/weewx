@@ -46,7 +46,7 @@ class AbstractConfigurator(object):
     up a device, querying device status, and other setup/maintenance
     operations.
 
-    Used by 'wee_device' and 'weectl device'.
+    Used by 'weectl device'.
     """
 
     @property
