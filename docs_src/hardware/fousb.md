@@ -81,25 +81,23 @@ For example, this would indicate that the station is a 30xx console:
     data_format = 3080
 ```
 
-## Configuring with `wee_device` {id=fousb_configuration}
+## Configuring with `weectl device` {id=fousb_configuration}
 
 !!! Note
-    Make sure you stop `weewxd` before running `wee_device`.
+    Make sure you stop `weewxd` before running `weectl device`.
 
 
 ### `--help` {id=fousb_help}
 
-Invoking `wee_device` with the `--help` option
+Invoking `weectl device` with the `--help` option
 
-```
-wee_device /home/weewx/weewx.conf --help
-```
+    weectl device --help
 
 will produce something like this:
 
 ```
 FineOffsetUSB driver version 1.7
-Usage: wee_device [config_file] [options] [--debug] [--help]
+Usage: weectl device [config_file] [options] [--debug] [--help]
 
 Configuration utility for weewx devices.
 
@@ -128,9 +126,7 @@ Mutating actions will request confirmation before proceeding.
 
 Display the station settings with the `--info` option.
 
-```
-wee_device --info
-```
+    weectl device --info
 
 This will result in something like:
 <pre class='tty'>Fine Offset station settings:
@@ -171,30 +167,26 @@ factory with an archive interval (read_period) of 30 minutes (1800
 seconds). To change the station's interval to 5 minutes, do the
 following:
 
-```
-wee_device --set-interval=5
-```
+    weectl device --set-interval=5
 
 ### `--history=N` {id=fousb_history}
 
-Fine Offset stations store records in a circular buffer &mdash; once the
-buffer fills, the oldest records are replaced by newer records. The 1080
-and 2080 consoles store up to 4080 records. The 3080 consoles store up
-to 3264 records. The `data_count` indicates how many records are in memory.
-The `read_period` indicates the number of minutes between records. `wee_device
-can display these records in space-delimited, raw bytes, or dictionary format.
+Fine Offset stations store records in a circular buffer &mdash; once the buffer
+fills, the oldest records are replaced by newer records. The 1080 and 2080
+consoles store up to 4080 records. The 3080 consoles store up to 3264 records.
+The `data_count` indicates how many records are in memory. The `read_period`
+indicates the number of minutes between records. `weectl device` can display
+these records in space-delimited, raw bytes, or dictionary format.
 
 For example, to display the most recent 30 records from the console memory:
-```
-wee_device --history=30
-```
+
+    weectl device --history=30
 
 ### `--clear-memory` {id=fousb_clear_memory}
 
 To clear the console memory:
-```
-wee_device --clear-memory
-```
+
+    weectl device --clear-memory
 
 ### `--check-usb` {id=fousb_check_usb}
 
@@ -203,9 +195,8 @@ and console. Poor quality USB cables, under-powered USB hubs, and other
 devices on the bus can interfere with communication.
 
 To test the quality of the USB connection to the console:
-```
-wee_device --check-usb
-```
+
+    weectl device --check-usb
 
 Let the utility run for at least a few minutes, or possibly an hour or two.
 It is not unusual to see a few bad reads in an hour, but if you see many bad

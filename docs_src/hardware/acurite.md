@@ -71,9 +71,9 @@ The 01025, 01035, 01036, 01525, and 02032 consoles have a USB mode setting.
 The 02064 and 01536 consoles do not have a mode setting; these
 consoles are always in USB mode 4.
 
-## Configuring with `wee_device` {id=acurite_configuration}
+## Configuring with `weectl device` {id=acurite_configuration}
 
-The `wee_device` utility cannot be used to configure AcuRite stations.
+The `weectl device` utility cannot be used to configure AcuRite stations.
 
 ## Station data {id=acurite_data}
 

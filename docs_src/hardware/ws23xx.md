@@ -18,7 +18,7 @@ seconds, depending on wind speed and rain activity.
 <table class='station_data'>
   <caption>WS23xx transmission periods</caption>
   <tbody>
-    <tr><th>sensor</th><th>period</th></tr>
+    <tr class="first_row"><td>sensor</td><td>period</td></tr>
     <tr><td>Wind</td>
       <td>32 seconds when wind > 22.36 mph (wireless)<br/>
         128 seconds when wind > 22.36 mph (wireless)<br/>
@@ -31,32 +31,30 @@ seconds, depending on wind speed and rain activity.
   </tbody>
 </table>
 
-The station has 175 history records. That is just over 7 days of
-data with the factory default history recording interval of 60
-minutes, or about 14 hours with a recording interval of 5
-minutes.
+The station has 175 history records. That is just over 7 days of data with the
+factory default history recording interval of 60 minutes, or about 14 hours with
+a recording interval of 5 minutes.
 
-When WeeWX starts up it will attempt to
-download all records from the console since the last record in the
-archive database.
+When WeeWX starts up it will attempt to download all records from the console
+since the last record in the archive database.
 
 
-## Configuring with `wee_device` {id=ws23xx_configuration}
+## Configuring with `weectl device` {id=ws23xx_configuration}
 
 !!! Note
-    Make sure you stop `weewxd` before running `wee_device`.
+    Make sure you stop `weewxd` before running `weectl device`.
 
 ### `--help` {id=ws23xx_help}
 
-Invoking `wee_device` with the `--help` option
+Invoking `weectl device` with the `--help` option
 
-    wee_device --help
+    weectl device --help
 
 will produce something like this:
 
 ```
   WS23xx driver version 0.21
-  Usage: wee_device [config_file] [options] [--debug] [--help]
+  Usage: weectl device [config_file] [options] [--debug] [--help]
 
   Configuration utility for weewx devices.
 
@@ -79,7 +77,7 @@ will produce something like this:
 
 Display the station settings with the `--info` option.
 
-    wee_device --info
+    weectl device --info
 
 This will result in something like:
 
@@ -106,7 +104,7 @@ This will result in something like:
   history time till sample: 5.0
   icon alarm active: 0
   in humidity: 48.0
-  ...
+```
 
 
 The line `history number of records` indicates how many records are in memory.
@@ -117,9 +115,9 @@ The line `history interval` indicates the number of minutes between records.
 WS23xx stations ship from the factory with an archive interval of 60 minutes
 (3600 seconds). To change the interval to 5 minutes, do the following:
 
-    wee_device --set-interval=5
+    weectl device --set-interval=5
 
-!!! Warn
+!!! Warning
     Changing the interval will clear the station memory.
 
 ### `--history` {id=ws23xx_history}
@@ -130,13 +128,13 @@ The console stores up to 175 records.
 
 For example, to display the latest 30 records from the console memory:
 
-    wee_device --history=30
+    weectl device --history=30
 
 ### `--clear-memory` {id=ws23xx_clear_memory}
 
 To clear the console memory:
 
-    wee_device --clear-memory
+    weectl device --clear-memory
 
 ## Station data {id=ws23xx_data}
 

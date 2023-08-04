@@ -45,7 +45,7 @@ This is an outline of the process to install, configure, and run WeeWX:
 * Configure the hardware. This involves setting things like the onboard
   archive interval, rain bucket size, etc. You may have to follow directions
   given by your hardware manufacturer, or you may be able to use the utility
-  [wee_device](../../utilities/wee_device).
+  [weectl device](../../utilities/weectl-device).
 
 * Run WeeWX by launching the `weewxd` program, either
   [directly](../running/#running-directly), or as a

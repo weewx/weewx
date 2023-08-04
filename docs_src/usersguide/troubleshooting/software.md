@@ -148,8 +148,8 @@ interval specified in the station hardware is 30 minutes. When the interval in
 `weewx.conf` does not match the station's hardware interval, WeeWX defers to the
 station's interval.
 
-Use the [`wee_device`](../../../utilities/wee_device) utility to change the
-station's interval.
+Use the [`weectl device`](../../../utilities/weectl-device) utility to change
+the station's interval.
 
 
 ## Spikes in the graphs

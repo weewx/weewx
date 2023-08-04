@@ -434,7 +434,7 @@ class EthernetWrapper(BaseWrapper):
             self.socket.sendall(data)
             # A delay of 0.0 gives socket write error; 0.01 gives no ack error;
             # 0.05 is OK for weewx program.
-            # Note: a delay of 0.5 s is required for wee_device --logger=logger_info
+            # Note: a delay of 0.5 s is required for weectl device --logger=logger_info
             time.sleep(self.tcp_send_delay)
         except (socket.timeout, socket.error) as ex:
             log.error("ip-write error: %s", ex)
@@ -2091,12 +2091,12 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     #
     # Retransmitting
     #    Any console can retransmit (not to be confused with acting as a repeater).
-    #    This is done through either the setup screen, or by using wee_device. For example,
-    #        wee_device --set-retransmit=on,4
+    #    This is done through either the setup screen, or by using weectl device. For example,
+    #        weectl device --set-retransmit=on,4
     #    would tell the console to retransmit data from the ISS on channel 4.
     #    Another console can then be configured to receive information from this channel,
     #    rather than directly from the ISS:
-    #        wee_device --set-transmitter-type=4,0
+    #        weectl device --set-transmitter-type=4,0
     #    This says listen for an ISS on channel 4. Note that no repeater is involved.
 
     # Repeaters
@@ -2106,7 +2106,7 @@ class VantageConfigurator(weewx.drivers.AbstractConfigurator):
     #    The setting up of a repeater is covered in the VP2 Console Manual, Appendix C (last page).
     #    You must set both the channel, and the repeater ID. For example, a temperature/humidity
     #    station on channel 5, which uses repeater B, would be set with the following:
-    #        wee_device --set-transmitter-type=5,3,2,4,B
+    #        weectl device --set-transmitter-type=5,3,2,4,B
     #    This says to look for the station on channel 5. It will be of type temp_hum (3). The
     #    temperature will appear as extraTemp2, the humidity as extraHumid4. It will use
     #    repeater "B".

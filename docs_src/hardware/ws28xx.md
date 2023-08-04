@@ -45,7 +45,7 @@ There are two ways to pair the console and the transceiver:
   in the display, then release the button. If the console pairs with the
   transceiver, 'PC' will go away within a second or two.
 ```
-wee_device --pair
+weectl device --pair
 
 Pairing transceiver with console...
 Press and hold the [v] key until "PC" appears (attempt 1 of 3)
@@ -53,10 +53,10 @@ Transceiver is paired to console
 ```
 
 * _The HeavyWeather way._ Follow the pairing instructions that came with the
-  station. You will have to run HeavyWeather on a windows computer with the
+  station. You will have to run HeavyWeather on a Windows computer with the
   USB transceiver. After HeavyWeather indicates the devices are paired, put
   the USB transceiver in your WeeWX computer and start WeeWX. Do not power
-  cycle the station console or you will have to start over.
+  cycle the station console, or you will have to start over.
 
 If the console does not pair, you will see messages in the log such as this:
 
@@ -99,22 +99,22 @@ When an alarm goes off, communication with the transceiver stops. The WS28xx
 driver clears all alarms in the station. It is better to create alarms in
 WeeWX, and the WeeWX alarms can do much more than the console alarms anyway.
 
-## Configuring with `wee_device` {id=ws28xx_configuration}
+## Configuring with `weectl device` {id=ws28xx_configuration}
 
 !!! Note
-    Make sure you stop `weewxd` before running `wee_device`.
+    Make sure you stop `weewxd` before running `weectl device`.
 
 ### `--help` {id=ws28xx_help}
 
-Invoking `wee_device` with the `--help` option
+Invoking `weectl device` with the `--help` option
 
-    wee_device --help
+    weectl device --help
 
 will produce something like this:
 
 ```
   WS28xx driver version 0.33
-  Usage: wee_device [config_file] [options] [--debug] [--help]
+  Usage: weectl device [config_file] [options] [--debug] [--help]
 
   Configuration utility for weewx devices.
 
@@ -143,7 +143,7 @@ Windows PC.
 Be sure that WeeWX is not running. Run the command:
 
 ```
-wee_device --pair
+weectl device --pair
 
 Pairing transceiver with console...
 Press and hold the [v] key until "PC" appears (attempt 1 of 3)
@@ -167,7 +167,7 @@ order to communicate. This should happen automatically.
 
 Display the station settings with the `--info` option.
 
-    wee_device --info
+    weectl device --info
 
 This will result in something like:
 

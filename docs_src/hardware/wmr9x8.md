@@ -4,10 +4,10 @@ The station includes a data logger, but the driver does not read records from th
 
 The station emits partial packets, which may confuse some online services.
 
-## Configuring with `wee_device` {id=wmr9x8_configuration}
+## Configuring with `weectl device` {id=wmr9x8_configuration}
 
 The WMR9x8 stations cannot be configured with the utility
-[`wee_device`](../../utilities/wee_device/).
+[`weectl device`](../../utilities/weectl-device/).
 
 
 ## Station data {id=wmr9x8_data}

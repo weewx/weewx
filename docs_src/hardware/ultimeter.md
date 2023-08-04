@@ -5,10 +5,10 @@ every 1/2 second or so.
 
 The Ultimeter driver ignores the maximum, minimum, and average values recorded by the station.
 
-## Configuring with `wee_device` {id=ultimeter_configuration}
+## Configuring with `weectl device` {id=ultimeter_configuration}
 
 The Ultimeter stations cannot be configured with the utility
-[`wee_device`](../../utilities/wee_device/).
+[`weectl device`](../../utilities/weectl-device/).
 
 ## Station data {id=ultimeter_data}
 

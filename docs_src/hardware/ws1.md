@@ -3,10 +3,10 @@
 
 The WS1 stations produce data every 1/2 second or so.
 
-## Configuring with `wee_device` {id=ws1_configuration}
+## Configuring with `weectl device` {id=ws1_configuration}
 
 The WS1 stations cannot be configured with the utility
-[`wee_device`](../../utilities/wee_device/).
+[`weectl device`](../../utilities/weectl-device/).
 
 
 ## Station data {id=ws1_data}

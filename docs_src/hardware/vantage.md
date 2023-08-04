@@ -4,20 +4,20 @@ The Davis Vantage stations include a variety of models and configurations.
 The WeeWX driver can communicate with a console or envoy using serial, USB,
 or TCP/IP interface.
 
-## Configuring with `wee_device` {id=vantage_configuration}
+## Configuring with `weectl device` {id=vantage_configuration}
 
 The Vantage stations can be configured with the utility
-[`wee_device`](../../utilities/wee_device/).
+[`weectl device`](../../utilities/weectl-device/).
 
 !!! NOTE
 
-    Make sure you stop `weewxd` before running `wee_device`
+    Make sure you stop `weewxd` before running `weectl device`
 
 ### `--help` {id=vantage_help}
 
-Invoking `wee_device` with the `--help` option
+Invoking `weectl device` with the `--help` option
 
-    wee_device /home/weewx/weewx.conf --help
+    weectl device /home/weewx/weewx.conf --help
 
 will produce something like this:
 
@@ -25,30 +25,30 @@ will produce something like this:
 Using configuration file /home/weewx-user/weewx-data/weewx.conf
 Using driver weewx.drivers.vantage.
 Using Vantage driver version 3.6.2 (weewx.drivers.vantage)
-Usage: wee_device --help
-       wee_device --info [config_file]
-       wee_device --current [config_file]
-       wee_device --clear-memory [config_file] [-y]
-       wee_device --set-interval=MINUTES [config_file] [-y]
-       wee_device --set-latitude=DEGREE [config_file] [-y]
-       wee_device --set-longitude=DEGREE [config_file] [-y]
-       wee_device --set-altitude=FEET [config_file] [-y]
-       wee_device --set-barometer=inHg [config_file] [-y]
-       wee_device --set-wind-cup=CODE [config_file] [-y]
-       wee_device --set-bucket=CODE [config_file] [-y]
-       wee_device --set-rain-year-start=MM [config_file] [-y]
-       wee_device --set-offset=VARIABLE,OFFSET [config_file] [-y]
-       wee_device --set-transmitter-type=CHANNEL,TYPE,TEMP,HUM,REPEATER_ID [config_file] [-y]
-       wee_device --set-retransmit=[OFF|ON|ON,CHANNEL] [config_file] [-y]
-       wee_device --set-temperature-logging=[LAST|AVERAGE] [config_file] [-y]
-       wee_device --set-time [config_file] [-y]
-       wee_device --set-dst=[AUTO|ON|OFF] [config_file] [-y]
-       wee_device --set-tz-code=TZCODE [config_file] [-y]
-       wee_device --set-tz-offset=HHMM [config_file] [-y]
-       wee_device --set-lamp=[ON|OFF] [config_file]
-       wee_device --dump [--batch-size=BATCH_SIZE] [config_file] [-y]
-       wee_device --logger-summary=FILE [config_file] [-y]
-       wee_device [--start | --stop] [config_file]
+Usage: weectl device --help
+       weectl device --info [config_file]
+       weectl device --current [config_file]
+       weectl device --clear-memory [config_file] [-y]
+       weectl device --set-interval=MINUTES [config_file] [-y]
+       weectl device --set-latitude=DEGREE [config_file] [-y]
+       weectl device --set-longitude=DEGREE [config_file] [-y]
+       weectl device --set-altitude=FEET [config_file] [-y]
+       weectl device --set-barometer=inHg [config_file] [-y]
+       weectl device --set-wind-cup=CODE [config_file] [-y]
+       weectl device --set-bucket=CODE [config_file] [-y]
+       weectl device --set-rain-year-start=MM [config_file] [-y]
+       weectl device --set-offset=VARIABLE,OFFSET [config_file] [-y]
+       weectl device --set-transmitter-type=CHANNEL,TYPE,TEMP,HUM,REPEATER_ID [config_file] [-y]
+       weectl device --set-retransmit=[OFF|ON|ON,CHANNEL] [config_file] [-y]
+       weectl device --set-temperature-logging=[LAST|AVERAGE] [config_file] [-y]
+       weectl device --set-time [config_file] [-y]
+       weectl device --set-dst=[AUTO|ON|OFF] [config_file] [-y]
+       weectl device --set-tz-code=TZCODE [config_file] [-y]
+       weectl device --set-tz-offset=HHMM [config_file] [-y]
+       weectl device --set-lamp=[ON|OFF] [config_file]
+       weectl device --dump [--batch-size=BATCH_SIZE] [config_file] [-y]
+       weectl device --logger-summary=FILE [config_file] [-y]
+       weectl device [--start | --stop] [config_file]
 
 Configures the Davis Vantage weather station.
 
@@ -128,7 +128,7 @@ confirmation before proceeding.
 
 Use the `--info` option to display the current EEPROM settings:
 
-    wee_device --info
+    weectl device --info
 
 This will result in something like:
 
@@ -238,7 +238,7 @@ interval does not have any real advantages.
 
 Example: change the archive interval to 10 minutes:
 
-    wee_device --set-interval=10
+    weectl device --set-interval=10
 
 ### `--set-altitude=N`
 
@@ -247,7 +247,7 @@ _feet_.
 
 Example: change the altitude to 700 feet:
 
-    wee_device --set-altitude=700
+    weectl device --set-altitude=700
 
 ### `--set-barometer=N`
 
@@ -266,7 +266,7 @@ Normally, this is set by Davis, but if you have replaced your bucket with a
 different kind, you might want to reconfigure. For example, to change to a
 0.1 mm bucket (bucket code `2`), use the following:
 
-    wee_device --set-bucket=2
+    weectl device --set-bucket=2
 
 ### `--set-rain-year-start`
 
@@ -275,7 +275,7 @@ other than 1 January.
 
 For example, to set it to 1 October:
 
-    wee_device --set-rain-year-start=10
+    weectl device --set-rain-year-start=10
 
 ### `--set-offset` {id=vantage_setting_offsets}
 
@@ -288,20 +288,20 @@ get maximal insolation, resulting in a 180° error in the wind direction. The
 solution is to add a 180° offset correction. You can do this with the
 following command:
 
-    wee_device --set-offset=windDir,180
+    weectl device --set-offset=windDir,180
 
 ### `--set-transmitter-type` {id=vantage_configuring_additional_sensors}
 
 If you have additional sensors and/or repeaters for your Vantage station, you
 can configure them using your console. However, if you have a [Davis Weather
 Envoy](https://www.davisinstruments.com/product/wireless-weather-envoy/),
-it will not have a console! As an alternative, `wee_device` can do this using
+it will not have a console! As an alternative, `weectl device` can do this using
 the command `--set-transmitter-type`.
 
 For example, to add an extra temperature sensor to channel 3 and no repeater
 is used, do the following:
 
-    wee_device --set-transmitter-type=3,1,2
+    weectl device --set-transmitter-type=3,1,2
 
 This says to turn on channel 3, set its type to 1 ("Temperature only"), and it
 will show up in the database as `extraTemp2`. No repeater id was specified, so
@@ -310,7 +310,7 @@ it defaults to "no repeater."
 Here's another example, this time for a combined temperature / humidity sensor
 retransmitted via repeater A:
 
-    wee_device --set-transmitter-type=5,3,2,4,a
+    weectl device --set-transmitter-type=5,3,2,4,a
 
 This will add the combined sensor to channel 5, set its type to 3
 ("Temperature and humidity"), via Repeater A, and it will
@@ -332,11 +332,11 @@ data.
 Example: Tell your console to retransmit ISS data using the first available
 channel:
 
-    wee_device --set-retransmit=on
+    weectl device --set-retransmit=on
 
 Example: Tell your console to retransmit ISS data on channel 4:
 
-    wee_device --set-retransmit=on,4
+    weectl device --set-retransmit=on,4
 
 !!! Warning
 
@@ -346,7 +346,7 @@ Example: Tell your console to retransmit ISS data on channel 4:
 
 Example: Tell your console to turn retransmission 'OFF':
 
-    wee_device --set-retransmit=off
+    weectl device --set-retransmit=off
 
 ### `--set-dst`
 
@@ -360,7 +360,7 @@ for the code that corresponds to your time zone.
 
 For example, to set the time zone code to Central European Time (code 20):
 
-    wee_device --set-tz-code=20
+    weectl device --set-tz-code=20
 
 !!! Warning
 
@@ -375,7 +375,7 @@ Davis time zones, you can set the offset from UTC using this command.
 For example, to set the time zone offset for Newfoundland Standard
 Time (UTC-03:30), use the following:
 
-    wee_device --set-tz-offset=-0330
+    weectl device --set-tz-offset=-0330
 
 !!! Warning
 
@@ -399,7 +399,7 @@ memory, you might be able to save these data.
 
 Stop WeeWX first, then
 
-    wee_device --dump
+    weectl device --dump
 
 This will dump all data archived in the Vantage memory directly to thee
 database, without regard to whether or not they have been seen before.
@@ -414,7 +414,7 @@ file `FILE`.
 
 Example:
 
-    wee_device --logger-summary=/var/tmp/summary.txt
+    weectl device --logger-summary=/var/tmp/summary.txt
 
 ### `--start`
 

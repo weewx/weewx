@@ -2,7 +2,7 @@
 
 !!! Warning
     You must use the same upgrade technique as your initial install! For
-    example, if you used pip to install WeeWX, then you should use it to
+    example, if you used pip to install WeeWX, then you should use pip to
     upgrade. If you used a DEB or RPM package to install, then you should
     upgrade using the same package type.
 
@@ -74,6 +74,26 @@ Previously, `SQLITE_ROOT` was expected to be an absolute path, but now relative
 paths are accepted. A relative path is considered relative to `WEEWX_ROOT`.
 Because this is _less restrictive_, it is not expected to affect any users.
 
+### New utilities
+
+Most of the old utilities have been collected and put under one master utility,
+`weectl`. This make it easy to use the `--help` option to see what you want.
+
+| Old utility     | New utility        |
+|-----------------|--------------------|
+| `wee_database`  | `weectl database`  |
+| `wee_debug`     | `weectl debug`     |
+| `wee_device`    | `weectl device`    |
+| `wee_extension` | `weectl extension` |
+| `wee_config`    | `weectl station`   |
+
+The utility `wee_reports` has not changed and must still be invoked using 
+`wee_reports`.
+
+### Utility `wunderfixer` has been removed.
+
+The Weather Underground no longer allows past-dated posts, so the utility is
+no longer useful.
 
 ## Upgrading to V4.10
 

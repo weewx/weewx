@@ -30,7 +30,8 @@ time, here are some tips, in decreasing order of importance:
 <figure markdown>
   ![Ferrite Coils](../../images/ferrites.jpg){ width="300" }
   <figcaption>Cable connection looped through a ferrite coil
-Ferrite coils on a Davis Envoy. There are two coils, one on the USB connection (top wire) and one on the power supply. Both have loops.</figcaption>
+Ferrite coils on a Davis Envoy. There are two coils, one on the USB connection 
+(top wire) and one on the power supply. Both have loops.</figcaption>
 </figure>
 
 
@@ -40,8 +41,8 @@ Most hardware with data-logging includes a parameter to specify the archive
 interval used by the logger. If the hardware and driver support it, WeeWX will
 use this interval as the archive interval. If not, WeeWX will fall back to using
 option `archive_interval` specified in
-[[StdArchive]](../../../reference/weewx-options/stdarchive/). The default fallback value
-is 300 seconds (5 minutes).
+[[StdArchive]](../../../reference/weewx-options/stdarchive/). The default 
+fallback value is 300 seconds (5 minutes).
 
 If the hardware archive interval is large, it will take a long time before
 anything shows up in the WeeWX reports. For example, WS23xx stations ship with
@@ -54,28 +55,44 @@ Since reports are generated when a new archive record arrives, a large archive
 interval means that reports will be generated infrequently.
 
 If you want data and reports closer to real-time, use the
-[wee_device](../../../utilities/wee_device) utility to change the interval.
+[weectl device](../../../utilities/weectl-device) utility to change the 
+interval.
 
 
 ## Raspberry Pi
 
-WeeWX runs very well on the Raspberry Pi, from the original Model A and Model B, to the latest incarnations. However, the Pi does have some quirks, including issues with USB power and lack of a clock.
+WeeWX runs very well on the Raspberry Pi, from the original Model A and Model B,
+to the latest incarnations. However, the Pi does have some quirks, including
+issues with USB power and lack of a clock.
 
-See the [Wiki](https://github.com/weewx/weewx/wiki) for up-to-date information on [Running WeeWX on a Raspberry Pi](https://github.com/weewx/weewx/wiki/Raspberry%20Pi).
+See the [Wiki](https://github.com/weewx/weewx/wiki) for up-to-date information
+on [Running WeeWX on a Raspberry
+Pi](https://github.com/weewx/weewx/wiki/Raspberry%20Pi).
 
 
 ## Davis stations
-For Davis-specific tips, see the Wiki article [Troubleshooting Davis stations](https://github.com/weewx/weewx/wiki/Troubleshooting-the-Davis-Vantage-station)
+
+For Davis-specific tips, see the Wiki article [Troubleshooting Davis
+stations](https://github.com/weewx/weewx/wiki/Troubleshooting-the-Davis-Vantage-station)
 
 
 ## Fine Offset USB lockups
 
-The Fine Offset series weather stations and their derivatives are a fine value and can be made to work reasonably reliably, but they have one problem that is difficult to work around: the USB can unexpectantly lock up, making it impossible to communicate with the console. The symptom in the log will look something like this:
+The Fine Offset series weather stations and their derivatives are a fine value
+and can be made to work reasonably reliably, but they have one problem that is
+difficult to work around: the USB can unexpectantly lock up, making it
+impossible to communicate with the console. The symptom in the log will look
+something like this:
 
 ```
 Jun 7 21:50:33 localhost weewx[2460]: fousb: get archive interval failed attempt 1 of 3: could not detach kernel driver from interface 0: No data available
 ```
 
-The exact error may vary, but the thing to look for is the **"could not detach kernel driver"** message. Unfortunately, we have not found a software cure for this. Instead, you must power cycle the unit. Remove the batteries and unplug the USB, then put it back together. No need to restart WeeWX.
+The exact error may vary, but the thing to look for is the **"could not detach
+kernel driver"** message. Unfortunately, we have not found a software cure for
+this. Instead, you must power cycle the unit. Remove the batteries and unplug
+the USB, then put it back together. No need to restart WeeWX.
 
-More details about [Fine Offset lockups](https://github.com/weewx/weewx/wiki/FineOffset%20USB%20lockup) can be found in the [Wiki](https://github.com/weewx/weewx/wiki).
+More details about [Fine Offset
+lockups](https://github.com/weewx/weewx/wiki/FineOffset%20USB%20lockup) can be
+found in the [Wiki](https://github.com/weewx/weewx/wiki).

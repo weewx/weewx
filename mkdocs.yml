@@ -91,9 +91,9 @@ nav:
       - weectl: utilities/weectl-about.md
       - weectl database: utilities/weectl-database.md
       - weectl debug: utilities/weectl-debug.md
+      - weectl device: utilities/weectl-device.md
       - weectl extension: utilities/weectl-extension.md
       - weectl station: utilities/weectl-station.md
-    - wee_device: utilities/wee_device.md
     - wee_import: utilities/wee_import.md
     - wee_reports: utilities/wee_reports.md
 
