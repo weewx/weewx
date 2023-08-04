@@ -1,3 +1,6 @@
+weewx (5.0.0b10-1) unstable; urgency=low
+  * weectl device replaces wee_device
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Thu, 03 Aug 2023 18:46:49 -0700
 weewx (5.0.0b9-1) unstable; urgency=low
   * new upstream release
  -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 14 Jul 2023 06:25:50 -0700
