@@ -11,7 +11,7 @@ The Vantage stations can be configured with the utility
 
 !!! NOTE
 
-    Make sure you stop `weewxd` before running `weectl device`
+    Make sure you stop `weewxd` before running `weectl device`.
 
 ### `--help` {id=vantage_help}
 

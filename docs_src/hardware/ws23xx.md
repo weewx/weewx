@@ -41,6 +41,9 @@ since the last record in the archive database.
 
 ## Configuring with `weectl device` {id=ws23xx_configuration}
 
+The WS23xx stations can be configured with the utility
+[`weectl device`](../../utilities/weectl-device/).
+
 !!! Note
     Make sure you stop `weewxd` before running `weectl device`.
 

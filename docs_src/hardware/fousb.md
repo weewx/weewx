@@ -83,6 +83,9 @@ For example, this would indicate that the station is a 30xx console:
 
 ## Configuring with `weectl device` {id=fousb_configuration}
 
+The Fine Offset stations can be configured with the utility
+[`weectl device`](../../utilities/weectl-device/).
+
 !!! Note
     Make sure you stop `weewxd` before running `weectl device`.
 
