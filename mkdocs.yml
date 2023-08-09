@@ -116,7 +116,7 @@ nav:
 
   - Reference:
     - "Application options":
-      - "How options work": reference/weewx-options/introduction.md
+      - "Introduction": reference/weewx-options/introduction.md
       - "General options": reference/weewx-options/general.md
       - "[Station]": reference/weewx-options/stations.md
       - "[StdRESTful]": reference/weewx-options/stdrestful.md
@@ -132,7 +132,7 @@ nav:
       - "[DatabaseTypes]": reference/weewx-options/database-types.md
       - "[Engine]": reference/weewx-options/engine.md
     - "Skin options":
-      - "How skin options work": reference/skin-options/introduction.md
+      - "Introduction": reference/skin-options/introduction.md
       - "[Extras]": reference/skin-options/extras.md
       - "[Labels]": reference/skin-options/labels.md
       - "[Almanac]": reference/skin-options/almanac.md

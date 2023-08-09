@@ -32,11 +32,11 @@ putting them under the appropriate subsection (*e.g.*, under `[[CWOP]]`).
 
 A registry of WeeWX weather stations is maintained at `weewx.com`. Stations
 are displayed on a map and a list at
-[https://weewx.com/stations.html](https://weewx.com/stations.html)
+[https://weewx.com/stations.html](https://weewx.com/stations.html).
 
 How does the registry work? Individual weather stations periodically contact
-the registry. Each station provides a unique URL to identify itself, plu
-s other information such as the station type, Python version, WeeWX version
+the registry. Each station provides a unique URL to identify itself, plus 
+other information such as the station type, Python version, WeeWX version
 and installation method. No personal information, nor any meteorological data,
 is sent.
 
@@ -64,14 +64,15 @@ Set this to `true` to register the weather station.
 
 #### description
 
-A description of the station. If no description is specified, the `location`
-from section `[Station]` will be used.
+A description of the station. If no description is specified, the 
+[`location`](../stations#location) from section `[Station]` will be used.
 
 #### station_url
 
 The URL to the weather station. If no URL is specified, the
-[`station_url`](../stations-config#station_url) from section `[Station]`
-will be used.
+[`station_url`](../stations#station_url) from section `[Station]`
+will be used. It must be a valid URL. In particular, it must start with either
+`http://` or `https://`.
 
 #### log_success
 

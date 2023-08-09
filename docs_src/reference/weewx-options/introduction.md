@@ -1,4 +1,4 @@
-# Application configuration options
+# Application options
 
 Application options are specified in a configuration file, nominally called
 `weewx.conf`. This is a big text file, which holds the configuration
@@ -14,14 +14,14 @@ information about your installation of WeeWX. This includes things such as:
     method. For example, if you installed using pip, then the nominal location
     is `~/weewx-data/weewx.conf`. For other installation methods, the location
     depends on your operating system. See the section
-    [*Where to find things*](../where).
+    [*Where to find things*](../../../usersguide/where).
 
 
 !!! note
     There is another configuration file for presentation-specific options.
     This file is called `skin.conf`, and there is one for each skin. It is
-    described in the [*Customization Guide*](../../custom/), under the section
-    [*Reference: report options*](../../custom/report-options/).
+    described in the reference guide 
+    [*Skin options*](../../skin-options/introduction).
 
 
 The following sections are the definitive guide to the many configuration
