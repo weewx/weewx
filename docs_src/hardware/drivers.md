@@ -760,18 +760,17 @@ working on the driver. There can be problems.
   </tr>
 </table>
 
-<a id="vantage">Davis &quot;Vantage&quot; series</a> of weather
-stations, including the
-<a href="http://www.davisnet.com/weather/products/vantage-pro-professional-weather-stations.asp">VantagePro2</a>&trade;
-and
-<a href="http://www.vantagevue.com/">VantageVue</a>&trade;,
-using serial, USB, or
-<a href="http://www.davisnet.com/weather/products/weather_product.asp?pnum=06555">WeatherLinkIP</a>&trade;
-connections. Both the &quot;Rev A&quot; (firmware dated before
-22 April 2002) and &quot;Rev B&quot; versions are supported.
+<a id="vantage">Davis &quot;Vantage&quot; series</a> of weather stations,
+including the <a
+href="http://www.davisnet.com/weather/products/vantage-pro-professional-weather-stations.asp">VantagePro2</a>&trade;
+and <a
+href="https://www.davisinstruments.com/pages/vantage-vue">VantageVue</a>&trade;,
+using serial, USB, or WeatherLinkIP&trade; connections. Both the &quot;Rev
+A&quot; (firmware dated before 22 April 2002) and &quot;Rev B&quot; versions are
+supported.
 
 <a id="wmr100">Oregon Scientific WMR-100 stations.</a> Tested on the
-<a href="http://us.oregonscientific.com/cat-Weather-sub-Professional-Weather-Stations-prod-Pro-Wireless-Weather-Station.html">Oregon
+<a href="https://www.oregonscientificstore.com/c-77-wmr100.aspx">Oregon
   Scientific WMR100N</a>.
 
 <a id="wmr300">Oregon Scientific WMR-300 stations.</a> Tested on the
@@ -782,17 +781,16 @@ connections. Both the &quot;Rev A&quot; (firmware dated before
 <a href="http://www.oregonscientificstore.com/oregon_scientific/product.asp?itmky=659831">Oregon Scientific WMR968</a>.
 
 <a id="fousb">Fine Offset 10xx, 20xx, and 30xx stations.</a>
-Tested on the
-<a href="http://www.ambientweather.com/amws2080.html">Ambient Weather WS2080</a>.
+Tested on the Ambient Weather WS2080.
 
 <a id="ws23xx">La Crosse WS-23xx stations.</a> Tested on the
-<a href="http://lacrossetechnologies.com/2317/">La Crosse 2317</a>.
+<a href="https://www.lacrossetechnology.com/products/ws-2317">La Crosse 2317</a>.
 
 <a id="ws28xx">La Crosse WS-28xx stations.</a> Tested on the
-<a href="http://lacrossetechnologies.com/2814/">La Crosse C86234</a>.
+<a href="https://www.lacrossetechnology.com/products/c86234">La Crosse C86234</a>.
 
-<a id="te923">Hideki Professional Weather Stations.</a> Tested on the
-<a href="http://www.ambientweather.com/hotewiwest.html">Meade TE923</a>.
+<a id="te923">Hideki Professional Weather Stations.</a> Tested on the Meade
+TE923.
 
 <a id="ads">ADS WS1 Stations.</a> Tested on the
 <a href="http://www.argentdata.com/catalog/product_info.php?products_id=135">WS1</a>.
@@ -804,5 +802,4 @@ Tested on the
 <a href="http://www.rainwise.com/">CC3000</a>
 (firmware "Rainwise CC-3000 Version: 1.3 Build 022 Dec 02 2016").
 
-<a id="acurite">AcuRite Weather Stations.</a> Tested on the
-<a href="http://www.acurite.com/8-pro-digital-weather-station-with-pc-connect-01036.html">01036RX</a>.
+<a id="acurite">AcuRite Weather Stations.</a> Tested on the 01036RX.
