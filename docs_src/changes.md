@@ -12,9 +12,8 @@ With pip installs, station data is stored in `~/weewx-data` by default,
 instead of `/home/weewx`. This allows pip installs to be done without
 root privileges. However, `/home/weewx` can still be used.
 
-The new utility `weectl` is now used for configuring stations, hardware,
-extensions, and the databases, as well as providing debug information. With
-time, it will probably take on other responsibilities.
+The new utility `weectl` replaces `wee_database`, `wee_debug`, `wee_device`,
+`wee_extension`, and `wee_config`. Try `weectl --help` to see how to use it.
 
 Package installs now use systemd instead of the old System V `/etc/init.d`.
 

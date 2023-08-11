@@ -1,20 +1,19 @@
 # Running WeeWX from a git repository
 
 Because WeeWX is pure-Python and does not need to be compiled, it can be run
-directly from source without "installing" it first. This approach is perhaps
-most appropriate for developers, but it is also useful on older operating
-systems or on platforms with tight memory and/or storage constraints.
+directly from a git repository without "installing" it first. This approach is
+perhaps most appropriate for developers, but it is also useful on older
+operating systems or on platforms with tight memory and/or storage constraints.
 
-This technique can be used to run from a clone of the WeeWX repository, or
-from a source directory expanded from a zip/tar file.
+This technique can also be used to run from a source directory expanded from a
+zip/tar file.
 
 Although you do not need root privileges to run WeeWX this way, you will need
 them to set up a daemon and, perhaps, to change device permissions.
 
 ## Install pre-requisites
 
-Before you run from source, you must install the pre-requisite Python and
-Python modules.
+Before starting, you must install the pre-requisite Python and Python modules.
 
 1. Ensure that Python 3.7 or later is installed.
 
@@ -89,7 +88,7 @@ only after you run `weewxd`, as shown in the following step.
 The program `weewxd` does the data collection, archiving, uploading, and report
 generation.  You can run it directly, or as a daemon.
 
-When you run WeeWX directly, it will print data to the screen. WeeWX will
+When you run `weewxd` directly, it will print data to the screen. It will
 stop when you log out, or when you terminate it with `control-c`.
 
 ```{.shell .copy}
@@ -101,7 +100,7 @@ python3 ~/weewx/bin/weewxd.py
 
 To run `weewxd` as a daemon, install a systemd or init file that is
 appropriate for your operating system. Be sure to use the full path in the
-virtual environment to the Python interpreter and `weewx.py`. Examples are
+virtual environment to the Python interpreter and `weewxd.py`. Examples are
 included in the `util` directory.
 
 
@@ -126,8 +125,8 @@ If you have problems, check the system log for entries from `weewxd`.
 To enable uploads or to customize reports, modify the configuration file.
 See the [*Customization Guide*](../../custom/introduction) for instructions,
 and the [application](../../reference/weewx-options/introduction) and
-[skin](../../reference/skin-options/introduction) references for all of
-the options.
+[skin](../../reference/skin-options/introduction) references for all the 
+options.
 
     nano ~/weewx-data/weewx.conf
 

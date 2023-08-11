@@ -87,8 +87,8 @@ Most of the old utilities have been collected and put under one master utility,
 | `wee_extension` | `weectl extension` |
 | `wee_config`    | `weectl station`   |
 
-The utility `wee_reports` has not changed and must still be invoked using 
-`wee_reports`.
+The utilities `wee_reports` and `wee_import` have not been changed and should
+still be invoked under their own names.
 
 ### Utility `wunderfixer` has been removed.
 
