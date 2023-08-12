@@ -162,7 +162,7 @@ class WindSpeedRecalculation(DatabaseFix):
         """Initialise our WindSpeedRecalculation object."""
 
         # call our parents __init__
-        super(WindSpeedRecalculation, self).__init__(config_dict, fix_config_dict)
+        super().__init__(config_dict, fix_config_dict)
 
         # log if a dry run
         if self.dry_run:
@@ -371,7 +371,7 @@ class CalcMissing(DatabaseFix):
         """
 
         # call our parents __init__
-        super(CalcMissing, self).__init__(config_dict, calc_missing_config_dict)
+        super().__init__(config_dict, calc_missing_config_dict)
 
         # the start timestamp of the period to calc missing
         self.start_ts = int(calc_missing_config_dict.get('start_ts'))

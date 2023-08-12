@@ -68,7 +68,7 @@ class WUSource(weeimport.Source):
     def __init__(self, config_dict, config_path, wu_config_dict, import_config_path, options):
 
         # call our parents __init__
-        super(WUSource, self).__init__(config_dict,
+        super().__init__(config_dict,
                                        wu_config_dict,
                                        options)
 

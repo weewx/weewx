@@ -64,7 +64,7 @@ class CSVSource(weeimport.Source):
     def __init__(self, config_dict, config_path, csv_config_dict, import_config_path, options):
 
         # call our parents __init__
-        super(CSVSource, self).__init__(config_dict,
+        super().__init__(config_dict,
                                         csv_config_dict,
                                         options)
 

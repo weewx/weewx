@@ -616,7 +616,7 @@ class StdWunderground(StdRESTful):
 
     def __init__(self, engine, config_dict):
 
-        super(StdWunderground, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         _ambient_dict = get_site_dict(
             config_dict, 'Wunderground', 'station', 'password')
@@ -739,7 +739,7 @@ class StdPWSWeather(StdRESTful):
     archive_url = "https://www.pwsweather.com/pwsupdate/pwsupdate.php"
 
     def __init__(self, engine, config_dict):
-        super(StdPWSWeather, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         _ambient_dict = get_site_dict(
             config_dict, 'PWSweather', 'station', 'password')
@@ -778,7 +778,7 @@ class StdWOW(StdRESTful):
     archive_url = "https://wow.metoffice.gov.uk/automaticreading"
 
     def __init__(self, engine, config_dict):
-        super(StdWOW, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         _ambient_dict = get_site_dict(
             config_dict, 'WOW', 'station', 'password')
@@ -843,22 +843,22 @@ class AmbientThread(RESTThread):
           
           server_url: An url where the server for this protocol can be found.
         """
-        super(AmbientThread, self).__init__(q,
-                                            protocol_name,
-                                            essentials=essentials,
-                                            manager_dict=manager_dict,
-                                            post_interval=post_interval,
-                                            max_backlog=max_backlog,
-                                            stale=stale,
-                                            log_success=log_success,
-                                            log_failure=log_failure,
-                                            timeout=timeout,
-                                            max_tries=max_tries,
-                                            retry_wait=retry_wait,
-                                            retry_login=retry_login,
-                                            retry_ssl=retry_ssl,
-                                            softwaretype=softwaretype,
-                                            skip_upload=skip_upload)
+        super().__init__(q,
+                         protocol_name,
+                         essentials=essentials,
+                         manager_dict=manager_dict,
+                         post_interval=post_interval,
+                         max_backlog=max_backlog,
+                         stale=stale,
+                         log_success=log_success,
+                         log_failure=log_failure,
+                         timeout=timeout,
+                         max_tries=max_tries,
+                         retry_wait=retry_wait,
+                         retry_login=retry_login,
+                         retry_ssl=retry_ssl,
+                         softwaretype=softwaretype,
+                         skip_upload=skip_upload)
         self.station = station
         self.password = password
         self.server_url = server_url
@@ -1004,28 +1004,28 @@ class AmbientLoopThread(AmbientThread):
           
           rtfreq: Frequency of update in seconds for RapidFire
         """
-        super(AmbientLoopThread, self).__init__(q,
-                                                manager_dict=manager_dict,
-                                                station=station,
-                                                password=password,
-                                                server_url=server_url,
-                                                post_indoor_observations=post_indoor_observations,
-                                                api_key=api_key,
-                                                protocol_name=protocol_name,
-                                                essentials=essentials,
-                                                post_interval=post_interval,
-                                                max_backlog=max_backlog,
-                                                stale=stale,
-                                                log_success=log_success,
-                                                log_failure=log_failure,
-                                                timeout=timeout,
-                                                max_tries=max_tries,
-                                                retry_wait=retry_wait,
-                                                retry_login=retry_login,
-                                                retry_ssl=retry_ssl,
-                                                softwaretype=softwaretype,
-                                                skip_upload=skip_upload,
-                                                force_direction=force_direction)
+        super().__init__(q,
+                         manager_dict=manager_dict,
+                         station=station,
+                         password=password,
+                         server_url=server_url,
+                         post_indoor_observations=post_indoor_observations,
+                         api_key=api_key,
+                         protocol_name=protocol_name,
+                         essentials=essentials,
+                         post_interval=post_interval,
+                         max_backlog=max_backlog,
+                         stale=stale,
+                         log_success=log_success,
+                         log_failure=log_failure,
+                         timeout=timeout,
+                         max_tries=max_tries,
+                         retry_wait=retry_wait,
+                         retry_login=retry_login,
+                         retry_ssl=retry_ssl,
+                         softwaretype=softwaretype,
+                         skip_upload=skip_upload,
+                         force_direction=force_direction)
 
         self.rtfreq = float(rtfreq)
         self.formats.update(AmbientLoopThread.WUONLY_FORMATS)
@@ -1126,7 +1126,7 @@ class StdCWOP(StdRESTful):
     default_servers = ['cwop.aprs.net:14580', 'cwop.aprs.net:23']
 
     def __init__(self, engine, config_dict):
-        super(StdCWOP, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         _cwop_dict = get_site_dict(config_dict, 'CWOP', 'station')
         if _cwop_dict is None:
@@ -1194,18 +1194,18 @@ class CWOPThread(RESTThread):
           Default is 60 (one minute).
         """
         # Initialize my superclass
-        super(CWOPThread, self).__init__(q,
-                                         protocol_name="CWOP",
-                                         manager_dict=manager_dict,
-                                         post_interval=post_interval,
-                                         max_backlog=max_backlog,
-                                         stale=stale,
-                                         log_success=log_success,
-                                         log_failure=log_failure,
-                                         timeout=timeout,
-                                         max_tries=max_tries,
-                                         retry_wait=retry_wait,
-                                         skip_upload=skip_upload)
+        super().__init__(q,
+                         protocol_name="CWOP",
+                         manager_dict=manager_dict,
+                         post_interval=post_interval,
+                         max_backlog=max_backlog,
+                         stale=stale,
+                         log_success=log_success,
+                         log_failure=log_failure,
+                         timeout=timeout,
+                         max_tries=max_tries,
+                         retry_wait=retry_wait,
+                         skip_upload=skip_upload)
         self.station = station
         self.passcode = passcode
         # In case we have a single server that would likely appear as a string
@@ -1423,7 +1423,7 @@ class StdStationRegistry(StdRESTful):
 
     def __init__(self, engine, config_dict):
 
-        super(StdStationRegistry, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         _registry_dict = get_site_dict(config_dict, 'StationRegistry', 'register_this_station')
         if _registry_dict is None:
@@ -1511,7 +1511,7 @@ class StationRegistryThread(RESTThread):
             Default is 60 seconds.
         """
 
-        super(StationRegistryThread, self).__init__(
+        super().__init__(
             q,
             protocol_name='StationRegistry',
             post_interval=post_interval,
@@ -1652,7 +1652,7 @@ class StdAWEKAS(StdRESTful):
     """
 
     def __init__(self, engine, config_dict):
-        super(StdAWEKAS, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         site_dict = get_site_dict(config_dict, 'AWEKAS', 'username', 'password')
         if site_dict is None:
@@ -1732,20 +1732,20 @@ class AWEKASThread(RESTThread):
           set to no less than 300. Default is 300
         """
         import hashlib
-        super(AWEKASThread, self).__init__(q,
-                                           protocol_name='AWEKAS',
-                                           manager_dict=manager_dict,
-                                           post_interval=post_interval,
-                                           max_backlog=max_backlog,
-                                           stale=stale,
-                                           log_success=log_success,
-                                           log_failure=log_failure,
-                                           timeout=timeout,
-                                           max_tries=max_tries,
-                                           retry_wait=retry_wait,
-                                           retry_login=retry_login,
-                                           retry_ssl=retry_ssl,
-                                           skip_upload=skip_upload)
+        super().__init__(q,
+                         protocol_name='AWEKAS',
+                         manager_dict=manager_dict,
+                         post_interval=post_interval,
+                         max_backlog=max_backlog,
+                         stale=stale,
+                         log_success=log_success,
+                         log_failure=log_failure,
+                         timeout=timeout,
+                         max_tries=max_tries,
+                         retry_wait=retry_wait,
+                         retry_login=retry_login,
+                         retry_ssl=retry_ssl,
+                         skip_upload=skip_upload)
         self.username = username
         # Calculate and save the password hash
         m = hashlib.md5()
@@ -1759,7 +1759,7 @@ class AWEKASThread(RESTThread):
     def get_record(self, record, dbmanager):
         """Ensure that rainRate is in the record."""
         # Have my superclass process the record first.
-        record = super(AWEKASThread, self).get_record(record, dbmanager)
+        record = super().get_record(record, dbmanager)
 
         # No need to do anything if rainRate is already in the record
         if 'rainRate' in record:

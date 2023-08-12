@@ -338,7 +338,7 @@ Setting record_generation to software.""")
 
 class FOUSBConfigurator(weewx.drivers.AbstractConfigurator):
     def add_options(self, parser):
-        super(FOUSBConfigurator, self).add_options(parser)
+        super().add_options(parser)
         parser.add_option("--info", dest="info", action="store_true",
                           help="display weather station configuration")
         parser.add_option("--current", dest="current", action="store_true",

@@ -53,7 +53,7 @@ class StdWXCalculate(weewx.engine.StdService):
         The derived type 'cloudbase' will always be calculated in software, for both LOOP packets
         and archive records"""
 
-        super(StdWXCalculate, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         self.loop_calc_dict = dict()        # map {obs->directive} for LOOP packets
         self.archive_calc_dict = dict()     # map {obs->directive} for archive records

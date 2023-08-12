@@ -5,9 +5,6 @@
 #
 """Console simulator for the weewx weather system"""
 
-from __future__ import with_statement
-from __future__ import absolute_import
-from __future__ import print_function
 import math
 import random
 import time
@@ -29,7 +26,15 @@ def loader(config_dict, engine):
 
 
 def extract_starts(config_dict, driver_name):
-    """Extract the start and resume times out of the configuration dictionary"""
+    """Extract the start and resume times out of the configuration dictionary.
+
+    Args:
+        config_dict (dict): The configuration dictionary
+        driver_name (str): The name of the driver. Something like 'Simulator'
+
+    Returns
+        tuple(float|None, float|None): A two-way tuple, start time and the resume time.
+    """
 
     # This uses a bit of a hack to have the simulator resume at a later
     # time. It's not bad, but I'm not enthusiastic about having special
@@ -69,24 +74,22 @@ class Simulator(weewx.drivers.AbstractDevice):
         
         NAMED ARGUMENTS:
         
-        loop_interval: The time (in seconds) between emitting LOOP packets.
-        [Optional. Default is 2.5]
+        loop_interval (float|None): The time (in seconds) between emitting LOOP packets.
+            Default is 2.5.
         
-        start_time: The start (seed) time for the generator in unix epoch time
-        [Optional. If 'None', or not present, then present time will be used.]
+        start_time (float|None): The start (seed) time for the generator in unix epoch time
+            If 'None', or not present, then present time will be used.
 
-        resume_time: The start time for the loop.
-        [Optional. If 'None', or not present, then start_time will be used.]
+        resume_time (float|None): The start time for the loop.
+            If 'None', or not present, then start_time will be used.
         
-        mode: Controls the frequency of packets.  One of either:
+        mode (str): Controls the frequency of packets.  One of either:
             'simulator': Real-time simulator - sleep between LOOP packets
             'generator': Emit packets as fast as possible (useful for testing)
-        [Required. Default is simulator.]
+            Default is 'simulator'
 
-        observations: Comma-separated list of observations that should be
-                      generated.  If nothing is specified, then all
-                      observations will be generated.
-        [Optional. Default is not defined.]
+        observations (list[str]|None): A list of observation types that should be generated.
+            If nothing is specified (the default), then all observations will be generated.
         """
 
         self.loop_interval = float(stn_dict.get('loop_interval', 2.5))
@@ -191,13 +194,14 @@ class Observation(object):
     
     def __init__(self, magnitude=1.0, average=0.0, period=96.0, phase_lag=0.0, start=None):
         """Initialize an observation function.
-        
-        magnitude: The value at max. The range will be twice this value
-        average: The average value, averaged over a full cycle.
-        period: The cycle period in hours.
-        phase_lag: The number of hours after the start time when the
-                     observation hits its max
-        start: Time zero for the observation in unix epoch time."""
+
+        Args:
+            magnitude (float): The value at max. The range will be twice this value
+            average (float): The average value, averaged over a full cycle.
+            period (float): The cycle period in hours.
+            phase_lag (float): The number of hours after the start time when the
+                observation hits its max
+            start (float|None): Time zero for the observation in unix epoch time."""
          
         if not start:
             raise ValueError("No start time specified")

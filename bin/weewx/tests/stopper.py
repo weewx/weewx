@@ -25,7 +25,7 @@ class Stopper(weewx.engine.StdService):
     """Special service which stops the engine when it gets to a certain time."""
 
     def __init__(self, engine, config_dict):
-        super(Stopper, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         # Fail hard if "run_length" or the "start" time are missing.
         run_length = to_int(config_dict['Stopper']['run_length'])

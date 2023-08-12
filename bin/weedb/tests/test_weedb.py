@@ -206,7 +206,7 @@ class TestSqlite(Common):
 
     def __init__(self, *args, **kwargs):
         self.db_dict = sqlite_db_dict
-        super(TestSqlite, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def test_variable(self):
         import sqlite3
@@ -232,11 +232,11 @@ class TestMySQL(Common):
                 import pymysql as MySQLdb
             except ImportError as e:
                 raise unittest.case.SkipTest(e)
-        super(TestMySQL, self).setUp()
+        super().setUp()
 
     def __init__(self, *args, **kwargs):
         self.db_dict = mysql_db_dict
-        super(TestMySQL, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def test_variable(self):
         weedb.create(self.db_dict)

@@ -285,14 +285,14 @@ class TestSqlite(Common, unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         self.archive_db_dict = archive_sqlite
-        super(TestSqlite, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class TestMySQL(Common, unittest.TestCase):
     
     def __init__(self, *args, **kwargs):
         self.archive_db_dict = archive_mysql
-        super(TestMySQL, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def setUp(self):
         try:
@@ -302,7 +302,7 @@ class TestMySQL(Common, unittest.TestCase):
                 import pymysql as MySQLdb
             except ImportError as e:
                 raise unittest.case.SkipTest(e)
-        super(TestMySQL, self).setUp()
+        super().setUp()
 
     
 def suite():

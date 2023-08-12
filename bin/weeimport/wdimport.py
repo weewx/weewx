@@ -190,7 +190,7 @@ class WDSource(weeimport.Source):
     def __init__(self, config_dict, config_path, wd_config_dict, import_config_path, options):
 
         # call our parents __init__
-        super(WDSource, self).__init__(config_dict, wd_config_dict, options)
+        super().__init__(config_dict, wd_config_dict, options)
 
         # save the import config path
         self.import_config_path = import_config_path

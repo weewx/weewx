@@ -331,7 +331,7 @@ class StdConvert(StdService):
 
     def __init__(self, engine, config_dict):
         # Initialize my base class:
-        super(StdConvert, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         # Get the target unit nickname (something like 'US' or 'METRIC'). If there is no
         # target, then do nothing
@@ -389,7 +389,7 @@ class StdCalibrate(StdService):
 
     def __init__(self, engine, config_dict):
         # Initialize my base class:
-        super(StdCalibrate, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         # Get the list of calibration corrections to apply. If a section
         # is missing, a KeyError exception will get thrown:
@@ -447,7 +447,7 @@ class StdQC(StdService):
     """
 
     def __init__(self, engine, config_dict):
-        super(StdQC, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         # If the 'StdQC' or 'MinMax' sections do not exist in the configuration
         # dictionary, then an exception will get thrown and nothing will be
@@ -488,7 +488,7 @@ class StdArchive(StdService):
     # archive period it then emits an archive record.
 
     def __init__(self, engine, config_dict):
-        super(StdArchive, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         # Extract the various options from the config file. If it's missing, fill in with defaults:
         archive_dict = config_dict.get('StdArchive', {})
@@ -731,7 +731,7 @@ class StdTimeSynch(StdService):
     """Regularly asks the station to synch up its clock."""
 
     def __init__(self, engine, config_dict):
-        super(StdTimeSynch, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         # Zero out the time of last synch, and get the time between synchs.
         self.last_synch_ts = 0
@@ -786,7 +786,7 @@ class StdPrint(StdService):
     or archive packet is received."""
 
     def __init__(self, engine, config_dict):
-        super(StdPrint, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
@@ -812,7 +812,7 @@ class StdReport(StdService):
     """Launches a separate thread to do reporting."""
 
     def __init__(self, engine, config_dict):
-        super(StdReport, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
         self.max_wait = int(config_dict['StdReport'].get('max_wait', 600))
         self.thread = None
         self.launch_time = None

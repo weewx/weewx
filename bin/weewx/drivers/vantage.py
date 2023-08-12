@@ -267,7 +267,7 @@ class SerialWrapper(BaseWrapper):
     """Wraps a serial connection returned from package serial"""
 
     def __init__(self, port, baudrate, timeout, wait_before_retry, command_delay):
-        super(SerialWrapper, self).__init__(wait_before_retry=wait_before_retry,
+        super().__init__(wait_before_retry=wait_before_retry,
                                             command_delay=command_delay)
         self.port = port
         self.baudrate = baudrate
@@ -338,7 +338,7 @@ class EthernetWrapper(BaseWrapper):
 
     def __init__(self, host, port, timeout, tcp_send_delay, wait_before_retry, command_delay):
 
-        super(EthernetWrapper, self).__init__(wait_before_retry=wait_before_retry,
+        super().__init__(wait_before_retry=wait_before_retry,
                                               command_delay=command_delay)
 
         self.host = host

@@ -637,7 +637,7 @@ class StdWXXTypes(weewx.engine.StdService):
 
     def __init__(self, engine, config_dict):
         """Initialize an instance of StdWXXTypes"""
-        super(StdWXXTypes, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         altitude_vt = engine.stn_info.altitude_vt
         latitude_f = engine.stn_info.latitude_f
@@ -737,7 +737,7 @@ class StdPressureCooker(weewx.engine.StdService):
 
     def __init__(self, engine, config_dict):
         """Initialize the PressureCooker. """
-        super(StdPressureCooker, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         try:
             override_dict = config_dict['StdWXCalculate']['PressureCooker']
@@ -768,7 +768,7 @@ class StdRainRater(weewx.engine.StdService):
 
     def __init__(self, engine, config_dict):
         """Initialize the RainRater."""
-        super(StdRainRater, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         # Get any user-defined overrides
         try:
@@ -802,7 +802,7 @@ class StdDelta(weewx.engine.StdService):
     """Instantiate and register the XTypes extension Delta."""
 
     def __init__(self, engine, config_dict):
-        super(StdDelta, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
 
         # Get any user-defined overrides
         try:

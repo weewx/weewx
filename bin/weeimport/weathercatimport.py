@@ -134,7 +134,7 @@ class WeatherCatSource(weeimport.Source):
                  options):
 
         # call our parents __init__
-        super(WeatherCatSource, self).__init__(config_dict,
+        super().__init__(config_dict,
                                                weathercat_config_dict,
                                                options)
 

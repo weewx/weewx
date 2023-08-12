@@ -276,7 +276,7 @@ DEFAULT_PORT = '/dev/ttyUSB0'
 
 class WS23xxConfigurator(weewx.drivers.AbstractConfigurator):
     def add_options(self, parser):
-        super(WS23xxConfigurator, self).add_options(parser)
+        super().add_options(parser)
         parser.add_option("--info", dest="info", action="store_true",
                           help="display weather station configuration")
         parser.add_option("--current", dest="current", action="store_true",

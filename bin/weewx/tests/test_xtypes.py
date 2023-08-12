@@ -18,6 +18,7 @@ import weeutil.logger
 import weeutil.weeutil
 import weewx.units
 import weewx.xtypes
+from weewx.units import ValueTuple
 
 weewx.debug = 1
 
@@ -39,6 +40,7 @@ my_dir = os.path.normpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 # The full path to the configuration file:
 config_path = os.path.join(my_dir, "testgen.conf")
 
+# Month of September 2010:
 month_timespan = weeutil.weeutil.TimeSpan(1283324400, 1285916400)
 
 
@@ -122,14 +124,14 @@ class TestSqlite(Common, unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         self.database_type = "sqlite"
-        super(TestSqlite, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class TestMySQL(Common, unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         self.database_type = "mysql"
-        super(TestMySQL, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def setUp(self):
         try:
@@ -139,7 +141,7 @@ class TestMySQL(Common, unittest.TestCase):
                 import pymysql as MySQLdb
             except ImportError as e:
                 raise unittest.case.SkipTest(e)
-        super(TestMySQL, self).setUp()
+        super().setUp()
 
 
 def suite():

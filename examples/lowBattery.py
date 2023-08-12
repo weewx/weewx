@@ -84,7 +84,7 @@ class BatteryAlarm(StdService):
 
     def __init__(self, engine, config_dict):
         # Pass the initialization information on to my superclass:
-        super(BatteryAlarm, self).__init__(engine, config_dict)
+        super().__init__(engine, config_dict)
         
         # This will hold the time when the last alarm message went out:
         self.last_msg_ts = 0

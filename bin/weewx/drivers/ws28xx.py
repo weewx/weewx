@@ -1051,7 +1051,7 @@ class WS28xxConfEditor(weewx.drivers.AbstractConfEditor):
 
 class WS28xxConfigurator(weewx.drivers.AbstractConfigurator):
     def add_options(self, parser):
-        super(WS28xxConfigurator, self).add_options(parser)
+        super().add_options(parser)
         parser.add_option("--check-transceiver", dest="check",
                           action="store_true",
                           help="check USB transceiver")

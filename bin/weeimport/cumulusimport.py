@@ -95,7 +95,7 @@ class CumulusSource(weeimport.Source):
     def __init__(self, config_dict, config_path, cumulus_config_dict, import_config_path, options):
 
         # call our parents __init__
-        super(CumulusSource, self).__init__(config_dict,
+        super().__init__(config_dict,
                                             cumulus_config_dict,
                                             options)
 

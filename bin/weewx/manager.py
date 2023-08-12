@@ -1046,7 +1046,7 @@ class DaySummaryManager(Manager):
             weedb.Uninitialized: If the database exists, but has not been initialized.
         """
         # Initialize my superclass:
-        super(DaySummaryManager, self).__init__(connection, table_name, schema)
+        super().__init__(connection, table_name, schema)
 
         # Has the database been initialized with the daily summaries?
         if '%s_day__metadata' % self.table_name not in self.connection.tables():
@@ -1062,12 +1062,12 @@ class DaySummaryManager(Manager):
         """Checks whether the observation type exists in the database."""
 
         # Check both with the superclass, and my own set of daily summaries
-        return super(DaySummaryManager, self).exists(obs_type) or obs_type in self.daykeys
+        return super().exists(obs_type) or obs_type in self.daykeys
 
     def close(self):
         self.version = None
         self.daykeys = None
-        super(DaySummaryManager, self).close()
+        super().close()
 
     def _create_sync(self):
         # Get a list of all the observation types which have daily summaries
@@ -1085,7 +1085,7 @@ class DaySummaryManager(Manager):
         log.debug('Daily summary version is %s', self.version)
 
     def _sync(self):
-        super(DaySummaryManager, self)._sync()
+        super()._sync()
         self._create_sync()
 
     def _initialize_day_tables(self, schema):
@@ -1164,7 +1164,7 @@ class DaySummaryManager(Manager):
         """
 
         # First let my superclass handle adding the record to the main archive table:
-        super(DaySummaryManager, self)._addSingleRecord(record, cursor, log_success, log_failure)
+        super()._addSingleRecord(record, cursor, log_success, log_failure)
 
         # Get the start of day for the record:
         _sod_ts = weeutil.weeutil.startOfArchiveDay(record['dateTime'])

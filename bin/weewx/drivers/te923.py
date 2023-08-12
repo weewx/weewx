@@ -706,7 +706,7 @@ class TE923Configurator(weewx.drivers.AbstractConfigurator):
         return DRIVER_VERSION
 
     def add_options(self, parser):
-        super(TE923Configurator, self).add_options(parser)
+        super().add_options(parser)
         parser.add_option("--info", dest="info", action="store_true",
                           help="display weather station configuration")
         parser.add_option("--current", dest="current", action="store_true",
