@@ -95,14 +95,16 @@ class MyAlarm(StdService):
             self.smtp_host     = config_dict['Alarm']['smtp_host']
             self.smtp_user     = config_dict['Alarm'].get('smtp_user')
             self.smtp_password = config_dict['Alarm'].get('smtp_password')
-            self.SUBJECT       = config_dict['Alarm'].get('subject', "Alarm message from weewx")
-            self.FROM          = config_dict['Alarm'].get('from', 'alarm@example.com')
+            self.SUBJECT       = config_dict['Alarm'].get('subject',
+                                                          "Alarm message from weewx")
+            self.FROM          = config_dict['Alarm'].get('from',
+                                                          'alarm@example.com')
             self.TO            = option_as_list(config_dict['Alarm']['mailto'])
         except KeyError as e:
             log.info("No alarm set.  Missing parameter: %s", e)
         else:
             # If we got this far, it's ok to start intercepting events:
-            self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)    # NOTE 1
+            self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)    # 1
             log.info("Alarm set for expression: '%s'", self.expression)
 
     def new_archive_record(self, event):
@@ -111,19 +113,21 @@ class MyAlarm(StdService):
         # To avoid a flood of nearly identical emails, this will do
         # the check only if we have never sent an email, or if we haven't
         # sent one in the last self.time_wait seconds:
-        if not self.last_msg_ts or abs(time.time() - self.last_msg_ts) >= self.time_wait:
+        if (not self.last_msg_ts
+                or abs(time.time() - self.last_msg_ts) >= self.time_wait):
             # Get the new archive record:
             record = event.record
             
-            # Be prepared to catch an exception in the case that the expression contains 
-            # a variable that is not in the record:
-            try:                                                              # NOTE 2
-                # Evaluate the expression in the context of the event archive record.
-                # Sound the alarm if it evaluates true:
-                if eval(self.expression, None, record):                       # NOTE 3
-                    # Sound the alarm!
-                    # Launch in a separate thread so it doesn't block the main LOOP thread:
-                    t = threading.Thread(target=MyAlarm.sound_the_alarm, args=(self, record))
+            # Be prepared to catch an exception in the case that the expression
+            # contains a variable that is not in the record:
+            try:                                                            # 2
+                # Evaluate the expression in the context of the event archive
+                # record. Sound the alarm if it evaluates true:
+                if eval(self.expression, None, record):                     # 3
+                    # Sound the alarm! Launch in a separate thread,
+                    # so it doesn't block the main LOOP thread:
+                    t = threading.Thread(target=MyAlarm.sound_the_alarm,
+                                         args=(self, record))
                     t.start()
                     # Record when the message went out:
                     self.last_msg_ts = time.time()
@@ -154,7 +158,8 @@ class MyAlarm(StdService):
         t_str = timestamp_to_string(record['dateTime'])
 
         # Log the alarm
-        log.info('Alarm expression "%s" evaluated True at %s' % (self.expression, t_str))
+        log.info('Alarm expression "%s" evaluated True at %s'
+                 % (self.expression, t_str))
 
         # Form the message text:
         msg_text = 'Alarm expression "%s" evaluated True at %s\nRecord:\n%s' \
@@ -173,7 +178,8 @@ class MyAlarm(StdService):
             log.debug("Using SMTP_SSL")
         except (AttributeError, socket.timeout, socket.error) as e:
             log.debug("Unable to use SMTP_SSL connection. Reason: %s", e)
-            # If that doesn't work, try creating an insecure host, then upgrading
+            # If that doesn't work, try creating an insecure host,
+            # then upgrading
             s = smtplib.SMTP(self.smtp_host, timeout=self.timeout)
             try:
                 # Be prepared to catch an exception if the server
@@ -186,7 +192,8 @@ class MyAlarm(StdService):
                 log.debug("Using SMTP unencrypted transport. Reason: %s", e)
 
         try:
-            # If a username has been given, assume that login is required for this host:
+            # If a username has been given, assume that login is required
+            # for this host:
             if self.smtp_user:
                 s.login(self.smtp_user, self.smtp_password)
                 log.debug("Logged in with user name %s", self.smtp_user)
@@ -221,7 +228,8 @@ Arguments:
     
       CONFIG_PATH: Path to weewx.conf """
 
-    epilog = """You must be sure the WeeWX modules are in your PYTHONPATH. For example:
+    epilog = """You must be sure the WeeWX modules are in your PYTHONPATH. 
+    For example:
     
     PYTHONPATH=/home/weewx/bin python alarm.py --help"""
 
@@ -229,8 +237,7 @@ Arguments:
     weewx.debug = 1
 
     # Create a command line parser:
-    parser = OptionParser(usage=usage,
-                          epilog=epilog)
+    parser = OptionParser(usage=usage, epilog=epilog)
     parser.add_option("--config", dest="config_path", metavar="CONFIG_FILE",
                       help="Use configuration file CONFIG_FILE.")
     # Parse the arguments and options
@@ -257,8 +264,9 @@ Arguments:
     # Use an expression that will evaluate to True by our fake record.
     config_dict['Alarm']['expression'] = "outTemp<40.0"
 
-    # We need the main WeeWX engine in order to bind to the event, but we don't need
-    # for it to completely start up. So get rid of all services:
+    # We need the main WeeWX engine in order to bind to the event,
+    # but we don't need for it to completely start up. So get rid of all
+    # services:
     config_dict['Engine']['Services'] = {}
     # Now we can instantiate our slim engine, using the DummyEngine class...
     engine = weewx.engine.DummyEngine(config_dict)

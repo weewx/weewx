@@ -168,18 +168,15 @@ supplied.
 
 ### Adding tag `$seven_day`
 
-Let's look at an example. The regular version of WeeWX offers
-statistical summaries by day, week, month, year, rain year, and all
-time. While WeeWX offers the tag `$week`, this is statistics
-*since Sunday at midnight*. Suppose we would like to have statistics for
-a full week, that is since midnight seven days ago.
+Let's look at an example. The regular version of WeeWX offers statistical
+summaries by day, week, month, year, rain year, and all time. While WeeWX offers
+the tag `$week`, this is statistics *since Sunday at midnight*. Suppose we would
+like to have statistics for a full week, that is since midnight seven days ago.
 
-This example is included in the distribution as
-`examples/seven_day.py`. If you wish to use or modify it, first
-copy it over to `user/seven_day.py`, then modify it there.
-Otherwise, at the next upgrade, you will lose any changes you have made.
+If you wish to use or modify this example, cut and paste the below to
+`user/seven_day.py`.
 
-``` python
+``` {.python .copy}
 import datetime
 import time
 
@@ -205,9 +202,9 @@ class SevenDay(SearchList):                                                  # 1
                      object.
         """
 
-        # Create a TimespanBinder object for the last seven days. First, calculate
-        # the time at midnight, seven days ago. The variable week_dt will be an instance of
-        # datetime.date.
+        # Create a TimespanBinder object for the last seven days. First,
+        # calculate the time at midnight, seven days ago. The variable week_dt 
+        # will be an instance of datetime.date.
         week_dt = datetime.date.fromtimestamp(timespan.stop) \
                   - datetime.timedelta(weeks=1)                              # 4
         # Convert it to unix epoch time:
@@ -355,11 +352,10 @@ HTML templates:
 </table>
 ```
 
-We put our addition `stats.py` in the "user" directory, which is automatically
-included by WeeWX in the Python path. 
-However, if you put the file somewhere else, you may have to specify its
-location with the environment variable
-[`PYTHONPATH`](https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH)
+We put our addition `seven_day.py` in the "user" directory, which is
+automatically included by WeeWX in the Python path. However, if you put the file
+somewhere else, you may have to specify its location with the environment
+variable [`PYTHONPATH`](https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH) 
 when you start WeeWX:
 
 ``` shell

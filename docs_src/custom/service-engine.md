@@ -92,10 +92,10 @@ which sends off an email when an arbitrary expression evaluates
 This example is included in the standard distribution as
 `examples/alarm.py:`
 
-``` python linenums="1" hl_lines="40 56 59"
+``` python linenums="1" hl_lines="45 61 64"
+import logging
 import smtplib
 import socket
-import syslog
 import threading
 import time
 from email.mime.text import MIMEText
@@ -104,18 +104,20 @@ import weewx
 from weeutil.weeutil import timestamp_to_string, option_as_list
 from weewx.engine import StdService
 
+log = logging.getLogger(__name__)
 
- # Inherit from the base class StdService:
+
+# Inherit from the base class StdService:
 class MyAlarm(StdService):
     """Service that sends email if an arbitrary expression evaluates true"""
-
+    
     def __init__(self, engine, config_dict):
         # Pass the initialization information on to my superclass:
         super(MyAlarm, self).__init__(engine, config_dict)
-
+        
         # This will hold the time when the last alarm message went out:
         self.last_msg_ts = 0
-
+        
         try:
             # Dig the needed options out of the configuration dictionary.
             # If a critical option is missing, an exception will be raised and
@@ -126,72 +128,78 @@ class MyAlarm(StdService):
             self.smtp_host     = config_dict['Alarm']['smtp_host']
             self.smtp_user     = config_dict['Alarm'].get('smtp_user')
             self.smtp_password = config_dict['Alarm'].get('smtp_password')
-            self.SUBJECT       = config_dict['Alarm'].get('subject', "Alarm message from weewx")
-            self.FROM          = config_dict['Alarm'].get('from', 'alarm@example.com')
+            self.SUBJECT       = config_dict['Alarm'].get('subject', 
+                                                          "Alarm message from weewx")
+            self.FROM          = config_dict['Alarm'].get('from',
+                                                          'alarm@example.com')
             self.TO            = option_as_list(config_dict['Alarm']['mailto'])
-            syslog.syslog(syslog.LOG_INFO, "alarm: Alarm set for expression: '%s'" % self.expression)
-
-            # If we got this far, it's ok to start intercepting events:
-            self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)    # NOTE 1
         except KeyError as e:
-            syslog.syslog(syslog.LOG_INFO, "alarm: No alarm set.  Missing parameter: %s" % e)
+            log.info("No alarm set.  Missing parameter: %s", e)
+        else:
+            # If we got this far, it's ok to start intercepting events:
+            self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)    # 1
+            log.info("Alarm set for expression: '%s'", self.expression)
 
     def new_archive_record(self, event):
         """Gets called on a new archive record event."""
-
+        
         # To avoid a flood of nearly identical emails, this will do
         # the check only if we have never sent an email, or if we haven't
         # sent one in the last self.time_wait seconds:
-        if not self.last_msg_ts or abs(time.time() - self.last_msg_ts) >= self.time_wait:
+        if (not self.last_msg_ts 
+                or abs(time.time() - self.last_msg_ts) >= self.time_wait):
             # Get the new archive record:
             record = event.record
-
-            # Be prepared to catch an exception in the case that the expression contains
-            # a variable that is not in the record:
-            try:                                                              # NOTE 2
-                # Evaluate the expression in the context of the event archive record.
-                # Sound the alarm if it evaluates true:
-                if eval(self.expression, None, record):                       # NOTE 3
-                    # Sound the alarm!
-                    # Launch in a separate thread so it doesn't block the main LOOP thread:
-                    t = threading.Thread(target=MyAlarm.sound_the_alarm, args=(self, record))
+            
+            # Be prepared to catch an exception in the case that the expression 
+            # contains a variable that is not in the record:
+            try:                                                            # 2
+                # Evaluate the expression in the context of the event archive 
+                # record. Sound the alarm if it evaluates true:
+                if eval(self.expression, None, record):                     # 3
+                    # Sound the alarm! Launch in a separate thread,
+                    # so it doesn't block the main LOOP thread:
+                    t = threading.Thread(target=MyAlarm.sound_the_alarm, 
+                                         args=(self, record))
                     t.start()
                     # Record when the message went out:
                     self.last_msg_ts = time.time()
             except NameError as e:
                 # The record was missing a named variable. Log it.
-                syslog.syslog(syslog.LOG_DEBUG, "alarm: %s" % e)
+                log.info("%s", e)
 
-    def sound_the_alarm(self, rec):
+    def sound_the_alarm(self, record):
         """Sound the alarm in a 'try' block"""
 
         # Wrap the attempt in a 'try' block so we can log a failure.
         try:
-            self.do_alarm(rec)
+            self.do_alarm(record)
         except socket.gaierror:
             # A gaierror exception is usually caused by an unknown host
-            syslog.syslog(syslog.LOG_CRIT, "alarm: unknown host %s" % self.smtp_host)
+            log.critical("Unknown host %s", self.smtp_host)
             # Reraise the exception. This will cause the thread to exit.
             raise
         except Exception as e:
-            syslog.syslog(syslog.LOG_CRIT, "alarm: unable to sound alarm. Reason: %s" % e)
+            log.critical("Unable to sound alarm. Reason: %s", e)
             # Reraise the exception. This will cause the thread to exit.
             raise
 
-    def do_alarm(self, rec):
+    def do_alarm(self, record):
         """Send an email out"""
 
         # Get the time and convert to a string:
-        t_str = timestamp_to_string(rec['dateTime'])
+        t_str = timestamp_to_string(record['dateTime'])
 
         # Log the alarm
-        syslog.syslog(syslog.LOG_INFO, 'alarm: Alarm expression "%s" evaluated True at %s' % (self.expression, t_str))
+        log.info('Alarm expression "%s" evaluated True at %s' 
+                 % (self.expression, t_str))
 
         # Form the message text:
-        msg_text = 'Alarm expression "%s" evaluated True at %s\nRecord:\n%s' % (self.expression, t_str, str(rec))
+        msg_text = 'Alarm expression "%s" evaluated True at %s\nRecord:\n%s' \
+                   % (self.expression, t_str, str(record))
         # Convert to MIME:
         msg = MIMEText(msg_text)
-
+        
         # Fill in MIME headers:
         msg['Subject'] = self.SUBJECT
         msg['From']    = self.FROM
@@ -200,10 +208,11 @@ class MyAlarm(StdService):
         try:
             # First try end-to-end encryption
             s = smtplib.SMTP_SSL(self.smtp_host, timeout=self.timeout)
-            syslog.syslog(syslog.LOG_DEBUG, "alarm: using SMTP_SSL")
-        except (AttributeError, socket.timeout, socket.error):
-            syslog.syslog(syslog.LOG_DEBUG, "alarm: unable to use SMTP_SSL connection.")
-            # If that doesn't work, try creating an insecure host, then upgrading
+            log.debug("Using SMTP_SSL")
+        except (AttributeError, socket.timeout, socket.error) as e:
+            log.debug("Unable to use SMTP_SSL connection. Reason: %s", e)
+            # If that doesn't work, try creating an insecure host, 
+            # then upgrading
             s = smtplib.SMTP(self.smtp_host, timeout=self.timeout)
             try:
                 # Be prepared to catch an exception if the server
@@ -211,28 +220,97 @@ class MyAlarm(StdService):
                 s.ehlo()
                 s.starttls()
                 s.ehlo()
-                syslog.syslog(syslog.LOG_DEBUG,
-                              "alarm: using SMTP encrypted transport")
-            except smtplib.SMTPException:
-                syslog.syslog(syslog.LOG_DEBUG,
-                              "alarm: using SMTP unencrypted transport")
+                log.debug("Using SMTP encrypted transport")
+            except smtplib.SMTPException as e:
+                log.debug("Using SMTP unencrypted transport. Reason: %s", e)
 
         try:
-            # If a username has been given, assume that login is required for this host:
+            # If a username has been given, assume that login is required 
+            # for this host:
             if self.smtp_user:
                 s.login(self.smtp_user, self.smtp_password)
-                syslog.syslog(syslog.LOG_DEBUG, "alarm: logged in with user name %s" % self.smtp_user)
-
+                log.debug("Logged in with user name %s", self.smtp_user)
+            
             # Send the email:
             s.sendmail(msg['From'], self.TO,  msg.as_string())
             # Log out of the server:
             s.quit()
         except Exception as e:
-            syslog.syslog(syslog.LOG_ERR, "alarm: SMTP mailer refused message with error %s" % e)
+            log.error("SMTP mailer refused message with error %s", e)
             raise
-
+        
         # Log sending the email:
-        syslog.syslog(syslog.LOG_INFO, "alarm: email sent to: %s" % self.TO)
+        log.info("Email sent to: %s", self.TO)
+
+
+if __name__ == '__main__':
+    """This section is used to test alarm.py. It uses a record and alarm
+     expression that are guaranteed to trigger an alert.
+     
+     You will need a valid weewx.conf configuration file with an [Alarm]
+     section that has been set up as illustrated at the top of this file."""
+
+    from optparse import OptionParser
+    import weecfg
+    import weeutil.logger
+
+    usage = """Usage: python alarm.py --help    
+       python alarm.py [CONFIG_FILE|--config=CONFIG_FILE]
+    
+Arguments:
+    
+      CONFIG_PATH: Path to weewx.conf """
+
+    epilog = """You must be sure the WeeWX modules are in your PYTHONPATH. 
+    For example:
+    
+    PYTHONPATH=/home/weewx/bin python alarm.py --help"""
+
+    # Force debug:
+    weewx.debug = 1
+
+    # Create a command line parser:
+    parser = OptionParser(usage=usage, epilog=epilog)
+    parser.add_option("--config", dest="config_path", metavar="CONFIG_FILE",
+                      help="Use configuration file CONFIG_FILE.")
+    # Parse the arguments and options
+    (options, args) = parser.parse_args()
+
+    try:
+        config_path, config_dict = weecfg.read_config(options.config_path, args)
+    except IOError as e:
+        exit("Unable to open configuration file: %s" % e)
+
+    print("Using configuration file %s" % config_path)
+
+    # Set logging configuration:
+    weeutil.logger.setup('alarm', config_dict)
+
+    if 'Alarm' not in config_dict:
+        exit("No [Alarm] section in the configuration file %s" % config_path)
+
+    # This is a fake record that we'll use
+    rec = {'extraTemp1': 1.0,
+           'outTemp': 38.2,
+           'dateTime': int(time.time())}
+
+    # Use an expression that will evaluate to True by our fake record.
+    config_dict['Alarm']['expression'] = "outTemp<40.0"
+
+    # We need the main WeeWX engine in order to bind to the event, 
+    # but we don't need for it to completely start up. So get rid of all
+    # services:
+    config_dict['Engine']['Services'] = {}
+    # Now we can instantiate our slim engine, using the DummyEngine class...
+    engine = weewx.engine.DummyEngine(config_dict)
+    # ... and set the alarm using it.
+    alarm = MyAlarm(engine, config_dict)
+
+    # Create a NEW_ARCHIVE_RECORD event
+    event = weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=rec)
+
+    # Use it to trigger the alarm:
+    alarm.new_archive_record(event)
 ```
 
 This service expects all the information it needs to be in the configuration
@@ -251,25 +329,24 @@ lines to your configuration file:
     subject = "Alarm message from WeeWX!"
 ```
 
-There are three important points to be noted in this example, each marked with
-a `NOTE` flag in the code.
+There are three important ==highlighted== points to be noted in this example.
 
-1.  (Line 40) Here is where the binding happens between an event,
-`weewx.NEW_ARCHIVE_RECORD` in this example, and a member function,
-`self.new_archive_record`. When the event `NEW_ARCHIVE_RECORD` occurs, the
-function `self.new_archive_record` will be called. There are many other events
-that can be intercepted. Look in the file `weewx/_init_.py`.
+1.  (Line 45) Here is where the binding happens between an event,
+    `weewx.NEW_ARCHIVE_RECORD`, and a member function, `self.new_archive_record`.
+    When the event `NEW_ARCHIVE_RECORD` occurs, the function
+    `self.new_archive_record` will be called. There are many other events that can
+    be intercepted. Look in the file `weewx/_init_.py`.
 
-2.  (Line 56) Some hardware do not emit all possible observation types in every
-record, so it's possible that a record may be missing some types that are used
-in the expression. This try block will catch the `NameError` exception that
-would be raised should this occur.
+2.  (Line 61) Some hardware do not emit all possible observation types in every
+    record, so it's possible that a record may be missing some types that are
+    used in the expression. This try block will catch the `NameError` exception
+    that would be raised should this occur.
 
-3.  (Line 59) This is where the test is done for whether to sound the alarm.
-The `[Alarm]` configuration options specify that the alarm be sounded when
-`outTemp < 40.0` evaluates `True`, that is when the outside temperature is
-below 40.0 degrees. Any valid Python expression can be used, although the only
-variables available are those in the current archive record.
+3.  (Line 64) This is where the test is done for whether to sound the alarm. The
+    `[Alarm]` configuration options specify that the alarm be sounded when
+    `outTemp < 40.0` evaluates `True`, that is when the outside temperature is
+    below 40.0 degrees. Any valid Python expression can be used, although the
+    only variables available are those in the current archive record.
 
 Another example expression could be:
 
@@ -277,27 +354,25 @@ Another example expression could be:
 expression = "outTemp < 32.0 and windSpeed > 10.0"
 ```
 
-In this case, the alarm is sounded if the outside temperature drops
-below freezing and the wind speed is greater than 10.0.
+In this case, the alarm is sounded if the outside temperature drops below
+freezing and the wind speed is greater than 10.0.
 
-Note that units must be the same as whatever is being used in your
-database, that is, the same as what you specified in option
+Note that units must be the same as whatever is being used in your database,
+that is, the same as what you specified in option
 [`target_unit`](../../reference/weewx-options/stdconvert/#target_unit).
 
-Option `time_wait` is used to avoid a flood of nearly identical
-emails. The new service will wait this long before sending another email
-out.
+Option `time_wait` is used to avoid a flood of nearly identical emails. The new
+service will wait this long before sending another email out.
 
 Email will be sent through the SMTP host specified by option `smtp_host`. The
 recipient(s) are specified by the comma separated option `mailto`.
 
-Many SMTP hosts require user login. If this is the case, the user and
-password are specified with options `smtp_user` and `smtp_password`,
-respectively.
+Many SMTP hosts require user login. If this is the case, the user and password
+are specified with options `smtp_user` and `smtp_password`, respectively.
 
-The last two options, `from` and `subject` are optional. If not supplied,
-WeeWX will supply something sensible. Note, however, that some mailers require
-a valid "from" email address and the one WeeWX supplies may not satisfy its
+The last two options, `from` and `subject` are optional. If not supplied, WeeWX
+will supply something sensible. Note, however, that some mailers require a valid
+"from" email address and the one that WeeWX supplies may not satisfy its
 requirements.
 
 To make this all work, you must first copy the `alarm.py` file to the `user`

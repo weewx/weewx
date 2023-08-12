@@ -141,7 +141,7 @@ the Weather Underground, simply modify the WeeWX configuration file, nominally
 
 Customization of reports may require changes to a skin configuration file
 `skin.conf` or template files ending in `.tmpl` or `.inc`. Anything in the
-skins subdirectory is also preserved across upgrades.
+`skins` subdirectory is also preserved across upgrades.
 
 You may choose to install one of the many
 [third-party extensions](https://github.com/weewx/weewx/wiki#extensions-to-weewx)
@@ -149,7 +149,7 @@ that are available for WeeWX. These are typically installed in either the
 skins or user subdirectories, both of which are preserved across upgrades.
 
 More advanced customizations may require new Python code or modifications of
-example code. These should be placed in the user directory, where they will
+example code. These should be placed in the `user` directory, where they will
 be preserved across upgrades. For example, if you wish to modify one of the
 examples that comes with WeeWX, copy it from the examples directory to the
 user directory, then modify it there. This way, your modifications will not
@@ -179,19 +179,13 @@ cycle, typically at the end of an archive interval.
 
 If you make changes, how do you know what the results will look like? You
 could just run `weewxd` and wait until the next reporting cycle kicks off but,
-depending on your archive interval, that could be a 30 minute wait or more.
+depending on your archive interval, that could be a 30-minute wait or more.
 
 The utility `wee_reports` allows you to run a report whenever you like. To use
 it, just run it from a command line, with the location of your configuration
-file `weewx.conf` as the first argument. Optionally, if you include a unix
-epoch timestamp as a second argument, then the report will use that as the
-"Current" time; otherwise, the time of the last record in the archive database
-will be used. Here is an example, using 1 May 2014 00:00 PDT as the "Current"
-time.
-
-```shell
-wee_reports weewx.conf 1398927600
-```
+file `weewx.conf` as the first argument. Optionally, you can tell it what to
+use as the "Current" time, using either option `--epoch`, or some combination
+of `--date` and `--time`. 
 
 For more information about `wee_reports`, see the [Utilities Guide](../../utilities/wee_reports)
 
@@ -270,7 +264,7 @@ install of WeeWX includes the following services:
 It is easy to extend old services or to add new ones. The source distribution
 includes an example new service called MyAlarm, which sends an email when an
 arbitrary expression evaluates True. These advanced topics are covered later
-in the section _[Customizing the WeeWX service engine](../custom/services)_.
+in the section [_Customizing the WeeWX service engine_](../service-engine).
 
 
 ## The standard reporting service `StdReport`

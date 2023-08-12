@@ -311,8 +311,9 @@ _[Binding names](../../reference/weewx-options/data-bindings)_
 for more details.
 
 _`obstype`_ is an _observation type_, such as `barometer`. This type must appear
-either as a field in the database, or in the current (usually, the latest)
-record.
+either in the current record, as a field in the database,
+or can be derived from some combination of the two as an 
+[XType](https://github.com/weewx/weewx/wiki/xtypes).
 
 _`unit_conversion`_ is an optional unit conversion tag. If provided,
 the results will be converted into the specified units, otherwise the default
@@ -375,9 +376,9 @@ example `$week(weeks_ago=1)` indicates last week, `$day(days_ago=2)` would be
 the day-before-yesterday, _etc_. The default is zero: that is, this
 aggregation period.
 
-_`obstype`_ is a _observation type_. This is generally any observation type
-that appears in the database (such as `outTemp` or `windSpeed`), as well as a
-few synthetic types (such as heating and cooling degree-days). Not all
+_`obstype`_ is a _observation type_. This is generally any observation type that
+appears in the database (such as `outTemp` or `windSpeed`), as well a most
+[XTypes](https://github.com/weewx/weewx/wiki/xtypes). However, not all
 aggregations are supported for all types.
 
 _`aggregation`_ is an _aggregation type_. If you ask for `$month.outTemp.avg`
@@ -1284,11 +1285,11 @@ span. The iteration loop is ==highlighted==.
   <tr>
     <td>Date/time</td><td>outTemp</td><td>outHumidity</td>
   </tr>
-#for $_span in $span($day_delta=1).spans(interval=10800)
+#for $time_band in $span($day_delta=1).spans(interval=10800)
   <tr>
-    <td>$_span.start.format("%d/%m %H:%M")</td>
-    <td>$_span.outTemp.avg</td>
-    <td>$_span.outHumidity.avg</td>
+    <td>$time_band.start.format("%d/%m %H:%M")</td>
+    <td>$time_band.outTemp.avg</td>
+    <td>$time_band.outHumidity.avg</td>
   </tr>
 #end for
 </table>
