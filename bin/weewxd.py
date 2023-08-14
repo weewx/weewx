@@ -29,8 +29,10 @@ log = logging.getLogger(__name__)
 usagestr = """Usage: %prog --help
        %prog --version
        %prog  [CONFIG_FILE|--config=CONFIG_FILE]
-              [--daemon] [--pidfile=PIDFILE]
-              [--exit]   [--loop-on-init]
+              [--daemon]
+              [--pidfile=PIDFILE]
+              [--exit]
+              [--loop-on-init]
               [--log-label=LABEL]
            
   Entry point to the weewx weather program. Can be run directly, or as a daemon

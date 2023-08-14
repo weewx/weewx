@@ -14,19 +14,23 @@ weewxd --help
 ```
 Usage: weewxd --help
        weewxd --version
-       weewxd config_file [--daemon] [--pidfile=PIDFILE] 
-                          [--exit]   [--loop-on-init]
-                          [--log-label=LABEL]
+       weewxd  [CONFIG_FILE|--config=CONFIG_FILE]
+              [--daemon]
+              [--pidfile=PIDFILE]
+              [--exit]
+              [--loop-on-init]
+              [--log-label=LABEL]
            
   Entry point to the weewx weather program. Can be run directly, or as a daemon
   by specifying the '--daemon' option.
 
 Arguments:
-    config_file: The weewx configuration file to be used.
+    CONFIG_FILE: The weewx configuration file to be used. Optional.
 
 
 Options:
   -h, --help            show this help message and exit
+  --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
   -d, --daemon          Run as a daemon
   -p PIDFILE, --pidfile=PIDFILE
                         Store the process ID in PIDFILE
@@ -36,3 +40,6 @@ Options:
   -n LABEL, --log-label=LABEL
                         Label to use in syslog entries
 ```
+
+Note that options `--daemon` and `--pidfile` are not necessary when running
+under systemd.
