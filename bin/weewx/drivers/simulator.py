@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -20,9 +20,9 @@ def loader(config_dict, engine):
 
     start_ts, resume_ts = extract_starts(config_dict, DRIVER_NAME)
 
-    station = Simulator(start_time=start_ts, resume_time=resume_ts, **config_dict[DRIVER_NAME])
+    stn = Simulator(start_time=start_ts, resume_time=resume_ts, **config_dict[DRIVER_NAME])
 
-    return station
+    return stn
 
 
 def extract_starts(config_dict, driver_name):
@@ -224,8 +224,15 @@ class Rain(object):
 
     bucket_tip = 0.01
 
-    def __init__(self, rain_start=0, rain_length=1, total_rain=0.1, loop_interval=None):
-        """Initialize a rain simulator"""
+    def __init__(self, rain_start=0, rain_length=1, total_rain=0.1, loop_interval=2.5):
+        """Initialize a rain simulator
+
+        Args:
+            rain_start (float): When the rain should start in hours, relative to midnight.
+            rain_length (float): How long it should rain in hours.
+            total_rain (float): How much rain should fall.
+            loop_interval (float): Interval between LOOP packets.
+        """
         npackets = 3600 * rain_length / loop_interval
         n_rain_packets = total_rain / Rain.bucket_tip
         self.period = int(npackets/n_rain_packets)
@@ -248,17 +255,16 @@ class Rain(object):
 class Solar(object):
 
     def __init__(self, magnitude=10, solar_start=6, solar_length=12):
-        """Initialize a solar simulator
-            Simulated ob will follow a single wave sine function starting at 0
-            and ending at 0.  The solar day starts at time solar_start and
+        """Initialize a solar simulator. The simulator will follow a simple wave sine function
+         starting and ending at 0.  The solar day starts at time solar_start and
             finishes after solar_length hours.
-                             
-            magnitude:      the value at max, the range will be twice
-                              this value
-            solar_start:    decimal hour of day that obs start
-                              (6.75=6:45am, 6:20=6:12am)
-            solar_length:   length of day in decimal hours
-                              (10.75=10hr 45min, 10:10=10hr 6min)
+
+        Args:
+            magnitude (float):  The value at max, the range will be twice this value
+            solar_start (float): The decimal hour of day that observation will start
+                (6.75=6:45am, 6:20=6:12am)
+            solar_length (float): The ength of day in decimal hours
+                (10.75=10hr 45min, 10:10=10hr 6min)
         """
 
         self.magnitude = magnitude
@@ -280,9 +286,12 @@ class BatteryStatus(object):
     
     def __init__(self, chance_of_failure=None, min_recovery_time=None):
         """Initialize a battery status.
-        
-        chance_of_failure - likeliehood that the battery should fail [0,1]
-        min_recovery_time - minimum time until the battery recovers, seconds
+
+        Args:
+            chance_of_failure (float|None): Likeliness that the battery should fail [0,1]. If
+                None, then use 0.05% (about once every 30 minutes).
+            min_recovery_time (float|None): Minimum time until the battery recovers in seconds.
+                Default is to pick a random time between 300 and 1800 seconds (5-60 minutes).
         """
         if chance_of_failure is None:
             chance_of_failure = 0.0005 # about once every 30 minutes
@@ -309,7 +318,13 @@ class BatteryStatus(object):
 class BatteryVoltage(object):
 
     def __init__(self, nominal_value=None, max_variance=None):
-        """Initialize a battery voltage."""
+        """Initialize a battery voltage.
+
+        Args:
+            nominal_value (float|None): The voltage averaged over time. Default is 12
+            max_variance (float|None): How much it should fluctuate in volts. Default is 10% of
+                the nominal_value.
+        """
         if nominal_value is None:
             nominal_value = 12.0
         if max_variance is None:
@@ -324,7 +339,12 @@ class BatteryVoltage(object):
 class SignalStrength(object):
 
     def __init__(self, minval=0.0, maxval=100.0):
-        """Initialize a signal strength simulator."""
+        """Initialize a signal strength simulator.
+
+        Args:
+            minval (float): The minimum signal strength in percent.
+            maxval (float): The maximum signal strength in percent.
+        """
         self.minval = minval
         self.maxval = maxval
         self.max_variance = 0.1 * (self.maxval - self.minval)
