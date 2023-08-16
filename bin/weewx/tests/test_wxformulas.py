@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2018-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2018-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -86,7 +86,7 @@ class WXFormulasTest(unittest.TestCase):
             self.assertAlmostEqual(result, expect, 2)
 
     def test_humidex(self):
-        self.assertAlmostEqual(weewx.wxformulas.humidexC(30.0, 80.0), 43.64, 2)
+        self.assertAlmostEqual(weewx.wxformulas.humidexC(30.0, 80.0), 43.66, 2)
         self.assertAlmostEqual(weewx.wxformulas.humidexC(30.0, 20.0), 30.00, 2)
         self.assertAlmostEqual(weewx.wxformulas.humidexC(0.0, 80.0), 0, 2)
         self.assertIsNone(weewx.wxformulas.humidexC(30.0, None))

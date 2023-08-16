@@ -1,21 +1,18 @@
 #
-#    Copyright (c) 2009-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 
 """Various weather related formulas and utilities."""
 
-from __future__ import absolute_import
-from __future__ import print_function
-
-import logging
 import cmath
+import logging
 import math
 import time
 
-import weewx.uwxutils
 import weewx.units
+import weewx.uwxutils
 from weewx.units import CtoK, CtoF, FtoC, mph_to_knot, kph_to_knot, mps_to_knot
 from weewx.units import INHG_PER_MBAR, METER_PER_FOOT, METER_PER_MILE, MM_PER_INCH
 
@@ -478,17 +475,19 @@ def cloudbase_US(t_F, rh, altitude_ft):
 
 
 def humidexC(t_C, rh):
-    """Calculate the humidex
-    Reference (look under heading "Humidex"):
-    http://climate.weather.gc.ca/climate_normals/normals_documentation_e.html?docID=1981
+    """Calculate the humidex.
+    Reference (look under heading "Humidex"): https://tinyurl.com/mr3ch6cc
 
-    t_C - temperature in degree Celsius
+    Args:
+        t_C (float): Temperature in degree Celsius
+        rh (float): Relative humidity [0-100]
 
-    rh - relative humidity [0-100]
+    Returns:
+        float|None: Value of humidex in Celsius, or None if it cannot be calculated.
 
     Examples:
     >>> print("%.2f" % humidexC(30.0, 80.0))
-    43.64
+    43.66
     >>> print("%.2f" % humidexC(30.0, 20.0))
     30.00
     >>> print("%.2f" % humidexC(0, 80.0))
@@ -499,7 +498,7 @@ def humidexC(t_C, rh):
     try:
         dp_C = dewpointC(t_C, rh)
         dp_K = CtoK(dp_C)
-        e = 6.11 * math.exp(5417.7530 * (1 / 273.16 - 1 / dp_K))
+        e = 6.11 * math.exp(5417.7530 * (1 / 273.15 - 1 / dp_K))
         h = 0.5555 * (e - 10.0)
     except (ValueError, OverflowError, TypeError):
         return None

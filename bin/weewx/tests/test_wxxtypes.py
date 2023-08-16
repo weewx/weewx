@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2019-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2019-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -45,7 +45,7 @@ correct = {
     'inDewpoint': 55.3580124202402,
     'windchill': 88.7,
     'heatindex': 116.1964007023,
-    'humidex': 121.28308732603907,
+    'humidex': 121.31401772489724,
     'appTemp': 99.36405806590201,
     'beaufort': 3,
     'windrun': 1.0
