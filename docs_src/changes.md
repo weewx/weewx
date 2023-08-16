@@ -100,6 +100,8 @@ generation. Thanks to user Ian for PR #879!
 Fix problem that prevented complex aggregates such as 'max_ge' from being used
 in plots. Fixes issue #881.
 
+Updated humidex formula and reference. Fixes issue #883.
+
 
 ### 4.10.2 02/22/2023
 
