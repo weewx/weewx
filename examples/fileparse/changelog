@@ -1,3 +1,6 @@
+0.9 20aug2023
+* Fix bug in error message
+
 0.8 22jan2023
 * Port to WeeWX V5 - tk
 

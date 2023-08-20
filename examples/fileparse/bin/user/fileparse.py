@@ -47,14 +47,13 @@
 #         in_temp = inTemp
 #         in_humid = inHumidity
 
-from __future__ import with_statement
 import logging
 import time
 
 import weewx.drivers
 
 DRIVER_NAME = 'FileParse'
-DRIVER_VERSION = "0.8"
+DRIVER_VERSION = "0.9"
 
 log = logging.getLogger(__name__)
 
@@ -65,7 +64,7 @@ def _get_as_float(data, key):
         try:
             v = float(data[key])
         except ValueError as e:
-            log.error("cannot read value for '%s': %s" % (s, e))
+            log.error("cannot read value for '%s': %s" % (data[key], e))
     return v
 
 
