@@ -118,13 +118,13 @@
   </tr>
 
   <tr style='vertical-align:top'>
-    <td class='metric_name'>$gettext["Precipitation"]</td>
+    <td class='metric_name'>$gettext("Precipitation")</td>
     <td class='metric_large' colspan='2' >
-      <span title=$gettext['rainfall within the past few minutes']><a href='dayrain.png' class='popup'>$current.rain.format(add_label=False)</a></span>
+      <span title=$gettext('rainfall within the past few minutes')><a href='dayrain.png' class='popup'>$current.rain.format(add_label=False)</a></span>
     </td>
     <td class='metric_value'>
-      <span title=$gettext['maximum rain rate this day']>$day.rainRate.max.format(add_label=False)</span><br/>
-      <span title=$gettext['total rainfall this day']>$day.rain.sum.format(add_label=False)</span>
+      <span title=$gettext('maximum rain rate this day')>$day.rainRate.max.format(add_label=False)</span><br/>
+      <span title=$gettext('total rainfall this day')>$day.rain.sum.format(add_label=False)</span>
     </td>
     <td class='metric_units'>
       $unit.label.rainRate<br/>
@@ -136,18 +136,18 @@
   <tr style='vertical-align:top'>
     <td class='metric_name'>$obs.label.UV</td>
     <td class='metric_large' colspan='2' >
-      <span title=$gettext['UV Index']><a href='dayuv.png' class='popup'>$current.UV.format(add_label=False)</a></span>
+      <span title=$gettext('UV Index')><a href='dayuv.png' class='popup'>$current.UV.format(add_label=False)</a></span>
     </td>
     <td class='metric_value'>
-      <span title=$gettext['maximum UV this day']>$day.UV.max.format(add_label=False)</span><br/>
-      <span title=$gettext['minimum UV this day']>$day.UV.min.format(add_label=False)</span>
+      <span title=$gettext('maximum UV this day')>$day.UV.max.format(add_label=False)</span><br/>
+      <span title=$gettext('minimum UV this day')>$day.UV.min.format(add_label=False)</span>
     </td>
     <td></td>
   </tr>
 #end if
 
   <tr style='vertical-align:top'>
-    <td class='metric_name'>$obs.label.outTemp<br/>$gettext["Inside"]</td>
+    <td class='metric_name'>$obs.label.outTemp<br/>$gettext("Inside")</td>
     <td class='metric_large' colspan='2' >
       <a href='dayintemphilo.png' class='popup'>$current.inTemp.format(add_label=False)</a>
     </td>
@@ -159,7 +159,7 @@
   </tr>
 
   <tr style='vertical-align:top'>
-    <td class='metric_name'>$obs.label.outHumidity<br/>$gettext["Inside"]</td>
+    <td class='metric_name'>$obs.label.outHumidity<br/>$gettext("Inside")</td>
     <td class='metric_large' colspan='2' >
       <a href='dayinhum.png' class='popup'>$current.inHumidity.format(add_label=False)</a>
     </td>

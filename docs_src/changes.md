@@ -102,6 +102,8 @@ in plots. Fixes issue #881.
 
 Updated humidex formula and reference. Fixes issue #883.
 
+Fix bugs in the "basic" skin example.
+
 
 ### 4.10.2 02/22/2023
 

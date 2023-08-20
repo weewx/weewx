@@ -10,7 +10,7 @@ extension installer. It also illustrates how to internationalize a skin.
 Installation instructions using the installer (recommended)
 -------------------------
 
-1) install the extension.
+1) Install the extension.
 
     For pip installs:
 
@@ -33,20 +33,20 @@ Manual installation instructions
     If you used the pip install method:
 
         cd ~/weewx-data
-        cp -rp skins/basic skins
+        cp -rp skins/Basic skins
 
     If you used a package installer:
 
         cd /usr/share/doc/weewx/examples/basic
-        sudo cp -rp skins/basic/ /etc/weewx/skins/
+        sudo cp -rp skins/Basic/ /etc/weewx/skins/
 
 2) In the WeeWX configuration file, add a report
 
        [StdReport]
            ...
            [[basic]]
-               skin = basic
-               HTML_ROOT = public_html/basic
+               skin = Basic
+               HTML_ROOT = basic
                lang = en
                unit_system = us
 

@@ -1,3 +1,9 @@
+0.5 20aug2023
+* Correct errors using gettext().
+* Use StringIO to initialize configuration.
+* Change skin name from 'basic' to 'Basic'.
+* Use .long_form for elapsed times.
+
 0.4 22jan2023
 * Ported to WeeWX V5. -tk
 
