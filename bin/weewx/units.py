@@ -1610,15 +1610,15 @@ def as_value_tuple(record_dict, obs_type):
     """Look up an observation type in a record, returning the result as a ValueTuple.
 
     Args:
-        record_dict (dict): A record. May be None. If it is not None, then it must contain an
+        record_dict (dict|None): A record. May be None. If it is not None, then it must contain an
             entry for `usUnits`.
         obs_type (str): The observation type to be returned
 
     Returns:
-        ValueTuple.
+        ValueTuple: The observation type as a ValueTuple.
 
     Raises:
-        KeyIndex, If the observation type cannot be found in the record, a KeyIndex error is
+        KeyIndex: If the observation type cannot be found in the record, a KeyIndex error is
             raised.
     """
 

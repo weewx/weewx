@@ -104,6 +104,9 @@ Updated humidex formula and reference. Fixes issue #883.
 
 Fix bugs in the "basic" skin example.
 
+Fix bug that prevented calculating `$trend` when one of the two records is
+missing.
+
 
 ### 4.10.2 02/22/2023
 

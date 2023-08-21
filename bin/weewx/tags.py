@@ -616,7 +616,7 @@ class TrendObj(object):
     """
 
     def __init__(self, time_delta, time_grace, db_lookup, data_binding,
-                 nowtime, formatter, converter, **option_dict):  # @UnusedVariable
+                 nowtime, formatter, converter, **option_dict):
         """Initialize a Trend object
 
         time_delta: The time difference over which the trend is to be calculated
@@ -649,33 +649,30 @@ class TrendObj(object):
         now_record = db_manager.getRecord(self.nowtime, self.time_grace_val)
         then_record = db_manager.getRecord(self.nowtime - self.time_delta_val, self.time_grace_val)
 
-        # Do both records exist?
-        if now_record is None or then_record is None:
-            # No. One is missing.
-            trend = ValueTuple(None, None, None)
+        # Extract the ValueTuples from the records.
+        try:
+            now_vt = weewx.units.as_value_tuple(now_record, obs_type)
+            then_vt = weewx.units.as_value_tuple(then_record, obs_type)
+        except KeyError:
+            # One of the records does not include the type. Convert the KeyError into
+            # an AttributeError.
+            raise AttributeError(obs_type)
+
+        # Do the unit conversion now, rather than lazily. This is because the temperature
+        # conversion functions are not distributive. That is,
+        #     F_to_C(68F - 50F)
+        # is not equal to
+        #     F_to_C(68F) - F_to_C(50F)
+        # We want the latter, not the former, so we perform the conversion immediately.
+        now_vtc = self.converter.convert(now_vt)
+        then_vtc = self.converter.convert(then_vt)
+        # Check to see if one of the values is None:
+        if now_vtc.value is None or then_vtc.value is None:
+            # One of the values is None, so the trend will be None.
+            trend = ValueTuple(None, now_vtc.unit, now_vtc.group)
         else:
-            # Both records exist. Check to see if the observation type is known
-            if obs_type not in now_record or obs_type not in then_record:
-                # obs_type is unknown. Signal it
-                raise AttributeError(obs_type)
-            else:
-                # Both records exist, both types are known. We can proceed.
-                now_vt = weewx.units.as_value_tuple(now_record, obs_type)
-                then_vt = weewx.units.as_value_tuple(then_record, obs_type)
-                # Do the unit conversion now, rather than lazily. This is because the temperature
-                # conversion functions are not distributive. That is,
-                #     F_to_C(68F - 50F)
-                # is not equal to
-                #     F_to_C(68F) - F_to_C(50F)
-                # We want the latter, not the former, so we perform the conversion immediately.
-                now_vtc = self.converter.convert(now_vt)
-                then_vtc = self.converter.convert(then_vt)
-                if now_vtc.value is None or then_vtc.value is None:
-                    # One of the values is None, so the trend will be None.
-                    trend = ValueTuple(None, now_vtc.unit, now_vtc.group)
-                else:
-                    # All good. Calculate the trend.
-                    trend = now_vtc - then_vtc
+            # All good. Calculate the trend.
+            trend = now_vtc - then_vtc
 
         # Return the results as a ValueHelper. Use the formatting and labeling options from the
         # current time record. The user can always override these.
