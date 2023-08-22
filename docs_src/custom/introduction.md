@@ -1,7 +1,8 @@
-# The Customization Guide
+# Customization Guide
 
 This document covers the customization of WeeWX. It assumes that you have read,
-and are reasonably familiar with, the *Users Guide*.
+and are reasonably familiar with, the [_Users
+Guide_](../../usersguide/introduction).
 
 The introduction contains an overview of the architecture. If you are only
 interested in customizing the generated reports you can probably skip the

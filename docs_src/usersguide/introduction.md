@@ -1,11 +1,16 @@
-# System requirements
+# User's Guide
 
-## Python
+This is the complete guide to installing, configuring, and troubleshooting
+WeeWX.
 
-Python 3.7 or later is required. WeeWX V5 will not run on Python 2.
+## System requirements
+
+### Python
+
+Python 3.7 or later is required. Python 2 will not work.
 
 
-## Station hardware
+### Station hardware
 
 WeeWX includes support for many types of weather stations. In addition to
 hardware support, WeeWX comes with a software simulator, useful for testing
@@ -25,7 +30,7 @@ If you still cannot find your hardware, post to the
 [User's Group](https://groups.google.com/g/weewx-user) for help.
 
 
-## Computer hardware
+### Computer hardware
 
 WeeWX is written in Python, so it has the overhead associated with that
 language. Nevertheless, it is "fast enough" on just about any hardware.
@@ -41,7 +46,7 @@ about 5.1 seconds on a RPi B+, compared to 3.0 seconds on the Fit-PC, and 0.3
 seconds on a NUC with a 4th gen i5 processor.
 
 
-## Time
+### Time
 
 You should run some sort of time synchronization daemon to ensure that your
 computer has the correct time. Doing so will greatly reduce errors, especially

@@ -6,8 +6,9 @@ stations and sensors, then generates plots, HTML pages, and monthly and
 yearly summary reports. It can push plots, pages, and reports to a web
 server, and data to many online weather services.
 
-Initial development began in the winter of 2008-2009, with the first release
-in 2009.
+Initial development began in the winter of 2008-2009, with the first release in
+2009. WeeWX is about 25,000 lines of code, plus another 15,000 for the hardware
+drivers.
 
 The source code is hosted on [GitHub](https://github.com/weewx/weewx).
 Installation instructions and releases are available at
@@ -65,7 +66,7 @@ you are developing a driver, skin, or other extension.
   <tr>
     <td><a href="quickstarts/git">source</td>
     <td>any operating system</td>
-    <td>
+  <tr>
 If you want to install WeeWX on a system with very little storage, or if you
 want to experiment with code that is under development, then you may want to
 run directly from the WeeWX sources.
@@ -79,7 +80,7 @@ WeeWX includes extensive documentation, and the WeeWX developers work hard to
 keep it relevant and up to date.  If you have questions, please consult the
 documentation first.
 
-* [User's Guide](usersguide/installing) - installation, getting started, where to find things, backup/restore, troubleshooting
+* [User's Guide](usersguide/introduction) - installation, getting started, where to find things, backup/restore, troubleshooting
 * [Customization Guide](custom/introduction) - instructions for customizing reports and plots, localization, formatting, writing extensions
 * [Utilities Guide](utilities/weewxd) - tools to manage stations, reports, and data
 * [Hardware Guide](hardware/drivers) - how to configure hardware, features of supported hardware

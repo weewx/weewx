@@ -2,6 +2,11 @@
 
 Think about how `WEEWX_ROOT` is defined.
 
+What is the subdirectory `user`? Is it station data, and therefore should be
+located under `~/weewx-data`? Or, is it code, and should be installed in the 
+virtual environment? Same issue with a package install.
+
+
 ## Debian packaging
 
 Right now, the depository is for a "squeeze" and "buster" distribution. Do we keep adding them

@@ -48,6 +48,8 @@ docs_dir: 'docs_src'
 site_dir: 'build/docs'
 
 nav:
+  - "Overview" : index.md
+
   - "Quick start":
     - Debian: quickstarts/debian.md
     - RedHat: quickstarts/redhat.md
@@ -56,7 +58,7 @@ nav:
     - git: quickstarts/git.md
 
   - "User's guide":
-    - "System requirements": usersguide/system-requirements.md
+    - "Introduction": usersguide/introduction.md
     - "Installing WeeWX": usersguide/installing.md
     - "Where to find things" : usersguide/where.md
     - "Running WeeWX": usersguide/running.md
@@ -70,7 +72,7 @@ nav:
       - "Meteorological problems": usersguide/troubleshooting/meteo.md
 
   - Customization guide:
-    - "Introduction to customization": custom/introduction.md
+    - "Introduction": custom/introduction.md
     - "Customizing reports": custom/custom-reports.md
     - "Scheduling reports": custom/report-scheduling.md
     - "The Cheetah generator": custom/cheetah-generator.md
