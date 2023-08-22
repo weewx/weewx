@@ -227,7 +227,9 @@ class GeneralPlot(object):
             self._renderRose(image, draw)
 
         if self.anti_alias != 1:
-            image.thumbnail((self.image_width / self.anti_alias, self.image_height / self.anti_alias), Image.ANTIALIAS)
+            image.thumbnail((self.image_width / self.anti_alias,
+                             self.image_height / self.anti_alias),
+                            Image.LANCZOS)
 
         return image
 
