@@ -6,9 +6,9 @@ be used to install WeeWX on almost any operating system, including macOS.
 WeeWX V5 requires Python 3.7 or greater. Python 2, or earlier versions of
 Python 3, will not work.
 
-Although you do not need root privileges to install and configure WeeWX, you
-may need them to configure pip, you will need them to set up a daemon and
-you may need them to change device permissions.
+Although you do not need root privileges to install and configure WeeWX using
+this method, you will need them to set up a daemon, and you may need them to
+change device permissions.
 
 While there are many ways to install WeeWX using pip (see the wiki document
 [_pip install strategies_](https://github.com/weewx/weewx/wiki/pip-install-strategies)

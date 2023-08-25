@@ -1,10 +1,10 @@
 # Introduction to WeeWX
 
 The WeeWX weather system is written in Python and runs on Linux, MacOSX,
-Solaris, and *BSD.  It collects data from many different types of weather
-stations and sensors, then generates plots, HTML pages, and monthly and
-yearly summary reports. It can push plots, pages, and reports to a web
-server, and data to many online weather services.
+Solaris, and *BSD. It collects data from many types of weather stations and
+sensors, then generates plots, HTML pages, and monthly and yearly summary
+reports. It can push plots, pages, and reports to a web server, and data to many
+online weather services.
 
 Initial development began in the winter of 2008-2009, with the first release in
 2009. WeeWX is about 25,000 lines of code, plus another 15,000 for the hardware
@@ -17,22 +17,21 @@ Installation instructions and releases are available at
 See the [hardware list](https://weewx.com/hardware.html) for a complete list
 of supported stations, and for pictures to help identify your hardware!  The
 [hardware comparison](https://weewx.com/hwcmp.html) shows specifications for
-many different types of hardware, including some not yet supported by WeeWX.
+many types of hardware, including some not yet supported by WeeWX.
 
-The WeeWX distribution includes drivers for many types of hardware.  These
+The WeeWX distribution includes drivers for many types of hardware. These
 are listed in the driver list in the [Hardware Guide](hardware/drivers).
 See the [WeeWX Wiki](https://github.com/weewx/weewx/wiki) for additional
 drivers and other extensions.
 
 If your hardware is not in the core driver list, you should first install
-WeeWX, then download and install the driver for your hardware.  The
+WeeWX, then download and install the driver for your hardware. The
 [installation instructions](usersguide/installing) tell you how to do it.
-
 
 ## Quickstart Guides
 
 Each quickstart guide shows how to install, run, monitor, upgrade, and
-uninstall WeeWX.  Choose the guide that is appropriate for your operating
+uninstall WeeWX. Choose the guide that is appropriate for your operating
 system and needs.
 
 <table>
@@ -43,7 +42,8 @@ system and needs.
     <td rowspan=3>
 The Debian, Redhat, and SUSE installers use the conventions and software
 management tools for their respective operating systems; these are the
-fastest and easiest way to get up and running.</td>
+fastest and easiest way to get up and running. You will need root access
+to install and run.</td>
   </tr>
   <tr>
     <td><a href="quickstarts/redhat">Redhat</a></td>
@@ -57,74 +57,77 @@ fastest and easiest way to get up and running.</td>
     <td><a href="quickstarts/pip">pip</a></td>
     <td>any operating system</td>
     <td>
-The pip installer will work on any operating system; use this approach
-for macOS or one of the BSDs, or if you are using an older operating system.
-This is also a good approach if you plan to do a lot of customization, or if
-you are developing a driver, skin, or other extension.
+The pip installer will work on any operating system. Use this approach for macOS
+or one of the BSDs, or if you are using an older operating system. When used in
+a "virtual environment" (recommended), this approach is least likely to disturb
+other applications on your computer. This is also a good approach if you plan to
+do a lot of customization, or if you are developing a driver, skin, or other
+extension. Root access is not needed to install, but will be needed to run.
     </td>
   </tr>
   <tr>
-    <td><a href="quickstarts/git">source</td>
+    <td><a href="quickstarts/git">source</a></td>
     <td>any operating system</td>
-  <tr>
+    <td>
 If you want to install WeeWX on a system with very little storage, or if you
 want to experiment with code that is under development, then you may want to
-run directly from the WeeWX sources.
-    </td.
+run directly from the WeeWX sources.  Root access is not needed to install, but 
+will be needed to run.
+    </td>
   </tr>
 </table>
 
 ## Documentation
 
 WeeWX includes extensive documentation, and the WeeWX developers work hard to
-keep it relevant and up to date.  If you have questions, please consult the
+keep it relevant and up to date. If you have questions, please consult the
 documentation first.
 
-* [User's Guide](usersguide/introduction) - installation, getting started, where to find things, backup/restore, troubleshooting
-* [Customization Guide](custom/introduction) - instructions for customizing reports and plots, localization, formatting, writing extensions
-* [Utilities Guide](utilities/weewxd) - tools to manage stations, reports, and data
-* [Hardware Guide](hardware/drivers) - how to configure hardware, features of supported hardware
+* [User's Guide](usersguide/introduction) - installation, getting started, where
+  to find things, backup/restore, troubleshooting
+* [Customization Guide](custom/introduction) - instructions for customizing
+  reports and plots, localization, formatting, writing extensions
+* [Utilities Guide](utilities/weewxd) - tools to manage stations, reports, and
+  data
+* [Hardware Guide](hardware/drivers) - how to configure hardware, features of
+  supported hardware
 * [Upgrade Guide](upgrade) - detailed changes in each release
-* [Reference](reference/weewx-options/introduction) - application options, skin options, definition of units and unit systems
-* [Notes for developers](devnotes) - things you should know if you write drivers or skins
-
+* [Reference](reference/weewx-options/introduction) - application options, skin
+  options, definition of units and unit systems
+* [Notes for developers](devnotes) - things you should know if you write drivers
+  or skins
 
 ## Support
 
-Please first try to solve any problems yourself by reading the documentation.
-If that fails, check the answers to frequently-asked questions, browse the
-latest guides and software in the WeeWX Wiki, or post a question to the WeeWX
-user group.
-
+Please first try to solve any problems yourself by reading the documentation. If
+that fails, check the answers to frequently-asked questions, browse the latest
+guides and software in the WeeWX Wiki, or post a question to the WeeWX user
+group.
 
 ### FAQ
 
-The Frequently Asked Questions (FAQ) is contributed by WeeWX users.  It
-contains pointers to more information for problems and questions most
-frequently asked in the WeeWX forums.
+The Frequently Asked Questions (FAQ) is contributed by WeeWX users. It contains
+pointers to more information for problems and questions most frequently asked in
+the WeeWX forums.
 
 https://github.com/weewx/weewx/wiki/WeeWX-Frequently-Asked-Questions
-
 
 ### Wiki
 
 The wiki content is contributed by WeeWX users. It contains suggestions and
-experiences with different types of hardware, skins, extensions to WeeWX,
-and other useful tips and tricks.
+experiences with different types of hardware, skins, extensions to WeeWX, and
+other useful tips and tricks.
 
 https://github.com/weewx/weewx/wiki
 
-
 ### Forums
 
-[weewx-user](https://groups.google.com/group/weewx-user) is for general
-issues such as installation, sharing skins and templates, reporting
-unexpected behavior, and suggestions for improvement.
+[weewx-user](https://groups.google.com/group/weewx-user) is for general issues
+such as installation, sharing skins and templates, reporting unexpected
+behavior, and suggestions for improvement.
 
-[weewx-development](https://groups.google.com/group/weewx-development) is
-for discussions about developing drivers, extensions, or working on the core
-code.
-
+[weewx-development](https://groups.google.com/group/weewx-development) is for
+discussions about developing drivers, extensions, or working on the core code.
 
 ## Licensing and Copyright
 
