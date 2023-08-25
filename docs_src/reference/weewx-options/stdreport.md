@@ -181,10 +181,11 @@ is `true`.
 
 Some FTP servers (notably PureFTP) reuse ssl connections with FTPS.
 Unfortunately, the Python library has a bug that prematurely closes such
-connections. See [https://bit.ly/2Lrywla](https://bit.ly/2Lrywla). Symptom
-is an exception **OSError: [Errno 0]**. This option activates a workaround
-for Python versions greater than 3.6. It won't work for earlier versions.
-Optional. Default is `false`.
+connections. See [https://bit.ly/2Lrywla](https://bit.ly/2Lrywla). Symptom is an
+exception *OSError: [Errno 0]*, or a 425 error ("*425 Unable to build data
+connection: Operation not permitted*"). This option activates a workaround for
+Python versions greater than 3.6. It won't work for earlier versions. Optional.
+Default is `false`.
 
 #### port
 
