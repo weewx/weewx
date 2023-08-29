@@ -18,15 +18,16 @@ launchtime_ts = time.time()
 debug = False
 
 # Exit return codes
-CMD_ERROR    = 2
+CMD_ERROR = 2
 CONFIG_ERROR = 3
-IO_ERROR     = 4
-DB_ERROR     = 5
+IO_ERROR = 4
+DB_ERROR = 5
 
 # Constants used to indicate a unit system:
-METRIC   = 0x10
+METRIC = 0x10
 METRICWX = 0x11
-US       = 0x01
+US = 0x01
+
 
 # =============================================================================
 #           Define possible exceptions that could get thrown.
@@ -36,53 +37,69 @@ class WeeWxIOError(IOError):
     """Base class of exceptions thrown when encountering an input/output error
     with the hardware."""
 
+
 class WakeupError(WeeWxIOError):
     """Exception thrown when unable to wake up or initially connect with the
     hardware."""
-    
+
+
 class CRCError(WeeWxIOError):
     """Exception thrown when unable to pass a CRC check."""
+
 
 class RetriesExceeded(WeeWxIOError):
     """Exception thrown when max retries exceeded."""
 
+
 class HardwareError(Exception):
     """Exception thrown when an error is detected in the hardware."""
-    
+
+
 class UnknownArchiveType(HardwareError):
     """Exception thrown after reading an unrecognized archive type."""
+
 
 class UnsupportedFeature(Exception):
     """Exception thrown when attempting to access a feature that is not
     supported (yet)."""
-    
+
+
 class ViolatedPrecondition(Exception):
     """Exception thrown when a function is called with violated
     preconditions."""
-    
+
+
 class StopNow(Exception):
     """Exception thrown to stop the engine."""
-    
+
+
 class UnknownDatabase(Exception):
     """Exception thrown when attempting to use an unknown database."""
+
 
 class UnknownDatabaseType(Exception):
     """Exception thrown when attempting to use an unknown database type."""
 
+
 class UnknownBinding(Exception):
     """Exception thrown when attempting to use an unknown data binding."""
+
 
 class UnitError(ValueError):
     """Exception thrown when there is a mismatch in unit systems."""
 
+
 class UnknownType(ValueError):
     """Exception thrown for an unknown observation type"""
+
 
 class UnknownAggregation(ValueError):
     """Exception thrown for an unknown aggregation type"""
 
+
 class CannotCalculate(ValueError):
     """Exception raised when a type cannot be calculated."""
+
 
 class NoCalculate(Exception):
     """Exception raised when a type does not need to be calculated."""
@@ -95,25 +112,38 @@ class NoCalculate(Exception):
 class STARTUP(object):
     """Event issued when the engine first starts up. Services have been
     loaded."""
+
+
 class PRE_LOOP(object):
     """Event issued just before the main packet loop is entered. Services
     have been loaded."""
+
+
 class NEW_LOOP_PACKET(object):
     """Event issued when a new LOOP packet is available. The event contains
     attribute 'packet', which is the new LOOP packet."""
+
+
 class CHECK_LOOP(object):
     """Event issued in the main loop, right after a new LOOP packet has been
     processed. Generally, it is used to throw an exception, breaking the main
     loop, so the console can be used for other things."""
+
+
 class END_ARCHIVE_PERIOD(object):
     """Event issued at the end of an archive period."""
+
+
 class NEW_ARCHIVE_RECORD(object):
     """Event issued when a new archive record is available. The event contains
     attribute 'record', which is the new archive record."""
+
+
 class POST_LOOP(object):
     """Event issued right after the main loop has been broken. Services hook
     into this to access the console for things other than generating LOOP
     packet."""
+
 
 # =============================================================================
 #                       Service groups.
@@ -123,11 +153,13 @@ class POST_LOOP(object):
 all_service_groups = ['prep_services', 'data_services', 'process_services', 'xtype_services',
                       'archive_services', 'restful_services', 'report_services']
 
+
 # =============================================================================
 #                       Class Event
 # =============================================================================
 class Event(object):
     """Represents an event."""
+
     def __init__(self, event_type, **argv):
         self.event_type = event_type
 
@@ -137,8 +169,9 @@ class Event(object):
     def __str__(self):
         """Return a string with a reasonable representation of the event."""
         et = "Event type: %s | " % self.event_type
-        s = "; ".join("%s: %s" %(k, self.__dict__[k]) for k in self.__dict__ if k!="event_type")
+        s = "; ".join("%s: %s" % (k, self.__dict__[k]) for k in self.__dict__ if k != "event_type")
         return et + s
+
 
 # =============================================================================
 #                           Utilities
@@ -154,9 +187,35 @@ def require_weewx_version(module, required_version):
 
 
 def add_user_path(config_dict):
-    """add the path to the user directory to PYTHONPATH."""
+    """add the path to the parent of the user directory to PYTHONPATH."""
+    root_dir = extract_roots(config_dict)
+    lib_dir = os.path.abspath(os.path.join(root_dir['USER_DIR'], '..'))
+    sys.path.insert(0, lib_dir)
+
+
+def extract_roots(config_dict):
+    """Get the location of the various root directories used by weewx.
+    The extracted paths are *absolute* paths. That is, they are no longer relative to WEEWX_ROOT.
+
+    Args:
+        config_dict(dict): The configuration dictionary
+    Returns:
+        dict[str, str]: Key is the type of root, value is its location.
+    """
     user_root = config_dict.get('USER_ROOT', 'bin/user')
-    lib_dir = os.path.abspath(os.path.join(config_dict['WEEWX_ROOT'], user_root, '..'))
-    sys.path.append(lib_dir)
+    root_dict = {
+        'WEEWX_ROOT': config_dict['WEEWX_ROOT'],
+        'USER_DIR': os.path.abspath(os.path.join(config_dict['WEEWX_ROOT'], user_root)),
+        'BIN_DIR': os.path.abspath(os.path.join(os.path.dirname(__file__), '..')),
+        'EXT_DIR': os.path.abspath(os.path.join(config_dict['WEEWX_ROOT'], user_root, 'installer'))
+    }
 
+    # Add SKIN_ROOT if it can be found:
+    try:
+        root_dict['SKIN_DIR'] = os.path.abspath(
+            os.path.join(root_dict['WEEWX_ROOT'], config_dict['StdReport']['SKIN_ROOT'])
+        )
+    except KeyError:
+        pass
 
+    return root_dict

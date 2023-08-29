@@ -16,8 +16,8 @@ import configobj
 import weecfg
 import weeutil.config
 import weeutil.weeutil
+import weewx
 from weecfg import Logger
-from weewx import all_service_groups
 
 # Very old extensions did:
 #   from setup import ExtensionInstaller
@@ -43,14 +43,15 @@ class ExtensionEngine(object):
     # Extension components can be installed to these locations
     target_dirs = {
         'bin': 'BIN_DIR',
-        'skins': 'SKIN_DIR'}
+        'skins': 'SKIN_DIR'
+    }
 
     def __init__(self, config_path, config_dict, dry_run=False, logger=None):
         """Initializer for ExtensionEngine.
 
         Args:
             config_path (str): Path to the configuration file.  For example, something
-                like /home/weewx/weewx.conf)
+                like /home/weewx/weewx.conf.
             config_dict (dict): The configuration dictionary, i.e., the contents of the
                 file at config_path.
             dry_run (bool): If Truthy, all the steps will be printed out, but nothing will
@@ -63,7 +64,7 @@ class ExtensionEngine(object):
         self.logger = logger or Logger()
         self.dry_run = dry_run
 
-        self.root_dict = weecfg.extract_roots(self.config_dict)
+        self.root_dict = weewx.extract_roots(self.config_dict)
         self.logger.log("root dictionary: %s" % self.root_dict, 4)
 
     def enumerate_extensions(self):
@@ -79,11 +80,11 @@ class ExtensionEngine(object):
                     msg = "%(name)-18s%(version)-10s%(description)s" % info
                     self.logger.log(msg, level=0)
             else:
-                self.logger.log("Extension cache is '%s'" % ext_dir, level=2)
-                self.logger.log("No extensions installed", level=0)
+                self.logger.log("Extension cache is '%s'." % ext_dir, level=2)
+                self.logger.log("No extensions installed.", level=0)
         except OSError:
-            self.logger.log("No extension cache '%s'" % ext_dir, level=2)
-            self.logger.log("No extensions installed", level=0)
+            self.logger.log("No extension cache '%s'." % ext_dir, level=2)
+            self.logger.log("No extensions installed.", level=0)
 
     def get_extension_info(self, ext_name):
         ext_cache_dir = os.path.join(self.root_dict['EXT_DIR'], ext_name)
@@ -96,7 +97,7 @@ class ExtensionEngine(object):
         Args:
             extension_path(str): Either a file path, a directory path, or an URL.
         """
-        self.logger.log("Request to install '%s'" % extension_path)
+        self.logger.log(f"Request to install '{extension_path}'.")
         if self.dry_run:
             self.logger.log("This is a dry run. Nothing will actually be done.")
 
@@ -108,7 +109,7 @@ class ExtensionEngine(object):
             # Download the file into a temporary file
             with tempfile.NamedTemporaryFile() as test_fd:
                 filename, info = urllib.request.urlretrieve(extension_path, test_fd.name)
-                # Now install the temporary file. The file type will be given up the download
+                # Now install the temporary file. The file type can be found in the download
                 # header's "subtype". This will be something like "zip".
                 extension_name = self._install_from_file(test_fd.name, info.get_content_subtype())
         elif os.path.isfile(extension_path):
@@ -125,12 +126,18 @@ class ExtensionEngine(object):
         else:
             raise InstallError(f"Unrecognized type for {extension_path}")
 
-        self.logger.log(f"Finished installing extension {extension_name} from {extension_path}")
+        self.logger.log(f"Finished installing extension {extension_name} from {extension_path}.")
         if self.dry_run:
             self.logger.log("This was a dry run. Nothing was actually done.")
 
     def _install_from_file(self, filepath, filetype):
-        """Install the extension at path filepath."""
+        """Install an extension from a file.
+
+        Args:
+            filepath(str): A path to the file holding the extension.
+            filetype(str): The type of file. If 'zip', it's assumed to be a zipfile. Anything else,
+                and it's assumed to be a tarfile.
+        """
         # Make a temporary directory into which to extract the file.
         with tempfile.TemporaryDirectory() as dir_name:
             if filetype == 'zip':
@@ -150,60 +157,25 @@ class ExtensionEngine(object):
 
     def install_from_dir(self, extension_dir):
         """Install the extension whose components are in extension_dir"""
-        self.logger.log("Request to install extension found in directory %s" %
-                        extension_dir, level=2)
+        self.logger.log(f"Request to install extension found in directory {extension_dir}.",
+                        level=2)
 
         # The "installer" is actually a dictionary containing what is to be installed and where.
         # The "installer_path" is the path to the file containing that dictionary.
         installer_path, installer = weecfg.get_extension_installer(extension_dir)
         extension_name = installer.get('name', 'Unknown')
-        self.logger.log("Found extension with name '%s'" % extension_name,
-                        level=2)
+        self.logger.log(f"Found extension with name '{extension_name}'.", level=2)
 
-        # Go through all the files used by the extension. A "source tuple" is something like
-        # (bin, [user/myext.py, user/otherext.py]). The first element is the directory the files go
-        # in, the second element is a list of files to be put in that directory
-        self.logger.log("Copying new files", level=2)
-        N = 0
-        for source_tuple in installer['files']:
-            # For each set of sources, see if it's a type we know about
-            for directory in ExtensionEngine.target_dirs:
-                # This will be something like 'bin', or 'skins':
-                source_type = os.path.commonprefix((source_tuple[0], directory))
-                # If there is a match, source_type will be something other than an empty string:
-                if source_type:
-                    # This will be something like 'BIN_DIr' or 'SKIN_DIR':
-                    root_type = ExtensionEngine.target_dirs[source_type]
-                    # Now go through all the files of the source tuple
-                    for install_file in source_tuple[1]:
-                        source_path = os.path.join(extension_dir, install_file)
-                        dst_file = ExtensionEngine._strip_leading_dir(install_file)
-                        destination_path = os.path.abspath(os.path.join(self.root_dict[root_type],
-                                                                        dst_file))
-                        self.logger.log("Copying from '%s' to '%s'"
-                                        % (source_path, destination_path),
-                                        level=3)
-                        if not self.dry_run:
-                            try:
-                                os.makedirs(os.path.dirname(destination_path))
-                            except OSError:
-                                pass
-                            shutil.copy(source_path, destination_path)
-                            N += 1
-                    # We've completed at least one destination directory that we recognized.
-                    break
-            else:
-                # No 'break' occurred, meaning that we didn't recognize any target directories.
-                sys.exit("Unknown destination directory %s. Skipped file(s) %s"
-                         % (source_tuple[0], source_tuple[1]))
-        self.logger.log("Copied %d files" % N, level=2)
+        # Install any files:
+        if 'files' in installer:
+            self._install_files(installer['files'], extension_dir)
 
         save_config = False
 
         # Go through all the possible service groups and see if the extension
         # includes any services that belong in any of them.
-        self.logger.log("Adding services to service lists", level=2)
-        for service_group in all_service_groups:
+        self.logger.log("Adding services to service lists.", level=2)
+        for service_group in weewx.all_service_groups:
             if service_group in installer:
                 extension_svcs = weeutil.weeutil.option_as_list(installer[service_group])
                 # Be sure that the leaf node is actually a list
@@ -217,20 +189,18 @@ class ExtensionEngine(object):
                             svc_list.append(svc)
                             self.config_dict['Engine']['Services'][service_group] = svc_list
                             save_config = True
-                        self.logger.log("Added new service %s to %s"
-                                        % (svc, service_group), level=3)
+                        self.logger.log(f"Added new service {svc} to {service_group}.", level=3)
 
         # Give the installer a chance to do any customized configuration
         save_config |= installer.configure(self)
 
         # Look for options that have to be injected into the configuration file
-        if 'config' in installer:
-            save_config |= self._inject_config(installer['config'], extension_name)
+        save_config |= self._inject_config(installer['config'], extension_name)
 
         # Save the extension's install.py file in the extension's installer
         # directory for later use enumerating and uninstalling
         extension_installer_dir = os.path.join(self.root_dict['EXT_DIR'], extension_name)
-        self.logger.log("Saving installer file to %s" % extension_installer_dir)
+        self.logger.log(f"Saving installer file to {extension_installer_dir}.")
         if not self.dry_run:
             try:
                 os.makedirs(os.path.join(extension_installer_dir))
@@ -240,13 +210,79 @@ class ExtensionEngine(object):
 
         if save_config:
             backup_path = weecfg.save_with_backup(self.config_dict, self.config_path)
-            self.logger.log("Saved configuration dictionary. Backup copy at %s" % backup_path)
+            self.logger.log(f"Saved configuration dictionary. Backup copy at {backup_path}.")
 
         return extension_name
 
-    def get_lang_code(self, skin, default_code):
-        """Convenience function for picking a language code"""
-        skin_path = os.path.join(self.root_dict['SKIN_DIR'], skin)
+    def _install_files(self, file_list, extension_dir):
+        """ Install any files included in the extension
+
+        Args:
+            file_list (list[tuple]): A list of two-way tuples. The first element of each tuple is
+                the relative path to a destination directory, the second element is a list of
+                relative paths to files to be put in that directory. For example,
+                (bin/user/, [src/foo.py, ]) means the relative path for the destination directory
+                is 'bin/user'. The file foo.py can be found in src/foo.py, and should be put
+                in bin/user/foo.py.
+            extension_dir (str): Path to the directory holding the downloaded extension.
+
+        Returns:
+            int: How many files were installed.
+        """
+
+        self.logger.log("Copying new files...", level=2)
+        N = 0
+
+        for source_path, destination_path in ExtensionEngine._gen_file_paths(
+                self.root_dict['WEEWX_ROOT'],
+                extension_dir,
+                file_list):
+
+            if self.dry_run:
+                self.logger.log(f"Fake copying from '{source_path}' to '{destination_path}'",
+                                level=3)
+            else:
+                self.logger.log(f"Copying from '{source_path}' to '{destination_path}'",
+                                level=3)
+                try:
+                    os.makedirs(os.path.dirname(destination_path))
+                except OSError:
+                    pass
+                shutil.copy(source_path, destination_path)
+            N += 1
+
+        if self.dry_run:
+            self.logger.log(f"Fake copied {N:d} files.", level=2)
+        else:
+            self.logger.log(f"Copied {N:d} files.", level=2)
+        return N
+
+    @staticmethod
+    def _gen_file_paths(weewx_root, extension_dir, file_list):
+        """Generate tuples of (source, destination) from a file_list"""
+
+        # Go through all the files used by the extension. A "source tuple" is something like
+        # (bin, [user/myext.py, user/otherext.py]).
+        for source_tuple in file_list:
+            # Expand the source tuple
+            dest_dir, source_files = source_tuple
+            for source_file in source_files:
+                common = os.path.commonpath([dest_dir, source_file])
+                rest = os.path.relpath(source_file, common)
+                abs_source_path = os.path.join(extension_dir, source_file)
+                abs_dest_path = os.path.abspath(os.path.join(weewx_root,
+                                                             dest_dir,
+                                                             rest))
+
+                yield abs_source_path, abs_dest_path
+
+    def get_lang_code(self, skin_path, default_code):
+        """Convenience function for picking a language code
+
+        Args:
+            skin_path (str): The path to the directory holding the skin.
+            default_code (str): In the absence of a locale directory, what language to pick.
+        """
         languages = weecfg.get_languages(skin_path)
         code = weecfg.pick_language(languages, default_code)
         return code
@@ -326,9 +362,13 @@ class ExtensionEngine(object):
             pass
 
     def uninstall_extension(self, extension_name):
-        """Uninstall the extension with name extension_name"""
+        """Uninstall an extension.
+        Args:
+            extension_name(str): The name of the extension. Use 'weectl extension list' to find
+                its name.
+        """
 
-        self.logger.log("Request to remove extension '%s'" % extension_name)
+        self.logger.log(f"Request to remove extension '{extension_name}'.")
         if self.dry_run:
             self.logger.log("This is a dry run. Nothing will actually be done.")
 
@@ -338,15 +378,16 @@ class ExtensionEngine(object):
             # Retrieve it
             _, installer = weecfg.get_extension_installer(extension_installer_dir)
         except weecfg.ExtensionError:
-            sys.exit("Unable to find extension %s" % extension_name)
+            sys.exit(f"Unable to find extension '{extension_name}'." )
 
         # Remove any files that were added:
-        self.uninstall_files(installer)
+        if 'files' in installer:
+            self.uninstall_files(installer['files'])
 
         save_config = False
 
         # Remove any services we added
-        for service_group in all_service_groups:
+        for service_group in weewx.all_service_groups:
             if service_group in installer:
                 new_list = [x for x in self.config_dict['Engine']['Services'][service_group] \
                             if x not in installer[service_group]]
@@ -366,53 +407,48 @@ class ExtensionEngine(object):
         if save_config:
             weecfg.save_with_backup(self.config_dict, self.config_path)
 
-        self.logger.log("Finished removing extension '%s'" % extension_name)
+        self.logger.log(f"Finished removing extension '{extension_name}'")
 
-    def uninstall_files(self, installer):
-        """Delete files that were installed for this extension"""
+        if self.dry_run:
+            self.logger.log("This was a dry run. Nothing was actually done.")
 
-        directory_list = []
+    def uninstall_files(self, file_list):
+        """Delete files that were installed for this extension
+        Args:
+            file_list (list[tuple]): A list of two-way tuples. The first element of each tuple is
+                the relative path to the destination directory, the second element is a list of
+                relative paths to files that are used by the extension.
+        """
 
         self.logger.log("Removing files.", level=2)
-        N = 0
-        for source_tuple in installer['files']:
-            # For each set of sources, see if it's a type we know about
-            for directory in ExtensionEngine.target_dirs:
-                # This will be something like 'bin', or 'skins':
-                source_type = os.path.commonprefix((source_tuple[0], directory))
-                # If there is a match, source_type will be something other than an empty string:
-                if source_type:
-                    # This will be something like 'BIN_DIR' or 'SKIN_DIR':
-                    root_type = ExtensionEngine.target_dirs[source_type]
-                    # Now go through all the files of the source tuple
-                    for install_file in source_tuple[1]:
-                        dst_file = ExtensionEngine._strip_leading_dir(install_file)
-                        destination_path = os.path.abspath(os.path.join(self.root_dict[root_type],
-                                                                        dst_file))
-                        file_name = os.path.basename(destination_path)
-                        # There may be a versioned skin.conf. Delete it by adding a wild card.
-                        # Similarly, be sure to delete Python files with .pyc or .pyo extensions.
-                        if file_name == 'skin.conf' or file_name.endswith('py'):
-                            destination_path += "*"
-                        N += self.delete_file(destination_path)
-                    # Accumulate all directories under 'skins'
-                    if root_type == 'SKIN_DIR':
-                        dst_dir = ExtensionEngine._strip_leading_dir(source_tuple[0])
-                        directory = os.path.abspath(os.path.join(self.root_dict[root_type],
-                                                                 dst_dir))
-                        directory_list.append(directory)
-                    break
-            else:
-                sys.exit("Skipped file %s: Unknown destination directory %s"
-                         % (source_tuple[1], source_tuple[0]))
-        self.logger.log("Removed %d files" % N, level=2)
 
-        # Now delete all the empty skin directories. Start by finding the directory closest to root
-        most_root = os.path.commonprefix(directory_list)
+        directory_set = set()
+        N = 0
+        # Go through all the listed files
+        for _, destination_path in ExtensionEngine._gen_file_paths(
+                self.root_dict['WEEWX_ROOT'],
+                '',
+                file_list):
+            file_name = os.path.basename(destination_path)
+            # There may be a versioned skin.conf. Delete it by adding a wild card.
+            # Similarly, be sure to delete Python files with .pyc or .pyo extensions.
+            if file_name == 'skin.conf' or file_name.endswith('py'):
+                destination_path += "*"
+            # Delete the file
+            N += self.delete_file(destination_path)
+            # Add its directory to the set of directories we've encountered
+            directory_set.add(os.path.dirname(destination_path))
+
+        self.logger.log(f"Removed {N:d} files.", level=2)
+
+        N_dir = 0
+        # Now delete all the empty directories. Start by finding the directory closest to root
+        most_root = os.path.commonprefix(list(directory_set))
         # Now delete the directories under it, from the bottom up.
         for dirpath, _, _ in os.walk(most_root, topdown=False):
-            if dirpath in directory_list:
-                self.delete_directory(dirpath)
+            if dirpath in directory_set:
+                N_dir += self.delete_directory(dirpath)
+        self.logger.log(f"Removed {N_dir:d} directores.", level=2)
 
     def delete_file(self, filename, report_errors=True):
         """
@@ -448,18 +484,21 @@ class ExtensionEngine(object):
                 empty, nothing is done.
 
             report_errors (bool); If truthy, report an error. Otherwise don't. In neither case will
-                an exception be raised. """
+                an exception be raised.
+        """
+        n_deleted = 0
         try:
             if os.listdir(directory):
-                self.logger.log("Directory '%s' not empty" % directory, level=2)
+                self.logger.log(f"Directory '{directory}' not empty.", level=2)
             else:
-                self.logger.log("Deleting directory %s" % directory, level=2)
+                self.logger.log(f"Deleting directory '{directory}'.", level=2)
                 if not self.dry_run:
                     shutil.rmtree(directory)
+                    n_deleted += 1
         except OSError as e:
             if report_errors:
-                self.logger.log("Delete failed on directory '%s': %s"
-                                % (directory, e), level=2)
+                self.logger.log(f"Delete failed on directory '{directory}': {e}", level=2)
+        return n_deleted
 
     @staticmethod
     def _strip_leading_dir(path):

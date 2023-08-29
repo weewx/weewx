@@ -1,6 +1,7 @@
 # installer for the 'basic' skin
 # Copyright 2014-2023 Matthew Wall
 
+import os.path
 from io import StringIO
 
 import configobj
@@ -56,6 +57,7 @@ class BasicInstaller(ExtensionInstaller):
     def configure(self, engine):
         """Customized configuration that sets a language code"""
         # TODO: Set a units code as well
-        code = engine.get_lang_code('Basic', 'en')
+        my_skin_path = os.path.join(os.path.dirname(__file__), 'skins/Basic')
+        code = engine.get_lang_code(my_skin_path, 'en')
         self['config']['StdReport']['BasicReport']['lang'] = code
         return True

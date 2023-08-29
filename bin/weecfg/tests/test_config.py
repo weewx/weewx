@@ -48,6 +48,7 @@ Y_STR = """
           c = 15"""
 
 import wee_resources
+
 resource_dir = os.path.dirname(wee_resources.__file__)
 current_config_dict_path = os.path.join(resource_dir, 'weewx.conf')
 
@@ -292,6 +293,37 @@ class ExtensionUtilityTest(unittest.TestCase):
                 actual_files.append(os.path.join(direc[0], filename))
         self.assertEqual(sorted(actual_files), self.INSTALLED_NAMES)
 
+    def test_gen_file_paths_common(self):
+        file_list = [
+            ('skins/Basic',
+             ['skins/Basic/index.html.tmpl',
+              'skins/Basic/skin.conf',
+              'skins/Basic/lang/en.conf',
+              'skins/Basic/lang/fr.conf',
+              ])]
+        out_list = [x for x in weecfg.extension.ExtensionEngine._gen_file_paths('/etc/weewx',
+                                                                                '/bar/baz',
+                                                                                file_list)]
+        self.assertEqual(out_list, [('/bar/baz/skins/Basic/index.html.tmpl',
+                                     '/etc/weewx/skins/Basic/index.html.tmpl'),
+                                    ('/bar/baz/skins/Basic/skin.conf',
+                                     '/etc/weewx/skins/Basic/skin.conf'),
+                                    ('/bar/baz/skins/Basic/lang/en.conf',
+                                     '/etc/weewx/skins/Basic/lang/en.conf'),
+                                    ('/bar/baz/skins/Basic/lang/fr.conf',
+                                     '/etc/weewx/skins/Basic/lang/fr.conf')])
+
+    def test_gen_file_paths_user(self):
+        file_list = [
+            ('bin/user',
+             ['bin/user/foo.py',
+              'bin/user/bar.py'])]
+        out_list = [x for x in weecfg.extension.ExtensionEngine._gen_file_paths('/etc/weewx',
+                                                                                '/bar/baz',
+                                                                                file_list)]
+        self.assertEqual(out_list, [('/bar/baz/bin/user/foo.py', '/etc/weewx/bin/user/foo.py'),
+                                    ('/bar/baz/bin/user/bar.py', '/etc/weewx/bin/user/bar.py')])
+
 
 class ExtensionInstallTest(unittest.TestCase):
     """Tests of the extension installer."""
@@ -330,8 +362,7 @@ class ExtensionInstallTest(unittest.TestCase):
         # Note that the actual location of the "mini-weewx" is over in /var/tmp
         self.config_dict['WEEWX_ROOT'] = self.weewx_root
 
-        # Initialize the install engine. We need to specify bin_root because it's in a
-        # non-standard location.
+        # Initialize the install engine.
         self.engine = weecfg.extension.ExtensionEngine(self.config_path,
                                                        self.config_dict,
                                                        logger=weecfg.Logger(verbosity=-1))
@@ -344,7 +375,6 @@ class ExtensionInstallTest(unittest.TestCase):
         # Make sure the root dictionary got calculated correctly:
         self.assertEqual(self.engine.root_dict['WEEWX_ROOT'], '/var/tmp/wee_test')
         self.assertEqual(self.engine.root_dict['USER_DIR'], '/var/tmp/wee_test/bin/user')
-        self.assertEqual(self.engine.root_dict['BIN_DIR'], '/var/tmp/wee_test/bin')
         self.assertEqual(self.engine.root_dict['EXT_DIR'], '/var/tmp/wee_test/bin/user/installer')
         self.assertEqual(self.engine.root_dict['SKIN_DIR'], '/var/tmp/wee_test/skins')
 
