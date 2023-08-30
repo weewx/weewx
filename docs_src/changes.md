@@ -108,6 +108,9 @@ Fix bugs in the "basic" skin example.
 Fix bug that prevented calculating `$trend` when one of the two records is
 missing.
 
+Python modules from user extensions are now inserted first into `sys.path`,
+allowing them to override other modules.
+
 
 ### 4.10.2 02/22/2023
 
