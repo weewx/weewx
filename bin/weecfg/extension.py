@@ -178,7 +178,10 @@ class ExtensionEngine(object):
         for service_group in weewx.all_service_groups:
             if service_group in installer:
                 extension_svcs = weeutil.weeutil.option_as_list(installer[service_group])
-                # Be sure that the leaf node is actually a list
+                # Check to make sure the service group is in the configuration dictionary
+                if service_group not in self.config_dict['Engine']['Services']:
+                    self.config_dict['Engine']['Services'][service_group] = []
+                # Be sure it's actually a list
                 svc_list = weeutil.weeutil.option_as_list(
                     self.config_dict['Engine']['Services'][service_group])
                 for svc in extension_svcs:

@@ -113,6 +113,9 @@ missing.
 Python modules from user extensions are now inserted first into `sys.path`,
 allowing them to override other modules.
 
+Fix bug that caused the extension installer to crash if one of the service
+groups was missing in the configuration file. Fixes issue #886.
+
 
 ### 4.10.2 02/22/2023
 
