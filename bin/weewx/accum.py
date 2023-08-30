@@ -23,8 +23,6 @@ of a sequence of records."""
 # When it comes time to extract wind, vector averages are calculated, then the results are
 # flattened again.
 #
-from __future__ import absolute_import
-
 import logging
 import math
 

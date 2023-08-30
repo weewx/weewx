@@ -6,8 +6,6 @@
 #
 """Test routines for weeutil.weeutil."""
 
-from __future__ import with_statement
-
 import unittest
 
 from weeutil.weeutil import *  # @UnusedWildImport

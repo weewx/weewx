@@ -9,9 +9,6 @@ For this test to work, MySQL user 'weewx' must have full access to database 'tes
     mysql> grant select, update, create, delete, drop, insert on test.* to weewx@localhost;
 """
 
-from __future__ import absolute_import
-from __future__ import with_statement
-
 import unittest
 
 import weedb

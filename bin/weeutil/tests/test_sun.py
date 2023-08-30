@@ -3,8 +3,6 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-from __future__ import absolute_import
-
 import os
 import time
 import unittest

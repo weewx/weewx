@@ -1,12 +1,9 @@
 #
-#    Copyright (c) 2019-2020 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2019-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Test aggregate functions."""
-
-from __future__ import absolute_import
-from __future__ import print_function
 
 import logging
 import math

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2013-2015 Matthew Wall, Andrew Miles
+# Copyright 2013-2023 Matthew Wall, Andrew Miles
 # See the file LICENSE.txt for your full rights.
 #
 # Thanks to Andrew Miles for figuring out how to read history records
@@ -438,10 +438,6 @@ schema, these are the additional fields that must be added to the schema:
 
 # FIXME: set-date and sync-date do not work - something reverts the clock
 # FIXME: is there any way to get rid of the bad header byte on first read?
-
-from __future__ import with_statement
-from __future__ import absolute_import
-from __future__ import print_function
 
 import logging
 import time

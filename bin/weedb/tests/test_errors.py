@@ -1,8 +1,4 @@
 """Test the weedb exception hierarchy"""
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import with_statement
-
 import os.path
 import sys
 import unittest

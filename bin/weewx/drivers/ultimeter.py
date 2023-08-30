@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2014-2020 Matthew Wall
+# Copyright 2014-2023 Matthew Wall
 # Copyright 2014 Nate Bargmann <n0nb@n0nb.us>
 # See the file LICENSE.txt for your rights.
 #
@@ -48,10 +48,6 @@ Modem Mode commands used by the driver
     >I          Set output mode to Data Logger Mode (continuous output)
 
 """
-
-from __future__ import with_statement
-from __future__ import absolute_import
-from __future__ import print_function
 
 import logging
 import time

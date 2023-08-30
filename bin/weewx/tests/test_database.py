@@ -5,9 +5,6 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Test archive and stats database modules"""
-from __future__ import with_statement
-from __future__ import absolute_import
-
 import unittest
 import time
 

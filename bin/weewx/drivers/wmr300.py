@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2015 Matthew Wall
+# Copyright 2015-2023 Matthew Wall
 # See the file LICENSE.txt for your rights.
 #
 # Credits:
@@ -779,9 +779,6 @@ examples:
 
 """
 
-from __future__ import with_statement
-from __future__ import absolute_import
-from __future__ import print_function
 import logging
 import time
 import usb

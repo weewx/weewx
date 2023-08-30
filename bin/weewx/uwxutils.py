@@ -51,8 +51,6 @@ Notes about Sensor Pressure vs. Station Pressure:
   for home weather stations, and the station pressure and the sensor pressure
   can be treated as equivalent."""
 
-from __future__ import absolute_import
-from __future__ import print_function
 import math
 
 def FToC(value): 

@@ -1,4 +1,4 @@
-# Copyright 2013 Matthew Wall
+# Copyright 2013-2023 Matthew Wall
 # See the file LICENSE.txt for your full rights.
 #
 # Thanks to Eddie De Pieri for the first Python implementation for WS-28xx.
@@ -922,9 +922,6 @@ Step 8. Go to step 1 to wait for state 0xde16 again.
 # FIXME: the history retrieval assumes a constant archive interval across all
 #        history records.  this means anything that modifies the archive
 #        interval should clear the history.
-
-from __future__ import absolute_import
-from __future__ import print_function
 
 import logging
 import sys

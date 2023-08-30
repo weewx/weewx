@@ -1,11 +1,9 @@
 #
-#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """A set of XTypes extensions for calculating weather-related derived observation types."""
-from __future__ import absolute_import
-
 import logging
 import threading
 
@@ -89,7 +87,7 @@ class WXXTypes(weewx.xtypes.XType):
     def calc_windDir(self, key, data, db_manager):
         """ Set windDir to None if windSpeed is zero. Otherwise, raise weewx.NoCalculate. """
         if 'windSpeed' not in data \
-                or not self.force_null\
+                or not self.force_null \
                 or data['windSpeed']:
             raise weewx.NoCalculate
         return ValueTuple(None, 'degree_compass', 'group_direction')
@@ -97,7 +95,7 @@ class WXXTypes(weewx.xtypes.XType):
     def calc_windGustDir(self, key, data, db_manager):
         """ Set windGustDir to None if windGust is zero. Otherwise, raise weewx.NoCalculate.If"""
         if 'windGust' not in data \
-                or not self.force_null\
+                or not self.force_null \
                 or data['windGust']:
             raise weewx.NoCalculate
         return ValueTuple(None, 'degree_compass', 'group_direction')
@@ -413,7 +411,7 @@ class PressureCooker(weewx.xtypes.XType):
     def pressure(self, record, dbmanager):
         """Calculate the observation type 'pressure'."""
 
-        # All of the following keys are required:
+        # All the following keys are required:
         if any(key not in record for key in ['usUnits', 'outTemp', 'barometer', 'outHumidity']):
             raise weewx.CannotCalculate('pressure')
 

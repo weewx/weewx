@@ -8,9 +8,6 @@
 #
 """For uploading files to a remove server via Rsync"""
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import errno
 import logging
 import os

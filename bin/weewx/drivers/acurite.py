@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright 2014 Matthew Wall
+# Copyright 2014-2023 Matthew Wall
 # See the file LICENSE.txt for your rights.
 #
 # Credits:
@@ -361,10 +361,6 @@ X1 - 2 bytes
 # FIXME: decode inside humidity
 # FIXME: decode historical records
 # FIXME: perhaps retry read when dodgey data or short read?
-
-from __future__ import with_statement
-from __future__ import absolute_import
-from __future__ import print_function
 
 import logging
 import time

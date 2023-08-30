@@ -1,6 +1,6 @@
 #
 #
-#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -8,10 +8,6 @@
 
 The idea is to create a deterministic database that reports
 can be run against, resulting in predictable, expected results"""
-
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import with_statement
 
 import logging
 import math

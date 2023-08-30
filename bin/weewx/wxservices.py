@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -8,8 +8,6 @@
 While this is named 'StdWXCalculate' for historical reasons, it can actually calculate
 non-weather related derived types as well.
 """
-from __future__ import absolute_import
-
 import logging
 
 import weeutil.weeutil

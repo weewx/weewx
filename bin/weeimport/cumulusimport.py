@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com> and
 #                            Gary Roderick
 #
 #    See the file LICENSE.txt for your full rights.
@@ -7,10 +7,6 @@
 """Module to interact with Cumulus monthly log files and import raw
 observational data for use with weeimport.
 """
-
-from __future__ import with_statement
-from __future__ import absolute_import
-from __future__ import print_function
 
 # Python imports
 import csv

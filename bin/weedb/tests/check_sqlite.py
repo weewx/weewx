@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -9,10 +9,6 @@
 # This module does not test anything in weewx. Instead, it checks that
 # the sqlite interface acts the way we think it should.
 #
-
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import with_statement
 
 import os
 import sqlite3

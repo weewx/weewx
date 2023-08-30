@@ -7,7 +7,6 @@
 
 """Backstop defaults used in the absence of any other values."""
 
-from __future__ import absolute_import
 import weeutil.config
 
 DEFAULT_STR = """# Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>

@@ -1,11 +1,10 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Given a date, determine the phase of the moon."""
 
-from __future__ import absolute_import
 import time
 import math
 

@@ -1,12 +1,11 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Classes and functions related to Quality Control of incoming data."""
 
 # Python imports
-from __future__ import absolute_import
 import logging
 
 # weewx imports

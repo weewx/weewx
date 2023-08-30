@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2015 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -37,8 +37,6 @@ it out of the source code, available at:
   https://pyusb.svn.sourceforge.net/svnroot/pyusb/branches/0.4/pyusb.c  
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 import logging
 import time
 import operator

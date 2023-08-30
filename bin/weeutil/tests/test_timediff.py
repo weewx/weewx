@@ -5,8 +5,6 @@
 #
 """Test routines for weeutil.timediff."""
 
-from __future__ import with_statement
-
 import time
 import unittest
 
