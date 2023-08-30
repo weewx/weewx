@@ -1,11 +1,5 @@
 # To do
 
-Think about how `WEEWX_ROOT` is defined.
-
-What is the subdirectory `user`? Is it station data, and therefore should be
-located under `~/weewx-data`? Or, is it code, and should be installed in the 
-virtual environment? Same issue with a package install.
-
 
 ## Debian packaging
 
@@ -38,8 +32,8 @@ need a page that shows how to download, install, and configure a skin.
 
 ## Wiki
 
-Update the wiki entries for going from MySQL to SQLite and for SQLite to MySQL, this time
-by using `weectl database transfer`.
+Update the wiki entries for going from MySQL to SQLite and for SQLite to MySQL,
+this time by using `weectl database transfer`.
 
 # Before release
 
@@ -48,5 +42,6 @@ by using `weectl database transfer`.
 Change the forwarding `.htm` files in `weewx.com/docs` to point to the V5 versions.
 
 ## `pyproject.toml`
+
 Change parameter `description`.
 

@@ -55,7 +55,7 @@ def station_create(config_path, *args,
     if not config_path:
         config_path = weecfg.default_config_path
 
-    weewx_root = os.path.dirname(config_path)
+    weewx_root = os.path.abspath(os.path.dirname(config_path))
 
     # Make sure there is not already a configuration file at the designated location.
     if os.path.exists(config_path):
