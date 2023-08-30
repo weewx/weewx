@@ -12,6 +12,7 @@ import weeutil.config
 import weeutil.logger
 import weewx.engine
 import weewx.units
+import weewx.uwxutils
 import weewx.wxformulas
 import weewx.xtypes
 from weeutil.weeutil import to_int, to_float, to_bool

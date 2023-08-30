@@ -25,13 +25,22 @@ class XType(object):
     """Base class for extensions to the WeeWX type system."""
 
     def get_scalar(self, obs_type, record, db_manager=None, **option_dict):
-        """Calculate a scalar. Specializing versions should raise...
-        
-        - an exception of type `weewx.UnknownType`, if the type `obs_type` is unknown to the
-          function.
-        - an exception of type `weewx.CannotCalculate` if the type is known to the function, but
-          all the information necessary to calculate the type is not there.
-          """
+        """Calculate a scalar.
+
+        Args:
+            obs_type (str): The name of the XType
+            record (dict): The current record.
+            db_manager(weewx.manager.Manager|None): An open database manager
+            option_dict(dict): A dictionary containing optional values
+
+        Returns:
+            ValueTuple: The value of the xtype as a ValueTuple
+
+        Raises:
+            weewx.UnknownType: If the type `obs_type` is unknown to the function.
+            weewx.CannotCalculate: If the type is known to the function, but all the information
+                necessary to calculate the type is not there.
+        """
         raise weewx.UnknownType
 
     def get_series(self, obs_type, timespan, db_manager, aggregate_type=None,
@@ -131,6 +140,36 @@ def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict)
     raise weewx.UnknownAggregation("%s('%s')" % (aggregate_type, obs_type))
 
 
+def has_data(obs_type, timespan, db_manager):
+    """Search the list, looking for a version that has data.
+    Args:
+        obs_type(str): The name of a potential xtype
+        timespan(tuple[float, float]): A two-way tuple (start time, stop time)
+        db_manager(weewx.manager.Manager|None): An open database manager
+    Returns:
+        bool: True if there is non-null xtype data in the timespan. False otherwise.
+    """
+    for xtype in xtypes:
+        try:
+            # Try this function. It will raise an exception if it doesn't know about the type of
+            # aggregation.
+            vt = xtype.get_aggregate(obs_type, timespan, 'not_null', db_manager)
+            # Check to see if we found a non-null value. Otherwise, keep going.
+            if vt[0]:
+                return True
+        except (weewx.UnknownType, weewx.UnknownAggregation):
+            pass
+    # Tried all the  get_aggregates() and didn't find a non-null value. Either it doesn't exist,
+    # or doesn't have any data
+    return False
+
+    # try:
+    #     vt = get_aggregate(obs_type, timespan, 'not_null', db_manager)
+    #     return bool(vt[0])
+    # except (weewx.UnknownAggregation, weewx.UnknownType):
+    #     return False
+
+
 #
 # ######################## Class ArchiveTable ##############################
 #
@@ -165,9 +204,9 @@ class ArchiveTable(XType):
                 do_aggregate = aggregate_type
 
             for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
-                if stamp.stop <= db_manager.first_timestamp:
+                if db_manager.first_timestamp is None or stamp.stop <= db_manager.first_timestamp:
                     continue
-                if stamp.start >= db_manager.last_timestamp:
+                if db_manager.last_timestamp is None or stamp.start >= db_manager.last_timestamp:
                     break
                 try:
                     # Get the aggregate as a ValueTuple
@@ -772,7 +811,7 @@ class AggregateHeatCool(XType):
             raise weewx.UnknownType(obs_type)
 
         # Only summation (total) or average heating or cooling degree days is supported:
-        if aggregate_type not in ['sum', 'avg']:
+        if aggregate_type not in {'sum', 'avg', 'not_null'}:
             raise weewx.UnknownAggregation(aggregate_type)
 
         # Get the base for heating and cooling degree-days
@@ -796,6 +835,8 @@ class AggregateHeatCool(XType):
             Tavg_t = DailySummaries.get_aggregate('outTemp', daySpan, 'avg', db_manager)
             # Make sure it's valid before including it in the aggregation:
             if Tavg_t is not None and Tavg_t[0] is not None:
+                if aggregate_type == 'not_null':
+                    return ValueTuple(True, 'boolean', 'group_boolean')
                 if obs_type == 'heatdeg':
                     total += weewx.wxformulas.heating_degrees(Tavg_t[0], heatbase_t[0])
                 elif obs_type == 'cooldeg':
@@ -805,7 +846,9 @@ class AggregateHeatCool(XType):
 
                 count += 1
 
-        if aggregate_type == 'sum':
+        if aggregate_type == 'not_null':
+            value = False
+        elif aggregate_type == 'sum':
             value = total
         else:
             value = total / count if count else None
@@ -872,7 +915,8 @@ class XTypeTable(XType):
         """Calculate an aggregate value for an xtype. Addresses issue #864. """
 
         # This version offers a limited set of aggregation types
-        if aggregate_type not in {'sum', 'count', 'avg', 'max', 'min', 'mintime', 'maxtime'}:
+        if aggregate_type not in {'sum', 'count', 'avg', 'max', 'min',
+                                  'mintime', 'maxtime', 'not_null'}:
             raise weewx.UnknownAggregation(aggregate_type)
 
         std_unit_system = None
@@ -897,6 +941,8 @@ class XTypeTable(XType):
             # bubble up.
             value = get_scalar(obs_type, record, db_manager)[0]
             if value is not None:
+                if aggregate_type == 'not_null':
+                    return ValueTuple(True, 'boolean', 'group_boolean')
                 total += value
                 count += 1
                 if minimum is None or value < minimum:
@@ -918,6 +964,8 @@ class XTypeTable(XType):
             result = maxtime
         elif aggregate_type == 'min':
             result = minimum
+        elif aggregate_type == 'not_null':
+            result = False
         else:
             assert aggregate_type == 'max'
             result = maximum

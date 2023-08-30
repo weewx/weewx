@@ -55,8 +55,8 @@
     </tr>
     <tr>
         <td class="first_col code">has_data</td>
-        <td>Returns <span class="code">True</span> if the observation type exists in the database and is
-            non-null.
+        <td>Returns <span class="code">True</span> if the observation type 
+            exists either in the database or as an xtype and is non-null.
         </td>
     </tr>
     <tr>

@@ -72,6 +72,8 @@ Fixes issue #855.
 Allow aggregation of xtypes that are not in the database schema.
 Fixes issue #864.
 
+Tag suffix `has_data()` now works for xtypes. Fixes issue #877.
+
 Additional shorthand notations for aggregation and trend intervals. For
 example, '3h' for three hours.
 

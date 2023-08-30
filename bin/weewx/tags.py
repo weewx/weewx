@@ -378,7 +378,13 @@ class ObservationBinder(object):
 
     @property
     def has_data(self):
-        return self.db_lookup(self.data_binding).has_data(self.obs_type, self.timespan)
+        db_manager = self.db_lookup(self.data_binding)
+        # First see if there is a non-null value in the database.
+        val = db_manager.has_data(self.obs_type, self.timespan)
+        if not val:
+            # Nope. Try the xtypes system.
+            val = weewx.xtypes.has_data(self.obs_type, self.timespan, db_manager)
+        return val
 
     def series(self, aggregate_type=None,
                aggregate_interval=None,
