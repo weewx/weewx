@@ -68,11 +68,24 @@ the user doing the install. However, old installations can continue to use
 `/home/weewx` by following the guide [_Migrating setup.py installs to Version
 5.0_](https://github.com/weewx/weewx/wiki/v5-upgrade).
 
-### `SQLITE_ROOT` is now relative to `WEEWX_ROOT`
+### New location for `user` directory
 
-Previously, `SQLITE_ROOT` was expected to be an absolute path, but now relative
-paths are accepted. A relative path is considered relative to `WEEWX_ROOT`.
-Because this is _less restrictive_, it is not expected to affect any users.
+This affects users who are using a package installer (such as from Debian or RPM
+packages). 
+
+Previous versions would install any Python code used by extensions alongside
+other code, usually in `/usr/share/weewx/user`. 
+
+However, Version 5 strives to keep user data separate from code. This makes
+backups easier, and allows read-only code areas. The `user` directory is now
+located with other user data in `/etc/weewx/`, specifically in
+`/etc/weewx/bin/user`. You will have to either reinstall any extensions, or
+manually copy over the `user` directory. For example,
+
+``` {.shell .copy}
+sudo mkdir /etc/weewx/bin
+cp -r /usr/share/weewx/user/ /etc/weewx/bin/
+```
 
 ### New utilities
 
@@ -94,6 +107,13 @@ still be invoked under their own names.
 
 The Weather Underground no longer allows past-dated posts, so the utility is
 no longer useful.
+
+### `SQLITE_ROOT` is now relative to `WEEWX_ROOT`
+
+Previously, `SQLITE_ROOT` was expected to be an absolute path, but now relative
+paths are accepted. A relative path is considered relative to `WEEWX_ROOT`.
+Because this is _less restrictive_, it is not expected to affect any users.
+
 
 ## Upgrading to V4.10
 
