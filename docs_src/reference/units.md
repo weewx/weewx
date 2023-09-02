@@ -112,7 +112,7 @@ unit system.
         <td>dB</td>
     </tr>
     <tr>
-        <td class="first_col">group_delta_time</td>
+        <td class="first_col">group_deltatime</td>
         <td>daySunshineDur<br/>rainDur<br/>sunshineDurDoc</td>
         <td>second<br/> minute<br/>hour<br/>day<br/></td>
         <td>second</td>
