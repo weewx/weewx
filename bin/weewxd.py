@@ -21,14 +21,14 @@ import weecfg
 import weedb
 import weeutil.logger
 import weewx.engine
-from weeutil.weeutil import to_bool
+from weeutil.weeutil import to_bool, to_float
 from weewx import daemon
 
 log = logging.getLogger(__name__)
 
 usagestr = """Usage: %prog --help
        %prog --version
-       %prog  [CONFIG_FILE|--config=CONFIG_FILE]
+       %prog  [FILENAME|--config=FILENAME]
               [--daemon]
               [--pidfile=PIDFILE]
               [--exit]
@@ -39,7 +39,7 @@ usagestr = """Usage: %prog --help
   by specifying the '--daemon' option.
 
 Arguments:
-    CONFIG_FILE: The weewx configuration file to be used. Optional.
+    FILENAME: The weewx configuration file to be used. Optional.
 """
 
 
@@ -50,8 +50,8 @@ Arguments:
 def main():
     parser = OptionParser(usage=usagestr)
     parser.add_option("--config", dest="config_path", type=str,
-                      metavar="CONFIG_FILE",
-                      help="Use configuration file CONFIG_FILE.")
+                      metavar="FILENAME",
+                      help="Use configuration file FILENAME.")
     parser.add_option("-d", "--daemon", action="store_true", dest="daemon", help="Run as a daemon")
     parser.add_option("-p", "--pidfile", type="string", dest="pidfile",
                       help="Store the process ID in PIDFILE",
@@ -74,7 +74,7 @@ def main():
         sys.exit(0)
 
     if args and options.config_path:
-        print("Specify CONFIG_PATH as an argument, or by using --config, but not both",
+        print("Specify FILENAME as an argument, or by using --config, but not both",
               file=sys.stderr)
         sys.exit(weewx.CMD_ERROR)
 
@@ -164,8 +164,9 @@ def main():
             # See if we should loop, waiting for the console to be ready.
             # Otherwise, just exit.
             if loop_on_init:
-                log.critical("    ****  Waiting 60 seconds then retrying...")
-                time.sleep(60)
+                wait_time = to_float(config_dict.get('retry_wait', 60.0))
+                log.critical(f"    ****  Waiting {wait_time:.1f} seconds then retrying...")
+                time.sleep(wait_time)
                 log.info("retrying...")
             else:
                 log.critical("    ****  Exiting...")
@@ -178,8 +179,9 @@ def main():
             if options.exit:
                 log.critical("    ****  Exiting...")
                 sys.exit(weewx.IO_ERROR)
-            log.critical("    ****  Waiting 60 seconds then retrying...")
-            time.sleep(60)
+            wait_time = to_float(config_dict.get('retry_wait', 60.0))
+            log.critical(f"    ****  Waiting {wait_time:.1f} seconds then retrying...")
+            time.sleep(wait_time)
             log.info("retrying...")
 
         # Catch any database connection errors:

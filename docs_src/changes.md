@@ -116,6 +116,9 @@ allowing them to override other modules.
 Fix bug that caused the extension installer to crash if one of the service
 groups was missing in the configuration file. Fixes issue #886.
 
+New option `retry_wait`. If `weewxd` encounters a critical error, it will sleep
+this long before doing a restart.
+
 
 ### 4.10.2 02/22/2023
 
