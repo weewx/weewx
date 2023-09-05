@@ -71,14 +71,14 @@ the user doing the install. However, old installations can continue to use
 ### New location for `user` directory
 
 This affects users who are using a package installer (such as from Debian or RPM
-packages). 
+packages). Users who used a `setup.py` install are not affected.
 
-Previous versions would install any Python code used by extensions alongside
-other code, usually in `/usr/share/weewx/user`. 
+The package installers for previous versions of WeeWX would install any Python
+code used by extensions alongside other code, usually in
+`/usr/share/weewx/user`.
 
-However, Version 5 strives to keep user data separate from code. This makes
-backups easier, and allows read-only code areas. The `user` directory is now
-located with other user data in `/etc/weewx/`, specifically in
+However, Version 5 strives to keep user data separate from code. The `user`
+directory is now located with other user data in `/etc/weewx/`, specifically in
 `/etc/weewx/bin/user`. You will have to either reinstall any extensions, or
 manually copy over the `user` directory. For example,
 
@@ -90,7 +90,8 @@ cp -r /usr/share/weewx/user/ /etc/weewx/bin/
 ### New utilities
 
 Most of the old utilities have been collected and put under one master utility,
-`weectl`. This make it easy to use the `--help` option to see what you want.
+`weectl`. This make it easy to use the `--help` option to see which one you
+want.
 
 | Old utility     | New utility        |
 |-----------------|--------------------|
