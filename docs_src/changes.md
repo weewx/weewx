@@ -26,16 +26,16 @@ allow posting past-dated records.
 Documentation now uses [MkDocs](https://www.mkdocs.org/).
 
 Logging handler `rotate` has been removed. Its need to access the privileged
-location `/var/log/` on start up would cause crashes, even if it was never used.
-Users can opt to add it back in by following the wiki on 
+location `/var/log/` on start up would cause crashes, even if it was never
+used. Users can opt to add it back in by following the wiki on 
 [Logging](https://github.com/weewx/weewx/wiki/WeeWX-v4-and-logging).
 
 MacOS now logs to `syslog` like any other system, rather than `rotate`.
 
 Method `ImageDraw.textsize()` and constants `ImageFont.LAYOUT_BASIC`, and
 `Image.ANTIALIAS` were deprecated in Pillow 9.2 (1-Jul-2022), then removed in
-Pillow 10.0 (1-Jul-2023). V5.0 replaces them with alternatives. Fixes issue
-#884.
+Pillow 10.0 (1-Jul-2023). V5.0 replaces them with alternatives. Fixes
+issue #884.
 
 Fix bug when using Pillow v9.5.0. Fixes issue #862.
 
