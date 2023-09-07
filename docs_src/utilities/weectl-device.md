@@ -21,9 +21,14 @@ your specific station:
 The utility requires a WeeWX configuration file. If no file is specified, it
 will look for a file called `weewx.conf` in the standard location. If your
 configuration file is in a non-standard location, specify the path to the
-configuration file as the first argument. For example,
+configuration file either as the first argument, or by using the `--config`
+option. For example,
 
     weectl device /path/to/weewx.conf --help
+
+or
+
+    weectl device --config=/path/to/weewx.conf --help
 
 For details about the options available for each type of hardware, see the
 appropriate hardware section:

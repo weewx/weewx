@@ -24,9 +24,13 @@ log = logging.getLogger(__name__)
 
 
 def device():
+    # Find the configuration file. The user may have used a --config option, or may have
+    # specified it on the command line. Search for either one:
+    config_path = _find_config(sys.argv)
+
     # Load the configuration file
     try:
-        config_fn, config_dict = weecfg.read_config(None, sys.argv[2:])
+        config_fn, config_dict = weecfg.read_config(config_path, sys.argv[2:])
     except (OSError, configobj.ConfigObjError) as e:
         sys.exit(e)
     print(f'Using configuration file {config_fn}')
@@ -77,3 +81,31 @@ def device():
     print(f'Using {driver_name} driver version {driver_vers} ({driver})')
 
     configurator.configure(config_dict)
+
+
+def _find_config(args):
+    """Mini parser that looks for constructs such as
+        --config=foo
+    or
+        --config foo
+    """
+    for idx, arg in enumerate(args):
+        # Look for a --config option
+        if arg.startswith('--config'):
+            # Found one. Now see if it uses an equal sign:
+            equals = arg.find('=')
+            if equals == -1:
+                # No equal sign. The file path must be the next argument
+                path = args[idx + 1]
+                # Delete the next argument
+                del args[idx + 1]
+            else:
+                # Found an equal sign. The file is the rest of the argument.
+                path = arg[equals + 1:]
+
+            # Delete the argument with the --config option
+            del args[idx]
+            return path
+
+    # No --config option. Return None
+    return None

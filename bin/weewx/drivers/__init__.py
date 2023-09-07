@@ -55,7 +55,7 @@ class AbstractConfigurator(object):
 
     @property
     def usage(self):
-        return "%prog [config_file] [options] [-y] [--debug] [--help]"
+        return "%prog [FILENAME|--config=FILENAME] [options] [-y] [--debug] [--help]"
 
     @property
     def epilog(self):
@@ -80,7 +80,11 @@ class AbstractConfigurator(object):
     def add_options(self, parser):
         """Add command line options.  Derived classes should override this
         method to add more options."""
+        import weecfg
 
+        parser.add_option("--config", metavar="FILENAME",
+                          help='Path to configuration file. '
+                               f'Default is "{weecfg.default_config_path}".')
         parser.add_option("--debug", dest="debug",
                           action="store_true",
                           help="display diagnostic information while running")
