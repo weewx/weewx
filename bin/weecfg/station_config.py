@@ -30,6 +30,7 @@ log = logging.getLogger(__name__)
 
 def station_create(config_path, *args,
                    dist_config_path=None,
+                   weewx_root=None,
                    docs_root=None,
                    examples_root=None,
                    user_root=None,
@@ -37,14 +38,15 @@ def station_create(config_path, *args,
                    **kwargs):
     """Create a brand-new station by creating a new configuration file.
 
-    WEEWX_ROOT is defined as the directory the resultant configuration file is in.
+    If a value  of weewx_root is not given, then it will be chosen as the directory the
+    resultant configuration file is in.
 
     This function first checks whether the configuration file already exists. If it does, then
     an exception is raised.
 
     It then:
       1. If no_prompt is false, it creates the configuration file by prompting the user. If true,
-       it uses defaults.
+         it uses defaults.
       2. It then copies the documentation out of package resources and into WEEWX_ROOT.
       3. Same with the examples and utility files.
     """
@@ -55,14 +57,15 @@ def station_create(config_path, *args,
     if not config_path:
         config_path = weecfg.default_config_path
 
-    weewx_root = os.path.abspath(os.path.dirname(config_path))
+    # If a value of WEEWX_ROOT was not given on the command line, then pick the directory the
+    # configuration file sits in as the default
+    weewx_root = weewx_root or os.path.abspath(os.path.dirname(config_path))
 
     # Make sure there is not already a configuration file at the designated location.
     if os.path.exists(config_path):
         raise weewx.ViolatedPrecondition(f"Config file {config_path} already exists")
 
-    print(f"The configuration file will be created "
-          f"at {bcolors.BOLD}{config_path}{bcolors.ENDC}.")
+    print(f"The configuration file will be created at {bcolors.BOLD}{config_path}{bcolors.ENDC}.")
 
     # Unless we've been given a path to the new configuration file, retrieve it from
     # package resources.

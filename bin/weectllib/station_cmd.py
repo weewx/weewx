@@ -17,6 +17,7 @@ station_create_usage = f"""{bcolors.BOLD}weectl station create
             [--latitude=LATITUDE] [--longitude=LONGITUDE]
             [--register=(y,n) [--station-url=URL]]
             [--units=(us|metricwx|metric)]
+            [--weewx-root=DIRECTORY]
             [--skin-root=DIRECTORY]
             [--sqlite-root=DIRECTORY]
             [--html-root=DIRECTORY]
@@ -35,6 +36,7 @@ station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure
             [--latitude=LATITUDE] [--longitude=LONGITUDE]
             [--register=(y,n) [--station-url=URL]]
             [--units=(us|metricwx|metric)]
+            [--weewx-root=DIRECTORY]
             [--skin-root=DIRECTORY]
             [--sqlite-root=DIRECTORY]
             [--html-root=DIRECTORY]
@@ -205,6 +207,7 @@ def create_station(namespace):
                                              register=namespace.register,
                                              station_url=namespace.station_url,
                                              unit_system=namespace.unit_system,
+                                             weewx_root=namespace.weewx_root,
                                              skin_root=namespace.skin_root,
                                              sqlite_root=namespace.sqlite_root,
                                              html_root=namespace.html_root,
@@ -228,6 +231,7 @@ def reconfigure_station(namespace):
                                                   register=namespace.register,
                                                   station_url=namespace.station_url,
                                                   unit_system=namespace.unit_system,
+                                                  weewx_root=namespace.weewx_root,
                                                   skin_root=namespace.skin_root,
                                                   sqlite_root=namespace.sqlite_root,
                                                   html_root=namespace.html_root,
@@ -282,6 +286,9 @@ def _add_common_args(parser):
                         dest='unit_system',
                         help='Set display units to us, metricwx, or metric. '
                              'Default is "us".')
+    parser.add_argument('--weewx-root',
+                        metavar='DIRECTORY',
+                        help="Location of WEEWX_ROOT. Rarely used.")
     parser.add_argument('--skin-root',
                         metavar='DIRECTORY',
                         help='Where to put the skins, relatve to WEEWX_ROOT. Default is "skins".')
