@@ -17,6 +17,7 @@ station_create_usage = f"""{bcolors.BOLD}weectl station create
             [--latitude=LATITUDE] [--longitude=LONGITUDE]
             [--register=(y,n) [--station-url=URL]]
             [--units=(us|metricwx|metric)]
+            [--debug=DEBUG]
             [--weewx-root=DIRECTORY]
             [--skin-root=DIRECTORY]
             [--sqlite-root=DIRECTORY]
@@ -36,6 +37,7 @@ station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure
             [--latitude=LATITUDE] [--longitude=LONGITUDE]
             [--register=(y,n) [--station-url=URL]]
             [--units=(us|metricwx|metric)]
+            [--debug=DEBUG]
             [--weewx-root=DIRECTORY]
             [--skin-root=DIRECTORY]
             [--sqlite-root=DIRECTORY]
@@ -207,6 +209,7 @@ def create_station(namespace):
                                              register=namespace.register,
                                              station_url=namespace.station_url,
                                              unit_system=namespace.unit_system,
+                                             debug=namespace.debug,
                                              weewx_root=namespace.weewx_root,
                                              skin_root=namespace.skin_root,
                                              sqlite_root=namespace.sqlite_root,
@@ -231,6 +234,7 @@ def reconfigure_station(namespace):
                                                   register=namespace.register,
                                                   station_url=namespace.station_url,
                                                   unit_system=namespace.unit_system,
+                                                  debug=namespace.debug,
                                                   weewx_root=namespace.weewx_root,
                                                   skin_root=namespace.skin_root,
                                                   sqlite_root=namespace.sqlite_root,
@@ -286,6 +290,10 @@ def _add_common_args(parser):
                         dest='unit_system',
                         help='Set display units to us, metricwx, or metric. '
                              'Default is "us".')
+    parser.add_argument('--debug',
+                       metavar='debug',
+                       help='Set the WeeWX debug level.'
+                            'Default is "0".')
     parser.add_argument('--weewx-root',
                         metavar='DIRECTORY',
                         help="Location of WEEWX_ROOT. Rarely used.")

@@ -32,6 +32,7 @@ def station_create(config_path, *args,
                    dist_config_path=None,
                    weewx_root=None,
                    docs_root=None,
+                   debug=None,
                    examples_root=None,
                    user_root=None,
                    dry_run=False,
@@ -122,6 +123,7 @@ def config_config(config_path, config_dict,
                   altitude=None, latitude=None, longitude=None,
                   register=None, station_url=None,
                   unit_system=None,
+                  debug=None,
                   weewx_root=None, skin_root=None,
                   html_root=None, sqlite_root=None,
                   user_root=None,
@@ -134,6 +136,7 @@ def config_config(config_path, config_dict,
     config_altitude(config_dict, altitude=altitude, no_prompt=no_prompt)
     config_latlon(config_dict, latitude=latitude, longitude=longitude, no_prompt=no_prompt)
     config_units(config_dict, unit_system=unit_system, no_prompt=no_prompt)
+    config_debug(config_dict, debug=debug, no_prompt=no_prompt)
     config_driver(config_dict, driver=driver, no_prompt=no_prompt)
     config_registry(config_dict, register=register, station_url=station_url, no_prompt=no_prompt)
     config_roots(config_dict, weewx_root, skin_root, html_root, sqlite_root, user_root)
@@ -317,6 +320,40 @@ def config_units(config_dict, unit_system=None, no_prompt=False):
         # Then add it under [[Defaults]]
         config_dict['StdReport']['Defaults']['unit_system'] = final_unit_system
 
+def config_debug(config_dict, debug=None, no_prompt=False):
+    """Set a (possibly new) value for the WeeWX debug level
+
+    Args:
+        config_dict (configobj.ConfigObj): The configuration dictionary.
+        debug(str|None): The debug level. If specified, no prompting will happen.
+        no_prompt(bool):  Do not prompt the user for a value.
+    """
+
+    if "debug" not in config_dict:
+        return
+
+    # Use the existing value, if any, as the default:
+    default_debug = config_dict['debug']
+    # Was a new value provided as an argument?
+
+    if debug is not None:
+        # Yes. Use it
+        final_debug = debug
+    elif not no_prompt:
+        # No value provided as an argument. Prompt for a new value
+        print("\nSpecify debug level [0-N]:")
+        debug = weecfg.prompt_with_limits("debug", default_debug, 0)
+        final_debug = debug
+    else:
+        # If we got here, there was no value provided as an argument, yet we cannot prompt.
+        # Use the default.
+        final_debug = default_debug
+
+    # Make sure we have something that can convert to a float:
+    float(final_debug)
+
+    # Set the value in the config file
+    config_dict['debug'] = final_debug
 
 def config_driver(config_dict, driver=None, no_prompt=False):
     """Do what's necessary to create or reconfigure a driver in the configuration file.
