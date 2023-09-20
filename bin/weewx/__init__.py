@@ -190,7 +190,7 @@ def add_user_path(config_dict):
     """add the path to the parent of the user directory to PYTHONPATH."""
     root_dir = extract_roots(config_dict)
     lib_dir = os.path.abspath(os.path.join(root_dir['USER_DIR'], '..'))
-    sys.path.insert(0, lib_dir)
+    sys.path.append(lib_dir)
 
 
 def extract_roots(config_dict):
