@@ -37,10 +37,6 @@ this time by using `weectl database transfer`.
 
 # Before release
 
-## Website
-
-Change the forwarding `.htm` files in `weewx.com/docs` to point to the V5 versions.
-
 ## `pyproject.toml`
 
 Change parameter `description`.

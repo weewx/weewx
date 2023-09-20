@@ -217,7 +217,7 @@ class Connection(weedb.Connection):
         self.connection.rollback()
 
 
-class Cursor(object):
+class Cursor(weedb.Cursor):
     """A wrapper around the MySQLdb cursor object"""
 
     @guard

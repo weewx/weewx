@@ -223,10 +223,10 @@ class Connection(weedb.Connection):
         self.connection.close()
 
 
-class Cursor(sqlite3.Cursor):
+class Cursor(sqlite3.Cursor, weedb.Cursor):
     """A wrapper around the sqlite cursor object"""
 
-    # The sqlite3 cursor object is very full featured. We need only turn
+    # The sqlite3 cursor object is very full-featured. We need only turn
     # the sqlite exceptions into weedb exceptions.
     @guard
     def execute(self, *args, **kwargs):

@@ -23,6 +23,7 @@ from weeutil.weeutil import timestamp_to_string, to_bool
 
 log = logging.getLogger(__name__)
 
+
 # ============================================================================
 #                             class DatabaseFix
 # ============================================================================
@@ -112,7 +113,6 @@ class DatabaseFix(object):
         _row = self.dbm.getSql(_sql_str)
         return _row[0] if _row else None
 
-
     @staticmethod
     def _progress(record, ts):
         """Utility function to show our progress while processing the fix.
@@ -174,7 +174,8 @@ class WindSpeedRecalculation(DatabaseFix):
                   (self.binding, self.dbm.database_name))
         # number of days per db transaction, default to 50.
         self.trans_days = int(fix_config_dict.get('trans_days', 50))
-        log.debug("maxwindspeed: Database transactions will use %s days of data." % self.trans_days)
+        log.debug("maxwindspeed: Database transactions will use %s days of data."
+                  % self.trans_days)
 
     def run(self):
         """Main entry point for applying the windSpeed Calculation fix.
@@ -253,30 +254,22 @@ class WindSpeedRecalculation(DatabaseFix):
             log.info("maxwindspeed: This was a dry run. %s was not applied." % self.name)
 
     def get_archive_span_max(self, span, obs):
-        """Find the max value of an obs and its timestamp in a span based on
-           archive data.
+        """Gets the max value of an observation and the timestamp at which it occurred from a
+        TimeSpan of archive records. Raises a weewx.ViolatedPrecondition error if the max value
+        of the observation field could not be determined.
 
-        Gets the max value of an observation and the timestamp at which it
-        occurred from a TimeSpan of archive records. Raises a
-        weewx.ViolatedPrecondition error if the max value of the observation
-        field could not be determined.
-
-        Input parameters:
-            span: TimesSpan object of the period from which to determine
+        Args:
+            span(weeutil.weeutil.TimeSpan): TimesSpan object of the period from which to determine
                   the interval value.
-            obs:  The observation to be used.
+            obs(str):  The observation to be used.
 
         Returns:
-            A tuple of the format:
+            tuple: A tuple of the format: (timestamp, value), where timestamp is the epoch
+                timestamp when the max value occurred, and value is the max value of the
+                observation over the time span
 
-                (timestamp, value)
-
-            where:
-                timestamp is the epoch timestamp when the max value occurred
-                value is the max value of the observation over the time span
-
-            If no observation field values are found then a
-            weewx.ViolatedPrecondition error is raised.
+        Raises:
+            weewx.ViolatedPrecondition: If no observation field values are found.
         """
 
         select_str = "SELECT dateTime, %(obs_type)s FROM %(table_name)s " \
@@ -304,16 +297,13 @@ class WindSpeedRecalculation(DatabaseFix):
 
         Updates the max and maxtime fields in a row in a daily summary table.
 
-        Input parameters:
-            obs:     The observation to be used. the daily summary updated will
-                     be xxx_day_obs where xxx is the database archive table name.
-            row_ts:  Timestamp of the row to be updated.
-            value:   The value to be saved in field max
-            when_ts: The timestamp to be saved in field maxtime
-            cursor:  Cursor object for the database connection being used.
-
-        Returns:
-            Nothing.
+        Args:
+            obs(str): The observation to be used. the daily summary updated will be xxx_day_obs
+              where xxx is the database archive table name.
+            row_ts(float): Timestamp of the row to be updated.
+            value(float): The value to be saved in field max
+            when_ts(float): The timestamp to be saved in field maxtime
+            cursor(weedb.Cursor|None): Cursor object for the database connection being used.
         """
 
         _cursor = cursor or self.dbm.connection.cursor()
@@ -358,26 +348,27 @@ class CalcMissing(DatabaseFix):
     def __init__(self, config_dict, calc_missing_config_dict):
         """Initialise a CalcMissing object.
 
-        config_dict: WeeWX config file as a dict
-        calc_missing_config_dict: A config dict with the following structure:
-            name:       A descriptive name for the class
-            binding:    data binding to use
-            start_ts:   start ts of timespan over which missing derived fields
-                        will be calculated
-            stop_ts:    stop ts of timespan over which missing derived fields
-                        will be calculated
-            trans_days: number of days of records per db transaction
-            dry_run:    is this a dry run (boolean)
+        Args:
+            config_dict(dict): WeeWX config file as a dict
+            calc_missing_config_dict(dict): A config dict with the following structure:
+                name:       A descriptive name for the class
+                binding:    data binding to use
+                start_ts:   start ts of timespan over which missing derived fields
+                            will be calculated
+                stop_ts:    stop ts of timespan over which missing derived fields
+                            will be calculated
+                trans_days: number of days of records per db transaction
+                dry_run:    is this a dry run (boolean)
         """
 
-        # call our parents __init__
+        # call our parent's __init__
         super().__init__(config_dict, calc_missing_config_dict)
 
         # the start timestamp of the period to calc missing
         self.start_ts = int(calc_missing_config_dict.get('start_ts'))
         # the stop timestamp of the period to calc missing
         self.stop_ts = int(calc_missing_config_dict.get('stop_ts'))
-        # number of days per db transaction, default to 50.
+        # number of days per db transaction, default to 10.
         self.trans_days = int(calc_missing_config_dict.get('trans_days', 10))
         # is this a dry run, default to true
         self.dry_run = to_bool(calc_missing_config_dict.get('dry_run', True))
@@ -443,7 +434,7 @@ class CalcMissing(DatabaseFix):
 
                             # Obtain a new record dictionary that contains only those items
                             # that wxcalculate calculated. Use dictionary comprehension.
-                            extras_dict = {k:v for (k,v) in record.items() if k in extras_list}
+                            extras_dict = {k: v for (k, v) in record.items() if k in extras_list}
 
                             # update the archive with the calculated data
                             records_updated += self.update_record_fields(record['dateTime'],
@@ -452,8 +443,9 @@ class CalcMissing(DatabaseFix):
                             total_records_processed += 1
                         # Give the user some information on progress
                         if total_records_processed % 1000 == 0:
-                            p_msg = "Processing record: %d; Last record: %s" % (total_records_processed,
-                                                                                timestamp_to_string(record['dateTime']))
+                            p_msg = "Processing record: %d; Last record: %s" \
+                                    % (total_records_processed,
+                                       timestamp_to_string(record['dateTime']))
                             self._progress(p_msg)
                     # update the total records updated
                     total_records_updated += records_updated
@@ -516,14 +508,15 @@ class CalcMissing(DatabaseFix):
                                             tdiff))
 
     def update_record_fields(self, ts, record, cursor=None):
-        """Update multiple fields in a given archive record.
+        """Updates multiple fields in an archive record via an update query.
 
-        Updates multiple fields in an archive record via an update query.
+        Args:
+            ts (float): epoch timestamp of the record to be updated
+            record (dict): dictionary containing the updated data in field name-value pairs
+            cursor (weedb.Cursor): sqlite cursor
 
-        Inputs:
-            ts:     epoch timestamp of the record to be updated
-            record: dict containing the updated data in field name-value pairs
-            cursor: sqlite cursor
+        Returns:
+            int: The number of records updated.
         """
 
         # Only data types that appear in the database schema can be

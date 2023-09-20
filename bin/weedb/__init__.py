@@ -200,6 +200,10 @@ class Connection(object):
             pass
 
 
+class Cursor(object):
+    pass
+
+
 class Transaction(object):
     """Class to be used to wrap transactions in a 'with' clause."""
 
