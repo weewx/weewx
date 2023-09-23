@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFont
 import weeplot.utilities
 import weeutil.weeutil
 from weeplot.utilities import tobgr
-from weeutil.weeutil import max_with_none, min_with_none, to_bool
+from weeutil.weeutil import max_with_none, min_with_none, to_bool, option_as_list
 
 # Test if this version of Pillow has ImageFont.getbbox. If not, we will activate a workaround.
 try:
@@ -48,9 +48,9 @@ class GeneralPlot(object):
 
         self.chart_background_color = tobgr(plot_dict.get('chart_background_color', '0xd8d8d8'))
         self.chart_gridline_color   = tobgr(plot_dict.get('chart_gridline_color', '0xa0a0a0'))
-        color_list                  = plot_dict.get('chart_line_colors', ['0xff0000', '0x00ff00', '0x0000ff'])
-        fill_color_list             = plot_dict.get('chart_fill_colors', color_list)
-        width_list                  = plot_dict.get('chart_line_width', [1, 1, 1])
+        color_list                  = option_as_list(plot_dict.get('chart_line_colors', ['0xff0000', '0x00ff00', '0x0000ff']))
+        fill_color_list             = option_as_list(plot_dict.get('chart_fill_colors', color_list))
+        width_list                  = option_as_list(plot_dict.get('chart_line_width', [1, 1, 1]))
         self.chart_line_colors      = [tobgr(v) for v in color_list]
         self.chart_fill_colors      = [tobgr(v) for v in fill_color_list]
         self.chart_line_widths      = [int(v) for v in width_list]
