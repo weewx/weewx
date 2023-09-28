@@ -4,17 +4,14 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-## Include the Google Analytics code if an Id has been specified
+## If a Google Analytics GA4 code has been specified, include it.
 
 #if 'googleAnalyticsId' in $Extras
-<script type="text/javascript">
-var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-</script>
-<script type="text/javascript">
-try {
-  var pageTracker = _gat._getTracker("$Extras.googleAnalyticsId");
-  pageTracker._trackPageview();
-} catch(err) {}
-</script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=$Extras.googleAnalyticsId"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '$Extras.googleAnalyticsId');
+    </script>
 #end if

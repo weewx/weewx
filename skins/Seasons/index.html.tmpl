@@ -19,6 +19,7 @@
     <link rel="canonical" href="$station.station_url/$filename" />
     #end if
     <script src="seasons.js"></script>
+    #include "analytics.inc"
   </head>
 
   <body onload="setup();">
@@ -77,8 +78,6 @@
     <p class="footnote">
       $gettext("This station is controlled by <a href='https://weewx.com'>WeeWX</a>, an experimental weather software system written in Python.")
     </p>
-
-    #include "analytics.inc"
 
   </body>
 

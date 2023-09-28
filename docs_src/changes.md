@@ -100,7 +100,7 @@ Fix problem that prevented database from getting hit when calculating
 Fix problem that prevented option `stale` from being honored in image
 generation. Thanks to user Ian for PR #879!
 
-Fix problem that prevented complex aggregates such as 'max_ge' from being used
+Fix problem that prevented complex aggregates such as `max_ge` from being used
 in plots. Fixes issue #881.
 
 Updated humidex formula and reference. Fixes issue #883.
@@ -118,6 +118,9 @@ groups was missing in the configuration file. Fixes issue #886.
 
 New option `retry_wait`. If `weewxd` encounters a critical error, it will sleep
 this long before doing a restart.
+
+Change from old Google analytics UA code to the GA4 tag system in the Standard
+and Seasons skins. Fixes issue #892.
 
 
 ### 4.10.2 02/22/2023
