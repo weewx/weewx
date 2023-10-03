@@ -1,4 +1,4 @@
-# To do
+# V5.0 "To Do"
 
 
 ## Debian packaging
@@ -12,16 +12,6 @@ install instructions should become
 
 ## Utilities
 
-- Allow rebuild daily summaries for only selected types.
-- Check semantics of specifying a time for `--from` and/or `--to` 
-  in `weectl database calc-missing`.
-
-
-## Logging
-
-Log to `~/weewx-data/log/weewx.log`.
-
-Update the logging wiki.
 
 ## Docs
 
@@ -29,15 +19,22 @@ need a page that shows how to download, install, and configure a driver.
 
 need a page that shows how to download, install, and configure a skin.
 
+Need a page on how to provision a second instance.
+
+
+
+# Before final release
+
+## `pyproject.toml`
+
+Change parameter `description`.
+
+## Logging
+
+Update the logging wiki.
 
 ## Wiki
 
 Update the wiki entries for going from MySQL to SQLite and for SQLite to MySQL,
 this time by using `weectl database transfer`.
-
-# Before release
-
-## `pyproject.toml`
-
-Change parameter `description`.
 
