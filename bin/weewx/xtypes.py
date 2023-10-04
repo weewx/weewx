@@ -198,10 +198,9 @@ class ArchiveTable(XType):
             unit, unit_group = None, None
 
             if aggregate_type == 'cumulative':
-                do_aggregate = 'sum'
-                total = 0
-            else:
-                do_aggregate = aggregate_type
+                # We don't know the 'cumulative' aggregation type so raise a
+                # weewx.UnknownAggregation exception
+                raise weewx.UnknownAggregation
 
             for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
                 if db_manager.first_timestamp is None or stamp.stop <= db_manager.first_timestamp:
@@ -210,7 +209,7 @@ class ArchiveTable(XType):
                     break
                 try:
                     # Get the aggregate as a ValueTuple
-                    agg_vt = get_aggregate(obs_type, stamp, do_aggregate, db_manager,
+                    agg_vt = get_aggregate(obs_type, stamp, aggregate_type, db_manager,
                                            **option_dict)
                 except weewx.CannotCalculate:
                     agg_vt = ValueTuple(None, unit, unit_group)
@@ -222,12 +221,7 @@ class ArchiveTable(XType):
                     unit, unit_group = agg_vt[1], agg_vt[2]
                 start_vec.append(stamp.start)
                 stop_vec.append(stamp.stop)
-                if aggregate_type == 'cumulative':
-                    if agg_vt[0] is not None:
-                        total += agg_vt[0]
-                    data_vec.append(total)
-                else:
-                    data_vec.append(agg_vt[0])
+                data_vec.append(agg_vt[0])
 
         else:
 
@@ -1231,6 +1225,277 @@ class WindVecDaily(XType):
         return weewx.units.ValueTuple(value, t, g)
 
 
+class Cumulative(XType):
+    """XType to produce cumulative series data with user specified reset times."""
+
+    reset_defs = {'midnight': '00:00',
+                  'midday': '12:00',
+                  'day': '00:00',
+                  'month': '1T00:00',
+                  'year': '01-01T00:00'}
+
+    @staticmethod
+    def get_series(obs_type, timespan, db_manager, aggregate_type=None,
+                   aggregate_interval=None, **option_dict):
+        """Obtain a cumulative series with a user specified reset time.
+
+        The underlying Xtype 'sum' query is obtained via a
+        xtypes.get_aggregate() call meaning hte Cumulative Xtype is
+        automatically optimised to use the daily summaries or archive table.
+
+        The following options are supported in option_dict:
+
+        reset: Date-time specification for cumulative value reset times.
+               Optional string. Format is [mm-][dd][T]HH:MM or one of
+               ('midnight', 'midday', 'day', 'month', 'year'). Optional string.
+               Default is no reset.
+        ignore_none: Whether to ignore None values when calculating the
+                     cumulative value. If ignored, aggregate intervals for
+                     which the sum is None are excluded from the resulting
+                     vector. If not ignored, data points for which the sum is
+                     None are included in the resulting vector, but the data
+                     point does not contribute to the cumulative value.
+                     Optional boolean. Default is True.
+        """
+
+        # initialise lists to hold the vectors that will make up our result
+        start_vec = list()
+        stop_vec = list()
+        data_vec = list()
+
+        # we only know how to handle the cumulative aggregate type, if we have
+        # any other aggregate raise a weewx.UnknownAggregation exception
+        if aggregate_type != 'cumulative':
+            # we don't know this aggregation type so raise a
+            # weewx.UnknownAggregation exception
+            raise weewx.UnknownAggregation
+        else:
+            # we've been asked for the cumulative aggregation type
+
+            # Are None values to be ignored? The default action is to ignore
+            # the data point if the aggregate for that span/data point is None.
+            # Setting ignore_none = False will include such data points in the
+            # resulting vector.
+            ignore_none = weeutil.weeutil.to_bool(option_dict.get('ignore_none', True))
+            # Has the reset option been set True? If so obtain a list of reset
+            # timestamps that will occur in our timespan of interest
+            reset = Cumulative.parse_reset(option_dict.get('reset'), timespan)
+            # our unit and unit group are None until we get some data
+            unit, unit_group = None, None
+            # initialise our running total
+            total = 0
+            # initialise our reset timestamp index
+            reset_index = 0
+            # iterate over the aggregate interval timespans in the overall
+            # timespan of interest
+            for span in weeutil.weeutil.intervalgen(timespan.start,
+                                                    timespan.stop,
+                                                    aggregate_interval):
+                # Get the aggregate as a ValueTuple. We are interested in the
+                # sum aggregate, we will do the cumulative part of the xtype
+                # later
+                agg_vt = weewx.xtypes.get_aggregate(obs_type, span, 'sum', db_manager)
+                # if the aggregate is None, and we are ignoring None values,
+                # then continue to the next span
+                if agg_vt.value is None and ignore_none:
+                    continue
+                # check for unit group consistency
+                if unit:
+                    # we've seen a unit and unit group before but is this unit
+                    # and unit group the same ? (it's OK if the unit is unknown,
+                    # ie == None)
+                    if agg_vt.unit is not None and (
+                            unit != agg_vt.unit or unit_group != agg_vt.group):
+                        # the unit group has changed, we cannot handle this so
+                        # raise an exception
+                        raise weewx.UnsupportedFeature("Cannot change unit groups "
+                                                       "within an aggregation.")
+                else:
+                    # we haven't seen a unit and group yet so set them
+                    unit, unit_group = agg_vt.unit, agg_vt.group
+                # append the start and stop timestamps of the current span to
+                # our vectors
+                start_vec.append(span.start)
+                stop_vec.append(span.stop)
+                # do we need to reset the running total?
+                if reset is not None and len(reset) > reset_index:
+                    # perhaps, but it depends...
+                    if span.stop == reset[reset_index]:
+                        # Our stop timestamp falls on the current reset
+                        # timestamp so reset the running total. This means we
+                        # effectively discard the current aggregate value.
+                        total = 0.0
+                        # since we encountered a reset timestamp increment the
+                        # reset index
+                        reset_index += 1
+                    elif span.stop > reset[reset_index]:
+                        # Our stop timestamp is after the current reset
+                        # timestamp, so reset the running total to the current
+                        # aggregate value.
+                        total = agg_vt.value if agg_vt.value is not None else 0.0
+                        # since we encountered a reset timestamp increment the
+                        # reset index
+                        reset_index += 1
+                    elif agg_vt.value is not None:
+                        # we haven't encountered a reset time so just add the
+                        # current aggregate to the running total, no need for
+                        # any resets
+                        total += agg_vt.value
+                else:
+                    # we have no reset timestamps, so just add the current
+                    # aggregate to the running total
+                    total += agg_vt.value if agg_vt.value is not None else 0.0
+                # append the total to our data vector
+                data_vec.append(total)
+        # convert our result vectors to ValueTuples and return the ValueTuples
+        # as a tuple
+        return (weewx.units.ValueTuple(start_vec, 'unix_epoch', 'group_time'),
+                weewx.units.ValueTuple(stop_vec, 'unix_epoch', 'group_time'),
+                weewx.units.ValueTuple(data_vec, unit, unit_group))
+
+    @staticmethod
+    def parse_reset(reset_opt, timespan):
+        """Parse a reset option setting.
+
+        Parse a reset option and return a list of timestamps with the timespan
+        of interest that match the reset option. If no matching timestamps were
+        found return an empty list. If the reset option is None return None.
+
+        We could have a reset option in any of the following:
+        - HH:MM - reset occurs at HH:MM daily
+        - ddTHH:MM - reset occurs at HH:MM on the dd day of each month
+        - mm-ddTHH:MM - reset occurs ate HH:MM on dd-mm of each year
+        - YYYY-mm-ddTHH:MM - reset occurs at HH:MM on YYYY-mm-dd
+
+        We could also have a keyword representing a reset time:
+        - midnight - reset occurs at 00:00 daily
+        - midday - reset occurs at 12:00 daily
+        - day - reset occurs at 00:00 daily
+        - month - reset occurs at 00:00 on the 1st of each month
+        - year - reset occurs at 00:00 on the 1st of January
+
+        Defaults and handling of invalid formats:
+        - if an invalid time or time format is specified midnight is used as
+          the time component of the reset option
+        - if an invalid date format is used (eg, 21 December 2021) the date
+          component of the reset option is ignored
+        - if an invalid date is specified  (eg, 42 or 31 April) then reset
+          occurs at midnight at the end of the month concerned
+        """
+
+        if reset_opt is None:
+            # we have no reset option setting so return None
+            return None
+        else:
+            # do we have a reset specified by keyword, if so set reset_opt to
+            # the equivalent date-time format
+            if reset_opt.lower() in Cumulative.reset_defs.keys():
+                reset_opt = Cumulative.reset_defs[reset_opt.lower()]
+            # first split on 'T'
+            _split = reset_opt.split('T')
+            if len(_split) == 1:
+                # we have no 'T', so assume we have a time in the format HH:MM
+                dt_params = Cumulative.parse_time(_split[0])
+                # obtain the list of reset timestamps for the timespan of
+                # interest
+                reset_list = Cumulative.get_ts_list(timespan, **dt_params)
+            elif len(_split) == 2:
+                # we have a 'T', so we need to look for date and time
+                # components
+                # first look at the time
+                dt_params = Cumulative.parse_time(_split[1])
+                # Now look at the date. We only accept a limited number of date
+                # formats so iterate over the acceptable date formats looking
+                # for a match
+                for date_fmt in ('%d', '%m-%d', '%Y-%m-%d'):
+                    # does the date format match, a ValueError will indicate it
+                    # does not
+                    try:
+                        _date_dt = datetime.datetime.strptime(_split[0], date_fmt)
+                    except ValueError:
+                        # We could not parse the date string using the current
+                        # format, so pass and try the next format. A check
+                        # later will pick up the case where none of the formats
+                        # were successful.
+                        pass
+                    else:
+                        # add the day of the month to our dict
+                        dt_params['day'] = _date_dt.timetuple().tm_mday
+                        # if we have a month add it to our dict
+                        if '%m' in date_fmt:
+                            dt_params['month'] = _date_dt.timetuple().tm_mon
+                        # if we have a year add it to our dict
+                        if '%Y' in date_fmt:
+                            dt_params['year'] = _date_dt.timetuple().tm_year
+                        # since we have a match we can exit the for loop
+                        continue
+                    finally:
+                        # now we can produce the reset timestamp list
+                        reset_list = Cumulative.get_ts_list(timespan, **dt_params)
+            else:
+                # we have a reset option we cannot parse
+                _msg = "Cannot parse reset option '%s'"
+                raise weewx.ViolatedPrecondition(_msg)
+            return reset_list
+
+    @staticmethod
+    def parse_time(time_str):
+        """Parse a time string.
+
+        Take a string in the format HH:MM and return a dict keyed by 'hour' and
+        'minute' with the respective hour and minute values. If the string is
+        not in HH:MM format or contains invalid value return the 0 for the hour
+        and minute fields (midnight).
+        """
+
+        try:
+            _dt = datetime.datetime.strptime(time_str, '%H:%M')
+        except ValueError:
+            # could not convert specified time so default to 00:00
+            time_str = '00:00'
+        # create a dict to hold the date and time components of the
+        # reset option
+        dt_params = dict()
+        # obtain the hour and minute components, first split on ':'
+        _split_time = time_str.split(':')
+        # obtain and add the hour and minute components to our dict
+        dt_params['hour'] = int(_split_time[0])
+        dt_params['minute'] = int(_split_time[1])
+        # return the date and time components dict
+        return dt_params
+
+    @staticmethod
+    def get_ts_list(timespan, **dt_params):
+        """Obtain a list of matching timestamps.
+
+        Given a timespan and a dictionary of date-time parameters obtain a list
+        of timestamps within the timespan that match the date-time parameters.
+        If no matching timestamps are found return an empty list.
+        """
+
+        # initialise an empty list for the result
+        ts_list = list()
+        # iterate over each day in the timespan of concern
+        for day_span in weeutil.weeutil.genDaySpans(timespan.start, timespan.stop):
+            # obtain a datetime object based on the timestamp for the start of
+            # day
+            _dt = datetime.datetime.fromtimestamp(day_span.start)
+            # Using the start of day datetime object update that object with
+            # the date-time parameters for matching date-times. The resulting
+            # date time object may fall within or without the current day.
+            _day_reset_dt = _dt.replace(**dt_params)
+            # convert the modified datetime object to a timestamp
+            _day_reset_ts = time.mktime(_day_reset_dt.timetuple())
+            # we are only interested in the resulting timestamp if it falls
+            # somewhere within the current day
+            if day_span.start <= _day_reset_ts < day_span.stop:
+                # the timestamp does fall within the current day, so add it to
+                # the list of matching timestamps
+                ts_list.append(_day_reset_ts)
+        # return the list of matching timestamps
+        return ts_list
+
+
 # Add instantiated versions to the extension list. Order matters. We want the highly-specialized
 # versions first, because they might offer optimizations.
 xtypes.append(WindVecDaily())
@@ -1238,4 +1503,5 @@ xtypes.append(WindVec())
 xtypes.append(AggregateHeatCool())
 xtypes.append(DailySummaries())
 xtypes.append(ArchiveTable())
+xtypes.append(Cumulative())
 xtypes.append(XTypeTable())
