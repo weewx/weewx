@@ -17,24 +17,27 @@ Before starting, you must install the pre-requisite Python and Python modules.
 
 1. Ensure that Python 3.7 or later is installed.
 
-2. Ensure that `pip` and `venv` are installed.
+2. Ensure that you have the utility `make`.
 
-3. Create and activate a virtual environment in your home directory
+3. Ensure that `pip` and `venv` are installed.
+
+4. Create and activate a virtual environment in your home directory:
 
     ``` {.shell .copy}
     python3 -m venv ~/weewx-venv
     source ~/weewx-venv/bin/activate
     ```
 
-4. Install the minimum WeeWX dependencies
+5. Install the minimum WeeWX dependencies:
 
     ``` {.shell .copy}
+    python3 -m pip install mkdocs mkdocs-material
     python3 -m pip install CT3
     python3 -m pip install configobj
     python3 -m pip install Pillow
     ```
 
-5. Depending on your situation, you may want to install these additional
+6. Depending on your situation, you may want to install these additional
 dependencies:
 
     ``` {.shell .copy}
@@ -51,7 +54,7 @@ dependencies:
 ## Get the code
 
 Use `git` to clone the WeeWX repository into a directory called `weewx` in
-your home directory.
+your home directory[^1]:
 
 ```{.shell .copy}
 git clone https://github.com/weewx/weewx ~/weewx
@@ -65,9 +68,21 @@ git clone https://github.com/weewx/weewx ~/weewx
     ```
 
 
+## Build the resources
+
+The repository stores markdown versions of the documentation. To convert them
+to HTML, you must build them:
+
+```{.shell .copy}
+cd ~/weewx
+# Make sure to include the trailing slash!
+make bin/wee_resources/
+```
+
 ## Provision a new station
 
-Now that you have the code, create a configuration file and skins:
+Finally, provision the configuration file, skins, and other resources for a
+new station:
 
 ```{.shell .copy}
 # Activate the WeeWX virtual environment
@@ -159,3 +174,7 @@ If desired, delete the data directory:
 ```shell
 rm -r ~/weewx-data
 ```
+
+[^1]: Of course, the directory you clone into does not have to be `~/weewx`.
+It can be any directory. Just be sure to replace `~/weewx` with your directory's
+path in the rest of the instructions.
