@@ -114,7 +114,7 @@ class Connection(weedb.Connection):
         Args:
             host (str): IP or hostname hosting the mysql database.
                 Alternatively, the path to the socket mount. (required)
-            user (str): User name (required)
+            user (str): The username (required)
             password (str): The password for the username (required)
             database_name (str): The database to be used. (required)
             port (int): Its port number (optional; default is 3306)

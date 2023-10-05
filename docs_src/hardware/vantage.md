@@ -401,7 +401,7 @@ Stop WeeWX first, then
 
     weectl device --dump
 
-This will dump all data archived in the Vantage memory directly to thee
+This will dump all data archived in the Vantage memory directly to the
 database, without regard to whether or not they have been seen before.
 Because the command dumps _all_ data, it may result in many duplicate primary
 key errors. These can be ignored.

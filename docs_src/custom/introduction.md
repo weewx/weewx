@@ -53,7 +53,7 @@ amount of rain that fell during the observation period.
 
 * WeeWX then compiles these LOOP packets into regularly spaced
 "archive records". For most types, the archive record contains the average
-value seen in all of the LOOP packets over the archive interval (typically
+value seen in all the LOOP packets over the archive interval (typically
 5 minutes). For extensive types, such as rain, it is the sum of all values
 over the archive interval.
 
@@ -293,7 +293,7 @@ The default distribution of WeeWX includes six reports:
         <td>
 Introduced with WeeWX V3.9, this report generates a single HTML file with day,
 week, month and year "to-date" summaries, as well as the plot images to go
-along with them. Buttons select which time scale the user wants. It also
+along with them. Buttons select which timescale the user wants. It also
 generates HTML files with more details on celestial bodies and statistics.
 Also generates NOAA monthly and yearly summaries.
         </td>
@@ -340,7 +340,7 @@ to a remote server using the utility
     </tbody>
 </table>
 
-Note that the FTP and RSYNC "reports" are a funny kind of report in that it
+Note that the FTP and RSYNC "reports" are a funny kind of report in that
 they do not actually generate anything. Instead, they use the reporting
 service engine to transfer files and folders to a remote server.
 

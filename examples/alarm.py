@@ -138,7 +138,7 @@ class MyAlarm(StdService):
     def sound_the_alarm(self, record):
         """Sound the alarm in a 'try' block"""
 
-        # Wrap the attempt in a 'try' block so we can log a failure.
+        # Wrap the attempt in a 'try' block, so we can log a failure.
         try:
             self.do_alarm(record)
         except socket.gaierror:

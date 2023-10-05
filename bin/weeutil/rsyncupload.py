@@ -34,7 +34,7 @@ class RsyncUpload(object):
         
         server: The remote server to which the files are to be uploaded.
         
-        user: The user name that is to be used. [Optional, maybe]
+        user: The username that is to be used. [Optional, maybe]
 
         delete: delete remote files that don't match with local files. Use
         with caution.  [Optional.  Default is False.]

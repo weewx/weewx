@@ -88,7 +88,7 @@ class BaseWrapper(object):
                 self.flush_output()
                 self.flush_input()
                 # It can be hard to get the console's attention, particularly
-                # when in the middle of a LOOP command. Send a whole bunch of line feeds,
+                # when in the middle of a LOOP command. Send a bunch of line feeds,
                 # then flush everything, then look for the \n\r acknowledgment
                 self.write(b'\n\n\n')
                 time.sleep(0.5)
@@ -612,7 +612,7 @@ class Vantage(weewx.drivers.AbstractDevice):
             raise weewx.CRCError("LOOP buffer failed CRC check")
         # ... decode it ...
         loop_packet = self._unpackLoopPacket(_buffer[:95])
-        # .. then return it
+        # ... then return it
         return loop_packet
 
     def genArchiveRecords(self, since_ts):
@@ -1473,7 +1473,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         # Try to guess the ISS ID for gauging reception strength.
         if self.iss_id is None:
             stations = self.getStnTransmitters()
-            # Wind retransmitter is best candidate.
+            # Wind retransmitter is the best candidate.
             for station_id in range(0, 8):
                 if stations[station_id]['transmitter_type'] == 'wind':
                     self.iss_id = station_id + 1  # Origin 1.
@@ -1502,7 +1502,7 @@ class Vantage(weewx.drivers.AbstractDevice):
         nbytes = struct.calcsize(v_format)
         # Don't bother waking up the console for the first try. It's probably
         # already awake from opening the port. However, if we fail, then do a
-        # wake up.
+        # wake-up.
         firsttime = True
 
         command = b"EEBRD %X %X\n" % (offset, nbytes)
@@ -1821,7 +1821,7 @@ def _archive_datetime(datestamp, timestamp):
     """Returns the epoch time of the archive packet."""
     try:
         # Construct a time tuple from Davis time. Unfortunately, as timestamps come
-        # off the Vantage logger, there is no way of telling whether or not DST is
+        # off the Vantage logger, there is no way of telling whether DST is
         # in effect. So, have the operating system guess by using a '-1' in the last
         # position of the time tuple. It's the best we can do...
         time_tuple = (((0xfe00 & datestamp) >> 9) + 2000, # year

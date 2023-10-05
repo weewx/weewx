@@ -169,7 +169,7 @@ above to recognize whether a DST transition occurs sometime between
 adjustments. This is generally what `wview` does. WeeWX takes a
 different approach and converts from UTC to local, does the arithmetic,
 then converts back. This is inefficient, but bulletproof against changes
-in DST algorithms, etc:
+in DST algorithms, etc.:
 
 ```
 time_dt = datetime.datetime.fromtimestamp(last_ts)
@@ -225,7 +225,7 @@ max_temp = weewx.xtypes.get_aggregate('outTemp',
 ```
 
 It will not only make sure the limits of the query are correct, but will
-also decide whether or not the daily summary optimization can be used
+also decide whether the daily summary optimization can be used
 ([details below](#daily-summaries)). If not, it will use the regular
 archive table.
 
@@ -431,7 +431,7 @@ you need them. Highly recommended.
 
 For Javascript, [JetBrain's
 WebStorm](http://www.jetbrains.com/webstorm/) is excellent, particularly
-if you will be using a framework such as NodeJS or ExpressJS.
+if you will be using a framework such as Node.js or Express.js.
 
 ## Daily summaries {#daily-summaries}
 

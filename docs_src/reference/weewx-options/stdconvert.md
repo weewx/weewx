@@ -9,7 +9,7 @@ you specify here.
 *Once chosen, the unit system in the database cannot be changed!*
 
 WeeWX does not allow you to mix unit systems within the databases. You must
-chose a unit system and then stick with it. This means that users coming from
+choose a unit system and then stick with it. This means that users coming from
 wview (which uses US Customary) should not change the default setting. Having
 said this, there is a way of reconfiguring the database to use another unit
 system. See the section [*Changing the unit system in an existing

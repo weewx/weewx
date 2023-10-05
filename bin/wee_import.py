@@ -32,7 +32,7 @@ Design
     wee_import. The child classes set a number of import type specific
     properties as well as defining getData() and period_generator() methods that
     read the raw data to be imported and generates a sequence of objects to be
-    imported (eg monthly log files) respectively. This way wee_import can be
+    imported (e.g., monthly log files) respectively. This way wee_import can be
     extended to support other sources by defining a new child class, its
     specific properties as well as getData() and period_generator() methods. The
     child class for a given import type are defined in the

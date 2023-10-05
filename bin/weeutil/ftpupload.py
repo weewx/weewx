@@ -42,7 +42,7 @@ class FtpUpload(object):
         server: The remote server to which the files are to be uploaded.
         
         user,
-        password : The user name and password that are to be used.
+        password : The username and password that are to be used.
         
         name: A unique name to be given for this FTP session. This allows more
         than one session to be uploading from the same local directory. [Optional.
@@ -282,7 +282,7 @@ def _skip_this_file(timestamp, fileset, hashdict, full_local_path, filehash):
         if os.stat(full_local_path).st_mtime > timestamp:
             return False
 
-    # Filename is in the set, and is up to date.
+    # Filename is in the set, and is up-to-date.
     return True
 
 

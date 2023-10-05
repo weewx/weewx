@@ -68,7 +68,7 @@ Filenames are case-sensitive. If the template filename has the letters `YYYY`,
 `MM`, `WW` or `DD` in its name, these will be substituted for the year, month,
 week and day of month, respectively. So, a template with the name
 `summary-YYYY-MM.html.tmpl` would have name `summary-2010-03.html` for the
-month of March, 2010.
+month of March 2010.
 
 #### generate_once
 
@@ -85,7 +85,7 @@ specified, then the file will be generated every time the generator
 runs.
 
 !!! Note
-    Precise control over when a is run is available through use of the
+    Precise control over when a run is available through use of the
     `report_timing` option. The `report_timing` option uses a CRON-like
     syntax to specify precisely when a report should be run. See the guide
     *[Scheduling report generation](../../../custom/report-scheduling)*

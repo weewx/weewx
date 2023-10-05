@@ -34,7 +34,7 @@ to run.  Report options can also be specified in this file.
         <td>
 This is the skin configuration file.  It contains information specific to a
 <em>skin</em>, in particular, which template files to process, and which plots
-to generate. Typically this file is supplied by the skin author.
+to generate. Typically, this file is supplied by the skin author.
         </td>
     </tr>
     <tr>
@@ -63,12 +63,12 @@ simple example:
 ```
 
 This example uses two sections at root level (sections `Section1` and
-`Section2`), and one sub-section (`SubSectionA`), which is nested under
+`Section2`), and one subsection (`SubSectionA`), which is nested under
 `Section1`. The option `key1` is nested under `Section1`, option `key3` is
-nested under `Section2`, while option `key2` is nested under sub-section
+nested under `Section2`, while option `key2` is nested under subsection
 `SubSectionA`.
 
-Note that while this example indents sub-sections and options, this is
+Note that while this example indents subsections and options, this is
 strictly for readability — this isn't Python! It's the number of brackets
 that counts in determining nesting, not the indentation! It would torture
 your readers, but the above example could be written
@@ -154,7 +154,7 @@ when the software is updated.
         <td>
 Supplied by the skin author, the skin configuration file,
 <span class="code">skin.conf</span>, contains options that define the baseline
-behavior of the skin. In this example, for whatever reasons, the skin author
+behavior of the skin. In this example, for whatever reason, the skin author
 has decided that the label for units in millibars should be
 <span class="code">" hPa"</span> (which is equivalent).
         </td>

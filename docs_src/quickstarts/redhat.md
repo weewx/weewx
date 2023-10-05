@@ -81,7 +81,7 @@ sudo systemctl start weewx
 To enable uploads or to customize reports, modify the configuration file.
 See the [*Customization Guide*](../../custom/introduction) for instructions,
 and the [application](../../reference/weewx-options/introduction) and
-[skin](../../reference/skin-options/introduction) references for all of
+[skin](../../reference/skin-options/introduction) references for all
 the options.
 
 Use any text editor, such as `nano`:

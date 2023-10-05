@@ -566,7 +566,7 @@ def update_to_v32(config_dict):
         # Set the default [[SQLite]] section. Turn off interpolation first, so the
         # symbol for WEEWX_ROOT does not get lost.
         save, config_dict.interpolation = config_dict.interpolation, False
-        # The section must be built step by step so we get the order of the entries correct
+        # The section must be built step-by-step so that we get the order of the entries correct
         config_dict['DatabaseTypes'] = {}
         config_dict['DatabaseTypes']['SQLite'] = {}
         config_dict['DatabaseTypes']['SQLite']['driver'] = 'weedb.sqlite'
@@ -845,7 +845,7 @@ def update_to_v40(config_dict):
                 old_comment = config_dict['StdReport']['Defaults']['Units']['Ordinates'].comments[
                     key]
 
-                # Shallow copy the sub-section
+                # Shallow copy the subsection
                 config_dict['StdReport']['Defaults']['Units'][key] = \
                     config_dict['StdReport']['Defaults']['Units']['Ordinates'][key]
                 # Delete it in from its old location

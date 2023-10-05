@@ -25,7 +25,7 @@ time, here are some tips, in decreasing order of importance:
 
 * If you do use a USB connection, put a ferrite coil on each end of the cable to
   your console. If you have enough length and the ferrite coil is big enough,
-  make a loop so it goes through the coil twice. See the picture below:
+  make a loop, so it goes through the coil twice. See the picture below:
 
 <figure markdown>
   ![Ferrite Coils](../../images/ferrites.jpg){ width="300" }

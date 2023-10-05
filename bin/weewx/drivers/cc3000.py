@@ -35,7 +35,7 @@ The CC3000 uses 4 AA batteries to maintain its clock.  Use only rechargeable
 NiMH batteries.
 
 The logger contains 2MB of memory, with a capacity of 49834 records (over 11
-months of data at a 10 minute logging interval).  The exact capacity depends
+months of data at a 10-minute logging interval).  The exact capacity depends
 on the sensors; the basic sensor record is 42 bytes.
 
 The logger does not delete old records when it fills up; once the logger is
@@ -45,7 +45,7 @@ memory.
 This driver does not support hardware record_generation.  It does support
 catchup on startup.
 
-If you request many history records then interrupt the receive, the logger will
+If you request many history records, then interrupt the receive, the logger will
 continue to send history records until it sends all that were requested.  As a
 result, any queries made while the logger is still sending will fail.
 
@@ -71,7 +71,7 @@ Logger uses the following units:
 The CC3000 has the habit of failing to execute about 1 in 6000
 commands.  That the bad news.  The good news is that the
 condition is easily detected and the driver can recover in about 1s.
-The telltale sing of failure is the first read after sending
+The telltale sign of failure is the first read after sending
 the command (to read the echo of the command) times out.  As such,
 the timeout is set to 1s.  If the timeout is hit, the buffers
 are flushed and the command is retried.  Oh, and there is one
@@ -488,7 +488,7 @@ class CC3000Driver(weewx.drivers.AbstractDevice):
         if self.logger_threshold != 0:
             log.info('Clear logger at %s records' % self.logger_threshold)
 
-        # track the last rain counter value so we can determine deltas
+        # track the last rain counter value, so we can determine deltas
         self.last_rain = None
 
         self.station = CC3000(port)
@@ -889,7 +889,7 @@ class CC3000(object):
         """Send cmd.  Time the reading of the echoed command.  If the measured
         time is >= timeout, the cc3000 is borked.  The input and output buffers
         will be flushed and the command retried.  Try up to 10 times.
-        It practice, one retry does the trick.
+        In practice, one retry does the trick.
         cc3000s.
         """
         attempts = 0
@@ -1011,9 +1011,9 @@ class CC3000(object):
         return data.split(',')
 
     def get_time(self):
-        # unlike all of the other accessor methods, the TIME command returns
+        # unlike all the other accessor methods, the TIME command returns
         # OK after it returns the requested parameter.  so we have to pop the
-        # OK off the serial so it does not trip up other commands.
+        # OK off the serial, so it does not trip up other commands.
         log.debug("Get time")
         tstr = self.command("TIME=?")
         if tstr not in ['ERROR', 'OK']:
@@ -1330,9 +1330,9 @@ class CC3000ConfEditor(weewx.drivers.AbstractConfEditor):
 #
 # PYTHONPATH=bin python -m weewx.drivers.cc3000 --help
 #
-# FIXME: This duplicates all of the functionality in CC3000Conigurator.
+# FIXME: This duplicates all the functionality in CC3000Conigurator.
 #        Perhaps pare this down to a version option and, by default,
-#        polling and printing records (a la, the vantage driver)..
+#        polling and printing records (a la, the vantage driver).
 
 if __name__ == '__main__':
     import optparse

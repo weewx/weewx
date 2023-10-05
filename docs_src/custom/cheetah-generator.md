@@ -376,7 +376,7 @@ example `$week(weeks_ago=1)` indicates last week, `$day(days_ago=2)` would be
 the day-before-yesterday, _etc_. The default is zero: that is, this
 aggregation period.
 
-_`obstype`_ is a _observation type_. This is generally any observation type that
+_`obstype`_ is an _observation type_. This is generally any observation type that
 appears in the database (such as `outTemp` or `windSpeed`), as well a most
 [XTypes](https://github.com/weewx/weewx/wiki/xtypes). However, not all
 aggregations are supported for all types.
@@ -559,8 +559,8 @@ or in foobar units: $day.barometer.min.foobar
 
 The data in the resultant tag can be optionally rounded to a fixed number of
 decimal digits. This is useful when emitting raw data or JSON strings. It
-should _not_ be used with formatted data - using a `format string` would
-be a better choice).
+should _not_ be used with formatted data. In that case, using a `format string` would
+be a better choice.
 
 The structure of the option is
 
@@ -2156,5 +2156,5 @@ calculation, or perhaps uses the database? Simply putting it in the `[Extras]`
 section won't do, because then it cannot change.
 
 The answer is to write a *search list extension*. Complete directioins on how
-to do this are in a the document
+to do this are in the document
 [*Writing search list extensions*](../../custom/sle).

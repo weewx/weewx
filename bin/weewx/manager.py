@@ -1480,7 +1480,7 @@ class DaySummaryManager(Manager):
             # Skip any types that are not in the daily summary schema
             if obs_type not in self.daykeys:
                 continue
-            # This will be list that looks like ['sum=2345.65', 'count=123', ... etc]
+            # This will be list that looks like ['sum=2345.65', 'count=123', ... etc.]
             # It will only include attributes that are in the accumulator for this type.
             set_list = ['%s=%s' % (k, getattr(day_accum[obs_type], k))
                         for k in ['sum', 'count', 'wsum', 'sumtime',

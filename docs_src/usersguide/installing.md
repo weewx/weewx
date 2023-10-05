@@ -51,7 +51,7 @@ This is an outline of the process to install, configure, and run WeeWX:
   [directly](../running/#running-directly), or as a
   [daemon](../running/#running-as-a-daemon).
 
-* Customize the installation. Typically this is done by changing settings in
+* Customize the installation. Typically, this is done by changing settings in
   the WeeWX [application configuration
   file](../../reference/weewx-options/introduction/). For example, you might
   want to [register your

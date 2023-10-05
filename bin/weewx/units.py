@@ -957,7 +957,7 @@ class Converter(object):
         obs_type: An observation type ('outTemp', 'rain', etc.)
         
         agg_type: Type of aggregation ('mintime', 'count', etc.)
-        [Optional. default is no aggregation)
+        [Optional. default is no aggregation]
         
         returns: A 2-way tuple holding the unit type and the unit group
         or (None, None) if they cannot be determined.
@@ -985,7 +985,7 @@ StdUnitConverters = {weewx.US       : Converter(USUnits),
 
 class ValueHelper(object):
     """A helper class that binds a value tuple together with everything needed to do a
-    context sensitive formatting """
+    context-sensitive formatting """
     def __init__(self, value_t, context='current', formatter=Formatter(), converter=None):
         """Initialize a ValueHelper
 
@@ -1343,7 +1343,7 @@ class LabelHelper(object):
         return get_label_string(self.formatter, self.converter, obs_type)
 
 class UnitInfoHelper(object):
-    """Helper class used for for the $unit template tag."""
+    """Helper class used for the $unit template tag."""
     def __init__(self, formatter, converter):
         """
         formatter: an instance of Formatter
@@ -1500,7 +1500,7 @@ def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
 
     Args:
         target_std_unit_system (int): A standardized unit system. If None, then
-            the the output units are indeterminate, so (None, None) is returned.
+            the output units are indeterminate, so (None, None) is returned.
 
         obs_type (str): An observation type, e.g., 'outTemp'
 

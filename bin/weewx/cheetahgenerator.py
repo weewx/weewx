@@ -40,7 +40,7 @@ Example:
             encoding = normalized_ascii
             template = NOAA-YYYY-MM.txt.tmpl
     [[SummaryByYear]]
-        [[[NOAA_year]]]]
+        [[[NOAA_year]]]
             encoding = normalized_ascii
             template = NOAA-YYYY.txt.tmpl
     [[ToDate]]

@@ -74,7 +74,7 @@ class StdReportEngine(threading.Thread):
     This engine runs zero or more reports. Each report uses a skin. A skin
     has its own configuration file specifying things such as which 'generators'
     should be run, which templates are to be used, what units are to be used,
-    etc..
+    etc.
     A 'generator' is a class inheriting from class ReportGenerator, that
     produces the parts of the report, such as image plots, HTML files.
 
@@ -143,7 +143,7 @@ class StdReportEngine(threading.Thread):
                 continue
 
             # Default action is to run the report. Only reason to not run it is
-            # if we have a valid report report_timing and it did not trigger.
+            # if we have a valid report report_timing, and it did not trigger.
             if self.record:
                 # StdReport called us not wee_reports so look for a report_timing
                 # entry if we have one.
@@ -152,7 +152,7 @@ class StdReportEngine(threading.Thread):
                     # Get a ReportTiming object.
                     timing = ReportTiming(timing_line)
                     if timing.is_valid:
-                        # Get timestamp and interval so we can check if the
+                        # Get timestamp and interval, so we can check if the
                         # report timing is triggered.
                         _ts = self.record['dateTime']
                         _interval = self.record['interval'] * 60
@@ -558,10 +558,10 @@ class ReportTiming(object):
       month and day names are not supported.
     - lists, x,y,z. Matches those items in the list. List items may be a range.
       Lists using month and day names are not supported.
-    - month names. Months may be specified by number 1..12 or first 3 (case
+    - month names. Months may be specified by number 1..12 or first 3 (case-
       insensitive) letters of the English month name jan..dec.
     - weekday names. Weekday names may be specified by number 0..7
-      (0,7 = Sunday) or first 3 (case insensitive) letters of the English
+      (0,7 = Sunday) or first 3 (case-insensitive) letters of the English
       weekday names sun..sat.
     - nicknames. Following nicknames are supported:
         @yearly   : Run once a year,  ie "0 0 1 1 *"
@@ -665,8 +665,8 @@ class ReportTiming(object):
         """Return the set of valid values for a field.
 
         Parses and validates a field and if the field is valid returns a set
-        containing all of the possible field values. Called recursively to
-        parse sub-fields (eg lists of ranges). If a field is invalid a
+        containing all the possible field values. Called recursively to
+        parse sub-fields (e.g., lists of ranges). If a field is invalid a
         ValueError is raised.
 
         field:   String containing the raw field to be parsed.
@@ -675,7 +675,7 @@ class ReportTiming(object):
         names:   Tuple containing all valid named values for the field. For
                  numeric only fields the tuple is empty.
         mapp:    Tuple of 2 way tuples mapping named values to numeric
-                 equivalents. Format is ((name1, numeric1), ..
+                 equivalents. Format is ((name1, numeric1), ...
                  (namex, numericx)). For numeric only fields the tuple is empty.
         is_rorl: Is field part of a range or list. Either True or False.
         """
@@ -685,9 +685,9 @@ class ReportTiming(object):
             # simply return a set of all poss values
             return set(range(span[0], span[1] + 1))
         elif field.isdigit():  # just a number
-            # If its a DOW then replace any 7s with 0
+            # If it's a DOW then replace any 7s with 0
             _field = field.replace('7', '0') if span == DOW else field
-            # its valid if its within our span
+            # its valid if it's within our span
             if span[0] <= int(_field) <= span[1]:
                 # it's valid so return the field itself as a set
                 return set((int(_field),))
@@ -702,7 +702,7 @@ class ReportTiming(object):
                 _field = field
                 for _name, _ord in mapp:
                     _field = _field.replace(_name, str(_ord))
-                # its valid if its within our span
+                # its valid if it's within our span
                 if span[0] <= int(_field) <= span[1]:
                     # it's valid so return the field itself as a set
                     return set((int(_field),))
@@ -782,7 +782,7 @@ class ReportTiming(object):
             if ts_lo is None:
                 _range = [int(ts_hi)]
             else:
-                # CRON like line has a 1 min resolution so step backwards every
+                # CRON like line has a 1-minute resolution so step backwards every
                 # 60 sec.
                 _range = list(range(int(ts_hi), int(ts_lo), -60))
             # Iterate through each ts in our range. All we need is one ts that
@@ -811,7 +811,7 @@ class ReportTiming(object):
                     if period in decode:
                         # we have a match
                         if field_span == DOM:
-                            # we have a match on DOM but we need to know if it
+                            # we have a match on DOM, but we need to know if it
                             # was a match on a restricted DOM field
                             dom_match = True
                             dom_restricted_match = self.dom_restrict
@@ -819,7 +819,7 @@ class ReportTiming(object):
                             break
                         continue
                     elif field_span == DOW and dom_restricted_match or field_span == DOM:
-                        # No match but consider it a match if this field is DOW
+                        # No match but consider it a match if this field is DOW,
                         # and we already have a DOM match. Also, if we didn't
                         # match on DOM then continue as we might match on DOW.
                         continue
@@ -835,6 +835,6 @@ class ReportTiming(object):
             # and the line was not triggered so return False.
             return False
         else:
-            # Our line is not valid or we do not have a timestamp to use,
+            # Our line is not valid, or we do not have a timestamp to use,
             # return None
             return None

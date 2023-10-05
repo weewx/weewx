@@ -94,7 +94,7 @@ def setup(process_name, user_log_dict):
 
     # Turn off interpolation in the incoming dictionary. First save the old
     # value, then restore later. However, the incoming dictionary may be a simple
-    # Python dictionary and not have interpolation. Hence the try block.
+    # Python dictionary and not have interpolation. Hence, the try block.
     try:
         old_interpolation = user_log_dict.interpolation
         user_log_dict.interpolation = False
@@ -104,7 +104,7 @@ def setup(process_name, user_log_dict):
     # Merge in the user additions / changes:
     log_config.merge(user_log_dict)
 
-    # Adjust the logging level in accordance with whether or not the 'debug' flag is on
+    # Adjust the logging level in accordance to whether the 'debug' flag is on
     log_level = 'DEBUG' if weewx.debug else 'INFO'
 
     # Now we need to walk the structure, plugging in the values we know.

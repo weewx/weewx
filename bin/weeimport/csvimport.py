@@ -248,7 +248,7 @@ class CSVSource(weeimport.Source):
     def period_generator():
         """Generator function to control CSV import processing loop.
 
-        Since CSV imports import from a single file this generator need only
+        Since CSV imports from a single file this generator need only
         return a single value before it is exhausted.
         """
 
@@ -258,7 +258,7 @@ class CSVSource(weeimport.Source):
     def first_period(self):
         """True if current period is the first period otherwise False.
 
-        For CSV imports there is only one period so it is always the first.
+        For CSV imports there is only one period, so it is always the first.
         """
 
         return True
@@ -267,7 +267,7 @@ class CSVSource(weeimport.Source):
     def last_period(self):
         """True if current period is the last period otherwise False.
 
-        For CSV imports there is only one period so it is always the last.
+        For CSV imports there is only one period, so it is always the last.
         """
 
         return True

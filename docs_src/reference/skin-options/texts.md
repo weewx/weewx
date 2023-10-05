@@ -18,4 +18,4 @@ Conditions"` appeared. See the section on
 
 !!! Note
     Strings that include commas must be included in single or double quotes.
-    Otherwise they will be misinterpreted as a list.
+    Otherwise, they will be misinterpreted as a list.

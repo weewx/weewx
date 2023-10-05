@@ -193,7 +193,7 @@ class Station(object):
         return int(time.time())
 
     def set_time(self, ts):
-        # go to modem mode so we do not get logger chatter
+        # go to modem mode, so we do not get logger chatter
         self.set_modem_mode()
 
         # set time should work on all models
@@ -316,7 +316,7 @@ def parse_readings(raw):
       dddd - date (day of year)
       mmmm - time (minute of day)
       RRRR - daily rain (0.01 in)
-      WWWW - one minute wind average (0.1 kph)
+      WWWW - one- minute wind average (0.1 kph)
 
     "pressure" reported by the Ultimeter 2000 is correlated to the local
     official barometer reading as part of the setup of the station

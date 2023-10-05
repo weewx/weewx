@@ -296,7 +296,7 @@ class ExtensionEngine(object):
         Returns True if it modified the config file, False otherwise.
         """
         self.logger.log("Adding sections to configuration file", level=2)
-        # Make a copy so we can modify the sections to fit the existing configuration
+        # Make a copy, so we can modify the sections to fit the existing configuration
         if isinstance(extension_config, configobj.Section):
             cfg = weeutil.config.deep_copy(extension_config)
         else:
@@ -311,8 +311,8 @@ class ExtensionEngine(object):
         # method.
         ExtensionEngine.prepend_path(cfg, 'HTML_ROOT', self.config_dict['StdReport']['HTML_ROOT'])
 
-        # If the extension uses a database, massage it so it's compatible with the new V3.2 way of
-        # specifying database options
+        # If the extension uses a database, massage it so that it's compatible with the new V3.2
+        # way of specifying database options
         if 'Databases' in cfg:
             for db in cfg['Databases']:
                 db_dict = cfg['Databases'][db]
@@ -341,7 +341,7 @@ class ExtensionEngine(object):
 
     def _reorder(self, cfg):
         """Reorder the resultant config_dict"""
-        # Patch up the location of any reports so they appear before FTP/RSYNC
+        # Patch up the location of any reports so that they appear before FTP/RSYNC
 
         # First, find the FTP or RSYNC reports. This has to be done on the basis of the skin type,
         # rather than the report name, in case there are multiple FTP or RSYNC reports to be run.
@@ -461,7 +461,7 @@ class ExtensionEngine(object):
             filename (str): The path to the file(s) to be deleted. Can include wildcards.
 
             report_errors (bool): If truthy, report an error if the file is missing or cannot be
-                deleted. Otherwise don't. In neither case will an exception be raised.
+                deleted. Otherwise, don't. In neither case will an exception be raised.
         Returns:
             int: The number of files deleted
         """
@@ -486,7 +486,7 @@ class ExtensionEngine(object):
             directory (str): The path to the directory to be deleted. If the directory is not
                 empty, nothing is done.
 
-            report_errors (bool); If truthy, report an error. Otherwise don't. In neither case will
+            report_errors (bool); If truthy, report an error. Otherwise, don't. In neither case will
                 an exception be raised.
         """
         n_deleted = 0

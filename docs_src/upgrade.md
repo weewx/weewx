@@ -837,7 +837,7 @@ Add the text in <span class="added">green</span>:
 <p>Perhaps the most significant change in V3.7 is a fix for how daily summary values are calculated and stored.
 </p>
 
-<p>Daily summaries were introduced in V3.0 (December, 2014), to speed up certain kinds of aggregation
+<p>Daily summaries were introduced in V3.0 (December 2014), to speed up certain kinds of aggregation
   calculations. They were designed to "weight" values depending on the time length of the archive record that
   contributed them. For example, shorter intervals contributed less than longer intervals. This was intended
   to enable changes to the length of the archive interval.

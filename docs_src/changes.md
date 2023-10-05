@@ -119,7 +119,7 @@ groups was missing in the configuration file. Fixes issue #886.
 New option `retry_wait`. If `weewxd` encounters a critical error, it will sleep
 this long before doing a restart.
 
-Change from old Google analytics UA code to the GA4 tag system in the Standard
+Change from old Google Analytics UA code to the GA4 tag system in the Standard
 and Seasons skins. Fixes issue #892.
 
 
@@ -723,7 +723,7 @@ Fixed several bugs in the te923 driver that prevented it from running under
 Python 3.
 
 Added a logging handler for rotating files. See https://bit.ly/2StYSHb for how
-to use it. It is the default for MacOS.
+to use it. It is the default for macOS.
 
 More information if an exception is raised while querying for vantage hardware
 type.
@@ -928,7 +928,7 @@ Thanks to user 'windcrusader'! Fixes issue #393.
 Fixed problem when calculating vector averages. Thanks to user
 timtsm! PR #396.
 
-windrun is now calculated on a per archive period basis, instead
+windrun is now calculated on a per-archive period basis, instead
 of for the whole day. Thanks to user 'windcrusader'!
 PR #399. Fixes issue #250.
 
@@ -1149,7 +1149,7 @@ and allows additional headers to be added to the HTTP request object.
 MySQL error 2006 ("MySQL server has gone away") now gets mapped to
 `weedb.CannotConnectError`. PR #246
 
-Whether to use a FTP secure data connection is now set separately
+Whether to use an FTP secure data connection is now set separately
 from whether to authenticate using TLS. Fixes issue #284.
 
 Corrected formatting used to report indoor temp and humidity to the

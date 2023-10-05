@@ -397,7 +397,7 @@ def solar_altitude(latitude, year, month, day):
     # Compute the altitude
     altitude = 90.0 - latitude  + declination
 
-    # In the tropical and  in extreme latitude, values over 90 may occurs.
+    # In the tropical and  in extreme latitude, values over 90 may occur.
     if altitude > 90:
         altitude = 90 - (altitude-90)
 
@@ -525,7 +525,7 @@ def revolution(x):
 
 def rev180(x):
     """
-    Reduce angle to within +180..+180 degrees
+    Reduce angle to within +180...+180 degrees
     """ 
     return (x - 360.0 * math.floor(x * INV360 + 0.5))
 

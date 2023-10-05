@@ -5,14 +5,14 @@ reports are to be generated. While it can be highly customized for your
 individual situation, this documentation describes the section as shipped in
 the standard distribution.
 
-Each report is represented by a sub-section, marked with double brackets (e.g.,
+Each report is represented by a subsection, marked with double brackets (e.g.,
 `[[MyReport]]`). Any options for the report should be placed under it. The
-standard report service will go through the sub-sections, running each report
+standard report service will go through the subsections, running each report
 in order.
 
-WeeWX ships with the following sub-sections:
+WeeWX ships with the following subsections:
 
-| Sub-section |	Description |
+| subsection |	Description |
 | ----------- | ----------- |
 | [[SeasonsReport]] | A full-featured single-page skin. Statistics and plots are revealed by touch or button press.|
 | [[SmartphoneReport]] | A skin formatted for smaller screens, with a look-and-feel reminiscent of first-generation Apple iPhone.|
@@ -257,7 +257,7 @@ configured for _user@server_. Required. No default.
 #### path
 
 Set to the path where the weather data will be stored on your webserver
-(_e.g._, `/var/www/html/weather`). Make sure user has write privileges in
+(_e.g._, `/var/www/html/weather`). Make sure `user` has write privileges in
 this directory. Required. No default.
 
 #### port

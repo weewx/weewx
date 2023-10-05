@@ -46,7 +46,7 @@ should only have to implement a few functions. In particular,
    often than 'post_interval'. Both of these can be set in the constructor of
    RESTThread.
 
- - post_request(self, request, data). This function takes a urllib.request.Request object
+ - post_request(self, request, data). This function takes an urllib.request.Request object
    and is responsible for performing the HTTP GET or POST. The default version
    simply uses urllib.request.urlopen(request) and returns the result. If the
    post could raise an unusual exception, override this function and catch the
@@ -151,7 +151,7 @@ class StdRESTful(weewx.engine.StdService):
     def shutDown_thread(q, t):
         """Function to shut down a thread."""
         if q and t.is_alive():
-            # Put a None in the queue to signal the thread to shutdown
+            # Put a None in the queue to signal the thread to shut down
             q.put(None)
             # Wait up to 20 seconds for the thread to exit:
             t.join(20.0)
@@ -515,7 +515,7 @@ class RESTThread(threading.Thread):
                 raise AbortedPost("Observation type %s missing" % obs_type)
 
     def check_response(self, response):
-        """Check the response from a HTTP post. This version does nothing."""
+        """Check the response from an HTTP post. This version does nothing."""
         pass
 
     def handle_code(self, code, count):
@@ -713,7 +713,7 @@ class CachedValues(object):
                     raise ValueError("Mixed units encountered in cache. %s vs %s"
                                      % (self.unit_system, packet['usUnits']))
             else:
-                # cache each value, associating it with the it was cached
+                # cache each value, associating it with the time it was cached
                 self.values[k] = {'value': packet[k], 'ts': ts}
 
     def get_value(self, k, ts, stale_age):
@@ -1031,7 +1031,7 @@ class AmbientLoopThread(AmbientThread):
         self.formats.update(AmbientLoopThread.WUONLY_FORMATS)
 
     # may also be used by non-rapidfire; this is the least invasive way to just fix rapidfire,
-    # which i know supports windGustDir, while the Ambient class is used elsewhere
+    # which I know supports windGustDir, while the Ambient class is used elsewhere
     WUONLY_FORMATS = {
         'windGustDir': 'windgustdir=%03.0f'
     }
@@ -1102,7 +1102,7 @@ class WOWThread(AmbientThread):
         try:
             _response = urllib.request.urlopen(request, timeout=self.timeout)
         except urllib.error.HTTPError as e:
-            # WOW signals a bad login with a HTML Error 403 code:
+            # WOW signals a bad login with an HTML Error 403 code:
             if e.code == 403:
                 raise BadLogin(e)
             elif e.code >= 400:
@@ -1598,7 +1598,7 @@ class StdAWEKAS(StdRESTful):
     Pos6: humidity (%) (int)
     Pos7: air pressure (hPa) (float) [22dec15. This should be SLP. -tk personal communications]
     Pos8: precipitation (rain at this day) (float)
-    Pos9: wind speed (km/h) float)
+    Pos9: wind speed (km/h) (float)
     Pos10: wind direction (degree) (int)
     Pos11: weather condition (int)
             0=clear warning
@@ -1705,7 +1705,7 @@ class AWEKASThread(RESTThread):
 
         Parameters specific to this class:
 
-          username: AWEKAS user name
+          username: AWEKAS username
 
           password: AWEKAS password
 

@@ -83,7 +83,7 @@ abbreviated names in the range jan..dec inclusive
 <td>Specifies the days of the week when the report will be run</td>
 <td>
 *, or
-numbers in the range 0..7 inclusive (0,7 = Sunday, 1 = Monday etc), or  
+numbers in the range 0..7 inclusive (0,7 = Sunday, 1 = Monday etc.), or  
 abbreviated names in the range sun..sat inclusive
 </td>
 </tr>
@@ -109,7 +109,7 @@ excerpt illustrates this:
         report_timing = */10 * * * *
 ```
 
-In this case, the report `AReport` would be run under under control of the
+In this case, the report `AReport` would be run under control of the
 `0 * * * *` setting (on the hour) and the report `AnotherReport` would be
 run under control of the `*/10 * * * *` setting (every 10 minutes).
 
@@ -121,7 +121,7 @@ The syntax and interpretation are outlined below.
 
 When the report_timing option is in use WeeWX will run a report when the
 minute, hour and month of year parameters match the report time, and at least
-one of the two day parameters (day of month or day of week) match the report
+one of the two-day parameters (day of month or day of week) match the report
 time. This means that non-existent times, such as "missing hours" during
 daylight savings changeover, will never match, causing reports scheduled
 during the "missing times" not to be run. Similarly, times that occur more
@@ -151,13 +151,13 @@ reports to be run more than once.
 ### The relationship between report_timing and archive period
 
 A traditional CRON service has a resolution of one minute, meaning that the
-CRON service checks each minute as to whether to execute any commands. On the
+CRON service checks each minute whether to execute any commands. On the
 other hand, the WeeWX report system checks which reports are to be run once
 per archive period, where the archive period may be one minute, five minutes,
 or some other user defined period. Consequently, the report_timing option may
 specify a report to be run at some time that does not align with the WeeWX
 archive period. In such cases the report_timing option does not cause a report
-to be run outside of the normal WeeWX report cycle, rather it will cause the
+to be run outside the normal WeeWX report cycle, rather it will cause the
 report to be run during the next report cycle. At the start of each report
 cycle, and provided a report_timing option is set, WeeWX will check each
 minute boundary from the current report time back until the report time of

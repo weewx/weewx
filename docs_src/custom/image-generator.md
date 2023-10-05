@@ -34,9 +34,9 @@ farther down (not shown) will also apply to all plots.
 ## Time periods
 
 After the "global" options at the top of section `[ImageGenerator]`, comes a
-set of sub-sections, one for each time period (day, week, month, and year).
-These sub-sections define the nature of aggregation and plot types for that
-time period. For example, here is a typical set of options for sub-section
+set of subsections, one for each time period (day, week, month, and year).
+These subsections define the nature of aggregation and plot types for that
+time period. For example, here is a typical set of options for subsection
 `[[month_images]]`. It controls which "monthly" images will get generated,
 and what they will look like:
 
@@ -63,7 +63,7 @@ day-night, shaded bands not be shown.
 
 ## Image files
 
-Within each time period sub-section is another nesting, one for each
+Within each time period subsection is another nesting, one for each
 image to be generated. The title of each sub-sub-section is the filename
 to be used for the image. Finally, at one additional nesting level (!)
 are the logical names of all the line types to be drawn in the image.
@@ -106,7 +106,7 @@ name `rain`. Because we have not said otherwise, the database
 column name to be used for this line will be the same as its logical
 name, that is, `rain`, but this can be overridden. The
 aggregation type will be summing (overriding the averaging specified in
-sub-section `[[month_images]]`), so you get the total rain
+subsection `[[month_images]]`), so you get the total rain
 over the aggregate period (rather than the average) over an aggregation
 interval of 86,400 seconds (one day). The plot line will be titled with
 the indicated label of 'Rain (daily total)'. The result of all this is
@@ -170,7 +170,7 @@ Here, the first plot line has been given the name `avgTemp` to
 distinguish it from the second line `outTemp`. Any name will do
 &mdash; it just has to be different. We have specified that the first line
 will use data type ` outTemp` and that it will use averaging over
-a one hour period. The second also uses `outTemp`, but will not
+a one-hour period. The second also uses `outTemp`, but will not
 use averaging.
 
 The result is a nice plot of the day's temperature, overlaid with a one-hour

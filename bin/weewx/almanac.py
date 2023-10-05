@@ -35,7 +35,7 @@ class Almanac(object):
     
         sunrise: Time (local) upper limb of the sun rises above the horizon, formatted using the format 'timeformat'.
         sunset: Time (local) upper limb of the sun sinks below the horizon, formatted using the format 'timeformat'.
-        moon_phase: A description of the moon phase(eg. "new moon", Waxing crescent", etc.)
+        moon_phase: A description of the moon phase (e.g. "new moon", Waxing crescent", etc.)
         moon_fullness: Percent fullness of the moon (0=new moon, 100=full moon)
 
     If the module 'ephem' is used, them many other attributes are available.

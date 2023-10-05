@@ -295,7 +295,7 @@ class GeneralPlot(object):
                        fill=self.daynight_edge_color)
 
     def _renderXAxes(self, sdraw):
-        """Draws the x axis and vertical constant-x lines, as well as the labels. """
+        """Draws the x-axis and vertical constant-x lines, as well as the labels. """
 
         axis_label_font = weeplot.utilities.get_font_handle(self.axis_label_font_path,
                                                             self.axis_label_font_size)
@@ -318,7 +318,7 @@ class GeneralPlot(object):
             drawlabelcount += 1
 
     def _renderYAxes(self, sdraw):
-        """Draws the y axis and horizontal constant-y lines, as well as the labels.
+        """Draws the y-axis and horizontal constant-y lines, as well as the labels.
         Should be sufficient for most purposes.
         """
         nygridlines     = int((self.yscale[1] - self.yscale[0]) / self.yscale[2] + 1.5)
@@ -665,7 +665,7 @@ def blend_ls(c, bg, alpha):
 
 def blend(c, bg, alpha_h, alpha_l, alpha_s):
     """Fade from c to bg in the hue, lightness, saturation colorspace.
-       Added hue directionality to choose shortest circular hue path e.g.
+       Added hue directionality to choose the shortest circular hue path e.g.
        https://stackoverflow.com/questions/1416560/hsl-interpolation
        Also, grey detection to minimize colour wheel travel.  Interesting resource:
        http://davidjohnstone.net/pages/lch-lab-colour-gradient-picker

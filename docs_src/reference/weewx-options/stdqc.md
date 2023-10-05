@@ -28,7 +28,7 @@ For example,
     outHumidity = 0, 100 
 ```
 
-With `target_unit=US` (the default), if a temperature should fall outside of
+With `target_unit=US` (the default), if a temperature should fall outside
 the inclusive range -40 °F through 120 °F, then it will be set to the null
 value, `None`, and ignored. In a similar manner, the acceptable values for
 barometric pressure would be 28 through 32.5 inHg, for humidity 0 through 100%.
@@ -43,7 +43,7 @@ For example,
     barometer = 28, 32.5, inHg
 ```
 
-In this example, if a temperature should fall outside of the inclusive range
+In this example, if a temperature should fall outside the inclusive range
 -40 °C through 60 °C, then it will be set to the null value, `None`, and
 ignored. In a similar manner, the acceptable values for barometric pressure
 would be 28 through 32.5 inHg. Since the units have been specified, these

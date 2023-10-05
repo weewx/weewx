@@ -8,7 +8,7 @@ The skin configuration options control report behavior, including:
 * how units are displayed
 * which language is used
 
-Options that control the behavior of a skin are specified in the the skin
+Options that control the behavior of a skin are specified in the skin
 configuration file `skin.conf`.
 
 Language-dependent labels and texts are specified in the language files,

@@ -1614,7 +1614,7 @@ class TE923Station(object):
             log.debug("timeout while reading: ignoring bytes: %s" % _fmt(rbuf))
             raise BadRead("Timeout after %d bytes" % len(rbuf))
 
-        # Send acknowledgement whether or not it was a good read
+        # Send acknowledgement whether it was a good read
         reqbuf = [0x24, 0xAF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
         reqbuf[4] = addr // 0x10000
         reqbuf[3] = (addr - (reqbuf[4] * 0x10000)) // 0x100
@@ -1641,7 +1641,7 @@ class TE923Station(object):
             raise BadRead("Bad crc: %02x != %02x" % (crc, rbuf[33]))
 
         # early versions of this driver used to get long reads, but these
-        # might not happen any more. log it then try to use the data anyway.
+        # might not happen anymore. log it then try to use the data anyway.
         if len(rbuf) != 34:
             log.info("read: wrong number of bytes: %d != 34" % len(rbuf))
 

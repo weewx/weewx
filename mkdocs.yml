@@ -2,7 +2,7 @@
 site_name: 'WeeWX 5.0'
 site_url: 'https://www.weewx.com'
 site_author: "Tom Keffer <tkeffer@gmail.com>"
-# do not display github info since it is always obscured anyway
+# do not display GitHub info since it is always obscured anyway
 #repo_url: https://github.com/weewx/weewx
 #repo_name: WeeWX GitHub Repository
 # Shut off the "edit on GitHub" feature:

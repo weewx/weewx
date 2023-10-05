@@ -34,7 +34,7 @@ class QC(object):
             min and max values are in. If 'unit' is not specified, then the values must be in the
             same unit as the incoming record (a risky supposition!).
 
-            log_failure: True to log values outside of their limits. False otherwise.
+            log_failure: True to log values outside their limits. False otherwise.
         """
 
         self.mm_dict = {}

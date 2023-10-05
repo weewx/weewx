@@ -69,7 +69,7 @@ def main():
 
     action = options.action
 
-    # list all of the lang files that we find
+    # list all the lang files that we find
     if action == 'all' or action == 'languages':
         confs = glob.glob("%s/*.conf" % lang_dir)
         print("language files found:")
@@ -175,7 +175,7 @@ def prettyp(d, indent=0):
             print('  ' * indent + "%s=%s" % (key, value))
 
 def get_gettext_strings(dir_name, ext_list, string_list=set()):
-    """get all of the gettext strings from a skin"""
+    """get all the gettext strings from a skin"""
     for f in os.listdir(dir_name):
         fn = os.path.join(dir_name, f)
         if os.path.isfile(fn):

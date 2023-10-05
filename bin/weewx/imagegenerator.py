@@ -363,7 +363,7 @@ def _skip_this_plot(time_ts, plot_options, img_file):
     if aggregate_interval is None or not os.path.exists(img_file):
         return False
 
-    # If its a very old image, then it has to be regenerated
+    # If it's a very old image, then it has to be regenerated
     if time_ts - os.stat(img_file).st_mtime >= aggregate_interval:
         return False
 

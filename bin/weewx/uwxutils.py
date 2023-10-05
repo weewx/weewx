@@ -20,7 +20,7 @@ Notes about pressure
 Notes about input parameters:
   currentTemp -   current instantaneous station temperature
   meanTemp -      average of current temp and the temperature 12 hours in
-                  the past. If the 12 hour temp is not known, simply pass
+                  the past. If the 12-hour temp is not known, simply pass
                   the same value as currentTemp for the mean temp.
   humidity -      Value should be 0 to 100. For the pressure conversion
                   functions, pass a value of zero if you do not want to
@@ -34,7 +34,7 @@ Notes about input parameters:
                   algorithms will convert the elevation internally into
                   a geopotential altitude.
   sensorElevation - This should be the geometric altitude of the actual
-                  barometric sensor (which could be different than the
+                  barometric sensor (which could be different from the
                   official station elevation).
 
 Notes about Sensor Pressure vs. Station Pressure:
@@ -462,10 +462,10 @@ class uWxUtilsVP(object):
     
     notes about input parameters:
       currentTemp -   current instantaneous station temperature
-      temp12HrsAgoF - temperature from 12 hours ago. If the 12 hour temp is
+      temp12HrsAgoF - temperature from 12 hours ago. If the 12-hour temp is
                       not known, simply pass the same value as currentTemp
-                      for the 12 hour temp. For the vantage pro sea level
-                      to sensor pressure conversion, the 12 hour temp
+                      for the 12-hour temp. For the vantage pro sea level
+                      to sensor pressure conversion, the 12-hour temp
                       should be the hourly temp that is 11 hours to 11:59
                       in the past. For example, if the current time is
                       3:59pm, use the 4:00am temp, and if it is currently
@@ -474,7 +474,7 @@ class uWxUtilsVP(object):
                       level calculation, so the function performs rounding
                       on the temperature.
       meanTemp -      average of current temp and the temperature 12 hours in
-                      the past. If the 12 hour temp is not known, simply pass
+                      the past. If the 12-hour temp is not known, simply pass
                       the same value as currentTemp for the mean temp. For the
                       Vantage Pro, the mean temperature should come from the
                       BARDATA.VirtualTemp. The value in BARDATA is an integer
@@ -505,8 +505,8 @@ class uWxUtilsVP(object):
         return Result
 
     # this function is used if you do not have access to BARDATA. The function
-    # will internally calculate the mean temp and the humidity correction
-    # the would normally come from the BARDATA.
+    # will internally calculate the mean temp and the humidity correction.
+    # which would normally come from the BARDATA.
     # currentTempF is the value of the current sensor temp
     # temp12HrsAgoF is the temperature from 12 hours ago (see comments on
     #           temp12Hr from earlier in this document for more on this).

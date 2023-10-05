@@ -596,7 +596,7 @@ class WDSource(weeimport.Source):
                 _ts_rec = dict(rec, **{'datetime': _ts})
                 # some WD log files contain records from another month so check
                 # year and month and if the record belongs to another month
-                # store it for use later otherwise add it to this months data
+                # store it for use later otherwise add it to this month's data
                 if _ts_rec['year'] == _year and _ts_rec['month'] == _month:
                     # add the timestamped record to our data list
                     _data.append(_ts_rec)
@@ -613,7 +613,7 @@ class WDSource(weeimport.Source):
                                       not (x['year'] == _year and x['month'] == _month)]
 
             # There may be duplicate timestamped records in the data. We will
-            # keep the first encountered duplicate and discard the latter ones
+            # keep the first encountered duplicate and discard the latter ones,
             # but we also need to keep track of the duplicate timestamps for
             # later reporting.
 
@@ -674,7 +674,7 @@ class WDSource(weeimport.Source):
         """True if current period is the first period otherwise False.
 
          Return True if the current file name being processed is the first in
-         the list or it is None (the initialisation value).
+         the list, or if it is None (the initialisation value).
          """
 
         return self.file_name == self.log_list[0] if self.file_name is not None else True

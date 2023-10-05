@@ -25,9 +25,9 @@ can be extended:
 
 The configuration section `[StdWXCalculate]` consists of two different parts:
 
-1. The sub-section `[[Calculations]]`, which specifies which derived types are
+1. The subsection `[[Calculations]]`, which specifies which derived types are
 to be calculated and under what circumstances.
-2. Zero or more sub-sections, which specify what parameters are to be used for
+2. Zero or more subsections, which specify what parameters are to be used for
 the calculation. These are described below.
 
 The service `StdWXCalculate` can be extended by the user to add new, derived
@@ -80,7 +80,7 @@ specify the following:
 ```
 
 This will force WeeWX to always calculate a value for `windchill`,
-irregardless of whether the hardware provides one.
+regardless of whether the hardware provides one.
 
 Example 2: suppose you want ET to be calculated, but only for archive records.
 The option would look like:

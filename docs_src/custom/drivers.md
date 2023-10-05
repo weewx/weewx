@@ -32,7 +32,7 @@ network to a physical device or a web service.
 
 Create a file in the user directory, say `mydriver.py`. This file
 will contain the driver class as well as any hardware-specific code. Do
-not put it in the `weewx/drivers` directory or it will be deleted
+not put it in the `weewx/drivers` directory, or it will be deleted
 when you upgrade WeeWX.
 
 Inherit from the abstract base class
@@ -202,7 +202,7 @@ The actual driver itself is in
 `examples/fileparse/bin/user/fileparse.py`.
 
 Another good example is the simulator code located in
-`weewx/drivers/simulator.py`. It's dirt simple and you can
+`weewx/drivers/simulator.py`. It's dirt simple, and you can
 easily play with it. Many people have successfully used it as a starting
 point for writing their own custom driver.
 

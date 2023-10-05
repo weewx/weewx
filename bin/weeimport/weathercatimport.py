@@ -163,7 +163,7 @@ class WeatherCatSource(weeimport.Source):
         if 'Units' in weathercat_config_dict and len(weathercat_config_dict['Units']) > 0:
             # we have [[Units]] settings so iterate over each
             for group, value in weathercat_config_dict['Units'].items():
-                # is this group (eg 'temperature', 'rain', etc) one that we know
+                # is this group (eg 'temperature', 'rain', etc.) one that we know
                 # about
                 if group in self.weathercat_unit_groups:
                     # it is, so iterate over each import field that could be affected by

@@ -96,7 +96,7 @@ The color of the x- and y-axis label font. Optional. Default is
 
 #### axis_label_font_path
 
-The path to the font to be use for the x- and y-axis labels. Optional.
+The path to the font to be used for the x- and y-axis labels. Optional.
 If not given, or if WeeWX cannot find the font, then the default PIL
 font will be used.
 
@@ -111,7 +111,7 @@ The color of the bottom label font. Optional. Default is `black`.
 
 #### bottom_label_font_path
 
-The path to the font to be use for the bottom label. Optional. If not
+The path to the font to be used for the bottom label. Optional. If not
 given, or if WeeWX cannot find the font, then the default PIL font will
 be used.
 
@@ -133,7 +133,7 @@ The margin of the bottom label from the bottom of the plot. Default is
 
 #### top_label_font_path
 
-The path to the font to be use for the top label. Optional. If not
+The path to the font to be used for the top label. Optional. If not
 given, or if WeeWX cannot find the font, then the default PIL font will
 be used.
 
@@ -148,7 +148,7 @@ The color of the unit label font. Optional. Default is `black`.
 
 #### unit_label_font_path
 
-The path to the font to be use for the unit label. Optional. If not
+The path to the font to be used for the unit label. Optional. If not
 given, or if WeeWX cannot find the font, then the default PIL font will
 be used.
 
@@ -222,7 +222,7 @@ Optional. Default is `N`.
 
 #### rose_label_font_path
 
-The path to the font to be use for the rose label (the letter "N,"
+The path to the font to be used for the rose label (the letter "N,"
 indicating North). Optional. If not given, or if WeeWX cannot find the
 font, then the default PIL font will be used.
 

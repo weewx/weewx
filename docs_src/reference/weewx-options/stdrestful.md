@@ -176,10 +176,10 @@ is `600`.
 
 #### stale
 
-How old a record can be in seconds before it will not be used for a catch up.
+How old a record can be in seconds before it will not be used for a catch-up.
 CWOP does not use the timestamp on a posted record. Instead, they use the wall
 clock time that it came in. This means that if your station is off the air for
-a long period of time, then when WeeWX attempts a catch up, old data could be
+a long period of time, then when WeeWX attempts a catch-up, old data could be
 interpreted as the current conditions. Optional. Default is `600`.
 
 #### server_list

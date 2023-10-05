@@ -147,7 +147,7 @@ def scale(data_min, data_max, prescale=(None, None, None), nsteps=10):
 
     # Test it against the desired minimum, if any
     if min_interval is None or interval >= min_interval:
-        # Either no min interval was specified, or its safely
+        # Either no min interval was specified, or it's safely
         # less than the chosen interval.
         if minscale is None:
             minscale = interval * math.floor(data_min / interval)
@@ -220,13 +220,13 @@ def scaletime(tmin_ts, tmax_ts):
     >>> print(to_string(xmin), to_string(xmax), xinc)
     2013-05-16 06:00:00 PDT (1368709200) 2013-05-17 09:00:00 PDT (1368806400) 10800
 
-    Example 5: 3 hours on a 15 minute boundary
+    Example 5: 3 hours on a 15-minute boundary
     >>> time_ts = time.mktime(time.strptime("2013-05-17 07:45", "%Y-%m-%d %H:%M"))
     >>> xmin, xmax, xinc = scaletime(time_ts - 3*3600, time_ts)
     >>> print(to_string(xmin), to_string(xmax), xinc)
     2013-05-17 05:00:00 PDT (1368792000) 2013-05-17 08:00:00 PDT (1368802800) 900
 
-    Example 6: 3 hours on a non-15 minute boundary
+    Example 6: 3 hours on a non 15-minute boundary
     >>> time_ts = time.mktime(time.strptime("2013-05-17 07:46", "%Y-%m-%d %H:%M"))
     >>> xmin, xmax, xinc = scaletime(time_ts - 3*3600, time_ts)
     >>> print(to_string(xmin), to_string(xmax), xinc)
@@ -262,10 +262,10 @@ def scaletime(tmin_ts, tmax_ts):
         else:
             # For intervals from 12 through 16 hours, use two hours.
             interval = 7200
-        # Get to the one hour boundary below tmax:
+        # Get to the one-hour boundary below tmax:
         stop_dt = tmax_dt.replace(minute=0, second=0, microsecond=0)
-        # if tmax happens to be on a one hour boundary we're done. Otherwise, round
-        # up to the next one hour boundary:
+        # if tmax happens to be on a one-hour boundary we're done. Otherwise, round
+        # up to the next one-hour boundary:
         if tmax_dt > stop_dt:
             stop_dt += datetime.timedelta(hours=1)
         n_hours = int((tdelta + 3599) / 3600)
@@ -279,8 +279,8 @@ def scaletime(tmin_ts, tmax_ts):
         # Subtract off enough to get to the lower 3-hour boundary from tmax: 
         stop_dt = tmax_dt.replace(minute=0, second=0, microsecond=0) \
                   - datetime.timedelta(hours=h % 3)
-        # If tmax happens to lie on a 3 hour boundary we don't need to do anything. If not, we need
-        # to round up to the next 3 hour boundary:
+        # If tmax happens to lie on a 3-hour boundary we don't need to do anything. If not, we need
+        # to round up to the next 3-hour boundary:
         if tmax_dt > stop_dt:
             stop_dt += datetime.timedelta(hours=3)
         # The stop time is one day earlier
@@ -291,7 +291,7 @@ def scaletime(tmin_ts, tmax_ts):
             start_dt -= datetime.timedelta(hours=3)
 
     elif 27 * 3600 < tdelta <= 31 * 24 * 3600:
-        # The time scale is between a day and a month. A time increment of one day is appropriate
+        # The timescale is between a day and a month. A time increment of one day is appropriate
         start_dt = tmin_dt.replace(hour=0, minute=0, second=0, microsecond=0)
         stop_dt = tmax_dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -301,7 +301,7 @@ def scaletime(tmin_ts, tmax_ts):
 
         interval = 24 * 3600
     elif tdelta <= 2 * 365.25 * 24 * 3600:
-        # The time scale is between a month and 2 years, inclusive. A time increment of a month
+        # The timescale is between a month and 2 years, inclusive. A time increment of a month
         # is appropriate
         start_dt = tmin_dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
@@ -315,7 +315,7 @@ def scaletime(tmin_ts, tmax_ts):
         # Average month length:
         interval = 365.25 / 12 * 24 * 3600
     else:
-        # The time scale is over 2 years. A time increment of six months is appropriate
+        # The time-scale is over 2 years. A time increment of six months is appropriate
         start_dt = tmin_dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         year, mon, day = tmax_dt.timetuple()[0:3]
@@ -388,7 +388,7 @@ class ScaledDraw(object):
 
         For a scatter plot, set line_type to None and marker_type to something other than None.
         """
-        # Break the line up around any nulls or gaps between samples
+        # Break the line around any nulls or gaps between samples
         for xy_seq in xy_seq_line(x, y, maxdx):
             # Create a list with the scaled coordinates...
             xy_seq_scaled = [(self.xtranslate(xc), self.ytranslate(yc)) for (xc, yc) in xy_seq]
@@ -470,7 +470,7 @@ class ScaledDraw(object):
 
 
 def xy_seq_line(x, y, maxdx=None):
-    """Generator function that breaks a line up into individual segments around
+    """Generator function that breaks a line into individual segments around
     any nulls held in y or any gaps in x greater than maxdx.
     
     x: iterable sequence of x coordinates. All values must be non-null

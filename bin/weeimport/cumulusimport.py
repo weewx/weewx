@@ -39,14 +39,14 @@ class CumulusSource(weeimport.Source):
 
     Handles the import of data from Cumulus monthly log files.Cumulus stores
     observation data in monthly log files. Each log file contains a month of
-    data in CSV format. The format of the CSV data (eg date separator, field
+    data in CSV format. The format of the CSV data (e.g., date separator, field
     delimiter, decimal point character) depends upon the settings used in
     Cumulus.
 
     Data is imported from all month log files found in the source directory one
     log file at a time. Units of measure are not specified in the monthly log
     files so the units of measure must be specified in the wee_import config
-    file. Whilst the Cumulus monthly log file format is well defined, some
+    file. Whilst the Cumulus monthly log file format is well-defined, some
     pre-processing of the data is required to provide data in a format the
     suitable for use in the wee_import mapping methods.
     """
@@ -132,7 +132,7 @@ class CumulusSource(weeimport.Source):
         # data.
         self.rain_source_confirmed = None
 
-        # Units of measure for some obs (eg temperatures) cannot be derived from
+        # Units of measure for some obs (e.g., temperatures) cannot be derived from
         # the Cumulus monthly log files. These units must be specified by the
         # user in the import config file. Read these units and fill in the
         # missing unit data in the header map. Do some basic error checking and
@@ -391,7 +391,7 @@ class CumulusSource(weeimport.Source):
         """True if current period is the first period otherwise False.
 
          Return True if the current file name being processed is the first in
-         the list or it is None (the initialisation value).
+         the list, or if it is None (the initialisation value).
          """
 
         return self.file_name == self.log_list[0] if self.file_name is not None else True

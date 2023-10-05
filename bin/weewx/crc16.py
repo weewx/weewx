@@ -3,7 +3,7 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Routines for calculating a 16 bit CRC check. """
+"""Routines for calculating a 16-bit CRC check. """
 
 from functools import reduce
 

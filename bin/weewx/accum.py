@@ -15,7 +15,7 @@ of a sequence of records."""
 # However, wind is a special case. It is a vector, which has been flatted over at least two
 # scalars, windSpeed and windDir. Some stations, notably the Davis Vantage, add windGust and
 # windGustDir. The accumulators cannot simply treat them individually as if they were just another
-# scalar. Instead they must be grouped together. This is done by treating windSpeed as a 'special'
+# scalar. Instead, they must be grouped together. This is done by treating windSpeed as a 'special'
 # scalar. When it appears, it is coupled with windDir and, if available, windGust and windGustDir,
 # and added to a vector accumulator. When the other types ( windDir, windGust, and windGustDir)
 # appear, they are ignored, having already been handled during the processing of type windSpeed.
@@ -410,7 +410,7 @@ class Accum(dict):
     """Accumulates statistics for a set of observation types."""
 
     def __init__(self, timespan, unit_system=None):
-        """Initialize a Accum.
+        """Initialize an Accum.
         
         timespan: The time period over which stats will be accumulated.
         unit_system: The unit system used by the accumulator"""

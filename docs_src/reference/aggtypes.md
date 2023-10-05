@@ -13,14 +13,14 @@
     </tr>
     <tr>
         <td class="first_col code">avg_ge(val)</td>
-        <td>The number of days where the average value is greater than or equal to <em>val</em>. Aggregation
+        <td>The number of days when the average value is greater than or equal to <em>val</em>. Aggregation
             period must be one day or longer. The argument <span class="code">val</span> is a
             <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
         </td>
     </tr>
     <tr>
         <td class="first_col code">avg_le(val)</td>
-        <td>The number of days where the average value is less than or equal to <em>val</em>. Aggregation period
+        <td>The number of days when the average value is less than or equal to <em>val</em>. Aggregation period
             must be one day or longer. The argument <span class="code">val</span> is a
             <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
         </td>
@@ -96,14 +96,14 @@
     </tr>
     <tr>
         <td class="first_col code">max_ge(val)</td>
-        <td>The number of days where the maximum value is greater than or equal to <em>val</em>. Aggregation
+        <td>The number of days when the maximum value is greater than or equal to <em>val</em>. Aggregation
             period must be one day or longer. The argument <span class="code">val</span> is a
             <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
         </td>
     </tr>
     <tr>
         <td class="first_col code">max_le(val)</td>
-        <td>The number of days where the maximum value is less than or equal to <em>val</em>. Aggregation period
+        <td>The number of days when the maximum value is less than or equal to <em>val</em>. Aggregation period
             must be one day or longer. The argument <span class="code">val</span> is a
             <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
         </td>
@@ -146,14 +146,14 @@
     </tr>
     <tr>
         <td class="first_col code">min_ge(val)</td>
-        <td>The number of days where the minimum value is greater than or equal to <em>val</em>. Aggregation
+        <td>The number of days when the minimum value is greater than or equal to <em>val</em>. Aggregation
             period must be one day or longer. The argument <span class="code">val</span> is a
             <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
         </td>
     </tr>
     <tr>
         <td class="first_col code">min_le(val)</td>
-        <td>The number of days where the minimum value is less than or equal to <em>val</em>. Aggregation period
+        <td>The number of days when the minimum value is less than or equal to <em>val</em>. Aggregation period
             must be one day or longer. The argument <span class="code">val</span> is a
             <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
         </td>
@@ -175,14 +175,14 @@
     </tr>
     <tr>
         <td class="first_col code">sum_ge(val)</td>
-        <td>The number of days where the sum of value is greater than or equal to <em>val</em>. Aggregation
+        <td>The number of days when the sum of value is greater than or equal to <em>val</em>. Aggregation
             period must be one day or longer. The argument <span class="code">val</span> is a
             <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
         </td>
     </tr>
     <tr>
         <td class="first_col code">sum_le(val)</td>
-        <td>The number of days where the sum of value is less than or equal to <em>val</em>. Aggregation period
+        <td>The number of days when the sum of value is less than or equal to <em>val</em>. Aggregation period
             must be one day or longer. The argument <span class="code">val</span> is a
             <a href="#ValueTuple"><span class="code">ValueTuple</span></a>.
         </td>

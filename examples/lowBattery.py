@@ -135,7 +135,7 @@ class BatteryAlarm(StdService):
                 if abs(time.time() - self.last_msg_ts) >= self.time_wait :
                     # Sound the alarm!
                     timestamp = event.packet['dateTime']
-                    # Launch in a separate thread so it does not block the
+                    # Launch in a separate thread, so it does not block the
                     # main LOOP thread:
                     t = threading.Thread(target=BatteryAlarm.sound_the_alarm,
                                          args=(self, timestamp,

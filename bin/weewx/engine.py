@@ -441,7 +441,7 @@ class StdCalibrate(StdService):
 class StdQC(StdService):
     """Service that performs quality check on incoming data.
 
-    A StdService wrapper for a QC object so it may be called as a service. This 
+    A StdService wrapper for a QC object, so it may be called as a service. This
     also allows the weewx.qc.QC class to be used elsewhere without the 
     overheads of running it as a weewx service.
     """
@@ -520,7 +520,7 @@ class StdArchive(StdService):
             ival_msg = "(software record generation)"
         elif self.record_generation == 'hardware':
             # If the station supports a hardware archive interval, use that.
-            # Warn if it is different than what is in config.
+            # Warn if it is different from what is in config.
             try:
                 if software_interval != self.engine.console.archive_interval:
                     log.info("The archive interval in the configuration file (%d) does not "
@@ -557,7 +557,7 @@ class StdArchive(StdService):
 
     def startup(self, _unused):
         """Called when the engine is starting up. Main task is to set up the database, backfill it,
-        then perform a catch up if the hardware supports it. """
+        then perform a catch-up if the hardware supports it. """
 
         # This will create the database if it doesn't exist:
         dbmanager = self.engine.db_binder.get_manager(self.data_binding, initialize=True)
@@ -569,10 +569,10 @@ class StdArchive(StdService):
                                              " complete. Finish the update first."
                                              % dbmanager.database_name)
 
-        # Back fill the daily summaries.
+        # Backfill the daily summaries.
         _nrecs, _ndays = dbmanager.backfill_day_summary()
 
-        # Do a catch up on any data still on the station, but not yet put in the database.
+        # Do a catch-up on any data still on the station, but not yet put in the database.
         if self.no_catchup:
             log.debug("No catchup specified.")
         else:
@@ -585,7 +585,7 @@ class StdArchive(StdService):
     def pre_loop(self, _event):
         """Called before the main packet loop is entered."""
 
-        # If this the the initial time through the loop, then the end of
+        # If this is the initial time through the loop, then the end of
         # the archive and delay periods need to be primed:
         if not self.end_archive_period_ts:
             now = self.engine._get_console_time()

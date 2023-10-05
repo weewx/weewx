@@ -49,10 +49,10 @@ the code will not be included.
 
 ### Extending `[Extras]`
 
-Other tags can be added in a similar manner, including sub-sections. For
+Other tags can be added in a similar manner, including subsections. For
 example, say you have added a video camera, and you would like to add a
 still image with a hyperlink to a page with the video. You want all of
-these options to be neatly contained in a sub-section.
+these options to be neatly contained in a subsection.
 
 ``` ini
 [Extras]

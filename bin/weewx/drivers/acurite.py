@@ -147,7 +147,7 @@ string is 10 bytes long, contains readings from the remote sensors, and comes
 in different flavors.  One contains wind speed, wind direction, and rain
 counter.  Another contains wind speed, temperature, and humidity.  The R2
 string is 25 bytes long and contains the temperature and pressure readings
-from the console, plus a whole bunch of calibration constants required to
+from the console, plus a bunch of calibration constants required to
 figure out the actual pressure and temperature.  The R3 string is 33 bytes
 and contains historical data and (apparently) the humidity readings from the
 console sensors.
@@ -228,7 +228,7 @@ for HP03S sensor:
  9-10:  C4 temperature coefficient of offset       0x00 - 0x1000
  11-12: C5 reference temperature                   0x1000 - 0xffff
  13-14: C6 temperature coefficient of temperature  0x00 - 0x4000
- 15-16: C7 offset fine tuning                      0x960 - 0xa28
+ 15-16: C7 offset fine-tuning                      0x960 - 0xa28
  17:    A sensor-specific parameter                0x01 - 0x3f
  18:    B sensor-specific parameter                0x01 - 0x3f
  19:    C sensor-specific parameter                0x01 - 0x0f
@@ -247,7 +247,7 @@ for MS5607-02BA03 sensor:
  9-10:  C4 temperature coefficient of offset       0x0400
  11-12: C5 reference temperature                   0x1000
  13-14: C6 temperature coefficient of temperature  0x00
- 15-16: C7 offset fine tuning                      0x0960
+ 15-16: C7 offset fine-tuning                      0x0960
  17:    A sensor-specific parameter                0x01
  18:    B sensor-specific parameter                0x01
  19:    C sensor-specific parameter                0x01
@@ -410,7 +410,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
 
     ignore_bounds - Indicates how to treat calibration constants from the
     pressure/temperature sensor.  Some consoles report constants that are
-    outside the limits specified by the sensor manufacturer.  Typically this
+    outside the limits specified by the sensor manufacturer.  Typically, this
     would indicate bogus data - perhaps a bad transmission or noisy USB.
     But in some cases, the apparently bogus constants actually work, and
     no amount of power cycling or resetting of the console changes the values

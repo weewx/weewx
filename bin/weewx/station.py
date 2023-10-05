@@ -136,7 +136,7 @@ def _os_uptime():
         pass
 
     try:
-        # For MacOS, Python 2:
+        # For macOS, Python 2:
         from Quartz.QuartzCore import CACurrentMediaTime
         return CACurrentMediaTime()
     except ImportError:

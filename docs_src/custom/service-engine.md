@@ -414,7 +414,7 @@ approaches for how to handle this:
 
 This section covers the latter approach.
 
-Suppose you have installed an electric meter at your house and you wish
+Suppose you have installed an electric meter at your house, and you wish
 to correlate electrical usage with the weather. The meter has some sort
 of connection to your computer, allowing you to download the total power
 consumed. At the end of every archive interval you want to calculate the

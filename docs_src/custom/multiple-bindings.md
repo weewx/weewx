@@ -128,7 +128,7 @@ The first will be of the temperature from the Vantage. It uses the default
 binding, `wx_binding`, and will be labeled `Vantage inTemp`. The second line
 explicitly uses the `wmr100_binding`. Because it uses the same variable name
 (`inTemp`) as the first line, we had to explicitly specify it using option
-`data_type`, in order to avoid using the same sub-section name twice (see
+`data_type`, in order to avoid using the same subsection name twice (see
 the section *[Including a type more than once in a plot](../image-generator/#include-same-sql-type-2x)*
 for details). It will be labeled `WMR100 inTemp`. The results look like this:
 

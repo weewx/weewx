@@ -60,7 +60,7 @@ readings.
 ## Data format {id=fousb_data_format}
 
 The 10xx/20xx consoles have a data format that is different from
-the 30xx consoles.  All of the consoles recognize wind, rain,
+the 30xx consoles.  All the consoles recognize wind, rain,
 temperature, and humidity from the same instrument clusters.
 However, some instrument clusters also include a luminosity sensor.
 Only the 30xx consoles recognize the luminosity and UV output

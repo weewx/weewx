@@ -229,7 +229,7 @@ class WindSpeedRecalculation(DatabaseFix):
                     # the archive
                     (day_max_ts, day_max) = self.get_archive_span_max(day_span, 'windSpeed')
                     # now save the value and time in the applicable row in the
-                    # windSpeed daily summary, but only if its not a dry run
+                    # windSpeed daily summary, but only if it's not a dry run
                     if not self.dry_run:
                         self.write_max('windSpeed', day_span.start,
                                        day_max, day_max_ts)
@@ -466,8 +466,8 @@ class CalcMissing(DatabaseFix):
             # first we need a start and stop date object
             start_d = datetime.date.fromtimestamp(self.start_ts)
             # Since each daily summary is identified by the midnight timestamp
-            # for that day we need to make sure we our stop timestamp is not on
-            # a midnight boundary or we will rebuild the following days sumamry
+            # for that day, we need to make sure our stop timestamp is not on
+            # a midnight boundary, or we will rebuild the following days sumamry
             # as well. if it is on a midnight boundary just subtract 1 second
             # and use that.
             summary_stop_ts = self.stop_ts
@@ -535,7 +535,7 @@ class CalcMissing(DatabaseFix):
             # argument, we want a string of comma separated `field_name`=?
             # entries. Each ? will be replaced by a value from update value list
             # when the SQL statement is executed. We should not see any field
-            # names that are SQLite/MySQL reserved words (eg interval) but just
+            # names that are SQLite/MySQL reserved words (e.g., interval) but just
             # in case enclose field names in backquotes.
             set_str = ','.join(["`%s`=?" % k for k in key_list])
             # form the SQL update statement
@@ -544,7 +544,7 @@ class CalcMissing(DatabaseFix):
                                                                       ts)
             # obtain a cursor if we don't have one
             _cursor = cursor or self.dbm.connection.cursor()
-            # execute the update statement but only if its not a dry run
+            # execute the update statement but only if it's not a dry run
             if not self.dry_run:
                 _cursor.execute(sql_update_stmt, value_list)
             # close the cursor is we opened one

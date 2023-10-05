@@ -112,7 +112,7 @@ Records from a single date can be imported by use of the `--date` option. The `-
     <tr>
       <td class="code first_col">omitted<br>(i.e., the default)</td>
       <td>All available records</td>
-      <td>Todays records only</td>
+      <td>Today's records only</td>
     </tr>
     <tr>
       <td class="code first_col">--date=2015-12-22</td>
@@ -165,7 +165,7 @@ table:
       <td class="code first_col">omitted<br>(i.e., the default)</td>
       <td class="code first_col">omitted<br>(i.e., the default)</td>
       <td>All available records</td>
-      <td>Todays records only</td>
+      <td>Today's records only</td>
     </tr>
     <tr>
       <td class="code first_col">--from=2015-12-22</td>
@@ -305,7 +305,7 @@ The character used to separate fields. Default is `,` (comma).
 #### `decimal`
 
 The character used as the decimal point in the source files. A full stop is
-frequently used but it may be another character. This parameter must be
+frequently used, but it may be another character. This parameter must be
 included in quotation marks. Default is `'.'`.
 
 #### `interval`
@@ -366,7 +366,7 @@ The default is `True`.
 
 #### `raw_datetime_format`
 
-WeeWX records each record with a unique unix epoch timestamp, whereas many weather station applications or web sources export observational data with a human readable date-time. This human readable date-time is interpreted according to the format set by the `raw_datetime_format` option. This option consists of <em> <a href="https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior">Python strptime() format codes</a> </em> and literal characters to represent the date-time data being imported.
+WeeWX records each record with a unique unix epoch timestamp, whereas many weather station applications or web sources export observational data with a human-readable date-time. This human-readable date-time is interpreted according to the format set by the `raw_datetime_format` option. This option consists of <em> <a href="https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior">Python strptime() format codes</a> </em> and literal characters to represent the date-time data being imported.
 
 For example, if the source data uses the format 23 January 2015 15:34 then the appropriate setting for `raw_datetime_format` would be `%d %B %Y %H:%M`, 9:25:00 12/28/16 would use `%H:%M:%S %m/%d/%y`. If the source data provides a unix epoch timestamp as the date-time field then the unix epoch timestamp is used directly and the `raw_datetime_format` option is ignored.
 
@@ -381,7 +381,7 @@ The default is `%Y-%m-%d %H:%M:%S`.
 
 #### `rain`
 
-The WeeWX `rain` field records rainfall that was recorded in the preceding archive period, so for a five minute archive period the `rain` field in each archive record would contain the total rainfall that fell in the previous five minutes. Many weather station applications provide a daily or yearly total. `wee_import` can derive the WeeWX `rain` field in one of two ways:
+The WeeWX `rain` field records rainfall that was recorded in the preceding archive period, so for a five-minute archive period the `rain` field in each archive record would contain the total rainfall that fell in the previous five minutes. Many weather station applications provide a daily or yearly total. `wee_import` can derive the WeeWX `rain` field in one of two ways:
 
 * If the imported rainfall data is a running total then `wee_import` can derive the WeeWX `rain` field from successive totals. For this method use `rain = cumulative`.
 
