@@ -44,7 +44,6 @@ packages = [
 include = [
     { path = "LICENSE.txt" },
     { path = "README.md"},
-    { path = "pkg/**/*", format = "sdist" },
     { path = "util/**/*", format = "sdist" },
     # By default, Poetry ignores things in .gitignore, which means it will
     # ignore bin/wee_resources. Hence, we need to include it back in.
