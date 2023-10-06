@@ -196,7 +196,7 @@ src-tarball: $(DSTDIR)/$(SRCPKG)
 
 $(DSTDIR)/$(SRCPKG):
 	mkdir -p $(BLDDIR)/weewx-$(VERSION)
-	rsync -ar ./ $(BLDDIR)/weewx-$(VERSION) --exclude-from .gitignore --exclude .git
+	rsync -ar ./ $(BLDDIR)/weewx-$(VERSION) --exclude-from .gitignore --exclude .git --exclude .editorconfig --exclude .idea --exclude .github --exclude .gitignore
 	mkdir -p $(DSTDIR)
 	tar cfz $(DSTDIR)/$(SRCPKG) -C $(BLDDIR) weewx-$(VERSION)
 
