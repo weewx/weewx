@@ -20,13 +20,15 @@ log = logging.getLogger(__name__)
 
 
 def dewpointF(T, R):
-    """Calculate dew point. 
+    """Calculate dew point in Fahrenheit
+
+    Args:
+        T (float|None): Temperature in Fahrenheit
+        R (float|None): Relative humidity in percent.
     
-    T: Temperature in Fahrenheit
-    
-    R: Relative humidity in percent.
-    
-    Returns: Dewpoint in Fahrenheit
+    Returns:
+        float|None: Dewpoint in Fahrenheit or None if it cannot be calculated
+
     Examples:
     
     >>> print("%.1f" % dewpointF(68, 50))
@@ -46,14 +48,15 @@ def dewpointF(T, R):
 
 
 def dewpointC(T, R):
-    """Calculate dew point.
+    """Calculate dew point in Celsius
     http://en.wikipedia.org/wiki/Dew_point
+
+    Args:
+        T (float|None): Temperature in Celsius
+        R (float|None): Relative humidity in percent.
     
-    T: Temperature in Celsius
-    
-    R: Relative humidity in percent.
-    
-    Returns: Dewpoint in Celsius
+    Returns:
+        float|None: Dewpoint in Celsius, or None if it cannot be calculated.
     """
 
     if T is None or R is None:
@@ -68,14 +71,15 @@ def dewpointC(T, R):
 
 
 def windchillF(T_F, V_mph):
-    """Calculate wind chill.
+    """Calculate wind chill in Fahrenhei
     http://www.nws.noaa.gov/om/cold/wind_chill.shtml
+
+    Args:
+        T_F (float|None): Temperature in Fahrenheit
+        V_mph (float|None): Wind speed in mph
     
-    T_F: Temperature in Fahrenheit
-    
-    V_mph: Wind speed in mph
-    
-    Returns Wind Chill in Fahrenheit
+    Returns:
+        float|None: Wind Chill in Fahrenheit or None if it cannot be calculated.
     """
 
     if T_F is None or V_mph is None:
@@ -91,12 +95,14 @@ def windchillF(T_F, V_mph):
 
 def windchillMetric(T_C, V_kph):
     """Wind chill, metric version, with wind in kph.
+
+    Args:
+        T (float|None): Temperature in Celsius
+        V (float|None): Wind speed in kph
     
-    T: Temperature in Celsius
-    
-    V: Wind speed in kph
-    
-    Returns wind chill in Celsius"""
+    Returns
+        float|None: wind chill in Celsius, or None if it cannot be calculated
+    """
 
     if T_C is None or V_kph is None:
         return None
@@ -115,12 +121,14 @@ windchillC = windchillMetric
 
 def windchillMetricWX(T_C, V_mps):
     """Wind chill, metric version, with wind in mps.
+
+    Args:
+        T_C (float|None): Temperature in Celsius
+        V_mps (float|None): Wind speed in mps
     
-    T: Temperature in Celsius
-    
-    V: Wind speed in mps
-    
-    Returns wind chill in Celsius"""
+    Returns:
+        float|None: wind chill in Celsius or None if it cannot be calculated.
+    """
 
     if T_C is None or V_mps is None:
         return None
@@ -134,17 +142,19 @@ def windchillMetricWX(T_C, V_mps):
 
 
 def heatindexF(T, R, algorithm='new'):
-    """Calculate heat index.
+    """Calculate heat index in Fahrenheit.
 
     The 'new' algorithm uses: https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
 
-    T: Temperature in Fahrenheit
+    Args:
+        T (float|None): Temperature in Fahrenheit
+        R (float|None): Relative humidity in percent
 
-    R: Relative humidity in percent
+    Returns:
+        float|None: heat index in Fahrenheit, or None if it cannot be calculated.
 
-    Returns heat index in Fahrenheit
-
-    Examples (Expected values obtained from https://www.wpc.ncep.noaa.gov/html/heatindex.shtml):
+    Examples:
+        (Expected values obtained from https://www.wpc.ncep.noaa.gov/html/heatindex.shtml):
 
     >>> print("%0.0f" % heatindexF(75.0, 50.0))
     75
