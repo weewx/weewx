@@ -52,8 +52,6 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
             self.config_dict['WEEWX_ROOT'],
             self.skin_dict['SKIN_ROOT'],
             self.skin_dict['skin'])
-        # ensure that we are in a consistent right location
-        os.chdir(self.image_dict['skin_dir'])
 
     def gen_images(self, gen_ts):
         """Generate the images.

@@ -169,6 +169,13 @@ class StdReportEngine(threading.Thread):
                                   "running report anyway", report)
                         log.debug("       ****  %s", timing.validation_error)
 
+            # Save the current working directory
+            cwd = os.getcwd()
+            # Change directory to the skin subdirectory:
+            os.chdir(os.path.join(self.config_dict['WEEWX_ROOT'],
+                                  skin_dict['SKIN_ROOT'],
+                                  skin_dict['skin']))
+
             if 'Generators' in skin_dict and 'generator_list' in skin_dict['Generators']:
                 for generator in weeutil.weeutil.option_as_list(skin_dict['Generators']['generator_list']):
 
@@ -205,8 +212,12 @@ class StdReportEngine(threading.Thread):
 
                     finally:
                         obj.finalize()
+
             else:
                 log.debug("No generators specified for report '%s'", report)
+
+            # Restore the current working directory
+            os.chdir(cwd)
 
 
 def _build_skin_dict(config_dict, report):
@@ -520,10 +531,6 @@ class CopyGenerator(ReportGenerator):
         except KeyError:
             pass
 
-        # Change directory to the skin subdirectory:
-        os.chdir(os.path.join(self.config_dict['WEEWX_ROOT'],
-                              self.skin_dict['SKIN_ROOT'],
-                              self.skin_dict['skin']))
         # Figure out the destination of the files
         html_dest_dir = os.path.join(self.config_dict['WEEWX_ROOT'],
                                      self.skin_dict['HTML_ROOT'])
