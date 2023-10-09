@@ -144,11 +144,11 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
         SyntaxError: If there is a syntax error in the file
         IOError: If the file cannot be found
     """
-    # Find and open the config file:
+    # Find the config file:
     config_path = find_file(config_path, args,
                             locations=locations, file_name=file_name)
+    # Now open it up and parse it.
     try:
-        # Now open it up and parse it.
         config_dict = configobj.ConfigObj(config_path,
                                           interpolation=interpolation,
                                           file_error=True,
@@ -161,6 +161,12 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
 
     # Remember where we found the config file
     config_dict['config_path'] = os.path.realpath(config_path)
+
+    if 'WEEWX_ROOT' not in config_dict:
+        # If missing, set WEEWX_ROOT to the directory the config file is in
+        config_dict['WEEWX_ROOT'] = os.path.dirname(config_path)
+    # In case WEEWX_ROOT is a relative path, convert it into an absolute path
+    config_dict['WEEWX_ROOT'] = os.path.abspath(config_dict['WEEWX_ROOT'])
 
     return config_path, config_dict
 
