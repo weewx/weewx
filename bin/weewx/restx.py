@@ -944,7 +944,8 @@ class AmbientThread(RESTThread):
                 if _key == 'dateTime':
                     # Convert from timestamp to string. The results will look something
                     # like '2020-10-19%2021%3A43%3A18'
-                    _v = urllib.parse.quote(str(datetime.datetime.utcfromtimestamp(_v)))
+                    _s = str(datetime.datetime.fromtimestamp(_v, datetime.timezone.utc))
+                    _v = urllib.parse.quote(_s)
                 # Format the value, and accumulate in _liststr:
                 _liststr.append(self.formats[_key] % _v)
         # Now stick all the pieces together with an ampersand between them:
@@ -1083,7 +1084,7 @@ class WOWThread(AmbientThread):
             if _v is not None:
                 if _key == 'dateTime':
                     _v = urllib.parse.quote_plus(
-                        datetime.datetime.utcfromtimestamp(_v).isoformat(' '))
+                        datetime.datetime.fromtimestamp(_v, datetime.timezone.utc).isoformat(' '))
                 # Format the value, and accumulate in _liststr:
                 _liststr.append(WOWThread._FORMATS[_key] % _v)
         # Now stick all the pieces together with an ampersand between them:

@@ -6,7 +6,7 @@ WeeWX change history
 Python 2.7 is no longer supported. You must have Python 3.7 (introduced
 May 2018) or greater.
 
-WeeWX can now be installed using pip.
+WeeWX can now be installed using [pip](https://pip.pypa.io).
 
 With pip installs, station data is stored in `~/weewx-data` by default, 
 instead of `/home/weewx`. This allows pip installs to be done without
@@ -16,15 +16,17 @@ The new utility [`weectl`](../utilities/weectl-about/) replaces `wee_database`,
 `wee_debug`, `wee_device`, `wee_extension`, and `wee_config`. Try `weectl
 --help` to see how to use it.
 
+Documentation now uses [MkDocs](https://www.mkdocs.org/).
+
 Package installs now use `systemd` instead of the old System V `/etc/init.d`.
 
 Removed all references to the deprecated package `distutils`, which is due to
 be removed in Python v3.12.
 
+Ported to Python v3.12.
+
 Removed the utility `wunderfixer`. The Weather Underground seems to no longer
 allow posting past-dated records.
-
-Documentation now uses [MkDocs](https://www.mkdocs.org/).
 
 Logging handler `rotate` has been removed. Its need to access the privileged
 location `/var/log/` on start up would cause crashes, even if it was never
