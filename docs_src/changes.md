@@ -12,10 +12,11 @@ With pip installs, station data is stored in `~/weewx-data` by default,
 instead of `/home/weewx`. This allows pip installs to be done without
 root privileges. However, `/home/weewx` can still be used.
 
-The new utility `weectl` replaces `wee_database`, `wee_debug`, `wee_device`,
-`wee_extension`, and `wee_config`. Try `weectl --help` to see how to use it.
+The new utility [`weectl`](../utilities/weectl-about/) replaces `wee_database`,
+`wee_debug`, `wee_device`, `wee_extension`, and `wee_config`. Try `weectl
+--help` to see how to use it.
 
-Package installs now use systemd instead of the old System V `/etc/init.d`.
+Package installs now use `systemd` instead of the old System V `/etc/init.d`.
 
 Removed all references to the deprecated package `distutils`, which is due to
 be removed in Python v3.12.
@@ -35,9 +36,10 @@ MacOS now logs to `syslog` like any other system, rather than `rotate`.
 Method `ImageDraw.textsize()` and constants `ImageFont.LAYOUT_BASIC`, and
 `Image.ANTIALIAS` were deprecated in Pillow 9.2 (1-Jul-2022), then removed in
 Pillow 10.0 (1-Jul-2023). V5.0 replaces them with alternatives. Fixes
-issue #884.
+issue [#884](https://github.com/weewx/weewx/issues/884).
 
-Fix bug when using Pillow v9.5.0. Fixes issue #862.
+Fix bug when using Pillow v9.5.0. Fixes issue 
+[#862](https://github.com/weewx/weewx/issues/862).
 
 The *Standard* skin now uses the font `DejaVuSansMono-Bold` and includes a
 copy. Before, it had to rely on hardwired font paths, which were less reliable.
@@ -53,13 +55,14 @@ Station registration is delayed by a random length of time to avoid everyone
 hitting the server at the same time.
 
 Fix problem where aggregation of null wind directions returns 90° instead of
-null. Fixes issue #849.
+null. Fixes issue [#849](https://github.com/weewx/weewx/issues/849).
 
-Fix wrong station type for Vantage `wee_device --info` query.
+Fix wrong station type for Vantage `weectl device --info` query.
 
-Add retransmit information for Vantage `wee_device --info` query.
+Add retransmit information for Vantage `weectl device --info` query.
 
-Fix problem when setting Vantage repeater. Fixes issue #863.
+Fix problem when setting Vantage repeater. Fixes issue 
+[#863](https://github.com/weewx/weewx/issues/863).
 
 Detect "dash" values for rain-related measurements on Vantage stations.
 
@@ -67,21 +70,22 @@ Change aggregations `minsumtime` and `maxsumtime` to return start-of-day,
 rather than the time of max rainfall during the day.
 
 Relax requirement that column `dateTime` be the first column in the database.
-Fixes issue #855.
+Fixes issue [#855](https://github.com/weewx/weewx/issues/855).
 
 Allow aggregation of xtypes that are not in the database schema.
-Fixes issue #864.
+Fixes issue [#864](https://github.com/weewx/weewx/issues/864).
 
-Tag suffix `has_data()` now works for xtypes. Fixes issue #877.
+Tag suffix `has_data()` now works for xtypes. Fixes issue 
+[#877](https://github.com/weewx/weewx/issues/877).
 
 Additional shorthand notations for aggregation and trend intervals. For
-example, '3h' for three hours.
+example, `3h` for three hours.
 
 Accumulator `firstlast` no longer coerces values to a string. Thanks to user
 "Karen" for spotting this!
 
 Fix problem that caused crashes with `firstlast` accumulator type.
-Fixes issue #876.
+Fixes issue [#876](https://github.com/weewx/weewx/issues/876).
 
 Fixed problem that prevented the astrometric heliocentric longitude of a body
 from being calculated properly.
@@ -95,32 +99,34 @@ avoid breaking old skins, these properties now have new names. For example,
 use `$almanac.venus.altitude` instead of `$almanac.venus.alt`. 
 
 Fix problem that prevented database from getting hit when calculating 
-`pressure`. Fixes issue #875.
+`pressure`. Fixes issue [#875](https://github.com/weewx/weewx/issues/875).
 
-Fix problem that prevented option `stale` from being honored in image
-generation. Thanks to user Ian for PR #879!
+Fix problem that prevented option
+[`stale_age`](../reference/skin-options/imagegenerator/#stale_age) from being
+honored in image generation. Thanks to user Ian for
+[PR #879](https://github.com/weewx/weewx/pull/879)!
 
 Fix problem that prevented complex aggregates such as `max_ge` from being used
-in plots. Fixes issue #881.
+in plots. Fixes issue [#881](https://github.com/weewx/weewx/issues/881).
 
-Updated humidex formula and reference. Fixes issue #883.
+Updated humidex formula and reference. Fixes issue 
+[#883](https://github.com/weewx/weewx/issues/883).
 
 Fix bugs in the "basic" skin example.
 
 Fix bug that prevented calculating `$trend` when one of the two records is
 missing.
 
-Python modules from user extensions are now inserted first into `sys.path`,
-allowing them to override other modules.
-
 Fix bug that caused the extension installer to crash if one of the service
-groups was missing in the configuration file. Fixes issue #886.
+groups was missing in the configuration file. Fixes issue 
+[#886](https://github.com/weewx/weewx/issues/886).
 
-New option `retry_wait`. If `weewxd` encounters a critical error, it will sleep
-this long before doing a restart.
+New option [`retry_wait`](../reference/weewx-options/general/#retry_wait). If
+`weewxd` encounters a critical error, it will sleep this long before doing a
+restart.
 
 Change from old Google Analytics UA code to the GA4 tag system in the Standard
-and Seasons skins. Fixes issue #892.
+and Seasons skins. Fixes issue [#892](https://github.com/weewx/weewx/issues/892).
 
 
 ### 4.10.2 02/22/2023
