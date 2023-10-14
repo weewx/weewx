@@ -886,7 +886,7 @@ class WeeutilTest(unittest.TestCase):
                                  msg="times=%s; location=%s" % (t, l))
 
     def test_utc_conversions(self):
-        self.assertEqual(utc_to_ts(2009, 3, 27, 14.5), 1238164200)
+        self.assertEqual(utc_to_ts(2009, 3, 27, 14.5), 1238164200.5)
         os.environ['TZ'] = 'America/Los_Angeles'
         time.tzset()
         tt = utc_to_local_tt(2009, 3, 27, 14.5)

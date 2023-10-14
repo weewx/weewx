@@ -23,7 +23,18 @@ import time
 
 
 def convertToFloat(seq):
-    """Convert a sequence with strings to floats, honoring 'Nones'"""
+    """Convert a sequence with strings to floats, honoring 'Nones'
+
+    Args:
+        seq(list[str]): A sequence of strings representing floats, possibly with a 'none' in there
+
+    Returns:
+        list[float]: All strings will have been converted to floats.
+
+    Example:
+        >>> print(convertToFloat(['1.2', '-2.5', 'none', '8.5']))
+        [1.2, -2.5, None, 8.5]
+    """
 
     if seq is None:
         return None
@@ -36,7 +47,9 @@ def option_as_list(option):
         return None
     return [option] if not isinstance(option, list) else option
 
+
 to_list = option_as_list
+
 
 def list_as_string(option):
     """Returns the argument as a string.
@@ -45,12 +58,12 @@ def list_as_string(option):
     as a string, despite the presence of a comma in the middle.
     
     Example:
-    >>> print(list_as_string('a string'))
-    a string
-    >>> print(list_as_string(['a', 'string']))
-    a, string
-    >>> print(list_as_string('Reno, NV'))
-    Reno, NV
+        >>> print(list_as_string('a string'))
+        a string
+        >>> print(list_as_string(['a', 'string']))
+        a, string
+        >>> print(list_as_string('Reno, NV'))
+        Reno, NV
     """
     # Check if it's already a string.
     if option is not None and not isinstance(option, str):
@@ -161,15 +174,19 @@ class TimeSpan(tuple):
         return self[1] - self[0]
 
     def includesArchiveTime(self, timestamp):
-        """
-        Returns True if the span includes the time timestamp, otherwise False.
+        """Test whether the span includes a timestamp, exclusive on the left,
+        inclusive on the right.
+
+        Args:
+            timestamp(float): The timestamp to be tested.
+
+        Returns:
+             bool: True if the span includes the time timestamp, otherwise False.
         
-        timestamp: The timestamp to be tested.
         """
         return self.start < timestamp <= self.stop
 
     def includes(self, span):
-
         return self.start <= span.start <= self.stop and self.start <= span.stop <= self.stop
 
     def __eq__(self, other):
@@ -200,7 +217,26 @@ duration_synonyms = {
 
 
 def nominal_spans(label):
-    """Convert a (possible) string into an integer time."""
+    """Convert a (possible) string into a time. The string can include a duration suffix.
+
+    Examples:
+        >>> print(nominal_spans(7200))
+        7200
+        >>> print(nominal_spans(7200.0))
+        7200.0
+        >>> print(nominal_spans('2h'))
+        7200
+        >>> print(nominal_spans('120M'))
+        7200
+        >>> print(nominal_spans(None))
+        None
+
+    Args:
+        label(str|float|int|None): A time, possibly with a duration suffix.
+
+    Returns:
+        int|float|None:
+    """
     if label is None:
         return None
 
@@ -241,21 +277,21 @@ def isStartOfDay(time_ts):
         bool: True if the timestamp is at midnight, False otherwise.
 
     Example:
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
-    >>> print(isStartOfDay(time_ts))
-    False
-    >>> time_ts = time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))
-    >>> print(isStartOfDay(time_ts))
-    True
-    >>> os.environ['TZ'] = 'America/Sao_Paulo'
-    >>> time.tzset()
-    >>> time_ts = 1541300400
-    >>> print(isStartOfDay(time_ts))
-    True
-    >>> print(isStartOfDay(time_ts - 1))
-    False
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
+        >>> print(isStartOfDay(time_ts))
+        False
+        >>> time_ts = time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))
+        >>> print(isStartOfDay(time_ts))
+        True
+        >>> os.environ['TZ'] = 'America/Sao_Paulo'
+        >>> time.tzset()
+        >>> time_ts = 1541300400
+        >>> print(isStartOfDay(time_ts))
+        True
+        >>> print(isStartOfDay(time_ts - 1))
+        False
     """
 
     # Test the date of the time against the date a tenth of a second before.
@@ -277,14 +313,14 @@ def isMidnight(time_ts):
         bool: True if the timestamp is at midnight, False otherwise.
 
     Example:
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
-    >>> print(isMidnight(time_ts))
-    False
-    >>> time_ts = time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))
-    >>> print(isMidnight(time_ts))
-    True
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
+        >>> print(isMidnight(time_ts))
+        False
+        >>> time_ts = time.mktime(time.strptime("2013-07-04 00:00:00", "%Y-%m-%d %H:%M:%S"))
+        >>> print(isMidnight(time_ts))
+        True
     """
 
     time_tt = time.localtime(time_ts)
@@ -300,40 +336,40 @@ def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta
         See issue #436 (https://github.com/weewx/weewx/issues/436)
 
     Example:
-    >>> os.environ['TZ'] = 'Australia/Brisbane'
-    >>> time.tzset()
-    >>> time_ts = time.mktime(time.strptime("2015-07-21 09:05:35", "%Y-%m-%d %H:%M:%S"))
-    >>> print(archiveSpanSpan(time_ts, time_delta=3600))
-    [2015-07-21 08:05:35 AEST (1437429935) -> 2015-07-21 09:05:35 AEST (1437433535)]
-    >>> print(archiveSpanSpan(time_ts, hour_delta=6))
-    [2015-07-21 03:05:35 AEST (1437411935) -> 2015-07-21 09:05:35 AEST (1437433535)]
-    >>> print(archiveSpanSpan(time_ts, day_delta=1))
-    [2015-07-20 09:05:35 AEST (1437347135) -> 2015-07-21 09:05:35 AEST (1437433535)]
-    >>> print(archiveSpanSpan(time_ts, time_delta=3600, day_delta=1))
-    [2015-07-20 08:05:35 AEST (1437343535) -> 2015-07-21 09:05:35 AEST (1437433535)]
-    >>> print(archiveSpanSpan(time_ts, week_delta=4))
-    [2015-06-23 09:05:35 AEST (1435014335) -> 2015-07-21 09:05:35 AEST (1437433535)]
-    >>> print(archiveSpanSpan(time_ts, month_delta=1))
-    [2015-06-21 09:05:35 AEST (1434841535) -> 2015-07-21 09:05:35 AEST (1437433535)]
-    >>> print(archiveSpanSpan(time_ts, year_delta=1))
-    [2014-07-21 09:05:35 AEST (1405897535) -> 2015-07-21 09:05:35 AEST (1437433535)]
-    >>> print(archiveSpanSpan(time_ts))
-    [2015-07-21 09:05:34 AEST (1437433534) -> 2015-07-21 09:05:35 AEST (1437433535)]
+        >>> os.environ['TZ'] = 'Australia/Brisbane'
+        >>> time.tzset()
+        >>> time_ts = time.mktime(time.strptime("2015-07-21 09:05:35", "%Y-%m-%d %H:%M:%S"))
+        >>> print(archiveSpanSpan(time_ts, time_delta=3600))
+        [2015-07-21 08:05:35 AEST (1437429935) -> 2015-07-21 09:05:35 AEST (1437433535)]
+        >>> print(archiveSpanSpan(time_ts, hour_delta=6))
+        [2015-07-21 03:05:35 AEST (1437411935) -> 2015-07-21 09:05:35 AEST (1437433535)]
+        >>> print(archiveSpanSpan(time_ts, day_delta=1))
+        [2015-07-20 09:05:35 AEST (1437347135) -> 2015-07-21 09:05:35 AEST (1437433535)]
+        >>> print(archiveSpanSpan(time_ts, time_delta=3600, day_delta=1))
+        [2015-07-20 08:05:35 AEST (1437343535) -> 2015-07-21 09:05:35 AEST (1437433535)]
+        >>> print(archiveSpanSpan(time_ts, week_delta=4))
+        [2015-06-23 09:05:35 AEST (1435014335) -> 2015-07-21 09:05:35 AEST (1437433535)]
+        >>> print(archiveSpanSpan(time_ts, month_delta=1))
+        [2015-06-21 09:05:35 AEST (1434841535) -> 2015-07-21 09:05:35 AEST (1437433535)]
+        >>> print(archiveSpanSpan(time_ts, year_delta=1))
+        [2014-07-21 09:05:35 AEST (1405897535) -> 2015-07-21 09:05:35 AEST (1437433535)]
+        >>> print(archiveSpanSpan(time_ts))
+        [2015-07-21 09:05:34 AEST (1437433534) -> 2015-07-21 09:05:35 AEST (1437433535)]
 
-    Example over a DST boundary. Because Brisbane does not observe DST, we need to
-    switch timezones.
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> time_ts = 1457888400
-    >>> print(timestamp_to_string(time_ts))
-    2016-03-13 10:00:00 PDT (1457888400)
-    >>> span = archiveSpanSpan(time_ts, day_delta=1)
-    >>> print(span)
-    [2016-03-12 10:00:00 PST (1457805600) -> 2016-03-13 10:00:00 PDT (1457888400)]
+        Example over a DST boundary. Because Brisbane does not observe DST, we need to
+        switch timezones.
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> time_ts = 1457888400
+        >>> print(timestamp_to_string(time_ts))
+        2016-03-13 10:00:00 PDT (1457888400)
+        >>> span = archiveSpanSpan(time_ts, day_delta=1)
+        >>> print(span)
+        [2016-03-12 10:00:00 PST (1457805600) -> 2016-03-13 10:00:00 PDT (1457888400)]
 
-    Note that there is not 24 hours of time over this span:
-    >>> print((span.stop - span.start) / 3600.0)
-    23.0
+        Note that there is not 24 hours of time over this span:
+        >>> print((span.stop - span.start) / 3600.0)
+        23.0
     """
 
     if time_ts is None:
@@ -370,31 +406,31 @@ def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta
 def archiveHoursAgoSpan(time_ts, hours_ago=0):
     """Returns a one-hour long TimeSpan for x hours ago that includes the given time.
 
+    NB: A timestamp that falls exactly on the hour boundary is considered to belong to the
+    *previous* hour.
+
     Args:
-        time_ts (float): A timestamp. An hour long time span will be returned that encompasses this
+        time_ts (float|None): A timestamp. An hour long time span will be returned that encompasses this
             timestamp.
-        hours_ago (int, optional): Which hour we want. 0=this hour, 1=last hour, etc. Default is
+        hours_ago (int): Which hour we want. 0=this hour, 1=last hour, etc. Default is
             zero (this hour).
 
     Returns:
         TimeSpan: A TimeSpan object one hour long, that includes time_ts.
 
-    NB: A timestamp that falls exactly on the hour boundary is considered to belong
-    to the *previous* hour.
-
     Example:
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
-    >>> print(archiveHoursAgoSpan(time_ts, hours_ago=0))
-    [2013-07-04 01:00:00 PDT (1372924800) -> 2013-07-04 02:00:00 PDT (1372928400)]
-    >>> print(archiveHoursAgoSpan(time_ts, hours_ago=2))
-    [2013-07-03 23:00:00 PDT (1372917600) -> 2013-07-04 00:00:00 PDT (1372921200)]
-    >>> time_ts = time.mktime(datetime.date(2013, 7, 4).timetuple())
-    >>> print(archiveHoursAgoSpan(time_ts, hours_ago=0))
-    [2013-07-03 23:00:00 PDT (1372917600) -> 2013-07-04 00:00:00 PDT (1372921200)]
-    >>> print(archiveHoursAgoSpan(time_ts, hours_ago=24))
-    [2013-07-02 23:00:00 PDT (1372831200) -> 2013-07-03 00:00:00 PDT (1372834800)]
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
+        >>> print(archiveHoursAgoSpan(time_ts, hours_ago=0))
+        [2013-07-04 01:00:00 PDT (1372924800) -> 2013-07-04 02:00:00 PDT (1372928400)]
+        >>> print(archiveHoursAgoSpan(time_ts, hours_ago=2))
+        [2013-07-03 23:00:00 PDT (1372917600) -> 2013-07-04 00:00:00 PDT (1372921200)]
+        >>> time_ts = time.mktime(datetime.date(2013, 7, 4).timetuple())
+        >>> print(archiveHoursAgoSpan(time_ts, hours_ago=0))
+        [2013-07-03 23:00:00 PDT (1372917600) -> 2013-07-04 00:00:00 PDT (1372921200)]
+        >>> print(archiveHoursAgoSpan(time_ts, hours_ago=24))
+        [2013-07-02 23:00:00 PDT (1372831200) -> 2013-07-03 00:00:00 PDT (1372834800)]
     """
     if time_ts is None:
         return None
@@ -422,28 +458,28 @@ def daySpan(time_ts, days_ago=0, archive=False):
     """Returns a one-day long TimeSpan for x days ago that includes a given time.
 
     Args:
-        time_ts (float): The day will include this timestamp.
+        time_ts (float|None): The day will include this timestamp.
         days_ago (int): Which day we want. 0=today, 1=yesterday, etc.
-        archive (bool, optional): True to calculate archive day; false otherwise.
+        archive (bool): True to calculate archive day; false otherwise.
 
     Returns:
         TimeSpan: A TimeSpan object one day long.
 
     Example:
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> time_ts = time.mktime(time.strptime("2014-01-01 01:57:35", "%Y-%m-%d %H:%M:%S"))
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> time_ts = time.mktime(time.strptime("2014-01-01 01:57:35", "%Y-%m-%d %H:%M:%S"))
 
-    As for today:
-    >>> print(daySpan(time_ts))
-    [2014-01-01 00:00:00 PST (1388563200) -> 2014-01-02 00:00:00 PST (1388649600)]
+        As for today:
+        >>> print(daySpan(time_ts))
+        [2014-01-01 00:00:00 PST (1388563200) -> 2014-01-02 00:00:00 PST (1388649600)]
 
-    Do it again, but on the midnight boundary
-    >>> time_ts = time.mktime(time.strptime("2014-01-01 00:00:00", "%Y-%m-%d %H:%M:%S"))
+        Do it again, but on the midnight boundary
+        >>> time_ts = time.mktime(time.strptime("2014-01-01 00:00:00", "%Y-%m-%d %H:%M:%S"))
 
-    We should still get today (this differs from the function archiveDaySpan())
-    >>> print(daySpan(time_ts))
-    [2014-01-01 00:00:00 PST (1388563200) -> 2014-01-02 00:00:00 PST (1388649600)]
+        We should still get today (this differs from the function archiveDaySpan())
+        >>> print(daySpan(time_ts))
+        [2014-01-01 00:00:00 PST (1388563200) -> 2014-01-02 00:00:00 PST (1388649600)]
 """
     if time_ts is None:
         return None
@@ -472,15 +508,14 @@ def daySpan(time_ts, days_ago=0, archive=False):
 def archiveDaySpan(time_ts, days_ago=0):
     """Returns a one-day long TimeSpan for x days ago that includes a given time.
 
+    NB: A timestamp that falls exactly on midnight is considered to belong to the *previous* day.
+
     Args:
-        time_ts (float): The day will include this timestamp.
+        time_ts (float|None): The day will include this timestamp.
         days_ago (int): Which day we want. 0=today, 1=yesterday, etc.
 
     Returns:
         TimeSpan: A TimeSpan object one day long.
-
-    NB: A timestamp that falls exactly on midnight is considered to belong
-    to the *previous* day.
 
     Example, which spans the end-of-year boundary
     >>> os.environ['TZ'] = 'America/Los_Angeles'
@@ -516,28 +551,30 @@ archiveDaysAgoSpan = archiveDaySpan
 def archiveWeekSpan(time_ts, startOfWeek=6, weeks_ago=0):
     """Returns a one-week long TimeSpan for x weeks ago that includes a given time.
 
+    NB: The time at midnight at the end of the week is considered to
+    actually belong in the previous week.
+
     Args:
         time_ts (float): The week will include this timestamp.
-        startOfWeek (int, optional): The start of the week (0=Monday, 1=Tues, ..., 6 = Sun).
-        weeks_ago (int, optional): Which week we want. 0=this week, 1=last week, etc.
+        startOfWeek (int): The start of the week (0=Monday, 1=Tues, ..., 6 = Sun). Default
+            is 6 (Sunday).
+        weeks_ago (int): Which week we want. 0=this week, 1=last week, etc. Default
+            is zero (this week).
     
     Returns:
          TimeSpan: A TimeSpan object one week long that contains time_ts. It will
             start at midnight of the day considered the start of the week.
     
-    NB: The time at midnight at the end of the week is considered to
-    actually belong in the previous week.
-
     Example:
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> time_ts = 1483429962
-    >>> print(timestamp_to_string(time_ts))
-    2017-01-02 23:52:42 PST (1483429962)
-    >>> print(archiveWeekSpan(time_ts))
-    [2017-01-01 00:00:00 PST (1483257600) -> 2017-01-08 00:00:00 PST (1483862400)]
-    >>> print(archiveWeekSpan(time_ts, weeks_ago=1))
-    [2016-12-25 00:00:00 PST (1482652800) -> 2017-01-01 00:00:00 PST (1483257600)]
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> time_ts = 1483429962
+        >>> print(timestamp_to_string(time_ts))
+        2017-01-02 23:52:42 PST (1483429962)
+        >>> print(archiveWeekSpan(time_ts))
+        [2017-01-01 00:00:00 PST (1483257600) -> 2017-01-08 00:00:00 PST (1483862400)]
+        >>> print(archiveWeekSpan(time_ts, weeks_ago=1))
+        [2016-12-25 00:00:00 PST (1482652800) -> 2017-01-01 00:00:00 PST (1483257600)]
     """
     if time_ts is None:
         return None
@@ -575,26 +612,27 @@ def archiveWeekSpan(time_ts, startOfWeek=6, weeks_ago=0):
 def archiveMonthSpan(time_ts, months_ago=0):
     """Returns a one-month long TimeSpan for x months ago that includes a given time.
 
-     Args:
-         time_ts (float): The month will include this timestamp.
-         months_ago (int, optional): Which month we want. 0=this month, 1=last month, etc.
+    The time at midnight at the end of the month is considered to actually belong in the
+    previous week.
 
-     Returns:
+    Args:
+         time_ts (float|None): The month will include this timestamp.
+         months_ago (int): Which month we want. 0=this month, 1=last month, etc. Default
+            is zero (this month).
+
+    Returns:
           TimeSpan: A TimeSpan object one month long that contains time_ts.
 
-     NB: The time at midnight at the end of the month is considered to
-     actually belong in the previous week.
-
     Example:
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> time_ts = 1483429962
-    >>> print(timestamp_to_string(time_ts))
-    2017-01-02 23:52:42 PST (1483429962)
-    >>> print(archiveMonthSpan(time_ts))
-    [2017-01-01 00:00:00 PST (1483257600) -> 2017-02-01 00:00:00 PST (1485936000)]
-    >>> print(archiveMonthSpan(time_ts, months_ago=1))
-    [2016-12-01 00:00:00 PST (1480579200) -> 2017-01-01 00:00:00 PST (1483257600)]
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> time_ts = 1483429962
+        >>> print(timestamp_to_string(time_ts))
+        2017-01-02 23:52:42 PST (1483429962)
+        >>> print(archiveMonthSpan(time_ts))
+        [2017-01-01 00:00:00 PST (1483257600) -> 2017-02-01 00:00:00 PST (1485936000)]
+        >>> print(archiveMonthSpan(time_ts, months_ago=1))
+        [2016-12-01 00:00:00 PST (1480579200) -> 2017-01-01 00:00:00 PST (1483257600)]
     """
     if time_ts is None:
         return None
@@ -637,16 +675,16 @@ def archiveMonthSpan(time_ts, months_ago=0):
 def archiveYearSpan(time_ts, years_ago=0):
     """Returns a TimeSpan representing a year that includes a given time.
 
+    NB: Midnight of the 1st of the January is considered to actually belong in the previous year.
+
     Args:
         time_ts (float): The year will include this timestamp.
-        years_ago (int, optional): Which year we want. 0=this year, 1=last year, etc.
+        years_ago (int): Which year we want. 0=this year, 1=last year, etc. Default
+            is zero (this year).
 
     Returns:
         TimeSpan: A TimeSpan object one year long that contains time_ts. It will
             start at midnight of 1-Jan
-
-    NB: Midnight of the 1st of the January is considered to actually belong
-    in the previous year.
     """
 
     if time_ts is None:
@@ -671,16 +709,17 @@ def archiveYearSpan(time_ts, years_ago=0):
 def archiveRainYearSpan(time_ts, sory_mon, years_ago=0):
     """Returns a TimeSpan representing a rain year that includes a given time.
 
+    NB: Midnight of the 1st of the month starting the rain year is considered to
+    actually belong in the previous rain year.
+
     Args:
         time_ts (float): The rain year will include this timestamp.
         sory_mon (int): The start of the rain year (1=Jan, 2=Feb, etc.)
-        years_ago (int, optional): Which rain year we want. 0=this year, 1=last year, etc.
+        years_ago (int): Which rain year we want. 0=this year, 1=last year, etc. Default
+            is zero (this year).
 
     Returns:
         TimeSpan: A one-year long TimeSpan object containing the timestamp.
-    
-    NB: Midnight of the 1st of the month starting the rain year is considered to
-    actually belong in the previous rain year.
     """
     if time_ts is None:
         return None
@@ -732,26 +771,25 @@ def stampgen(startstamp, stopstamp, interval):
         float: yields a sequence of timestamps between startstamp and endstamp, inclusive.
 
     Example:
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> startstamp = 1236560400
+        >>> print(timestamp_to_string(startstamp))
+        2009-03-08 18:00:00 PDT (1236560400)
+        >>> stopstamp = 1236607200
+        >>> print(timestamp_to_string(stopstamp))
+        2009-03-09 07:00:00 PDT (1236607200)
 
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> startstamp = 1236560400
-    >>> print(timestamp_to_string(startstamp))
-    2009-03-08 18:00:00 PDT (1236560400)
-    >>> stopstamp = 1236607200
-    >>> print(timestamp_to_string(stopstamp))
-    2009-03-09 07:00:00 PDT (1236607200)
+        >>> for stamp in stampgen(startstamp, stopstamp, 10800):
+        ...     print(timestamp_to_string(stamp))
+        2009-03-08 18:00:00 PDT (1236560400)
+        2009-03-08 21:00:00 PDT (1236571200)
+        2009-03-09 00:00:00 PDT (1236582000)
+        2009-03-09 03:00:00 PDT (1236592800)
+        2009-03-09 06:00:00 PDT (1236603600)
 
-    >>> for stamp in stampgen(startstamp, stopstamp, 10800):
-    ...     print(timestamp_to_string(stamp))
-    2009-03-08 18:00:00 PDT (1236560400)
-    2009-03-08 21:00:00 PDT (1236571200)
-    2009-03-09 00:00:00 PDT (1236582000)
-    2009-03-09 03:00:00 PDT (1236592800)
-    2009-03-09 06:00:00 PDT (1236603600)
-
-    Note that DST started in the middle of the sequence and that therefore the
-    actual time deltas between stamps is not necessarily 3 hours.
+        Note that DST started in the middle of the sequence and that therefore the
+        actual time deltas between stamps is not necessarily 3 hours.
     """
     dt = datetime.datetime.fromtimestamp(startstamp)
     stop_dt = datetime.datetime.fromtimestamp(stopstamp)
@@ -803,45 +841,44 @@ def intervalgen(start_ts, stop_ts, interval):
             will be on the same time boundary as start_ts. See the example below.
 
     Example:
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> startstamp = 1236477600
+        >>> print(timestamp_to_string(startstamp))
+        2009-03-07 18:00:00 PST (1236477600)
+        >>> stopstamp = 1236538800
+        >>> print(timestamp_to_string(stopstamp))
+        2009-03-08 12:00:00 PDT (1236538800)
 
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> startstamp = 1236477600
-    >>> print(timestamp_to_string(startstamp))
-    2009-03-07 18:00:00 PST (1236477600)
-    >>> stopstamp = 1236538800
-    >>> print(timestamp_to_string(stopstamp))
-    2009-03-08 12:00:00 PDT (1236538800)
+        >>> for span in intervalgen(startstamp, stopstamp, 10800):
+        ...     print(span)
+        [2009-03-07 18:00:00 PST (1236477600) -> 2009-03-07 21:00:00 PST (1236488400)]
+        [2009-03-07 21:00:00 PST (1236488400) -> 2009-03-08 00:00:00 PST (1236499200)]
+        [2009-03-08 00:00:00 PST (1236499200) -> 2009-03-08 03:00:00 PDT (1236506400)]
+        [2009-03-08 03:00:00 PDT (1236506400) -> 2009-03-08 06:00:00 PDT (1236517200)]
+        [2009-03-08 06:00:00 PDT (1236517200) -> 2009-03-08 09:00:00 PDT (1236528000)]
+        [2009-03-08 09:00:00 PDT (1236528000) -> 2009-03-08 12:00:00 PDT (1236538800)]
 
-    >>> for span in intervalgen(startstamp, stopstamp, 10800):
-    ...     print(span)
-    [2009-03-07 18:00:00 PST (1236477600) -> 2009-03-07 21:00:00 PST (1236488400)]
-    [2009-03-07 21:00:00 PST (1236488400) -> 2009-03-08 00:00:00 PST (1236499200)]
-    [2009-03-08 00:00:00 PST (1236499200) -> 2009-03-08 03:00:00 PDT (1236506400)]
-    [2009-03-08 03:00:00 PDT (1236506400) -> 2009-03-08 06:00:00 PDT (1236517200)]
-    [2009-03-08 06:00:00 PDT (1236517200) -> 2009-03-08 09:00:00 PDT (1236528000)]
-    [2009-03-08 09:00:00 PDT (1236528000) -> 2009-03-08 12:00:00 PDT (1236538800)]
+        (Note how in this example the local time boundaries are constant, despite
+        DST kicking in. The interval length is not constant.)
 
-    (Note how in this example the local time boundaries are constant, despite
-    DST kicking in. The interval length is not constant.)
+        Another example, this one over the Fall DST boundary, and using 1 hour intervals:
 
-    Another example, this one over the Fall DST boundary, and using 1 hour intervals:
-
-    >>> startstamp = 1257051600
-    >>> print(timestamp_to_string(startstamp))
-    2009-10-31 22:00:00 PDT (1257051600)
-    >>> stopstamp = 1257080400
-    >>> print(timestamp_to_string(stopstamp))
-    2009-11-01 05:00:00 PST (1257080400)
-    >>> for span in intervalgen(startstamp, stopstamp, 3600):
-    ...    print(span)
-    [2009-10-31 22:00:00 PDT (1257051600) -> 2009-10-31 23:00:00 PDT (1257055200)]
-    [2009-10-31 23:00:00 PDT (1257055200) -> 2009-11-01 00:00:00 PDT (1257058800)]
-    [2009-11-01 00:00:00 PDT (1257058800) -> 2009-11-01 01:00:00 PDT (1257062400)]
-    [2009-11-01 01:00:00 PDT (1257062400) -> 2009-11-01 02:00:00 PST (1257069600)]
-    [2009-11-01 02:00:00 PST (1257069600) -> 2009-11-01 03:00:00 PST (1257073200)]
-    [2009-11-01 03:00:00 PST (1257073200) -> 2009-11-01 04:00:00 PST (1257076800)]
-    [2009-11-01 04:00:00 PST (1257076800) -> 2009-11-01 05:00:00 PST (1257080400)]
+        >>> startstamp = 1257051600
+        >>> print(timestamp_to_string(startstamp))
+        2009-10-31 22:00:00 PDT (1257051600)
+        >>> stopstamp = 1257080400
+        >>> print(timestamp_to_string(stopstamp))
+        2009-11-01 05:00:00 PST (1257080400)
+        >>> for span in intervalgen(startstamp, stopstamp, 3600):
+        ...    print(span)
+        [2009-10-31 22:00:00 PDT (1257051600) -> 2009-10-31 23:00:00 PDT (1257055200)]
+        [2009-10-31 23:00:00 PDT (1257055200) -> 2009-11-01 00:00:00 PDT (1257058800)]
+        [2009-11-01 00:00:00 PDT (1257058800) -> 2009-11-01 01:00:00 PDT (1257062400)]
+        [2009-11-01 01:00:00 PDT (1257062400) -> 2009-11-01 02:00:00 PST (1257069600)]
+        [2009-11-01 02:00:00 PST (1257069600) -> 2009-11-01 03:00:00 PST (1257073200)]
+        [2009-11-01 03:00:00 PST (1257073200) -> 2009-11-01 04:00:00 PST (1257076800)]
+        [2009-11-01 04:00:00 PST (1257076800) -> 2009-11-01 05:00:00 PST (1257080400)]
 """
 
     dt1 = datetime.datetime.fromtimestamp(start_ts)
@@ -895,26 +932,25 @@ def genHourSpans(start_ts, stop_ts):
             of the next day.
 
     Example:
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> start_ts = 1204796460
+        >>> stop_ts  = 1204818360
 
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> start_ts = 1204796460
-    >>> stop_ts  = 1204818360
+        >>> print(timestamp_to_string(start_ts))
+        2008-03-06 01:41:00 PST (1204796460)
+        >>> print(timestamp_to_string(stop_ts))
+        2008-03-06 07:46:00 PST (1204818360)
 
-    >>> print(timestamp_to_string(start_ts))
-    2008-03-06 01:41:00 PST (1204796460)
-    >>> print(timestamp_to_string(stop_ts))
-    2008-03-06 07:46:00 PST (1204818360)
-
-    >>> for span in genHourSpans(start_ts, stop_ts):
-    ...   print(span)
-    [2008-03-06 01:00:00 PST (1204794000) -> 2008-03-06 02:00:00 PST (1204797600)]
-    [2008-03-06 02:00:00 PST (1204797600) -> 2008-03-06 03:00:00 PST (1204801200)]
-    [2008-03-06 03:00:00 PST (1204801200) -> 2008-03-06 04:00:00 PST (1204804800)]
-    [2008-03-06 04:00:00 PST (1204804800) -> 2008-03-06 05:00:00 PST (1204808400)]
-    [2008-03-06 05:00:00 PST (1204808400) -> 2008-03-06 06:00:00 PST (1204812000)]
-    [2008-03-06 06:00:00 PST (1204812000) -> 2008-03-06 07:00:00 PST (1204815600)]
-    [2008-03-06 07:00:00 PST (1204815600) -> 2008-03-06 08:00:00 PST (1204819200)]
+        >>> for span in genHourSpans(start_ts, stop_ts):
+        ...   print(span)
+        [2008-03-06 01:00:00 PST (1204794000) -> 2008-03-06 02:00:00 PST (1204797600)]
+        [2008-03-06 02:00:00 PST (1204797600) -> 2008-03-06 03:00:00 PST (1204801200)]
+        [2008-03-06 03:00:00 PST (1204801200) -> 2008-03-06 04:00:00 PST (1204804800)]
+        [2008-03-06 04:00:00 PST (1204804800) -> 2008-03-06 05:00:00 PST (1204808400)]
+        [2008-03-06 05:00:00 PST (1204808400) -> 2008-03-06 06:00:00 PST (1204812000)]
+        [2008-03-06 06:00:00 PST (1204812000) -> 2008-03-06 07:00:00 PST (1204815600)]
+        [2008-03-06 07:00:00 PST (1204815600) -> 2008-03-06 08:00:00 PST (1204819200)]
     """
     _stop_dt = datetime.datetime.fromtimestamp(stop_ts)
     _start_hour = int(start_ts / 3600)
@@ -940,27 +976,26 @@ def genDaySpans(start_ts, stop_ts):
             of the next day.
 
     Example:
-    
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> start_ts = 1204796460
-    >>> stop_ts  = 1205265720
-    
-    >>> print(timestamp_to_string(start_ts))
-    2008-03-06 01:41:00 PST (1204796460)
-    >>> print(timestamp_to_string(stop_ts))
-    2008-03-11 13:02:00 PDT (1205265720)
-    
-    >>> for span in genDaySpans(start_ts, stop_ts):
-    ...   print(span)
-    [2008-03-06 00:00:00 PST (1204790400) -> 2008-03-07 00:00:00 PST (1204876800)]
-    [2008-03-07 00:00:00 PST (1204876800) -> 2008-03-08 00:00:00 PST (1204963200)]
-    [2008-03-08 00:00:00 PST (1204963200) -> 2008-03-09 00:00:00 PST (1205049600)]
-    [2008-03-09 00:00:00 PST (1205049600) -> 2008-03-10 00:00:00 PDT (1205132400)]
-    [2008-03-10 00:00:00 PDT (1205132400) -> 2008-03-11 00:00:00 PDT (1205218800)]
-    [2008-03-11 00:00:00 PDT (1205218800) -> 2008-03-12 00:00:00 PDT (1205305200)]
-    
-    Note that a daylight savings time change happened 8 March 2009.
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> start_ts = 1204796460
+        >>> stop_ts  = 1205265720
+
+        >>> print(timestamp_to_string(start_ts))
+        2008-03-06 01:41:00 PST (1204796460)
+        >>> print(timestamp_to_string(stop_ts))
+        2008-03-11 13:02:00 PDT (1205265720)
+
+        >>> for span in genDaySpans(start_ts, stop_ts):
+        ...   print(span)
+        [2008-03-06 00:00:00 PST (1204790400) -> 2008-03-07 00:00:00 PST (1204876800)]
+        [2008-03-07 00:00:00 PST (1204876800) -> 2008-03-08 00:00:00 PST (1204963200)]
+        [2008-03-08 00:00:00 PST (1204963200) -> 2008-03-09 00:00:00 PST (1205049600)]
+        [2008-03-09 00:00:00 PST (1205049600) -> 2008-03-10 00:00:00 PDT (1205132400)]
+        [2008-03-10 00:00:00 PDT (1205132400) -> 2008-03-11 00:00:00 PDT (1205218800)]
+        [2008-03-11 00:00:00 PDT (1205218800) -> 2008-03-12 00:00:00 PDT (1205305200)]
+
+        Note that a daylight savings time change happened 8 March 2009.
     """
     _start_dt = datetime.datetime.fromtimestamp(start_ts)
     _stop_dt = datetime.datetime.fromtimestamp(stop_ts)
@@ -979,33 +1014,31 @@ def genMonthSpans(start_ts, stop_ts):
     inclusive range.
     
     Args:
-        start_ts: A time stamp somewhere in the first month.
-        stop_ts: A time stamp somewhere in the last month.
+        start_ts (float): A time stamp somewhere in the first month.
+        stop_ts (float): A time stamp somewhere in the last month.
 
     Yields:
-        TimeSpan: A sequence of TimeSpans, where the start is the time stamp
-            of the start of the month, the stop is the time stamp of the start
-            of the next month.
+        TimeSpan: A sequence of TimeSpans, where the start is the time stamp of the start of the
+            month, the stop is the time stamp of the start of the next month.
 
     Example:
-    
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> start_ts = 1196705700
-    >>> stop_ts  = 1206101100
-    >>> print("start time is %s" % timestamp_to_string(start_ts))
-    start time is 2007-12-03 10:15:00 PST (1196705700)
-    >>> print("stop time is  %s" % timestamp_to_string(stop_ts))
-    stop time is  2008-03-21 05:05:00 PDT (1206101100)
-    
-    >>> for span in genMonthSpans(start_ts, stop_ts):
-    ...   print(span)
-    [2007-12-01 00:00:00 PST (1196496000) -> 2008-01-01 00:00:00 PST (1199174400)]
-    [2008-01-01 00:00:00 PST (1199174400) -> 2008-02-01 00:00:00 PST (1201852800)]
-    [2008-02-01 00:00:00 PST (1201852800) -> 2008-03-01 00:00:00 PST (1204358400)]
-    [2008-03-01 00:00:00 PST (1204358400) -> 2008-04-01 00:00:00 PDT (1207033200)]
-    
-    Note that a daylight savings time change happened 8 March 2009.
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> start_ts = 1196705700
+        >>> stop_ts  = 1206101100
+        >>> print("start time is %s" % timestamp_to_string(start_ts))
+        start time is 2007-12-03 10:15:00 PST (1196705700)
+        >>> print("stop time is  %s" % timestamp_to_string(stop_ts))
+        stop time is  2008-03-21 05:05:00 PDT (1206101100)
+
+        >>> for span in genMonthSpans(start_ts, stop_ts):
+        ...   print(span)
+        [2007-12-01 00:00:00 PST (1196496000) -> 2008-01-01 00:00:00 PST (1199174400)]
+        [2008-01-01 00:00:00 PST (1199174400) -> 2008-02-01 00:00:00 PST (1201852800)]
+        [2008-02-01 00:00:00 PST (1201852800) -> 2008-03-01 00:00:00 PST (1204358400)]
+        [2008-03-01 00:00:00 PST (1204358400) -> 2008-04-01 00:00:00 PDT (1207033200)]
+
+        Note that a daylight savings time change happened 8 March 2009.
     """
     if None in (start_ts, stop_ts):
         return
@@ -1047,9 +1080,7 @@ def startOfDay(time_ts):
     """Calculate the unix epoch time for the start of a (local time) day.
     
     Args:
-
-        time_ts (float): A timestamp somewhere in the day for which the start-of-day
-            is desired.
+        time_ts (float): A timestamp somewhere in the day for which the start-of-day is desired.
     
     Returns:
          float: The timestamp for the start-of-day (00:00) in unix epoch time.
@@ -1070,19 +1101,18 @@ def startOfGregorianDay(date_greg):
         date_greg (int): A date as an ordinal Gregorian day.
     
     Returns:
-         int: The local start of the day as a unix epoch time.
+         float: The local start of the day as a unix epoch time.
 
     Example:
-    
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> date_greg = 735973  # 10-Jan-2016
-    >>> print(startOfGregorianDay(date_greg))
-    1452412800
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> date_greg = 735973  # 10-Jan-2016
+        >>> print(startOfGregorianDay(date_greg))
+        1452412800.0
     """
     date_dt = datetime.datetime.fromordinal(date_greg)
     date_tt = date_dt.timetuple()
-    sod_ts = int(time.mktime(date_tt))
+    sod_ts = time.mktime(date_tt)
     return sod_ts
 
 
@@ -1096,14 +1126,14 @@ def toGregorianDay(time_ts):
          int: The ordinal Gregorian day that contains that time
     
     Example:
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> time_ts = 1452412800  # Midnight, 10-Jan-2016
-    >>> print(toGregorianDay(time_ts))
-    735972
-    >>> time_ts = 1452412801  # Just after midnight, 10-Jan-2016
-    >>> print(toGregorianDay(time_ts))
-    735973
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> time_ts = 1452412800  # Midnight, 10-Jan-2016
+        >>> print(toGregorianDay(time_ts))
+        735972
+        >>> time_ts = 1452412801  # Just after midnight, 10-Jan-2016
+        >>> print(toGregorianDay(time_ts))
+        735973
     """
 
     date_dt = datetime.datetime.fromtimestamp(time_ts)
@@ -1123,14 +1153,20 @@ def startOfDayUTC(time_ts):
     
     Returns:
          int: The timestamp for the start-of-day (00:00) in unix epoch time.
-    
+
+    Example:
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> time_ts = 1452412800  # Midnight, 10-Jan-2016
+        >>> print(startOfDayUTC(time_ts))
+        1452384000
     """
     _time_tt = time.gmtime(time_ts)
     _bod_ts = calendar.timegm((_time_tt.tm_year,
                                _time_tt.tm_mon,
                                _time_tt.tm_mday,
                                0, 0, 0, 0, 0, -1))
-    return int(_bod_ts)
+    return _bod_ts
 
 
 def startOfArchiveDay(time_ts):
@@ -1165,13 +1201,14 @@ def getDayNightTransitions(start_ts, end_ts, lat, lon):
 
     Args:
 
-        start_ts (float or int): A timestamp (UTC) indicating the beginning of the period
-        end_ts (float or int): A timestamp (UTC) indicating the end of the period
+        start_ts (float): A timestamp (UTC) indicating the beginning of the period
+        end_ts (float): A timestamp (UTC) indicating the end of the period
         lat (float): The latitude in degrees
         lon (float): The longitude in degrees
 
     Returns:
-        tuple: A two-way tuple, The first element is either the string 'day' or 'night'.
+        tuple[str,list[float]]: A two-way tuple, The first element is either the string 'day' 
+            or 'night'.
             If 'day', the first transition is from day to night.
             If 'night', the first transition is from night to day.
             The second element is a sequence of transition times in unix epoch times.
@@ -1225,31 +1262,23 @@ def getDayNightTransitions(start_ts, end_ts, lat, lon):
     return first, values
 
 
-# The following has been replaced by the I18N-aware function delta_secs_to_string in units.py:
-
-# def secs_to_string(secs):
-#     """Convert seconds to a string with days, hours, and minutes"""
-#     str_list = []
-#     for (label, interval) in (('day', 86400), ('hour', 3600), ('minute', 60)):
-#         amt = int(secs / interval)
-#         plural = u'' if amt == 1 else u's'
-#         str_list.append(u"%d %s%s" % (amt, label, plural))
-#         secs %= interval
-#     ans = ', '.join(str_list)
-#     return ans
-
-
 def timestamp_to_string(ts, format_str="%Y-%m-%d %H:%M:%S %Z"):
     """Return a string formatted from the timestamp
+
+    Args:
+        ts (float): A unix-epoch timestamp
+        format_str(str): A format string
+
+    Returns:
+        str: The time in local time as a string.
     
     Example:
-
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> print(timestamp_to_string(1196705700))
-    2007-12-03 10:15:00 PST (1196705700)
-    >>> print(timestamp_to_string(None))
-    ******* N/A *******     (    N/A   )
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> print(timestamp_to_string(1196705700))
+        2007-12-03 10:15:00 PST (1196705700)
+        >>> print(timestamp_to_string(None))
+        ******* N/A *******     (    N/A   )
     """
     if ts is not None:
         return "%s (%d)" % (time.strftime(format_str, time.localtime(ts)), ts)
@@ -1259,11 +1288,18 @@ def timestamp_to_string(ts, format_str="%Y-%m-%d %H:%M:%S %Z"):
 
 def timestamp_to_gmtime(ts):
     """Return a string formatted for GMT
-    
-    >>> print(timestamp_to_gmtime(1196705700))
-    2007-12-03 18:15:00 UTC (1196705700)
-    >>> print(timestamp_to_gmtime(None))
-    ******* N/A *******     (    N/A   )
+
+    Args:
+        ts (float): A unix-epoch timestamp
+
+    Returns:
+        str: The time in UTC as a string
+
+    Example:
+        >>> print(timestamp_to_gmtime(1196705700))
+        2007-12-03 18:15:00 UTC (1196705700)
+        >>> print(timestamp_to_gmtime(None))
+        ******* N/A *******     (    N/A   )
     """
     if ts:
         return "%s (%d)" % (time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime(ts)), ts)
@@ -1275,39 +1311,43 @@ def utc_to_ts(y, m, d, hrs_utc):
     """Converts from a tuple-time in UTC to unix epoch time.
 
     Args:
-    
         y (int): The year for which the conversion is desired.
         m (int): The month.
         d (int): The day.
         hrs_utc (float): Floating point number with the number of hours since midnight in UTC.
     
     Returns:
-        int: The corresponding unix epoch time.
-    
-    >>> print(utc_to_ts(2009, 3, 27, 14.5))
-    1238164200
+        float: The corresponding unix epoch time.
+
+    Example:
+        >>> print(utc_to_ts(2009, 3, 27, 14.5))
+        1238164200.5
     """
     # Construct a time tuple with the time at midnight, UTC:
     daystart_utc_tt = (y, m, d, 0, 0, 0, 0, 0, -1)
     # Convert the time tuple to a time stamp and add on the number of seconds since midnight:
-    time_ts = int(calendar.timegm(daystart_utc_tt) + hrs_utc * 3600.0 + 0.5)
+    time_ts = calendar.timegm(daystart_utc_tt) + hrs_utc * 3600.0 + 0.5
     return time_ts
 
 
 def utc_to_local_tt(y, m, d, hrs_utc):
     """Converts from a UTC time to a local time.
     
-    y,m,d: The year, month, day for which the conversion is desired.
-    
-    hrs_tc: Floating point number with the number of hours since midnight in UTC.
-    
-    Returns: A timetuple with the local time.
-    
-    >>> os.environ['TZ'] = 'America/Los_Angeles'
-    >>> time.tzset()
-    >>> tt=utc_to_local_tt(2009, 3, 27, 14.5)
-    >>> print(tt.tm_year, tt.tm_mon, tt.tm_mday, tt.tm_hour, tt.tm_min)
-    2009 3 27 7 30
+    Args:
+        y (int): The year for which the conversion is desired.
+        m (int): The month.
+        d (int): The day.
+        hrs_utc (float): Floating point number with the number of hours since midnight in UTC.
+
+    Returns:
+         time.struct_time: A timetuple with the local time.
+
+    Example:
+        >>> os.environ['TZ'] = 'America/Los_Angeles'
+        >>> time.tzset()
+        >>> tt=utc_to_local_tt(2009, 3, 27, 14.5)
+        >>> print(tt.tm_year, tt.tm_mon, tt.tm_mday, tt.tm_hour, tt.tm_min)
+        2009 3 27 7 30
     """
     # Get the UTC time:
     time_ts = utc_to_ts(y, m, d, hrs_utc)
@@ -1321,15 +1361,21 @@ def latlon_string(ll, hemi, which, format_list=None):
 
     Args:
         ll (float): The decimal latitude or longitude
-        hemi (list|tuple): A tuple holding strings representing positive or negative values.
-            E.g.: ('N', 'S', 'E', 'W')
+        hemi (list[str,str]): A tuple holding strings representing positive or negative values.
+            E.g.: ('N', 'S') or ('E', 'W')
         which (str): 'lat' for latitude, 'lon' for longitude
-        format_list (list|tuple): A list or tuple holding the format strings to be used.
+        format_list (list[str,str,str]|None): A list or tuple holding the format strings to be used.
             These are [whole degrees latitude, whole degrees longitude, minutes]
 
     Returns:
-        tuple: A 3-way tuple holding (latlon whole degrees, latlon minutes,
+        tuple[str,str,str]: A 3-way tuple holding (latlon whole degrees, latlon minutes,
             hemisphere designator). Example: ('022', '08.3', 'N')
+
+    Example:
+        >>> print(latlon_string(-22.3, ('N','S'), 'lat'))
+        ('22', '18.00', 'S')
+        >>> print(latlon_string(-95.5, ('E','W'), 'lon'))
+        ('095', '30.00', 'W')
     """
     labs = abs(ll)
     frac, deg = math.modf(labs)
@@ -1403,18 +1449,12 @@ class GenWithPeek(object):
         else:
             return next(self.generator)
 
-    # For Python 2:
-    next = __next__
-
     def peek(self):
         """Take a peek at the next object"""
         if not self.have_peek:
             self.peek_obj = next(self.generator)
             self.have_peek = True
         return self.peek_obj
-
-    # For Python 3 compatiblity
-    __next__ = next
 
 
 class GenByBatch(object):
@@ -1423,9 +1463,9 @@ class GenByBatch(object):
     def __init__(self, generator, batch_size=0):
         """Initialize an instance of GenWithConvert
 
-        generator: An iterator which will be wrapped.
-
-        batch_size: The number of items to fetch in a batch.
+        Args:
+            generator: An iterator which will be wrapped.
+            batch_size (int): The number of items to fetch in a batch.
         """
         self.generator = generator
         self.batch_size = batch_size
@@ -1452,9 +1492,6 @@ class GenByBatch(object):
             return self.batch_buffer.pop(0)
         else:
             raise StopIteration
-
-    # For Python 2:
-    next = __next__
 
 
 def tobool(x):
