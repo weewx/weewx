@@ -9,6 +9,13 @@ install instructions should become
 
     echo "deb [arch=all] http://weewx.com/apt/python3 stable main" | sudo tee /etc/apt/sources.list.d/weewx.list
 
+### Upgrading using package installer
+
+Right now, the function `weewx.read_config()` will convert `WEEWX_ROOT=/` to
+`WEEWX_ROOT=/etc/weewx` at runtime. Is there a way to do this when upgrading?
+
+Can we copy `/usr/share/weewx/user` to `/etc/weewx/user` when upgrading? Then
+delete the former.
 
 ## Utilities
 
@@ -19,7 +26,8 @@ need a page that shows how to download, install, and configure a driver.
 
 need a page that shows how to download, install, and configure a skin.
 
-Need a page on how to provision a second instance.
+Need a page on how to provision a second instance, for both a pip install and a
+package install.
 
 
 
