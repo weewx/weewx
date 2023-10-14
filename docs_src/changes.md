@@ -130,6 +130,8 @@ restart.
 Change from old Google Analytics UA code to the GA4 tag system in the Standard
 and Seasons skins. Fixes issue [#892](https://github.com/weewx/weewx/issues/892).
 
+`cumulative` aggregate type now supports a user specified reset date-time meaning cumulative plots can now reset to zero at a user specified time. Partially mitigates issue #91. 
+
 
 ### 4.10.2 02/22/2023
 

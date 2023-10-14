@@ -34,7 +34,6 @@ month_stop_tt = (2010, 4, 1, 0, 0, 0, 0, 0, -1)
 start_ts = time.mktime(month_start_tt)
 stop_ts = time.mktime(month_stop_tt)
 
-
 class VaporPressure(weewx.xtypes.XType):
     """Calculate VaporPressure. Used to test generating series of a user-defined type."""
 
@@ -113,6 +112,29 @@ class Common(object):
                                           0.113, None, 0.433, 0.272, 0.116, 0.212, 0.444, None,
                                           0.120, 0.218, 0.454, 0.286, 0.123, None, 0.465, 0.293,
                                           0.126, 0.229, 0.477, None]
+    # These are the expected cumulative rain results for 10 March 2010
+    expected_hourly_rain_cumulative = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+                                       0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.08,
+                                       0.20, 0.36, 0.52, 0.68]
+    expected_hourly_rain_cumulative_2200_reset = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+                                                  0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+                                                  0.00, 0.00, 0.00, 0.08, 0.20, 0.00, 0.16, 0.32]
+    # These are the expected cumulative rain results for 10-11 March 2010
+    expected_hourly_rain_cumulative_midnight_reset = [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+                                                      0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+                                                      0.00, 0.00, 0.00, 0.00, 0.00, 0.08, 0.20,
+                                                      0.36, 0.52, 0.00, 0.16, 0.32, 0.48, 0.56,
+                                                      0.60, 0.60, 0.60, 0.60, 0.60, 0.60, 0.60,
+                                                      0.60, 0.60, 0.60, 0.60, 0.60, 0.60, 0.60,
+                                                      0.60, 0.60, 0.60, 0.60, 0.60, 0.60]
+    # These are the expected cumulative rain results for 31 March-1 April 2010
+    expected_hourly_rain_cumulative_month_reset = [0.16, 0.32, 0.48, 0.64, 0.72, 0.76, 0.76, 0.76,
+                                                   0.76, 0.76, 0.76, 0.76, 0.76, 0.76, 0.76, 0.76,
+                                                   0.76, 0.76, 0.76, 0.76, 0.76, 0.76, 0.76, 0.00,
+                                                   0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+                                                   0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
+                                                   0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00]
+
 
     def setUp(self):
         global config_path
@@ -184,24 +206,6 @@ class Common(object):
         self.assertEqual((["%.2f" % d for d in data_vec[0]], data_vec[1], data_vec[2]),
                          (["%.2f" % d for d in Common.expected_daily_rain_sum], 'inch',
                           'group_rain'))
-
-    def test_get_series_archive_agg_rain_cum(self):
-        """Test a series of daily cumulative rain totals, run against the main archive table."""
-        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
-            # Calculate the cumulative total daily rain
-            start_vec, stop_vec, data_vec \
-                = weewx.xtypes.ArchiveTable.get_series('rain',
-                                                       TimeSpan(start_ts, stop_ts),
-                                                       db_manager,
-                                                       'cumulative',
-                                                       24 * 3600)
-        # March has 30 days.
-        self.assertEqual(len(start_vec[0]), 30 + 1)
-        self.assertEqual(len(stop_vec[0]), 30 + 1)
-        right_answer = functools.reduce(lambda v, x: v + [v[-1] + x],
-                                        Common.expected_daily_rain_sum, [0])[1:]
-        self.assertEqual((["%.2f" % d for d in data_vec[0]], data_vec[1], data_vec[2]),
-                         (["%.2f" % d for d in right_answer], 'inch', 'group_rain'))
 
     def test_get_series_archive_windvec(self):
         """Test a series of 'windvec', with no aggregation, run against the main archive table"""
@@ -312,6 +316,161 @@ class Common(object):
             self.assertEqual(data_vec[1], 'inHg')
             self.assertEqual(data_vec[2], 'group_pressure')
 
+    def test_get_series_agg_rain_cumulative(self):
+        """Test a series of cumulative rain totals."""
+
+        day_start_tt = (2010, 3, 10, 0, 0, 0, 0, 0, -1)
+        day_stop_tt = (2010, 3, 11, 0, 0, 0, 0, 0, -1)
+        day_start_ts = time.mktime(day_start_tt)
+        day_stop_ts = time.mktime(day_stop_tt)
+        next_day_stop_tt = (2010, 3, 12, 0, 0, 0, 0, 0, -1)
+        next_day_stop_ts = time.mktime(next_day_stop_tt)
+        last_day_start_tt = (2010, 3, 31, 0, 0, 0, 0, 0, -1)
+        first_day_stop_tt = (2010, 4, 2, 0, 0, 0, 0, 0, -1)
+        last_day_start_ts = time.mktime(last_day_start_tt)
+        first_day_stop_ts = time.mktime(first_day_stop_tt)
+        year_start_tt = (2010, 3, 10, 0, 0, 0, 0, 0, -1)
+        year_stop_tt = (2012, 7, 21, 0, 0, 0, 0, 0, -1)
+        year_start_ts = time.mktime(year_start_tt)
+        year_stop_ts = time.mktime(year_stop_tt)
+        reset_2011_1_1_tt = (2011, 1, 1, 0, 0, 0, 0, 0, -1)
+        reset_2012_1_1_tt = (2012, 1, 1, 0, 0, 0, 0, 0, -1)
+        reset_2011_1_1_ts = time.mktime(reset_2011_1_1_tt)
+        reset_2012_1_1_ts = time.mktime(reset_2012_1_1_tt)
+
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
+            # Calculate the hourly rain totals for the day
+            start_vec, stop_vec, data_vec \
+                = weewx.xtypes.Cumulative.get_series('rain',
+                                                       TimeSpan(day_start_ts, day_stop_ts),
+                                                       db_manager,
+                                                       'cumulative',
+                                                       3600)
+            # There should be 24 elements in each vector, one for each hour of
+            # the day
+            self.assertEqual(len(start_vec[0]), 24)
+            self.assertEqual(len(stop_vec[0]), 24)
+            self.assertEqual((["%.2f" % d for d in data_vec[0]], data_vec[1], data_vec[2]),
+                            (["%.2f" % d for d in Common.expected_hourly_rain_cumulative], 'inch',
+                             'group_rain'))
+
+            # Test 22:00 reset
+
+            # Calculate the hourly rain totals for the day with a 10pm reset
+            start_vec, stop_vec, data_vec \
+                = weewx.xtypes.Cumulative.get_series('rain',
+                                                     TimeSpan(day_start_ts, day_stop_ts),
+                                                     db_manager,
+                                                    'cumulative',
+                                                    3600,
+                                                     reset='22:00')
+            # There should be 24 elements in each vector, one for each hour of
+            # the day
+            self.assertEqual(len(start_vec[0]), 24)
+            self.assertEqual(len(stop_vec[0]), 24)
+            self.assertEqual((["%.2f" % d for d in data_vec[0]], data_vec[1], data_vec[2]),
+                            (["%.2f" % d for d in Common.expected_hourly_rain_cumulative_2200_reset],
+                             'inch', 'group_rain'))
+
+            # Test midnight keyword reset
+
+            # Calculate the hourly rain totals for the two-day period with a
+            # midnight reset
+            start_vec, stop_vec, data_vec \
+                = weewx.xtypes.Cumulative.get_series('rain',
+                                                     TimeSpan(day_start_ts, next_day_stop_ts),
+                                                     db_manager,
+                                                    'cumulative',
+                                                    3600,
+                                                     reset='midnight')
+            # There should be 48 elements in each vector, one for each hour of
+            # the two day period
+            self.assertEqual(len(start_vec[0]), 48)
+            self.assertEqual(len(stop_vec[0]), 48)
+            self.assertEqual((["%.2f" % d for d in data_vec[0]], data_vec[1], data_vec[2]),
+                            (["%.2f" % d for d in Common.expected_hourly_rain_cumulative_midnight_reset],
+                             'inch', 'group_rain'))
+
+            # Test month keyword reset
+
+            # Calculate the hourly rain totals for the two-day period with a
+            # month reset
+            start_vec, stop_vec, data_vec \
+                = weewx.xtypes.Cumulative.get_series('rain',
+                                                     TimeSpan(last_day_start_ts, first_day_stop_ts),
+                                                     db_manager,
+                                                    'cumulative',
+                                                    3600,
+                                                     reset='month')
+            # There should be 48 elements in each vector, one for each hour of
+            # the two day period
+            self.assertEqual(len(start_vec[0]), 48)
+            self.assertEqual(len(stop_vec[0]), 48)
+            self.assertEqual((["%.2f" % d for d in data_vec[0]], data_vec[1], data_vec[2]),
+                            (["%.2f" % d for d in Common.expected_hourly_rain_cumulative_month_reset],
+                             'inch', 'group_rain'))
+
+            # Limitations of the test database prevent full testing of the
+            # 'year' keyword reset. Best we can do is test the parsing of the
+            # 'year' keyword reset option.
+
+            res = weewx.xtypes.Cumulative.parse_reset('year',
+                                                      TimeSpan(year_start_ts, year_stop_ts))
+            self.assertListEqual(res, [reset_2011_1_1_ts, reset_2012_1_1_ts])
+
+            # Test weewx.xtypes.Cumulative supporting methods
+
+            # The tests so far test the supporting methods with valid data.
+            # Rather than repeat these expensive tests with corner cases we can
+            # test the supporting methods only. parse_time() and get_ts_list()
+            # can be adequately tested by testing parse_reset() meaning we only
+            # need test parse_reset().
+
+            # Test parse_reset()
+
+            # reset_opt is None, should see None
+            res = weewx.xtypes.Cumulative.parse_reset(None,
+                                                      TimeSpan(day_start_ts, day_stop_ts))
+            self.assertIsNone(res)
+            # invalid time format, we should see midnight
+            res = weewx.xtypes.Cumulative.parse_reset('2345',
+                                                      TimeSpan(day_start_ts, day_stop_ts))
+            self.assertListEqual(res, [1268208000,])
+            # invalid time, we should see midnight
+            res = weewx.xtypes.Cumulative.parse_reset('24:32',
+                                                      TimeSpan(day_start_ts, day_stop_ts))
+            self.assertListEqual(res, [1268208000,])
+            # invalid day-time format, we should see midnight
+            res = weewx.xtypes.Cumulative.parse_reset('1212:05',
+                                                      TimeSpan(day_start_ts, day_stop_ts))
+            self.assertListEqual(res, [1268208000,])
+            # invalid day-time, we should see midnight
+            res = weewx.xtypes.Cumulative.parse_reset('32T12:05',
+                                                      TimeSpan(day_start_ts, day_stop_ts))
+            self.assertListEqual(res, [1268251500,])
+            # invalid month, day-time format, we should see midnight
+            res = weewx.xtypes.Cumulative.parse_reset('1/12T12:05',
+                                                      TimeSpan(day_start_ts, day_stop_ts))
+            self.assertListEqual(res, [1268251500,])
+            # invalid month, day-time, we should see midnight
+            res = weewx.xtypes.Cumulative.parse_reset('13-01T12:05',
+                                                      TimeSpan(day_start_ts, day_stop_ts))
+            self.assertListEqual(res, [1268251500,])
+            # invalid date-time format, we should see midnight
+            res = weewx.xtypes.Cumulative.parse_reset('2023/01/12T12:05',
+                                                      TimeSpan(day_start_ts, day_stop_ts))
+            self.assertListEqual(res, [1268251500,])
+            # invalid date-time, we should see midnight
+            res = weewx.xtypes.Cumulative.parse_reset('2023-13-05T12:05',
+                                                      TimeSpan(day_start_ts, day_stop_ts))
+            self.assertListEqual(res, [1268251500,])
+            # reset option that cannot be parsed, we should see a
+            # weewx.ViolatedPrecondition exception
+            self.assertRaises(weewx.ViolatedPrecondition,
+                              weewx.xtypes.Cumulative.parse_reset,
+                              reset_opt='T201T0-03-32T12:00',
+                              timespan=TimeSpan(day_start_ts, day_stop_ts))
+
 
 class TestSqlite(Common, unittest.TestCase):
 
@@ -342,13 +501,13 @@ def suite():
         'test_get_series_archive_outTemp',
         'test_get_series_daily_agg_rain_sum',
         'test_get_series_archive_agg_rain_sum',
-        'test_get_series_archive_agg_rain_cum',
         'test_get_series_archive_windvec',
         'test_get_series_archive_agg_windvec_avg',
         'test_get_series_archive_agg_windvec_last',
         'test_get_aggregate_windvec_last',
         'test_get_series_on_the_fly',
         'test_get_aggregate_series_on_the_fly',
+        'test_get_series_agg_rain_cumulative',
     ]
     return unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
     # return unittest.TestSuite(list(map(TestSqlite, tests)))
