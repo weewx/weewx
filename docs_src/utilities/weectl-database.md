@@ -75,7 +75,8 @@ for `--from` is from the first day in the database. The default value for
 
 ## Add a new observation type to the database
 
-    weectl database add-column NAME --type=COLUMN-DEF
+    weectl database add-column NAME
+        [--type=COLUMN-DEF]
         [--config=FILENAME] [--binding=BINDING] [--dry-run]
 
 This action adds a new database observation type (column), given by `NAME`, to
