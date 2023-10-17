@@ -168,8 +168,10 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
     elif config_dict['WEEWX_ROOT'] == '/':
         # If a legacy path from a package installer, update it.
         config_dict['WEEWX_ROOT'] = '/etc/weewx'
-    # Make sure WEEWX_ROOT is an absolute path
-    config_dict['WEEWX_ROOT'] = os.path.abspath(config_dict['WEEWX_ROOT'])
+    # In case WEEWX_ROOT is a relative path, join it with the location of the config file, then
+    # convert it to an absolute path.
+    config_dict['WEEWX_ROOT'] = os.path.abspath(os.path.join(os.path.dirname(config_path),
+                                                             config_dict['WEEWX_ROOT']))
 
     return config_path, config_dict
 

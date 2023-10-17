@@ -188,8 +188,8 @@ def require_weewx_version(module, required_version):
 
 def add_user_path(config_dict):
     """add the path to the parent of the user directory to PYTHONPATH."""
-    root_dir = extract_roots(config_dict)
-    lib_dir = os.path.abspath(os.path.join(root_dir['USER_DIR'], '..'))
+    root_dict = extract_roots(config_dict)
+    lib_dir = os.path.abspath(os.path.join(root_dict['USER_DIR'], '..'))
     sys.path.append(lib_dir)
 
 
