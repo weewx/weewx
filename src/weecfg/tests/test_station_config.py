@@ -73,7 +73,7 @@ class AltitudeConfigTest(CommonConfigTest):
 
     def test_default_config_altitude(self):
         weecfg.station_config.config_altitude(self.config_dict, no_prompt=True)
-        self.assertEqual(self.config_dict['Station']['altitude'], ["700", "foot"])
+        self.assertEqual(self.config_dict['Station']['altitude'], ["0", "foot"])
         # Delete the value in the configuration dictionary
         del self.config_dict['Station']['altitude']
         # Now we should get the hardwired default
@@ -96,7 +96,7 @@ class AltitudeConfigTest(CommonConfigTest):
     def test_prompt_config_altitude(self):
         with patch('weecfg.station_config.input', side_effect=['']):
             weecfg.station_config.config_altitude(self.config_dict)
-            self.assertEqual(self.config_dict['Station']['altitude'], ["700", "foot"])
+            self.assertEqual(self.config_dict['Station']['altitude'], ["0", "foot"])
         with patch('weecfg.station_config.input', side_effect=['110, meter']):
             weecfg.station_config.config_altitude(self.config_dict)
             self.assertEqual(self.config_dict['Station']['altitude'], ["110", "meter"])
