@@ -16,8 +16,10 @@ WEEWX_DOWNLOADS=$(WEEWX_HTMLDIR)/downloads
 WEEWX_STAGING=$(WEEWX_HTMLDIR)/downloads/development_versions
 # Location of doc sources
 DOC_SRC=docs_src
+# Location of built docs
+DOC_BUILT=src/weewx_data/docs
 # Location of the skins
-SKINLOC=skins
+SKINLOC=src/weewx_data/skins
 
 # extract version to be used in package controls and labels
 VERSION:=$(shell sed -ne 's/^version = "\(.*\)"/\1/p;' pyproject.toml)
@@ -30,9 +32,6 @@ DSTDIR=dist
 SRCPKG=weewx-$(VERSION).tgz
 WHEELSRC=weewx-$(VERSION).tar.gz
 WHEEL=weewx-$(VERSION)-py3-none-any.whl
-
-# Location of built docs
-DOC_BUILT=$(BLDDIR)/docs
 
 PYTHON?=python3
 
@@ -103,18 +102,17 @@ info:
 	@echo ""
 
 clean:
-	find bin -name "*.pyc" -exec rm {} \;
-	find bin -name "__pycache__" -prune -exec rm -rf {} \;
+	find src -name "*.pyc" -exec rm {} \;
+	find src -name "__pycache__" -prune -exec rm -rf {} \;
 	rm -rf $(BLDDIR) $(DSTDIR)
 
 realclean: clean
 	rm -rf $(DOC_BUILT)
-	rm -rf bin/wee_resources
 
 
 ###############################################################################
 # update the version in all relevant places
-VCONFIGS=weewx.conf bin/weecfg/tests/expected/weewx43_user_expected.conf
+VCONFIGS=src/weewx_data/weewx.conf src/weecfg/tests/expected/weewx43_user_expected.conf
 VSKINS=Ftp/skin.conf Mobile/skin.conf Rsync/skin.conf Seasons/skin.conf Smartphone/skin.conf Standard/skin.conf
 version:
 	sed -e "s/^site_name.*/site_name: \'WeeWX $(MMVERSION)\'/" mkdocs.yml > mkdocs.yml.tmp; mv mkdocs.yml.tmp mkdocs.yml
@@ -126,16 +124,16 @@ done
   sed -e 's/^SKIN_VERSION = [0-9].*/SKIN_VERSION = $(VERSION)/' $(SKINLOC)/$$f > $(SKINLOC)/$$f.tmp; \
   mv $(SKINLOC)/$$f.tmp $(SKINLOC)/$$f; \
 done
-	sed -e 's/__version__ *=.*/__version__ = "$(VERSION)"/' bin/weewx/__init__.py > weeinit.py.tmp
-	mv weeinit.py.tmp bin/weewx/__init__.py
+	sed -e 's/__version__ *=.*/__version__ = "$(VERSION)"/' src/weewx/__init__.py > weeinit.py.tmp
+	mv weeinit.py.tmp src/weewx/__init__.py
 
 
 ###############################################################################
 ## testing targets
 
 # if no suite is specified, find all test suites in the source tree
-SUITE?=`find bin -name "test_*.py"`
-test: bin/wee_resources/
+SUITE?=`find src -name "test_*.py"`
+test: src/weewx_data/
 	@rm -f $(BLDDIR)/test-results
 	@mkdir -p $(BLDDIR)
 	@echo "Python interpreter in use:" >> $(BLDDIR)/test-results 2>&1;
@@ -143,7 +141,7 @@ test: bin/wee_resources/
 	@for f in $(SUITE); do \
   echo running $$f; \
   echo $$f >> $(BLDDIR)/test-results; \
-  PYTHONPATH="bin:examples:bin/weewx/tests" $(PYTHON) $$f >> $(BLDDIR)/test-results 2>&1; \
+  PYTHONPATH="src:src/weewx_data/examples:src/weewx/tests" $(PYTHON) $$f >> $(BLDDIR)/test-results 2>&1; \
   echo >> $(BLDDIR)/test-results; \
 done
 	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results || echo "no failures"
@@ -152,10 +150,10 @@ done
 	@grep -q "ERROR:\|FAIL:" $(BLDDIR)/test-results && exit 1 || true
 
 test-setup:
-	bin/weedb/tests/setup_mysql.sh
+	src/weedb/tests/setup_mysql.sh
 
 test-setup-ci:
-	MYSQL_NO_OPTS=1 bin/weedb/tests/setup_mysql.sh
+	MYSQL_NO_OPTS=1 src/weedb/tests/setup_mysql.sh
 
 TESTDIR=/var/tmp/weewx_test
 MYSQLCLEAN="drop database test_weewx;\n\
@@ -177,7 +175,8 @@ test-clean:
 build-docs: $(DOC_BUILT)
 
 $(DOC_BUILT): $(shell find $(DOC_SRC) -type f)
-	@mkdir -p $(BLDDIR)
+	@rm -r $(DOC_BUILT)
+	@mkdir -p $(DOC_BUILT)
 	@echo "Building documents"
 	$(PYTHON) -m mkdocs --quiet build --site-dir=$(DOC_BUILT)
 
@@ -208,23 +207,7 @@ upload-src:
 ###############################################################################
 ## pypi targets
 
-# Copy resources into the source tree as required by pypi for its tarball
-bin/wee_resources/: $(DOC_BUILT) $(SKINLOC) weewx.conf
-	@echo "Copying resources into wee_resources"
-	mkdir -p bin/wee_resources
-	touch bin/wee_resources/__init__.py
-	cp -rp examples bin/wee_resources/
-	rm -rf bin/wee_resources/docs
-	cp -rp $(DOC_BUILT) bin/wee_resources/docs
-	rm -rf bin/wee_resources/skins
-	cp -rp skins bin/wee_resources/
-	rm -rf bin/wee_resources/util
-	cp -rp util bin/wee_resources/
-	mkdir -p bin/wee_resources/bin
-	cp -rp bin/user bin/wee_resources/bin/
-	cp -p weewx.conf bin/wee_resources/
-
-pypi-packages $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL): bin/wee_resources/ pyproject.toml
+pypi-packages $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL): pyproject.toml
 	poetry build
 
 # Upload wheel and src package to pypi.org
@@ -501,4 +484,4 @@ critic:
 	perlcritic -1 --verbose 8 pkg/mkchangelog.pl
 
 code-summary:
-	cloc --force-lang="HTML",tmpl --force-lang="INI",conf --force-lang="INI",inc bin docs_src examples skins util
+	cloc --force-lang="HTML",tmpl --force-lang="INI",conf --force-lang="INI",inc src docs_src examples skins util

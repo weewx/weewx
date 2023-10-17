@@ -43,20 +43,21 @@ install:
 	mkdir -p $(DST)/etc/default
 
 # copy files from the source tree
-	cp -r $(SRC)/bin/* $(DST_BINDIR)
-	cp -r $(SRC)/../docs/* $(DST_DOCDIR)
-	cp -r $(SRC)/examples $(DST_DOCDIR)
-	cp -r $(SRC)/skins $(DST_CFGDIR)
-	cp -r $(SRC)/util/apache $(DST_CFGDIR)
-	cp -r $(SRC)/util/import $(DST_CFGDIR)
-	cp -r $(SRC)/util/logrotate.d $(DST_CFGDIR)
-	cp -r $(SRC)/util/logwatch $(DST_CFGDIR)
-	cp -r $(SRC)/util/rsyslog.d $(DST_CFGDIR)
-	cp -r $(SRC)/util/scripts $(DST_CFGDIR)
-	cp -r $(SRC)/util/udev $(DST_CFGDIR)
+	cp -r $(SRC)/src/* $(DST_BINDIR)
+	cp -r $(SRC)/src/weewx_data/bin/* $(DST_BINDIR)
+	cp -r $(SRC)/src/weewx_data/docs/* $(DST_DOCDIR)
+	cp -r $(SRC)/src/weewx_data/examples $(DST_DOCDIR)
+	cp -r $(SRC)/src/weewx_data/skins $(DST_CFGDIR)
+	cp -r $(SRC)/src/weewx_data/util/apache $(DST_CFGDIR)
+	cp -r $(SRC)/src/weewx_data/util/import $(DST_CFGDIR)
+	cp -r $(SRC)/src/weewx_data/util/logrotate.d $(DST_CFGDIR)
+	cp -r $(SRC)/src/weewx_data/util/logwatch $(DST_CFGDIR)
+	cp -r $(SRC)/src/weewx_data/util/rsyslog.d $(DST_CFGDIR)
+	cp -r $(SRC)/src/weewx_data/util/scripts $(DST_CFGDIR)
+	cp -r $(SRC)/src/weewx_data/util/udev $(DST_CFGDIR)
 
 # Patch weewx.conf with the various ROOT symbols
-	cat $(SRC)/weewx.conf | sed \
+	cat $(SRC)/src/weewx_data/weewx.conf | sed \
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /etc/weewx%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = skins%' \
  -e 's%HTML_ROOT = public_html%HTML_ROOT = /var/www/html/weewx%' \
@@ -65,7 +66,7 @@ install:
 
 # Patch the weewx.service file to read /etd/default/weewx, then
 # use its symbols to invoke weewxd
-	cat $(SRC)/util/systemd/weewx.service | sed \
+	cat $(SRC)/src/weewx_data/util/systemd/weewx.service | sed \
  -e '/^\[Service\]/a EnvironmentFile=/etc/default/weewx' \
  -e 's%^ExecStart=.*%ExecStart=/usr/bin/env $${WEEWX_BIN} $${WEEWX_CFG}%' \
  > $(DST_SYSTEMDDIR)/weewx.service
@@ -75,11 +76,11 @@ install:
 
 # create the entry points
 	for f in $(ENTRIES); do \
-  cp $(SRC)/util/scripts/$$f $(DST)/usr/bin; \
+  cp $(SRC)/src/weewx_data/util/scripts/$$f $(DST)/usr/bin; \
 done
 
 # configure application layout
-	cat $(SRC)/util/default/weewx | sed \
+	cat $(SRC)/src/weewx_data/util/default/weewx | sed \
  -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
  -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
  -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \

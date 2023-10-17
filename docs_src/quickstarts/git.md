@@ -76,7 +76,7 @@ to HTML, you must build them:
 ```{.shell .copy}
 cd ~/weewx
 # Make sure to include the trailing slash!
-make bin/wee_resources/
+make bin/weewx_data/
 ```
 
 ## Provision a new station

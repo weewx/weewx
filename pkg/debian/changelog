@@ -1,3 +1,7 @@
+weewx (5.0.0b14-1) unstable; urgency=low
+  * Refactor, using 'src' instead of 'bin'.
+  * Put weewx_data in version control. Put built docs in it.
+ -- Tom Keffer (Author of WeeWX) <tkeffer@gmail.com>  Tue, 17 Oct 2023 04:30:09 -0700
 weewx (5.0.0b10-1) unstable; urgency=low
   * weectl device replaces wee_device
  -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Thu, 03 Aug 2023 18:46:49 -0700

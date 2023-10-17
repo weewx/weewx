@@ -1,0 +1,711 @@
+/* Styles for the weewx documentation
+ *
+ *  Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+ *
+ *  See the file LICENSE.txt for your rights.
+ *
+ */
+/*noinspection CssUnknownTarget,CssUnknownTarget*/
+@import url('https://fonts.googleapis.com/css?family=Roboto:700|Noto+Sans|Inconsolata:400,700|Droid+Serif');
+
+body {
+    font-family: 'Noto Sans', sans-serif;
+    margin-top: 4px;
+}
+
+@media (min-width: 320px) {
+    .sidebar {
+        display: none;
+    }
+
+    .main {
+        width: 100%;
+    }
+}
+
+@media (min-width: 641px) {
+    .sidebar {
+        display: block;
+        width: 190px;
+    }
+
+    .main {
+        margin-left: 210px;
+        width: auto;
+    }
+}
+
+@media (min-width: 961px) {
+    .sidebar {
+        display: block;
+        width: 190px;
+    }
+
+    .main {
+        margin-left: 210px;
+    }
+}
+
+@media (min-width: 1025px) {
+    .sidebar {
+        display: block;
+        width: 220px;
+    }
+
+    .main {
+        margin-left: 230px;
+        width: auto;
+    }
+}
+
+@media (min-width: 1281px) {
+    .sidebar {
+        display: block;
+        width: 250px;
+    }
+
+    .main {
+        margin-left: 270px;
+    }
+}
+
+@media (max-height: 800px) {
+    .sidebar {
+        max-height: 60%;
+    }
+}
+
+div.sidebar {
+    position: fixed;
+    top: 4px;
+    left: 4px;
+    bottom: 4px;
+}
+
+div.main {
+    overflow-x: hidden;
+}
+
+.header {
+    margin-top: 0;
+    padding-left: 4px;
+    padding-bottom: 24px;
+    border: 1px solid #999999;
+    background-color: #aacccc;
+    border-radius: 3px;
+}
+
+.content {
+    padding-left: 4px;
+}
+
+.footer {
+    margin-top: 50px;
+}
+
+.doclist {
+    padding: 4px;
+    margin-bottom: 16px;
+    border: 1px solid #999999;
+    border-radius: 3px;
+}
+
+.title {
+    font-family: 'Roboto', sans-serif;
+    font-size: 180%;
+    font-weight: bold;
+    margin-top: 0;
+}
+
+li {
+    margin-right: 10%;
+    margin-top: 10px;
+}
+
+dt {
+    margin-top: 10px;
+}
+
+dd {
+    margin-top: 5px;
+}
+
+h1 {
+    background-color: #aacccc;
+    border-radius: 3px;
+    border: 1px solid #999999;
+    clear:both;
+    color:teal;
+    font-family: 'Roboto', sans-serif;
+    font-size: 160%;
+    font-weight: bold;
+    margin-bottom: 0;
+    margin-top: 2em;
+    padding-left: .5em;
+    padding-right: .5em;
+}
+
+h2 {
+    border-bottom: 1px solid #999999;
+    clear:both;
+    color: teal;
+    font-family: 'Roboto', sans-serif;
+    font-size: 140%;
+    font-weight: bold;
+    margin-bottom: 0;
+    margin-top: 2em;
+}
+
+h3 {
+    clear:left;
+    color: teal;
+    font-family: 'Roboto', sans-serif;
+    font-size: 120%;
+    font-weight: bold;
+    margin-bottom: 0;
+    margin-top: 1.5em;
+}
+
+h4 {
+    clear:left;
+    color: teal;
+    font-family: 'Roboto', sans-serif;
+    font-size: 100%;
+    font-weight: bold;
+}
+
+
+table {
+    border-collapse: collapse;
+    border: 1px solid #cccccc;
+    width: 98%;
+    margin: 1%;
+}
+
+table .tty {
+    margin: 0;
+}
+
+tr {
+    vertical-align: top;
+    font-size: 100%;
+}
+
+td {
+    border: 1px solid #cccccc;
+    padding: 2px 2px 2px 8px;
+}
+
+table .first_row {
+    font-weight: bold;
+    background-color: #ddefef;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+table.fixed_width td {
+    width: 10%;
+}
+
+caption {
+    background-color: #aacccc;
+    margin: 0 0 8px;
+    border: 1px solid #888888;
+    padding: 6px 16px;
+    font-weight: bold;
+}
+
+.code {
+    font-family: 'Inconsolata', monospace;
+}
+
+p .code, td .code, li .code, dd .code {
+    background-color: #ecf3f3;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+.symcode {
+    font-family: 'Inconsolata', monospace;
+    font-style: italic;
+}
+
+p .symcode {
+    background-color: #ecf3f3;
+    padding-left: 1px;
+    padding-right: 1px;
+}
+
+.indent {
+    margin-left: 30px;
+    width: 95%;
+}
+
+.no_indent {
+    margin-left: 0px;
+    width: 98%;
+}
+
+.station_data {
+    margin-left: 40px;
+    margin-right: 80px;
+    width: 500px;
+}
+
+.station_data_key {
+    font-size: 80%;
+    font-style: italic;
+    margin-left: 40px;
+    margin-right: 80px;
+    width: 500px;
+}
+
+.cmd {
+    font-weight: bold;
+}
+
+.tty {
+    font-family: 'Inconsolata', monospace;
+    background-color: var(--md-code-bg-color), #f5f5f5;
+    border: 1px solid #ccd3d3;
+    padding: 3px 8px 3px 8px;
+    margin: 5px 15px 5px 15px;
+    white-space: pre;
+    line-height: normal;
+    font-weight: bold;
+    color: var(--md-code-fg-color), #36464e;
+    overflow: auto;
+}
+
+.config_section {
+}
+
+.config_option, .config_important {
+    font-family: 'Inconsolata', monospace;
+    font-weight: bold;
+    color: black;
+    margin-top: 1.5em;
+    margin-bottom: 0;
+}
+
+.config_important {
+    color: #bb9900;
+}
+
+.highlight {
+    background-color: #fff777;
+}
+
+.text_highlight, .first_col {
+    font-weight: bold;
+    background-color: #eef0f0;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.center {
+    text-align: center;
+}
+
+.example_output {
+    font-family: 'Droid Serif', serif;
+    padding: 15px 20px 15px 20px;
+    margin: 5px 15px 5px 15px;
+    border: 1px solid #cccccc;
+    box-shadow: 2px 2px 2px #dddddd;
+    display: inline-block;
+}
+
+.example_text {
+    font-family: 'Noto Sans', sans-serif;
+    font-weight: bold;
+    background-color: #ecf3f3;
+    padding: 0px 4px 0px 4px;
+}
+
+.image {
+    padding: 5px;
+}
+
+.image-right {
+    padding-left: 50px;
+    padding-right: 20px;
+    float: right;
+}
+
+.image_caption {
+    font-size: 80%;
+    text-align: center;
+    padding: 5px;
+}
+
+.note {
+    background-color: #ddf0e0;
+    border: 1px solid #bbd0c0;
+    margin: 10px 30px 10px 30px;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.warning {
+    background-color: #ffeeee;
+    border: 1px solid #ffdddd;
+    margin: 10px 30px 10px 30px;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.copyright {
+    font-style: italic;
+    text-align: right;
+}
+
+.prompt {
+    font-weight: bold;
+}
+
+.thumbnail {
+    width: 12px;
+}
+
+.locations {
+    border: none;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.locations tr {
+    border: none;
+    vertical-align: middle;
+}
+
+.version {
+    font-size: 80%;
+}
+
+.logo {
+    height: 24px;
+    padding-right: 0;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.logoref {
+    float: right;
+    padding-right: 10px;
+}
+
+.os-icons {
+    float: right;
+    margin-left: 20px;
+}
+
+/* Multi-column list */
+.mc-list {
+    column-count: 3;
+    list-style: none;
+}
+
+ul.mc-list > li {
+    display: inline-block;
+    width: 100%;
+}
+
+/*
+ * The stats styles mimic the styles used in the default standard template
+ * output so that examples in the docs match those of the standard template.
+ */
+.stats {
+    font-family: 'Noto Sans', sans-serif;
+    padding: 13px 58px 13px 58px;
+}
+
+.stats table {
+    border: thin solid #000000;
+    width: 100%;
+}
+
+.stats td {
+    border: thin solid #000000;
+    padding: 2px;
+}
+
+.stats_label {
+    color: green;
+}
+
+.stats_data {
+    color: red;
+}
+
+
+/********************************* settings for printing *********************************/
+
+@media print {
+    /* Impose portrait printing with forced margins */
+    @page {
+        size: landscape;
+        margin: 1.8cm 1cm;
+    }
+
+    body {
+        font-family: sans-serif;
+        font-size: 10pt;
+        background: none;
+    }
+
+    div.sidebar {
+        display: none; /* Delete the left menu */
+    }
+
+    div.main {
+        margin: 0; /* Do not make any margin for sidebar since there is none */
+    }
+
+    /* underline headers */
+    .header {
+        border: none;
+        border-bottom: 1px solid #999999;
+    }
+
+    .footer {
+        display: none;
+    }
+
+    .title {
+        text-align: center;
+        font-size: 180%;
+    }
+
+    .image {
+        max-width: 98%; /* To be responsive the size of the image must at most be in width that of the article container */
+        height: auto; /* Keep the ratio when the image is resized */
+    }
+
+    table {
+        max-width: 98%; /* To be responsive the size of the image must at most be in width that of the article container */
+        height: auto; /* Keep the ratio when the image is resized */
+    }
+
+    p, blockquote {
+        orphans: 3; /* No orphan line down */
+        widows: 3; /* No orphan line up */
+    }
+
+    /* No cut in these elements */
+    blockquote, ul, ol, table, .tty {
+        page-break-inside: avoid;
+    }
+
+    /* Justify text for paragraphs */
+    p, ul, ol {
+        text-align: justify;
+    }
+
+    /* No jump after these elements */
+    h1, h2, h3, h4, caption {
+        border: none;
+        border-radius: 0;
+        page-break-after: avoid;
+    }
+
+    /* Each title begins on a new page */
+    h1 {
+        border: none;
+        border-radius: 0;
+        border-bottom: 1px solid #999999;
+        page-break-before: always;
+    }
+
+    a {
+        text-decoration: none;
+    }
+
+    table {
+        border: none;
+    }
+
+    td {
+        border: 1px solid #eeeeee;
+    }
+
+    caption {
+        border: none;
+    }
+
+    .note {
+        border: 4px solid #aac0b0;
+        background-color: #cce0d0 !important;
+    }
+
+    .warning {
+        border: 4px solid #ffdddd;
+        background-color: #ffeeee !important;
+    }
+
+    p .code, td .code, li .code {
+        background-color: #ecf3f3;
+        border: none;
+    }
+}
+
+/********************************* Modal dialog box *********************************/
+/*
+ * The following dialog CSS was stolen from http://bit.ly/1cYAqTr
+ */
+.modal-dialog {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 99999;
+    opacity: 0;
+    transition: opacity 400ms ease-in;
+    pointer-events: none;
+}
+
+.modal-dialog:target {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-dialog > div {
+    width: 400px;
+    position: relative;
+    margin: 10% auto;
+    padding: 5px 20px 13px 20px;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.close-dialog {
+    background: #606061;
+    color: #FFFFFF;
+    line-height: 25px;
+    position: absolute;
+    right: -12px;
+    text-align: center;
+    top: -10px;
+    width: 24px;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 12px;
+    box-shadow: 1px 1px 3px #000;
+}
+
+.close-dialog:hover {
+    background: #00d9ff;
+}
+
+/********************************* Table of contents *********************************/
+
+#toc_parent {
+    border-radius: 3px;
+    border: 1px solid #aaaaaa;
+    max-height: 75%;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    padding: 4px;
+}
+
+.toc {
+    border-radius: 0;
+    border: 0;
+    font-size: 1.1em;
+    margin-left: 0;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    position: relative;
+    width: auto;
+}
+
+a.toc-link {
+    text-decoration-line: none;
+}
+
+a.toc-link:hover {
+    background-color: #ddefef;
+}
+
+/* lists inside of lists should use progressively smaller fonts: */
+.toc-list .toc-list {
+    font-size: 85%;
+}
+
+.is-active-link {
+    font-weight: normal;
+    background-color: #aacccc;
+}
+
+.toc-list li {
+    line-height: 1.3;
+    margin: 0 0 0 0;
+}
+
+/********************************* Tabs *********************************/
+
+.tabs {
+    clear: both;
+    float: left;
+    margin: 0 1em 1em 1em;
+    width: 95%;
+}
+
+.tabs img {
+    display: inline;
+}
+
+.tab {
+    background-color: white;
+    border-radius: 6px 6px 0 0;
+    border: 1px solid #cccccc;
+    color: #808080;
+    cursor: pointer;
+    float: left;
+    font-family: inherit;
+    font-size: 80%;
+    font-weight: bold;
+    margin:2px 4px 0 0;
+    padding: 4px 10px;
+    position: relative;
+}
+
+.tab:hover {
+    /* A lighter version of the 'selected' background color: */
+    background-color: #dfecec;
+}
+
+.tab.selected {
+    background-color: #aacccc;
+    /* Darken borders; bottom border should be same color as content below me */
+    border-color: #447777 #447777 #aacccc;
+    color: black;
+    /* When selected, shift myself down 1px to cover content border */
+    top: 1px;
+}
+
+.tab-content {
+    clear: both;
+    padding: 5px;
+    border: 1px solid #aacccc;
+    border-top: 5px solid #aacccc;
+}
+
+/* For mkdocs markdown: */
+.md-typeset code {
+    font-weight:bold;
+}
+
+.md-source__facts li {
+    margin-right: 7%;   /* over 7% breaks the github banner */
+}
+
+.md-header__button.md-logo {
+    background-color: white; /* make logo fully visible */
+}
+
+.md-typeset h1 {
+    color: teal; /* ensure that h1 looks ok in dark mode */
+}
