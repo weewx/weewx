@@ -10,6 +10,8 @@
       <sourceFolder url="file://$MODULE_DIR$/src/weewx/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/dist" />
       <excludeFolder url="file://$MODULE_DIR$/build" />
+      <excludeFolder url="file://$MODULE_DIR$/src/weewx_data/archive" />
+      <excludeFolder url="file://$MODULE_DIR$/src/weewx_data/public_html" />
     </content>
     <orderEntry type="jdk" jdkName="Python 3.7 (weewx)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
@@ -17,5 +19,12 @@
   <component name="PyDocumentationSettings">
     <option name="format" value="GOOGLE" />
     <option name="myDocStringFormat" value="Google" />
+  </component>
+  <component name="PyNamespacePackagesService">
+    <option name="namespacePackageFolders">
+      <list>
+        <option value="$MODULE_DIR$/src/weewx_data" />
+      </list>
+    </option>
   </component>
 </module>
