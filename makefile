@@ -106,9 +106,6 @@ clean:
 	find src -name "__pycache__" -prune -exec rm -rf {} \;
 	rm -rf $(BLDDIR) $(DSTDIR)
 
-realclean: clean
-	rm -rf $(DOC_BUILT)
-
 
 ###############################################################################
 # update the version in all relevant places
