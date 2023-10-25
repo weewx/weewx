@@ -240,13 +240,12 @@ class WUSource(weeimport.Source):
             buf = io.BytesIO(response.read())
             f = gzip.GzipFile(fileobj=buf)
             # but what charset is in use
-            try:
-                char_set = response.headers.get_content_charset()
-            except AttributeError:
-                # must be python2
-                char_set = response.headers.getparam('charset')
-            # get the raw data making sure we decode the charset
-            _raw_data = f.read().decode(char_set)
+            char_set = response.headers.get_content_charset()
+            # get the raw data making sure we decode the charset if required
+            if char_set is not None:
+                _raw_data = f.read().decode(char_set)
+            else:
+                _raw_data = f.read()
             # decode the json data
             _raw_decoded_data = json.loads(_raw_data)
         else:
