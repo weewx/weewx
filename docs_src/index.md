@@ -24,58 +24,11 @@ are listed in the driver list in the [Hardware Guide](hardware/drivers).
 See the [WeeWX Wiki](https://github.com/weewx/weewx/wiki) for additional
 drivers and other extensions.
 
-If your hardware is not in the core driver list, you should first install
-WeeWX, then download and install the driver for your hardware. The
-[installation instructions](usersguide/installing) tell you how to do it.
 
-## Quickstart Guides
+## Installation
 
-Each quickstart guide shows how to install, run, monitor, upgrade, and
-uninstall WeeWX. Choose the guide that is appropriate for your operating
-system and needs.
-
-<table>
-  <tr><td>Installer</td><td>Systems</td><td>Best for...</td></tr>
-  <tr>
-    <td><a href="quickstarts/debian">Debian</a></td>
-    <td>including Ubuntu, Mint, Raspberry Pi OS, Devuan</td>
-    <td rowspan=3>
-The Debian, Redhat, and SUSE installers use the conventions and software
-management tools for their respective operating systems; these are the
-fastest and easiest way to get up and running. You will need root access
-to install and run.</td>
-  </tr>
-  <tr>
-    <td><a href="quickstarts/redhat">Redhat</a></td>
-    <td>including Fedora, CentOS, Rocky</td>
-  </tr>
-  <tr>
-    <td><a href="quickstarts/suse">SUSE</a></td>
-    <td>including openSUSE</td>
-  </tr>
-  <tr>
-    <td><a href="quickstarts/pip">pip</a></td>
-    <td>any operating system</td>
-    <td>
-The pip installer will work on any operating system. Use this approach for macOS
-or one of the BSDs, or if you are using an older operating system. When used in
-a "virtual environment" (recommended), this approach is least likely to disturb
-other applications on your computer. This is also a good approach if you plan to
-do a lot of customization, or if you are developing a driver, skin, or other
-extension. Root access is not needed to install, but will be needed to run.
-    </td>
-  </tr>
-  <tr>
-    <td><a href="quickstarts/git">source</a></td>
-    <td>any operating system</td>
-    <td>
-If you want to install WeeWX on a system with very little storage, or if you
-want to experiment with code that is under development, then you may want to
-run directly from the WeeWX sources.  Root access is not needed to install, but 
-will be needed to run.
-    </td>
-  </tr>
-</table>
+See the section [_Installing WeeWX_](./usersguide/installing) in the _User's
+Guide_.
 
 ## Documentation
 

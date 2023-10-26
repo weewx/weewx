@@ -2,7 +2,10 @@
 name = "weewx"
 version = "5.0.0b14"
 description = "The WeeWX weather software system. This is an BETA release, and may have many bugs!"
-authors = ["Tom Keffer <tkeffer@gmail.com>"]
+authors = [
+    "Tom Keffer <tkeffer@gmail.com>",
+    "Matthew Wall <mwall@users.sourceforge.net>"
+]
 license = "GPL3"
 readme = 'README.md'
 repository = "https://github.com/weewx/weewx"
@@ -27,7 +30,6 @@ classifiers = [
 ]
 packages = [
     { include = "schemas", from = "src" },
-    { include = "weewx_data", from = "src" },
     { include = "weecfg", from = "src" },
     { include = "weectllib", from = "src" },
     { include = "weedb", from = "src" },
@@ -35,6 +37,7 @@ packages = [
     { include = "weeplot", from = "src" },
     { include = "weeutil", from = "src" },
     { include = "weewx", from = "src" },
+    { include = "weewx_data", from = "src" },
     { include = "wee_import.py", from = "src" },
     { include = "wee_reports.py", from = "src" },
     { include = "weectl.py", from = "src" },
