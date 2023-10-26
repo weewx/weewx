@@ -45,7 +45,7 @@ extra_css:
   - css/weewx_ui.css
 
 docs_dir: 'docs_src'
-site_dir: 'build/docs'
+site_dir: 'src/weewx_data/docs'
 
 nav:
   - "Overview" : index.md

@@ -1,6 +1,18 @@
 # Installing WeeWX
 
-## Required Skills
+If you're an old hand at installing software on Unix systems, you may be able to
+use one of our _Quickstart guides_:
+
+* [Debian](../../quickstarts/debian) - including Ubuntu, Mint, Raspberry Pi 
+  OS, Devuan. Uses `apt`.
+* [Redhat](../../quickstarts/redhat) - including Fedora, CentOS, Rocky. Uses `yum`.
+* [SUSE](../../quickstarts/suse) - including openSUSE. Uses `zypper`.
+* [pip](../../quickstarts/pip) - any operating system. Uses `pip`
+* [git](../../quickstarts/git) - any operating system. Run directly from repository.
+
+Otherwise, continue on...
+
+## Required skills
 
 In the world of open-source hobbyist software, WeeWX is pretty easy to install
 and configure. There are not many package dependencies, the configuration is
@@ -53,53 +65,60 @@ This is an outline of the process to install, configure, and run WeeWX:
 
 * Customize the installation. Typically, this is done by changing settings in
   the WeeWX [application configuration
-  file](../../reference/weewx-options/introduction/). For example, you might
-  want to [register your
+  file](../../reference/weewx-options/introduction/) (typically, `weewx.conf`).
+  For example, you might want to [register your
   station](../../reference/weewx-options/stdrestful/#stationregistry), so it
   shows up on a world-wide map of WeeWX installations. To make changes to reports,
-  see the [_Customization guide_](../../custom/introduction/).
+  see the [_Customization Guide_](../../custom/introduction/).
 
 
 ## Installation methods
 
-There are a few different ways to install WeeWX.  There are packages available
-for Debian (`apt`), Redhat (`yum`), and SUSE (`zypper`) systems, WeeWX can be
-installed using the Package Installer for Python (`pip`) on any operating
-system, or WeeWX can be run directly from source (e.g., using git).
+There are several different ways to install WeeWX.
 
-The Debian, Redhat, and SUSE installers use the conventions and software
-management tools for their respective operating systems; these are the fastest
-and easiest way to get up and running.
-
-The pip installer will work on any operating system; use this approach
-for macOS or one of the BSDs, or if you are using an older operating system.
-This is also a good approach if you plan to do a lot of customization, or if
-you are developing a driver, skin, or other extension.
-
+<table>
+  <tr><td>Installer</td><td>Systems</td><td>Best for...</td></tr>
+  <tr>
+    <td><a href="../../quickstarts/debian">Debian</a></td>
+    <td>including Ubuntu, Mint, Raspberry Pi OS, Devuan</td>
+    <td rowspan=3>
+      The Debian, Redhat, and SUSE package installers use <em>apt</em>, 
+      <em>yum</em>, and <em>zypper</em>, respectively. This is the fastest 
+      and easiest way to get up and running. You will need root access to 
+      install and run.
+    </td>
+  </tr>
+  <tr>
+    <td><a href="../../quickstarts/redhat">Redhat</a></td>
+    <td>including Fedora, CentOS, Rocky</td>
+  </tr>
+  <tr>
+    <td><a href="../../quickstarts/suse">SUSE</a></td>
+    <td>including openSUSE</td>
+  </tr>
+  <tr>
+    <td><a href="../../quickstarts/pip">pip</a></td>
+    <td>any operating system</td>
+    <td>
+The pip installer will work on any operating system. Use this approach for macOS
+or one of the BSDs, or if you are using an older operating system. When used in
+a "virtual environment" (recommended), this approach is least likely to disturb
+other applications on your computer. This is also a good approach if you plan to
+do a lot of customization, or if you are developing a driver, skin, or other
+extension. Root access is not needed to install, but may be needed to run.
+    </td>
+  </tr>
+  <tr>
+    <td><a href="../../quickstarts/git">git</a></td>
+    <td>any operating system</td>
+    <td>
 If you want to install WeeWX on a system with very little storage, or if you
 want to experiment with code that is under development, then you may want to
-run directly from a git clone of the WeeWX sources.
-
-|                        | apt/yum/zypper                                                     | pip                                                  | git                                                  |
-|------------------------|--------------------------------------------------------------------|------------------------------------------------------|------------------------------------------------------|
-| Operating system       | Only systems based on Debian, Redhat, or SUSE                      | Any operating system                                 | Any operating system                                 |
-| Installation steps     | Single                                                             | Multiple                                             | Multiple                                             |
-| Privileges required    | root                                                               | Install, configure, or upgrade does not require root | Install, configure, or upgrade does not require root |
-| Software location      | Installs into locations that are standard for the operating system | Installs into locations that are standard for Python | No files are installed                               |
-| Configuration location | `/etc/weewx`                                                       | `~/weewx-data`                                       | `~/weewx-data`                                       |
-| Database location      | `/var/lib/weewx`                                                   | `~/weewx-data`                                       | `~/weewx-data`                                       |
-| Report location        | `/var/www/html/weewx`                                              | `~/weewx-data`                                       | `~/weewx-data`                                       |
-| Log location           | syslog                                                             | syslog                                               | syslog                                               |
-
-The quick start guides contain installation instructions for each method:
-
-* [Debian](../../quickstarts/debian) - including Ubuntu, Mint, Raspberry Pi 
-  OS, Devuan
-* [Redhat](../../quickstarts/redhat) - including Fedora, CentOS, Rocky
-* [SUSE](../../quickstarts/suse) - including openSUSE
-* [pip](../../quickstarts/pip) - any operating system
-* [git](../../quickstarts/git) - any operating system
-
+run directly from the WeeWX sources.  Root access is not needed to install, but 
+may be needed to run.
+    </td>
+  </tr>
+</table>
 
 ## Installing a driver
 

@@ -1,0 +1,4886 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="Tom Keffer <tkeffer@gmail.com>">
+      
+      
+        <link rel="canonical" href="https://www.weewx.com/custom/cheetah-generator/">
+      
+      
+        <link rel="prev" href="../report-scheduling/">
+      
+      
+        <link rel="next" href="../image-generator/">
+      
+      <link rel="icon" href="../../images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
+    
+    
+      
+        <title>The Cheetah generator - WeeWX 5.0</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.85bb2934.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.a6bdf11c.min.css">
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CInconsolata+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Inconsolata Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../css/weewx_ui.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="white">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#the-cheetah-generator" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="WeeWX 5.0" class="md-header__button md-logo" aria-label="WeeWX 5.0" data-md-component="logo">
+      
+  <img src="../../images/logo-weewx.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            WeeWX 5.0
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              The Cheetah generator
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="white"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+            
+              <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4zM7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+              </label>
+            
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+            
+              <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3Z"/></svg>
+              </label>
+            
+          
+        </form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="WeeWX 5.0" class="md-nav__button md-logo" aria-label="WeeWX 5.0" data-md-component="logo">
+      
+  <img src="../../images/logo-weewx.png" alt="logo">
+
+    </a>
+    WeeWX 5.0
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          Quick start
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Quick start
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstarts/debian/" class="md-nav__link">
+        Debian
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstarts/redhat/" class="md-nav__link">
+        RedHat
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstarts/suse/" class="md-nav__link">
+        SuSE
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstarts/pip/" class="md-nav__link">
+        pip
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstarts/git/" class="md-nav__link">
+        git
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          User's guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          User's guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/installing/" class="md-nav__link">
+        Installing WeeWX
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/where/" class="md-nav__link">
+        Where to find things
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/running/" class="md-nav__link">
+        Running WeeWX
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/webserver/" class="md-nav__link">
+        Web server integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/backup/" class="md-nav__link">
+        Backup & restore
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/mysql-mariadb/" class="md-nav__link">
+        MySQL/MariaDB
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+          Troubleshooting
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3_8">
+          <span class="md-nav__icon md-icon"></span>
+          Troubleshooting
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/troubleshooting/what-to-do/" class="md-nav__link">
+        What to do
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/troubleshooting/hardware/" class="md-nav__link">
+        Hardware problems
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/troubleshooting/software/" class="md-nav__link">
+        Software problems
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/troubleshooting/meteo/" class="md-nav__link">
+        Meteorological problems
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          Customization guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Customization guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom-reports/" class="md-nav__link">
+        Customizing reports
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../report-scheduling/" class="md-nav__link">
+        Scheduling reports
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          The Cheetah generator
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        The Cheetah generator
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#which-files-get-processed" class="md-nav__link">
+    Which files get processed?
+  </a>
+  
+    <nav class="md-nav" aria-label="Which files get processed?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#specifying-template-files" class="md-nav__link">
+    Specifying template files
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summarybyyear" class="md-nav__link">
+    [[SummaryByYear]]
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summarybymonth" class="md-nav__link">
+    [[SummaryByMonth]]
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summarybyday" class="md-nav__link">
+    [[SummaryByDay]]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tags" class="md-nav__link">
+    Tags
+  </a>
+  
+    <nav class="md-nav" aria-label="Tags">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#time-period-current" class="md-nav__link">
+    Time period $current
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#time-period-latest" class="md-nav__link">
+    Time period $latest
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aggregation-periods" class="md-nav__link">
+    Aggregation periods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unit-conversion-options" class="md-nav__link">
+    Unit conversion options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rounding-options" class="md-nav__link">
+    Rounding options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#formatting-options" class="md-nav__link">
+    Formatting options
+  </a>
+  
+    <nav class="md-nav" aria-label="Formatting options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#format" class="md-nav__link">
+    format()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#long_form" class="md-nav__link">
+    long_form()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#formatting-examples" class="md-nav__link">
+    Formatting examples
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#start-end-and-datetime" class="md-nav__link">
+    start, end, and dateTime
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tag-trend" class="md-nav__link">
+    Tag $trend
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tag-span" class="md-nav__link">
+    Tag $span
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tag-unit" class="md-nav__link">
+    Tag $unit
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tag-obs" class="md-nav__link">
+    Tag $obs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iteration" class="md-nav__link">
+    Iteration
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comprehensive-example" class="md-nav__link">
+    Comprehensive example
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#support-for-series" class="md-nav__link">
+    Support for series
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helper-functions" class="md-nav__link">
+    Helper functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Helper functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rndx-ndigitsnone" class="md-nav__link">
+    $rnd(x, ndigits=None)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jsonizeseq" class="md-nav__link">
+    $jsonize(seq)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_intx" class="md-nav__link">
+    $to_int(x)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_boolx" class="md-nav__link">
+    $to_bool(x)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_listx" class="md-nav__link">
+    $to_list(x)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getobsplot_name" class="md-nav__link">
+    $getobs(plot_name)
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#general-tags" class="md-nav__link">
+    General tags
+  </a>
+  
+    <nav class="md-nav" aria-label="General tags">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#encoding" class="md-nav__link">
+    $encoding
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filename" class="md-nav__link">
+    $filename
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lang" class="md-nav__link">
+    $lang
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#month_name" class="md-nav__link">
+    $month_name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#page" class="md-nav__link">
+    $page
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skin" class="md-nav__link">
+    $skin
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skin_name" class="md-nav__link">
+    $SKIN_NAME
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skin_version" class="md-nav__link">
+    $SKIN_VERSION
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summarybyday_1" class="md-nav__link">
+    $SummaryByDay
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summarybymonth_1" class="md-nav__link">
+    $SummaryByMonth
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summarybyyear_1" class="md-nav__link">
+    $SummaryByYear
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#year_name" class="md-nav__link">
+    $year_name
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gettext-internationalization" class="md-nav__link">
+    $gettext - Internationalization
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pgettext-context-sensitive-lookups" class="md-nav__link">
+    $pgettext - Context sensitive lookups
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#almanac" class="md-nav__link">
+    Almanac
+  </a>
+  
+    <nav class="md-nav" aria-label="Almanac">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calendar-events" class="md-nav__link">
+    Calendar events
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#heavenly-bodies" class="md-nav__link">
+    Heavenly bodies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#functions" class="md-nav__link">
+    Functions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-new-bodies" class="md-nav__link">
+    Adding new bodies
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wind" class="md-nav__link">
+    Wind
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#defining-new-tags" class="md-nav__link">
+    Defining new tags
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../image-generator/" class="md-nav__link">
+        The Image generator
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../localization/" class="md-nav__link">
+        Localization
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../database/" class="md-nav__link">
+        Customizing the database
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../units/" class="md-nav__link">
+        Customizing units
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../multiple-bindings/" class="md-nav__link">
+        Multiple data bindings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sle/" class="md-nav__link">
+        Search lists
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../service-engine/" class="md-nav__link">
+        Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../derived/" class="md-nav__link">
+        Derived types
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../drivers/" class="md-nav__link">
+        Drivers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extensions/" class="md-nav__link">
+        Extensions
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          Utilities guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Utilities guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../utilities/weewxd/" class="md-nav__link">
+        weewxd
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+          weectl
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_5_2">
+          <span class="md-nav__icon md-icon"></span>
+          weectl
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../utilities/weectl-about/" class="md-nav__link">
+        weectl
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../utilities/weectl-database/" class="md-nav__link">
+        weectl database
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../utilities/weectl-debug/" class="md-nav__link">
+        weectl debug
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../utilities/weectl-device/" class="md-nav__link">
+        weectl device
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../utilities/weectl-extension/" class="md-nav__link">
+        weectl extension
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../utilities/weectl-station/" class="md-nav__link">
+        weectl station
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../utilities/wee_import/" class="md-nav__link">
+        wee_import
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../utilities/wee_reports/" class="md-nav__link">
+        wee_reports
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          Hardware guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          Hardware guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/drivers/" class="md-nav__link">
+        Drivers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/acurite/" class="md-nav__link">
+        AcuRite
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/cc3000/" class="md-nav__link">
+        CC3000
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/fousb/" class="md-nav__link">
+        FineOffset
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/te923/" class="md-nav__link">
+        TE923
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/ultimeter/" class="md-nav__link">
+        Ultimeter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/vantage/" class="md-nav__link">
+        Vantage
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/wmr100/" class="md-nav__link">
+        WMR100
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/wmr300/" class="md-nav__link">
+        WMR300
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/wmr9x8/" class="md-nav__link">
+        WMR9x8
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/ws1/" class="md-nav__link">
+        WS1
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/ws23xx/" class="md-nav__link">
+        WS23xx
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/ws28xx/" class="md-nav__link">
+        WS28xx
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../upgrade/" class="md-nav__link">
+        Upgrade guide
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+          Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_8">
+          <span class="md-nav__icon md-icon"></span>
+          Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8_1" id="__nav_8_1_label" tabindex="0">
+          Application options
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_1_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_8_1">
+          <span class="md-nav__icon md-icon"></span>
+          Application options
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/general/" class="md-nav__link">
+        General options
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stations/" class="md-nav__link">
+        [Station]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stdrestful/" class="md-nav__link">
+        [StdRESTful]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stdreport/" class="md-nav__link">
+        [StdReport]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stdconvert/" class="md-nav__link">
+        [StdConvert]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stdcalibrate/" class="md-nav__link">
+        [StdCalibrate]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stdqc/" class="md-nav__link">
+        [StdQC]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stdwxcalculate/" class="md-nav__link">
+        [StdWXCalculate]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stdarchive/" class="md-nav__link">
+        [StdArchive]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stdtimesynch/" class="md-nav__link">
+        [StdTimeSynch]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/data-bindings/" class="md-nav__link">
+        [DataBindings]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/databases/" class="md-nav__link">
+        [Databases]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/database-types/" class="md-nav__link">
+        [DatabaseTypes]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/engine/" class="md-nav__link">
+        [Engine]
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_2" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8_2" id="__nav_8_2_label" tabindex="0">
+          Skin options
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_8_2">
+          <span class="md-nav__icon md-icon"></span>
+          Skin options
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/extras/" class="md-nav__link">
+        [Extras]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/labels/" class="md-nav__link">
+        [Labels]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/almanac/" class="md-nav__link">
+        [Almanac]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/units/" class="md-nav__link">
+        [Units]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/texts/" class="md-nav__link">
+        [Texts]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/cheetahgenerator/" class="md-nav__link">
+        [CheetahGenerator]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/imagegenerator/" class="md-nav__link">
+        [ImageGenerator]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/copygenerator/" class="md-nav__link">
+        [CopyGenerator]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/generators/" class="md-nav__link">
+        [Generators]
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/aggtypes/" class="md-nav__link">
+        Aggregation types
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/durations/" class="md-nav__link">
+        Durations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/units/" class="md-nav__link">
+        Units
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/valuetuple/" class="md-nav__link">
+        ValueTuple
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/valuehelper/" class="md-nav__link">
+        ValueHelper
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../devnotes/" class="md-nav__link">
+        Notes for developers
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changes/" class="md-nav__link">
+        Change log
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#which-files-get-processed" class="md-nav__link">
+    Which files get processed?
+  </a>
+  
+    <nav class="md-nav" aria-label="Which files get processed?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#specifying-template-files" class="md-nav__link">
+    Specifying template files
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summarybyyear" class="md-nav__link">
+    [[SummaryByYear]]
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summarybymonth" class="md-nav__link">
+    [[SummaryByMonth]]
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summarybyday" class="md-nav__link">
+    [[SummaryByDay]]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tags" class="md-nav__link">
+    Tags
+  </a>
+  
+    <nav class="md-nav" aria-label="Tags">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#time-period-current" class="md-nav__link">
+    Time period $current
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#time-period-latest" class="md-nav__link">
+    Time period $latest
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aggregation-periods" class="md-nav__link">
+    Aggregation periods
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unit-conversion-options" class="md-nav__link">
+    Unit conversion options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rounding-options" class="md-nav__link">
+    Rounding options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#formatting-options" class="md-nav__link">
+    Formatting options
+  </a>
+  
+    <nav class="md-nav" aria-label="Formatting options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#format" class="md-nav__link">
+    format()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#long_form" class="md-nav__link">
+    long_form()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#formatting-examples" class="md-nav__link">
+    Formatting examples
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#start-end-and-datetime" class="md-nav__link">
+    start, end, and dateTime
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tag-trend" class="md-nav__link">
+    Tag $trend
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tag-span" class="md-nav__link">
+    Tag $span
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tag-unit" class="md-nav__link">
+    Tag $unit
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tag-obs" class="md-nav__link">
+    Tag $obs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iteration" class="md-nav__link">
+    Iteration
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comprehensive-example" class="md-nav__link">
+    Comprehensive example
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#support-for-series" class="md-nav__link">
+    Support for series
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#helper-functions" class="md-nav__link">
+    Helper functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Helper functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rndx-ndigitsnone" class="md-nav__link">
+    $rnd(x, ndigits=None)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jsonizeseq" class="md-nav__link">
+    $jsonize(seq)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_intx" class="md-nav__link">
+    $to_int(x)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_boolx" class="md-nav__link">
+    $to_bool(x)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#to_listx" class="md-nav__link">
+    $to_list(x)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getobsplot_name" class="md-nav__link">
+    $getobs(plot_name)
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#general-tags" class="md-nav__link">
+    General tags
+  </a>
+  
+    <nav class="md-nav" aria-label="General tags">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#encoding" class="md-nav__link">
+    $encoding
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filename" class="md-nav__link">
+    $filename
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lang" class="md-nav__link">
+    $lang
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#month_name" class="md-nav__link">
+    $month_name
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#page" class="md-nav__link">
+    $page
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skin" class="md-nav__link">
+    $skin
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skin_name" class="md-nav__link">
+    $SKIN_NAME
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skin_version" class="md-nav__link">
+    $SKIN_VERSION
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summarybyday_1" class="md-nav__link">
+    $SummaryByDay
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summarybymonth_1" class="md-nav__link">
+    $SummaryByMonth
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summarybyyear_1" class="md-nav__link">
+    $SummaryByYear
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#year_name" class="md-nav__link">
+    $year_name
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gettext-internationalization" class="md-nav__link">
+    $gettext - Internationalization
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pgettext-context-sensitive-lookups" class="md-nav__link">
+    $pgettext - Context sensitive lookups
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#almanac" class="md-nav__link">
+    Almanac
+  </a>
+  
+    <nav class="md-nav" aria-label="Almanac">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calendar-events" class="md-nav__link">
+    Calendar events
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#heavenly-bodies" class="md-nav__link">
+    Heavenly bodies
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#functions" class="md-nav__link">
+    Functions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-new-bodies" class="md-nav__link">
+    Adding new bodies
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wind" class="md-nav__link">
+    Wind
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#defining-new-tags" class="md-nav__link">
+    Defining new tags
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="the-cheetah-generator">The Cheetah generator<a class="headerlink" href="#the-cheetah-generator" title="Permanent link">&para;</a></h1>
+<p>File generation is done using the <a href="https://cheetahtemplate.org/">Cheetah</a>
+templating engine, which processes a <em>template</em>, replacing any symbolic <em>tags</em>,
+then produces an output file. Typically, it runs after each new archive record
+(usually about every five minutes), but it can also run on demand using the
+utility <code>wee_reports</code>.</p>
+<p>The Cheetah engine is very powerful, essentially letting you have the full
+semantics of Python available in your templates. As this would make the
+templates incomprehensible to anyone but a Python programmer, WeeWX adopts
+a very small subset of its power.</p>
+<p>The Cheetah generator is controlled by the configuration options in the
+section <a href="../../reference/skin-options/cheetahgenerator"><code>[CheetahGenerator]</code></a>
+of the skin configuration file.</p>
+<p>Let's take a look at how this works.</p>
+<h2 id="which-files-get-processed">Which files get processed?<a class="headerlink" href="#which-files-get-processed" title="Permanent link">&para;</a></h2>
+<p>Each template file is named something like <code>D/F.E.tmpl</code>, where <code>D</code> is the
+(optional) directory the template sits in and will also be the directory the
+results will be put in, and <code>F.E</code> is the generated file name. So, given a
+template file with name <code>Acme/index.html.tmpl</code>, the results will be put in
+<code>HTML_ROOT/Acme/index.html</code>.</p>
+<p>The configuration for a group of templates will look something like this:</p>
+<div class="highlight"><pre><span></span><code>[CheetahGenerator]
+    [[index]]
+        template = index.html.tmpl
+    [[textfile]]
+        template = filename.txt.tmpl
+    [[xmlfile]]
+        template = filename.xml.tmpl
+</code></pre></div>
+<p>There can be only one template in each block. In most cases, the block name
+does not matter — it is used only to isolate each template. However, there
+are four block names that have special meaning: <code>SummaryByDay</code>,
+<code>SummaryByMonth</code>, <code>SummaryByYear</code>, and <code>ToDate</code>.</p>
+<h3 id="specifying-template-files">Specifying template files<a class="headerlink" href="#specifying-template-files" title="Permanent link">&para;</a></h3>
+<p>By way of example, here is the <code>[CheetahGenerator]</code> section from the
+<code>skin.conf</code> for the skin <em><code>Seasons</code></em>.</p>
+<div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
+<span class="normal"> 2</span>
+<span class="normal"> 3</span>
+<span class="normal"> 4</span>
+<span class="normal"> 5</span>
+<span class="normal"> 6</span>
+<span class="normal"> 7</span>
+<span class="normal"> 8</span>
+<span class="normal"> 9</span>
+<span class="normal">10</span>
+<span class="normal">11</span>
+<span class="normal">12</span>
+<span class="normal">13</span>
+<span class="normal">14</span>
+<span class="normal">15</span>
+<span class="normal">16</span>
+<span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span></pre></div></td><td class="code"><div><pre><span></span><code>[CheetahGenerator]
+    # The CheetahGenerator creates files from templates.  This section
+    # specifies which files will be generated from which template.
+
+    # Possible encodings include &#39;html_entities&#39;, &#39;strict_ascii&#39;, &#39;normalized_ascii&#39;,
+    # as well as those listed in https://docs.python.org/3/library/codecs.html#standard-encodings
+    encoding = html_entities
+
+    [[SummaryByMonth]]
+        # Reports that summarize &quot;by month&quot;
+        [[[NOAA_month]]]
+            encoding = normalized_ascii
+            template = NOAA/NOAA-%Y-%m.txt.tmpl
+
+    [[SummaryByYear]]
+        # Reports that summarize &quot;by year&quot;
+        [[[NOAA_year]]]
+            encoding = normalized_ascii
+            template = NOAA/NOAA-%Y.txt.tmpl
+
+    [[ToDate]]
+        # Reports that show statistics &quot;to date&quot;, such as day-to-date,
+        # week-to-date, month-to-date, etc.
+        [[[index]]]
+            template = index.html.tmpl
+        [[[statistics]]]
+            template = statistics.html.tmpl
+        [[[telemetry]]]
+            template = telemetry.html.tmpl
+        [[[tabular]]]
+            template = tabular.html.tmpl
+        [[[celestial]]]
+            template = celestial.html.tmpl
+            # Uncomment the following to have WeeWX generate a celestial page only once an hour:
+            # stale_age = 3600
+        [[[RSS]]]
+            template = rss.xml.tmpl
+</code></pre></div></td></tr></table></div>
+<p>The skin contains three different kinds of generated output:</p>
+<ol>
+<li>
+<p>Summary by Month (line 9). The skin uses <code>SummaryByMonth</code> to produce NOAA
+  summaries, one for each month, as a simple text file.</p>
+</li>
+<li>
+<p>Summary by Year (line 15). The skin uses <code>SummaryByYear</code> to produce NOAA
+  summaries, one for each year, as a simple text file.</p>
+</li>
+<li>
+<p>Section "To Date" (line 21). The skin produces an HTML <code>index.html</code> page,
+  as well as HTML files for detailed statistics, telemetry, and celestial
+  information. It also includes a master page (<code>tabular.html</code>) in which NOAA
+  information is displayed. All these files are HTML.</p>
+</li>
+</ol>
+<p>Because the option</p>
+<div class="highlight"><pre><span></span><code>encoding = html_entities
+</code></pre></div>
+<p>appears directly under <code>[StdReport]</code>, this will be the default encoding of the
+generated files unless explicitly overridden. We see an example of this under
+<code>[SummaryByMonth]</code> and <code>[SummaryByYear]</code>, which use option <code>normalized_ascii</code>
+instead of <code>html_entities</code>. This encoding replaces accented characters with a
+non-accented analog.</p>
+<p>Other than <code>SummaryByMonth</code> and <code>SummaryByYear</code>, the section names are
+arbitrary. The section <code>[[ToDate]]</code> could just as well have been called
+<code>[[files_to_date]]</code>, and the sections <code>[[[index]]]</code>, <code>[[[statistics]]]</code>, and
+<code>[[[telemetry]]]</code> could just as well have been called <code>[[[tom]]]</code>,
+<code>[[[dick]]]</code>, and <code>[[[harry]]]</code>.</p>
+<h3 id="summarybyyear">[[SummaryByYear]]<a class="headerlink" href="#summarybyyear" title="Permanent link">&para;</a></h3>
+<p>Use <code>SummaryByYear</code> to generate a set of files, one file per year. The name of
+the template file should contain a <a href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior">strftime()</a>
+code for the year; this will be replaced with the year of the data in the file.</p>
+<div class="highlight"><pre><span></span><code><span class="k">[CheetahGenerator]</span>
+<span class="w">    </span><span class="k">[[SummaryByYear]]</span>
+<span class="w">        </span><span class="c1"># Reports that summarize &quot;by year&quot;</span>
+<span class="w">        </span><span class="k">[[[NOAA_year]]]</span>
+<span class="w">            </span><span class="na">encoding</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">normalized_ascii</span>
+<span class="w">            </span><span class="na">template</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">NOAA/NOAA-%Y.txt.tmpl</span>
+</code></pre></div>
+<p>The template <code>NOAA/NOAA-%Y.txt.tmpl</code> might look something like this:</p>
+<div class="highlight"><pre><span></span><code>           SUMMARY FOR YEAR $year.dateTime
+
+MONTHLY TEMPERATURES AND HUMIDITIES:
+#for $record in $year.records
+$record.dateTime $record.outTemp $record.outHumidity
+#end for
+</code></pre></div>
+<h3 id="summarybymonth">[[SummaryByMonth]]<a class="headerlink" href="#summarybymonth" title="Permanent link">&para;</a></h3>
+<p>Use <code>SummaryByMonth</code> to generate a set of files, one file per month. The name
+of the template file should contain a <a href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior">strftime()</a>
+code for year and month; these will be replaced with the year and month of
+the data in the file.</p>
+<div class="highlight"><pre><span></span><code><span class="k">[CheetahGenerator]</span>
+<span class="w">    </span><span class="k">[[SummaryByMonth]]</span>
+<span class="w">        </span><span class="c1"># Reports that summarize &quot;by month&quot;</span>
+<span class="w">        </span><span class="k">[[[NOAA_month]]]</span>
+<span class="w">            </span><span class="na">encoding</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">normalized_ascii</span>
+<span class="w">            </span><span class="na">template</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">NOAA/NOAA-%Y-%m.txt.tmpl</span>
+</code></pre></div>
+<p>The template <code>NOAA/NOAA-%Y-%m.txt.tmpl</code> might look something like this:</p>
+<div class="highlight"><pre><span></span><code>           SUMMARY FOR MONTH $month.dateTime
+
+DAILY TEMPERATURES AND HUMIDITIES:
+#for $record in $month.records
+$record.dateTime $record.outTemp $record.outHumidity
+#end for
+</code></pre></div>
+<h3 id="summarybyday">[[SummaryByDay]]<a class="headerlink" href="#summarybyday" title="Permanent link">&para;</a></h3>
+<p>While the <em>Seasons</em> skin does not make use of it, there is also a
+<code>SummaryByDay</code> capability. As the name suggests, this results in one file per
+day. The name of the template file should contain a
+<a href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior">strftime()</a>
+code for the year, month and day; these will be replaced with the year, month,
+and day of the data in the file.</p>
+<div class="highlight"><pre><span></span><code><span class="k">[CheetahGenerator]</span>
+<span class="w">    </span><span class="k">[[SummaryByDay]]</span>
+<span class="w">        </span><span class="c1"># Reports that summarize &quot;by day&quot;</span>
+<span class="w">        </span><span class="k">[[[NOAA_day]]]</span>
+<span class="w">            </span><span class="na">encoding</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">normalized_ascii</span>
+<span class="w">            </span><span class="na">template</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">NOAA/NOAA-%Y-%m-%d.txt.tmpl</span>
+</code></pre></div>
+<p>The template <code>NOAA/NOAA-%Y-%m-%d.txt.tmpl</code> might look something like this:</p>
+<div class="highlight"><pre><span></span><code>           SUMMARY FOR DAY $day.dateTime
+
+HOURLY TEMPERATURES AND HUMIDITIES:
+#for $record in $day.records
+$record.dateTime $record.outTemp $record.outHumidity
+#end for
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This can create a <em>lot</em> of files &mdash; one per day. If you have 3 years
+of records, this would be more than 1,000 files!</p>
+</div>
+<h2 id="tags">Tags<a class="headerlink" href="#tags" title="Permanent link">&para;</a></h2>
+<p>If you look inside a template, you will see it makes heavy use of <em>tags</em>. As
+the Cheetah generator processes the template, it replaces each tag with an
+appropriate value and, sometimes, a label. This section discusses the details
+of how that happens.</p>
+<p>If there is a tag error during template generation, the error will show up in
+the log file. Many errors are obvious — Cheetah will display a line number and
+list the template file in which the error occurred. Unfortunately, in other
+cases, the error message can be very cryptic and not very useful. So make
+small changes and test often. Use the utility
+<a href="../../utilities/wee_reports">wee_reports</a> to speed up the process.</p>
+<p>Here are some examples of tags:</p>
+<div class="highlight"><pre><span></span><code>$current.outTemp
+$month.outTemp.max
+$month.outTemp.maxtime
+</code></pre></div>
+<p>These code the current outside temperature, the maximum outside temperature
+for the month, and the time that maximum occurred, respectively. So a template
+file that contains:</p>
+<div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">title</span><span class="p">&gt;</span>Current conditions<span class="p">&lt;/</span><span class="nt">title</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Current temperature = $current.outTemp<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Max for the month is $month.outTemp.max, which occurred at $month.outTemp.maxtime<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</code></pre></div>
+<p>would be all you need for a very simple HTML page that would display the text
+(assuming that the unit group for temperature is <code>degree_F</code>):</p>
+<p><span class="example_output">
+Current temperature = 51.0°F<br />
+Max for the month is 68.8°F, which occurred at 07-Oct-2009 15:15
+</span></p>
+<p>The format that was used to format the temperature (<code>51.0</code>) is specified in
+section <a href="../../reference/skin-options/units/#stringformats"><code>[Units][[StringFormat]]</code></a>.
+The unit label <code>°F</code> is from section
+<a href="../../reference/skin-options/units/#labels"><code>[Units][[Labels]]</code></a>, while the
+time format is from
+<a href="../../reference/skin-options/units/#timeformats"><code>[Units][[TimeFormats]]</code></a>.</p>
+<p>As we saw above, the tags can be very simple:</p>
+<div class="highlight"><pre><span></span><code># Output max outside temperature using an appropriate format and label:
+$month.outTemp.max
+</code></pre></div>
+<p>Most of the time, tags will "do the right thing" and are all you will need.
+However, WeeWX offers extensive customization of the tags for specialized
+applications such as XML RSS feeds, or rigidly formatted reports (such as
+the NOAA reports). This section specifies the various tag options available.</p>
+<p>There are two different versions of the tags, depending on whether the data
+is "current", or an aggregation over time. However, both versions are similar.</p>
+<h3 id="time-period-current">Time period <code>$current</code><a class="headerlink" href="#time-period-current" title="Permanent link">&para;</a></h3>
+<p>Time period <code>$current</code> represents a <em>current observation</em>. An example would be
+the current barometric pressure:</p>
+<div class="highlight"><pre><span></span><code>$current.barometer
+</code></pre></div>
+<p>Formally, for current observations, WeeWX first looks for the observation type
+in the record emitted by the <code>NEW_ARCHIVE_RECORD</code> event. This is generally the
+data emitted by the station console, augmented by any derived variables
+(<em>e.g.</em>, wind chill) that you might have specified. If the observation type
+cannot be found there, the most recent record in the database will be searched.</p>
+<p>The most general tag for a "current" observation looks like:</p>
+<div class="highlight"><pre><span></span><code>$current(timestamp=some_time, max_delta=delta_t,data_binding=binding_name)
+    .obstype
+    [.unit_conversion]
+    [.rounding]
+    [.formatting]
+</code></pre></div>
+<p>Where:</p>
+<p><em><code>timestamp</code></em> is a timestamp that you want to display in unix epoch time. It
+is optional, The default is to display the value for the current time.</p>
+<p><em><code>max_delta</code></em> is the largest acceptable time difference (in seconds) between
+the time specified by <code>timestamp</code> and a record's timestamp in the database. By
+default, it is zero, which means there must be an exact match with a specified
+time for a record to be retrieved. If it were <code>30</code>, then a record up to 30
+seconds away would be acceptable.</p>
+<p><em><code>data_binding</code></em> is a <em>binding name</em> to a database. An example would be
+<code>wx_binding</code>. See the section
+<em><a href="../../reference/weewx-options/data-bindings">Binding names</a></em>
+for more details.</p>
+<p><em><code>obstype</code></em> is an <em>observation type</em>, such as <code>barometer</code>. This type must appear
+either in the current record, as a field in the database,
+or can be derived from some combination of the two as an 
+<a href="https://github.com/weewx/weewx/wiki/xtypes">XType</a>.</p>
+<p><em><code>unit_conversion</code></em> is an optional unit conversion tag. If provided,
+the results will be converted into the specified units, otherwise the default
+units specified in the skin configuration file (in section <code>[Units][[Groups]]</code>)
+will be used. See the section
+<em><a href="#unit-conversion-options">Unit conversion options</a></em>.</p>
+<p><em><code>rounding</code></em> is an optional rounding tag.  If provided, it rounds the result
+to a fixed number of decimal digits. See the section
+<em><a href="#rounding-options">Rounding options</a></em>.</p>
+<p><em><code>formatting</code></em> is an optional formatting tag. If provided, it controls how the
+value will appear. See the section <em><a href="#formatting-options">Formatting options</a></em>.</p>
+<h3 id="time-period-latest">Time period $latest<a class="headerlink" href="#time-period-latest" title="Permanent link">&para;</a></h3>
+<p>Time period <code>$latest</code> is very similar to <code>$current</code>, except that it uses the
+last available timestamp in a database. Usually, <code>$current</code> and <code>$latest</code> are
+the same, but if a data binding points to a remote database, they may not be.
+See the section <em><a href="../../custom/multiple-bindings">Using multiple bindings</a></em>
+for an example where this happened.</p>
+<h3 id="aggregation-periods">Aggregation periods<a class="headerlink" href="#aggregation-periods" title="Permanent link">&para;</a></h3>
+<p>Aggregation periods is the other kind of tag. For example,</p>
+<div class="highlight"><pre><span></span><code>$week.rain.sum
+</code></pre></div>
+<p>represents an <em>aggregation over time</em>, using a certain <em>aggregation type</em>. In
+this example, the aggregation time is a week, and the aggregation type is
+summation. So, this tag represents the total rainfall over a week.</p>
+<p>The most general tag for an aggregation over time looks like:</p>
+<div class="highlight"><pre><span></span><code>$period(data_binding=binding_name[, ago=delta])
+    .obstype
+    .aggregation
+    [.unit_conversion]
+    [.rounding]
+    [.formatting]
+</code></pre></div>
+<p>Where:</p>
+<p><em><code>period</code></em> is the <em>aggregation period</em> over which the aggregation is to be
+done. Possible choices are listed in the
+<a href="#aggregation-periods-table">aggregation periods table</a>.</p>
+<p><em><code>data_binding</code></em> is a <em>binding name</em> to a database. An example would be
+<code>wx_binding</code>. See the section
+<em><a href="../../reference/weewx-options/data-bindings">Binding names</a></em>
+for more details.</p>
+<p><em><code>ago</code></em> is a keyword that depends on the aggregation period. For example, for
+week, it would be <code>weeks_ago</code>, for day, it would be <code>days_ago</code>, <em>etc.</em></p>
+<p><em><code>delta</code></em> is an integer indicating which aggregation period is desired. For
+example <code>$week(weeks_ago=1)</code> indicates last week, <code>$day(days_ago=2)</code> would be
+the day-before-yesterday, <em>etc</em>. The default is zero: that is, this
+aggregation period.</p>
+<p><em><code>obstype</code></em> is an <em>observation type</em>. This is generally any observation type that
+appears in the database (such as <code>outTemp</code> or <code>windSpeed</code>), as well a most
+<a href="https://github.com/weewx/weewx/wiki/xtypes">XTypes</a>. However, not all
+aggregations are supported for all types.</p>
+<p><em><code>aggregation</code></em> is an <em>aggregation type</em>. If you ask for <code>$month.outTemp.avg</code>
+you are asking for the <em>average</em> outside temperature for the month. Possible
+aggregation types are given in the reference <a href="../../reference/aggtypes"><em>Aggregation
+types</em></a>.</p>
+<p><em><code>unit_conversion</code></em> is an optional unit conversion tag. If provided, the results
+will be converted into the specified units, otherwise the default units
+specified in the skin configuration file (in section <code>[Units][[Groups]]</code>) will
+be used. See the section <em><a href="#unit-conversion-options">Unit conversion options</a></em>.</p>
+<p><em><code>rounding</code></em> is an optional rounding tag.  If provided, it rounds the result to
+a fixed number of decimal digits. See the section <em><a href="#rounding-options">Rounding
+options</a></em>.</p>
+<p><em><code>formatting</code></em> is an optional formatting tag. If provided, it controls how the
+value will appear. See the section <em><a href="#formatting-options">Formatting options</a></em>.</p>
+<p>There are several <em>aggregation periods</em> that can be used:</p>
+<table id="aggregation-periods-table" class="indent">
+    <caption>Aggregation periods</caption>
+    <tbody>
+    <tr class="first_row">
+        <td>Aggregation period</td>
+        <td>Meaning</td>
+        <td>Example</td>
+        <td>Meaning of example</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$hour</td>
+        <td>This hour.</td>
+        <td class="code">$hour.outTemp.maxtime</td>
+        <td>The time of the max temperature this hour.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day</td>
+        <td>Today (since midnight).</td>
+        <td class="code">$day.outTemp.max</td>
+        <td>The max temperature since midnight</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$yesterday</td>
+        <td>Yesterday. Synonym for <span class="code">$day($days_ago=1)</span>.
+        </td>
+        <td class="code">$yesterday.outTemp.maxtime</td>
+        <td>The time of the max temperature yesterday.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$week</td>
+        <td>This week. The start of the week is set by option <a href="../../reference/weewx-options/stations/#week_start"><span
+            class="code">week_start</span></a>.
+        </td>
+        <td class="code">$week.outTemp.max</td>
+        <td>The max temperature this week.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$month</td>
+        <td>This month (since the first of the month).</td>
+        <td class="code">$month.outTemp.min</td>
+        <td>The minimum temperature this month.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$year</td>
+        <td>This year (since 1-Jan).</td>
+        <td class="code">$year.outTemp.max</td>
+        <td>The max temperature since the start of the year.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$rainyear</td>
+        <td>This rain year. The start of the rain year is set by option <a
+            href="../../reference/weewx-options/stations/#rain_year_start"><span class="code">rain_year_start</span></a>.
+        </td>
+        <td class="code">$rainyear.rain.sum</td>
+        <td>The total rainfall for this rain year. </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$alltime</td>
+        <td>
+            All records in the database given by <span class="code"><em>binding_name</em></span>.
+        </td>
+        <td class="code">$alltime.outTemp.max</td>
+        <td>
+            The maximum outside temperature in the default database.
+        </td>
+    </tr>
+
+    </tbody>
+</table>
+
+<p>The "<em><code>ago</code></em>" parameters can be useful for statistics farther in the past.
+Here are some examples:</p>
+<table class="indent">
+    <tbody>
+    <tr class="first_row">
+        <td>Aggregation period</td>
+        <td>Example</td>
+        <td>Meaning</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$hour(hours_ago=<em>h</em>)
+        </td>
+        <td class="code">$hour(hours_ago=1).outTemp.avg</td>
+        <td>The average temperature last hour (1 hour ago).</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day(days_ago=<em>d</em>)
+        </td>
+        <td class="code">$day(days_ago=2).outTemp.avg</td>
+        <td>The average temperature day before yesterday (2 days ago).
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$week(weeks_ago=<em>w</em>)
+        </td>
+        <td class="code">$week(weeks_ago=1).outTemp.max</td>
+        <td>The maximum temperature last week.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$month(months_ago=<em>m</em>)
+        </td>
+        <td class="code">$month(months_ago=1).outTemp.max</td>
+        <td>The maximum temperature last month.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$year(years_ago=<em>y</em>)
+        </td>
+        <td class="code">$year(years_ago=1).outTemp.max</td>
+        <td>The maximum temperature last year.</td>
+    </tr>
+    </tbody>
+</table>
+
+<h3 id="unit-conversion-options">Unit conversion options<a class="headerlink" href="#unit-conversion-options" title="Permanent link">&para;</a></h3>
+<p>The option <em><code>unit_conversion</code></em> can be used with either current observations
+or with aggregations. If supplied, the results will be converted to the
+specified units. For example, if you have set <code>group_pressure</code> to inches
+of mercury (<code>inHg</code>), then the tag</p>
+<div class="highlight"><pre><span></span><code>Today&#39;s average pressure=$day.barometer.avg
+</code></pre></div>
+<p>would normally give a result such as</p>
+<div class="example_output">
+Today's average pressure=30.05 inHg
+</div>
+
+<p>However, if you add <code>mbar</code> to the end of the tag,</p>
+<div class="highlight"><pre><span></span><code>Today&#39;s average pressure=$day.barometer.avg.mbar
+</code></pre></div>
+<p>then the results will be in millibars:</p>
+<div class="example_output">
+Today's average pressure=1017.5 mbar
+</div>
+
+<p>If an inappropriate or nonsense conversion is asked for, <em>e.g.</em>,</p>
+<div class="highlight"><pre><span></span><code>Today&#39;s minimum pressure in mbars: $day.barometer.min.mbar
+or in degrees C: $day.barometer.min.degree_C
+or in foobar units: $day.barometer.min.foobar
+</code></pre></div>
+<p>then the offending tag(s) will be put in the output:</p>
+<div class="example_output">
+Today's minimum pressure in mbars: 1015.3  
+or in degrees C: $day.barometer.min.degree_C  
+or in foobar units: $day.barometer.min.foobar
+</div>
+
+<h3 id="rounding-options">Rounding options<a class="headerlink" href="#rounding-options" title="Permanent link">&para;</a></h3>
+<p>The data in the resultant tag can be optionally rounded to a fixed number of
+decimal digits. This is useful when emitting raw data or JSON strings. It
+should <em>not</em> be used with formatted data. In that case, using a <code>format string</code> would
+be a better choice.</p>
+<p>The structure of the option is</p>
+<div class="highlight"><pre><span></span><code>.round(ndigits=None)
+</code></pre></div>
+<p>where <code>ndigits</code> is the number of decimal digits to retain. If <code>None</code> (the
+default), then all digits will be retained.</p>
+<h3 id="formatting-options">Formatting options<a class="headerlink" href="#formatting-options" title="Permanent link">&para;</a></h3>
+<p>A variety of options are available to you to customize the formatting of the
+final observation value. They can be used whenever a tag results in a
+<a href="../../reference/valuehelper"><code>ValueHelper</code></a>, which is almost all the time.
+This table summarizes the options:</p>
+<table class="indent">
+    <caption>Formatting options</caption>
+    <tbody>
+    <tr class="first_row">
+        <td>Formatting option</td>
+        <td>Comment</td>
+    </tr>
+    <tr>
+        <td class="code text_highlight">.format(<em>args</em>)</td>
+        <td>
+            Format the value as a string, according to a set of optional
+        <em>args</em>.
+        </td>
+    </tr>
+    <tr>
+        <td class="code text_highlight">.long_form(<em>args</em>)</td>
+        <td>
+            Format <em>delta times</em> in the "long form", according to a
+        set of optional <em>args</em>.
+        </td>
+    </tr>
+    <tr>
+        <td class="code text_highlight">.ordinal_compass</td>
+        <td>Format the value as a compass ordinals (<i>e.g.</i>, "SW"), useful
+    for wind directions. The ordinal abbreviations are set by option
+    <a href="../../reference/skin-options/units/#directions"><span class="code">directions</span></a>
+    in the skin configuration file.
+        </td>
+    </tr>
+    <tr>
+        <td class="code text_highlight">.json</td>
+        <td>
+            Format the value as a
+        <a href="https://www.json.org/json-en.html">JSON string</a>.
+        </td>
+    </tr>
+    <tr>
+        <td class="code text_highlight">.raw</td>
+        <td>
+      Return the value "as is", without being converted to a string and
+      without any formatting applied. This can be useful for doing
+      arithmetic directly within the templates. You must be prepared
+      to deal with a potential value of <span class="code">None</span>.
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<h4 id="format">format()<a class="headerlink" href="#format" title="Permanent link">&para;</a></h4>
+<p>The results of a tag can be optionally formatted using option <code>format()</code>.
+It has the formal structure:</p>
+<div class="highlight"><pre><span></span><code>format(format_string=None, None_string=None, add_label=True, localize=True)
+</code></pre></div>
+<p>Here is the meaning of each of the optional arguments:</p>
+<table class="indent">
+    <caption>Optional arguments for <span class="code">format()</span></caption>
+    <tbody>
+    <tr class="first_row">
+        <td>Optional argument</td>
+        <td>Comment</td>
+    </tr>
+    <tr>
+        <td id="format_string" class='code text_highlight'>format_string</td>
+        <td>
+If set, use the supplied string to format the value. Otherwise, if set to
+<span class="code">None</span>, then an appropriate value from
+<span class="code"><a href="../../reference/skin-options/units/#stringformats">[Units][[StringFormats]]</a></span>
+will be used.
+    </td>
+    </tr>
+    <tr>
+        <td class="code text_highlight">None_string</td>
+        <td>
+Should the observation value be <span class="code">NONE</span>, then use the
+supplied string (typically, something like "N/A"). If
+<span class="code">None_string</span> is set to <span class="code">None</span>,
+then the value for <span class="code">NONE</span> in
+<span class="code"><a href="../../reference/skin-options/units/#stringformats">[Units][[StringFormats]]</a></span>
+will be used.
+        </td>
+    </tr>
+    <tr>
+        <td class="code text_highlight">add_label</td>
+        <td>
+If set to <span class="code">True</span> (the default), then a unit label
+(<i>e.g.</i>, &deg;F) from <span class="code">skin.conf</span> will be
+attached to the end. Otherwise, it will be left out.
+        </td>
+    </tr>
+    <tr>
+        <td class="code text_highlight">localize</td>
+        <td>
+If set to <span class="code">True</span> (the default), then localize the
+results. Otherwise, do not.
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<p>If you're willing to honor the ordering of the arguments, the argument name
+can be omitted.</p>
+<h4 id="long_form">long_form()<a class="headerlink" href="#long_form" title="Permanent link">&para;</a></h4>
+<p>The option <code>long_form()</code>, can be used to format <em>delta times</em>. A <em>delta time</em>
+is the difference between two times, for example, the amount of uptime (the
+difference between start up and the current time). By default, this will be
+formatted as the number of elapsed seconds. For example, a template with the
+following</p>
+<div class="highlight"><pre><span></span><code>&lt;p&gt;WeeWX has been up $station.uptime&lt;/p&gt;
+</code></pre></div>
+<p>will result in</p>
+<div class="example_output">
+WeeWX has been up 101100 seconds
+</div>
+
+<p>The "long form" breaks the time down into constituent time elements. For
+example,</p>
+<div class="highlight"><pre><span></span><code>&lt;p&gt;WeeWX has been up $station.uptime.long_form&lt;/p&gt;
+</code></pre></div>
+<p>results in</p>
+<div class="example_output">
+WeeWX has been up 1 day, 4 hours, 5 minutes
+</div>
+
+<p>The option <code>long_form()</code> has the formal structure</p>
+<div class="highlight"><pre><span></span><code>long_form(format_string=None, None_string=None)
+</code></pre></div>
+<p>Here is the meaning of each of the optional arguments:</p>
+<table class="indent">
+    <caption>Optional arguments for <span class="code">long_form()</span></caption>
+    <tbody>
+    <tr class="first_row">
+        <td>Optional argument</td>
+        <td>Comment</td>
+    </tr>
+    <tr>
+        <td id="format_string" class='code text_highlight'>format_string</td>
+        <td>
+            Use the supplied string to format the value.
+        </td>
+    </tr>
+    <tr>
+        <td class="code text_highlight">None_string</td>
+        <td>
+            Should the observation value be <span class="code">NONE</span>,
+        then use the supplied string to format the value (typically,
+        something like "N/A").
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<p>The argument <code>format_string</code> uses special symbols to represent its constitutent
+components. Here's what they mean:</p>
+<table>
+<thead>
+<tr>
+<th>Symbol</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>day</code></td>
+<td>The number of days</td>
+</tr>
+<tr>
+<td><code>hour</code></td>
+<td>The number of hours</td>
+</tr>
+<tr>
+<td><code>minute</code></td>
+<td>The number of minutes</td>
+</tr>
+<tr>
+<td><code>second</code></td>
+<td>The number of seconds</td>
+</tr>
+<tr>
+<td><code>day_label</code></td>
+<td>The label used for days</td>
+</tr>
+<tr>
+<td><code>hour_label</code></td>
+<td>The label used for hours</td>
+</tr>
+<tr>
+<td><code>minute_label</code></td>
+<td>The label used for minutes</td>
+</tr>
+<tr>
+<td><code>second_label</code></td>
+<td>The label used for seconds</td>
+</tr>
+</tbody>
+</table>
+<p>Putting this together, the example above could be written</p>
+<div class="highlight"><pre><span></span><code>&lt;p&gt;WeeWX has been up $station.uptime.long_form(format_string=&quot;%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s&quot;)&lt;/p&gt;
+</code></pre></div>
+<h3 id="formatting-examples">Formatting examples<a class="headerlink" href="#formatting-examples" title="Permanent link">&para;</a></h3>
+<p>This section gives a number of example tags, and their expected output. The
+following values are assumed:</p>
+<table class="indent" style="width:50%">
+    <caption>Values used in the formatting examples</caption>
+    <tr class="first_row">
+        <td>Observation</td>
+        <td>Value</td>
+    </tr>
+    <tr>
+        <td class="code first_col">
+            outTemp
+        </td>
+        <td>45.2&deg;F</td>
+    </tr>
+    <tr>
+        <td class="code first_col">
+            UV
+        </td>
+        <td>
+            <span class="code">None</span>
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">
+            windDir
+        </td>
+        <td>138&deg;</td>
+    </tr>
+    <tr>
+        <td class="code first_col">
+            dateTime
+        </td>
+        <td>1270250700</td>
+    </tr>
+    <tr>
+        <td class="code first_col">
+            uptime
+        </td>
+        <td>101100 seconds</td>
+    </tr>
+</table>
+
+<p>Here are the examples:</p>
+<table>
+    <caption>Formatting options with expected results</caption>
+    <tbody>
+    <tr class="first_row">
+        <td>Tag</td>
+        <td>Result</td>
+        <td>Result<br/>type</td>
+        <td>Comment</td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.outTemp</td>
+        <td class="code">45.2°F</td>
+        <td class="code">str</td>
+        <td>
+String formatting from <span class="code"><a href="../../reference/skin-options/units/#stringformats">[Units][[StringFormats]]</a></span>. Label from <span class="code"><a href="../../reference/skin-options/units/#labels">[Units][[Labels]]</a></span>.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.outTemp.format</td>
+        <td class="code">45.2°F</td>
+        <td class="code">str</td>
+        <td>
+            Same as the <span class="code">$current.outTemp</span>.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.outTemp.format()</td>
+        <td class="code">45.2°F</td>
+        <td class="code">str</td>
+        <td>
+            Same as the <span class="code">$current.outTemp</span>.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.outTemp.format(format_string="%.3f")</td>
+        <td class="code">45.200°F</td>
+        <td class="code">str</td>
+        <td>
+            Specified string format used; label from <span class="code"><a href="../../reference/skin-options/units/#labels">[Units][[Labels]]</a></span>.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.outTemp.format("%.3f")</td>
+        <td class="code">45.200°F</td>
+        <td class="code">str</td>
+        <td>
+            As above, except a positional argument, instead of the named argument, is being used.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.outTemp.format(add_label=False)</td>
+        <td class="code">45.2</td>
+        <td class="code">str</td>
+        <td>
+            No label. The string formatting is from <span class="code"><a href="../../reference/skin-options/units/#stringformats">[Units][[StringFormats]]</a></span>.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.UV</td>
+        <td class="code">N/A</td>
+        <td class="code">str</td>
+        <td>
+            The string specified by option <span class="code">NONE</span> in <span class="code"> <a href="../../reference/skin-options/units/#stringformats">[Units][[StringFormats]]</a></span>.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.UV.format(None_string="No UV")</td>
+        <td class="code">No UV</td>
+        <td class="code">str</td>
+        <td>
+            Specified <span class="code">None_string</span> is used.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.windDir</td>
+        <td class="code">138&deg;</td>
+        <td class="code">str</td>
+        <td>
+            Formatting is from option <span class="code">degree_compass</span> in <span class="code"> <a href="../../reference/skin-options/units/#stringformats">[Units][[StringFormats]]</a></span>.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.windDir.ordinal_compass</td>
+        <td class="code">SW</td>
+        <td class="code">str</td>
+        <td>
+            Ordinal direction from section <span class="code"><a href="../../reference/skin-options/units/#ordinates">[Units][[Ordinates]]</a></span> is being substituted.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.dateTime</td>
+        <td class="code">02-Apr-2010 16:25</td>
+        <td class="code">str</td>
+        <td>
+            Time formatting from <span class="code"><a href="../../reference/skin-options/units/#timeformats">[Units][[TimeFormats]]</a></span> is being used.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.dateTime.format(format_string="%H:%M")</td>
+        <td class="code">16:25</td>
+        <td class="code">str</td>
+        <td>
+            Specified time format used.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.dateTime.format("%H:%M")</td>
+        <td class="code">16:25</td>
+        <td class="code">str</td>
+        <td>
+            As above, except a positional argument, instead of the named
+        argument, is being used.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.dateTime.raw</td>
+        <td class="code">1270250700</td>
+        <td class="code">int</td>
+        <td>
+            Raw Unix epoch time. The result is an <em>integer</em>.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.outTemp.raw</td>
+        <td class="code">45.2</td>
+        <td class="code">float</td>
+        <td>
+            Raw float value. The result is a <em>float</em>.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.outTemp.degree_C.raw</td>
+        <td class="code">7.33333333</td>
+        <td class="code">float</td>
+        <td>
+            Raw float value in degrees Celsius. The result is a <em>float</em>.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.outTemp.degree_C.json</td>
+        <td class="code">7.33333333</td>
+        <td class="code">str</td>
+        <td>
+            Value in degrees Celsius, converted to a JSON string.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$current.outTemp.degree_C.round(2).json</td>
+        <td class="code">7.33</td>
+        <td class="code">str</td>
+        <td>
+            Value in degrees Celsius, rounded to two decimal digits, then
+        converted to a JSON string.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$station.uptime</td>
+        <td class="code">101100 seconds</td>
+        <td class="code">str</td>
+        <td>
+            WeeWX uptime.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$station.uptime.hour</td>
+        <td class="code">28.1 hours</td>
+        <td class="code">str</td>
+        <td>
+            WeeWX uptime, with unit conversion to hours.
+        </td>
+    </tr>
+    <tr>
+        <td class="code first_col">$station.uptime.long_form</td>
+        <td class="code">1 day, 4 hours, 5 minutes</td>
+        <td class="code">str</td>
+        <td>
+            WeeWX uptime with "long form" formatting.
+        </td>
+    </tr>
+
+    </tbody>
+</table>
+
+<h3 id="start-end-and-datetime">start, end, and dateTime<a class="headerlink" href="#start-end-and-datetime" title="Permanent link">&para;</a></h3>
+<p>While not an observation type, in many ways the time of an observation,
+<code>dateTime</code>, can be treated as one. A tag such as</p>
+<div class="highlight"><pre><span></span><code>$current.dateTime
+</code></pre></div>
+<p>represents the <em>current time</em> (more properly, the time as of the end of the
+last archive interval) and would produce something like</p>
+<div class="example_output">
+01/09/2010 12:30:00
+</div>
+
+<p>Like true observation types, explicit formats can be specified, except that
+they require a <a href="https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior">strftime() <em>time format</em></a> ,
+rather than a <em>string format</em>.</p>
+<p>For example, adding a format descriptor like this:</p>
+<div class="highlight"><pre><span></span><code>$current.dateTime.format(&quot;%d-%b-%Y %H:%M&quot;)
+</code></pre></div>
+<p>produces</p>
+<div class="example_output">
+09-Jan-2010 12:30
+</div>
+
+<p>For <em>aggregation periods</em>, such as <code>$month</code>, you can request the <em>start</em>,
+<em>end</em>, or <em>length</em> of the period, by using suffixes <code>.start</code>, <code>.end</code>, or
+<code>.length</code>, respectively. For example,</p>
+<div class="highlight"><pre><span></span><code>The current month runs from $month.start to $month.end and has $month.length.format(&quot;%(day)d %(day_label)s&quot;).
+</code></pre></div>
+<p>results in</p>
+<div class="example_output">
+The current month runs from 01/01/2010 12:00:00 AM to 02/01/2010 12:00:00 AM and has 31 days.
+</div>
+
+<p>The returned string values will always be in <em>local time</em>. However, if you ask
+for the raw value</p>
+<div class="highlight"><pre><span></span><code>$current.dateTime.raw
+</code></pre></div>
+<p>the returned value will be in Unix Epoch Time (number of seconds since 00:00:00
+UTC 1 Jan 1970, <em>i.e.</em>, a large number), which you must convert yourself. It
+is guaranteed to never be <code>None</code>, so you don't worry have to worry about
+handling a <code>None</code> value.</p>
+<h3 id="tag-trend">Tag $trend<a class="headerlink" href="#tag-trend" title="Permanent link">&para;</a></h3>
+<p>The tag <code>$trend</code> is available for time trends, such as changes in barometric
+pressure. Here are some examples:</p>
+<table>
+<thead>
+<tr>
+<th>Tag</th>
+<th>Results</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$trend.barometer</code></td>
+<td>-.05 inHg</td>
+</tr>
+<tr>
+<td><code>$trend(time_delta=3600).barometer</code></td>
+<td>-.02 inHg</td>
+</tr>
+<tr>
+<td><code>$trend.outTemp</code></td>
+<td>1.1 °C</td>
+</tr>
+<tr>
+<td><code>$trend.time_delta</code></td>
+<td>10800 secs</td>
+</tr>
+<tr>
+<td><code>$trend.time_delta.hour</code></td>
+<td>3 hrs</td>
+</tr>
+</tbody>
+</table>
+<p>Note how you can explicitly specify a time interval in the tag itself (2nd row
+in the table above). If you do not specify a value, then a default time
+interval, set by option
+<a href="../../reference/skin-options/units/#time_delta"><code>time_delta</code></a> in the skin
+configuration file, will be used. This value can be retrieved by using the
+syntax <code>$trend.time_delta</code> (4th row in the table).</p>
+<p>For example, the template expression</p>
+<div class="highlight"><pre><span></span><code>The barometer trend over $trend.time_delta.hour is $trend.barometer.format(&quot;%+.2f&quot;)
+</code></pre></div>
+<p>would result in</p>
+<div class="example_output">
+The barometer trend over 3 hrs is +.03 inHg.
+</div>
+
+<h3 id="tag-span">Tag $span<a class="headerlink" href="#tag-span" title="Permanent link">&para;</a></h3>
+<p>The tag <code>$span</code> allows aggregation over a user defined period up to and
+including the current time. Its most general form looks like:</p>
+<div class="highlight"><pre><span></span><code>$span([data_binding=binding_name][,delta=delta][,boundary=(None|&#39;midnight&#39;)])
+    .obstype
+    .aggregation
+    [.unit_conversion]
+    [.formatting]
+</code></pre></div>
+<p>Where:</p>
+<p><em><code>data_binding</code></em> is a <em>binding name</em> to a database. An example would be
+<code>wx_binding</code>. See the section
+<em><a href="../../reference/weewx-options/data-bindings">Binding names</a></em>
+for more details.</p>
+<p><em><code>delta</code></em> is one or more comma separated delta settings from the table below.
+If more than one delta setting is included then the period used for the
+aggregate is the sum of the individual delta settings. If no delta setting
+is included, or all included delta settings are zero, the returned aggregate
+is based on the current obstype only.</p>
+<p><em><code>boundary</code></em> is an optional specifier that can force the starting time to a
+time boundary. If set to 'midnight', then the starting time will be at the
+previous midnight. If left out, then the start time will be the sum of the
+optional deltas.</p>
+<p><em><code>obstype</code></em> is an <em>observation type</em>, such as <code>outTemp</code>.</p>
+<p><em><code>aggregation</code></em> is an <em>aggregation type</em>. If you ask for <code>$month.outTemp.avg</code>
+you are asking for the <em>average</em> outside temperature for the month. Possible
+aggregation types are given in the reference <em><a href="../../reference/aggtypes">Aggregation types</a></em>.</p>
+<p><em><code>unit_conversion</code></em> is an optional unit conversion tag. If provided,
+the results will be converted into the specified units, otherwise the default
+units specified in the skin configuration file (in section <code>[Units][[Groups]]</code>)
+will be used. See the section
+<em><a href="#unit-conversion-options">Unit conversion options</a></em>.</p>
+<p><em><code>formatting</code></em> is an optional formatting tag. If provided, it controls how the
+value will appear. See the section <em><a href="#formatting-options">Formatting options</a></em>.</p>
+<p>There are several delta settings that can be used:</p>
+<table class="indent">
+    <tbody>
+    <tr class="first_row">
+        <td>Delta Setting</td>
+        <td>Example</td>
+        <td>Meaning</td>
+    </tr>
+    <tr>
+        <td class="first_col code">time_delta=<em>seconds</em></td>
+        <td class="code">$span(time_delta=1800).outTemp.avg</td>
+        <td>The average temperature over the last immediate 30 minutes (1800 seconds).
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">hour_delta=<em>hours</em></td>
+        <td class="code">$span(hour_delta=6).outTemp.avg</td>
+        <td>The average temperature over the last immediate 6 hours.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">day_delta=<em>days</em></td>
+        <td class="code">$span(day_delta=1).rain.sum</td>
+        <td>The total rainfall over the last immediate 24 hours.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">week_delta=<em>weeks</em></td>
+        <td class="code">$span(week_delta=2).barometer.max</td>
+        <td>The maximum barometric pressure over the last immediate 2 weeks.
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<p>For example, the template expressions</p>
+<div class="highlight"><pre><span></span><code>The total rainfall over the last 30 hours is $span($hour_delta=30).rain.sum
+</code></pre></div>
+<p>and</p>
+<div class="highlight"><pre><span></span><code>The total rainfall over the last 30 hours is $span($hour_delta=6, $day_delta=1).rain.sum
+</code></pre></div>
+<p>would both result in</p>
+<div class="example_output">
+The total rainfall over the last 30 hours is 1.24 in
+</div>
+
+<h3 id="tag-unit">Tag $unit<a class="headerlink" href="#tag-unit" title="Permanent link">&para;</a></h3>
+<p>The type, label, and string formats for all units are also available, allowing
+you to do highly customized labels:</p>
+<table>
+<thead>
+<tr>
+<th>Tag</th>
+<th>Results</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$unit.unit_type.outTemp</code></td>
+<td><code>degree_C</code></td>
+</tr>
+<tr>
+<td><code>$unit.label.outTemp</code></td>
+<td>°C</td>
+</tr>
+<tr>
+<td><code>$unit.format.outTemp</code></td>
+<td><code>%.1f</code></td>
+</tr>
+</tbody>
+</table>
+<p>For example, the tag</p>
+<div class="highlight"><pre><span></span><code>$day.outTemp.max.format(add_label=False)$unit.label.outTemp
+</code></pre></div>
+<p>would result in</p>
+<div class="example_output">
+21.2°C
+</div>
+
+<p>(assuming metric values have been specified for <code>group_temperature</code>),
+essentially reproducing the results of the simpler tag <code>$day.outTemp.max</code>.</p>
+<h3 id="tag-obs">Tag $obs<a class="headerlink" href="#tag-obs" title="Permanent link">&para;</a></h3>
+<p>The labels used for the various observation types are available using tag
+<code>$obs</code>. These are basically the values given in the skin dictionary, section
+<a href="../../reference/skin-options/labels/#generic"><code>[Labels][[Generic]]</code></a>.</p>
+<table>
+<thead>
+<tr>
+<th>Tag</th>
+<th>Results</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$obs.label.outTemp</code></td>
+<td>Outside Temperature</td>
+</tr>
+<tr>
+<td><code>$obs.label.UV</code></td>
+<td>UV Index</td>
+</tr>
+</tbody>
+</table>
+<h3 id="iteration">Iteration<a class="headerlink" href="#iteration" title="Permanent link">&para;</a></h3>
+<p>It is possible to iterate over the following:</p>
+<table class="indent">
+    <tbody>
+    <tr class="first_row">
+        <td>Tag suffix</td>
+        <td>Results</td>
+    </tr>
+    <tr>
+        <td class="code first_col">.records</td>
+        <td>Iterate over every record</td>
+    </tr>
+    <tr>
+        <td class="code first_col">.hours</td>
+        <td>Iterate by hours</td>
+    </tr>
+    <tr>
+        <td class="code first_col">.days</td>
+        <td>Iterate by days</td>
+    </tr>
+    <tr>
+        <td class="code first_col">.months</td>
+        <td>Iterate by months</td>
+    </tr>
+    <tr>
+        <td class="code first_col">.years</td>
+        <td>Iterate by years</td>
+    </tr>
+    <tr>
+        <td class="code first_col">.spans(interval=<em>seconds</em>)
+        </td>
+        <td>
+          Iterate by custom length spans. The default interval is 10800
+          seconds (3 hours). The spans will
+          align to local time boundaries.
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<p>The following template uses a Cheetah for loop to iterate over all months in
+a year, printing out each month's min and max temperature. The iteration loop
+is <mark>highlighted</mark>.</p>
+<div class="highlight"><pre><span></span><code>Min, max temperatures by month
+<span class="hll">#for $month in $year.months
+</span>$month.dateTime.format(&quot;%B&quot;): Min, max temperatures: $month.outTemp.min $month.outTemp.max
+<span class="hll">#end for
+</span></code></pre></div>
+<p>The result is:</p>
+<div class="highlight"><pre><span></span><code>Min, max temperatures by month
+January: Min, max temperatures: 30.1°F 51.5°F  
+February: Min, max temperatures: 24.4°F 58.6°F  
+March: Min, max temperatures: 27.3°F 64.1°F  
+April: Min, max temperatures: 33.2°F 52.5°F  
+May: Min, max temperatures: N/A N/A  
+June: Min, max temperatures: N/A N/A  
+July: Min, max temperatures: N/A N/A  
+August: Min, max temperatures: N/A N/A  
+September: Min, max temperatures: N/A N/A  
+October: Min, max temperatures: N/A N/A  
+November: Min, max temperatures: N/A N/A  
+December: Min, max temperatures: N/A N/A
+</code></pre></div>
+<p>The following template again uses a Cheetah <code>for</code> loop, this time to iterate
+over 3-hour spans over the last 24 hours, displaying the averages in each
+span. The iteration loop is <mark>highlighted</mark>.</p>
+<div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>3 hour averages over the last 24 hours<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+<span class="p">&lt;</span><span class="nt">table</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">tr</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>Date/time<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;&lt;</span><span class="nt">td</span><span class="p">&gt;</span>outTemp<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;&lt;</span><span class="nt">td</span><span class="p">&gt;</span>outHumidity<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+  <span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;</span>
+<span class="hll">#for $time_band in $span($day_delta=1).spans(interval=10800)
+</span>  <span class="p">&lt;</span><span class="nt">tr</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>$time_band.start.format(&quot;%d/%m %H:%M&quot;)<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>$time_band.outTemp.avg<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>$time_band.outHumidity.avg<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+  <span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;</span>
+<span class="hll">#end for
+</span><span class="p">&lt;/</span><span class="nt">table</span><span class="p">&gt;</span>
+</code></pre></div>
+<p>The result is:</p>
+<div class="example_output">
+    <p>3 hour averages over the last 24 hours</p>
+    <table>
+        <tr>
+            <td>Date/time</td>
+            <td>outTemp</td>
+            <td>outHumidity</td>
+        </tr>
+        <tr>
+            <td>21/01 18:50</td>
+            <td>33.4&#176;F</td>
+            <td>95%</td>
+        </tr>
+        <tr>
+            <td>21/01 21:50</td>
+            <td>32.8&#176;F</td>
+            <td>96%</td>
+        </tr>
+        <tr>
+            <td>22/01 00:50</td>
+            <td>33.2&#176;F</td>
+            <td>96%</td>
+        </tr>
+        <tr>
+            <td>22/01 03:50</td>
+            <td>33.2&#176;F</td>
+            <td>96%</td>
+        </tr>
+        <tr>
+            <td>22/01 06:50</td>
+            <td>33.8&#176;F</td>
+            <td>96%</td>
+        </tr>
+        <tr>
+            <td>22/01 09:50</td>
+            <td>36.8&#176;F</td>
+            <td>95%</td>
+        </tr>
+        <tr>
+            <td>22/01 12:50</td>
+            <td>39.4&#176;F</td>
+            <td>91%</td>
+        </tr>
+        <tr>
+            <td>22/01 15:50</td>
+            <td>35.4&#176;F</td>
+            <td>93%</td>
+        </tr>
+    </table>
+
+</div>
+
+<p>See the NOAA template files <code>NOAA/NOAA-YYYY.txt.tmpl</code> and
+<code>NOAA/NOAA-YYYY-MM.txt.tmpl</code>, both included in the <em>Seasons</em> skin, for other
+examples using iteration and explicit formatting.</p>
+<h3 id="comprehensive-example">Comprehensive example<a class="headerlink" href="#comprehensive-example" title="Permanent link">&para;</a></h3>
+<p>This example is designed to put together a lot of the elements described
+above, including iteration, aggregation period starts and ends, formatting,
+and overriding units. <a href="../../examples/tag.htm">Click here</a> for the results.</p>
+<div class="highlight"><pre><span></span><code><span class="p">&lt;</span><span class="nt">html</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="nt">head</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">style</span><span class="p">&gt;</span>
+<span class="w">      </span><span class="nt">td</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">border</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="kt">px</span><span class="w"> </span><span class="kc">solid</span><span class="w"> </span><span class="mh">#cccccc</span><span class="p">;</span><span class="w"> </span><span class="k">padding</span><span class="p">:</span><span class="w"> </span><span class="mi">5</span><span class="kt">px</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">&lt;/</span><span class="nt">style</span><span class="p">&gt;</span>
+  <span class="p">&lt;/</span><span class="nt">head</span><span class="p">&gt;</span>
+
+  <span class="p">&lt;</span><span class="nt">body</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">table</span> <span class="na">border</span><span class="o">=</span><span class="s">1</span> <span class="na">style</span><span class="o">=</span><span class="s">&quot;border-collapse:collapse;&quot;</span><span class="p">&gt;</span>
+      <span class="p">&lt;</span><span class="nt">tr</span> <span class="na">style</span><span class="o">=</span><span class="s">&quot;font-weight:bold&quot;</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>Time interval<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>Max temperature<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>Time<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+      <span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;</span>
+#for $hour in $day($days_ago=1).hours
+      <span class="p">&lt;</span><span class="nt">tr</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>$hour.start.format(&quot;%H:%M&quot;)-$hour.end.format(&quot;%H:%M&quot;)<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>$hour.outTemp.max ($hour.outTemp.max.degree_C)<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">td</span><span class="p">&gt;</span>$hour.outTemp.maxtime.format(&quot;%H:%M&quot;)<span class="p">&lt;/</span><span class="nt">td</span><span class="p">&gt;</span>
+      <span class="p">&lt;/</span><span class="nt">tr</span><span class="p">&gt;</span>
+#end for
+      <span class="p">&lt;</span><span class="nt">caption</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>
+          Hourly max temperatures yesterday<span class="p">&lt;</span><span class="nt">br</span><span class="p">/&gt;</span>
+          $day($days_ago=1).start.format(&quot;%d-%b-%Y&quot;)
+        <span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+      <span class="p">&lt;/</span><span class="nt">caption</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">table</span><span class="p">&gt;</span>
+  <span class="p">&lt;/</span><span class="nt">body</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="nt">html</span><span class="p">&gt;</span>
+</code></pre></div>
+<h3 id="support-for-series">Support for series<a class="headerlink" href="#support-for-series" title="Permanent link">&para;</a></h3>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is an experimental API that could change.</p>
+</div>
+<p>WeeWX V4.5 introduced some experimental tags for producing <em>series</em> of data,
+possibly aggregated. This can be useful for creating the JSON data needed for
+JavaScript plotting packages, such as
+<a href="https://www.highcharts.com/">HighCharts</a>,
+<a href="https://developers.google.com/chart">Google Charts</a>,
+or <a href="https://c3js.org/">C3.js</a>.</p>
+<p>For example, suppose you need the maximum temperature for each day of the
+month. This tag</p>
+<div class="highlight"><pre><span></span><code>$month.outTemp.series(aggregate_type=&#39;max&#39;, aggregate_interval=&#39;1d&#39;, time_series=&#39;start&#39;).json
+</code></pre></div>
+<p>would produce the following:</p>
+<div class="highlight"><pre><span></span><code>[[1614585600, 58.2], [1614672000, 55.8], [1614758400, 59.6], [1614844800, 57.8], ... ]
+</code></pre></div>
+<p>This is a list of (time, temperature) for each day of the month, in JSON,
+easily consumed by many of these plotting packages.</p>
+<p>Many other combinations are possible. See the Wiki article
+<a href="https://github.com/weewx/weewx/wiki/Tags-for-series"><em>Tags for series</em></a>.</p>
+<h3 id="helper-functions">Helper functions<a class="headerlink" href="#helper-functions" title="Permanent link">&para;</a></h3>
+<p>WeeWX includes a number of helper functions that may be useful when writing
+templates.</p>
+<h4 id="rndx-ndigitsnone">$rnd(x, ndigits=None)<a class="headerlink" href="#rndx-ndigitsnone" title="Permanent link">&para;</a></h4>
+<p>Round <code>x</code> to <code>ndigits</code> decimal digits. The argument <code>x</code> can be a <code>float</code> or a list of <code>floats</code>. Values of <code>None</code> are passed through.</p>
+<h4 id="jsonizeseq">$jsonize(seq)<a class="headerlink" href="#jsonizeseq" title="Permanent link">&para;</a></h4>
+<p>Convert the iterable <code>seq</code> to a JSON string.</p>
+<h4 id="to_intx">$to_int(x)<a class="headerlink" href="#to_intx" title="Permanent link">&para;</a></h4>
+<p>Convert <code>x</code> to an integer. The argument <code>x</code> can be of type <code>float</code> or <code>str</code>. Values of <code>None</code> are passed through.</p>
+<h4 id="to_boolx">$to_bool(x)<a class="headerlink" href="#to_boolx" title="Permanent link">&para;</a></h4>
+<p>Convert <code>x</code> to a boolean. The argument <code>x</code> can be of type <code>int</code>, <code>float</code>, or <code>str</code>. If lowercase <code>x</code> is 'true', 'yes', or 'y' the function returns <code>True</code>. If it is 'false', 'no', or 'n' it returns <code>False</code>. Other string values raise a <code>ValueError</code>. In case of a numeric argument, 0 means <code>False</code>, all other values <code>True</code>.</p>
+<h4 id="to_listx">$to_list(x)<a class="headerlink" href="#to_listx" title="Permanent link">&para;</a></h4>
+<p>Convert <code>x</code> to a list. If <code>x</code> is already a list, nothing changes. If it is a single value it is converted to a list with this value as the only list element. Values of <code>None</code> are passed through.</p>
+<h4 id="getobsplot_name">$getobs(plot_name)<a class="headerlink" href="#getobsplot_name" title="Permanent link">&para;</a></h4>
+<p>For a given plot name, this function will return the set of all observation types used by the plot.</p>
+<p>For example, consider a plot that is defined in <code>[ImageGenerator]</code> as</p>
+<div class="highlight"><pre><span></span><code><span class="k">[[[daytempleaf]]]</span>
+<span class="w">  </span><span class="k">[[[[leafTemp1]]]]</span>
+<span class="w">  </span><span class="k">[[[[leafTemp2]]]]</span>
+<span class="w">  </span><span class="k">[[[[temperature]]]]</span>
+<span class="w">    </span><span class="na">data_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">outTemp</span>
+</code></pre></div>
+<p>The tag <code>$getobs('daytempleaf')</code> would return the set <code>{'leafTemp1', 'leafTemp2', 'outTemp'}</code>.</p>
+<h3 id="general-tags">General tags<a class="headerlink" href="#general-tags" title="Permanent link">&para;</a></h3>
+<p>There are some general tags that do not reflect observation data, but
+technical information about the template files. They are frequently useful
+in <code>#if</code> expressions to control how Cheetah processes the template.</p>
+<h4 id="encoding">$encoding<a class="headerlink" href="#encoding" title="Permanent link">&para;</a></h4>
+<p>Character encoding, to which the file is converted after creation. Possible values are <code>html_entities</code>, <code>strict_ascii</code>, <code>normalized_ascii</code>, and <code>utf-8</code>.</p>
+<h4 id="filename">$filename<a class="headerlink" href="#filename" title="Permanent link">&para;</a></h4>
+<p>Name of the file to be created including relative path. Can be used to set the canonical URL for search engines.</p>
+<div class="highlight"><pre><span></span><code>&lt;link rel=&quot;canonical&quot; href=&quot;$station.station_url/$filename&quot; /&gt;
+</code></pre></div>
+<h4 id="lang">$lang<a class="headerlink" href="#lang" title="Permanent link">&para;</a></h4>
+<p>Language code set by the <code>lang</code> option for the report. For example, <code>fr</code>, or <code>gr</code>.</p>
+<h4 id="month_name">$month_name<a class="headerlink" href="#month_name" title="Permanent link">&para;</a></h4>
+<p>For templates listed under <code>SummaryByMonth</code>, this will contain the localized month name (<em>e.g.</em>, "<em>Sep</em>").</p>
+<h4 id="page">$page<a class="headerlink" href="#page" title="Permanent link">&para;</a></h4>
+<p>The section name from <code>skin.conf</code> where the template is described.</p>
+<h4 id="skin">$skin<a class="headerlink" href="#skin" title="Permanent link">&para;</a></h4>
+<p>The value of option <code>skin</code> in <code>weewx.conf</code>.</p>
+<h4 id="skin_name">$SKIN_NAME<a class="headerlink" href="#skin_name" title="Permanent link">&para;</a></h4>
+<p>All skin included with WeeWX, version 4.6 or later, include the tag <code>$SKIN_NAME</code>. For example, for the <em>Seasons</em> skin, <code>$SKIN_NAME</code> would return <code>Seasons</code>.</p>
+<h4 id="skin_version">$SKIN_VERSION<a class="headerlink" href="#skin_version" title="Permanent link">&para;</a></h4>
+<p>All skin included with WeeWX, version 4.6 or later, include the tag <code>$SKIN_VERSION</code>, which returns the WeeWX version number of when the skin was installed. Because skins are not touched during the upgrade process, this shows the origin of the skin.</p>
+<h4 id="summarybyday_1">$SummaryByDay<a class="headerlink" href="#summarybyday_1" title="Permanent link">&para;</a></h4>
+<p>A list of year-month-day strings (<em>e.g.</em>, <code>["2018-12-31", "2019-01-01"]</code>) for which a summary-by-day has been generated. The <code>[[SummaryByDay]]</code> section must have been processed before this tag will be valid, otherwise it will be empty.</p>
+<h4 id="summarybymonth_1">$SummaryByMonth<a class="headerlink" href="#summarybymonth_1" title="Permanent link">&para;</a></h4>
+<p>A list of year-month strings (<em>e.g.</em>, <code>["2018-12", "2019-01"]</code>) for which a summary-by-month has been generated. The <code>[[SummaryByMonth]]</code> section must have been processed before this tag will be valid, otherwise it will be empty.</p>
+<h4 id="summarybyyear_1">$SummaryByYear<a class="headerlink" href="#summarybyyear_1" title="Permanent link">&para;</a></h4>
+<p>A list of year strings (<em>e.g.</em>, <code>["2018", "2019"]</code>) for which a summary-by-year has been generated. The <code>[[SummaryByYear]]</code> section must have been processed before this tag will be valid, otherwise it will be empty.</p>
+<h4 id="year_name">$year_name<a class="headerlink" href="#year_name" title="Permanent link">&para;</a></h4>
+<p>For templates listed under <code>SummaryByMonth</code> or <code>SummaryByYear</code>, this will contain the year (<em>e.g.</em>, "2018").</p>
+<h3 id="gettext-internationalization"><code>$gettext</code> - Internationalization<a class="headerlink" href="#gettext-internationalization" title="Permanent link">&para;</a></h3>
+<p>Pages generated by WeeWX not only contain observation data, but also static
+text. The WeeWX tag <code>$gettext</code> provides internationalization support for these
+kinds of texts. It is structured very similarly to the
+<a href="https://www.gnu.org/software/gettext/">GNU gettext facility</a>, but its
+implementation is very different. To support internationalization of your
+template, do not use static text in your templates, but rather use <code>$gettext</code>.
+Here's how.</p>
+<p>Suppose you write a skin called "YourSkin", and you want to include a headline
+labelled "Current Conditions" in English, "aktuelle Werte" in German,
+"Conditions actuelles" in French, etc. Then the template file could contain:</p>
+<div class="highlight"><pre><span></span><code>&lt;h1&gt;$gettext(&quot;Current Conditions&quot;)&lt;/h1&gt;
+</code></pre></div>
+<p>The section of <code>weewx.conf</code> configuring your skin would look something like
+this:</p>
+<div class="highlight"><pre><span></span><code>[StdReport]
+    [[YourSkinReport]]
+        skin = YourSkin
+        lang = fr
+</code></pre></div>
+<p>With <code>lang = fr</code> the report is in French. To get it in English, replace the
+language code <code>fr</code> by the code for English <code>en</code>. And to get it in German
+use <code>de</code>.</p>
+<p>To make this all work, a language file has to be created for each supported
+language. The language files reside in the <code>lang</code> subdirectory of the skin
+directory that is defined by the skin option. The file name of the language
+file is the language code appended by <code>.conf</code>, for example <code>en.conf</code>,
+<code>de.conf</code>, or <code>fr.conf</code>.</p>
+<p>The language file has the same layout as <code>skin.conf</code>, <em>i.e.</em> you can put
+language specific versions of the labels there. Additionally, a section
+<code>[Texts]</code> can be defined to hold the static texts used in the skin. For
+the example above the language files would contain the following:</p>
+<p><code>en.conf</code></p>
+<div class="highlight"><pre><span></span><code>[Texts]
+    &quot;Current Conditions&quot; = Current Conditions
+</code></pre></div>
+<p><code>de.conf</code></p>
+<div class="highlight"><pre><span></span><code>[Texts]
+    &quot;Current Conditions&quot; = Aktuelle Werte
+</code></pre></div>
+<p><code>fr.conf</code></p>
+<div class="highlight"><pre><span></span><code>[Texts]
+    &quot;Current Conditions&quot; = Conditions actuelles
+</code></pre></div>
+<p>While it is not technically necessary, we recommend using the whole English
+text for the key. This makes the template easier to read, and easier for the
+translator. In the absence of a translation, it will also be the default, so
+the skin will still be usable, even if a translation is not available.</p>
+<p>See the subdirectory <code>SKIN_ROOT/Seasons/lang</code> for examples of language files.</p>
+<h3 id="pgettext-context-sensitive-lookups">$pgettext - Context sensitive lookups<a class="headerlink" href="#pgettext-context-sensitive-lookups" title="Permanent link">&para;</a></h3>
+<p>A common problem is that the same string may have different translations,
+depending on its context. For example, in English, the word "Altitude" is
+used to mean both height above sea level, and the angle of a heavenly body
+from the horizon, but that's not necessarily true in other languages. For
+example, in Thai, "ระดับความสูง" is used to mean the former, "อัลติจูด" the latter.
+The function <code>pgettext()</code> (the "p" stands for <em>particular</em>) allows you to
+distinguish between the two. Its semantics are very similar to the
+<a href="https://www.gnu.org/software/gettext/manual/gettext.html#Contexts">GNU</a> and
+<a href="https://docs.python.org/3/library/gettext.html#gettext.pgettext">Python</a>
+versions of the function.</p>
+<p>Here's an example:</p>
+<div class="highlight"><pre><span></span><code>&lt;p&gt;$pgettext(&quot;Geographical&quot;,&quot;Altitude&quot;): $station.altitude&lt;/p&gt;
+&lt;p&gt;$pgettext(&quot;Astronomical&quot;,&quot;Altitude&quot;): $almanac.moon.alt&lt;/p&gt;
+</code></pre></div>
+<p>The <code>[Texts]</code> section of the language file should then contain a subsection
+for each context. For example, the Thai language file would include:</p>
+<p><code>th.conf</code></p>
+<div class="highlight"><pre><span></span><code>[Texts]
+    [[Geographical]]
+        &quot;Altitude&quot; = &quot;ระดับความสูง&quot;    # As in height above sea level
+    [[Astronomical]]
+        &quot;Altitude&quot; = &quot;อัลติจูด&quot;         # As in angle above the horizon
+</code></pre></div>
+<h2 id="almanac">Almanac<a class="headerlink" href="#almanac" title="Permanent link">&para;</a></h2>
+<p>If module <a href="https://rhodesmill.org/pyephem"><code>ephem</code></a> has been installed, then
+WeeWX can generate extensive almanac information for the Sun, Moon, Venus,
+Mars, Jupiter, and other heavenly bodies, including their rise, transit and
+set times, as well as their azimuth and altitude. Other information is also
+available.</p>
+<p>Here is an example template:</p>
+<div class="highlight"><pre><span></span><code>Current time is $current.dateTime
+#if $almanac.hasExtras
+    Sunrise, transit, sunset: $almanac.sun.rise $almanac.sun.transit $almanac.sun.set
+    Moonrise, transit, moonset: $almanac.moon.rise $almanac.moon.transit $almanac.moon.set
+    Mars rise, transit, set: $almanac.mars.rise $almanac.mars.transit $almanac.mars.set
+    Azimuth, altitude of Mars: $almanac.mars.azimuth $almanac.mars.altitude
+    Next new, full moon: $almanac.next_new_moon; $almanac.next_full_moon
+    Next summer, winter solstice: $almanac.next_summer_solstice; $almanac.next_winter_solstice
+#else
+    Sunrise, sunset: $almanac.sunrise $almanac.sunset
+#end if
+</code></pre></div>
+<p>If <code>ephem</code> is installed this would result in:</p>
+<div class="example_output">
+Current time is 03-Sep-2010 11:00
+    Sunrise, transit, sunset: 06:29 13:05 19:40
+    Moonrise, transit, moonset: 00:29 08:37 16:39
+    Mars rise, transit, set: 10:12 15:38 21:04
+    Azimuth, altitude of Mars: 111° 08°
+    Next new, full moon: 08-Sep-2010 03:29; 23-Sep-2010 02:17
+    Next summer, winter solstice: 21-Jun-2011 10:16; 21-Dec-2010 15:38
+</div>
+
+<p>Otherwise, a fallback of basic calculations is used, resulting in:</p>
+<div class="example_output">
+Current time is 29-Mar-2011 09:20<br/>  
+Sunrise, sunset: 06:51 19:30
+</div>
+
+<p>As shown in the example, you can test whether this extended almanac
+information is available with the value <code>$almanac.hasExtras</code>.</p>
+<p>The almanac information falls into three categories:</p>
+<ul>
+<li>Calendar events</li>
+<li>Heavenly bodies</li>
+<li>Functions</li>
+</ul>
+<p>We will cover each of these separately.</p>
+<h3 id="calendar-events">Calendar events<a class="headerlink" href="#calendar-events" title="Permanent link">&para;</a></h3>
+<p>"Calendar events" do not require a heavenly body. They cover things such as
+the time of the next solstice or next first quarter moon, or the sidereal
+time. The syntax is:</p>
+<div class="highlight"><pre><span></span><code>$almanac.next_solstice
+</code></pre></div>
+<p>or</p>
+<div class="highlight"><pre><span></span><code>$almanac.next_first_quarter_moon
+</code></pre></div>
+<p>or</p>
+<div class="highlight"><pre><span></span><code>$almanac.sidereal_angle
+</code></pre></div>
+<p>Here is a table of the information that falls into this category:</p>
+<table class="indent">
+    <caption>Calendar events</caption>
+    <tbody class="code">
+    <tr>
+        <td>previous_equinox</td>
+        <td>next_equinox</td>
+    </tr>
+    <tr>
+        <td>previous_solstice</td>
+        <td>next_solstice</td>
+    </tr>
+    <tr>
+        <td>previous_autumnal_equinox</td>
+        <td>next_autumnal_equinox</td>
+    </tr>
+    <tr>
+        <td>previous_vernal_equinox</td>
+        <td>next_vernal_equinox</td>
+    </tr>
+    <tr>
+        <td>previous_winter_solstice</td>
+        <td>next_winter_solstice</td>
+    </tr>
+    <tr>
+        <td>previous_summer_solstice</td>
+        <td>next_summer_solstice</td>
+    </tr>
+    <tr>
+        <td>previous_new_moon</td>
+        <td>next_new_moon</td>
+    </tr>
+    <tr>
+        <td>previous_first_quarter_moon</td>
+        <td>next_first_quarter_moon</td>
+    </tr>
+    <tr>
+        <td>previous_full_moon</td>
+        <td>next_full_moon</td>
+    </tr>
+    <tr>
+        <td>previous_last_quarter_moon</td>
+        <td>next_last_quarter_moon</td>
+    </tr>
+    <tr>
+        <td>sidereal_angle</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The tag <code>$almanac.sidereal_angle</code> returns a value in decimal degrees
+rather than a more customary value from 0 to 24 hours.</p>
+</div>
+<h3 id="heavenly-bodies">Heavenly bodies<a class="headerlink" href="#heavenly-bodies" title="Permanent link">&para;</a></h3>
+<p>The second category does require a heavenly body. This covers queries such
+as, "When does Jupiter rise?" or, "When does the sun transit?" Examples are</p>
+<div class="highlight"><pre><span></span><code>$almanac.jupiter.rise
+</code></pre></div>
+<p>or</p>
+<div class="highlight"><pre><span></span><code>$almanac.sun.transit
+</code></pre></div>
+<p>To accurately calculate these times, WeeWX automatically uses the present
+temperature and pressure to calculate refraction effects. However, you can
+override these values, which will be necessary if you wish to match the
+almanac times published by the Naval Observatory <a href="https://rhodesmill.org/pyephem/rise-set.html">as explained in the PyEphem
+documentation</a>. For example,
+to match the sunrise time as published by the Observatory, instead of</p>
+<div class="highlight"><pre><span></span><code>$almanac.sun.rise
+</code></pre></div>
+<p>use</p>
+<div class="highlight"><pre><span></span><code>$almanac(pressure=0, horizon=-34.0/60.0).sun.rise
+</code></pre></div>
+<p>By setting pressure to zero we are bypassing the refraction calculations
+and manually setting the horizon to be 34 arcminutes lower than the
+normal horizon. This is what the Navy uses.</p>
+<p>If you wish to calculate the start of civil twilight, you can set the
+horizon to -6 degrees, and also tell WeeWX to use the center of the sun
+(instead of the upper limb, which it normally uses) to do the
+calcuation:</p>
+<div class="highlight"><pre><span></span><code>$almanac(pressure=0, horizon=-6).sun(use_center=1).rise
+</code></pre></div>
+<p>The general syntax is:</p>
+<div class="highlight"><pre><span></span><code>$almanac(almanac_time=time,            ## Unix epoch time
+         lat=latitude, lon=longitude,  ## degrees
+         altitude=altitude,            ## meters
+         pressure=pressure,            ## mbars
+         horizon=horizon,              ## degrees
+         temperature=temperature_C     ## degrees C
+       ).heavenly_body(use_center=[01]).attribute
+</code></pre></div>
+<p>As you can see, many other properties can be overridden besides pressure
+and the horizon angle.</p>
+<p>PyEphem offers an extensive list of objects that can be used for the
+<em><code>heavenly_body</code></em> tag. All the planets and many stars are in the list.</p>
+<p>The possible values for the <em><code>attribute</code></em> tag are listed in the following
+table, along with the corresponding name used in the PyEphem documentation.</p>
+<table class="indent" style="width: 80%">
+    <caption>Attributes that can be used with heavenly bodies</caption>
+    <tbody>
+    <tr class="first_row">
+        <td>WeeWX name</td>
+        <td>PyEphem name</td>
+        <td>Meaning</td>
+    </tr>
+    <tr>
+        <td class="code">azimuth</td>
+        <td class="code">az</td>
+        <td>Azimuth</td>
+    </tr>
+    <tr>
+        <td class="code">altitude</td>
+        <td class="code">alt</td>
+        <td>Altitude</td>
+    </tr>
+    <tr>
+        <td class="code">astro_ra</td>
+        <td class="code">a_ra</td>
+        <td>Astrometric geocentric right ascension</td>
+    </tr>
+    <tr>
+        <td class="code">astro_dec</td>
+        <td class="code">a_dec</td>
+        <td>Astrometric geocentric declination</td>
+    </tr>
+    <tr>
+        <td class="code">geo_ra</td>
+        <td class="code">g_ra</td>
+        <td>Apparent geocentric right ascension</td>
+    </tr>
+    <tr>
+        <td class="code">topo_ra</td>
+        <td class="code">ra</td>
+        <td>Apparent topocentric right ascension</td>
+    </tr>
+    <tr>
+        <td class="code">geo_dec</td>
+        <td class="code">g_dec</td>
+        <td>Apparent geocentric declination</td>
+    </tr>
+    <tr>
+        <td class="code">topo_dec</td>
+        <td class="code">dec</td>
+        <td>Apparent topocentric declination</td>
+    </tr>
+    <tr>
+        <td class="code">elongation</td>
+        <td class="code">elong</td>
+        <td>Angle with sun</td>
+    </tr>
+    <tr>
+        <td class="code">radius_size</td>
+        <td class="code">radius</td>
+        <td>Size as an angle</td>
+    </tr>
+    <tr>
+        <td class="code">hlongitude</td>
+        <td class="code">hlon</td>
+        <td>Astrometric heliocentric longitude</td>
+    </tr>
+    <tr>
+        <td class="code">hlatitude</td>
+        <td class="code">hlat</td>
+        <td>Astrometric heliocentric latitude</td>
+    </tr>
+    <tr>
+        <td class="code">sublatitude</td>
+        <td class="code">sublat</td>
+        <td>Geocentric latitude</td>
+    </tr>
+    <tr>
+        <td class="code">sublongitude</td>
+        <td class="code">sublon</td>
+        <td>Geocentric longitude</td>
+    </tr>
+    <tr>
+        <td class="code">next_rising</td>
+        <td class="code">next_rising</td>
+        <td>Time body will rise next</td>
+    </tr>
+    <tr>
+        <td class="code">next_setting</td>
+        <td class="code">next_setting</td>
+        <td>Time body will set next</td>
+    </tr>
+    <tr>
+        <td class="code">next_transit</td>
+        <td class="code">next_transit</td>
+        <td>Time body will transit next</td>
+    </tr>
+    <tr>
+        <td class="code">next_antitransit</td>
+        <td class="code">next_antitransit</td>
+        <td>Time body will anti-transit next</td>
+    </tr>
+    <tr>
+        <td class="code">previous_rising</td>
+        <td class="code">previous_rising</td>
+        <td>Previous time the body rose</td>
+    </tr>
+    <tr>
+        <td class="code">previous_setting</td>
+        <td class="code">previous_setting</td>
+        <td>Previous time the body sat</td>
+    </tr>
+    <tr>
+        <td class="code">previous_transit</td>
+        <td class="code">previous_transit</td>
+        <td>Previous time the body transited</td>
+    </tr>
+    <tr>
+        <td class="code">previous_antitransit</td>
+        <td class="code">previous_antitransit</td>
+        <td>Previous time the body anti-transited</td>
+    </tr>
+    <tr>
+        <td class="code">rise</td>
+        <td class="code">next_rising</td>
+        <td>Time body will rise next</td>
+    </tr>
+    <tr>
+        <td class="code">set</td>
+        <td class="code">next_setting</td>
+        <td>Time body will set next</td>
+    </tr>
+    <tr>
+        <td class="code">transit</td>
+        <td class="code">next_transit</td>
+        <td>Time body will transit next</td>
+    </tr>
+    <tr>
+        <td class="code">visible</td>
+        <td>N/A</td>
+        <td>How long body will be visible</td>
+    </tr>
+    <tr>
+        <td class="code">visible_change</td>
+        <td>N/A</td>
+        <td>Change in visibility from previous day</td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The tags <code>topo_ra</code>, <code>astro__ra</code> and <code>geo_ra</code> return values in decimal
+degrees rather than customary values from 0 to 24 hours.</p>
+</div>
+<h3 id="functions">Functions<a class="headerlink" href="#functions" title="Permanent link">&para;</a></h3>
+<p>There is actually one function in this category: <code>separation</code>. It returns
+the angular separation between two heavenly bodies. For example, to calculate
+the angular separation between Venus and Mars you would use:</p>
+<div class="highlight"><pre><span></span><code>&lt;p&gt;The separation between Venus and Mars is
+      $almanac.separation(($almanac.venus.alt,$almanac.venus.az), ($almanac.mars.alt,$almanac.mars.az))&lt;/p&gt;
+</code></pre></div>
+<p>This would result in:</p>
+<div class="example_output">
+The separation between Venus and Mars is 55:55:31.8
+</div>
+
+<h3 id="adding-new-bodies">Adding new bodies<a class="headerlink" href="#adding-new-bodies" title="Permanent link">&para;</a></h3>
+<p>It is possible to extend the WeeWX almanac, adding new bodies that it was not
+previously aware of. For example, say we wanted to add
+<a href="https://en.wikipedia.org/wiki/433_Eros"><em>433 Eros</em></a>, the first asteroid
+visited by a spacecraft. Here is the process:</p>
+<ol>
+<li>
+<p>Put the following in the file <code>user/extensions.py</code>:</p>
+<div class="highlight"><pre><span></span><code>import ephem
+eros = ephem.readdb(&quot;433 Eros,e,10.8276,304.3222,178.8165,1.457940,0.5598795,0.22258902,71.2803,09/04.0/2017,2000,H11.16,0.46&quot;)
+ephem.Eros = eros
+</code></pre></div>
+<p>This does two things: it adds orbital information about <em>433 Eros</em>
+to the internal PyEphem database, and it makes that data available
+under the name <code>Eros</code> (note the capital letter).</p>
+</li>
+<li>
+<p>You can then use <em>433 Eros</em> like any other body in your templates.
+    For example, to display when it will rise above the horizon:</p>
+<div class="highlight"><pre><span></span><code>$almanac.eros.rise
+</code></pre></div>
+</li>
+</ol>
+<h2 id="wind">Wind<a class="headerlink" href="#wind" title="Permanent link">&para;</a></h2>
+<p>Wind deserves a few comments because it is stored in the database in two
+different ways: as a set of scalars, and as a <em>vector</em> of speed and
+direction. Here are the four wind-related scalars stored in the main
+archive database:</p>
+<table class="indent">
+    <tbody>
+    <tr class="first_row">
+        <td>Archive type</td>
+        <td>Meaning</td>
+        <td>Valid contexts</td>
+    </tr>
+    <tr>
+        <td class="first_col code">windSpeed</td>
+        <td>The average wind speed seen during the archive period.
+        </td>
+        <td rowspan='4' class='code'>
+            $current, $latest, $hour, $day, $week, $month, $year, $rainyear
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">windDir</td>
+        <td>
+      If software record generation is used, this is the vector average
+          over the archive period. If hardware record generation is used, the
+          value is hardware dependent.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">windGust</td>
+        <td>The maximum (gust) wind speed seen during the archive period.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">windGustDir</td>
+        <td>The direction of the wind when the gust was observed.</td>
+    </tr>
+    </tbody>
+</table>
+
+<p>Some wind aggregation types, notably <code>vecdir</code> and <code>vecavg</code>, require wind
+speed <em>and</em> direction. For these, WeeWX provides a composite observation
+type called <code>wind</code>. It is stored directly in the daily summaries, but
+synthesized for aggregations other than multiples of a day.</p>
+<table>
+<thead>
+<tr>
+<th>Daily summary type</th>
+<th>Meaning</th>
+<th>Valid contexts</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>wind</td>
+<td>A vector composite of the wind.</td>
+<td><code>$hour</code>, <code>$day</code>, <code>$week</code>, <code>$month</code>, <code>$year</code>, <code>$rainyear</code></td>
+</tr>
+</tbody>
+</table>
+<p>Any of these can be used in your tags. Here are some examples:</p>
+<table class="indent">
+    <tbody>
+    <tr class="first_row">
+        <td>Tag</td>
+        <td>Meaning</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$current.windSpeed</td>
+        <td>The average wind speed over the most recent archive interval.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$current.windDir</td>
+        <td>
+If software record generation is used, this is the vector average over the
+archive interval. If hardware record generation is used, the value is
+hardware dependent.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$current.windGust</td>
+        <td>The maximum wind speed (gust) over the most recent archive interval.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$current.windGustDir</td>
+        <td>The direction of the gust.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day.windSpeed.avg<br/>$day.wind.avg</td>
+        <td>
+The average wind speed since midnight. If the wind blows east at 5 m/s for 2
+hours, then west at 5 m/s for 2 hours, the average wind speed is 5 m/s.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day.wind.vecavg</td>
+        <td>
+The <em>vector average</em> wind speed since midnight. If the wind blows
+east at 5 m/s for 2 hours, then west at 5 m/s for 2 hours, the vector
+average wind speed is zero.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day.wind.vecdir</td>
+        <td>
+The direction of the vector averaged wind speed. If the wind blows northwest
+at 5 m/s for two hours, then southwest at 5 m/s for two hours, the vector
+averaged direction is west.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day.windGust.max<br/>$day.wind.max</td>
+        <td>The maximum wind gust since midnight.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day.wind.gustdir</td>
+        <td>The direction of the maximum wind gust.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day.windGust.maxtime<br/>$day.wind.maxtime</td>
+        <td>The time of the maximum wind gust.</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day.windSpeed.max</td>
+        <td>
+The max average wind speed. The wind is averaged over each of the archive
+intervals. Then the maximum of these values is taken. Note that this is
+<em>not</em> the same as the maximum wind gust.
+        </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$day.windDir.avg</td>
+        <td>
+Not a very useful quantity. This is the strict, arithmetic average of all
+the compass wind directions. If the wind blows at 350&deg; for two hours
+then at 10&deg; for two hours, then the scalar average wind direction will
+be 180&deg; &mdash; probably not what you expect, nor want.
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<h2 id="defining-new-tags">Defining new tags<a class="headerlink" href="#defining-new-tags" title="Permanent link">&para;</a></h2>
+<p>We have seen how you can change a template and make use of the various tags
+available such as <code>$day.outTemp.max</code> for the maximum outside temperature for
+the day. But, what if you want to introduce some new data for which no tag
+is available?</p>
+<p>If you wish to introduce a static tag, that is, one that will not change with
+time (such as a Google Analytics tracker ID, or your name), then this is very
+easy: put it in section <a href="../../reference/skin-options/extras"><code>[Extras]</code></a> in
+the skin configuration file. More information on how to do this can be found
+there.</p>
+<p>But, what if you wish to introduce a more dynamic tag, one that requires some
+calculation, or perhaps uses the database? Simply putting it in the <code>[Extras]</code>
+section won't do, because then it cannot change.</p>
+<p>The answer is to write a <em>search list extension</em>. Complete directioins on how
+to do this are in the document
+<a href="../../custom/sle"><em>Writing search list extensions</em></a>.</p>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+            Back to top
+          </button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © 2009-2023 Thomas Keffer, Matthew Wall, and Gary Roderick, all rights reserved
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "toc.follow", "search.highlight", "search.share", "search.suggest", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.b4d07000.min.js"></script>
+      
+    
+  </body>
+</html>

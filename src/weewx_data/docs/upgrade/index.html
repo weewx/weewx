@@ -1,0 +1,5406 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="Tom Keffer <tkeffer@gmail.com>">
+      
+      
+        <link rel="canonical" href="https://www.weewx.com/upgrade/">
+      
+      
+        <link rel="prev" href="../hardware/ws28xx/">
+      
+      
+        <link rel="next" href="../reference/weewx-options/introduction/">
+      
+      <link rel="icon" href="../images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
+    
+    
+      
+        <title>Upgrade guide - WeeWX 5.0</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.85bb2934.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.a6bdf11c.min.css">
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CInconsolata+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Inconsolata Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../css/weewx_ui.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="white">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#upgrade-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="WeeWX 5.0" class="md-header__button md-logo" aria-label="WeeWX 5.0" data-md-component="logo">
+      
+  <img src="../images/logo-weewx.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            WeeWX 5.0
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Upgrade guide
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="white"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+            
+              <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4zM7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+              </label>
+            
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+            
+              <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3Z"/></svg>
+              </label>
+            
+          
+        </form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="WeeWX 5.0" class="md-nav__button md-logo" aria-label="WeeWX 5.0" data-md-component="logo">
+      
+  <img src="../images/logo-weewx.png" alt="logo">
+
+    </a>
+    WeeWX 5.0
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+          Quick start
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Quick start
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstarts/debian/" class="md-nav__link">
+        Debian
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstarts/redhat/" class="md-nav__link">
+        RedHat
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstarts/suse/" class="md-nav__link">
+        SuSE
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstarts/pip/" class="md-nav__link">
+        pip
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstarts/git/" class="md-nav__link">
+        git
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+          User's guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          User's guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usersguide/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usersguide/installing/" class="md-nav__link">
+        Installing WeeWX
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usersguide/where/" class="md-nav__link">
+        Where to find things
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usersguide/running/" class="md-nav__link">
+        Running WeeWX
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usersguide/webserver/" class="md-nav__link">
+        Web server integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usersguide/backup/" class="md-nav__link">
+        Backup & restore
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usersguide/mysql-mariadb/" class="md-nav__link">
+        MySQL/MariaDB
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3_8" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_3_8" id="__nav_3_8_label" tabindex="0">
+          Troubleshooting
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_8_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_3_8">
+          <span class="md-nav__icon md-icon"></span>
+          Troubleshooting
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usersguide/troubleshooting/what-to-do/" class="md-nav__link">
+        What to do
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usersguide/troubleshooting/hardware/" class="md-nav__link">
+        Hardware problems
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usersguide/troubleshooting/software/" class="md-nav__link">
+        Software problems
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usersguide/troubleshooting/meteo/" class="md-nav__link">
+        Meteorological problems
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          Customization guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Customization guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom/custom-reports/" class="md-nav__link">
+        Customizing reports
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom/report-scheduling/" class="md-nav__link">
+        Scheduling reports
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom/cheetah-generator/" class="md-nav__link">
+        The Cheetah generator
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom/image-generator/" class="md-nav__link">
+        The Image generator
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom/localization/" class="md-nav__link">
+        Localization
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom/database/" class="md-nav__link">
+        Customizing the database
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom/units/" class="md-nav__link">
+        Customizing units
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom/multiple-bindings/" class="md-nav__link">
+        Multiple data bindings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom/sle/" class="md-nav__link">
+        Search lists
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom/service-engine/" class="md-nav__link">
+        Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom/derived/" class="md-nav__link">
+        Derived types
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom/drivers/" class="md-nav__link">
+        Drivers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../custom/extensions/" class="md-nav__link">
+        Extensions
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          Utilities guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Utilities guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utilities/weewxd/" class="md-nav__link">
+        weewxd
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_5_2" id="__nav_5_2_label" tabindex="0">
+          weectl
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_5_2">
+          <span class="md-nav__icon md-icon"></span>
+          weectl
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utilities/weectl-about/" class="md-nav__link">
+        weectl
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utilities/weectl-database/" class="md-nav__link">
+        weectl database
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utilities/weectl-debug/" class="md-nav__link">
+        weectl debug
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utilities/weectl-device/" class="md-nav__link">
+        weectl device
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utilities/weectl-extension/" class="md-nav__link">
+        weectl extension
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utilities/weectl-station/" class="md-nav__link">
+        weectl station
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utilities/wee_import/" class="md-nav__link">
+        wee_import
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utilities/wee_reports/" class="md-nav__link">
+        wee_reports
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          Hardware guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          Hardware guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/drivers/" class="md-nav__link">
+        Drivers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/acurite/" class="md-nav__link">
+        AcuRite
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/cc3000/" class="md-nav__link">
+        CC3000
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/fousb/" class="md-nav__link">
+        FineOffset
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/te923/" class="md-nav__link">
+        TE923
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/ultimeter/" class="md-nav__link">
+        Ultimeter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/vantage/" class="md-nav__link">
+        Vantage
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/wmr100/" class="md-nav__link">
+        WMR100
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/wmr300/" class="md-nav__link">
+        WMR300
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/wmr9x8/" class="md-nav__link">
+        WMR9x8
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/ws1/" class="md-nav__link">
+        WS1
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/ws23xx/" class="md-nav__link">
+        WS23xx
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/ws28xx/" class="md-nav__link">
+        WS28xx
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Upgrade guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Upgrade guide
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-the-weewx-configuration-file" class="md-nav__link">
+    Upgrading the WeeWX configuration file
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v50" class="md-nav__link">
+    Upgrading to V5.0
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V5.0">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#python-27-no-longer-supported" class="md-nav__link">
+    Python 2.7 no longer supported
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setuppy-installs-no-longer-possible" class="md-nav__link">
+    setup.py installs no longer possible
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pip-installs-to-new-location" class="md-nav__link">
+    pip installs to new location
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-location-for-user-directory" class="md-nav__link">
+    New location for user directory
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-utilities" class="md-nav__link">
+    New utilities
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#utility-wunderfixer-has-been-removed" class="md-nav__link">
+    Utility wunderfixer has been removed.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sqlite_root-is-now-relative-to-weewx_root" class="md-nav__link">
+    SQLITE_ROOT is now relative to WEEWX_ROOT
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v410" class="md-nav__link">
+    Upgrading to V4.10
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V4.10">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#breaking-changes-for-skins-that-use-delta-times" class="md-nav__link">
+    Breaking changes for skins that use delta times
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changes-for-custom-delta-time-formats" class="md-nav__link">
+    Changes for custom delta time formats
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v49" class="md-nav__link">
+    Upgrading to V4.9
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V4.9">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#wee_reports-may-require-epoch-option" class="md-nav__link">
+    wee_reports may require --epoch option.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init-function-of-class-wxxtypes-has-changed" class="md-nav__link">
+    Init function of class WXXTypes has changed
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calling-signature-of-some-archive-span-functions-has-changed" class="md-nav__link">
+    Calling signature of some archive span functions has changed
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v46" class="md-nav__link">
+    Upgrading to V4.6
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V4.6">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ordering-of-search-list-changed" class="md-nav__link">
+    Ordering of search list changed
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tag-alltime" class="md-nav__link">
+    Tag $alltime
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v45" class="md-nav__link">
+    Upgrading to V4.5
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V4.5">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api-changes" class="md-nav__link">
+    API changes
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v44" class="md-nav__link">
+    Upgrading to V4.4
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V4.4">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#auto-patch-of-daily-summaries" class="md-nav__link">
+    Auto patch of daily summaries
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v43" class="md-nav__link">
+    Upgrading to V4.3
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V4.3">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#auto-patch-of-daily-summaries_1" class="md-nav__link">
+    Auto patch of daily summaries
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-ignore_zero_wind-has-been-renamed-and-moved" class="md-nav__link">
+    Option ignore_zero_wind has been renamed and moved
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-log_failure-set-to-true" class="md-nav__link">
+    Option log_failure set to True
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v42" class="md-nav__link">
+    Upgrading to V4.2
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V4.2">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#type-beaufort-deprecated" class="md-nav__link">
+    Type beaufort deprecated
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v40" class="md-nav__link">
+    Upgrading to V4.0
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V4.0">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#python-25-and-26" class="md-nav__link">
+    Python 2.5 and 2.6
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stdwxcalculate" class="md-nav__link">
+    [StdWXCalculate]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v39" class="md-nav__link">
+    Upgrading to V3.9
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V3.9">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-skins" class="md-nav__link">
+    New skins
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skin-defaults" class="md-nav__link">
+    Skin defaults
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do-you-need-to-change-anything" class="md-nav__link">
+    Do you need to change anything?
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v37" class="md-nav__link">
+    Upgrading to V3.7
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V3.7">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changes-to-daily-summaries" class="md-nav__link">
+    Changes to daily summaries
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recalculation-of-windspeed-maximum-values" class="md-nav__link">
+    Recalculation of windSpeed maximum values
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#change-in-the-name-and-locations-of-examples" class="md-nav__link">
+    Change in the name and locations of examples
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changes-to-sensor-mapping" class="md-nav__link">
+    Changes to sensor mapping
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v36" class="md-nav__link">
+    Upgrading to V3.6
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V3.6">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changes-to-weewxconf" class="md-nav__link">
+    Changes to weewx.conf
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v32" class="md-nav__link">
+    Upgrading to V3.2
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V3.2">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-utilities_1" class="md-nav__link">
+    New utilities
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changes-to-weewxconf_1" class="md-nav__link">
+    Changes to weewx.conf
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v30" class="md-nav__link">
+    Upgrading to V3.0
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V3.0">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database-contents" class="md-nav__link">
+    Database contents
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pressure-calibration" class="md-nav__link">
+    Pressure calibration
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#weewxconf" class="md-nav__link">
+    weewx.conf
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-data-sources-in-skins" class="md-nav__link">
+    Custom data sources in skins
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extensions" class="md-nav__link">
+    Extensions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#search-list-extensions" class="md-nav__link">
+    Search list extensions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#derived-quantities" class="md-nav__link">
+    Derived quantities
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#driver-apis" class="md-nav__link">
+    Driver APIs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#service-apis" class="md-nav__link">
+    Service APIs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restful-apis" class="md-nav__link">
+    RESTful APIs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database-apis" class="md-nav__link">
+    Database APIs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generator-apis" class="md-nav__link">
+    Generator APIs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extension-installer" class="md-nav__link">
+    Extension installer
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v27" class="md-nav__link">
+    Upgrading to V2.7
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v26" class="md-nav__link">
+    Upgrading to V2.6
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v24" class="md-nav__link">
+    Upgrading to V2.4
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v23" class="md-nav__link">
+    Upgrading to V2.3
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v22" class="md-nav__link">
+    Upgrading to V2.2
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v20" class="md-nav__link">
+    Upgrading to V2.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v114" class="md-nav__link">
+    Upgrading to V1.14
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v113" class="md-nav__link">
+    Upgrading to V1.13
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v110" class="md-nav__link">
+    Upgrading to V1.10
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V1.10">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-almanac-features-icon-and-mobile-template" class="md-nav__link">
+    New almanac features, icon, and mobile template
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backwards-compatibility" class="md-nav__link">
+    Backwards compatibility
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v18" class="md-nav__link">
+    Upgrading to V1.8
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v17" class="md-nav__link">
+    Upgrading to V1.7
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v15" class="md-nav__link">
+    Upgrading to V1.5
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v14" class="md-nav__link">
+    Upgrading to V1.4
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+          Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_8">
+          <span class="md-nav__icon md-icon"></span>
+          Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_1" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8_1" id="__nav_8_1_label" tabindex="0">
+          Application options
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_1_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_8_1">
+          <span class="md-nav__icon md-icon"></span>
+          Application options
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/weewx-options/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/weewx-options/general/" class="md-nav__link">
+        General options
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/weewx-options/stations/" class="md-nav__link">
+        [Station]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/weewx-options/stdrestful/" class="md-nav__link">
+        [StdRESTful]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/weewx-options/stdreport/" class="md-nav__link">
+        [StdReport]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/weewx-options/stdconvert/" class="md-nav__link">
+        [StdConvert]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/weewx-options/stdcalibrate/" class="md-nav__link">
+        [StdCalibrate]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/weewx-options/stdqc/" class="md-nav__link">
+        [StdQC]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/weewx-options/stdwxcalculate/" class="md-nav__link">
+        [StdWXCalculate]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/weewx-options/stdarchive/" class="md-nav__link">
+        [StdArchive]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/weewx-options/stdtimesynch/" class="md-nav__link">
+        [StdTimeSynch]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/weewx-options/data-bindings/" class="md-nav__link">
+        [DataBindings]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/weewx-options/databases/" class="md-nav__link">
+        [Databases]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/weewx-options/database-types/" class="md-nav__link">
+        [DatabaseTypes]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/weewx-options/engine/" class="md-nav__link">
+        [Engine]
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_2" >
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8_2" id="__nav_8_2_label" tabindex="0">
+          Skin options
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_8_2">
+          <span class="md-nav__icon md-icon"></span>
+          Skin options
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/skin-options/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/skin-options/extras/" class="md-nav__link">
+        [Extras]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/skin-options/labels/" class="md-nav__link">
+        [Labels]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/skin-options/almanac/" class="md-nav__link">
+        [Almanac]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/skin-options/units/" class="md-nav__link">
+        [Units]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/skin-options/texts/" class="md-nav__link">
+        [Texts]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/skin-options/cheetahgenerator/" class="md-nav__link">
+        [CheetahGenerator]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/skin-options/imagegenerator/" class="md-nav__link">
+        [ImageGenerator]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/skin-options/copygenerator/" class="md-nav__link">
+        [CopyGenerator]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/skin-options/generators/" class="md-nav__link">
+        [Generators]
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/aggtypes/" class="md-nav__link">
+        Aggregation types
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/durations/" class="md-nav__link">
+        Durations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/units/" class="md-nav__link">
+        Units
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/valuetuple/" class="md-nav__link">
+        ValueTuple
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/valuehelper/" class="md-nav__link">
+        ValueHelper
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../devnotes/" class="md-nav__link">
+        Notes for developers
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changes/" class="md-nav__link">
+        Change log
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-the-weewx-configuration-file" class="md-nav__link">
+    Upgrading the WeeWX configuration file
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v50" class="md-nav__link">
+    Upgrading to V5.0
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V5.0">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#python-27-no-longer-supported" class="md-nav__link">
+    Python 2.7 no longer supported
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#setuppy-installs-no-longer-possible" class="md-nav__link">
+    setup.py installs no longer possible
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pip-installs-to-new-location" class="md-nav__link">
+    pip installs to new location
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-location-for-user-directory" class="md-nav__link">
+    New location for user directory
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#new-utilities" class="md-nav__link">
+    New utilities
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#utility-wunderfixer-has-been-removed" class="md-nav__link">
+    Utility wunderfixer has been removed.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sqlite_root-is-now-relative-to-weewx_root" class="md-nav__link">
+    SQLITE_ROOT is now relative to WEEWX_ROOT
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v410" class="md-nav__link">
+    Upgrading to V4.10
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V4.10">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#breaking-changes-for-skins-that-use-delta-times" class="md-nav__link">
+    Breaking changes for skins that use delta times
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changes-for-custom-delta-time-formats" class="md-nav__link">
+    Changes for custom delta time formats
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v49" class="md-nav__link">
+    Upgrading to V4.9
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V4.9">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#wee_reports-may-require-epoch-option" class="md-nav__link">
+    wee_reports may require --epoch option.
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#init-function-of-class-wxxtypes-has-changed" class="md-nav__link">
+    Init function of class WXXTypes has changed
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calling-signature-of-some-archive-span-functions-has-changed" class="md-nav__link">
+    Calling signature of some archive span functions has changed
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v46" class="md-nav__link">
+    Upgrading to V4.6
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V4.6">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ordering-of-search-list-changed" class="md-nav__link">
+    Ordering of search list changed
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tag-alltime" class="md-nav__link">
+    Tag $alltime
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v45" class="md-nav__link">
+    Upgrading to V4.5
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V4.5">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#api-changes" class="md-nav__link">
+    API changes
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v44" class="md-nav__link">
+    Upgrading to V4.4
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V4.4">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#auto-patch-of-daily-summaries" class="md-nav__link">
+    Auto patch of daily summaries
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v43" class="md-nav__link">
+    Upgrading to V4.3
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V4.3">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#auto-patch-of-daily-summaries_1" class="md-nav__link">
+    Auto patch of daily summaries
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-ignore_zero_wind-has-been-renamed-and-moved" class="md-nav__link">
+    Option ignore_zero_wind has been renamed and moved
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-log_failure-set-to-true" class="md-nav__link">
+    Option log_failure set to True
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v42" class="md-nav__link">
+    Upgrading to V4.2
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V4.2">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#type-beaufort-deprecated" class="md-nav__link">
+    Type beaufort deprecated
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v40" class="md-nav__link">
+    Upgrading to V4.0
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V4.0">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#python-25-and-26" class="md-nav__link">
+    Python 2.5 and 2.6
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stdwxcalculate" class="md-nav__link">
+    [StdWXCalculate]
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v39" class="md-nav__link">
+    Upgrading to V3.9
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V3.9">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-skins" class="md-nav__link">
+    New skins
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#skin-defaults" class="md-nav__link">
+    Skin defaults
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#do-you-need-to-change-anything" class="md-nav__link">
+    Do you need to change anything?
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v37" class="md-nav__link">
+    Upgrading to V3.7
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V3.7">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changes-to-daily-summaries" class="md-nav__link">
+    Changes to daily summaries
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recalculation-of-windspeed-maximum-values" class="md-nav__link">
+    Recalculation of windSpeed maximum values
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#change-in-the-name-and-locations-of-examples" class="md-nav__link">
+    Change in the name and locations of examples
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changes-to-sensor-mapping" class="md-nav__link">
+    Changes to sensor mapping
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v36" class="md-nav__link">
+    Upgrading to V3.6
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V3.6">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#changes-to-weewxconf" class="md-nav__link">
+    Changes to weewx.conf
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v32" class="md-nav__link">
+    Upgrading to V3.2
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V3.2">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-utilities_1" class="md-nav__link">
+    New utilities
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#changes-to-weewxconf_1" class="md-nav__link">
+    Changes to weewx.conf
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v30" class="md-nav__link">
+    Upgrading to V3.0
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V3.0">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database-contents" class="md-nav__link">
+    Database contents
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pressure-calibration" class="md-nav__link">
+    Pressure calibration
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#weewxconf" class="md-nav__link">
+    weewx.conf
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-data-sources-in-skins" class="md-nav__link">
+    Custom data sources in skins
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extensions" class="md-nav__link">
+    Extensions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#search-list-extensions" class="md-nav__link">
+    Search list extensions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#derived-quantities" class="md-nav__link">
+    Derived quantities
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#driver-apis" class="md-nav__link">
+    Driver APIs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#service-apis" class="md-nav__link">
+    Service APIs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#restful-apis" class="md-nav__link">
+    RESTful APIs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#database-apis" class="md-nav__link">
+    Database APIs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#generator-apis" class="md-nav__link">
+    Generator APIs
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#extension-installer" class="md-nav__link">
+    Extension installer
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v27" class="md-nav__link">
+    Upgrading to V2.7
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v26" class="md-nav__link">
+    Upgrading to V2.6
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v24" class="md-nav__link">
+    Upgrading to V2.4
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v23" class="md-nav__link">
+    Upgrading to V2.3
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v22" class="md-nav__link">
+    Upgrading to V2.2
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v20" class="md-nav__link">
+    Upgrading to V2.0
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v114" class="md-nav__link">
+    Upgrading to V1.14
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v113" class="md-nav__link">
+    Upgrading to V1.13
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v110" class="md-nav__link">
+    Upgrading to V1.10
+  </a>
+  
+    <nav class="md-nav" aria-label="Upgrading to V1.10">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#new-almanac-features-icon-and-mobile-template" class="md-nav__link">
+    New almanac features, icon, and mobile template
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backwards-compatibility" class="md-nav__link">
+    Backwards compatibility
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v18" class="md-nav__link">
+    Upgrading to V1.8
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v17" class="md-nav__link">
+    Upgrading to V1.7
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v15" class="md-nav__link">
+    Upgrading to V1.5
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#upgrading-to-v14" class="md-nav__link">
+    Upgrading to V1.4
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="upgrade-guide">Upgrade guide<a class="headerlink" href="#upgrade-guide" title="Permanent link">&para;</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>You must use the same upgrade technique as your initial install! For
+example, if you used pip to install WeeWX, then you should use pip to
+upgrade. If you used a DEB or RPM package to install, then you should
+upgrade using the same package type.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If you are upgrading from an old <code>setup.py</code> installation, see the
+instructions <a href="https://github.com/weewx/weewx/wiki/v5-upgrade"><em>Migrating setup.py installs to Version 5.0</em></a>.</p>
+</div>
+<p>The instructions for upgrading WeeWX are in the quick start guides:</p>
+<ul>
+<li><a href="../quickstarts/debian/#upgrade">Upgrading using Debian DEB</a></li>
+<li><a href="../quickstarts/redhat/#upgrade">Upgrading using Redhat RPM</a></li>
+<li><a href="../quickstarts/suse/#upgrade">Upgrading using SUSE RPM</a></li>
+<li><a href="../quickstarts/pip/#upgrade">Upgrading using pip</a></li>
+<li><a href="../quickstarts/git/#upgrade">Upgrading using git</a></li>
+</ul>
+<p>The rest of this document describes the changes in each WeeWX release.</p>
+<h2 id="upgrading-the-weewx-configuration-file">Upgrading the WeeWX configuration file<a class="headerlink" href="#upgrading-the-weewx-configuration-file" title="Permanent link">&para;</a></h2>
+<p>It does not happen very often, but occasionally a new release will
+<em>require</em> changes to the WeeWX configuration file. When this happens,
+the installer takes care of upgrading the file, and you do not need to worry
+about it.</p>
+<p>However, there are some occasions when you may need to upgrade the file
+yourself. In particular, this happens when you run several instances of
+<code>weewxd</code> on the same machine, each with its own configuration file. The
+configuration file named <code>weewx.conf</code> will get upgraded, but what about
+the others?</p>
+<p>The answer is to use <code>weectl station upgrade</code> with the <code>--config</code> option
+pointing to the configuration file to be upgraded. For example, this would
+upgrade the configuration file <code>/etc/weewx/other.conf</code>:</p>
+<div class="highlight"><pre><span></span><code>sudo weectl station upgrade --config=/etc/weewx/other.conf
+</code></pre></div>
+<h2 id="upgrading-to-v50">Upgrading to V5.0<a class="headerlink" href="#upgrading-to-v50" title="Permanent link">&para;</a></h2>
+<h3 id="python-27-no-longer-supported">Python 2.7 no longer supported<a class="headerlink" href="#python-27-no-longer-supported" title="Permanent link">&para;</a></h3>
+<p>It has now been over 3 years since the end-of-life for Python 2.7. It's time
+to move on. WeeWX V5.x requires Python 3.7 or greater. These days, all but the
+most ancient of operating systems offer Python 3, although you may have to
+install it.</p>
+<h3 id="setuppy-installs-no-longer-possible">setup.py installs no longer possible<a class="headerlink" href="#setuppy-installs-no-longer-possible" title="Permanent link">&para;</a></h3>
+<p>The package <code>distutils</code>, and the imperative approach on which the WeeWX
+<code>setup.py</code> install method depends, <a href="https://peps.python.org/pep-0632/">has been
+deprecated</a> and will ultimately be removed.
+The future is clearly pip installs using <code>pyproject.toml</code>. See the wiki article
+on <a href="https://github.com/weewx/weewx/wiki/Version-5">Version 5</a> for the technical
+reasons why.</p>
+<h3 id="pip-installs-to-new-location">pip installs to new location<a class="headerlink" href="#pip-installs-to-new-location" title="Permanent link">&para;</a></h3>
+<p>The default location for a <code>setup.py</code> install was <code>/home/weewx</code>. The new pip
+install method installs to a directory called <code>weewx-data</code> in home directory of
+the user doing the install. However, old installations can continue to use
+<code>/home/weewx</code> by following the guide <a href="https://github.com/weewx/weewx/wiki/v5-upgrade"><em>Migrating setup.py installs to Version
+5.0</em></a>.</p>
+<h3 id="new-location-for-user-directory">New location for <code>user</code> directory<a class="headerlink" href="#new-location-for-user-directory" title="Permanent link">&para;</a></h3>
+<p>This affects users who are using a package installer (such as from Debian or RPM
+packages). Users who used a <code>setup.py</code> install are not affected.</p>
+<p>The package installers for previous versions of WeeWX would install any Python
+code used by extensions alongside other code, usually in
+<code>/usr/share/weewx/user</code>.</p>
+<p>However, Version 5 strives to keep user data separate from code. The <code>user</code>
+directory is now located with other user data in <code>/etc/weewx/</code>, specifically in
+<code>/etc/weewx/bin/user</code>. You will have to either reinstall any extensions, or
+manually copy over the <code>user</code> directory. For example,</p>
+<div class="copy highlight"><pre><span></span><code>sudo<span class="w"> </span>mkdir<span class="w"> </span>/etc/weewx/bin
+cp<span class="w"> </span>-r<span class="w"> </span>/usr/share/weewx/user/<span class="w"> </span>/etc/weewx/bin/
+</code></pre></div>
+<h3 id="new-utilities">New utilities<a class="headerlink" href="#new-utilities" title="Permanent link">&para;</a></h3>
+<p>Most of the old utilities have been collected and put under one master utility,
+<code>weectl</code>. This make it easy to use the <code>--help</code> option to see which one you
+want.</p>
+<table>
+<thead>
+<tr>
+<th>Old utility</th>
+<th>New utility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>wee_database</code></td>
+<td><code>weectl database</code></td>
+</tr>
+<tr>
+<td><code>wee_debug</code></td>
+<td><code>weectl debug</code></td>
+</tr>
+<tr>
+<td><code>wee_device</code></td>
+<td><code>weectl device</code></td>
+</tr>
+<tr>
+<td><code>wee_extension</code></td>
+<td><code>weectl extension</code></td>
+</tr>
+<tr>
+<td><code>wee_config</code></td>
+<td><code>weectl station</code></td>
+</tr>
+</tbody>
+</table>
+<p>The utilities <code>wee_reports</code> and <code>wee_import</code> have not been changed and should
+still be invoked under their own names.</p>
+<h3 id="utility-wunderfixer-has-been-removed">Utility <code>wunderfixer</code> has been removed.<a class="headerlink" href="#utility-wunderfixer-has-been-removed" title="Permanent link">&para;</a></h3>
+<p>The Weather Underground no longer allows past-dated posts, so the utility is
+no longer useful.</p>
+<h3 id="sqlite_root-is-now-relative-to-weewx_root"><code>SQLITE_ROOT</code> is now relative to <code>WEEWX_ROOT</code><a class="headerlink" href="#sqlite_root-is-now-relative-to-weewx_root" title="Permanent link">&para;</a></h3>
+<p>Previously, <code>SQLITE_ROOT</code> was expected to be an absolute path, but now relative
+paths are accepted. A relative path is considered relative to <code>WEEWX_ROOT</code>.
+Because this is <em>less restrictive</em>, it is not expected to affect any users.</p>
+<h2 id="upgrading-to-v410">Upgrading to V4.10<a class="headerlink" href="#upgrading-to-v410" title="Permanent link">&para;</a></h2>
+<h3 id="breaking-changes-for-skins-that-use-delta-times">Breaking changes for skins that use delta times<a class="headerlink" href="#breaking-changes-for-skins-that-use-delta-times" title="Permanent link">&para;</a></h3>
+<p>A "delta time" is the difference between two times, for example the amount of
+uptime (difference between start and current time), or the amount of daylight
+(difference between sunrise and sunset). In previous versions, delta times were
+treated as a special case, which limited their flexibility. With <a
+href="https://github.com/weewx/weewx/pull/807">PR #807</a>, a delta time is
+treated like any other scalar, which gives you access to all the regular
+formatting tools. However, a side effect is that if you want to format the time
+in the "long form", that is, so the results look like <span class="code">4
+hours, 15 minutes</span>, rather than <span class="code">15300 seconds</span>,
+then you will have to say so explicitly.</p>
+<p>If you use the <em>Seasons</em> skin, you will have to make these four changes.
+Add the text in <span class="added">green</span>:</p>
+<div class="wide-table">
+  <table>
+    <tr class="first_row">
+      <td style='width:50%'>V4.9 and earlier Seasons skin</td>
+      <td>4.10 Seasons skin</td>
+    </tr>
+    <tr>
+      <td colspan="2" style="text-align: center"><span class="code">Seasons/about.inc</span> starting at
+        line 31
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <pre class="tty">
+      &lt;tr&gt;
+      &lt;td class="label"&gt;$gettext("Server uptime")&lt;/td&gt;
+      &lt;td class="data"&gt;$station.os_uptime&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+      &lt;td class="label"&gt;$gettext("WeeWX uptime")&lt;/td&gt;
+      &lt;td class="data"&gt;$station.uptime&lt;/td&gt;
+      &lt;/tr&gt;
+        </pre>
+      </td>
+      <td>
+        <pre class="tty">
+      &lt;tr&gt;
+      &lt;td class="label"&gt;$gettext("Server uptime")&lt;/td&gt;
+      &lt;td class="data"&gt;$station.os_uptime<span class="added">.long_form</span>&lt;/td&gt;
+      &lt;/tr&gt;
+      &lt;tr&gt;
+      &lt;td class="label"&gt;$gettext("WeeWX uptime")&lt;/td&gt;
+      &lt;td class="data"&gt;$station.uptime<span class="added">.long_form</span>&lt;/td&gt;
+      &lt;/tr&gt;
+        </pre>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="text-align: center"><span class="code">Seasons/celestial.inc</span>
+        starting at line 94
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <pre class="tty">
+      &lt;tr&gt;
+      &lt;td class="label"&gt;$gettext("Total daylight")&lt;/td&gt;
+      &lt;td class="data"&gt;$almanac.sun.visible&lt;br/&gt;$sun_visible_change $change_str&lt;/td&gt;
+      &lt;/tr&gt;
+        </pre>
+      </td>
+      <td>
+        <pre class="tty">
+      &lt;tr&gt;
+      &lt;td class="label"&gt;$gettext("Total daylight")&lt;/td&gt;
+      &lt;td class="data"&gt;$almanac.sun.visible<span class="added">.long_form</span>&lt;br/&gt;$sun_visible_change<span class="added">.long_form</span> $change_str&lt;/td&gt;
+      &lt;/tr&gt;
+        </pre>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>
+  In a similar manner, if you use the <em>Standard</em> skin, you will have to
+  make these two changes. 
+</p>
+
+<div class="wide-table">
+  <table>
+    <tr class="first_row">
+      <td style='width:50%'>V4.9 and earlier Standard skin</td>
+      <td>4.10 Standard skin</td>
+    </tr>
+    <tr>
+      <td colspan="2" style="text-align: center"><span class="code">Standard/index.html.tmpl</span>
+        starting at line 309
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <pre class="tty">
+          &lt;p&gt;$gettext("WeeWX uptime"):  $station.uptime&lt;br/&gt;
+          $gettext("Server uptime"): $station.os_uptime&lt;br/&gt;
+        </pre>
+      </td>
+      <td>
+        <pre class="tty">
+          &lt;p&gt;$gettext("WeeWX uptime"):  $station.uptime<span class="added">.long_form</span>&lt;br/&gt;
+          $gettext("Server uptime"): $station.os_uptime<span class="added">.long_form</span>&lt;br/&gt;
+        </pre>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>
+  In both cases, the new formatting directive <span class="code">.long_form</span>
+  has been used to explicitly request that the delta time be formatted into its
+  constituent components. The advantage of this approach is that the delta time
+  can be treated like any other scalar. Here are some examples: 
+</p>
+
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>Tag</td>
+    <td>Results</td>
+  </tr>
+  <tr>
+    <td class="tty">
+      $almanac.sun.visible
+    </td>
+    <td class="tty">
+      45000 seconds
+    </td>
+  </tr>
+  <tr>
+    <td class="tty">
+      $almanac.sun.visible.hour
+    </td>
+    <td class="tty">
+      12.5 hours
+    </td>
+  </tr>
+  <tr>
+    <td class="tty">
+      $almanac.sun.visible.hour.format("%.2f")
+    </td>
+    <td class="tty">
+      12.50 hours
+    </td>
+  </tr>
+  <tr>
+    <td class="tty">
+      $almanac.sun.visible.long_form
+    </td>
+    <td class="tty">
+      12 hours, 30 minutes, 0 seconds
+    </td>
+  </tr>
+</table>
+
+<h3 id="changes-for-custom-delta-time-formats">Changes for custom delta time formats<a class="headerlink" href="#changes-for-custom-delta-time-formats" title="Permanent link">&para;</a></h3>
+<p>
+  Fixing issue <a href="https://github.com/weewx/weewx/issues/808">#808</a>
+  required introducing a separate dictionary for members of group <span
+  class="code">group_deltatime</span>. This means that if you specified custom
+  formats under <span class="code">[Units]/[[TimeFormats]]</span>, then you will
+  have to move them to the new section <span
+  class="code">[Units]/[[DeltaTimeFormats]]</span>. Very few users should be
+  affected by this change because the ability to set custom delta time formats is
+  an undocumented feature. 
+</p>
+
+<p>
+  The good news is that the contexts they now use have more standard names. The 
+  table below summarizes:
+</p>
+
+<div class="wide-table">
+  <table>
+    <tr class="first_row">
+      <td>V4.9 and earlier</td>
+      <td>4.10</td>
+    </tr>
+    <tr>
+      <td>
+        <pre class='tty'>
+      [[TimeFormats]]
+          ...
+          current     = %x %X
+          ephem_day   = %X
+          ephem_year  = %x %X
+          <span class="removed">brief_delta = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+          <span class="removed">short_delta = "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+          <span
+            class="removed">long_delta  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+          <span
+            class="removed">delta_time  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+        </pre>
+      </td>
+      <td>
+        <pre class='tty'>
+      [[TimeFormats]]
+          ...
+          current     = %x %X
+          ephem_day   = %X
+          ephem_year  = %x %X
+
+          <span class="added">[[DeltaTimeFormats]]</span>
+          <span class="added">current = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+          <span class="added">hour    = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+          <span class="added">day     = "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+          <span class="added">week    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+          <span class="added">month   = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+          <span class="added">year    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+        </pre>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<h4>Elapsed time calls may have to be changed</h4>
+<p>
+  The fix for Issue #808 also affects the API.
+</p>
+
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>V4.9 and earlier</td>
+    <td>4.10</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>
+    # Create an elapsed time of 1655 seconds
+    vt = ValueTuple(1655, 'second', 'group_deltatime')
+    vh = ValueHelper(vt,
+        formatter=self.generator.formatter,
+        converter=self.generator.converter,
+        <span class="changed">context='short_delta'</span>)
+      </pre>
+    </td>
+    <td>
+      <pre class='tty'>
+    # Create an elapsed time of 1655 seconds
+    vt = ValueTuple(1655, 'second', 'group_deltatime')
+    vh = ValueHelper(vt,
+        formatter=self.generator.formatter,
+        converter=self.generator.converter,
+        <span class="changed">context='day'</span>)
+      </pre>
+    </td>
+  </tr>
+</table>
+
+<p>
+  In summary, because <span class="code">group_deltatime</span> now uses the same context names as any other
+  time, you will have to change the call to use one of the conventional contexts.
+</p>
+
+<h2 id="upgrading-to-v49">Upgrading to V4.9<a class="headerlink" href="#upgrading-to-v49" title="Permanent link">&para;</a></h2>
+<h3 id="wee_reports-may-require-epoch-option"><span class="code">wee_reports</span> may require <span class="code">--epoch</span> option.<a class="headerlink" href="#wee_reports-may-require-epoch-option" title="Permanent link">&para;</a></h3>
+<p>
+  In previous versions, the utility <span class="code">wee_reports</span> could take an optional position
+  argument that specified the reporting time in unix epoch time. For example,
+</p>
+<pre class="tty cmd">wee_reports /home/weewx/weewx.conf 1645131600</pre>
+<p>
+  would specify that the reporting time should be 1645131600, or 17-Feb-2022 13:00 PST.
+</p>
+<p>
+  Starting with V4.9, the unix epoch time must be specified using the <span class="code">--epoch</span> flag,
+  so the command becomes
+</p>
+<pre class="tty cmd">wee_reports /home/weewx/weewx.conf --epoch=1645131600</pre>
+<p>
+  Alternatively, the reporting time can be specified by using <span class="code">--date</span> and <span
+                                                     class="code">--time</span> flags:
+</p>
+<pre class="tty cmd">wee_reports /home/weewx/weewx.conf --date=2022-02-17 --time=13:00</pre>
+
+<h3 id="init-function-of-class-wxxtypes-has-changed">Init function of class <span class="code">WXXTypes</span> has changed<a class="headerlink" href="#init-function-of-class-wxxtypes-has-changed" title="Permanent link">&para;</a></h3>
+<p>
+  In earlier versions, ET was calculated in class <span class="code">WXXTypes</span>. Now it has its own
+  class, <span class="code">ETXType</span>. As a result, some initialization parameters are no longer needed
+  and have been removed.
+</p>
+<p>
+  Note also that the parameter <span class="code">heat_index_algo</span> was changed to <span class="code">heatindex_algo</span>
+  in keeping with the rest of the code.
+</p>
+<p>
+  Unless you have been writing specialized code that required direct access to <span
+                                         class="code">WXXTypes</span> you are very unlikely to be affected.
+</p>
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>V4.8 and earlier</td>
+    <td>4.9</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>
+    def __init__(self, altitude_vt, latitude_f, longitude_f,
+        <span class="removed">et_period=3600,</span>
+        atc=0.8,
+        nfac=2,
+        <span class="removed">wind_height=2.0,</span>
+        force_null=True,
+        maxSolarRad_algo='rs',
+        <span class="changed">heat_index_algo</span>='new')
+      </pre>
+    </td>
+    <td>
+      <pre class='tty'>
+    def __init__(self, altitude_vt, latitude_f, longitude_f,
+        atc=0.8,
+        nfac=2,
+        force_null=True,
+        maxSolarRad_algo='rs',
+        <span class="changed">heatindex_algo</span>='new')
+      </pre>
+    </td>
+  </tr>
+</table>
+
+<h3 id="calling-signature-of-some-archive-span-functions-has-changed">Calling signature of some archive span functions has changed<a class="headerlink" href="#calling-signature-of-some-archive-span-functions-has-changed" title="Permanent link">&para;</a></h3>
+<p>
+  The calling signature of the following functions has changed. In general, the parameter <span class="code">grace</span>
+  has been removed in favor of a more robust method for figuring out which time span a timestamp belongs to.
+</p>
+
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>V4.8 and earlier</td>
+    <td>4.9</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>
+    def archiveHoursAgoSpan(time_ts, hours_ago=0<span class="removed">, grace=1</span>)
+      </pre>
+    </td>
+    <td>
+      <pre class='tty'>
+    def archiveHoursAgoSpan(time_ts, hours_ago=0)
+      </pre>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>
+    def archiveDaySpan(time_ts, <span class="removed">grace=1,</span> days_ago=0)
+      </pre>
+    </td>
+    <td>
+      <pre class='tty'>
+    def archiveDaySpan(time_ts, days_ago=0)
+      </pre>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>
+    def archiveWeekSpan(time_ts, startOfWeek=6, <span class="removed">grace=1,</span> weeks_ago=0)
+      </pre>
+    </td>
+    <td>
+      <pre class='tty'>
+    def archiveWeekSpan(time_ts, startOfWeek=6, weeks_ago=0)
+      </pre>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>
+    def archiveMonthSpan(time_ts, <span class="removed">grace=1,</span> months_ago=0)
+      </pre>
+    </td>
+    <td>
+      <pre class='tty'>
+    def archiveMonthSpan(time_ts, months_ago=0)
+      </pre>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>
+    def archiveYearSpan(time_ts, <span class="removed">grace=1,</span> years_ago=0)
+      </pre>
+    </td>
+    <td>
+      <pre class='tty'>
+    def archiveYearSpan(time_ts, years_ago=0)
+      </pre>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>
+    def archiveRainYearSpan(time_ts, sory_mon<span class="removed">, grace=1</span>)
+      </pre>
+    </td>
+    <td>
+      <pre class='tty'>
+    def archiveRainYearSpan(time_ts, sory_mon)
+      </pre>
+    </td>
+  </tr>
+</table>
+
+<h2 id="upgrading-to-v46">Upgrading to V4.6<a class="headerlink" href="#upgrading-to-v46" title="Permanent link">&para;</a></h2>
+<h3 id="ordering-of-search-list-changed">Ordering of search list changed<a class="headerlink" href="#ordering-of-search-list-changed" title="Permanent link">&para;</a></h3>
+<p>
+  In previous versions, user-supplied search list extensions were <em>appended</em> to the search list.
+  Starting with V4.6, they are now <em>prepended</em> to the list. This means that when Cheetah is evaluating
+  the list, looking for a tag, it will encounter user-supplied extensions first, allowing extensions to
+  override the built-in tags and change their behavior.
+</p>
+<h3 id="tag-alltime">Tag <span class="code">$alltime</span><a class="headerlink" href="#tag-alltime" title="Permanent link">&para;</a></h3>
+<p>
+  The tag <span class="code">$alltime</span>, formerly included as an example, is now a part of the core of
+  WeeWX. This means you may no longer need to include the "stats" example as a Cheetah search list extension,
+  although leaving it in will do no harm.
+</p>
+
+<h2 id="upgrading-to-v45">Upgrading to V4.5<a class="headerlink" href="#upgrading-to-v45" title="Permanent link">&para;</a></h2>
+<p>
+  Version 4.5 changes are unlikely to affect anyone, except extension writers who are deep in the internals of
+  WeeWX.
+</p>
+
+<h3 id="api-changes">API changes<a class="headerlink" href="#api-changes" title="Permanent link">&para;</a></h3>
+<p>
+  There have been a number of changes in the WeeWX API. None of them are likely to affect end users. Overall,
+  the biggest change is that the data held internally in class <span class="code">ValueHelper</span> is now
+  held in the target unit system, rather than being converted at time of use.
+</p>
+
+<h4>Defaults for <span class="code">ValueHelper</span> have changed</h4>
+<p>
+  Before, when constructing a new <span class="code">ValueHelper</span>, if no converter was included in the
+  constructor, a default converter, which converts to US Units, was supplied. Now, if no converter is included
+  in the constructor, no default converter at all is supplied, and the data remain in the original units. This
+  is unlikely to affect most extension writers because the usual case is to supply a converter to the <span
+                                                    class="code">ValueHelper</span> constructor.
+</p>
+
+<h4>Function <span class="code">as_value_tuple()</span> may raise <span class="code">KeyError</span></h4>
+<p>
+  Previously, if the function <span class="code">as_value_tuple()</span> was asked to return a <span
+                                                 class="code">ValueTuple</span> of a non-existent type, it returned a <span class="code">ValueTuple</span>
+  with values <span class="code">(None, None, None)</span>. Now it raises a <span class="code">KeyError</span>
+  exception.
+</p>
+
+<h2 id="upgrading-to-v44">Upgrading to V4.4<a class="headerlink" href="#upgrading-to-v44" title="Permanent link">&para;</a></h2>
+<h3 id="auto-patch-of-daily-summaries">Auto patch of daily summaries<a class="headerlink" href="#auto-patch-of-daily-summaries" title="Permanent link">&para;</a></h3>
+<p>
+  The V4.2 daily summary patch inadvertently introduced a bug which caused the <span class="code">wind</span>
+  daily summary to be incorrectly weighted. See issue <a
+                            href="https://github.com/weewx/weewx/issues/642">#642</a>. V4.4 includes a patch to automatically fix the
+  defective daily summary. It is run only once on the first use of a database (usually by <span class="code">weewxd</span>)
+  and takes only a few seconds.
+</p>
+
+<h2 id="upgrading-to-v43">Upgrading to V4.3<a class="headerlink" href="#upgrading-to-v43" title="Permanent link">&para;</a></h2>
+<h3 id="auto-patch-of-daily-summaries_1">Auto patch of daily summaries<a class="headerlink" href="#auto-patch-of-daily-summaries_1" title="Permanent link">&para;</a></h3>
+<p>
+  Version 4.2 inadvertently introduced a bug, which prevented the sums that are kept in the daily summaries
+  from being weighted by the archive interval. See issue <a href="https://github.com/weewx/weewx/issues/623">#623</a>.
+  V4.3 includes a patch, which will fix any defective daily summaries automatically. It is run only once on
+  the first use of a database (usually by <span class="code">weewxd</span>) and takes only a few seconds.
+</p>
+
+<h3 id="option-ignore_zero_wind-has-been-renamed-and-moved">Option <span class="code">ignore_zero_wind</span> has been renamed and moved<a class="headerlink" href="#option-ignore_zero_wind-has-been-renamed-and-moved" title="Permanent link">&para;</a></h3>
+<p>
+  Normally, WeeWX sets wind direction to undefined when wind speed is zero. While it was never documented,
+  some users used option <span class="code">ignore_zero_wind</span> to prevent this: if set to <span
+                                                 class="code">False</span>, wind direction will not be set to undefined when wind speed is zero. However, the
+  option's location and name has changed. It is now called <span class="code">force_null</span>, and it is now
+  located under <span class="code">[StdWXCalculate] / [[WXXTypes]] / [[[windDir]]]</span>. The old name and
+  location has been deprecated, but still honored.
+</p>
+
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>V4.2 and earlier</td>
+    <td>4.3</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>
+    [StdWXCalculate]
+    <span class="removed">ignore_zero_wind = False</span>
+    [[Calculations]]
+        ...
+      </pre>
+    </td>
+    <td>
+      <pre class='tty'>
+    [StdWXCalculate]
+    [[Calculations]]
+        ...
+    [[WXXTypes]]
+        [[[windDir]]]
+        <span class="added">force_null = False</span>
+      </pre>
+    </td>
+  </tr>
+</table>
+
+<h3 id="option-log_failure-set-to-true">Option <span class="code">log_failure</span> set to <span class="code">True</span><a class="headerlink" href="#option-log_failure-set-to-true" title="Permanent link">&para;</a></h3>
+<p>
+  The option <span class="code">log_failure</span> under <span class="code">[StdReport]</span> controls
+  whether to log failures into the system log. It was previously set to <span class="code">False</span>. The
+  upgrade process will set it to <span class="code">True</span>, so that users can better see failure modes.
+</p>
+
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>V4.2 and earlier</td>
+    <td>4.3</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>
+    [StdReport]
+    ...
+    <span class="changed">log_failure = False</span>
+    ...
+      </pre>
+    </td>
+    <td>
+      <pre class='tty'>
+    [StdReport]
+    ...
+    <span class="changed">log_failure = True</span>
+    ...
+      </pre>
+    </td>
+  </tr>
+</table>
+
+<h2 id="upgrading-to-v42">Upgrading to V4.2<a class="headerlink" href="#upgrading-to-v42" title="Permanent link">&para;</a></h2>
+<p>
+  For the most part, V4.2 is backwards compatible with previous versions. There is one small exception.
+</p>
+
+<h3 id="type-beaufort-deprecated">Type <span class="code">beaufort</span> deprecated<a class="headerlink" href="#type-beaufort-deprecated" title="Permanent link">&para;</a></h3>
+<p>
+  The type <span class="code">beaufort</span> has been deprecated, although there are no immediate plans to
+  remove it &mdash; using it will put a warning in the log. Instead, it has become a new unit, which can be
+  used as part of <span class="code">group_speed</span>. Here's an example:
+</p>
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>V4.1 and earlier</td>
+    <td>4.2</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>&lt;p&gt;
+    The current wind speed is $current.windSpeed,
+    which is <span class="changed">$current.beaufort</span> on the beaufort scale.
+    &lt;/p&gt;
+      </pre>
+    </td>
+    <td>
+      <pre class='tty'>&lt;p&gt;
+    The current wind speed is $current.windSpeed,
+    which is <span class="changed">$current.windSpeed.beaufort</span> on the beaufort scale.
+    &lt;/p&gt;
+      </pre>
+    </td>
+  </tr>
+</table>
+
+<h2 id="upgrading-to-v40">Upgrading to V4.0<a class="headerlink" href="#upgrading-to-v40" title="Permanent link">&para;</a></h2>
+<p>
+  For the most part, V4.0 is backwards compatible with previous versions.
+</p>
+<h3 id="python-25-and-26">Python 2.5 and 2.6<a class="headerlink" href="#python-25-and-26" title="Permanent link">&para;</a></h3>
+<p>
+  Support for Python 2.5 and 2.6 has been dropped. It has now been well over 10 years since these versions
+  were introduced, and 6+ years since they were supported by the Python Software Foundation. If you are using
+  Python 2.5 or 2.6, then you should either upgrade your copy of Python, or stay with your old version of
+  WeeWX.
+</p>
+<h3 id="stdwxcalculate"><span class="code">[StdWXCalculate]</span><a class="headerlink" href="#stdwxcalculate" title="Permanent link">&para;</a></h3>
+<p>
+  In earlier versions of WeeWX, many derived types were calculated by default by the service <span
+                                                   class="code">StdWXCalculate</span>. By contrast, in WeeWX V4, no derived types are calculated by default
+  &mdash; all desired types must be explicitly listed in <span class="code">weewx.conf</span>. For most users,
+  this will not cause a problem because most types were already listed in <span class="code">weewx.conf</span>.
+  However if you deleted one of the following types in the clause <span class="code">[StdWXCalculate]</span>,
+  and started to depend on the default calculations, then the type will no longer be calculated in V4.
+</p>
+<table class="tty" style="width:50%">
+  <tr>
+    <td>pressure</td>
+    <td>barometer</td>
+    <td>altimeter</td>
+  </tr>
+  <tr>
+    <td>windchill</td>
+    <td>heatindex</td>
+    <td>dewpoint</td>
+  </tr>
+  <tr>
+    <td>inDewpoint</td>
+    <td>rainRate</td>
+  </tr>
+</table>
+<p>
+  In this case, you should add the type to <span class="code">[StdWXCalculate]</span>. For example, if for
+  some reason you deleted <span class="code">dewpoint</span>, then you would need to add the following
+</p>
+<pre class="tty" style="width:50%">
+  [StdWXCalculate]
+  [[Calculations]]
+  ...
+  <span class="highlight">dewpoint = prefer_hardware</span>
+</pre>
+
+<h2 id="upgrading-to-v39">Upgrading to V3.9<a class="headerlink" href="#upgrading-to-v39" title="Permanent link">&para;</a></h2>
+<h3 id="new-skins">New skins<a class="headerlink" href="#new-skins" title="Permanent link">&para;</a></h3>
+<p>
+  Version 3.9 introduces and installs a new skin, <em>Seasons</em>, and promotes two old skins,
+  <em>Mobile</em> and <em>Smartphone</em>, previously part of <em>Standard</em>, to first-class, independent,
+  skins.
+</p>
+
+<ul>
+  <li>
+    If you are installing fresh (not an upgrade), then all four skins, <em>Seasons</em>, <em>Standard</em>,
+    <em>Mobile</em>, and <em>Smartphone</em> will be installed, but only <em>Seasons</em> will be activated.
+  </li>
+  <li>
+    If you are upgrading, then the three new skins, <em>Seasons</em>, <em>Mobile</em>, and
+    <em>Smartphone</em> will be installed, but none will be activated. Your existing <em>Standard</em> will
+    be left untouched and activated. For most people, your website will continue to look as expected (the
+    exception is explained below in section <a href="#do-you-need-to-change-anything"><em>Do you need to change anything?</em></a>).
+  </li>
+</ul>
+
+<p class="note">
+  If you are upgrading, and you wish to try the new skin <em>Seasons</em>, then activate it, but <em>be sure
+    to deactivate Standard</em>. Otherwise, both will get generated, and they will compete with each other for
+  placement in your HTML directory.
+</p>
+
+<h3 id="skin-defaults">Skin defaults<a class="headerlink" href="#skin-defaults" title="Permanent link">&para;</a></h3>
+<p>
+  Version 3.9 introduces a new section, <span class="code">[StdReport]/[[Defaults]]</span> in <span
+                                                class="code">weewx.conf</span>. Options in this section apply to <em>all</em> reports. For example, if you
+  set a unit group here, it will be applied everywhere. This makes it easy to set the units across all
+  reports, or to ensure that the labels for observations are the same in every report.
+</p>
+<p>
+  It also adds a file <span class="code">defaults.py</span>, in which the fallback values for every report
+  parameter are specified. Although the defaults file is currently useful only to developers, in the future it
+  may be extended to facilitate translations and localization.
+</p>
+
+<h3 id="do-you-need-to-change-anything">Do you need to change anything?<a class="headerlink" href="#do-you-need-to-change-anything" title="Permanent link">&para;</a></h3>
+<p>
+  The introduction of the new section, <span
+  class="code">[StdReport]/[[Defaults]]</span> in <span
+  class="code">weewx.conf</span>, can change which units are applied to reports
+  because it has a higher precedence than what is in <span
+  class="code">skin.conf</span>. See the section <a
+  href="../custom/custom-reports/#how-to-specify-options"><em>How to specify options</em></a> for
+  details of the ordering in which an option is considered. 
+</p>
+
+<p>
+  Most users will be unaffected by these changes because they depend on specific report overrides. There is,
+  however, one exception:
+</p>
+
+<p class="note">
+  If your installation does not use overrides, and you changed to metric units in your <span class="code">skin.conf</span>
+  file, you will be affected.
+</p>
+
+<p>
+  Your reports will start appearing in U.S. Customary units. The reason is that
+  the new section, <span class="code">[StdReport]/[[Defaults]]</span> has higher
+  priority than options in <span class="code">skin.conf</span>, and thus will
+  start asserting itself. </p>
+
+<p>
+  The fix is simple: modify the <span class="code">[StdReport]/[[Defaults]]</span> to suit your preferences.
+</p>
+
+<p>
+  However, users who specified what unit system to use as part of the automated install using a package
+  installer or <span class="code">setup.py</span>, will have an override section, and therefore will be
+  unaffected. This is because the override section has the highest priority.
+</p>
+
+<h2 id="upgrading-to-v37">Upgrading to V3.7<a class="headerlink" href="#upgrading-to-v37" title="Permanent link">&para;</a></h2>
+<h3 id="changes-to-daily-summaries">Changes to daily summaries<a class="headerlink" href="#changes-to-daily-summaries" title="Permanent link">&para;</a></h3>
+<p>Perhaps the most significant change in V3.7 is a fix for how daily summary values are calculated and stored.
+</p>
+
+<p>Daily summaries were introduced in V3.0 (December 2014), to speed up certain kinds of aggregation
+  calculations. They were designed to "weight" values depending on the time length of the archive record that
+  contributed them. For example, shorter intervals contributed less than longer intervals. This was intended
+  to enable changes to the length of the archive interval.
+</p>
+
+<p>Unfortunately, a bug caused the weightings to all be one (1), regardless of what the actual archive interval
+  length might be. This means all archive records, long and short, contribute the same amount, instead of
+  being weighted by their length. So, if the archive interval were to change, averages would be calculated
+  incorrectly.
+</p>
+
+<p>
+  This bug will only affect you if you have changed the length of your archive interval, or if you plan to. If
+  you have not changed your archive interval length, and have no plans to do so, then there is nothing you
+  need to do.
+</p>
+
+<p class="note">
+  Your archive may have interval values of different sizes if...<br/> <br/> ... you have imported data using
+  <span class="code">wee_import</span>.<br/> <br/> ... your hardware has a data logger, your configuration
+  uses <span class="code">record_generation=software</span>, and the <span
+                                       class="code">archive_interval</span> is different from that in the hardware.<br/> <br/> ... your archive
+  contains data from more than one type of hardware.
+</p>
+
+<p>The <a href="../utilities/weectl-database/#update"><span class="code">weectl
+database update</span></a> utility can fix this problem by recalculating the
+weights in the daily summary, on the basis of the actual archive interval
+lengths. On a Raspberry Pi 1, model B, it takes about 10 minutes to fix a
+database with 10 years of data. On faster machines, it takes much less time.
+</p>
+
+<pre class="tty cmd">weectl database update</pre>
+
+<p>
+  If you have multiple databases, consider recalculating the weights in each database. Interval weighting will
+  only need to be applied to databases that have daily summaries, i.e., the binding uses
+</p>
+<pre class="tty">manager = weewx.wxmanager.WXDaySummaryManager</pre>
+<p>
+  To apply interval weighting to a database other than the default <span class="code">wx_binding</span>, use
+  the <span class="code">--binding=BINDING_NAME</span> option.
+</p>
+<pre class="tty cmd">weectl database update --binding=cmon_binding</pre>
+
+<h3 id="recalculation-of-windspeed-maximum-values">Recalculation of <span class="code">windSpeed</span> maximum values<a class="headerlink" href="#recalculation-of-windspeed-maximum-values" title="Permanent link">&para;</a></h3>
+<p>Version 3.7 changes how maximum <span class="code">windSpeed</span> is calculated for aggregations of a day
+  or more. Previously, if option <span class="code">use_hilo</span> was set to <span class="code">True</span>
+  (the usual case), maximum <span class="code">windSpeed</span> for a day was set to the maximum value seen in
+  the LOOP packets for the day. In practice this is the same value as <span class="code">windGust</span>. That
+  is, these two tags would supply the same value:
+</p>
+
+<pre class="tty">$day.windSpeed.max
+  $day.windGust.max</pre>
+
+<p>
+In Version 3.7, this has been changed so the maximum <span class="code">windSpeed</span> is now set to the
+  maximum <em>archive</em> value seen during the day &mdash; usually a slightly smaller number. However, older
+  daily max values will still contain the max LOOP packet values. If you wish to update your older values and
+  have them use the max archive record value, use the utility <a href="../utilities/weectl-database/#update"><span class="code">weectl
+  database update</span></a> .
+</p>
+
+<h3 id="change-in-the-name-and-locations-of-examples">Change in the name and locations of examples<a class="headerlink" href="#change-in-the-name-and-locations-of-examples" title="Permanent link">&para;</a></h3>
+<p>
+  In earlier versions, examples were located with the WeeWX code base, and packaged as a Python module. This
+  is categorically and semantically incorrect.
+</p>
+<p>
+  The examples now live in their own directory, <a href="../usersguide/where">whose location
+    is dependent on the installation method</a>. If you use an example, you should copy it to the <span
+                                                    class="code">user</span> subdirectory, modify it if necessary, then use it there. Your copy will be retained
+  across version upgrades.
+</p>
+
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>3.6</td>
+    <td>3.7</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'><span class="changed">examples.alarm.MyAlarm
+      examples.lowBattery.MyAlarm
+      examples.xsearch.MyXSearch</span></pre>
+    </td>
+    <td>
+      <pre class='tty'><span class="changed">user.alarm.MyAlarm
+      user.lowBattery.BatteryAlarm
+      user.stats.MyStats</span></pre>
+    </td>
+  </tr>
+</table>
+
+<p>Finally, note that the name of one example has been changed:</p>
+
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>3.6</td>
+    <td>3.7</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'><span class="changed">xsearch.py</span></pre>
+    </td>
+    <td>
+      <pre class='tty'><span class="changed">stats.py</span></pre>
+    </td>
+  </tr>
+</table>
+
+<h3 id="changes-to-sensor-mapping">Changes to sensor mapping<a class="headerlink" href="#changes-to-sensor-mapping" title="Permanent link">&para;</a></h3>
+<p>
+  The mapping of sensors to database fields was formalized in Version 3.7, resulting in changes to the
+  configuration for some of the drivers, including <span class="code">cc3000</span>, <span
+                                               class="code">te923</span>, <span class="code">wmr100</span>, <span class="code">wmr200</span>, <span
+                                                                                            class="code">wmr300</span>, and <span class="code">wmr9x8</span>.
+</p>
+<p>
+  For the <span class="code">wmr200</span> driver, until Version 3.6, the fields extraTemp1 and extraHumid1
+  were not usable. Version 3.6.1 shifted the extraTemp and extraHumid mappings down one channel, so that
+  extraTemp1 corresponded to channel 2, extraTemp2 corresponded to channel 3, and so on. The mappings can now
+  be modified by a change to the configuration file, and the default mappings are as follows:
+</p>
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>3.6</td>
+    <td>3.7</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>** hard-coded in the driver **
+
+    outTemp = temperature_1
+    # extraTemp1 is not usable
+    extraTemp2 = temperature_2
+    extraTemp3 = temperature_3
+    extraTemp4 = temperature_4
+    extraTemp5 = temperature_5
+    extraTemp6 = temperature_6
+    extraTemp7 = temperature_7
+    extraTemp8 = temperature_8
+    outHumidity = humidity_1
+    # extraHumid1 is not usable
+    extraHumid2 = humidity_2
+    extraHumid3 = humidity_3
+    extraHumid4 = humidity_4
+    extraHumid5 = humidity_5
+    extraHumid6 = humidity_6
+    extraHumid7 = humidity_7
+    extraHumid8 = humidity_8</pre>
+    </td>
+    <td>
+      <pre class='tty'>[WMR200]
+    <span class="added">[[sensor_map]]
+          altimeter = altimeter
+          pressure = pressure
+          windSpeed = wind_speed
+          windDir = wind_dir
+          windGust = wind_gust
+          windBatteryStatus = battery_status_wind
+          inTemp = temperature_0
+          outTemp = temperature_1
+          extraTemp1 = temperature_2
+          extraTemp2 = temperature_3
+          extraTemp3 = temperature_4
+          extraTemp4 = temperature_5
+          extraTemp5 = temperature_6
+          extraTemp6 = temperature_7
+          extraTemp7 = temperature_8
+          inHumidity = humidity_0
+          outHumidity = humidity_1
+          extraHumid1 = humidity_2
+          extraHumid2 = humidity_3
+          extraHumid3 = humidity_4
+          extraHumid4 = humidity_5
+          extraHumid5 = humidity_6
+          extraHumid6 = humidity_7
+          extraHumid7 = humidity_8
+          outTempBatteryStatus = battery_status_out
+          rain = rain
+          rainTotal = rain_total
+          rainRate = rain_rate
+          hourRain = rain_hour
+          rain24 = rain_24
+          rainBatteryStatus = battery_status_rain
+          UV = uv
+          uvBatteryStatus = battery_status_uv
+          windchill = windchill
+          heatindex = heatindex
+          forecastIcon = forecast_icon
+          outTempFault = out_fault
+          windFault = wind_fault
+          uvFault = uv_fault
+          rainFault = rain_fault
+          clockUnsynchronized = clock_unsynchronized
+      </span></pre>
+    </td>
+  </tr>
+</table>
+<p>
+  For the <span class="code">te923</span> driver:
+</p>
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>3.6</td>
+    <td>3.7</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>[TE923]
+    <span class="changed">[[map]]
+          link_wind = windLinkStatus
+          bat_wind = windBatteryStatus
+          link_rain = rainLinkStatus
+          bat_rain = rainBatteryStatus
+          link_uv = uvLinkStatus
+          bat_uv = uvBatteryStatus
+          uv = UV
+          t_in = inTemp
+          h_in = inHumidity
+          t_1 = outTemp
+          h_1 = outHumidity
+          bat_1 = outBatteryStatus
+          link_1 = outLinkStatus
+          t_2 = extraTemp1
+          h_2 = extraHumid1
+          bat_2 = extraBatteryStatus1
+          link_2 = extraLinkStatus1
+          t_3 = extraTemp2
+          h_3 = extraHumid3
+          bat_3 = extraBatteryStatus2
+          link_3 = extraLinkStatus2
+          t_4 = extraTemp3
+          h_4 = extraHumid3
+          bat_4 = extraBatteryStatus3
+          link_4 = extraLinkStatus3
+          t_5 = extraTemp4
+          h_5 = extraHumid4
+          bat_5 = extraBatteryStatus4
+          link_5 = extraLinkStatus4</span></pre>
+    </td>
+    <td>
+      <pre class='tty'>[TE923]
+    <span class="changed">[[sensor_map]]
+          windLinkStatus = link_wind
+          windBatteryStatus = bat_wind
+          rainLinkStatus = link_rain
+          rainBatteryStatus = bat_rain
+          uvLinkStatus = link_uv
+          uvBatteryStatus = bat_uv
+          inTemp = t_in
+          inHumidity = h_in
+          outTemp = t_1
+          outHumidity = h_1
+          outTempBatteryStatus = bat_1
+          outLinkStatus = link_1
+          extraTemp1 = t_2
+          extraHumid1 = h_2
+          extraBatteryStatus1 = bat_2
+          extraLinkStatus1 = link_2
+          extraTemp2 = t_3
+          extraHumid2 = h_3
+          extraBatteryStatus2 = bat_3
+          extraLinkStatus2 = link_3
+          extraTemp3 = t_4
+          extraHumid3 = h_4
+          extraBatteryStatus3 = bat_4
+          extraLinkStatus3 = link_4
+          extraTemp4 = t_5
+          extraHumid4 = h_5
+          extraBatteryStatus4 = bat_5
+          extraLinkStatus4 = link_5
+
+      </span></pre>
+    </td>
+  </tr>
+</table>
+
+<h2 id="upgrading-to-v36">Upgrading to V3.6<a class="headerlink" href="#upgrading-to-v36" title="Permanent link">&para;</a></h2>
+<h3 id="changes-to-weewxconf">Changes to <span class="code">weewx.conf</span><a class="headerlink" href="#changes-to-weewxconf" title="Permanent link">&para;</a></h3>
+<p>
+  In Version 3.6, the list of options that describe how derived variables are to be calculated have been moved
+  to a new subsection called <span class="code">[[Calculations]]</span>. The upgrade process will
+  automatically make this change for you.
+</p>
+
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>3.5</td>
+    <td>3.6</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>[StdWXCalculate]
+    pressure = prefer_hardware
+    barometer = prefer_hardware
+    altimeter = prefer_hardware
+    windchill = prefer_hardware
+    heatindex = prefer_hardware
+    dewpoint = prefer_hardware
+    inDewpoint = prefer_hardware
+    rainRate = prefer_hardware
+
+      </pre>
+    </td>
+    <td>
+      <pre class='tty'>[StdWXCalculate]
+    <span class="changed">[[Calculations]]</span>
+        pressure = prefer_hardware
+        barometer = prefer_hardware
+        altimeter = prefer_hardware
+        windchill = prefer_hardware
+        heatindex = prefer_hardware
+        dewpoint = prefer_hardware
+        inDewpoint = prefer_hardware
+        rainRate = prefer_hardware</pre>
+    </td>
+  </tr>
+</table>
+
+<h2 id="upgrading-to-v32">Upgrading to V3.2<a class="headerlink" href="#upgrading-to-v32" title="Permanent link">&para;</a></h2>
+<h3 id="new-utilities_1">New utilities<a class="headerlink" href="#new-utilities_1" title="Permanent link">&para;</a></h3>
+<p>
+  Version 3.2 includes new utilities to facilitate configuration.
+</p>
+<table>
+  <tr class="first_row">
+    <td style='width:30%'>3.2</td>
+    <td style='width:30%'>3.1 and earlier</td>
+    <td></td>
+  </tr>
+  <tr>
+    <td><span class='code'>wee_config</span></td>
+    <td></td>
+    <td>Change driver or other station parameters</td>
+  </tr>
+  <tr>
+    <td><span class='code'>wee_extension</span></td>
+    <td><span class='code'>setup.py</span> or <span class='code'>wee_setup</span></td>
+    <td>Install, list, and remove extensions</td>
+  </tr>
+  <tr>
+    <td><span class='code'>wee_database</span></td>
+    <td><span class='code'>wee_config_database</span></td>
+    <td>Manipulate the database</td>
+  </tr>
+  <tr>
+    <td><span class='code'>wee_device</span></td>
+    <td><span class='code'>wee_config_device</span></td>
+    <td>Get and set parameters on the hardware</td>
+  </tr>
+  <tr>
+    <td><span class='code'>wee_reports</span></td>
+    <td><span class='code'>wee_reports</span></td>
+    <td>Run reports</td>
+  </tr>
+</table>
+
+<h3 id="changes-to-weewxconf_1">Changes to weewx.conf<a class="headerlink" href="#changes-to-weewxconf_1" title="Permanent link">&para;</a></h3>
+<p>Release 3.2 introduces a new section <span class='code'>[DatabaseTypes]</span>. This section defines the
+  default settings for each type of database. For example, the host, user, and password for MySQL databases
+  can be specified once in the <span class='code'>DatabaseTypes</span> section instead of repeating in each
+  <span class='code'>Database</span> section. The defaults in <span class='code'>DatabaseTypes</span> can be
+  overridden in each <span class='code'>Database</span> section as needed.
+</p>
+
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>3.1</td>
+    <td>3.2</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>[DataBindings]
+    [[wx_binding]]
+        database = archive_sqlite
+        manager = weewx.wxmanager.WXDaySummaryManager
+        table_name = archive
+        schema = schemas.wview.schema
+    [Databases]
+    [[archive_sqlite]]
+    <span class='changed'>        root = %(WEEWX_ROOT)s
+          database = archive/weewx.sdb
+          driver = weedb.sqlite</span>
+    [[archive_mysql]]
+    <span class='changed'>        host = localhost
+          user = weewx
+          password = weewx
+          database = weewx
+          driver = weedb.mysql</span>
+
+
+
+
+
+
+
+
+
+      </pre>
+    </td>
+    <td>
+      <pre class='tty'>[DataBindings]
+    [[wx_binding]]
+        database = archive_sqlite
+        manager = weewx.wxmanager.WXDaySummaryManager
+        table_name = archive
+        schema = schemas.wview.schema
+    [Databases]
+    [[archive_sqlite]]
+    <span class='changed'>        database_name = weewx.sdb
+          database_type = SQLite</span>
+
+    [[archive_mysql]]
+    <span class='changed'>        database_name = weewx
+          database_type = MySQL</span>
+
+
+
+    <span class='added'>[DatabaseTypes]
+      [[SQLite]]
+          driver = weedb.sqlite
+          SQLITE_ROOT = %(WEEWX_ROOT)s/archive
+      [[MySQL]]
+          driver = weedb.mysql
+          host = localhost
+          user = weewx
+          password = weewx</span></pre>
+    </td>
+  </tr>
+</table>
+
+<h2 id="upgrading-to-v30">Upgrading to V3.0<a class="headerlink" href="#upgrading-to-v30" title="Permanent link">&para;</a></h2>
+<h3 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h3>
+<p>While a lot has changed with Version 3, the upgrade process should take care of most changes for most users.
+  However, if you have installed an extension or, especially, if you have written a custom service, search
+  list extension, or uploader, you will have to make some changes.
+</p>
+
+<h3 id="database-contents">Database contents<a class="headerlink" href="#database-contents" title="Permanent link">&para;</a></h3>
+<p>
+  With Version 3, there is no longer a separate "stats" database. Instead, "daily summaries" have been
+  included in the same database as the archive data &mdash; everything is under one name. For example, if you
+  are using sqlite, both the archive data and the daily summaries will be inside file <span class="code">weewx.sdb</span>.
+  With MySQL, everything is inside the database <span class="code">weewx</span>. This makes it easier to keep
+  all data together when working with multiple databases.
+</p>
+
+<p>This change in database structure should be transparent to you. On startup, WeeWX will automatically backfill
+  the new internal daily summaries from the archive data. Your old "stats" database will no longer be used and
+  may safely set aside or even deleted.
+</p>
+
+<h3 id="pressure-calibration">Pressure calibration<a class="headerlink" href="#pressure-calibration" title="Permanent link">&para;</a></h3>
+<p>
+  Since the new <span class="code">StdWXCalculate</span> service is applied after the <span class="code">StdCalibrate</span>
+  services, the <span class='code'>pressure_offset</span> parameter is no longer necessary; pressure
+  calibration can be applied just like any other calibration. If your pressure was calibrated using the <span
+                                                      class='code'>pressure_offset</span> parameter, move the calibration to the <span
+                                                                                               class="code">[StdCalibrate]</span> section. This applies only to CC3000, FineOffsetUSB, Ultimeter, WS1,
+  WS23xx, and WS28xx hardware.
+</p>
+
+<h3 id="weewxconf"><span class="code">weewx.conf</span><a class="headerlink" href="#weewxconf" title="Permanent link">&para;</a></h3>
+<p>
+  A version 2.X <span class="code">weewx.conf</span> file is not compatible with Version 3.X. However, the
+  upgrade process should automatically update the file. Nevertheless, the changes are documented below:
+</p>
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>2.7</td>
+    <td>3.0</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>
+      <pre class='tty'>[StdReport]
+    <span class='added'>    data_binding = wx_binding</span></pre>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>[StdArchive]
+    <span class='removed'>    archive_database = archive_sqlite
+      stats_database = stats_sqlite
+      archive_schema = user.schemas.defaultArchiveSchema
+      stats_schema = user.schemas.defaultStatsSchema</span></pre>
+    </td>
+    <td>
+      <pre class='tty'>[StdArchive]
+    <span class='added'>    data_binding = wx_binding</span></pre>
+    </td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>
+      <pre class='tty'><span class='added'>[DataBindings]
+      [[wx_binding]]
+          database = archive_sqlite
+          manager = weewx.wxmanager.WXDaySummaryManager
+          table_name = archive
+          schema = schemas.wview.schema</span></pre>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>[Databases]
+    [[archive_sqlite]]
+        root = %(WEEWX_ROOT)s
+        <span class='changed'>database</span> = archive/weewx.sdb
+        driver = weedb.sqlite
+    <span class='removed'>    [[stats_sqlite]]
+          root = %(WEEWX_ROOT)s
+          database = archive/stats.sdb
+          driver = weedb.sqlite</span>
+    [[archive_mysql]]
+        host = localhost
+        user = weewx
+        password = weewx
+        <span class='changed'>database</span> = weewx
+        driver = weedb.mysql
+    <span class='removed'>    [[stats_mysql]]
+          host = localhost
+          user = weewx
+          password = weewx
+          database = stats
+          driver = weedb.mysql</span></pre>
+    </td>
+    <td>
+      <pre class='tty'>[Databases]
+    [[archive_sqlite]]
+        root = %(WEEWX_ROOT)s
+        <span class='changed'>database_name</span> = archive/weewx.sdb
+        driver = weedb.sqlite
+
+
+
+
+    [[archive_mysql]]
+        host = localhost
+        user = weewx
+        password = weewx
+        <span class='changed'>database_name</span> = weewx
+        driver = weedb.mysql
+
+
+
+
+
+
+      </pre>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>[<span class='changed'>Engines</span>]
+    [[<span class='changed'>WxEngine</span>]]
+        prep_services = \
+    weewx.<span class='changed'>wxengine</span>.StdTimeSynch
+        process_services = \
+    weewx.<span class='changed'>wxengine</span>.StdConvert, \
+    weewx.<span class='changed'>wxengine</span>.StdCalibrate, \
+    weewx.<span class='changed'>wxengine</span>.StdQC
+
+        archive_services = \
+    weewx.<span class='changed'>wxengine</span>.StdArchive
+        restful_services = \
+    weewx.restx.StdStationRegistry, \
+    weewx.restx.StdWunderground, \
+    weewx.restx.StdPWSweather, \
+    weewx.restx.StdCWOP, \
+    weewx.restx.StdWOW, \
+    weewx.restx.StdAWEKAS
+        report_services = \
+    weewx.<span class='changed'>wxengine</span>.StdPrint, \
+    weewx.<span class='changed'>wxengine</span>.StdReport</pre>
+    </td>
+    <td>
+      <pre class='tty'>[<span class='changed'>Engine</span>]
+    [[<span class='changed'>Services</span>]]
+        prep_services = \
+    weewx.<span class='changed'>engine</span>.StdTimeSynch
+        process_services = \
+    weewx.<span class='changed'>engine</span>.StdConvert, \
+    weewx.<span class='changed'>engine</span>.StdCalibrate, \
+    weewx.<span class='changed'>engine</span>.StdQC<span class='added'>, \
+      weewx.wxservices.StdWXCalculate</span>
+        archive_services = \
+    weewx.<span class='changed'>engine</span>.StdArchive
+        restful_services = \
+    weewx.restx.StdStationRegistry, \
+    weewx.restx.StdWunderground, \
+    weewx.restx.StdPWSweather, \
+    weewx.restx.StdCWOP, \
+    weewx.restx.StdWOW, \
+    weewx.restx.StdAWEKAS
+        report_services = \
+    weewx.<span class='changed'>engine</span>.StdPrint, \
+    weewx.<span class='changed'>engine</span>.StdReport</pre>
+    </td>
+  </tr>
+</table>
+
+<h3 id="custom-data-sources-in-skins">Custom data sources in skins<a class="headerlink" href="#custom-data-sources-in-skins" title="Permanent link">&para;</a></h3>
+<p>The mechanism for specifying non-default data sources in skins has changed. If you modified the Standard
+  skin, or created or used other skins that draw data from a database other than the weather database, you
+  must change how the other sources are specified.
+</p>
+
+<p>For example, in the <span class='code'>cmon</span> extension:</p>
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>2.7</td>
+    <td>3.0</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>[ImageGenerator]
+    ...
+    [[day_images]]
+        ...
+        [[[daycpu]]]
+        <span class='changed'>archive_database = cmon_sqlite</span>
+        [[[cpu_user]]]
+        [[[cpu_idle]]]
+        [[[cpu_system]]]</pre>
+    </td>
+    <td>
+      <pre class='tty'>[ImageGenerator]
+    ...
+    [[day_images]]
+        ...
+        [[[daycpu]]]
+        <span class='changed'>data_binding = cmon_binding</span>
+        [[[cpu_user]]]
+        [[[cpu_idle]]]
+        [[[cpu_system]]]</pre>
+    </td>
+  </tr>
+</table>
+
+<h3 id="extensions">Extensions<a class="headerlink" href="#extensions" title="Permanent link">&para;</a></h3>
+<p>
+  Many skins will work in v3 with no modification required. However, every search list extension will have to
+  be upgraded, every restful extension must be upgraded, and some other services must be upgraded.
+</p>
+
+<p>
+  There is no automated upgrade system for extensions; if an extension must be upgraded, you must do it
+  manually. If the extension has any python code, this will mean replacing any v2-compatible code with
+  v3-compatible code. In some cases parts of the configuration file <span class='code'>weewx.conf</span> must
+  be modified.
+</p>
+
+<p>
+  For example, to update the <span class='code'>pmon</span> extension, replace <span class='code'>bin/user/pmon.py</span>
+  with the v3-compatible <span class='code'>pmon.py</span> and modify <span class='code'>weewx.conf</span> as
+  shown in this table:
+</p>
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>2.7</td>
+    <td>3.0</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>[ProcessMonitor]
+    <span class='changed'>database = pmon_sqlite</span></pre>
+    </td>
+    <td>
+      <pre class='tty'>[ProcessMonitor]
+    <span class='changed'>data_binding = pmon_binding</span></pre>
+    </td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>
+      <pre class='tty'><span class='added'>[DataBindings]
+      [[pmon_binding]]
+          database = pmon_sqlite
+          manager = weewx.manager.DaySummaryManager
+          table_name = archive
+          schema = user.pmon.schema</span></pre>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>[Databases]
+    [[pmon_sqlite]]
+        root = %(WEEWX_ROOT)s
+        <span class='changed'>database</span> = archive/pmon.sdb
+        driver = weedb.sqlite</pre>
+    </td>
+    <td>
+      <pre class='tty'>[Databases]
+    [[pmon_sqlite]]
+        root = %(WEEWX_ROOT)s
+        <span class='changed'>database_name</span> = archive/pmon.sdb
+        driver = weedb.sqlite</pre>
+    </td>
+  </tr>
+</table>
+<p>
+  For other extensions, see the extension's documentation or contact the author of the extension.
+</p>
+
+<h3 id="search-list-extensions">Search list extensions<a class="headerlink" href="#search-list-extensions" title="Permanent link">&para;</a></h3>
+<p>
+  The introduction of <em>data bindings</em> has meant a change in the calling signature of <em>search list
+    extensions.</em> By way of example, here's the example from the document <a href="../sle"><i>Writing
+      search list extensions</i></a>, but with the differences highlighted.
+</p>
+<table>
+  <tbody>
+    <tr class="first_row">
+      <td>2.7</td>
+      <td>3.0</td>
+    </tr>
+    <tr>
+      <td><pre class="tty">def <span class="changed">get_extension</span>(self, timespan, <span
+                                                class="changed">archivedb, statsdb</span>):
+
+      all_stats = <span class="changed">TimeSpanStats</span>(
+          timespan,
+          <span class="changed">statsdb</span>,
+          formatter=self.generator.formatter,
+          converter=self.generator.converter)
+      week_dt = datetime.date.fromtimestamp(timespan.stop) - \
+          datetime.timedelta(weeks=1)
+      week_ts = time.mktime(week_dt.timetuple())
+      seven_day_stats = <span class="changed">TimeSpanStats</span>(
+          TimeSpan(week_ts, timespan.stop),
+          <span class="changed">statsdb</span>,
+          formatter=self.generator.formatter,
+          converter=self.generator.converter)
+
+      search_list_extension = {'alltime'   : all_stats,
+          'seven_day' : seven_day_stats}
+
+      return search_list_extension</pre>
+      </td>
+      <td><pre class="tty">def <span class="changed">get_extension_list</span>(self, timespan, <span
+                                                 class="changed">db_lookup</span>):
+
+      all_stats = <span class="changed">TimespanBinder</span>(
+          timespan, 
+          <span class="changed">db_lookup</span>,
+          formatter=self.generator.formatter,
+          converter=self.generator.converter)
+      week_dt = datetime.date.fromtimestamp(timespan.stop) - \
+          datetime.timedelta(weeks=1)
+      week_ts = time.mktime(week_dt.timetuple())
+      seven_day_stats = <span class="changed">TimespanBinder</span>(
+          TimeSpan(week_ts, timespan.stop),
+          <span class="changed">db_lookup</span>,
+          formatter=self.generator.formatter,
+          converter=self.generator.converter)
+
+      search_list_extension = {'alltime'   : all_stats,
+          'seven_day' : seven_day_stats}
+
+      return <span class="added">[</span>search_list_extension<span class="added">]</span></pre>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p>A few things to note:</p>
+<ul>
+  <li>The name of the extension function has changed from <span class="code">get_extension</span> to <span
+                                                       class="code">get_extension_list</span>.
+  </li>
+  <li>The calling signature has changed. Instead of an archive database and a stats database being passed in,
+    a single <em>database lookup function</em> is passed in.
+  </li>
+  <li>The name of the top-level class in the tag chain has changed from <span
+                                      class="code">TimeSpanStats</span> to <span class="code">TimespanBinder</span>. See the <i>Customizing
+      Guide</i> for details.
+  </li>
+  <li>Instead of returning a single search list extension, the function should now return a Python <span
+                                                     class="code">list</span> of extensions. The list will be searched in order.
+  </li>
+</ul>
+
+<h3 id="derived-quantities">Derived quantities<a class="headerlink" href="#derived-quantities" title="Permanent link">&para;</a></h3>
+<p>Some calculations that were done in drivers or in hardware are now done consistently by the new
+  StdWXCalculate service. Drivers should no longer calculate derived quantities such as windchill, heatindex,
+  dewpoint, or rain rate.
+</p>
+
+<h3 id="driver-apis">Driver APIs<a class="headerlink" href="#driver-apis" title="Permanent link">&para;</a></h3>
+<p>The base class for drivers has been renamed, and new, optional, methods have been defined to provide hooks
+  for configuring hardware and producing default and upgraded configuration stanzas.
+</p>
+
+<p>These changes affect only those who have written custom drivers.</p>
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>2.7</td>
+    <td>3.0</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>import weewx.<span class="changed">abstractstation</span>
+
+    class ACME960(weewx.<span class="changed">abstractstation.AbstractStation</span>):
+    ...</pre>
+    </td>
+    <td>
+      <pre class='tty'>import weewx.<span class="changed">drivers</span>
+
+    class ACME960(weewx.<span class="changed">drivers.AbstractDevice</span>):
+    ...</pre>
+    </td>
+  </tr>
+</table>
+
+<h3 id="service-apis">Service APIs<a class="headerlink" href="#service-apis" title="Permanent link">&para;</a></h3>
+<p>The base class for services has moved.</p>
+
+<p>This affects only those who have written custom services.</p>
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>2.7</td>
+    <td>3.0</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>import weewx.<span class="changed">wxengine</span>
+
+    class BetterMousetrapService(weewx.<span class="changed">wxengine</span>.StdService):
+    ...</pre>
+    </td>
+    <td>
+      <pre class='tty'>import weewx.<span class="changed">engine</span>
+
+    class BetterMousetrapService(weewx.<span class="changed">engine</span>.StdService):
+    ...</pre>
+    </td>
+  </tr>
+</table>
+
+<h3 id="restful-apis">RESTful APIs<a class="headerlink" href="#restful-apis" title="Permanent link">&para;</a></h3>
+<p>Some of the methods internal to RESTful services have changed, specifically those that relate to getting
+  configuration options from <span class='code'>weewx.conf</span> and configuring databases.
+</p>
+
+<p>This affects only those who have written custom RESTful services.</p>
+
+<p>Here is an example of obtaining the database dictionary for use in the RESTful service thread.</p>
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>2.7</td>
+    <td>3.0</td>
+  </tr>
+  <tr>
+    <td><pre class="tty">site_dict = weewx.restx.get_dict(config_dict, 'Uploader')
+    db_name = config_dict['StdArchive']['archive_database']
+    db_dict = config_dict['Databases'][db_name]
+    site_dict.setdefault('database_dict', db_dict)</pre>
+    </td>
+    <td><pre class="tty">site_dict = config_dict['StdRESTful']['Uploader']
+    site_dict = accumulateLeaves(site_dict, max_level=1)
+    manager_dict = weewx.manager.open_manager_with_config(
+    config_dict, 'wx_binding')</pre>
+    </td>
+  </tr>
+</table>
+
+<h3 id="database-apis">Database APIs<a class="headerlink" href="#database-apis" title="Permanent link">&para;</a></h3>
+<p>The methods for obtaining, opening, and querying databases have changed. This affects only those who have
+  written code that accesses databases.
+</p>
+
+<p>
+  The class <span class="code">Manager</span> and its subclasses have replaced the old <span class="code">Archive</span>
+  class. The table name is no longer hard-coded, so developers should use the table name from the database
+  binding. There is no longer a separate <span class="code">StatsDb</span> class, its functions having been
+  subsumed into the <span class="code">Manager</span> class and its subclasses.
+</p>
+
+<p>
+  A new class <span class="code">DBBinder</span> is the preferred way of getting a <span
+                                             class="code">Manager</span> class, as it will automatically take care of instantiating the right class, as
+  well as caching instances of <span class="code">Manager</span>. An instance of <span
+                                           class="code">DBBinder</span> is held by the engine as attribute <span class="code">db_binder</span>. Here's
+  an example of making a simple query.
+</p>
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>2.7</td>
+    <td>3.0</td>
+  </tr>
+  <tr>
+    <td><pre class="tty">db = config_dict['StdArchive']['archive_database']
+    self.database_dict = config_dict['Databases'][db]
+    with weewx.archive.Archive.open(self.database_dict) as archive:
+    val = archive.getSql("SELECT AVG(windSpeed) FROM archive"
+        " WHERE dateTime&gt;? AND dateTime&lt;=?",
+        (start_ts, end_ts))</pre>
+    </td>
+    <td><pre class="tty">with self.engine.db_binder.get_manager('wx_binding') as mgr:
+    val = mgr.getSql("SELECT AVG(windSpeed) FROM %s"
+        " WHERE dateTime&gt;? AND dateTime&lt;=?" %
+        mgr.table_name, (start_ts, end_ts))</pre>
+    </td>
+  </tr>
+</table>
+
+<h3 id="generator-apis">Generator APIs<a class="headerlink" href="#generator-apis" title="Permanent link">&para;</a></h3>
+<p>
+  The base class for report generators has changed. The old class <span
+                                    class="code">CachedReportGenerator</span> no longer exists; its functionality has been replaced by an
+  instance of <span class="code">DBBinder</span>, held by the generator superclass. This affects only those
+  who have written customer generators.
+</p>
+
+<p>Here's an example:</p>
+<table>
+  <tr class="first_row">
+    <td style='width: 50%'>2.7</td>
+    <td>3.0</td>
+  </tr>
+  <tr>
+    <td><pre class="tty">class GaugeGenerator(weewx.reportengine.<span
+                                   class='changed'>CachedReportGenerator</span>)
+    def run(self):
+        archive_name = self.config_dict['GaugeGenerator']['archive_name']
+        archive = self._getArchive(archive_name)
+        results = archive.getSql(...)</pre>
+    </td>
+    <td><pre class="tty">class GaugeGenerator(weewx.reportengine.<span
+                                   class='changed'>ReportGenerator</span>)
+    def run(self):
+        mgr = self.generator.db_binder.get_manager()
+        results = mgr.getSql(...)</pre>
+    </td>
+  </tr>
+</table>
+
+<h3 id="extension-installer">Extension installer<a class="headerlink" href="#extension-installer" title="Permanent link">&para;</a></h3>
+<p>The <span class='code'>setup.py</span> utility is now included in the installation; it is no longer necessary
+  to keep a copy of the WeeWX source tree just for the <span class='code'>setup.py</span> utility.
+</p>
+
+<p>For .deb and .rpm installations, the command <span class='code'>wee_setup</span> is a symlink to <span
+                                                      class='code'>setup.py</span>.
+</p>
+
+<p>The options for installing extensions changed slightly to be more consistent with the rest of the options to
+  <span class='code'>setup.py</span>.
+</p>
+<table>
+  <tr class="first_row">
+    <td style='width:50%'>2.7</td>
+    <td>3.0</td>
+  </tr>
+  <tr>
+    <td>
+      <pre class='tty'>setup.py --extension --install extensions/basic
+    setup.py --extension --install basic.tar.gz
+    setup.py --extension --uninstall basic
+    setup.py --extension --list
+    setup.py --extension --install basic.tar.gz --dryrun</pre>
+    </td>
+    <td>
+      <pre class='tty'>setup.py install --extension extensions/basic
+    setup.py install --extension basic.tar.gz
+    setup.py uninstall --extension basic
+    setup.py list-extensions
+    setup.py install --extension basic.tar.gz --dry-run</pre>
+    </td>
+  </tr>
+</table>
+
+<h2 id="upgrading-to-v27">Upgrading to V2.7<a class="headerlink" href="#upgrading-to-v27" title="Permanent link">&para;</a></h2>
+<p>Version 2.7 is backwards compatible with earlier versions with one minor exception.</p>
+
+<p>
+It now includes the ability to localize the WeeWX and server uptimes. Previously, the labels <span class="code">days</span>, <span class="code">hours</span>, and <span class="code">minutes</span> were hardcoded in a Python utility. There was no way of changing them. Now, like any other labels, they are taken from the skin configuration file, <span class="code">skin.conf</span>, section <span class="code">[[Labels]]</span>. Older configuration files had a definition for <span class="code">hour</span>, but none for <span class="code">day</span>, and <span class="code">minute</span>. Also, the old definition for <span class="code">hour</span> used an abbreviation <span class="code">hrs</span> instead of <span class="code">hours</span>.
+</p>
+
+<p>If you do nothing, your WeeWX and station uptimes will look like:</p>
+<pre class="tty">Weewx uptime:  1 day, 1 hrs, 41 minutes
+Server uptime: 2 days, 10 hrs, 22 minutes</pre>
+<p>
+Note how the label for hours is abbreviated and always uses the plural. If you want the previous behavior, or if you want to localize the labels, you should update your skin configuration file. Remove the old entries for <span class="code">hour</span> and <span class="code">second</span> and replace them with:
+</p>
+<pre class="tty">day               = " day",    " days"
+hour              = " hour",   " hours"
+minute            = " minute", " minutes"
+second            = " second", " seconds"</pre>
+
+<p>The first item is the singular spelling, the second the plural. This will result in the desired</p>
+<pre class="tty">Weewx uptime:  1 day, 1 hour, 41 minutes
+Server uptime: 2 days, 10 hours, 22 minutes</pre>
+
+<h2 id="upgrading-to-v26">Upgrading to V2.6<a class="headerlink" href="#upgrading-to-v26" title="Permanent link">&para;</a></h2>
+<p>Version 2.6 is backwards compatible with earlier versions, with a couple of small exceptions.</p>
+<ul>
+  <li>If you have written a custom WeeWX service, the install routine will try to insert its name into an
+    appropriate place in one of the five new lists of services to be run. You should check section <span
+                                                     class="code">[Engines][[WxEngine]]</span> to make sure it made a reasonable guess.
+  </li>
+  <li>If you have written a custom RESTful service, the architecture for these services has completely
+    changed. They are now first class services, and are treated like any other WeeWX service. There are some
+    guides to writing RESTful services using the new architecture at the top of the file <span class='code'>bin/weewx/restx.py</span>.
+    I can also help you with the transition.
+  </li>
+  <li>Option <span class='code'>interval</span> in the CWOP configuration section has become option <span
+                                                      class='code'>post_interval</span>. This change should be done automatically by the install routine.
+  </li>
+  <li>The mechanism for specifying RESTful services has changed. To activate a RESTful service, put the driver
+    in the <span class="code">restful_services</span> list in <span
+                                class="code">[Engines][[WxEngine]]</span>. The <span class="code">driver</span> parameter is no
+    longer necessary in the RESTful service's configuration stanza. These changes should be done
+    automatically by the install routine.
+  </li>
+</ul>
+
+<h2 id="upgrading-to-v24">Upgrading to V2.4<a class="headerlink" href="#upgrading-to-v24" title="Permanent link">&para;</a></h2>
+<p>The option <span class="code">time_length</span> will now be the exact length of the resultant plot. Before,
+  a plot with <span class="code">time_length</span> equal to 24 hours would result in a plot of 27 hours, now
+  it's 24 hours. If you want the old behavior, set it equal to 27 hours. To do this, change your section in
+  <span class="code">skin.conf</span> from
+</p>
+
+<pre class="tty">[[day_images]]
+  x_label_format = %H:%M
+  bottom_label_format = %m/%d/%y %H:%M
+  time_length = 86400 # == 24 hours</pre>
+
+<p>to</p>
+
+<pre class="tty">[[day_images]]
+  x_label_format = %H:%M
+  bottom_label_format = %m/%d/%y %H:%M
+  <span class="highlight">time_length = 97200 # == 27 hours</span></pre>
+
+<p>The service <span class="code">StdTimeSync</span> now synchronizes the console's onboard clock on startup.
+  This is nice because if the clock failed, perhaps because the battery was taken out, the time is corrected
+  first <em>before</em> data is downloaded from the logger's memory. To take advantage of this, you can move
+  service <span class="code">StdTimeSync</span> to the front of the list of services to be run. For example:
+</p>
+
+<pre class="tty">[[WxEngine]]
+  # The list of services the main weewx engine should run:
+  service_list = <span class="highlight">weewx.wxengine.StdTimeSynch</span>, weewx.wxengine.StdConvert,
+  weewx.wxengine.StdCalibrate, weewx.wxengine.StdQC, weewx.wxengine.StdArchive, weewx.wxengine.StdPrint,
+  weewx.wxengine.StdRESTful, weewx.wxengine.StdReport</pre>
+
+<h2 id="upgrading-to-v23">Upgrading to V2.3<a class="headerlink" href="#upgrading-to-v23" title="Permanent link">&para;</a></h2>
+<p>The signature of the function "<span class="code">loader</span>", used to return an instance of the station
+  device driver, has changed slightly. It has changed from
+</p>
+
+<pre class="tty">loader(config_dict)</pre>
+
+<p>to</p>
+
+<pre class="tty">loader(config_dict, engine)</pre>
+
+<p>That is, a second parameter, <span class="code">engine</span>, has been added. This is a reference to the
+  WeeWX engine.
+</p>
+
+<p>This change will affect only those who have written their own device driver.</p>
+
+<h2 id="upgrading-to-v22">Upgrading to V2.2<a class="headerlink" href="#upgrading-to-v22" title="Permanent link">&para;</a></h2>
+<p>Version 2.2 introduces a schema, found in <span class="code">
+    bin/user/schemas.py</span>, for the stats database. This schema is used only when initially creating the
+  database. If you have a specialized stats database, that is, one that saves types other than the default
+  that comes with WeeWX, you should edit this file to reflect your changes before attempting to rebuild the
+  database.
+</p>
+
+<h2 id="upgrading-to-v20">Upgrading to V2.0<a class="headerlink" href="#upgrading-to-v20" title="Permanent link">&para;</a></h2>
+<p>Version 2.0 introduces many new features, including a revamped internal engine. There are two changes that
+  are not backwards compatible:
+</p>
+<ul>
+  <li>The configuration file, <span class="code">weewx.conf</span>. When upgrading from V1.X, the setup
+    utility will install a new, fresh copy of <span class="code">weewx.conf</span>, which you will then have
+    to edit by hand. Thereafter, V2.X upgrades should be automatic.
+  </li>
+  <li>Custom services. If you have written a custom service, it will have to be updated to use the new engine.
+    The overall architecture is very similar, except that functions must be <em>bound</em> to events, rather
+    than get called implicitly. See the sections <a href="customizing.htm#Customizing_a_service">Customizing
+      a Service</a> and <a href="customizing.htm#Adding_a_service">Adding a Service</a> in the <a
+                                                 href="customizing.htm">Customization Guide</a> for details on how to do this.
+  </li>
+</ul>
+<p>All skins should be completely backwards compatible, so you should not have to change your templates or skin
+  configuration file, <span class="code">skin.conf</span>.
+</p>
+
+<p>If you have written a custom report generator it should also be backwards compatible.</p>
+
+<h2 id="upgrading-to-v114">Upgrading to V1.14<a class="headerlink" href="#upgrading-to-v114" title="Permanent link">&para;</a></h2>
+<p>Version 1.14 introduces some new webpages that have been expressly formatted for the smartphone by using <a
+                                                          href="http://jquery.com/">jQuery</a>.
+</p>
+
+<p>The skins shipped with the distribution take advantage of these features. If you do nothing, your old skins
+  will continue to work, but you will not be taking advantage of these new webpages.
+</p>
+
+<p>If you want them, then you have two choices:</p>
+<ol>
+  <li>Rename your old skin directory (call it &quot;<span class="code">skins.old</span>&quot;) then do the install. This will install the new skin distribution. You can then modify it to reflect any changes you have made, referring to <span class="code"> skins.old</span> for guidance. If you have not changed many things, this approach will be the easiest.
+  </li>
+  <li>Alternatively, change the contents of your existing skin directory to include the new webpages. If you take this approach, you will need to copy over the contents of the subdirectory <span class="code"> skins/Standard/smartphone</span> from the distribution into your <span class="code">skins/Standard</span> directory. You will then need to modify your <span class="code">skin.conf</span>.
+    <p>After the section that looks like</p>
+
+    <pre class='tty'>[[[Mobile]]]
+      template = mobile.html.tmpl</pre>
+
+    <p>add the following directives:</p>
+
+    <pre class='tty'>[[[MobileSmartphone]]]
+      template = smartphone/index.html.tmpl
+      [[[MobileTempOutside]]]
+      template = smartphone/temp_outside.html.tmpl
+      [[[MobileRain]]]
+      template = smartphone/rain.html.tmpl
+      [[[MobileBarometer]]]
+      template = smartphone/barometer.html.tmpl
+      [[[MobileWind]]]
+      template = smartphone/wind.html.tmpl
+      [[[MobileRadar]]]
+      template = smartphone/radar.html.tmpl</pre>
+
+    <p>Then modify section <span class="code">[CopyGenerator]</span> to add the <span class="highlight">highlighted</span> files:
+    </p>
+
+    <pre class='tty'>[CopyGenerator]
+      #
+      # This section is used by the generator CopyGenerator
+      #
+
+      # List of files that are to be copied at the first invocation of the generator only
+      copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico, <span class="highlight">smartphone/icons/*, smartphone/custom.js</span></pre>
+  </li>
+</ol>
+<p>Whichever approach you chose, the generated files will appear in <span class="code">public_html/smartphone</span>. The start of the document root will be at <span class="code">public_html/smartphone/index.html</span>. You may want to add a link to this in the template for your main index page <span class="code">skins/Standard/index.html.tmpl</span>.
+</p>
+
+<h2 id="upgrading-to-v113">Upgrading to V1.13<a class="headerlink" href="#upgrading-to-v113" title="Permanent link">&para;</a></h2>
+<p>Version 1.13 changed the way binding happens to the databases used in reports so that it happens much later. The upshot is that the signature of a few functions changed. Most you are unlikely to encounter. The exception is if you have written custom template <em>search lists</em>, as described in the <a href="customizing.htm">Customizing weewx guide</a>. This section has been updated to reflect the new function signatures. As a side effect, the illustrated example actually has become much simpler!
+</p>
+
+<p>No changes to skins.</p>
+
+<h2 id="upgrading-to-v110">Upgrading to V1.10<a class="headerlink" href="#upgrading-to-v110" title="Permanent link">&para;</a></h2>
+<p>Version 1.10 introduced several new features.</p>
+
+<h3 id="new-almanac-features-icon-and-mobile-template">New almanac features, icon, and mobile template<a class="headerlink" href="#new-almanac-features-icon-and-mobile-template" title="Permanent link">&para;</a></h3>
+<p>Version 1.10 introduces some extra almanac features, such as the azimuth and elevation of the sun and moon, or when the next solstice will be. It also includes a template formatted for smartphones, as well as an icon (&quot;<span class="code">favicon.ico</span>&quot;) that displays in your browser toolbar. The skins shipped with the distribution take advantage of these features. If you do nothing, your old skins will continue to work, but you will not take advantage of these new features.
+</p>
+
+<p>If you want these new features then you have two choices:</p>
+<ol>
+  <li>Rename your old skin directory (call it &quot;<span class="code">skin.old</span>&quot;) then do the install. This will install the new skin distribution. You can modify it to reflect any changes you have made, referring to <span class="code">skin.old</span> for guidance.
+  </li>
+  <li>Alternatively, change the contents of your existing skin directory to take advantage of the new features. If you take this approach, you will need to copy over files <span class="code">favicon.ico, mobile.css</span>, and <span class="code">mobile.html.tmpl</span> from the distribution into your <span class="code">skin/Standard</span> directory. Modify <span class="code">skins/Standard/index.html.tmpl</span> to take advantage of the new almanac features, using the version shipped with the distribution for guidance. You will then need to modify your <span class="code">skin.conf</span>.
+    <p>Add a new <span class="code">[[[Mobile]]]</span> section:</p>
+
+    <pre class="tty">[FileGenerator]
+      ...
+      [[ToDate]]
+      ...
+      [[[Mobile]]]
+      template = mobile.html.tmpl</pre>
+
+    <p>Then add <span class="code">mobile.css</span> and <span class="code"> favicon.ico</span> to the list of files to be copied on report generation:
+    </p>
+
+    <pre class="tty">[CopyGenerator]
+      copy_once = backgrounds/*, weewx.css, mobile.css, favicon.ico</pre>
+  </li>
+</ol>
+<p>Which approach you should take will depend on how extensively you have modified the stock skin distribution. If the modifications are slight, approach #1 will be easier, otherwise use approach #2.
+</p>
+
+<h3 id="backwards-compatibility">Backwards compatibility<a class="headerlink" href="#backwards-compatibility" title="Permanent link">&para;</a></h3>
+<p>With the introduction of explicit control of output units in the templates such as</p>
+
+<pre class="tty">$day.outTemp.max.degree_C</pre>
+
+<p>the calling signature of the following two Python classes was changed</p>
+<ul>
+  <li><span class="code">weewx.stats.TaggedStats</span></li>
+  <li><span class="code">weewx.stats.TimeSpanStats</span></li>
+</ul>
+<p>The example of writing a custom generator <span class="code">MyFileGenerator</span> (which produced &quot;all time&quot; statistics) has been changed to reflect the new signatures.
+</p>
+
+<p>This will only affect you if you have written a custom generator.</p>
+
+<h2 id="upgrading-to-v18">Upgrading to V1.8<a class="headerlink" href="#upgrading-to-v18" title="Permanent link">&para;</a></h2>
+<p>With the introduction of a standard archiving service, <span class="code"> StdArchive</span>, the names of some events have changed. This will not affect you unless you have written a custom service.
+</p>
+
+<h2 id="upgrading-to-v17">Upgrading to V1.7<a class="headerlink" href="#upgrading-to-v17" title="Permanent link">&para;</a></h2>
+<p>V1.7 introduces <em>skins</em>. The skins live in subdirectory <span class="code">skins</span>. They are <em>not</em> compatible with the old <span class="code">template</span> subdirectory --- you can&#39;t simply rename <span class="code">templates</span> to <span class="code">skins</span>.
+</p>
+
+<p>The part of the configuration file dealing with the presentation layer has been split off into a separate file <span class="code">skin.conf</span>. Hence, once again, the installation script <span class="code">setup.py</span> will NOT merge your old <span class="code"> weewx.conf</span> configuration file into the new one. You will have to re-edit <span class="code">weewx.conf</span> to put in your customizations. You may also have to edit <span class="code"> skin.conf</span> for whatever skin you choose (right now, only one skin, <em>Standard</em>, comes with the distribution).
+</p>
+
+<p>However, a reinstall of V1.7 <em>will</em> merge your changes for <span class="code">weewx.conf</span>. It will also merge any changes you have made to <span class="code">skin.conf</span> as well.
+</p>
+
+<p>Please check the following:</p>
+<ul>
+  <li>Option &quot;<span class="code">altitude</span>&quot; in section <span class="code">[Station]</span> now takes a unit. Hence, it should look something like:
+    <pre class='tty'>altitude = 120, meter</pre>
+
+  </li>
+  <li>In a similar manner, options <span class="code">heating_base</span> and <span
+                                        class="code">cooling_base</span> in <span class="code">skin.conf</span> also take units:
+    <pre class='tty'>heating_base = 65, degree_F
+cooling_base = 65, degree_F</pre>
+  </li>
+</ul>
+<p>The directory &#39;<span class="code">templates</span>&#39; is no longer used; it has been replaced with directory &#39;<span class="code">skins</span>&#39;. You may delete it if you wish:
+</p>
+
+<pre class="tty cmd">rm -r templates</pre>
+
+<h2 id="upgrading-to-v15">Upgrading to V1.5<a class="headerlink" href="#upgrading-to-v15" title="Permanent link">&para;</a></h2>
+<p>Because the configuration file <span class="code">weewx.conf</span> changed significantly going from V1.4 to V1.5, the installation script <span class="code">setup.py</span> will NOT merge your old configuration file into the new one. You will have to re-edit <span class="code">weewx.conf</span> to put in your customizations.
+</p>
+
+<h2 id="upgrading-to-v14">Upgrading to V1.4<a class="headerlink" href="#upgrading-to-v14" title="Permanent link">&para;</a></h2>
+<p>Option <span class="code">clock_check</span>, previously found in the <span class="code">[VantagePro]</span> section, is now found in the <span class="code">[Station]</span> section. The install program will put a default value in the new place, but it will not delete nor move your old value over. If you have changed this value or if you cannot stand the thought of <span class="code">clock_check</span> appearing in two different places, you should delete the old one found under <span class="code">[VantagePro]</span> and make sure the new value, found under <span class="code">[Station]</span> is correct.
+</p>
+
+<p>Two Python files are no longer used, so they may be deleted from your installation if you wish:</p>
+
+<pre class="tty cmd">rm bin/weewx/processdata.py
+rm bin/weewx/mainloop.py</pre>
+
+<p>In addition, file <span class="code">readme.htm</span> has been moved to subdirectory <span class='code'>docs</span>, so the old one can be deleted:
+</p>
+
+<pre class="tty cmd">rm readme.htm</pre>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+            Back to top
+          </button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © 2009-2023 Thomas Keffer, Matthew Wall, and Gary Roderick, all rights reserved
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "toc.follow", "search.highlight", "search.share", "search.suggest", "content.tabs.link"], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.b4d07000.min.js"></script>
+      
+    
+  </body>
+</html>

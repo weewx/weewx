@@ -17,27 +17,24 @@ Before starting, you must install the pre-requisite Python and Python modules.
 
 1. Ensure that Python 3.7 or later is installed.
 
-2. Ensure that you have the utility `make`.
+2. Ensure that `pip` and `venv` are installed.
 
-3. Ensure that `pip` and `venv` are installed.
-
-4. Create and activate a virtual environment in your home directory:
+3. Create and activate a virtual environment in your home directory:
 
     ``` {.shell .copy}
     python3 -m venv ~/weewx-venv
     source ~/weewx-venv/bin/activate
     ```
 
-5. Install the minimum WeeWX dependencies:
+4. Install the minimum WeeWX dependencies:
 
     ``` {.shell .copy}
-    python3 -m pip install mkdocs mkdocs-material
     python3 -m pip install CT3
     python3 -m pip install configobj
     python3 -m pip install Pillow
     ```
 
-6. Depending on your situation, you may want to install these additional
+5. Depending on your situation, you may want to install these additional
 dependencies:
 
     ``` {.shell .copy}
@@ -68,27 +65,16 @@ git clone https://github.com/weewx/weewx ~/weewx
     ```
 
 
-## Build the resources
-
-The repository stores markdown versions of the documentation. To convert them
-to HTML, you must build them:
-
-```{.shell .copy}
-cd ~/weewx
-# Make sure to include the trailing slash!
-make bin/wee_resources/
-```
-
 ## Provision a new station
 
-Finally, provision the configuration file, skins, and other resources for a
+Now that you have the prerequisites and the WeeWX code, you can provision a
 new station:
 
 ```{.shell .copy}
-# Activate the WeeWX virtual environment
+# If necessary, activate the WeeWX virtual environment
 source ~/weewx-venv/bin/activate
-# Create the station data
-python3 ~/weewx/bin/weectl.py station create
+# Provision a new station
+python3 ~/weewx/src/weectl.py station create
 ```
 
 The tool `weectl` will ask you a series of questions, then create a directory
@@ -107,16 +93,16 @@ When you run `weewxd` directly, it will print data to the screen. It will
 stop when you log out, or when you terminate it with `control-c`.
 
 ```{.shell .copy}
-# Activate the WeeWX virtual environment
+# If necessary, activate the WeeWX virtual environment
 source ~/weewx-venv/bin/activate
 # Run weewxd
-python3 ~/weewx/bin/weewxd.py
+python3 ~/weewx/src/weewxd.py
 ```
 
 To run `weewxd` as a daemon, install a systemd or init file that is
 appropriate for your operating system. Be sure to use the full path in the
 virtual environment to the Python interpreter and `weewxd.py`. Examples are
-included in the `util` directory.
+included in the directory `~/weewx-data/util`.
 
 
 ## Verify

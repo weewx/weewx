@@ -10,57 +10,53 @@ documentation.
 
     | Component               | Symbolic name    | Nominal value                   |
     |-------------------------|------------------|---------------------------------|
-    | WeeWX root directory    | _`WEEWX_ROOT`_   | `/`                             |
-    | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`             |
-    | Configuration directory | _`CONFIG_ROOT`_  | `/etc/weewx/`                   |
+    | WeeWX root directory    | _`WEEWX_ROOT`_   | `/etc/weewx`                    |
     | Skins and templates     | _`SKIN_ROOT`_    | `/etc/weewx/skins/`             |
+    | User directory          | _`USER_ROOT`_    | `/etc/weewx/bin/user/`          |
+    | Examples                | _`EXAMPLE_ROOT`_ | `/etc/weewx/examples/`          |
+    | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`             |
     | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`               |
     | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`          |
     | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx/`         |
-    | Examples                | _`EXAMPLE_ROOT`_ | `/usr/share/doc/weewx/examples/`|
-    | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user/`        |
 
 === "RedHat"
 
-    | Component               | Symbolic name    | Nominal value                          |
-    |-------------------------|------------------|----------------------------------------|
-    | WeeWX root directory    | _`WEEWX_ROOT`_   | `/`                                    |
-    | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`                    |
-    | Configuration directory | _`CONFIG_ROOT`_  | `/etc/weewx/`                          |
-    | Skins and templates     | _`SKIN_ROOT`_    | `/etc/weewx/skins/`                    |
-    | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`                      |
-    | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`                 |
-    | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx-x.y.z/`          |
-    | Examples                | _`EXAMPLE_ROOT`_ | `/usr/share/doc/weewx-x.y.z/examples/` |
-    | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user/`               |
+    | Component               | Symbolic name    | Nominal value                   |
+    |-------------------------|------------------|---------------------------------|
+    | WeeWX root directory    | _`WEEWX_ROOT`_   | `/etc/weewx`                    |
+    | Skins and templates     | _`SKIN_ROOT`_    | `/etc/weewx/skins/`             |
+    | User directory          | _`USER_ROOT`_    | `/etc/weewx/bin/user/`          |
+    | Examples                | _`EXAMPLE_ROOT`_ | `/etc/weewx/examples/`          |
+    | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`             |
+    | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`               |
+    | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`          |
+    | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx-x.y.z/`   |
 
 === "openSUSE"
 
-    | Component               | Symbolic name    | Nominal value                          |
-    |-------------------------|------------------|----------------------------------------|
-    | WeeWX root directory    | _`WEEWX_ROOT`_   | `/`                                    |
-    | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`                    |
-    | Configuration directory | _`CONFIG_ROOT`_  | `/etc/weewx/`                          |
-    | Skins and templates     | _`SKIN_ROOT`_    | `/etc/weewx/skins/`                    |
-    | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`                      |
-    | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`                 |
-    | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx-x.y.z/`          |
-    | Examples                | _`EXAMPLE_ROOT`_ | `/usr/share/doc/weewx-x.y.z/examples/` |
-    | User directory          | _`USER_ROOT`_    | `/usr/share/weewx/user/`               |
+    | Component               | Symbolic name    | Nominal value                 |
+    |-------------------------|------------------|-------------------------------|
+    | WeeWX root directory    | _`WEEWX_ROOT`_   | `/etc/weewx`                  |
+    | Skins and templates     | _`SKIN_ROOT`_    | `/etc/weewx/skins/`           |
+    | User directory          | _`USER_ROOT`_    | `/etc/weewx/bin/user/`        |
+    | Examples                | _`EXAMPLE_ROOT`_ | `/etc/weewx/examples/`        |
+    | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`           |
+    | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`             |
+    | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`        |
+    | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx-x.y.z/` |
 
 === "pip"
 
     | Component               | Symbolic name    | Nominal value        |
     |-------------------------|------------------|----------------------|
     | WeeWX root directory    | _`WEEWX_ROOT`_   | `~/weewx-data`       |
-    | Executables             | _`BIN_ROOT`_     | varies               |
-    | Configuration directory | _`CONFIG_ROOT`_  | `./`                 |
     | Skins and templates     | _`SKIN_ROOT`_    | `skins/`             |
+    | User directory          | _`USER_ROOT`_    | `bin/user/`          |
+    | Examples                | _`EXAMPLE_ROOT`_ | `examples/`          |
+    | Executables             | _`BIN_ROOT`_     | varies               |
     | SQLite databases        | _`SQLITE_ROOT`_  | `archive/`           |
     | Web pages and images    | _`HTML_ROOT`_    | `public_html/`       |
     | Documentation           | _`DOC_ROOT`_     | `docs/`              |
-    | Examples                | _`EXAMPLE_ROOT`_ | `examples/`          |
-    | User directory          | _`USER_ROOT`_    | `bin/user/`          |
 
 !!! Note
     In the locations above, relative paths are *relative to _`WEEWX_ROOT`_*.
@@ -71,15 +67,15 @@ documentation.
 ## Location of executables in a pip install
 
 If you use a pip install, the location of the executables will depend on how
-the pip installation was done.
+the installation was done.
 
-| Install method                    | Commands                                                                     | Location of executables |
-|-----------------------------------|------------------------------------------------------------------------------|-------------------------|
-| Virtual environment<br/>(recommended) | `python3 -m venv ~/ve`<br/>`source ~/ve/bin/activate`<br/>`pip3 install weewx`        | `~/ve/bin/`             |
-| pip, no sudo, with `--user`       | `pip3 install weewx --user`                                                  | `~/.local/bin/`         |
-| pip, no sudo, no `--user`         | `pip3 install weewx`                                                         | `~/.local/bin/`         |
-| pip with sudo<br/>(not recommended)   | `sudo pip3 install weewx`                                                    | `/usr/local/bin/` (1)   |
-| Virtual environment with `--user` | `python3 -m venv ~/ve`<br/>`source ~/ve/bin/activate`<br/>`pip3 install weewx --user` | Not allowed             |
+| Install method                                      | Commands                                                                     | Location of executables |
+|-----------------------------------------------------|------------------------------------------------------------------------------|-------------------------|
+| Virtual environment<br/>(recommended)               | `python3 -m venv ~/ve`<br/>`source ~/ve/bin/activate`<br/>`pip3 install weewx` | `~/ve/bin/`             |
+| pip, no sudo, with `--user`                         | `pip3 install weewx --user`                                                  | `~/.local/bin/`         |
+| pip, no sudo, no `--user`                           | `pip3 install weewx`                                                         | `~/.local/bin/`         |
+| pip with sudo<br/>(not recommended)                 | `sudo pip3 install weewx`                                                    | `/usr/local/bin/` (1)   |
+| Virtual environment with `--user`<br/>(not allowed) | `python3 -m venv ~/ve`<br/>`source ~/ve/bin/activate`<br/>`pip3 install weewx --user` | N/A                     |
 
 (1) Checked on Ubuntu 22.02 and Rocky v9.1
 

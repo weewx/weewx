@@ -18,4 +18,7 @@ venv
 MANIFEST
 build
 dist
-bin/wee_resources
+
+# Ignore archive database and HTML directories
+src/weewx_data/archive/
+src/weewx_data/public_html/

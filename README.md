@@ -1,4 +1,5 @@
 ![CI workflow](https://github.com/weewx/weewx/actions/workflows/ci.yaml/badge.svg)
+[![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
 
 # [WeeWX](https://www.weewx.com)
 *Open source software for your weather station*
@@ -37,6 +38,7 @@ Support for many online weather services, including:
 * PWSweather
 * WOW
 * AWEKAS
+* Windy
 * Open Weathermap
 * WeatherBug
 * Weather Cloud
@@ -83,7 +85,7 @@ WeeWX.
 
 ## Install
 
-[https://weewx.com/docs/quickstarts](https;//weewx.com/quickstarts)
+[https://weewx.com/docs/5.0/quickstarts](https://weewx.com/docs/5.0/quickstarts)
 
 ## Download
 
@@ -99,7 +101,7 @@ For the latest source code:
 
 Guides for installation, upgrading, and customization:
 
-[https://weewx.com/docs.html](https://weewx.com/docs.html)
+[https://weewx.com/docs/5.0/](https://weewx.com/docs/5.0/)
 
 The wiki includes user-contributed extensions and suggestions:
 
