@@ -73,7 +73,7 @@ def station_create(config_path, *args,
         dist_config_dict = configobj.ConfigObj(dist_config_path, encoding='utf-8', file_error=True)
     else:
         # Retrieve the new configuration file from package resources:
-        with importlib.resources.open_text('weewx_data', 'weewx.conf', encoding='utf-8') as fd:
+        with weeutil.weeutil.get_resource_fd('weewx_data', 'weewx.conf') as fd:
             dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
 
     config_config(config_path, dist_config_dict, weewx_root=weewx_root, dry_run=dry_run,
@@ -513,7 +513,7 @@ def copy_skins(config_dict, dry_run=False):
     # The difference is what's missing
     missing_skins = available_skins - existing_skins
 
-    with weeutil.weeutil.path_to_resource('weewx_data', 'skins') as skin_resources:
+    with weeutil.weeutil.get_resource_path('weewx_data', 'skins') as skin_resources:
         # Copy over any missing skins
         for skin in missing_skins:
             src = os.path.join(skin_resources, skin)
@@ -550,7 +550,7 @@ def copy_docs(config_dict, docs_root=None, dry_run=False, force=False):
     print(f"Removing {docs_dir}.")
     if not dry_run:
         shutil.rmtree(docs_dir, ignore_errors=True)
-    with weeutil.weeutil.path_to_resource('weewx_data', 'docs') as docs_resources:
+    with weeutil.weeutil.get_resource_path('weewx_data', 'docs') as docs_resources:
         print(f"Copying new docs into {docs_dir}.")
         if not dry_run:
             shutil.copytree(docs_resources, docs_dir)
@@ -584,7 +584,7 @@ def copy_examples(config_dict, examples_root=None, dry_run=False, force=False):
     print(f"Removing directory {examples_dir}.")
     if not dry_run:
         shutil.rmtree(examples_dir, ignore_errors=True)
-    with weeutil.weeutil.path_to_resource('weewx_data', 'examples') as examples_resources:
+    with weeutil.weeutil.get_resource_path('weewx_data', 'examples') as examples_resources:
         print(f"Copying new examples into {examples_dir}.")
         if not dry_run:
             shutil.copytree(examples_resources, examples_dir)
@@ -603,7 +603,7 @@ def copy_user(config_dict, user_root=None, dry_run=False):
 
     # Don't clobber an existing user subdirectory
     if not os.path.isdir(user_dir):
-        with weeutil.weeutil.path_to_resource('weewx_data', 'bin') as lib_resources:
+        with weeutil.weeutil.get_resource_path('weewx_data', 'bin') as lib_resources:
             print(f"Creating a new 'user' directory at {user_dir}.")
             if not dry_run:
                 shutil.copytree(os.path.join(lib_resources, 'user'),
@@ -648,7 +648,7 @@ def copy_util(config_path, config_dict, dry_run=False):
     # Convert to a list of two-way tuples.
     re_list = [(re.compile(key), re_dict[key]) for key in re_dict]
 
-    with weeutil.weeutil.path_to_resource('weewx_data', 'util') as util_resources:
+    with weeutil.weeutil.get_resource_path('weewx_data', 'util') as util_resources:
         dstdir = os.path.join(weewx_root, 'util')
         print(f"Creating utility files in {dstdir}.")
         if not dry_run:
@@ -796,7 +796,7 @@ def _get_core_skins():
     Returns:
         set: A set containing the names of the core skins
     """
-    with weeutil.weeutil.path_to_resource('weewx_data', 'skins') as skin_resources:
+    with weeutil.weeutil.get_resource_path('weewx_data', 'skins') as skin_resources:
         # Find which skins are available in the resource package
         with os.scandir(skin_resources) as resource_contents:
             available_skins = {os.path.basename(d.path) for d in resource_contents if d.is_dir()}

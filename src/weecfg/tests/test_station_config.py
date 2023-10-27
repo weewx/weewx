@@ -25,7 +25,7 @@ import weewxd
 weewxd_path = weewxd.__file__
 
 # For the tests, use the version of weewx.conf that comes with WeeWX.
-with importlib.resources.open_text('weewx_data', 'weewx.conf', encoding='utf-8') as fd:
+with weeutil.weeutil.get_resource_fd('weewx_data', 'weewx.conf') as fd:
     CONFIG_DICT = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
 
 STATION_URL = 'https://weewx.com'

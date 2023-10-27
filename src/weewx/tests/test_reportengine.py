@@ -21,7 +21,7 @@ weewx.debug = 1
 # Find where the skins are stored. Unfortunately, the following strategy won't work if the
 # resources are stored as a zip file. But, the alternative is too messy. After all, this is just
 # for testing.
-with weeutil.weeutil.path_to_resource('weewx_data', 'skins') as skin_resource:
+with weeutil.weeutil.get_resource_path('weewx_data', 'skins') as skin_resource:
     SKIN_DIR = skin_resource
 
 CONFIG_DICT_INI = f"""
