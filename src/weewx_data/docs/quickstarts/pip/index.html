@@ -2196,15 +2196,14 @@
 
 
 <h1 id="installation-using-pip">Installation using pip<a class="headerlink" href="#installation-using-pip" title="Permanent link">&para;</a></h1>
-<p>This is a guide to installing WeeWX using <a href="https://pip.pypa.io">pip</a>. It can
-be used to install WeeWX on almost any operating system, including macOS.</p>
-<p>WeeWX V5 requires Python 3.7 or greater. Python 2, or earlier versions of
-Python 3, will not work.</p>
+<p>This is a guide to installing WeeWX using <a href="https://pip.pypa.io"><code>pip</code></a>. It can be
+used on almost any operating system (including macOS) that offers Python v3.7 or
+greater. Python 2, or earlier versions of Python 3, will not work.</p>
 <p>Although you do not need root privileges to install and configure WeeWX using
-this method, you will need them to set up a daemon, and you may need them to
-change device permissions.</p>
-<p>While there are many ways to install WeeWX using pip (see the wiki document
-<a href="https://github.com/weewx/weewx/wiki/pip-install-strategies"><em>pip install strategies</em></a>
+<code>pip</code>, you will need them to set up a daemon, and you may need them to change
+device permissions.</p>
+<p>While there are many ways to install WeeWX using <code>pip</code> (see the wiki document
+<a href="https://github.com/weewx/weewx/wiki/pip-install-strategies"><em><code>pip</code> install strategies</em></a>
 for a partial list), we recommend creating a <em>Python virtual environment</em>,
 because it is the least likely to disturb the rest of your system. It is
 worth reading about
@@ -2212,24 +2211,19 @@ worth reading about
 the module used to create a virtual environment, in the Python3 documentation.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>WeeWX can be installed on any operating system that offers Python 3.7
-or later.</p>
-<p>However, you may need to install <code>pip</code> first. See <a href="https://packaging.python.org/en/latest/guides/installing-using-linux-tools/">Installing pip with
-Linux Package Managers</a>. The
-<a href="https://pip.pypa.io/en/stable/installation/">installation directions</a>
-on the pip website may also be useful.</p>
-<p>You will also need <code>venv</code>. If <code>venv</code> is not available, you may substitute 
-<a href="https://virtualenv.pypa.io"><code>virtualenv</code></a>, which can be installed using
-pip.</p>
+<p>You may need to install <code>pip</code> and <code>venv</code> first. This usually involves a 
+command such as</p>
+<div class="highlight"><pre><span></span><code>sudo apt install python3-pip python3-venv
+</code></pre></div>
+<p>See <a href="https://packaging.python.org/en/latest/guides/installing-using-linux-tools/">Installing <code>pip</code> with
+Linux Package Managers</a>.</p>
 </div>
 <h2 id="install-in-a-virtual-environment">Install in a virtual environment<a class="headerlink" href="#install-in-a-virtual-environment" title="Permanent link">&para;</a></h2>
 <p>To install WeeWX in a virtual environment, follow the directions below for
 your system. If you plan to use MySQL or MariaDB, be sure to see the
 <code>MySQL/MariaDB</code> tab as well.</p>
-<p>When finished, the WeeWX executables will have been installed in
-<code>~/weewx-venv/bin</code>, while the WeeWX libraries and dependencies will have been
-installed in <code>~/weewx-venv/lib/python3.x/site-packages</code>, where <code>3.x</code> is the
-version of Python you used.</p>
+<p>When you are finished, the WeeWX executables and dependencies will have been
+installed inside the virtual environment.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:7"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><input id="__tabbed_1_5" name="__tabbed_1" type="radio" /><input id="__tabbed_1_6" name="__tabbed_1" type="radio" /><input id="__tabbed_1_7" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Debian</label><label for="__tabbed_1_2">Redhat 8</label><label for="__tabbed_1_3">Redhat 9</label><label for="__tabbed_1_4">openSUSE</label><label for="__tabbed_1_5">macOS</label><label for="__tabbed_1_6">Other</label><label for="__tabbed_1_7">MySQL/MariaDB</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
@@ -2317,7 +2311,7 @@ python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </s
 <code>caching_sha2_password</code> authentication, you will also need to install
 the module <code>cryptography</code>. On some operating systems this can be a bit
 of a struggle, but the following usually works. The key step is to update
-pip before trying the install.</p>
+<code>pip</code> before trying the install.</p>
 <div class="copy highlight"><pre><span></span><code><span class="c1"># Activate the WeeWX virtual environment</span>
 <span class="nb">source</span><span class="w"> </span>~/weewx-venv/bin/activate
 <span class="c1"># Make sure pip is up-to-date</span>

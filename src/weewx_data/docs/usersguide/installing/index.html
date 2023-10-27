@@ -456,7 +456,7 @@
       
         <li class="md-nav__item">
   <a href="#required-skills" class="md-nav__link">
-    Required Skills
+    Required skills
   </a>
   
 </li>
@@ -2058,7 +2058,7 @@
       
         <li class="md-nav__item">
   <a href="#required-skills" class="md-nav__link">
-    Required Skills
+    Required skills
   </a>
   
 </li>
@@ -2100,7 +2100,18 @@
 
 
 <h1 id="installing-weewx">Installing WeeWX<a class="headerlink" href="#installing-weewx" title="Permanent link">&para;</a></h1>
-<h2 id="required-skills">Required Skills<a class="headerlink" href="#required-skills" title="Permanent link">&para;</a></h2>
+<p>If you're an old hand at installing software on Unix systems, you may be able to
+use one of our <em>Quickstart guides</em>:</p>
+<ul>
+<li><a href="../../quickstarts/debian">Debian</a> - including Ubuntu, Mint, Raspberry Pi 
+  OS, Devuan. Uses <code>apt</code>.</li>
+<li><a href="../../quickstarts/redhat">Redhat</a> - including Fedora, CentOS, Rocky. Uses <code>yum</code>.</li>
+<li><a href="../../quickstarts/suse">SUSE</a> - including openSUSE. Uses <code>zypper</code>.</li>
+<li><a href="../../quickstarts/pip">pip</a> - any operating system. Uses <code>pip</code></li>
+<li><a href="../../quickstarts/git">git</a> - any operating system. Run directly from repository.</li>
+</ul>
+<p>Otherwise, continue on...</p>
+<h2 id="required-skills">Required skills<a class="headerlink" href="#required-skills" title="Permanent link">&para;</a></h2>
 <p>In the world of open-source hobbyist software, WeeWX is pretty easy to install
 and configure. There are not many package dependencies, the configuration is
 simple, and this guide includes extensive instructions. There are thousands of
@@ -2158,97 +2169,59 @@ this case, you should be comfortable programming in Python.</p>
 <li>
 <p>Customize the installation. Typically, this is done by changing settings in
   the WeeWX <a href="../../reference/weewx-options/introduction/">application configuration
-  file</a>. For example, you might
-  want to <a href="../../reference/weewx-options/stdrestful/#stationregistry">register your
+  file</a> (typically, <code>weewx.conf</code>).
+  For example, you might want to <a href="../../reference/weewx-options/stdrestful/#stationregistry">register your
   station</a>, so it
   shows up on a world-wide map of WeeWX installations. To make changes to reports,
-  see the <a href="../../custom/introduction/"><em>Customization guide</em></a>.</p>
+  see the <a href="../../custom/introduction/"><em>Customization Guide</em></a>.</p>
 </li>
 </ul>
 <h2 id="installation-methods">Installation methods<a class="headerlink" href="#installation-methods" title="Permanent link">&para;</a></h2>
-<p>There are a few different ways to install WeeWX.  There are packages available
-for Debian (<code>apt</code>), Redhat (<code>yum</code>), and SUSE (<code>zypper</code>) systems, WeeWX can be
-installed using the Package Installer for Python (<code>pip</code>) on any operating
-system, or WeeWX can be run directly from source (e.g., using git).</p>
-<p>The Debian, Redhat, and SUSE installers use the conventions and software
-management tools for their respective operating systems; these are the fastest
-and easiest way to get up and running.</p>
-<p>The pip installer will work on any operating system; use this approach
-for macOS or one of the BSDs, or if you are using an older operating system.
-This is also a good approach if you plan to do a lot of customization, or if
-you are developing a driver, skin, or other extension.</p>
-<p>If you want to install WeeWX on a system with very little storage, or if you
-want to experiment with code that is under development, then you may want to
-run directly from a git clone of the WeeWX sources.</p>
+<p>There are several different ways to install WeeWX.</p>
 <table>
-<thead>
-<tr>
-<th></th>
-<th>apt/yum/zypper</th>
-<th>pip</th>
-<th>git</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Operating system</td>
-<td>Only systems based on Debian, Redhat, or SUSE</td>
-<td>Any operating system</td>
-<td>Any operating system</td>
-</tr>
-<tr>
-<td>Installation steps</td>
-<td>Single</td>
-<td>Multiple</td>
-<td>Multiple</td>
-</tr>
-<tr>
-<td>Privileges required</td>
-<td>root</td>
-<td>Install, configure, or upgrade does not require root</td>
-<td>Install, configure, or upgrade does not require root</td>
-</tr>
-<tr>
-<td>Software location</td>
-<td>Installs into locations that are standard for the operating system</td>
-<td>Installs into locations that are standard for Python</td>
-<td>No files are installed</td>
-</tr>
-<tr>
-<td>Configuration location</td>
-<td><code>/etc/weewx</code></td>
-<td><code>~/weewx-data</code></td>
-<td><code>~/weewx-data</code></td>
-</tr>
-<tr>
-<td>Database location</td>
-<td><code>/var/lib/weewx</code></td>
-<td><code>~/weewx-data</code></td>
-<td><code>~/weewx-data</code></td>
-</tr>
-<tr>
-<td>Report location</td>
-<td><code>/var/www/html/weewx</code></td>
-<td><code>~/weewx-data</code></td>
-<td><code>~/weewx-data</code></td>
-</tr>
-<tr>
-<td>Log location</td>
-<td>syslog</td>
-<td>syslog</td>
-<td>syslog</td>
-</tr>
-</tbody>
+  <tr><td>Installer</td><td>Systems</td><td>Best for...</td></tr>
+  <tr>
+    <td><a href="../../quickstarts/debian">Debian</a></td>
+    <td>including Ubuntu, Mint, Raspberry Pi OS, Devuan</td>
+    <td rowspan=3>
+      The Debian, Redhat, and SUSE package installers use <em>apt</em>, 
+      <em>yum</em>, and <em>zypper</em>, respectively. This is the fastest 
+      and easiest way to get up and running. You will need root access to 
+      install and run.
+    </td>
+  </tr>
+  <tr>
+    <td><a href="../../quickstarts/redhat">Redhat</a></td>
+    <td>including Fedora, CentOS, Rocky</td>
+  </tr>
+  <tr>
+    <td><a href="../../quickstarts/suse">SUSE</a></td>
+    <td>including openSUSE</td>
+  </tr>
+  <tr>
+    <td><a href="../../quickstarts/pip">pip</a></td>
+    <td>any operating system</td>
+    <td>
+The pip installer will work on any operating system. Use this approach for macOS
+or one of the BSDs, or if you are using an older operating system. When used in
+a "virtual environment" (recommended), this approach is least likely to disturb
+other applications on your computer. This is also a good approach if you plan to
+do a lot of customization, or if you are developing a driver, skin, or other
+extension. Root access is not needed to install, but may be needed to run.
+    </td>
+  </tr>
+  <tr>
+    <td><a href="../../quickstarts/git">git</a></td>
+    <td>any operating system</td>
+    <td>
+If you want to install WeeWX on a system with very little storage, or if you
+want to experiment with code that is under development, then you may want to
+run directly from the WeeWX sources.  Root access is not needed to install, but 
+may be needed to run.
+    </td>
+  </tr>
 </table>
-<p>The quick start guides contain installation instructions for each method:</p>
-<ul>
-<li><a href="../../quickstarts/debian">Debian</a> - including Ubuntu, Mint, Raspberry Pi 
-  OS, Devuan</li>
-<li><a href="../../quickstarts/redhat">Redhat</a> - including Fedora, CentOS, Rocky</li>
-<li><a href="../../quickstarts/suse">SUSE</a> - including openSUSE</li>
-<li><a href="../../quickstarts/pip">pip</a> - any operating system</li>
-<li><a href="../../quickstarts/git">git</a> - any operating system</li>
-</ul>
+
 <h2 id="installing-a-driver">Installing a driver<a class="headerlink" href="#installing-a-driver" title="Permanent link">&para;</a></h2>
 <p>If your hardware requires a driver that is not included with WeeWX, use the
 WeeWX extension management utility to download and install the driver.</p>

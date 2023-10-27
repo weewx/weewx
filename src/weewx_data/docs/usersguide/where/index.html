@@ -2105,22 +2105,27 @@ documentation.</p>
 <tr>
 <td>WeeWX root directory</td>
 <td><em><code>WEEWX_ROOT</code></em></td>
-<td><code>/</code></td>
-</tr>
-<tr>
-<td>Executables</td>
-<td><em><code>BIN_ROOT</code></em></td>
-<td><code>/usr/share/weewx/</code></td>
-</tr>
-<tr>
-<td>Configuration directory</td>
-<td><em><code>CONFIG_ROOT</code></em></td>
-<td><code>/etc/weewx/</code></td>
+<td><code>/etc/weewx</code></td>
 </tr>
 <tr>
 <td>Skins and templates</td>
 <td><em><code>SKIN_ROOT</code></em></td>
 <td><code>/etc/weewx/skins/</code></td>
+</tr>
+<tr>
+<td>User directory</td>
+<td><em><code>USER_ROOT</code></em></td>
+<td><code>/etc/weewx/bin/user/</code></td>
+</tr>
+<tr>
+<td>Examples</td>
+<td><em><code>EXAMPLE_ROOT</code></em></td>
+<td><code>/etc/weewx/examples/</code></td>
+</tr>
+<tr>
+<td>Executables</td>
+<td><em><code>BIN_ROOT</code></em></td>
+<td><code>/usr/share/weewx/</code></td>
 </tr>
 <tr>
 <td>SQLite databases</td>
@@ -2137,15 +2142,58 @@ documentation.</p>
 <td><em><code>DOC_ROOT</code></em></td>
 <td><code>/usr/share/doc/weewx/</code></td>
 </tr>
+</tbody>
+</table>
+</div>
+<div class="tabbed-block">
+<table>
+<thead>
 <tr>
-<td>Examples</td>
-<td><em><code>EXAMPLE_ROOT</code></em></td>
-<td><code>/usr/share/doc/weewx/examples/</code></td>
+<th>Component</th>
+<th>Symbolic name</th>
+<th>Nominal value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WeeWX root directory</td>
+<td><em><code>WEEWX_ROOT</code></em></td>
+<td><code>/etc/weewx</code></td>
+</tr>
+<tr>
+<td>Skins and templates</td>
+<td><em><code>SKIN_ROOT</code></em></td>
+<td><code>/etc/weewx/skins/</code></td>
 </tr>
 <tr>
 <td>User directory</td>
 <td><em><code>USER_ROOT</code></em></td>
-<td><code>/usr/share/weewx/user/</code></td>
+<td><code>/etc/weewx/bin/user/</code></td>
+</tr>
+<tr>
+<td>Examples</td>
+<td><em><code>EXAMPLE_ROOT</code></em></td>
+<td><code>/etc/weewx/examples/</code></td>
+</tr>
+<tr>
+<td>Executables</td>
+<td><em><code>BIN_ROOT</code></em></td>
+<td><code>/usr/share/weewx/</code></td>
+</tr>
+<tr>
+<td>SQLite databases</td>
+<td><em><code>SQLITE_ROOT</code></em></td>
+<td><code>/var/lib/weewx/</code></td>
+</tr>
+<tr>
+<td>Web pages and images</td>
+<td><em><code>HTML_ROOT</code></em></td>
+<td><code>/var/www/html/weewx/</code></td>
+</tr>
+<tr>
+<td>Documentation</td>
+<td><em><code>DOC_ROOT</code></em></td>
+<td><code>/usr/share/doc/weewx-x.y.z/</code></td>
 </tr>
 </tbody>
 </table>
@@ -2163,22 +2211,27 @@ documentation.</p>
 <tr>
 <td>WeeWX root directory</td>
 <td><em><code>WEEWX_ROOT</code></em></td>
-<td><code>/</code></td>
-</tr>
-<tr>
-<td>Executables</td>
-<td><em><code>BIN_ROOT</code></em></td>
-<td><code>/usr/share/weewx/</code></td>
-</tr>
-<tr>
-<td>Configuration directory</td>
-<td><em><code>CONFIG_ROOT</code></em></td>
-<td><code>/etc/weewx/</code></td>
+<td><code>/etc/weewx</code></td>
 </tr>
 <tr>
 <td>Skins and templates</td>
 <td><em><code>SKIN_ROOT</code></em></td>
 <td><code>/etc/weewx/skins/</code></td>
+</tr>
+<tr>
+<td>User directory</td>
+<td><em><code>USER_ROOT</code></em></td>
+<td><code>/etc/weewx/bin/user/</code></td>
+</tr>
+<tr>
+<td>Examples</td>
+<td><em><code>EXAMPLE_ROOT</code></em></td>
+<td><code>/etc/weewx/examples/</code></td>
+</tr>
+<tr>
+<td>Executables</td>
+<td><em><code>BIN_ROOT</code></em></td>
+<td><code>/usr/share/weewx/</code></td>
 </tr>
 <tr>
 <td>SQLite databases</td>
@@ -2194,74 +2247,6 @@ documentation.</p>
 <td>Documentation</td>
 <td><em><code>DOC_ROOT</code></em></td>
 <td><code>/usr/share/doc/weewx-x.y.z/</code></td>
-</tr>
-<tr>
-<td>Examples</td>
-<td><em><code>EXAMPLE_ROOT</code></em></td>
-<td><code>/usr/share/doc/weewx-x.y.z/examples/</code></td>
-</tr>
-<tr>
-<td>User directory</td>
-<td><em><code>USER_ROOT</code></em></td>
-<td><code>/usr/share/weewx/user/</code></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="tabbed-block">
-<table>
-<thead>
-<tr>
-<th>Component</th>
-<th>Symbolic name</th>
-<th>Nominal value</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>WeeWX root directory</td>
-<td><em><code>WEEWX_ROOT</code></em></td>
-<td><code>/</code></td>
-</tr>
-<tr>
-<td>Executables</td>
-<td><em><code>BIN_ROOT</code></em></td>
-<td><code>/usr/share/weewx/</code></td>
-</tr>
-<tr>
-<td>Configuration directory</td>
-<td><em><code>CONFIG_ROOT</code></em></td>
-<td><code>/etc/weewx/</code></td>
-</tr>
-<tr>
-<td>Skins and templates</td>
-<td><em><code>SKIN_ROOT</code></em></td>
-<td><code>/etc/weewx/skins/</code></td>
-</tr>
-<tr>
-<td>SQLite databases</td>
-<td><em><code>SQLITE_ROOT</code></em></td>
-<td><code>/var/lib/weewx/</code></td>
-</tr>
-<tr>
-<td>Web pages and images</td>
-<td><em><code>HTML_ROOT</code></em></td>
-<td><code>/var/www/html/weewx/</code></td>
-</tr>
-<tr>
-<td>Documentation</td>
-<td><em><code>DOC_ROOT</code></em></td>
-<td><code>/usr/share/doc/weewx-x.y.z/</code></td>
-</tr>
-<tr>
-<td>Examples</td>
-<td><em><code>EXAMPLE_ROOT</code></em></td>
-<td><code>/usr/share/doc/weewx-x.y.z/examples/</code></td>
-</tr>
-<tr>
-<td>User directory</td>
-<td><em><code>USER_ROOT</code></em></td>
-<td><code>/usr/share/weewx/user/</code></td>
 </tr>
 </tbody>
 </table>
@@ -2282,19 +2267,24 @@ documentation.</p>
 <td><code>~/weewx-data</code></td>
 </tr>
 <tr>
-<td>Executables</td>
-<td><em><code>BIN_ROOT</code></em></td>
-<td>varies</td>
-</tr>
-<tr>
-<td>Configuration directory</td>
-<td><em><code>CONFIG_ROOT</code></em></td>
-<td><code>./</code></td>
-</tr>
-<tr>
 <td>Skins and templates</td>
 <td><em><code>SKIN_ROOT</code></em></td>
 <td><code>skins/</code></td>
+</tr>
+<tr>
+<td>User directory</td>
+<td><em><code>USER_ROOT</code></em></td>
+<td><code>bin/user/</code></td>
+</tr>
+<tr>
+<td>Examples</td>
+<td><em><code>EXAMPLE_ROOT</code></em></td>
+<td><code>examples/</code></td>
+</tr>
+<tr>
+<td>Executables</td>
+<td><em><code>BIN_ROOT</code></em></td>
+<td>varies</td>
 </tr>
 <tr>
 <td>SQLite databases</td>
@@ -2311,16 +2301,6 @@ documentation.</p>
 <td><em><code>DOC_ROOT</code></em></td>
 <td><code>docs/</code></td>
 </tr>
-<tr>
-<td>Examples</td>
-<td><em><code>EXAMPLE_ROOT</code></em></td>
-<td><code>examples/</code></td>
-</tr>
-<tr>
-<td>User directory</td>
-<td><em><code>USER_ROOT</code></em></td>
-<td><code>bin/user/</code></td>
-</tr>
 </tbody>
 </table>
 </div>
@@ -2334,7 +2314,7 @@ Absolute paths begin with a forward slash (<code>/</code>).  The tilde character
 </div>
 <h2 id="location-of-executables-in-a-pip-install">Location of executables in a pip install<a class="headerlink" href="#location-of-executables-in-a-pip-install" title="Permanent link">&para;</a></h2>
 <p>If you use a pip install, the location of the executables will depend on how
-the pip installation was done.</p>
+the installation was done.</p>
 <table>
 <thead>
 <tr>
@@ -2365,9 +2345,9 @@ the pip installation was done.</p>
 <td><code>/usr/local/bin/</code> (1)</td>
 </tr>
 <tr>
-<td>Virtual environment with <code>--user</code></td>
+<td>Virtual environment with <code>--user</code><br/>(not allowed)</td>
 <td><code>python3 -m venv ~/ve</code><br/><code>source ~/ve/bin/activate</code><br/><code>pip3 install weewx --user</code></td>
-<td>Not allowed</td>
+<td>N/A</td>
 </tr>
 </tbody>
 </table>

@@ -10,27 +10,23 @@
         <meta name="author" content="Tom Keffer <tkeffer@gmail.com>">
       
       
-        <link rel="canonical" href="https://www.weewx.com/quickstarts/git/">
+        <link rel="canonical" href="https://www.weewx.com/quickstarts/">
       
       
-        <link rel="prev" href="../pip/">
       
-      
-        <link rel="next" href="../../usersguide/introduction/">
-      
-      <link rel="icon" href="../../images/favicon.png">
+      <link rel="icon" href="../images/favicon.png">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.14">
     
     
       
-        <title>git - WeeWX 5.0</title>
+        <title>Quickstarts - WeeWX 5.0</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.85bb2934.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.85bb2934.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.a6bdf11c.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.a6bdf11c.min.css">
       
       
 
@@ -46,9 +42,9 @@
       
     
     
-      <link rel="stylesheet" href="../../css/weewx_ui.css">
+      <link rel="stylesheet" href="../css/weewx_ui.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -77,7 +73,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#running-weewx-from-a-git-repository" class="md-skip">
+        <a href="#quickstarts" class="md-skip">
           Skip to content
         </a>
       
@@ -93,9 +89,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="WeeWX 5.0" class="md-header__button md-logo" aria-label="WeeWX 5.0" data-md-component="logo">
+    <a href=".." title="WeeWX 5.0" class="md-header__button md-logo" aria-label="WeeWX 5.0" data-md-component="logo">
       
-  <img src="../../images/logo-weewx.png" alt="logo">
+  <img src="../images/logo-weewx.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -111,7 +107,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              git
+              Quickstarts
             
           </span>
         </div>
@@ -210,9 +206,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="WeeWX 5.0" class="md-nav__button md-logo" aria-label="WeeWX 5.0" data-md-component="logo">
+    <a href=".." title="WeeWX 5.0" class="md-nav__button md-logo" aria-label="WeeWX 5.0" data-md-component="logo">
       
-  <img src="../../images/logo-weewx.png" alt="logo">
+  <img src="../images/logo-weewx.png" alt="logo">
 
     </a>
     WeeWX 5.0
@@ -228,7 +224,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         Overview
       </a>
     </li>
@@ -241,16 +237,14 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
       
       
         
@@ -271,7 +265,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_2">
           <span class="md-nav__icon md-icon"></span>
           Quick start
@@ -284,7 +278,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../debian/" class="md-nav__link">
+      <a href="debian/" class="md-nav__link">
         Debian
       </a>
     </li>
@@ -298,7 +292,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../redhat/" class="md-nav__link">
+      <a href="redhat/" class="md-nav__link">
         RedHat
       </a>
     </li>
@@ -312,7 +306,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../suse/" class="md-nav__link">
+      <a href="suse/" class="md-nav__link">
         SuSE
       </a>
     </li>
@@ -326,7 +320,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../pip/" class="md-nav__link">
+      <a href="pip/" class="md-nav__link">
         pip
       </a>
     </li>
@@ -338,101 +332,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          git
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="git/" class="md-nav__link">
         git
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#install-pre-requisites" class="md-nav__link">
-    Install pre-requisites
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#get-the-code" class="md-nav__link">
-    Get the code
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#provision-a-new-station" class="md-nav__link">
-    Provision a new station
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#run-weewxd" class="md-nav__link">
-    Run weewxd
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#verify" class="md-nav__link">
-    Verify
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#customize" class="md-nav__link">
-    Customize
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#upgrade" class="md-nav__link">
-    Upgrade
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#uninstall" class="md-nav__link">
-    Uninstall
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -497,7 +401,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usersguide/introduction/" class="md-nav__link">
+      <a href="../usersguide/introduction/" class="md-nav__link">
         Introduction
       </a>
     </li>
@@ -511,7 +415,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usersguide/installing/" class="md-nav__link">
+      <a href="../usersguide/installing/" class="md-nav__link">
         Installing WeeWX
       </a>
     </li>
@@ -525,7 +429,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usersguide/where/" class="md-nav__link">
+      <a href="../usersguide/where/" class="md-nav__link">
         Where to find things
       </a>
     </li>
@@ -539,7 +443,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usersguide/running/" class="md-nav__link">
+      <a href="../usersguide/running/" class="md-nav__link">
         Running WeeWX
       </a>
     </li>
@@ -553,7 +457,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usersguide/webserver/" class="md-nav__link">
+      <a href="../usersguide/webserver/" class="md-nav__link">
         Web server integration
       </a>
     </li>
@@ -567,7 +471,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usersguide/backup/" class="md-nav__link">
+      <a href="../usersguide/backup/" class="md-nav__link">
         Backup & restore
       </a>
     </li>
@@ -581,7 +485,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usersguide/mysql-mariadb/" class="md-nav__link">
+      <a href="../usersguide/mysql-mariadb/" class="md-nav__link">
         MySQL/MariaDB
       </a>
     </li>
@@ -632,7 +536,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usersguide/troubleshooting/what-to-do/" class="md-nav__link">
+      <a href="../usersguide/troubleshooting/what-to-do/" class="md-nav__link">
         What to do
       </a>
     </li>
@@ -646,7 +550,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usersguide/troubleshooting/hardware/" class="md-nav__link">
+      <a href="../usersguide/troubleshooting/hardware/" class="md-nav__link">
         Hardware problems
       </a>
     </li>
@@ -660,7 +564,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usersguide/troubleshooting/software/" class="md-nav__link">
+      <a href="../usersguide/troubleshooting/software/" class="md-nav__link">
         Software problems
       </a>
     </li>
@@ -674,7 +578,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../usersguide/troubleshooting/meteo/" class="md-nav__link">
+      <a href="../usersguide/troubleshooting/meteo/" class="md-nav__link">
         Meteorological problems
       </a>
     </li>
@@ -760,7 +664,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../custom/introduction/" class="md-nav__link">
+      <a href="../custom/introduction/" class="md-nav__link">
         Introduction
       </a>
     </li>
@@ -774,7 +678,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../custom/custom-reports/" class="md-nav__link">
+      <a href="../custom/custom-reports/" class="md-nav__link">
         Customizing reports
       </a>
     </li>
@@ -788,7 +692,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../custom/report-scheduling/" class="md-nav__link">
+      <a href="../custom/report-scheduling/" class="md-nav__link">
         Scheduling reports
       </a>
     </li>
@@ -802,7 +706,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../custom/cheetah-generator/" class="md-nav__link">
+      <a href="../custom/cheetah-generator/" class="md-nav__link">
         The Cheetah generator
       </a>
     </li>
@@ -816,7 +720,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../custom/image-generator/" class="md-nav__link">
+      <a href="../custom/image-generator/" class="md-nav__link">
         The Image generator
       </a>
     </li>
@@ -830,7 +734,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../custom/localization/" class="md-nav__link">
+      <a href="../custom/localization/" class="md-nav__link">
         Localization
       </a>
     </li>
@@ -844,7 +748,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../custom/database/" class="md-nav__link">
+      <a href="../custom/database/" class="md-nav__link">
         Customizing the database
       </a>
     </li>
@@ -858,7 +762,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../custom/units/" class="md-nav__link">
+      <a href="../custom/units/" class="md-nav__link">
         Customizing units
       </a>
     </li>
@@ -872,7 +776,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../custom/multiple-bindings/" class="md-nav__link">
+      <a href="../custom/multiple-bindings/" class="md-nav__link">
         Multiple data bindings
       </a>
     </li>
@@ -886,7 +790,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../custom/sle/" class="md-nav__link">
+      <a href="../custom/sle/" class="md-nav__link">
         Search lists
       </a>
     </li>
@@ -900,7 +804,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../custom/service-engine/" class="md-nav__link">
+      <a href="../custom/service-engine/" class="md-nav__link">
         Services
       </a>
     </li>
@@ -914,7 +818,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../custom/derived/" class="md-nav__link">
+      <a href="../custom/derived/" class="md-nav__link">
         Derived types
       </a>
     </li>
@@ -928,7 +832,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../custom/drivers/" class="md-nav__link">
+      <a href="../custom/drivers/" class="md-nav__link">
         Drivers
       </a>
     </li>
@@ -942,7 +846,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../custom/extensions/" class="md-nav__link">
+      <a href="../custom/extensions/" class="md-nav__link">
         Extensions
       </a>
     </li>
@@ -1001,7 +905,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utilities/weewxd/" class="md-nav__link">
+      <a href="../utilities/weewxd/" class="md-nav__link">
         weewxd
       </a>
     </li>
@@ -1056,7 +960,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utilities/weectl-about/" class="md-nav__link">
+      <a href="../utilities/weectl-about/" class="md-nav__link">
         weectl
       </a>
     </li>
@@ -1070,7 +974,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utilities/weectl-database/" class="md-nav__link">
+      <a href="../utilities/weectl-database/" class="md-nav__link">
         weectl database
       </a>
     </li>
@@ -1084,7 +988,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utilities/weectl-debug/" class="md-nav__link">
+      <a href="../utilities/weectl-debug/" class="md-nav__link">
         weectl debug
       </a>
     </li>
@@ -1098,7 +1002,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utilities/weectl-device/" class="md-nav__link">
+      <a href="../utilities/weectl-device/" class="md-nav__link">
         weectl device
       </a>
     </li>
@@ -1112,7 +1016,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utilities/weectl-extension/" class="md-nav__link">
+      <a href="../utilities/weectl-extension/" class="md-nav__link">
         weectl extension
       </a>
     </li>
@@ -1126,7 +1030,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utilities/weectl-station/" class="md-nav__link">
+      <a href="../utilities/weectl-station/" class="md-nav__link">
         weectl station
       </a>
     </li>
@@ -1147,7 +1051,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utilities/wee_import/" class="md-nav__link">
+      <a href="../utilities/wee_import/" class="md-nav__link">
         wee_import
       </a>
     </li>
@@ -1161,7 +1065,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../utilities/wee_reports/" class="md-nav__link">
+      <a href="../utilities/wee_reports/" class="md-nav__link">
         wee_reports
       </a>
     </li>
@@ -1238,7 +1142,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../hardware/drivers/" class="md-nav__link">
+      <a href="../hardware/drivers/" class="md-nav__link">
         Drivers
       </a>
     </li>
@@ -1252,7 +1156,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../hardware/acurite/" class="md-nav__link">
+      <a href="../hardware/acurite/" class="md-nav__link">
         AcuRite
       </a>
     </li>
@@ -1266,7 +1170,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../hardware/cc3000/" class="md-nav__link">
+      <a href="../hardware/cc3000/" class="md-nav__link">
         CC3000
       </a>
     </li>
@@ -1280,7 +1184,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../hardware/fousb/" class="md-nav__link">
+      <a href="../hardware/fousb/" class="md-nav__link">
         FineOffset
       </a>
     </li>
@@ -1294,7 +1198,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../hardware/te923/" class="md-nav__link">
+      <a href="../hardware/te923/" class="md-nav__link">
         TE923
       </a>
     </li>
@@ -1308,7 +1212,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../hardware/ultimeter/" class="md-nav__link">
+      <a href="../hardware/ultimeter/" class="md-nav__link">
         Ultimeter
       </a>
     </li>
@@ -1322,7 +1226,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../hardware/vantage/" class="md-nav__link">
+      <a href="../hardware/vantage/" class="md-nav__link">
         Vantage
       </a>
     </li>
@@ -1336,7 +1240,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../hardware/wmr100/" class="md-nav__link">
+      <a href="../hardware/wmr100/" class="md-nav__link">
         WMR100
       </a>
     </li>
@@ -1350,7 +1254,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../hardware/wmr300/" class="md-nav__link">
+      <a href="../hardware/wmr300/" class="md-nav__link">
         WMR300
       </a>
     </li>
@@ -1364,7 +1268,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../hardware/wmr9x8/" class="md-nav__link">
+      <a href="../hardware/wmr9x8/" class="md-nav__link">
         WMR9x8
       </a>
     </li>
@@ -1378,7 +1282,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../hardware/ws1/" class="md-nav__link">
+      <a href="../hardware/ws1/" class="md-nav__link">
         WS1
       </a>
     </li>
@@ -1392,7 +1296,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../hardware/ws23xx/" class="md-nav__link">
+      <a href="../hardware/ws23xx/" class="md-nav__link">
         WS23xx
       </a>
     </li>
@@ -1406,7 +1310,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../hardware/ws28xx/" class="md-nav__link">
+      <a href="../hardware/ws28xx/" class="md-nav__link">
         WS28xx
       </a>
     </li>
@@ -1428,7 +1332,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../upgrade/" class="md-nav__link">
+      <a href="../upgrade/" class="md-nav__link">
         Upgrade guide
       </a>
     </li>
@@ -1545,7 +1449,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/weewx-options/introduction/" class="md-nav__link">
+      <a href="../reference/weewx-options/introduction/" class="md-nav__link">
         Introduction
       </a>
     </li>
@@ -1559,7 +1463,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/weewx-options/general/" class="md-nav__link">
+      <a href="../reference/weewx-options/general/" class="md-nav__link">
         General options
       </a>
     </li>
@@ -1573,7 +1477,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/weewx-options/stations/" class="md-nav__link">
+      <a href="../reference/weewx-options/stations/" class="md-nav__link">
         [Station]
       </a>
     </li>
@@ -1587,7 +1491,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/weewx-options/stdrestful/" class="md-nav__link">
+      <a href="../reference/weewx-options/stdrestful/" class="md-nav__link">
         [StdRESTful]
       </a>
     </li>
@@ -1601,7 +1505,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/weewx-options/stdreport/" class="md-nav__link">
+      <a href="../reference/weewx-options/stdreport/" class="md-nav__link">
         [StdReport]
       </a>
     </li>
@@ -1615,7 +1519,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/weewx-options/stdconvert/" class="md-nav__link">
+      <a href="../reference/weewx-options/stdconvert/" class="md-nav__link">
         [StdConvert]
       </a>
     </li>
@@ -1629,7 +1533,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/weewx-options/stdcalibrate/" class="md-nav__link">
+      <a href="../reference/weewx-options/stdcalibrate/" class="md-nav__link">
         [StdCalibrate]
       </a>
     </li>
@@ -1643,7 +1547,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/weewx-options/stdqc/" class="md-nav__link">
+      <a href="../reference/weewx-options/stdqc/" class="md-nav__link">
         [StdQC]
       </a>
     </li>
@@ -1657,7 +1561,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/weewx-options/stdwxcalculate/" class="md-nav__link">
+      <a href="../reference/weewx-options/stdwxcalculate/" class="md-nav__link">
         [StdWXCalculate]
       </a>
     </li>
@@ -1671,7 +1575,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/weewx-options/stdarchive/" class="md-nav__link">
+      <a href="../reference/weewx-options/stdarchive/" class="md-nav__link">
         [StdArchive]
       </a>
     </li>
@@ -1685,7 +1589,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/weewx-options/stdtimesynch/" class="md-nav__link">
+      <a href="../reference/weewx-options/stdtimesynch/" class="md-nav__link">
         [StdTimeSynch]
       </a>
     </li>
@@ -1699,7 +1603,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/weewx-options/data-bindings/" class="md-nav__link">
+      <a href="../reference/weewx-options/data-bindings/" class="md-nav__link">
         [DataBindings]
       </a>
     </li>
@@ -1713,7 +1617,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/weewx-options/databases/" class="md-nav__link">
+      <a href="../reference/weewx-options/databases/" class="md-nav__link">
         [Databases]
       </a>
     </li>
@@ -1727,7 +1631,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/weewx-options/database-types/" class="md-nav__link">
+      <a href="../reference/weewx-options/database-types/" class="md-nav__link">
         [DatabaseTypes]
       </a>
     </li>
@@ -1741,7 +1645,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/weewx-options/engine/" class="md-nav__link">
+      <a href="../reference/weewx-options/engine/" class="md-nav__link">
         [Engine]
       </a>
     </li>
@@ -1811,7 +1715,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/skin-options/introduction/" class="md-nav__link">
+      <a href="../reference/skin-options/introduction/" class="md-nav__link">
         Introduction
       </a>
     </li>
@@ -1825,7 +1729,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/skin-options/extras/" class="md-nav__link">
+      <a href="../reference/skin-options/extras/" class="md-nav__link">
         [Extras]
       </a>
     </li>
@@ -1839,7 +1743,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/skin-options/labels/" class="md-nav__link">
+      <a href="../reference/skin-options/labels/" class="md-nav__link">
         [Labels]
       </a>
     </li>
@@ -1853,7 +1757,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/skin-options/almanac/" class="md-nav__link">
+      <a href="../reference/skin-options/almanac/" class="md-nav__link">
         [Almanac]
       </a>
     </li>
@@ -1867,7 +1771,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/skin-options/units/" class="md-nav__link">
+      <a href="../reference/skin-options/units/" class="md-nav__link">
         [Units]
       </a>
     </li>
@@ -1881,7 +1785,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/skin-options/texts/" class="md-nav__link">
+      <a href="../reference/skin-options/texts/" class="md-nav__link">
         [Texts]
       </a>
     </li>
@@ -1895,7 +1799,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/skin-options/cheetahgenerator/" class="md-nav__link">
+      <a href="../reference/skin-options/cheetahgenerator/" class="md-nav__link">
         [CheetahGenerator]
       </a>
     </li>
@@ -1909,7 +1813,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/skin-options/imagegenerator/" class="md-nav__link">
+      <a href="../reference/skin-options/imagegenerator/" class="md-nav__link">
         [ImageGenerator]
       </a>
     </li>
@@ -1923,7 +1827,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/skin-options/copygenerator/" class="md-nav__link">
+      <a href="../reference/skin-options/copygenerator/" class="md-nav__link">
         [CopyGenerator]
       </a>
     </li>
@@ -1937,7 +1841,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/skin-options/generators/" class="md-nav__link">
+      <a href="../reference/skin-options/generators/" class="md-nav__link">
         [Generators]
       </a>
     </li>
@@ -1958,7 +1862,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/aggtypes/" class="md-nav__link">
+      <a href="../reference/aggtypes/" class="md-nav__link">
         Aggregation types
       </a>
     </li>
@@ -1972,7 +1876,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/durations/" class="md-nav__link">
+      <a href="../reference/durations/" class="md-nav__link">
         Durations
       </a>
     </li>
@@ -1986,7 +1890,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/units/" class="md-nav__link">
+      <a href="../reference/units/" class="md-nav__link">
         Units
       </a>
     </li>
@@ -2000,7 +1904,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/valuetuple/" class="md-nav__link">
+      <a href="../reference/valuetuple/" class="md-nav__link">
         ValueTuple
       </a>
     </li>
@@ -2014,7 +1918,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/valuehelper/" class="md-nav__link">
+      <a href="../reference/valuehelper/" class="md-nav__link">
         ValueHelper
       </a>
     </li>
@@ -2036,7 +1940,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../devnotes/" class="md-nav__link">
+      <a href="../devnotes/" class="md-nav__link">
         Notes for developers
       </a>
     </li>
@@ -2051,7 +1955,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../changes/" class="md-nav__link">
+      <a href="../changes/" class="md-nav__link">
         Change log
       </a>
     </li>
@@ -2078,70 +1982,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#install-pre-requisites" class="md-nav__link">
-    Install pre-requisites
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#get-the-code" class="md-nav__link">
-    Get the code
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#provision-a-new-station" class="md-nav__link">
-    Provision a new station
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#run-weewxd" class="md-nav__link">
-    Run weewxd
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#verify" class="md-nav__link">
-    Verify
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#customize" class="md-nav__link">
-    Customize
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#upgrade" class="md-nav__link">
-    Upgrade
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#uninstall" class="md-nav__link">
-    Uninstall
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -2155,135 +1995,17 @@
                   
 
 
-<h1 id="running-weewx-from-a-git-repository">Running WeeWX from a git repository<a class="headerlink" href="#running-weewx-from-a-git-repository" title="Permanent link">&para;</a></h1>
-<p>Because WeeWX is pure-Python and does not need to be compiled, it can be run
-directly from a git repository without "installing" it first. This approach is
-perhaps most appropriate for developers, but it is also useful on older
-operating systems or on platforms with tight memory and/or storage constraints.</p>
-<p>This technique can also be used to run from a source directory expanded from a
-zip/tar file.</p>
-<p>Although you do not need root privileges to run WeeWX this way, you will need
-them to set up a daemon and, perhaps, to change device permissions.</p>
-<h2 id="install-pre-requisites">Install pre-requisites<a class="headerlink" href="#install-pre-requisites" title="Permanent link">&para;</a></h2>
-<p>Before starting, you must install the pre-requisite Python and Python modules.</p>
-<ol>
-<li>
-<p>Ensure that Python 3.7 or later is installed.</p>
-</li>
-<li>
-<p>Ensure that <code>pip</code> and <code>venv</code> are installed.</p>
-</li>
-<li>
-<p>Create and activate a virtual environment in your home directory:</p>
-<div class="copy highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>~/weewx-venv
-<span class="nb">source</span><span class="w"> </span>~/weewx-venv/bin/activate
-</code></pre></div>
-</li>
-<li>
-<p>Install the minimum WeeWX dependencies:</p>
-<div class="copy highlight"><pre><span></span><code>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>CT3
-python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>configobj
-python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>Pillow
-</code></pre></div>
-</li>
-<li>
-<p>Depending on your situation, you may want to install these additional
-dependencies:</p>
-<div class="copy highlight"><pre><span></span><code><span class="c1"># If your hardware uses a serial port</span>
-python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>pyserial
-<span class="c1"># If your hardware uses a USB port</span>
-python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>pyusb
-<span class="c1"># If you want extended celestial information:</span>
-python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>ephem
-<span class="c1"># If you use MySQL or Maria</span>
-python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>PyMySQL<span class="o">[</span>rsa<span class="o">]</span>
-</code></pre></div>
-</li>
-</ol>
-<h2 id="get-the-code">Get the code<a class="headerlink" href="#get-the-code" title="Permanent link">&para;</a></h2>
-<p>Use <code>git</code> to clone the WeeWX repository into a directory called <code>weewx</code> in
-your home directory<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>:</p>
-<div class="copy highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/weewx/weewx<span class="w"> </span>~/weewx
-</code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>For systems with very little space, you may want to create a <em>shallow</em>
-clone:
-<div class="copy highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>--depth<span class="w"> </span><span class="m">1</span><span class="w"> </span>https://github.com/weewx/weewx<span class="w"> </span>~/weewx
-</code></pre></div></p>
-</div>
-<h2 id="provision-a-new-station">Provision a new station<a class="headerlink" href="#provision-a-new-station" title="Permanent link">&para;</a></h2>
-<p>Now that you have the prerequisites and the WeeWX code, you can provision a
-new station:</p>
-<div class="copy highlight"><pre><span></span><code><span class="c1"># If necessary, activate the WeeWX virtual environment</span>
-<span class="nb">source</span><span class="w"> </span>~/weewx-venv/bin/activate
-<span class="c1"># Provision a new station</span>
-python3<span class="w"> </span>~/weewx/src/weectl.py<span class="w"> </span>station<span class="w"> </span>create
-</code></pre></div>
-<p>The tool <code>weectl</code> will ask you a series of questions, then create a directory
-<code>weewx-data</code> in your home directory with a new configuration file. It will
-also install skins, documentation, utilitiy files, and examples in the same
-directory. The database and reports will also go into that directory, but
-only after you run <code>weewxd</code>, as shown in the following step.</p>
-<h2 id="run-weewxd">Run <code>weewxd</code><a class="headerlink" href="#run-weewxd" title="Permanent link">&para;</a></h2>
-<p>The program <code>weewxd</code> does the data collection, archiving, uploading, and report
-generation.  You can run it directly, or as a daemon.</p>
-<p>When you run <code>weewxd</code> directly, it will print data to the screen. It will
-stop when you log out, or when you terminate it with <code>control-c</code>.</p>
-<div class="copy highlight"><pre><span></span><code><span class="c1"># If necessary, activate the WeeWX virtual environment</span>
-<span class="nb">source</span><span class="w"> </span>~/weewx-venv/bin/activate
-<span class="c1"># Run weewxd</span>
-python3<span class="w"> </span>~/weewx/src/weewxd.py
-</code></pre></div>
-<p>To run <code>weewxd</code> as a daemon, install a systemd or init file that is
-appropriate for your operating system. Be sure to use the full path in the
-virtual environment to the Python interpreter and <code>weewxd.py</code>. Examples are
-included in the directory <code>~/weewx-data/util</code>.</p>
-<h2 id="verify">Verify<a class="headerlink" href="#verify" title="Permanent link">&para;</a></h2>
-<p>After about 5 minutes (the exact length of time depends on your archive
-interval), copy the following and paste into a web browser. You should see
-your station information and data.</p>
-<div class="highlight"><pre><span></span><code>~/weewx-data/public_html/index.html
-</code></pre></div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Not all browsers understand the tilde ("<code>~</code>") mark. You may
-have to substitute an explicit path to your home directory,
-for example, <code>file:///home/jackhandy</code> instead of <code>~</code>.</p>
-</div>
-<p>If you have problems, check the system log for entries from <code>weewxd</code>.</p>
-<h2 id="customize">Customize<a class="headerlink" href="#customize" title="Permanent link">&para;</a></h2>
-<p>To enable uploads or to customize reports, modify the configuration file.
-See the <a href="../../custom/introduction"><em>Customization Guide</em></a> for instructions,
-and the <a href="../../reference/weewx-options/introduction">application</a> and
-<a href="../../reference/skin-options/introduction">skin</a> references for all the 
-options.</p>
-<div class="highlight"><pre><span></span><code>nano ~/weewx-data/weewx.conf
-</code></pre></div>
-<p>The executable <code>weewxd</code> must be restarted for the changes to take effect.</p>
-<h2 id="upgrade">Upgrade<a class="headerlink" href="#upgrade" title="Permanent link">&para;</a></h2>
-<p>Update the code by pulling the latest:</p>
-<div class="copy highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>~/weewx<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>git<span class="w"> </span>pull
-</code></pre></div>
-<p>Then restart <code>weewxd</code></p>
-<h2 id="uninstall">Uninstall<a class="headerlink" href="#uninstall" title="Permanent link">&para;</a></h2>
-<p>Before you uninstall, be sure that <code>weewxd</code> is not running.</p>
-<p>Then simply delete the git clone:</p>
-<div class="highlight"><pre><span></span><code>rm<span class="w"> </span>-rf<span class="w"> </span>~/weewx
-</code></pre></div>
-<p>If desired, delete the data directory:</p>
-<div class="highlight"><pre><span></span><code>rm<span class="w"> </span>-r<span class="w"> </span>~/weewx-data
-</code></pre></div>
-<div class="footnote">
-<hr />
-<ol>
-<li id="fn:1">
-<p>Of course, the directory you clone into does not have to be <code>~/weewx</code>.
-It can be any directory. Just be sure to replace <code>~/weewx</code> with your directory's
-path in the rest of the instructions.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
-</li>
-</ol>
-</div>
+<h1 id="quickstarts">Quickstarts<a class="headerlink" href="#quickstarts" title="Permanent link">&para;</a></h1>
+<p>If you're an old hand at installing software on Unix systems, you may be able to
+use one of our <em>Quickstart guides</em>:</p>
+<ul>
+<li><a href="./debian">Debian</a> - including Ubuntu, Mint, Raspberry Pi 
+  OS, Devuan. Uses <code>apt</code>.</li>
+<li><a href="./redhat">Redhat</a> - including Fedora, CentOS, Rocky. Uses <code>yum</code>.</li>
+<li><a href="./suse">SUSE</a> - including openSUSE. Uses <code>zypper</code>.</li>
+<li><a href="./pip">pip</a> - any operating system. Uses <code>pip</code></li>
+<li><a href="./git">git</a> - any operating system. Run directly from repository.</li>
+</ul>
 
 
 
@@ -2332,10 +2054,10 @@ path in the rest of the instructions.&#160;<a class="footnote-backref" href="#fn
       <div class="md-dialog__inner md-typeset"></div>
     </div>
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "toc.follow", "search.highlight", "search.share", "search.suggest", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "toc.follow", "search.highlight", "search.share", "search.suggest", "content.tabs.link"], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.b4d07000.min.js"></script>
+      <script src="../assets/javascripts/bundle.b4d07000.min.js"></script>
       
     
   </body>
