@@ -7,7 +7,7 @@
 """Various handy utilities that don't belong anywhere else.
 
    NB: To run the doctests, this code must be run as a module. For example:
-     cd ~/git/weewx/bin
+     cd ~/git/weewx/src
      python -m weeutil.weeutil
 """
 
@@ -20,6 +20,9 @@ import os
 import re
 import shutil
 import time
+
+# For backwards compatibility:
+from weeutil.config import accumulateLeaves, search_up
 
 
 def convertToFloat(seq):
