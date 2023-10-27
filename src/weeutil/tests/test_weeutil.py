@@ -11,6 +11,9 @@ import unittest
 from weeutil.weeutil import *  # @UnusedWildImport
 from weewx.tags import TimespanBinder
 
+# Check for backwards compatiblity shim:
+from weeutil.weeutil import accumulateLeaves, search_up
+
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
 
