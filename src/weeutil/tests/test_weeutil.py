@@ -1,6 +1,5 @@
-# This Python file uses the following encoding: utf-8
 #
-#    Copyright (c) 2009-2022 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -62,7 +61,7 @@ class WeeutilTest(unittest.TestCase):
         os.environ['TZ'] = 'America/Los_Angeles'
         time.tzset()
 
-        # Test the start of DST using a 30 minute increment:
+        # Test the start of DST using a 30-minute increment:
         start = time.mktime((2013, 3, 10, 0, 0, 0, 0, 0, -1))
         stop = time.mktime((2013, 3, 10, 6, 0, 0, 0, 0, -1))
         result = list(stampgen(start, stop, 1800))
@@ -70,7 +69,7 @@ class WeeutilTest(unittest.TestCase):
                                   1362909600, 1362911400, 1362913200, 1362915000,
                                   1362916800, 1362918600, 1362920400])
 
-        # Test the ending of DST using a 30 minute increment:
+        # Test the ending of DST using a 30-minute increment:
         start = time.mktime((2013, 11, 3, 0, 0, 0, 0, 0, -1))
         stop = time.mktime((2013, 11, 3, 6, 0, 0, 0, 0, -1))
         result = list(stampgen(start, stop, 1800))
@@ -79,14 +78,14 @@ class WeeutilTest(unittest.TestCase):
                                   1383480000, 1383481800, 1383483600, 1383485400,
                                   1383487200])
 
-        # Test the start of DST using a 3 hour increment
+        # Test the start of DST using a 3-hour increment
         start = time.mktime((2013, 3, 9, 12, 0, 0, 0, 0, -1))
         stop = time.mktime((2013, 3, 10, 11, 0, 0, 0, 0, -1))
         result = list(stampgen(start, stop, 10800))
         self.assertEqual(result, [1362859200, 1362870000, 1362880800, 1362891600,
                                   1362902400, 1362909600, 1362920400, 1362931200])
 
-        # Test the end of DST using a 3 hour increment
+        # Test the end of DST using a 3-hour increment
         start = time.mktime((2013, 11, 2, 12, 0, 0, 0, 0, -1))
         stop = time.mktime((2013, 11, 3, 12, 0, 0, 0, 0, -1))
         result = list(stampgen(start, stop, 10800))
@@ -124,7 +123,7 @@ class WeeutilTest(unittest.TestCase):
         os.environ['TZ'] = 'America/Los_Angeles'
         time.tzset()
 
-        # Test the start of DST using a 30 minute increment:
+        # Test the start of DST using a 30-minute increment:
         start = time.mktime((2013, 3, 10, 0, 0, 0, 0, 0, -1))
         stop = time.mktime((2013, 3, 10, 5, 0, 0, 0, 0, -1))
         result = list(intervalgen(start, stop, 1800))
@@ -138,7 +137,7 @@ class WeeutilTest(unittest.TestCase):
                                                                    (1362913200, 1362915000),
                                                                    (1362915000, 1362916800)])))
 
-        # Test the ending of DST using a 30 minute increment:
+        # Test the ending of DST using a 30-minute increment:
         start = time.mktime((2013, 11, 3, 0, 0, 0, 0, 0, -1))
         stop = time.mktime((2013, 11, 3, 6, 0, 0, 0, 0, -1))
         result = list(intervalgen(start, stop, 1800))
@@ -156,7 +155,7 @@ class WeeutilTest(unittest.TestCase):
                                                                    (1383483600, 1383485400),
                                                                    (1383485400, 1383487200)])))
 
-        # Test the start of DST using a 3 hour increment:
+        # Test the start of DST using a 3-hour increment:
         start = time.mktime((2013, 3, 9, 12, 0, 0, 0, 0, -1))
         stop = time.mktime((2013, 3, 10, 11, 0, 0, 0, 0, -1))
         result = list(intervalgen(start, stop, 10800))
@@ -170,7 +169,7 @@ class WeeutilTest(unittest.TestCase):
                                                                    (1362920400, 1362931200),
                                                                    (1362931200, 1362938400)])))
 
-        # Test the ending of DST using a 3 hour increment:
+        # Test the ending of DST using a 3-hour increment:
         start = time.mktime((2013, 11, 2, 12, 0, 0, 0, 0, -1))
         stop = time.mktime((2013, 11, 3, 12, 0, 0, 0, 0, -1))
         result = list(intervalgen(start, stop, 10800))
@@ -202,30 +201,23 @@ class WeeutilTest(unittest.TestCase):
                                                              (1385884800, 1388563200)]))
         self.assertEqual(result, expected)
 
-    #    The "roundTS" feature has been removed. Keep the tests. tk 1/24/2017.
-    #         # Test roundTS = True
-    #         start = time.mktime((2017,1,14,10,38,35,0,0,-1))
-    #         stop  = time.mktime((2017,1,15,10,37,36,0,0,-1))
-    #         for s, check_s in zip(intervalgen(start, stop, 10800, True), [(1484413200, 1484424000), (1484424000, 1484434800),
-    #                                                                       (1484434800, 1484445600), (1484445600, 1484456400),
-    #                                                                       (1484456400, 1484467200), (1484467200, 1484478000),
-    #                                                                       (1484478000, 1484488800), (1484488800, 1484499600),
-    #                                                                       (1484499600, 1484510400)]):
-    #             self.assertEqual(s, TimeSpan(check_s[0], check_s[1]))
-
     def test_archiveHoursAgoSpan(self):
         os.environ['TZ'] = 'America/Los_Angeles'
         time.tzset()
         time_ts = time.mktime(time.strptime("2013-07-04 01:57:35", "%Y-%m-%d %H:%M:%S"))
         self.assertEqual(str(archiveHoursAgoSpan(time_ts, hours_ago=0)),
-                         "[2013-07-04 01:00:00 PDT (1372924800) -> 2013-07-04 02:00:00 PDT (1372928400)]")
+                         "[2013-07-04 01:00:00 PDT (1372924800) -> "
+                         "2013-07-04 02:00:00 PDT (1372928400)]")
         self.assertEqual(str(archiveHoursAgoSpan(time_ts, hours_ago=2)),
-                         "[2013-07-03 23:00:00 PDT (1372917600) -> 2013-07-04 00:00:00 PDT (1372921200)]")
+                         "[2013-07-03 23:00:00 PDT (1372917600) -> "
+                         "2013-07-04 00:00:00 PDT (1372921200)]")
         time_ts = time.mktime(datetime.date(2013, 7, 4).timetuple())
         self.assertEqual(str(archiveHoursAgoSpan(time_ts, hours_ago=0)),
-                         "[2013-07-03 23:00:00 PDT (1372917600) -> 2013-07-04 00:00:00 PDT (1372921200)]")
+                         "[2013-07-03 23:00:00 PDT (1372917600) -> "
+                         "2013-07-04 00:00:00 PDT (1372921200)]")
         self.assertEqual(str(archiveHoursAgoSpan(time_ts, hours_ago=24)),
-                         "[2013-07-02 23:00:00 PDT (1372831200) -> 2013-07-03 00:00:00 PDT (1372834800)]")
+                         "[2013-07-02 23:00:00 PDT (1372831200) -> "
+                         "2013-07-03 00:00:00 PDT (1372834800)]")
         self.assertIsNone(archiveHoursAgoSpan(None, hours_ago=24))
 
     def test_archiveSpanSpan(self):
@@ -250,7 +242,8 @@ class WeeutilTest(unittest.TestCase):
                          TimeSpan(1437400800, 1437433535))
         self.assertEqual(archiveSpanSpan(time_ts, day_delta=1, boundary='midnight'),
                          TimeSpan(1437314400, 1437433535))
-        self.assertEqual(archiveSpanSpan(time_ts, time_delta=3600, day_delta=1, boundary='midnight'),
+        self.assertEqual(archiveSpanSpan(time_ts, time_delta=3600, day_delta=1,
+                                         boundary='midnight'),
                          TimeSpan(1437314400, 1437433535))
         self.assertEqual(archiveSpanSpan(time_ts, week_delta=4, boundary='midnight'),
                          TimeSpan(1434981600, 1437433535))
@@ -415,7 +408,7 @@ class WeeutilTest(unittest.TestCase):
         t_start = startOfInterval(t_test, t_length)
         self.assertEqual(t_start, t_ans)
 
-        # Once again, but an an archive interval boundary
+        # Once again, but an archive interval boundary
         # This is 01:00:00 DST, the instant of the changeover
         # The correct answer is 00:59:00 DST.
         t_length = 1 * 60
@@ -445,11 +438,7 @@ class WeeutilTest(unittest.TestCase):
         self.assertFalse(t.includes(tright))
 
         # Test dictionary lookups. This will test hash and equality.
-        dic = {}
-        dic[t] = 't'
-        dic[tsub] = 'tsub'
-        dic[tleft] = 'tleft'
-        dic[tright] = 'tright'
+        dic = {t: 't', tsub: 'tsub', tleft: 'tleft', tright: 'tright'}
         self.assertEqual(dic[t], 't')
 
         self.assertTrue(t.includesArchiveTime(1230000001))
@@ -458,7 +447,7 @@ class WeeutilTest(unittest.TestCase):
         self.assertEqual(t.length, 1231000000 - 1230000000)
 
         with self.assertRaises(ValueError):
-            no_t = TimeSpan(1231000000, 1230000000)
+            _ = TimeSpan(1231000000, 1230000000)
 
     def test_genYearSpans(self):
 
@@ -688,12 +677,14 @@ class WeeutilTest(unittest.TestCase):
                                   time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
 
         # One month ago from 2008-01-01 00:00:00
-        self.assertEqual(archiveMonthSpan(time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1)), months_ago=1),
+        self.assertEqual(archiveMonthSpan(time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1)),
+                                          months_ago=1),
                          TimeSpan(time.mktime((2007, 11, 1, 0, 0, 0, 0, 0, -1)),
                                   time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1))))
 
         # One month ago from 2008-01-01 00:00:01
-        self.assertEqual(archiveMonthSpan(time.mktime((2008, 1, 1, 0, 0, 1, 0, 0, -1)), months_ago=1),
+        self.assertEqual(archiveMonthSpan(time.mktime((2008, 1, 1, 0, 0, 1, 0, 0, -1)),
+                                          months_ago=1),
                          TimeSpan(time.mktime((2007, 12, 1, 0, 0, 0, 0, 0, -1)),
                                   time.mktime((2008, 1, 1, 0, 0, 0, 0, 0, -1))))
 
@@ -910,7 +901,7 @@ class WeeutilTest(unittest.TestCase):
                 yield str(i)
                 # Every second object, let's take a peek ahead
                 if i % 2:
-                    # We can get a peek at the next object without disturbing the wrapped generator:
+                    # We can get a peek at the next object without disturbing the wrapped generator
                     yield "peek: %d" % g.peek()
 
         seq = [x for x in tester(g_with_peek)]
@@ -1025,8 +1016,8 @@ class WeeutilTest(unittest.TestCase):
         self.assertEqual(lod['i'], 9)
 
         # Now check .keys()
-        lod2 = ListOfDicts({k : str(k) for k in range(5)},
-                           {k : str(k) for k in range(5, 10)})
+        lod2 = ListOfDicts({k: str(k) for k in range(5)},
+                           {k: str(k) for k in range(5, 10)})
         self.assertEqual(set(lod2.keys()), set(range(10)))
         self.assertIn(3, lod2.keys())
         self.assertIn(6, lod2.keys())
@@ -1066,13 +1057,13 @@ class WeeutilTest(unittest.TestCase):
         self.assertEqual(latlon_string(-123.3, ('E', 'W'), 'long'), ('123', '18.00', 'W'))
     
     def test_timespanbinder_length(self):
-        t = ((1667689200,1667775600,'day',86400),
-             (1667257200,1669849200,'month',86400*30),
-             (1640991600,1672527600,'year',31536000))
+        t = ((1667689200, 1667775600, 'day', 86400),
+             (1667257200, 1669849200, 'month', 86400*30),
+             (1640991600, 1672527600, 'year', 31536000))
         for i in t:
-            ts = TimeSpan(i[0],i[1])
-            tsb = TimespanBinder(ts,None,context=i[2])
-            self.assertEqual(tsb.length.raw,i[3])
+            ts = TimeSpan(i[0], i[1])
+            tsb = TimespanBinder(ts, None, context=i[2])
+            self.assertEqual(tsb.length.raw, i[3])
 
     def test_version_compare(self):
         from weeutil.weeutil import version_compare
@@ -1081,6 +1072,7 @@ class WeeutilTest(unittest.TestCase):
         self.assertEqual(version_compare('1.2.2', '1.2.3'), -1)
         self.assertEqual(version_compare('1.3', '1.2.2'), 1)
         self.assertEqual(version_compare('1.3.0a1', '1.3.0a2'), -1)
+
 
 if __name__ == '__main__':
     unittest.main()

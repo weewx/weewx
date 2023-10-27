@@ -1,4 +1,3 @@
-# This Python file uses the following encoding: utf-8
 #
 #    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
 #
@@ -20,6 +19,7 @@ import os
 import re
 import shutil
 import time
+from collections import ChainMap
 
 # For backwards compatibility:
 from weeutil.config import accumulateLeaves, search_up
@@ -29,7 +29,8 @@ def convertToFloat(seq):
     """Convert a sequence with strings to floats, honoring 'Nones'
 
     Args:
-        seq(list[str]): A sequence of strings representing floats, possibly with a 'none' in there
+        seq(None|list[str]): A sequence of strings representing floats, possibly with a 'none'
+            in there
 
     Returns:
         list[float]: All strings will have been converted to floats.
@@ -135,16 +136,16 @@ def startOfInterval(time_ts, interval):
     return start_interval_ts
 
 
-def _ord_to_ts(ord):
+def _ord_to_ts(ord_date):
     """Convert from ordinal date to unix epoch time.
 
     Args:
-        ord (int): A proleptic Gregorian ordinal.
+        ord_date (int): A proleptic Gregorian ordinal.
 
     Returns:
         int: Unix epoch time of the start of the corresponding day.
     """
-    d = datetime.date.fromordinal(ord)
+    d = datetime.date.fromordinal(ord_date)
     t = int(time.mktime(d.timetuple()))
     return t
 
@@ -333,7 +334,8 @@ def isMidnight(time_ts):
 def archiveSpanSpan(time_ts, time_delta=0, hour_delta=0, day_delta=0, week_delta=0, month_delta=0,
                     year_delta=0, boundary=None):
     """ Returns a TimeSpan for the last xxx seconds where xxx equals
-        time_delta sec + hour_delta hours + day_delta days + week_delta weeks + month_delta months + year_delta years
+        time_delta sec + hour_delta hours + day_delta days + week_delta weeks \
+            + month_delta months + year_delta years
 
         NOTE: Use of month_delta and year_delta is deprecated.
         See issue #436 (https://github.com/weewx/weewx/issues/436)
@@ -413,8 +415,8 @@ def archiveHoursAgoSpan(time_ts, hours_ago=0):
     *previous* hour.
 
     Args:
-        time_ts (float|None): A timestamp. An hour long time span will be returned that encompasses this
-            timestamp.
+        time_ts (float|None): A timestamp. An hour long time span will be returned that encompasses
+            this timestamp.
         hours_ago (int): Which hour we want. 0=this hour, 1=last hour, etc. Default is
             zero (this hour).
 
@@ -558,7 +560,7 @@ def archiveWeekSpan(time_ts, startOfWeek=6, weeks_ago=0):
     actually belong in the previous week.
 
     Args:
-        time_ts (float): The week will include this timestamp.
+        time_ts (float|None): The week will include this timestamp.
         startOfWeek (int): The start of the week (0=Monday, 1=Tues, ..., 6 = Sun). Default
             is 6 (Sunday).
         weeks_ago (int): Which week we want. 0=this week, 1=last week, etc. Default
@@ -681,7 +683,7 @@ def archiveYearSpan(time_ts, years_ago=0):
     NB: Midnight of the 1st of the January is considered to actually belong in the previous year.
 
     Args:
-        time_ts (float): The year will include this timestamp.
+        time_ts (float|None): The year will include this timestamp.
         years_ago (int): Which year we want. 0=this year, 1=last year, etc. Default
             is zero (this year).
 
@@ -716,7 +718,7 @@ def archiveRainYearSpan(time_ts, sory_mon, years_ago=0):
     actually belong in the previous rain year.
 
     Args:
-        time_ts (float): The rain year will include this timestamp.
+        time_ts (float|None): The rain year will include this timestamp.
         sory_mon (int): The start of the rain year (1=Jan, 2=Feb, etc.)
         years_ago (int): Which rain year we want. 0=this year, 1=last year, etc. Default
             is zero (this year).
@@ -768,7 +770,7 @@ def stampgen(startstamp, stopstamp, interval):
     Args:
         startstamp (float): The start of the sequence in unix epoch time.
         stopstamp (float): The end of the sequence in unix epoch time.
-        interval (int): The time length of an interval in seconds.
+        interval (int|float): The time length of an interval in seconds.
 
     Yields:
         float: yields a sequence of timestamps between startstamp and endstamp, inclusive.
@@ -836,8 +838,8 @@ def intervalgen(start_ts, stop_ts, interval):
         start_ts (float): The start of the first interval in unix epoch time. In unix epoch time.
         stop_ts (float): The end of the last interval will be equal to or less than this.
             In unix epoch time.
-        interval (int|str): The time length of an interval in seconds, or a shorthand description
-            (such as 'day', or 'hour', or '3d').
+        interval (int|float|str): The time length of an interval in seconds, or a shorthand
+            description (such as 'day', or 'hour', or '3d').
 
     Yields:
          TimeSpan: A sequence of TimeSpans. Both the start and end of the timespan
@@ -865,7 +867,7 @@ def intervalgen(start_ts, stop_ts, interval):
         (Note how in this example the local time boundaries are constant, despite
         DST kicking in. The interval length is not constant.)
 
-        Another example, this one over the Fall DST boundary, and using 1 hour intervals:
+        Another example, this one over the Fall DST boundary, and using 1-hour intervals:
 
         >>> startstamp = 1257051600
         >>> print(timestamp_to_string(startstamp))
@@ -1364,11 +1366,11 @@ def latlon_string(ll, hemi, which, format_list=None):
 
     Args:
         ll (float): The decimal latitude or longitude
-        hemi (list[str,str]): A tuple holding strings representing positive or negative values.
-            E.g.: ('N', 'S') or ('E', 'W')
+        hemi (list[str,str]|tuple[str,str]): A tuple holding strings representing positive or
+            negative values. E.g.: ('N', 'S') or ('E', 'W')
         which (str): 'lat' for latitude, 'lon' for longitude
-        format_list (list[str,str,str]|None): A list or tuple holding the format strings to be used.
-            These are [whole degrees latitude, whole degrees longitude, minutes]
+        format_list (list[str,str,str]|None): A list or tuple holding the format strings to be
+            used. These are [whole degrees latitude, whole degrees longitude, minutes]
 
     Returns:
         tuple[str,str,str]: A 3-way tuple holding (latlon whole degrees, latlon minutes,
@@ -1486,7 +1488,7 @@ class GenByBatch(object):
                 self.batch_buffer.append(item)
                 count += 1
                 # If batch_size is zero, that means fetch everything in one big batch, so keep
-                # going. Otherwise, break when we have fetched 'batch_size" items.
+                # going. Otherwise, break when we have fetched 'batch_size' items.
                 if self.batch_size and count >= self.batch_size:
                     break
         # If there's still nothing in the buffer, we're done. Stop the iteration. Otherwise,
@@ -1606,9 +1608,9 @@ def dirN(c):
 class Polar(object):
     """Polar notation, except the direction is a compass heading."""
 
-    def __init__(self, mag, dir):
+    def __init__(self, mag, direction):
         self.mag = mag
-        self.dir = dir
+        self.dir = direction
 
     @classmethod
     def from_complex(cls, c):
@@ -1627,7 +1629,7 @@ def rounder(x, ndigits):
     Args:
         x (None, float, complex, list): The number or sequence of numbers to be rounded. If the
             argument is None, then None will be returned.
-        ndigits (int): The number of decimal digits to retain.
+        ndigits (int|None): The number of decimal digits to retain. Set to None to retain them all
 
     Returns:
         None, float, complex, list: Returns the number, or sequence of numbers, with the requested
@@ -1691,95 +1693,12 @@ def move_with_timestamp(path):
     return newpath
 
 
-try:
-    # Python 3
-    from collections import ChainMap
+class ListOfDicts(ChainMap):
+    def extend(self, m):
+        self.maps.append(m)
 
-
-    class ListOfDicts(ChainMap):
-        def extend(self, m):
-            self.maps.append(m)
-
-        def prepend(self, m):
-            self.maps.insert(0, m)
-
-except ImportError:
-
-    # Python 2. We'll have to supply our own
-    class ListOfDicts(object):
-        """A near clone of ChainMap"""
-
-        def __init__(self, *maps):
-            self.maps = list(maps) or [{}]
-
-        def __missing__(self, key):
-            raise KeyError(key)
-
-        def __getitem__(self, key):
-            for mapping in self.maps:
-                try:
-                    return mapping[key]
-                except KeyError:
-                    pass
-            return self.__missing__(key)
-
-        def get(self, key, default=None):
-            return self[key] if key in self else default
-
-        def __len__(self):
-            return len(set().union(*self.maps))
-
-        def __iter__(self):
-            return iter(set().union(*self.maps))
-
-        def __contains__(self, key):
-            return any(key in m for m in self.maps)
-
-        def __bool__(self):
-            return any(self.maps)
-
-        def __setitem__(self, key, value):
-            """Set a key, value on the first map. """
-            self.maps[0][key] = value
-
-        def __delitem__(self, key):
-            try:
-                del self.maps[0][key]
-            except KeyError:
-                raise KeyError('Key not found in the first mapping: {!r}'.format(key))
-
-        def popitem(self):
-            'Remove and return an item pair from maps[0]. Raise KeyError is maps[0] is empty.'
-            try:
-                return self.maps[0].popitem()
-            except KeyError:
-                raise KeyError('No keys found in the first mapping.')
-
-        def pop(self, key, *args):
-            'Remove *key* from maps[0] and return its value. Raise KeyError if *key* not in maps[0].'
-            try:
-                return self.maps[0].pop(key, *args)
-            except KeyError:
-                raise KeyError('Key not found in the first mapping: {!r}'.format(key))
-
-        def extend(self, m):
-            self.maps.append(m)
-
-        def prepend(self, m):
-            self.maps.insert(0, m)
-
-        def copy(self):
-            return self.__class__(self.maps[0].copy(), *self.maps[1:])
-
-        __copy__ = copy
-
-        def keys(self):
-            """Return an iterator of all keys in the maps."""
-            return iter(i for s in self.maps for i in s)
-
-        def values(self):
-            """Return an iterator of all values in the maps."""
-            return iter(i for s in self.maps for i in s.values())
+    def prepend(self, m):
+        self.maps.insert(0, m)
 
 
 class KeyDict(dict):
@@ -1799,7 +1718,7 @@ def natural_keys(text):
     Allows use of key=natural_keys to sort a list in human order, eg:
         alist.sort(key=natural_keys)
 
-    http://nedbatchelder.com/blog/200712/human_sorting.html
+    Ref: https://nedbatchelder.com/blog/200712/human_sorting.html
     """
 
     return [atoi(c) for c in re.split(natural_keys.compiled_re, text.lower())]
