@@ -1093,7 +1093,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         """
         records = self.get_records(since_ts)
         log.debug('found %d archive records' % len(records))
-        epoch = datetime.datetime.fromtimestamp(0, datetime.timezone.utc)
+        epoch = datetime.datetime.utcfromtimestamp(0)
         for r in records:
             delta = r['datetime'] - epoch
             # FIXME: deal with daylight saving corner case
@@ -1292,7 +1292,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                 if fixed_block['data_count'] is None:
                     raise weewx.WeeWxIOError('invalid data_count in get_records')
                 if since_ts:
-                    dt = datetime.datetime.fromtimestamp(since_ts, datetime.timezone.utc)
+                    dt = datetime.datetime.utcfromtimestamp(since_ts)
                     dt += datetime.timedelta(seconds=fixed_block['read_period']*30)
                 else:
                     dt = datetime.datetime.min
@@ -1516,8 +1516,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                     while data_time > next_live + live_interval:
                         log.debug('missed interval')
                         next_live += live_interval
-                    result['idx'] = datetime.datetime.fromtimestamp(int(next_live),
-                                                                    datetime.timezone.utc)
+                    result['idx'] = datetime.datetime.utcfromtimestamp(int(next_live))
                     next_live += live_interval
                     yield result, old_ptr, False
                 old_data = new_data
@@ -1555,8 +1554,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                     next_log = None
                     self._station_clock = None
                 if next_log:
-                    result['idx'] = datetime.datetime.fromtimestamp(int(next_log),
-                                                                    datetime.timezone.utc)
+                    result['idx'] = datetime.datetime.utcfromtimestamp(int(next_log))
                     next_log += log_interval
                     yield result, old_ptr, True
                 if new_ptr != self.inc_ptr(old_ptr):

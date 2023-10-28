@@ -19,7 +19,9 @@ Any reason why we can't use `weectl station create` to populate `/etc/weewx`
 instead of custom shell scripts?
 
 
-## Utilities
+## Drivers
+
+The `fousb` driver needs to be ported to Python 12.
 
 
 ## Docs
