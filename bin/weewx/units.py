@@ -1091,7 +1091,10 @@ class ValueHelper(object):
     @property
     def raw(self):
         """Returns just the data part, without any formatting."""
-        return self.value_t[0]
+        try:
+            return self.value_t[0]
+        except (TypeError,LookupError):
+            return None
 
     def convert(self, target_unit):
         """Return a ValueHelper in a new target unit.
