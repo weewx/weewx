@@ -4,6 +4,7 @@
 #    See the file LICENSE.txt for your rights.
 #
 """Entry point to the weewx weather system."""
+import argparse
 import importlib
 import locale
 import logging
@@ -13,7 +14,6 @@ import platform
 import signal
 import sys
 import time
-from optparse import OptionParser
 
 import configobj
 
@@ -26,21 +26,21 @@ from weewx import daemon
 
 log = logging.getLogger(__name__)
 
-usagestr = """Usage: %prog --help
-       %prog --version
-       %prog  [FILENAME|--config=FILENAME]
-              [--daemon]
-              [--pidfile=PIDFILE]
-              [--exit]
-              [--loop-on-init]
-              [--log-label=LABEL]
-           
-  Entry point to the weewx weather program. Can be run directly, or as a daemon
-  by specifying the '--daemon' option.
+description = """The main entry point for WeeWX. This program will gather data from your 
+station, archive its data, then generate reports."""
 
-Arguments:
-    FILENAME: The weewx configuration file to be used. Optional.
+usagestr = """%(prog)s --help
+       %(prog)s --version
+       %(prog)s [FILENAME|--config=FILENAME]
+                 [--daemon]
+                 [--pidfile=PIDFILE]
+                 [--exit]
+                 [--loop-on-init]
+                 [--log-label=LABEL]
 """
+
+epilog = "Specify either the positional argument FILENAME, " \
+         "or the optional argument using --config, but not both."
 
 
 # ===============================================================================
@@ -48,40 +48,40 @@ Arguments:
 # ===============================================================================
 
 def main():
-    parser = OptionParser(usage=usagestr)
-    parser.add_option("--config", dest="config_path", type=str,
-                      metavar="FILENAME",
-                      help="Use configuration file FILENAME.")
-    parser.add_option("-d", "--daemon", action="store_true", dest="daemon", help="Run as a daemon")
-    parser.add_option("-p", "--pidfile", type="string", dest="pidfile",
-                      help="Store the process ID in PIDFILE",
-                      default="/var/run/weewx.pid", metavar="PIDFILE")
-    parser.add_option("-v", "--version", action="store_true", dest="version",
-                      help="Display version number then exit")
-    parser.add_option("-x", "--exit", action="store_true", dest="exit",
-                      help="Exit on I/O and database errors instead of restarting")
-    parser.add_option("-r", "--loop-on-init", action="store_true", dest="loop_on_init",
-                      help="Retry forever if device is not ready on startup")
-    parser.add_option("-n", "--log-label", type="string", dest="log_label",
-                      help="Label to use in syslog entries",
-                      default="weewx", metavar="LABEL")
+    parser = argparse.ArgumentParser(description=description, usage=usagestr, epilog=epilog)
+    parser.add_argument("--config", dest="config_option", metavar="FILENAME",
+                        help="Use configuration file FILENAME")
+    parser.add_argument("-d", "--daemon", action="store_true", dest="daemon",
+                        help="Run as a daemon")
+    parser.add_argument("-p", "--pidfile", dest="pidfile", metavar="PIDFILE",
+                        default="/var/run/weewx.pid",
+                        help="Store the process ID in PIDFILE")
+    parser.add_argument("-v", "--version", action="store_true", dest="version",
+                        help="Display version number then exit")
+    parser.add_argument("-x", "--exit", action="store_true", dest="exit",
+                        help="Exit on I/O and database errors instead of restarting")
+    parser.add_argument("-r", "--loop-on-init", action="store_true", dest="loop_on_init",
+                        help="Retry forever if device is not ready on startup")
+    parser.add_argument("-n", "--log-label", dest="log_label", metavar="LABEL", default="weewx",
+                        help="Label to use in syslog entries")
+    parser.add_argument("config_arg", nargs='?', metavar="FILENAME")
 
     # Get the command line options and arguments:
-    options, args = parser.parse_args()
+    namespace = parser.parse_args()
 
-    if options.version:
+    if namespace.version:
         print(weewx.__version__)
         sys.exit(0)
 
-    if args and options.config_path:
-        print("Specify FILENAME as an argument, or by using --config, but not both",
-              file=sys.stderr)
-        sys.exit(weewx.CMD_ERROR)
+    # User can specify the config file as either a positional argument, or as an option
+    # argument, but not both.
+    if namespace.config_option and namespace.config_arg:
+        sys.exit(epilog)
 
     # Read the configuration file
     try:
-        # Pass in a copy of the command line arguments. read_config() will change it.
-        config_path, config_dict = weecfg.read_config(options.config_path, list(args))
+        config_path, config_dict = weecfg.read_config(namespace.config_arg,
+                                                      [namespace.config_option])
     except (IOError, configobj.ConfigObjError) as e:
         print("Error parsing config file: %s" % e, file=sys.stderr)
         weeutil.logger.log_traceback(log.critical, "    ****  ")
@@ -93,11 +93,12 @@ def main():
     # Now we can import user extensions
     importlib.import_module('user.extensions')
 
+    # Look for the debug flag. If set, ask for extra logging
     weewx.debug = int(config_dict.get('debug', 0))
 
     # Now that we have the config_dict and debug setting, we can customize the
     # logging with user additions
-    weeutil.logger.setup(options.log_label, config_dict)
+    weeutil.logger.setup(namespace.log_label, config_dict)
 
     # Log key bits of information.
     log.info("Initializing weewx version %s", weewx.__version__)
@@ -110,10 +111,10 @@ def main():
     log.info("Debug is %s", weewx.debug)
 
     # If no command line --loop-on-init was specified, look in the config file.
-    if options.loop_on_init is None:
+    if namespace.loop_on_init is None:
         loop_on_init = to_bool(config_dict.get('loop_on_init', False))
     else:
-        loop_on_init = options.loop_on_init
+        loop_on_init = namespace.loop_on_init
 
     # Save the current working directory. A service might
     # change it. In case of a restart, we need to change it back.
@@ -135,9 +136,9 @@ def main():
     # Set up a handler for a termination signal
     signal.signal(signal.SIGTERM, sigTERMhandler)
 
-    if options.daemon:
-        log.info("PID file is %s", options.pidfile)
-        daemon.daemonize(pidfile=options.pidfile)
+    if namespace.daemon:
+        log.info("PID file is %s", namespace.pidfile)
+        daemon.daemonize(pidfile=namespace.pidfile)
 
     # Main restart loop
     while True:
@@ -176,7 +177,7 @@ def main():
         except weewx.WeeWxIOError as e:
             # Caught an I/O error. Log it, wait 60 seconds, then try again
             log.critical("Caught WeeWxIOError: %s", e)
-            if options.exit:
+            if namespace.exit:
                 log.critical("    ****  Exiting...")
                 sys.exit(weewx.IO_ERROR)
             wait_time = to_float(config_dict.get('retry_wait', 60.0))
@@ -188,7 +189,7 @@ def main():
         except (weedb.CannotConnectError, weedb.DisconnectError) as e:
             # No connection to the database server. Log it, wait 60 seconds, then try again
             log.critical("Database connection exception: %s", e)
-            if options.exit:
+            if namespace.exit:
                 log.critical("    ****  Exiting...")
                 sys.exit(weewx.DB_ERROR)
             log.critical("    ****  Waiting 60 seconds then retrying...")
@@ -198,7 +199,7 @@ def main():
         except weedb.OperationalError as e:
             # Caught a database error. Log it, wait 120 seconds, then try again
             log.critical("Database OperationalError exception: %s", e)
-            if options.exit:
+            if namespace.exit:
                 log.critical("    ****  Exiting...")
                 sys.exit(weewx.DB_ERROR)
             log.critical("    ****  Waiting 2 minutes then retrying...")

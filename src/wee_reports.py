@@ -12,6 +12,8 @@ import socket
 import sys
 import time
 
+import configobj
+
 import weecfg
 import weeutil.logger
 import weewx
@@ -28,12 +30,12 @@ Use this utility to run reports immediately instead of waiting for the end of
 an archive interval."""
 
 usage = """%(prog)s --help
-       %(prog)s [CONFIG_FILE | --config=CONFIG_FILE]
-       %(prog)s [CONFIG_FILE | --config=CONFIG_FILE] --epoch=TIMESTAMP
-       %(prog)s [CONFIG_FILE | --config=CONFIG_FILE] --date=YYYY-MM-DD --time=HH:MM"""
+       %(prog)s [FILENAME | --config=FILENAME]
+       %(prog)s [FILENAME | --config=FILENAME] --epoch=TIMESTAMP
+       %(prog)s [FILENAME | --config=FILENAME] --date=YYYY-MM-DD --time=HH:MM"""
 
-epilog = "Specify either the positional argument CONFIG_FILE, " \
-         "or the optional argument --config, but not both."
+epilog = "Specify either the positional argument FILENAME, " \
+         "or the optional argument using --config, but not both."
 
 
 def disable_timing(section, key):
@@ -48,8 +50,8 @@ def main():
                                      prog='wee_reports')
 
     # Add the various options:
-    parser.add_argument("--config", dest="config_option", metavar="CONFIG_FILE",
-                        help="Use the configuration file CONFIG_FILE")
+    parser.add_argument("--config", dest="config_option", metavar="FILENAME",
+                        help="Use the configuration file FILENAME")
     parser.add_argument("--epoch", metavar="EPOCH_TIME",
                         help="Time of the report in unix epoch time")
     parser.add_argument("--date", metavar="YYYY-MM-DD",
@@ -58,7 +60,7 @@ def main():
     parser.add_argument("--time", metavar="HH:MM",
                         type=lambda t: time.strptime(t, '%H:%M'),
                         help="Time of day for the report")
-    parser.add_argument("config_arg", nargs='?', metavar="CONFIG_FILE")
+    parser.add_argument("config_arg", nargs='?', metavar="FILENAME")
 
     # Now we are ready to parse the command line:
     namespace = parser.parse_args()
@@ -88,8 +90,15 @@ def main():
     else:
         print("Generating for requested time %s" % timestamp_to_string(gen_ts))
 
-    # Fetch the config file
-    config_path, config_dict = weecfg.read_config(namespace.config_arg, [namespace.config_option])
+    # Read the configuration file
+    try:
+        config_path, config_dict = weecfg.read_config(namespace.config_arg,
+                                                      [namespace.config_option])
+    except (IOError, configobj.ConfigObjError) as e:
+        print("Error parsing config file: %s" % e, file=sys.stderr)
+        weeutil.logger.log_traceback(log.critical, "    ****  ")
+        sys.exit(weewx.CMD_ERROR)
+
     print("Using configuration file %s" % config_path)
 
     # Now that we have the configuration dictionary, we can add the path to the user
@@ -101,7 +110,8 @@ def main():
     # Look for the debug flag. If set, ask for extra logging
     weewx.debug = int(config_dict.get('debug', 0))
 
-    # Set logging configuration:
+    # Now that we have the config_dict and debug setting, we can customize the
+    # logging with user additions
     weeutil.logger.setup('wee_reports', config_dict)
 
     # With logging setup out of the way, we can log the config file in use.
