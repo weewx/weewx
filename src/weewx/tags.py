@@ -605,7 +605,7 @@ class CurrentObj(object):
                         vt = weewx.xtypes.get_scalar(obs_type, self.record, db_manager)
                     except (weewx.UnknownType, weewx.CannotCalculate):
                         # Nothing seems to be working. It's an unknown type.
-                        vt = weewx.units.UnknownType(obs_type)
+                        vt = weewx.units.UnknownObsType(obs_type)
 
         # Finally, return a ValueHelper
         return weewx.units.ValueHelper(vt, 'current', self.formatter, self.converter)

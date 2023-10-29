@@ -115,6 +115,12 @@ Previously, `SQLITE_ROOT` was expected to be an absolute path, but now relative
 paths are accepted. A relative path is considered relative to `WEEWX_ROOT`.
 Because this is _less restrictive_, it is not expected to affect any users.
 
+### Class `weewx.units.UnknownType` has been renamed
+
+Its name was too similar to `weewx.UnknownType`, so it has been renamed to
+`weewx.units.UnknownObsType`. It is very unlikely any users would be affected by
+this.
+
 
 ## Upgrading to V4.10
 

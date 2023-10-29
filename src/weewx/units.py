@@ -79,11 +79,6 @@ def kph_to_knot(x):
 def mps_to_knot(x):
     return x * 1.94384449
 
-class UnknownType(object):
-    """Indicates that the observation type is unknown."""
-    def __init__(self, obs_type):
-        self.obs_type = obs_type
-
 unit_constants = {
     'US'       : weewx.US,
     'METRIC'   : weewx.METRIC,
@@ -565,6 +560,18 @@ class ValueTuple(tuple):
         return ValueTuple(self[0] + other[0], self[1], self[2])
 
 
+class UnknownObsType:
+    """A type of ValueTuple that indicates the observation type is unknown."""
+    # def __new__(cls, obs_type):
+    #     vt = ValueTuple.__new__(cls, None, None, None)
+    #     vt.obs_type = obs_type
+    #     return vt
+    def __init__(self, obs_type):
+        self.obs_type = obs_type
+
+    def __str__(self):
+        return u"?'%s'?" % self.obs_type
+
 #==============================================================================
 #                        class Formatter
 #==============================================================================
@@ -697,7 +704,7 @@ class Formatter(object):
         """
 
         # Check to see if the ValueTuple holds an iterable:
-        if is_iterable(val_t[0]):
+        if type(val_t) is not UnknownObsType and is_iterable(val_t[0]):
             # Yes. Format each element individually, then stick them all together.
             s_list = [self._to_string((v, val_t[1], val_t[2]),
                                       context, addLabel, useThisFormat, None_string, localize)
@@ -715,7 +722,9 @@ class Formatter(object):
         """Similar to the function toString(), except that the value in val_t must be a
         simple scalar."""
 
-        if val_t is None or val_t[0] is None:
+        if type(val_t) is UnknownObsType:
+            return str(val_t)
+        elif val_t is None or val_t[0] is None:
             if None_string is None:
                 val_str = self.unit_format_dict.get('NONE', u'N/A')
             else:
@@ -990,10 +999,10 @@ class ValueHelper(object):
         """Initialize a ValueHelper
 
         Args:
-            value_t (ValueTuple|UnknownType|tuple): This parameter can be either a ValueTuple,
-                or an instance of UnknownType. If a ValueTuple, the "value" part can be either a
+            value_t (ValueTuple|UnknownObsType|tuple): This parameter can be either a ValueTuple,
+                or an instance of UnknownObsType. If a ValueTuple, the "value" part can be either a
                 scalar, or a series. If a converter is given, it will be used to convert the
-                ValueTuple before storing. If the parameter is 'UnknownType', it is an error ot
+                ValueTuple before storing. If the parameter is 'UnknownObsType', it is an error to
                 perform any operation on the resultant ValueHelper, except ask it to be formatted
                 as a string. In this case, the name of the unknown type will be included in the
                 resultant string.
@@ -1005,7 +1014,7 @@ class ValueHelper(object):
                 [Optional.]
         """
         # If there's a converter, then perform the conversion:
-        if converter and not isinstance(value_t, UnknownType):
+        if converter and not isinstance(value_t, UnknownObsType):
             self.value_t = converter.convert(value_t)
         else:
             self.value_t = value_t
@@ -1034,9 +1043,6 @@ class ValueHelper(object):
         Returns:
             str. The formatted and labeled string
         """
-        # If the type is unknown, then just return an error string:
-        if isinstance(self.value_t, UnknownType):
-            return u"?'%s'?" % self.value_t.obs_type
         # Check NONE_string for backwards compatibility:
         if None_string is None and NONE_string is not None:
             None_string = NONE_string
@@ -1129,7 +1135,7 @@ class ValueHelper(object):
             yield vh
 
     def exists(self):
-        return not isinstance(self.value_t, UnknownType)
+        return not isinstance(self.value_t, UnknownObsType)
 
     def has_data(self):
         return self.exists() and self.value_t[0] is not None

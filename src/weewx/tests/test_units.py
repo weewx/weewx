@@ -188,7 +188,16 @@ class ValueHelperTest(unittest.TestCase):
         vh = weewx.units.ValueHelper(value_t, formatter=default_formatter, converter=converter)
         self.assertEqual(str(vh), "   N/A")
         self.assertEqual(str(vh.degree_C), "   N/A")
-        
+
+    def testUnknownObsType(self):
+        value_t = weewx.units.UnknownObsType('foobar')
+        vh = weewx.units.ValueHelper(value_t, formatter=default_formatter)
+        self.assertEqual(str(vh), "?'foobar'?")
+        self.assertFalse(vh.exists())
+        self.assertFalse(vh.has_data())
+        with self.assertRaises(TypeError):
+            vh.raw
+
     def testElapsedTime(self):
         value_t = (2*86400 + 1*3600 + 5*60 + 12, "second", "group_deltatime")
         vh = weewx.units.ValueHelper(value_t, formatter=default_formatter, context='month')
