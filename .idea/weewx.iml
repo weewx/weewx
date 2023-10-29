@@ -13,7 +13,7 @@
       <excludeFolder url="file://$MODULE_DIR$/src/weewx_data/archive" />
       <excludeFolder url="file://$MODULE_DIR$/src/weewx_data/public_html" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.7 (weewx)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.9 (weewx)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">

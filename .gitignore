@@ -7,12 +7,8 @@ __pycache__
 .venv
 venv
 
-# Include all of .idea in the repository except ...
-.idea/misc.xml
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/dictionary/*
-.idea/shelf/*
+# Exclude all of the JetBrains .idea directory
+.idea
 
 # Ignore artifacts produced during build/packaging
 MANIFEST
