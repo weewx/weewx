@@ -171,9 +171,10 @@ install_weewxconf() {
       station_url_param=" "
     fi
 
-    $cfgapp station reconfigure --config=$cfgfile --driver=$driver --units=$units \
-      --location="$location" --latitude=$lat --longitude=$lon \
-      --altitude=$altitude,$altitude_unit --register=$register $station_url_param \
+    $cfgapp station reconfigure --config=$cfgfile \
+      --driver=$driver --units=$units --location="$location" \
+      --latitude=$lat --longitude=$lon --altitude=$altitude,$altitude_unit \
+      --register=$register $station_url_param \
       --no-prompt --no-backup
 
     insert_driver

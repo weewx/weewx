@@ -100,7 +100,7 @@ mkdir -p %{buildroot}/etc/default
 cp -r src/* %{buildroot}%{dst_bin_dir}
 
 # get rid of all the stuff we do not want or need
-rm -rf %{buildroot}%{dst_bin_dir}/weewx_data
+rm -rf %{buildroot}%{dst_bin_dir}/weewx_data/util
 for d in weecfg weectllib weedb weeplot weeutil weewx/drivers weewx; do
   rm -rf %{buildroot}%{dst_bin_dir}/$d
 done
