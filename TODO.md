@@ -3,10 +3,16 @@
 
 ## Package installers
 
-Convert `WEEWX_ROOT=/` to`WEEWX_ROOT=/etc/weewx` when upgrading.
+For new install:
+* Set `WEEWX_ROOT=/etc/weewx`
+* Create user+group `weewx`, then run as `weewx.weewx`
+* Install the udev file with permissions set for user `weewx`
 
-Copy `/usr/share/weewx/user` to `/etc/weewx/user` when upgrading, then move the 
-old one aside with a label.
+For upgrades:
+* Convert `WEEWX_ROOT=/` to`WEEWX_ROOT=/etc/weewx`
+* Copy contents of `/usr/share/weewx/user` to `/etc/weewx/bin/user`, then
+rename `/usr/share/weewx/user` to `/usr/share/weewx/user-YYmmdd`
+* Do not changeover to running as weewx.weewx
 
 ## `weectl`
 
@@ -16,6 +22,12 @@ subdirectory to `~/weewx-data`. We only want
 - `systemd`
 - `launchd`
 - `udev`
+
+
+## Testing
+
+Automate the testing of install/upgrade/uninstall for each installation
+method.
 
 
 ## Drivers
