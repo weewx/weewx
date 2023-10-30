@@ -648,47 +648,37 @@ def copy_util(config_path, config_dict, dry_run=False):
     # Convert to a list of two-way tuples.
     re_list = [(re.compile(key), re_dict[key]) for key in re_dict]
 
+    def _patch_file(srcpath, dstpath):
+        """Copy an individual file from srcpath to dstpath, while making substitutions
+         using the list of regular expressions re_list"""
+        with open(srcpath, 'r') as rd, open(dstpath, 'w') as wd:
+            for line in rd:
+                # Lines starting with "#&" are comment lines. Ignore them.
+                if line.startswith("#&"):
+                    continue
+                # Go through all the regular expressions, substituting the value for the key
+                for key, value in re_list:
+                    line = key.sub(value, line)
+                wd.write(line)
+
+    # Create a callable using the shutil.ignore_patterns factory function.
+    _ignore_function = shutil.ignore_patterns('*.pyc', '__pycache__', 'apache', 'default', 'i18n',
+                                              'init.d', 'logrotate.d', 'logwatch', 'newsyslog.d',
+                                              'rsyslog.d', 'scripts', 'solaris',
+                                              'tmpfiles.d')
+
     with weeutil.weeutil.get_resource_path('weewx_data', 'util') as util_resources:
         dstdir = os.path.join(weewx_root, 'util')
         print(f"Creating utility files in {dstdir}.")
         if not dry_run:
-            _process_files(util_resources, dstdir, re_list)
+            # Copy the tree rooted in 'util_resources' to 'dstdir', while ignoring files given
+            # by _ignore_function. While copying, use the function _patch_file() to massage
+            # the files.
+            shutil.copytree(util_resources, dstdir,
+                            ignore=_ignore_function,
+                            copy_function=_patch_file)
 
     return dstdir
-
-
-def _process_files(srcdir, dstdir, re_list, exclude={'__pycache__'}):
-    """Process all the utility files found in srcdir. Put them in dstdir"""
-    if os.path.basename(srcdir) in exclude:
-        return
-    # If the destination directory doesn't exist yet, make it
-    if not os.path.exists(dstdir):
-        os.mkdir(dstdir)
-
-    for f in os.listdir(srcdir):
-        if ".pyc" in f:
-            continue
-        srcpath = os.path.join(srcdir, f)
-        dstpath = os.path.join(dstdir, f)
-        # If this entry is a directory, descend into it using recursion
-        if os.path.isdir(srcpath):
-            _process_files(srcpath, dstpath, re_list, exclude)
-        else:
-            # Otherwise, it's a file. Patch it.
-            _patch_file(srcpath, dstpath, re_list)
-
-
-def _patch_file(srcpath, dstpath, re_list):
-    """Patch an individual file using the list of regular expressions re_list"""
-    with open(srcpath, 'r') as rd, open(dstpath, 'w') as wd:
-        for line in rd:
-            # Lines starting with "#&" are comment lines. Ignore them.
-            if line.startswith("#&"):
-                continue
-            # Go through all the regular expressions, substituting the value for the key
-            for key, value in re_list:
-                line = key.sub(value, line)
-            wd.write(line)
 
 
 def station_upgrade(config_path, dist_config_path=None, docs_root=None, examples_root=None,
@@ -818,4 +808,3 @@ def _get_existing_skins(skin_dir):
         existing_skins = {os.path.basename(d.path) for d in existing_contents if d.is_dir()}
 
     return existing_skins
-

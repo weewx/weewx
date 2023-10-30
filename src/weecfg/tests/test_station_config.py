@@ -5,7 +5,6 @@
 #
 """Test the configuration utilities."""
 import contextlib
-import importlib.resources
 import os
 import sys
 import tempfile

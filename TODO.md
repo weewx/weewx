@@ -14,15 +14,6 @@ For upgrades:
 rename `/usr/share/weewx/user` to `/usr/share/weewx/user-YYmmdd`
 * Do not changeover to running as weewx.weewx
 
-## `weectl`
-
-When doing a `weectl station create`, selectively copy what's in the `util`
-subdirectory to `~/weewx-data`. We only want
-- `import`
-- `systemd`
-- `launchd`
-- `udev`
-
 
 ## Testing
 
