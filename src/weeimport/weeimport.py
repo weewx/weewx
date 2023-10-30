@@ -427,8 +427,8 @@ class Source(object):
                 self.saveToArchive(archive, _mapped_data)
                 # advise the user and log, but only if it's not a dry run
                 if not self.dry_run:
-                    _msg = 'Mapped data saved to archive successfully "' \
-                           '"for period %d.' % self.period_no
+                    _msg = 'Mapped data saved to archive successfully ' \
+                           'for period %d.' % self.period_no
                     if self.verbose:
                         print(_msg)
                     log.info(_msg)
@@ -436,6 +436,9 @@ class Source(object):
                 self.period_no += 1
             # The source data has been processed and any records saved to
             # archive (except if it was a dry run).
+
+            # calculate the time taken for the import for our summary
+            self.tdiff = time.time() - self.t1
 
             # now update the lastUpdate metadata field, set it to the max of
             # the timestamp of the youngest record imported and the value of
@@ -1339,9 +1342,6 @@ class Source(object):
                 # multiple periods
                 _msg = 'Period %d - no records identified for import.' % self.period_no
             print(_msg)
-        # if we have finished record the time taken for our summary
-        if self.last_period:
-            self.tdiff = time.time() - self.t1
 
 
 # ============================================================================
