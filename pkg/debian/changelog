@@ -1,3 +1,6 @@
+weewx (5.0.0b15-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 29 Oct 2023 22:41:56 -0400
 weewx (5.0.0b14-1) unstable; urgency=low
   * Refactor, using 'src' instead of 'bin'.
   * Put weewx_data in version control. Put built docs in it.
