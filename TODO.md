@@ -3,20 +3,19 @@
 
 ## Package installers
 
-Right now, the Debian depository is for a "squeeze" and "buster" distribution.
-Do we keep adding them ("bullseye", "bookworm", etc.)? Or, do we just use
-"stable"? If the last, then the Debian install instructions should become
+Convert `WEEWX_ROOT=/` to`WEEWX_ROOT=/etc/weewx` when upgrading.
 
-    echo "deb [arch=all] http://weewx.com/apt/python3 stable main" | sudo tee /etc/apt/sources.list.d/weewx.list
+Copy `/usr/share/weewx/user` to `/etc/weewx/user` when upgrading, then move the 
+old one aside with a label.
 
-Right now, the function `weewx.read_config()` will convert `WEEWX_ROOT=/` to
-`WEEWX_ROOT=/etc/weewx` at runtime. Is there a way to do this when upgrading?
+## `weectl`
 
-Can we copy `/usr/share/weewx/user` to `/etc/weewx/user` when upgrading? Then
-delete the former.
-
-Any reason why we can't use `weectl station create` to populate `/etc/weewx`
-instead of custom shell scripts?
+When doing a `weectl station create`, selectively copy what's in the `util`
+subdirectory to `~/weewx-data`. We only want
+- `import`
+- `systemd`
+- `launchd`
+- `udev`
 
 
 ## Drivers
