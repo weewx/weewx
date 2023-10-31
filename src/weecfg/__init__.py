@@ -161,13 +161,13 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
 
     # Remember where we found the config file
     config_dict['config_path'] = os.path.realpath(config_path)
+    # Remember the original value for WEEWX_ROOT. In case we need to write this file out, we
+    # can restore it.
+    config_dict['WEEWX_ROOT_ORIG'] = config_dict.get('WEEWX_ROOT')
 
     if 'WEEWX_ROOT' not in config_dict:
         # If missing, set WEEWX_ROOT to the directory the config file is in
         config_dict['WEEWX_ROOT'] = os.path.dirname(config_path)
-    elif config_dict['WEEWX_ROOT'] == '/':
-        # If a legacy path from a package installer, update it.
-        config_dict['WEEWX_ROOT'] = '/etc/weewx'
     # In case WEEWX_ROOT is a relative path, join it with the location of the config file, then
     # convert it to an absolute path.
     config_dict['WEEWX_ROOT'] = os.path.abspath(os.path.join(os.path.dirname(config_path),
@@ -197,6 +197,10 @@ def save(config_dict, config_path, backup=False):
     write_dict = weeutil.config.deep_copy(config_dict)
     write_dict.pop('config_path', None)
     write_dict.pop('entry_path', None)
+    if write_dict.get('WEEWX_ROOT_ORIG'):
+        # Reset WEEWX_ROOT to what it originally was, then pop WEEWX_ROOT_ORIG
+        write_dict['WEEWX_ROOT'] = write_dict['WEEWX_ROOT_ORIG']
+        write_dict.pop('WEEWX_ROOT_ORIG', None)
 
     # Check to see if the file exists, and we are supposed to make backup:
     if os.path.exists(config_path) and backup:
