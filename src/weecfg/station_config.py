@@ -253,11 +253,8 @@ def config_latlon(config_dict, latitude=None, longitude=None, no_prompt=False):
         # Use the default.
         final_latitude = default_latitude
 
-    # Make sure we have something that can convert to a float:
-    float(final_latitude)
-
     # Set the value in the config file
-    config_dict['Station']['latitude'] = final_latitude
+    config_dict['Station']['latitude'] = float(final_latitude)
 
     # Similar, except for longitude
     default_longitude = to_float(config_dict['Station'].get('longitude', 0.0))
@@ -274,11 +271,8 @@ def config_latlon(config_dict, latitude=None, longitude=None, no_prompt=False):
         # Use the default.
         final_longitude = default_longitude
 
-    # Make sure we have something that can convert to a float:
-    float(final_longitude)
-
     # Set the value in the config file
-    config_dict['Station']['longitude'] = final_longitude
+    config_dict['Station']['longitude'] = float(final_longitude)
 
 
 def config_units(config_dict, unit_system=None, no_prompt=False):
