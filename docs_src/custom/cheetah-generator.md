@@ -104,11 +104,11 @@ Because the option
 
     encoding = html_entities
 
-appears directly under `[StdReport]`, this will be the default encoding of the
-generated files unless explicitly overridden. We see an example of this under
-`[SummaryByMonth]` and `[SummaryByYear]`, which use option `normalized_ascii`
-instead of `html_entities`. This encoding replaces accented characters with a
-non-accented analog.
+appears directly under `[CheetahGenerator]`, this will be the default encoding
+of the generated files unless explicitly overridden. We see an example of this
+under `[SummaryByMonth]` and `[SummaryByYear]`, which override the default by
+specifying option `normalized_ascii` (which replaces accented characters with a 
+non-accented analog).
 
 Other than `SummaryByMonth` and `SummaryByYear`, the section names are
 arbitrary. The section `[[ToDate]]` could just as well have been called
@@ -283,6 +283,8 @@ in the record emitted by the `NEW_ARCHIVE_RECORD` event. This is generally the
 data emitted by the station console, augmented by any derived variables
 (_e.g._, wind chill) that you might have specified. If the observation type
 cannot be found there, the most recent record in the database will be searched.
+If it still cannot be found, WeeWX will attempt to calculate it using the
+[xtypes system](../derived).
 
 The most general tag for a "current" observation looks like:
 
