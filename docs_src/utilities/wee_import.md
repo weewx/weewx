@@ -1017,368 +1017,257 @@ A mapping is not required for every WeeWX archive field (e.g., the Weather Displ
 
 The example Weather Display import configuration file located in the `/home/weewx/util/import]` or the `/etc/weewx/import directory contains an example field map in the import configuration file comments. There is no default.
 
+
 ### [WeatherCat]
 
-        <p>The <span class="config_section">[WeatherCat]</span> section contains the options relating to the import of
-            observational data from WeatherCat monthly .cat files.
-        </p>
+The `[WeatherCat]` section contains the options relating to the import of observational data from WeatherCat monthly .cat files.
 
-        <h4 class='config_option' id='wcat_directory'>directory</h4>
+#### `directory`{#wcat_directory}
 
-        <p>The full path to the directory containing the year directories that contain the WeatherCat monthly .cat files
-            to be imported. Do not include a trailing /. There is no default.
-        </p>
+The full path to the directory containing the year directories that contain the WeatherCat monthly .cat files to be imported. Do not include a trailing `/`.
 
-        <h4 class='config_option' id='wcat_encoding'>source_encoding</h4>
+There is no default.
 
-        <p>The WeatherCat monthly .cat file encoding. This option is identical in operation to the
-            CSV <em><a href="#csv_encoding">source_encoding</a></em> option but applies to WeatherCat imports only. The
-            default is <span class="code">utf-8-sig</span>.
-        </p>
+#### `source_encoding`{#wcat_encoding}
 
-        <h4 class='config_option' id='wcat_interval'>interval</h4>
+The WeatherCat monthly .cat file encoding. This option is identical in operation to the CSV [source_encoding](#csv_encoding) option but applies to WeatherCat imports only.
 
-        <p>Determines how the time interval (WeeWX database field <span class="code">interval</span>) between successive
-            observations is determined. This option is identical in operation to the CSV <em><a href="#csv_interval">interval</a></em>
-            option but applies to WeatherCat imports only. As WeatherCat monthly .cat files can, at times, have
-            missing entries, the use of <span class="code">interval = derive</span> may give incorrect or
-            inconsistent interval values. Better results may be obtained by using <span
-                class="code">interval = conf</span> if the <span class="code">archive_interval</span> for the current
-            WeeWX installation is the same as the WeatherCat .cat file log interval, or by
-            using <span class="code">interval = x</span> where <span class="code">x</span> is
-            the time interval in minutes used in the WeatherCat monthly .cat file(s). The most appropriate setting
-            will depend on the completeness and (time) accuracy of the WeatherCat data being imported.
-        </p>
+The default is `utf-8-sig`.
 
-        <p>The default is <span class="code">derive</span>.</p>
+#### `interval`{#wcat_interval}
 
-        <h4 class='config_option' id='wcat_qc'>qc</h4>
+Determines how the time interval (WeeWX database field `interval`) between successive observations is determined. This option is identical in operation to the CSV [interval](#csv_interval) option but applies to WeatherCat imports only. As WeatherCat monthly .cat files can, at times, have missing entries, the use of `interval = derive` may give incorrect or inconsistent interval values. Better results may be obtained by using `interval = conf` if the `archive_interval` for the current WeeWX installation is the same as the WeatherCat .cat file log interval, or by using `interval = x` where `x` is the time interval in minutes used in the WeatherCat monthly .cat file(s). The most appropriate setting will depend on the completeness and (time) accuracy of the WeatherCat data being imported.
 
-        <p>Determines whether simple quality control checks are applied to imported data. This option is identical in
-            operation to the CSV <em><a href="#csv_qc">qc</a></em> option but applies to WeatherCat imports only. The
-            default is <span class="code">True</span>.
-        </p>
+The default is `derive`.
 
-        <h4 class='config_option' id='wcat_calc_missing'>calc_missing</h4>
+#### `qc`{#wcat_qc}
 
-        <p>Determines whether any missing derived observations will be calculated from the imported data. This option is
-            identical in operation to the CSV <em><a href="#csv_calc_missing">calc_missing</a></em> option but applies
-            to WeatherCat imports only. The default is <span class="code">True</span>.
-        </p>
+Determines whether simple quality control checks are applied to imported data. This option is identical in operation to the CSV [qc](#csv_qc) option but applies to WeatherCat imports only.
 
-        <h4 class='config_option' id='wcat_decimal'>decimal</h4>
+The default is `True`.
 
-        <p>The character used as the decimal point in the WeatherCat monthly .cat files. This parameter must be included
-            in quotation marks. Default is <span class="code">'.'</span>.
-        </p>
+#### ``{#wcat_calc_missing}calc_missing
 
-        <h4 class='config_option' id='wcat_tranche'>tranche</h4>
+Determines whether any missing derived observations will be calculated from the imported data. This option is identical in operation to the CSV [calc_missing](#csv_calc_missing) option but applies to WeatherCat imports only.
 
-        <p>The number of records written to the WeeWX database in each transaction. This option is identical in
-            operation to the CSV <em><a href="#csv_tranche">tranche</a></em> option but applies to WeatherCat imports
-            only. The default is <span class="code">250</span> which should suit most users.
-        </p>
+The default is `True`.
 
-        <h4 class='config_option' id='wcat_UV'>UV_sensor</h4>
+#### `decimal`{#wcat_decimal}
 
-        <p>Enables <span class="code">wee_import</span> to distinguish between the case where a UV sensor is present and
-            the UV index is 0 and the case where no UV sensor is present and UV index is 0. This option is identical in
-            operation to the CSV <em><a href="#csv_UV">UV_sensor</a></em> option but applies to WeatherCat imports only.
-            The default is <span class="code">True</span>.
-        </p>
+The character used as the decimal point in the WeatherCat monthly .cat files. This parameter must be included in quotation marks.
 
-        <h4 class='config_option' id='wcat_solar'>solar_sensor</h4>
+The default is `.`.
 
-        <p>Enables <span class="code">wee_import</span> to distinguish between the case where a solar radiation sensor
-            is present and the solar radiation is 0 and the case where no solar radiation sensor is present and solar
-            radiation is 0. This option is identical in operation to the
-            CSV <em><a href="#csv_solar">solar_sensor</a></em> option but applies to WeatherCat imports only. The
-            default is <span class="code">True</span>.
-        </p>
+#### `tranche`{#wcat_tranche}
 
-        <h4 class='config_option' id='wcat_units'>[[Units]]</h4>
+The number of records written to the WeeWX database in each transaction. This option is identical in operation to the CSV [tranche](#csv_tranche) option but applies to WeatherCat imports only.
 
-        <p>The <span class="code">[[Units]]</span> stanza defines the units used in the WeatherCat monthly .cat files.
-            Unit settings are required for <span class="code">temperature</span>, <span class="code">pressure</span>, <span
-                class="code">rain</span> and <span class="code">speed</span>. The format for each setting is:
-        </p>
+The default is `250` which should suit most users.
 
-        <pre class="tty">obs_type = weewx_unit_name</pre>
+#### `UV_sensor`{#wcat_UV}
 
-        <p>Where <span class="code">obs_type</span> is one of <span class="code">temperature</span>, <span class="code">pressure</span>,
-            <span class="code">rain</span> or <span class="code">speed</span> and
-            <span class="code">weewx_unit_name</span> is the WeeWX unit name of the units used by that particular
-            <span class="code">obs_type</span> (refer to the <a href="customizing.htm#units">Units</a> appendix in
-            the Customization Guide for details of available WeeWX unit names). As WeatherCat supports a different suite
-            of possible units only a subset of the available WeeWX unit names can be used for some settings.
-        </p>
+Enables `wee_import` to distinguish between the case where a UV sensor is present and the UV index is 0 and the case where no UV sensor is present and UV index is 0. This option is identical in operation to the CSV [UV_sensor](#csv_UV) option but applies to WeatherCat imports only.
 
-        <h2>Importing from CSV files</h2>
+The default is `True`.
 
-        <p class="warning">
-            <strong>Warning!</strong><br/>Running WeeWX during a <span class="code">wee_import</span> session can lead to
-            abnormal termination of the import. If WeeWX must remain running (e.g., so that live data is not lost) run
-            the <span class="code">wee_import</span> session on another machine or to a second database and merge the
-            in-use and second database once the import is complete.
-        </p>
+#### `solar_sensor`{#wcat_solar}
 
-        <p><span class="code">wee_import</span> can import data from a single CSV file. The CSV source file must be
-            structured as follows:
-        </p>
+Enables `wee_import` to distinguish between the case where a solar radiation sensor is present and the solar radiation is 0 and the case where no solar radiation sensor is present and solar radiation is 0. This option is identical in operation to the CSV [solar_sensor](#csv_solar) option but applies to WeatherCat imports only.
 
-        <ul>
-            <li>The file must have a header row consisting of a comma separated list of field names. The field names can
-                be any valid string as long as each field name is unique within the list. There is no requirement for
-                the field names to be in any particular order as long as the same order is used for the observations on
-                each row in the file. These field names will be mapped to WeeWX field names in the <span class="code">[CSV]</span>
-                section of the import configuration file.
-            </li>
+The default is `True`.
 
-            <li>Observation data for a given date-time must be listed on a single line with individual fields separated
-                by a comma. The fields must be in the same order as the field names in the header row.
-            </li>
+#### `[[Units]]`{#wcat_units}
 
-            <li>Blank fields are represented by the use of white space or no space only between commas.
-            </li>
+The `[[Units]]` stanza defines the units used in the WeatherCat monthly .cat files. Unit settings are required for `temperature`, `pressure`, `rain` and `speed`. The format for each setting is:
 
-            <li>Direction data being imported may be represented as numeric degrees or as a string representing
-                the <a href="https://en.wikipedia.org/wiki/Cardinal_direction">cardinal, intercardinal and/or secondary intercardinal directions</a>.
-            </li>
+```
+obs_type = weewx_unit_name
+```
 
-            <li>There must a field that represents the date-time of the observations on each line. This date-time field
-                must be either a Unix epoch timestamp or any date-time format that can be represented using <em> <a
-                    href="https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior">Python
-                    strptime() format codes</a></em>.
-            </li>
-        </ul>
+Where `obs_type` is one of `temperature`, `pressure`, `rain` or `speed` and `weewx_unit_name` is the WeeWX unit name of the units used by that particular `obs_type` (refer to the [_Units_](../reference/units) for details of available WeeWX unit names). As WeatherCat supports a different suite of possible units only a subset of the available WeeWX unit names can be used for some settings.
 
-        <p>A CSV file suitable for import by <span class="code">wee_import</span> may look like this:</p>
+## Importing from CSV files
 
-        <pre class="tty">Time,Barometer,Temp,Humidity,Windspeed,Dir,Gust,Dayrain,Radiation,Uv,Comment
+!!! Warning!
+    Running WeeWX during a `wee_import` session can lead to abnormal termination of the import. If WeeWX must remain running (e.g., so that live data is not lost) run the `wee_import` session on another machine or to a second database and merge the in-use and second database once the import is complete.
+
+`wee_import can import data from a single CSV file. The CSV source file must be structured as follows:
+
+* The file must have a header row consisting of a comma separated list of field names. The field names can be any valid string as long as each field name is unique within the list. There is no requirement for the field names to be in any particular order as long as the same order is used for the observations on each row in the file. These field names will be mapped to WeeWX field names in the `[CSV]` section of the import configuration file.
+
+* Observation data for a given date-time must be listed on a single line with individual fields separated by a comma. The fields must be in the same order as the field names in the header row.
+
+* Blank fields are represented by the use of white space or no space only between commas.
+
+* Direction data being imported may be represented as numeric degrees or as a string representing the [cardinal, intercardinal and/or secondary intercardinal directions](https://en.wikipedia.org/wiki/Cardinal_direction).
+
+* There must a field that represents the date-time of the observations on each line. This date-time field must be either a Unix epoch timestamp or any date-time format that can be represented using (Python
+strptime() format codes)[https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior].
+
+A CSV file suitable for import by `wee_import` may look like this:
+
+```Time,Barometer,Temp,Humidity,Windspeed,Dir,Gust,Dayrain,Radiation,Uv,Comment
 28/11/2017 08:00:00,1016.9,24.6,84,1.8,113,8,0,359,3.8,"start of observations"
 28/11/2017 08:05:00,1016.9,25.1,82,4.8,135,11.3,0,775,4.7,
 28/11/2017 08:10:00,1016.9,25.4,80,4.4,127,11.3,0,787,5.1,"note temperature"
 28/11/2017 08:15:00,1017,25.7,79,3.5,74,11.3,0,800,5.4,
 28/11/2017 08:20:00,1016.9,25.9,79,1.6,95,9.7,0,774,5.5,
 28/11/2017 08:25:00,1017,25.5,78,2.9,48,9.7,0,303,3.4,"forecast received"
-28/11/2017 08:30:00,1017.1,25.1,80,3.1,54,9.7,0,190,3.6,</pre>
+28/11/2017 08:30:00,1017.1,25.1,80,3.1,54,9.7,0,190,3.6,
+```
 
-        <p>or this:</p>
+or this:
 
-        <pre class="tty">Time,Barometer,Temp,Humidity,Windspeed,Dir,Gust,Dayrain,Radiation,Uv
+```
+Time,Barometer,Temp,Humidity,Windspeed,Dir,Gust,Dayrain,Radiation,Uv
 2/1/2017 06:20:00,1006.4,4.8,48,2.8,NE,4,0,349,2.8
 2/1/2017 06:25:00,1006.9,5.0,48,3.8,NNE,21.3,0,885,4.3
 2/1/2017 06:30:00,1006.8,5.4,47,3.4,North,12.3,0,887,5.3
 2/1/2017 06:35:00,1007,5.2,49,5.5,NNE,13.3,0,600,5.4
 2/1/2017 06:40:00,1006.9,5.7,49,2.6,ESE,9.7,0,732,5.5
 2/1/2017 06:45:00,1007,5.5,48,1.9,Southsoutheast,9.8,0,393,6.4
-2/1/2017 06:50:00,1007.1,5.2,50,2.1,southeast,9.9,0,180,6.6</pre>
+2/1/2017 06:50:00,1007.1,5.2,50,2.1,southeast,9.9,0,180,6.6
+```
 
-        <p class="note">
-            <strong>Note</strong><br/><a href="https://en.wikipedia.org/wiki/Cardinal_direction">Cardinal, intercardinal
-            and/or secondary intercardinal directions</a> may be represented by one, two or three letter abbreviations
-            e.g., N, SE or SSW; by a single word e.g., North, Southwest or Southsouthwest or by hyphenated or spaced words
-            e.g., North West or South-south-west. Capitalisation is ignored as are any spaces, hyphens or other white
-            space. At present only English abbreviations and directions are supported.
-        </p>
+!!! Note
+    [Cardinal, intercardinal and/or secondary intercardinal directions](https://en.wikipedia.org/wiki/Cardinal_direction) may be represented by one, two or three letter abbreviations e.g., N, SE or SSW; by a single word e.g., North, Southwest or Southsouthwest or by hyphenated or spaced words e.g., North West or South-south-west. Capitalisation is ignored as are any spaces, hyphens or other white space. At present only English abbreviations and directions are supported.
 
-        <h3>Mapping data to archive fields</h3>
+### Mapping data to archive fields
 
-        <p>The WeeWX archive fields populated during a CSV import depend on the CSV-to-WeeWX field mappings specified in
-            <span class="code">[[FieldMap]]</span> stanza in the import configuration file. If a valid field mapping
-            exists, the WeeWX field exists in the WeeWX archive table schema and provided the mapped CSV field contains
-            valid data, then the corresponding WeeWX field will populated. Note that the CSV import is the only import
-            supported by <span class="code">wee_import</span> that allows any WeeWX archive field to be populated.
-        </p>
+The WeeWX archive fields populated during a CSV import depend on the CSV-to-WeeWX field mappings specified in `[[FieldMap]]` stanza in the import configuration file. If a valid field mapping exists, the WeeWX field exists in the WeeWX archive table schema and provided the mapped CSV field contains valid data, then the corresponding WeeWX field will populated. Note that the CSV import is the only import supported by `wee_import` that allows any WeeWX archive field to be populated.
 
-        <p class="note">
-            <strong>Note</strong><br/>The use of the <span class="code"><a
-            href="#csv_calc_missing">calc_missing</a></span> option in the import configuration file may result in a
-            number of derived fields being calculated from the imported data. If these derived fields exist in the
-            in-use database schema they will be saved to the database as well.
-        </p>
+!!! Note
+    The use of the [calc_missing](#csv_calc_missing) option in the import configuration file may result in a number of derived fields being calculated from the imported data. If these derived fields exist in the in-use database schema they will be saved to the database as well.
 
-        <h3>Step-by-step instructions</h3>
+### Step-by-step instructions
 
-        <p>To import observations from a CSV file:</p>
+To import observations from a CSV file:
 
-        <ol>
-            <li>Ensure the source data file is in a directory accessible by the machine that will run
-                <span class="code">wee_import</span>. For the purposes of the following examples the source data file
-                <span class="code">data.csv</span> located in the <span class="code">/var/tmp</span> directory will be
-                used.
-            </li>
+1. Ensure the source data file is in a directory accessible by the machine that will run `wee_import`. For the purposes of the following examples the source data file `data.csv` located in the `/var/tmp` directory will be used.
 
-            <li>Make a backup of the WeeWX database in case the import should go awry.
-            </li>
+1. Make a backup of the WeeWX database in case the import should go awry.
 
-            <li>Create an import configuration file. In this case we will make a copy of the example CSV import
-                configuration file and save it as <span class="code">csv.conf</span> in the <span
-                    class="code">/var/tmp</span> directory:
-                    <pre class="tty cmd">$ cp /home/weewx/util/import/csv-example.conf /var/tmp/csv.conf</pre>
-            </li>
+1. Create an import configuration file. In this case we will make a copy of the example CSV import configuration file and save it as `csv.conf` in the `/var/tmp` directory:
 
-            <li>Confirm that the <span class="code"><a href="#import_config_source">source</a></span> option is set to
-                CSV:
-                    <pre class="tty">source = CSV</pre>
-            </li>
+    ```
+    $ cp /home/weewx/util/import/csv-example.conf /var/tmp/csv.conf
+    ```
+
+1. Confirm that the [`source`](#import_config_source) option is set to CSV:
+        <pre class="tty">source = CSV</pre>
+
+1. Confirm the following options in the `[CSV]` section are set:
+
+   * [file](#csv_file). The full path and file name of the file containing the CSV formatted data to be imported.
+
+   * [delimiter](#csv_delimiter). The single character used to separate fields.
+
+   * [interval](#csv_interval). Determines how the WeeWX interval field is derived.
+
+   * [qc](#csv_qc). Determines whether quality control checks are performed on the imported data.
+
+   * [calc_missing](#csv_calc_missing). Determines whether missing derived observations will be calculated from the imported data.
+
+   * [ignore_invalid_data](#csv_ignore_invalid_data). Determines whether invalid data in a source field is ignored or the import aborted.
+
+   * [tranche](#csv_tranche). The number of records written to the WeeWX database in each transaction.
+
+   * [UV_sensor](#csv_UV). Whether a UV sensor was installed when the source data was produced.
+
+   * [solar_sensor](#csv_solar). Whether a solar radiation sensor was installed when the source data was produced.
+
+   * [raw_datetime_format](#csv_raw_datetime_format). The format of the imported date time field.
+
+   * [rain](#csv_rain). Determines how the WeeWX rain field is derived.
+
+   * [wind_direction](#csv_wind_direction). Determines how imported wind direction fields are interpreted.
+
+   * [[[FieldMap]]](#csv_fieldmap). Defines the mapping between imported data fields and WeeWX archive fields. Also defines the units of measure for each imported field.
+
+1. When first importing data it is prudent to do a dry run import before any data are actually imported. A dry run import will perform all steps of the import without actually writing imported data to the WeeWX database. In addition, consideration should be given to any additional options such as `--date`.
+
+   To perform a dry run enter the following command:
+
+   ```
+   wee_import --import-config=/var/tmp/csv.conf --dry-run
+   ```
+
+   The output should be something like this:
+
+    ```
+    Using WeeWX configuration file /home/weewx/weewx.conf
+    Starting wee_import...
+    A CSV import from source file '/var/tmp/data.csv' has been requested.
+    Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
+    Destination table 'archive' unit system is '0x01' (US).
+    Missing derived observations will be calculated.
+    This is a dry run, imported data will not be saved to archive.
+    Starting dry run import ...
+    27337 records identified for import.
+    Unique records processed: 27337; Last timestamp: 2018-03-03 06:00:00 AEST (1520020800)
+    Finished dry run import
+    27337 records were processed and 27337 unique records would have been imported.
+    ```
+
+    The output includes details about the data source, the destination of the imported data and some other details on how the data will be processed. The import will then be performed but no data will be written to the WeeWX database. Upon completion a brief summary of the records processed is provided.
+
+1. Once the dry run results are satisfactory the data can be imported using the following command:
+
+    ```
+    wee_import --import-config=/var/tmp/csv.conf
+    ```
+
+    This will result in a short preamble similar to that from the dry run. At the end of the preamble there will be a prompt:
+
+    ```
+    Using WeeWX configuration file /home/weewx/weewx.conf
+    Starting wee_import...
+    A CSV import from source file '/var/tmp/data.csv' has been requested.
+    Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
+    Destination table 'archive' unit system is '0x01' (US).
+    Missing derived observations will be calculated.
+    Starting import ...
+    27337 records identified for import.
+    Proceeding will save all imported records in the WeeWX archive.
+    Are you sure you want to proceed (y/n)?
+    ```
+
+1. If the import parameters are acceptable enter `y` to proceed with the import or `n` to abort the import. If the import is confirmed then the source data will be imported, processed and saved in the WeeWX database. Information on the progress of the import will be displayed similar to the following:
+
+    ```
+    Unique records processed: 3250; Last timestamp: 2017-12-09 14:45:00 AEST (1512794700)
+    ```
+
+    The line commencing with <span class="code">Unique records processed</span> should update as records are imported with progress information on number of records processed, number of unique records imported and the date time of the latest record processed. Once the initial import is complete `wee_import` will, if requested, calculate any missing derived observations and rebuild the daily summaries. A brief summary should be displayed similar to the following:
+
+    ```
+    Calculating missing derived observations...
+    Processing record: 27337; Last record: 2018-03-03 06:00:00 AEST (1520020800)
+    Recalculating daily summaries...
+    Records processed: 27337; Last date: 2018-03-03 06:00:00 AEST (1520020800)
+    Finished recalculating daily summaries
+    Finished calculating missing derived observations
+    ```
+    
+    When the import is complete a brief summary is displayed similar to the following:
+    
+    ```
+    Finished import
+    27337 records were processed and 27337 unique records imported in 113.91 seconds.
+    Those records with a timestamp already in the archive will not have been
+    imported. Confirm successful import in the WeeWX log file.
+    ```
+
+1. Whilst `wee_import` will advise of the number of records processed and the number of unique records found, `wee_import` does know how many, if any, of the imported records were successfully saved to the database. You should look carefully through the WeeWX log file covering the `wee_import` session and take note of any records that were not imported. The most common reason for imported records not being saved to the database is because a record with that timestamp already exists in the database, in such cases something similar to the following will be found in the log:
+
+    ```
+    Aug 22 14:38:28 stretch12  wee_import[1226] ERROR weewx.manager: Unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
+    ```
+    
+    In such cases you should take note of the timestamp of the record(s) concerned and make a decision about whether to delete the pre-existing record and re-import the record or retain the pre-existing record.
 
 
-            <li>Confirm that the following options in the <span class="code">[CSV]</span> section are set:
-
-
-                <ul>
-                    <li><a href="#csv_file"><strong><span class="code">file</span></strong></a>. The full path and file
-                        name of the file containing the CSV formatted data to be imported.
-                    </li>
-                    <li><a href="#csv_delimiter"><strong><span class="code">delimiter</span></strong></a>. The single
-                        character used to separate fields.
-                    </li>
-                    <li><a href="#csv_interval"><strong><span class="code">interval</span></strong></a>. Determines how
-                        the WeeWX interval field is derived.
-                    </li>
-                    <li><a href="#csv_qc"><strong><span class="code">qc</span></strong></a>. Determines whether quality
-                        control checks are performed on the imported data.
-                    </li>
-                    <li><a href="#csv_calc_missing"><strong><span class="code">calc_missing</span></strong></a>.
-                        Determines whether missing derived observations will be calculated from the imported data.
-                    </li>
-                    <li><a href="#csv_ignore_invalid_data"><strong><span
-                        class="code">ignore_invalid_data</span></strong></a>. Determines whether invalid data in a
-                        source field is ignored or the import aborted.
-                    </li>
-                    <li><a href="#csv_tranche"><strong><span class="code">tranche</span></strong></a>. The number of
-                        records written to the WeeWX database in each transaction.
-                    </li>
-                    <li><a href="#csv_UV"><strong><span class="code">UV_sensor</span></strong></a>. Whether a UV sensor
-                        was installed when the source data was produced.
-                    </li>
-                    <li><a href="#csv_solar"><strong><span class="code">solar_sensor</span></strong></a>. Whether a
-                        solar radiation sensor was installed when the source data was produced.
-                    </li>
-                    <li><a href="#csv_raw_datetime_format"><strong><span
-                        class="code">raw_datetime_format</span></strong></a>. The format of the imported date time
-                        field.
-                    </li>
-                    <li><a href="#csv_rain"><strong><span class="code">rain</span></strong></a>. Determines how the
-                        WeeWX rain field is derived.
-                    </li>
-                    <li><a href="#csv_wind_direction"><strong><span class="code">wind_direction</span></strong></a>.
-                        Determines how imported wind direction fields are interpreted.
-                    </li>
-                    <li><a href="#csv_fieldmap"><strong><span class="code">[[FieldMap]]</span></strong></a>. Defines the
-                        mapping between imported data fields and WeeWX archive fields. Also defines the units of measure
-                        for each imported field.
-                    </li>
-                </ul>
-            </li>
-
-            <li>When first importing data it is prudent to do a dry run import before any data are actually imported. A
-                dry run import will perform all steps of the import without actually writing imported data to the WeeWX
-                database. In addition, consideration should be given to any additional options such as <span
-                    class="code">--date</span>.
-
-                <p>To perform a dry run enter the following command:</p>
-
-                <pre class="tty cmd">wee_import --import-config=/var/tmp/csv.conf --dry-run
-</pre>
-                <p>The output should be something like this:</p>
-
-                <pre class="tty">Using WeeWX configuration file /home/weewx/weewx.conf
-Starting wee_import...
-A CSV import from source file '/var/tmp/data.csv' has been requested.
-Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-Destination table 'archive' unit system is '0x01' (US).
-Missing derived observations will be calculated.
-This is a dry run, imported data will not be saved to archive.
-Starting dry run import ...
-27337 records identified for import.
-Unique records processed: 27337; Last timestamp: 2018-03-03 06:00:00 AEST (1520020800)
-Finished dry run import
-27337 records were processed and 27337 unique records would have been imported.
-</pre>
-
-                <p>The output includes details about the data source, the destination of the imported data and some other
-                    details on how the data will be processed. The import will then be performed but no data will be
-                    written to the WeeWX database. Upon completion a brief summary of the records processed is provided.
-                </p>
-            </li>
-
-            <li>Once the dry run results are satisfactory the data can be imported using the following command:
-
-                <pre class="tty cmd">wee_import --import-config=/var/tmp/csv.conf</pre>
-
-                <p>This will result in a short preamble similar to that from the dry run. At the end of the preamble
-                    there will be a prompt:
-                </p>
-
-                <pre class="tty">Using WeeWX configuration file /home/weewx/weewx.conf
-Starting wee_import...
-A CSV import from source file '/var/tmp/data.csv' has been requested.
-Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-Destination table 'archive' unit system is '0x01' (US).
-Missing derived observations will be calculated.
-Starting import ...
-27337 records identified for import.
-Proceeding will save all imported records in the WeeWX archive.
-Are you sure you want to proceed (y/n)?
-</pre>
-            </li>
-
-            <li>If the import parameters are acceptable enter <span class="code">y</span> to proceed with the import or
-                <span class="code">n</span> to abort the import. If the import is confirmed then the source data will be
-                imported, processed and saved in the WeeWX database. Information on the progress of the import will be
-                displayed similar to the following:
-
-                <pre class="tty">Unique records processed: 3250; Last timestamp: 2017-12-09 14:45:00 AEST (1512794700)
-</pre>
-
-                <p>The line commencing with <span class="code">Unique records processed</span> should update as records are
-                    imported with progress information on number of records processed, number of unique records imported
-                    and the date time of the latest record processed. Once the initial import is complete
-                    <span class="code">wee_import</span> will, if requested, calculate any missing derived observations and
-                    rebuild the daily summaries. A brief summary should be displayed similar to the following:
-                </p>
-
-                <pre class="tty">Calculating missing derived observations...
-Processing record: 27337; Last record: 2018-03-03 06:00:00 AEST (1520020800)
-Recalculating daily summaries...
-Records processed: 27337; Last date: 2018-03-03 06:00:00 AEST (1520020800)
-Finished recalculating daily summaries
-Finished calculating missing derived observations
-</pre>
-
-                <p>When the import is complete a brief summary is displayed similar to the following:
-                </p>
-
-                <pre class="tty">Finished import
-27337 records were processed and 27337 unique records imported in 113.91 seconds.
-Those records with a timestamp already in the archive will not have been
-imported. Confirm successful import in the WeeWX log file.
-</pre>
-
-            </li>
-            <li>Whilst <span class="code">wee_import</span> will advise of the number of records processed and the
-                number of unique records found, <span class="code">wee_import</span> does know how many, if any, of the
-                imported records were successfully saved to the database. You should look carefully through the WeeWX
-                log file covering the <span class="code">wee_import</span> session and take note of any records that
-                were not imported. The most common reason for imported records not being saved to the database is
-                because a record with that timestamp already exists in the database, in such cases something similar to
-                the following will be found in the log:
-
-                <pre class="tty">
-Aug 22 14:38:28 stretch12  wee_import[1226] ERROR weewx.manager: Unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
-</pre>
-
-                <p>In such cases you should take note of the timestamp of the record(s) concerned and make a decision
-                    about whether to delete the pre-existing record and re-import the record or retain the pre-existing
-                    record.
-                </p>
-            </li>
-
-        </ol>
-
-        <h2>Importing from Weather Underground</h2>
+## Importing from Weather Underground
 
         <p class="warning">
             <strong>Warning!</strong><br/>Running WeeWX during a <span class="code">wee_import</span> session can lead to
