@@ -1269,336 +1269,214 @@ To import observations from a CSV file:
 
 ## Importing from Weather Underground
 
-        <p class="warning">
-            <strong>Warning!</strong><br/>Running WeeWX during a <span class="code">wee_import</span> session can lead to
-            abnormal termination of the import. If WeeWX must remain running (e.g., so that live data is not lost) run
-            the <span class="code">wee_import</span> session on another machine or to a second database and merge the
-            in-use and second database once the import is complete.
-        </p>
+!!! Warning!
+    Running WeeWX during a `wee_import` session can lead to abnormal termination of the import. If WeeWX must remain running (e.g., so that live data is not lost) run the `wee_import` session on another machine or to a second database and merge the in-use and second database once the import is complete.
 
-        <p><span class="code">wee_import</span> can import historical observation data for a Weather Underground PWS via
-            the Weather Underground API. The Weather Underground API provides historical weather station observations
-            received by Weather Underground for the PWS concerned on a day by day basis. As such, the data is analogous
-            to the WeeWX archive table. When <span class="code">wee_import</span> imports data from the Weather
-            Underground API each day is considered a 'period'. <span class="code">wee_import</span> processes one period
-            at a time in chronological order (oldest to newest) and provides import summary data on a per period basis.
-        </p>
+`wee_import` can import historical observation data for a Weather Underground PWS via the Weather Underground API. The Weather Underground API provides historical weather station observations received by Weather Underground for the PWS concerned on a day by day basis. As such, the data is analogous to the WeeWX archive table. When `wee_import` imports data from the Weather Underground API each day is considered a 'period'. `wee_import` processes one period at a time in chronological order (oldest to newest) and provides import summary data on a per period basis.
 
-        <h3>Mapping data to archive fields</h3>
+### Mapping data to archive fields
 
-        <p>A Weather Underground import will populate WeeWX archive fields as follows:</p>
+A Weather Underground import will populate WeeWX archive fields as follows:
 
-        <ul>
-            <li>Provided data exists for each field returned by the Weather Underground API, the following WeeWX archive
-                fields will be directly populated by imported data:
+* Provided data exists for each field returned by the Weather Underground API, the following WeeWX archive fields will be directly populated by imported data:
 
-                <ul>
-                    <li><span class="code">dateTime</span></li>
-                    <li><span class="code">barometer</span></li>
-                    <li><span class="code">dewpoint</span></li>
-                    <li><span class="code">heatindex</span></li>
-                    <li><span class="code">outHumidity</span></li>
-                    <li><span class="code">outTemp</span></li>
-                    <li><span class="code">radiation</span></li>
-                    <li><span class="code">rain</span></li>
-                    <li><span class="code">rainRate</span></li>
-                    <li><span class="code">UV</span></li>
-                    <li><span class="code">windchill</span></li>
-                    <li><span class="code">windDir</span></li>
-                    <li><span class="code">windGust</span></li>
-                    <li><span class="code">windSpeed</span></li>
-                </ul>
+  * `dateTime`
+  * `barometer`
+  * `dewpoint`
+  * `heatindex`
+  * `outHumidity`
+  * `outTemp`
+  * `radiation`
+  * `rain`
+  * `rainRate`
+  * `UV`
+  * `windchill`
+  * `windDir`
+  * `windGust`
+  * `windSpeed`
 
-                <p class="note">
-                    <strong>Note</strong><br/>If an appropriate field is not returned by the Weather Underground API then
-                    the corresponding WeeWX archive field will contain no data. If the API returns an appropriate field but
-                    with no data, the corresponding WeeWX archive field will be set to <span class="code">None/null</span>.
-                    For example, if the API response has no solar radiation field the WeeWX
-                    <span class="code">radiation</span> archive field will have no data stored. However, if the API
-                    response has a solar radiation field but contains no data, the WeeWX
-                    <span class="code">radiation</span> archive field will be <span class="code">None/null</span>.
-                </p>
-            </li>
+    !!! Note
+        If an appropriate field is not returned by the Weather Underground API the corresponding WeeWX archive field will contain no data. If the API returns an appropriate field but with no data, the corresponding WeeWX archive field will be set to `None/null`. For example, if the API response has no solar radiation field the WeeWX `radiation` archive field will have no data stored. However, if the API response has a solar radiation field but contains no data, the WeeWX `radiation` archive field will be `None/null`.
 
-            <li>The following WeeWX archive fields will be populated from other settings or configuration options:
-                <ul>
-                    <li><span class="code">interval</span></li>
-                    <li><span class="code">usUnits</span></li>
-                </ul>
-            </li>
+* The following WeeWX archive fields will be populated from other settings or configuration options:
 
-            <li>The following WeeWX archive fields will be populated with values derived from the imported data provided
-                <span class="code">calc_missing = True</span> is included in the <span class="code">[WU]</span> section
-                of the import configuration file and the field exists in the in-use WeeWX archive table schema.
+  * interval
+  * usUnits
 
-                <ul>
-                    <li><span class="code">altimeter</span></li>
-                    <li><span class="code">ET</span></li>
-                    <li><span class="code">pressure</span></li>
-                </ul>
+* The following WeeWX archive fields will be populated with values derived from the imported data provided `calc_missing = True` is included in the `[WU]` section of the import configuration file and the field exists in the in-use WeeWX archive table schema.
 
-                <p class="note">
-                    <strong>Note</strong><br/>If <span class="code">calc_missing = False</span> is included in the <span
-                    class="code">[WU]</span> section of the import configuration file being used then all of the above
-                    fields will be set to <span class="code">None/null</span>. The default setting of the <span
-                    class="code">calc_missing</span> option is <span class="code">True</span>
-                </p>
-            </li>
-        </ul>
+  * altimeter
+  * ET
+  * pressure
 
-        <h3>Step-by-step instructions</h3>
+!!! Note
+    If `calc_missing = False` is included in the `[WU]` section of the import configuration file being used then all of the above fields will be set to `None/null`. The default setting for the `calc_missing` option is `True`.
 
-        <p>To import observations from a Weather Underground PWS history:</p>
 
-        <ol>
-            <li>Obtain the weather station ID of the Weather Underground PWS from which data is to be imported. The
-                station ID will be a sequence of numbers and upper case letters that is usually 11 or 12 characters in
-                length. For the purposes of the following examples a weather station ID
-                of <span class="code">ISTATION123</span> will be used.
-            </li>
+### Step-by-step instructions
 
-            <li>Obtain the API key to be used to access the Weather Underground API. This will be a seemingly random
-                alphanumeric sequence of 32 characters. API keys are available to Weather Underground PWS contributors
-                by logging on to their Weather Underground account and accessing Member Settings.
-            </li>
+To import observations from a Weather Underground PWS history:
 
-            <li>Make a backup of the WeeWX database in case the import should go awry.
-            </li>
+1. Obtain the weather station ID of the Weather Underground PWS from which data is to be imported. The station ID will be a sequence of numbers and upper case letters that is usually 11 or 12 characters in length. For the purposes of the following examples a weather station ID of `ISTATION123` will be used.
 
-            <li>Create an import configuration file. In this case we will make a copy of the example Weather Underground
-                import configuration file and save it as <span class="code">wu.conf</span> in the <span class="code">/var/tmp</span>
-                directory:
+1. Obtain the API key to be used to access the Weather Underground API. This will be a seemingly random alphanumeric sequence of 32 characters. API keys are available to Weather Underground PWS contributors by logging on to their Weather Underground account and accessing Member Settings.
 
-                <pre class="tty cmd">$ cp /home/weewx/util/import/wu-example.conf /var/tmp/wu.conf</pre>
-            </li>
-            <li>Confirm that the <span class="code"><a href="#import_config_source">source</a></span> option is set to
-                WU
-            <pre class="tty">source = WU</pre>
-            </li>
+1. Make a backup of the WeeWX database in case the import should go awry.
 
-            <li>Confirm that the following options in the <span class="code">[WU]</span> section are correctly set:
+1. Create an import configuration file. In this case we will make a copy of the example Weather Underground import configuration file and save it as `wu.conf` in the `/var/tmp` directory:
 
-                <ul>
-                    <li><a href="#wu_station_id"><strong><span class="code">station_id</span></strong></a>. The 11 or 12
-                        character weather station ID of the Weather Underground PWS that will be the source of the
-                        imported data.
-                    </li>
-                    <li><a href="#wu_api_key"><strong><span class="code">api_key</span></strong></a>. The 32 character
-                        API key to be used to access the Weather Underground API.
-                    </li>
-                    <li><a href="#wu_interval"><strong><span class="code">interval</span></strong></a>. Determines how
-                        the WeeWX interval field is derived.
-                    </li>
-                    <li><a href="#wu_qc"><strong><span class="code">qc</span></strong></a>. Determines whether quality
-                        control checks are performed on the imported data.
+    ```
+    $ cp /home/weewx/util/import/wu-example.conf /var/tmp/wu.conf
+    ```
 
-                        <p class="note">
-                            <strong>Note</strong><br/>As Weather Underground imports at times contain nonsense values,
-                            particularly for fields for which no data were uploaded to Weather Underground by the PWS,
-                            the use of quality control checks on imported data can prevent these nonsense values from
-                            being imported and contaminating the WeeWX database.
-                        </p>
-                    </li>
+1. Confirm that the [`source'](#import_config_source) option is set to `WU`:
 
-                    <li><a href="#wu_calc_missing"><strong><span class="code">calc_missing</span></strong></a>.
-                        Determines whether missing derived observations will be calculated from the imported data.
-                    </li>
-                    <li><a href="#wu_ignore_invalid_data"><strong><span class="code">ignore_invalid_data</span></strong></a>.
-                        Determines whether invalid data in a source field is ignored or the import aborted.
-                    </li>
-                    <li><a href="#wu_tranche"><strong><span class="code">tranche</span></strong></a>. The number of
-                        records written to the WeeWX database in each transaction.
-                    </li>
-                    <li><a href="#wu_wind_direction"><strong><span class="code">wind_direction</span></strong></a>.
-                        Determines how imported wind direction fields are interpreted.
-                    </li>
-                </ul>
-            </li>
+    ```
+    source = WU
+    ```
 
-            <li>When first importing data it is prudent to do a dry run import before any data is actually imported. A
-                dry run import will perform all steps of the import without actually writing imported data to the WeeWX
-                database. In addition, consideration should be given to any additional options to be used such as <span
-                    class="code">--date</span>, <span class="code">--from</span> or <span class="code">--to</span>.
-                <p>To perform a dry run enter the following command:</p>
+1. Confirm that the following options in the `[WU]` section are correctly set:
 
-                <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --from=2016-01-20T22:30 --to=2016-01-23T06:00 --dry-run
-</pre>
+   * [station_id](#wu_station_id). The 11 or 12 character weather station ID of the Weather Underground PWS that will be the source of the imported data.
 
-                <p>
-                    In this case the <span class="code">--from</span> and <span class="code">--to</span> options have
-                    been used to import Weather Underground records from 10:30pm on 20 January 2016 to 6:00am on 23
-                    January 2016 inclusive.
-                </p>
+   * [api_key](#wu_api_key). The 32 character API key to be used to access the Weather Underground API.
 
-                <p class="note">
-                    <strong>Note</strong><br/>If the <span class="code">--date</span> option is omitted, or a date (not
-                    date-time) range is specified using the <span class="code">--from</span> and <span
-                    class="code">--to</span> options during a Weather Underground import, then one or more full days of
-                    history data will be imported. This includes records timestamped from <span
-                    class="code">00:00</span> (inclusive) at the start of the day up to but NOT including the <span
-                    class="code">00:00</span> record at the end of the last day. As the timestamped record refers to
-                    observations of the previous interval, such an import actually includes one record with observations
-                    from the previous day (the <span class="code">00:00</span> record at the start of the day). Whilst
-                    this will not present a problem for <span class="code">wee_import</span> as any records being
-                    imported with a timestamp that already exists in the WeeWX database are ignored, you may wish to use
-                    the <span class="code">--from</span> and <span class="code">--to</span> options with a suitable
-                    date-time range to precisely control which records are imported.
-                </p>
+   * [interval](#wu_interval). Determines how the WeeWX interval field is derived.
 
-                <p class="note">
-                    <strong>Note</strong><br/><span class="code">wee_import</span> obtains Weather Underground daily
-                    history data one day at a time via a HTTP request and as such the import of large time spans of data
-                    may take some time. Such imports may be best handled as a series of imports of smaller time spans.
-                </p>
+   * [qc](#wu_qc). Determines whether quality control checks are performed on the imported data.
 
-                <p>This will result in a short preamble with details on the data source, the destination of the imported
-                    data and some other details on how the data will be processed. The import will then be performed but
-                    no data will written to the WeeWX database.
-                </p>
-                <p>The output should be similar to:</p>
+       !!! Note
+           As Weather Underground imports at times contain nonsense values, particularly for fields for which no data were uploaded to Weather Underground by the PWS, the use of quality control checks on imported data can prevent these nonsense values from being imported and contaminating the WeeWX database.
 
-                <pre class="tty">Using WeeWX configuration file /home/weewx/weewx.conf
-Starting wee_import...
-Observation history for Weather Underground station 'ISTATION123' will be imported.
-Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-Destination table 'archive' unit system is '0x01' (US).
-Missing derived observations will be calculated.
-Observations timestamped after 2016-01-20 22:30:00 AEST (1453293000) and up to and
-including 2016-01-23 06:00:00 AEST (1453492800) will be imported.
-This is a dry run, imported data will not be saved to archive.
-Starting dry run import ...
-Records covering multiple periods have been identified for import.
-Period 1 ...
-Unique records processed: 18; Last timestamp: 2016-01-20 23:55:00 AEST (1453298100)
-Period 2 ...
-Unique records processed: 284; Last timestamp: 2016-01-21 23:55:00 AEST (1453384500)
-Period 3 ...
-Unique records processed: 284; Last timestamp: 2016-01-22 23:55:00 AEST (1453470900)
-Period 4 ...
-Unique records processed: 71; Last timestamp: 2016-01-23 06:00:00 AEST (1453492800)
-Finished dry run import
-657 records were processed and 657 unique records would have been imported.
-</pre>
-                <p class="note">
-                    <strong>Note</strong><br/>Any periods for which no data could be obtained will be skipped. The lack
-                    of data may be due to an incorrect station ID, an incorrect date or Weather Underground API problems.
-                    A short explanatory note to this effect will be displayed against the period concerned and an entry
-                    included in the log.
-                </p>
-            </li>
+   * [calc_missing](#wu_calc_missing). Determines whether missing derived observations will be calculated from the imported data.
 
-            <li>Once the dry run results are satisfactory the source data can be imported using the following command:
+   * [ignore_invalid_data](#wu_ignore_invalid_data). Determines whether invalid data in a source field is ignored or the import aborted.
 
-                <pre class="tty cmd">wee_import --import-config=/var/tmp/wu.conf --from=2016-01-20T22:30 --to=2016-01-23T06:00
-</pre>
+   * [tranche](#wu_tranche). The number of records written to the WeeWX database in each transaction.
 
-                <p>This will result in a short preamble similar to that of a dry run. At the end of the preamble there
-                    will be a prompt:
-                </p>
+   * [wind_direction](#wu_wind_direction). Determines how imported wind direction fields are interpreted.
 
-                <pre class="tty">Using WeeWX configuration file /home/weewx/weewx.conf
-Starting wee_import...
-Observation history for Weather Underground station 'ISTATION123' will be imported.
-Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-Destination table 'archive' unit system is '0x01' (US).
-Missing derived observations will be calculated.
-Observations timestamped after 2016-01-20 22:30:00 AEST (1453293000) and up to and
-including 2016-01-23 06:00:00 AEST (1453492800) will be imported.
-Starting import ...
-Records covering multiple periods have been identified for import.
-Period 1 ...
-Proceeding will save all imported records in the WeeWX archive.
-Are you sure you want to proceed (y/n)?
-</pre>
+1. When first importing data it is prudent to do a dry run import before any data is actually imported. A dry run import will perform all steps of the import without actually writing imported data to the WeeWX database. In addition, consideration should be given to any additional options to be used such as `--date`, `--from` or `--to`.
+                
+    To perform a dry run enter the following command:
 
-                <p class="note">
-                    <strong>Note</strong><br/><span class="code">wee_import</span> obtains Weather Underground data
-                    one day at a time via a HTTP request and as such the import of large time spans of data may take some
-                    time. Such imports may be best handled as a series of imports of smaller time spans.
-                </p>
-            </li>
+    ```
+    wee_import --import-config=/var/tmp/wu.conf --from=2016-01-20T22:30 --to=2016-01-23T06:00 --dry-run
+    ```
 
-            <li>If the import parameters are acceptable enter <span class="code">y</span> to proceed with the import or
-                <span class="code">n</span> to abort the import. If the import is confirmed, the source data will be
-                imported, processed and saved in the WeeWX database. Information on the progress of the import will be
-                displayed similar to the following:
+    In this case the `--from` and `--to` options have been used to import Weather Underground records from 10:30pm on 20 January 2016 to 6:00am on 23 January 2016 inclusive.
 
-                <pre class="tty">Unique records processed: 18; Last timestamp: 2016-01-20 23:55:00 AEST (1453298100)
-Period 2 ...
-Unique records processed: 284; Last timestamp: 2016-01-21 23:55:00 AEST (1453384500)
-Period 3 ...
-Unique records processed: 284; Last timestamp: 2016-01-22 23:55:00 AEST (1453470900)
-</pre>
-                <p class="note">
-                    <strong>Note</strong><br/>Any periods for which no data could be obtained will be skipped. The lack
-                    of data may be due to an incorrect station ID, an incorrect date or Weather Underground API problems.
-                    A short explanatory note to this effect will be displayed against the period concerned and an entry
-                    included in the log.
-                </p>
+    !!! Note
+        If the `--date` option is omitted, or a date (not date-time) range is specified using the `--from` and `--to` options during a Weather Underground import, then one or more full days of history data will be imported. This includes records timestamped from `00:00` (inclusive) at the start of the day up to but NOT including the `00:00` record at the end of the last day. As the timestamped record refers to observations of the previous interval, such an import actually includes one record with observations from the previous day (the `00:00` record at the start of the day). Whilst this will not present a problem for `wee_import` as any records being imported with a timestamp that already exists in the WeeWX database are ignored, you may wish to use the `--from` and `--to` options with a suitable date-time range to precisely control which records are imported.
 
-                <p>The line commencing with <span class="code">Unique records processed</span> should update as records are
-                    imported with progress information on number of records processed, number of unique records imported
-                    and the date time of the latest record processed. If the import spans multiple days then a new <span
-                        class="code">Period</span> line is created for each day.
-                </p>
+    !!! Note
+        `wee_import` obtains Weather Underground daily history data one day at a time via a HTTP request and as such the import of large time spans of data may take some time. Such imports may be best handled as a series of imports of smaller time spans.
+    
+    This will result in a short preamble with details on the data source, the destination of the imported data and some other details on how the data will be processed. The import will then be performed but no data will written to the WeeWX database.
+    
+    The output should be similar to:
+    
+    ```
+    Using WeeWX configuration file /home/weewx/weewx.conf
+    Starting wee_import...
+    Observation history for Weather Underground station 'ISTATION123' will be imported.
+    Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
+    Destination table 'archive' unit system is '0x01' (US).
+    Missing derived observations will be calculated.
+    Observations timestamped after 2016-01-20 22:30:00 AEST (1453293000) and up to and
+    including 2016-01-23 06:00:00 AEST (1453492800) will be imported.
+    This is a dry run, imported data will not be saved to archive.
+    Starting dry run import ...
+    Records covering multiple periods have been identified for import.
+    Period 1 ...
+    Unique records processed: 18; Last timestamp: 2016-01-20 23:55:00 AEST (1453298100)
+    Period 2 ...
+    Unique records processed: 284; Last timestamp: 2016-01-21 23:55:00 AEST (1453384500)
+    Period 3 ...
+    Unique records processed: 284; Last timestamp: 2016-01-22 23:55:00 AEST (1453470900)
+    Period 4 ...
+    Unique records processed: 71; Last timestamp: 2016-01-23 06:00:00 AEST (1453492800)
+    Finished dry run import
+    657 records were processed and 657 unique records would have been imported.
+    ```
 
-                <p>Once the initial import is complete <span class="code">wee_import</span> will, if requested, calculate
-                    any missing derived observations and rebuild the daily summaries. A brief summary should be displayed
-                    similar to the following:
-                </p>
+    !!! Note
+        Any periods for which no data could be obtained will be skipped. The lack of data may be due to an incorrect station ID, an incorrect date or Weather Underground API problems. A short explanatory note to this effect will be displayed against the period concerned and an entry included in the log.
 
-                <pre class="tty">Calculating missing derived observations ...
-Processing record: 204; Last record: 2016-01-22 23:55:00 AEST (1453470900)
-Recalculating daily summaries...
-Finished recalculating daily summaries
-Finished calculating missing derived observations
-</pre>
+1. Once the dry run results are satisfactory the source data can be imported using the following command:
 
-                <p>When the import is complete a brief summary is displayed similar to the following:
-                </p>
+    ```
+    wee_import --import-config=/var/tmp/wu.conf --from=2016-01-20T22:30 --to=2016-01-23T06:00
+    ```
 
-                <pre class="tty">Finished import
-657 records were processed and 657 unique records imported in 78.97 seconds.
-Those records with a timestamp already in the archive will not have been
-imported. Confirm successful import in the WeeWX log file.
-</pre>
+    This will result in a short preamble similar to that of a dry run. At the end of the preamble there will be a prompt:
+    
+    ```
+    Using WeeWX configuration file /home/weewx/weewx.conf
+    Starting wee_import...
+    Observation history for Weather Underground station 'ISTATION123' will be imported.
+    Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
+    Destination table 'archive' unit system is '0x01' (US).
+    Missing derived observations will be calculated.
+    Observations timestamped after 2016-01-20 22:30:00 AEST (1453293000) and up to and
+    including 2016-01-23 06:00:00 AEST (1453492800) will be imported.
+    Starting import ...
+    Records covering multiple periods have been identified for import.
+    Period 1 ...
+    Proceeding will save all imported records in the WeeWX archive.
+    Are you sure you want to proceed (y/n)?
+    ```
+    
+    !!! Note
+        `wee_import` obtains Weather Underground data one day at a time via a HTTP request and as such the import of large time spans of data may take some time. Such imports may be best handled as a series of imports of smaller time spans.
 
-                <p class="note">
-                    <strong>Note</strong><br/>The new (2019) Weather Underground API appears to have an issue when
-                    obtaining historical data for the current day. The first time the API is queried the API returns all
-                    historical data up to and including the most recent record. However, subsequent later API queries
-                    during the same day return the same set of records rather than all records up to and including the
-                    time of the latest API query. Users importing Weather Underground data that includes data from the
-                    current day are advised to carefully check the WeeWX log to ensure that all expected records were
-                    imported. If some records are missing from the current day try running an import for the current day
-                    again using the <span class="code">--date</span> option setting. If this fails then wait until the
-                    following day and perform another import for the day concerned again using the
-                    <span class="code">--date</span> option setting. In all cases confirm what data has been imported by
-                    referring to the WeeWX log.
-                </p>
-            </li>
+1. If the import parameters are acceptable enter `y` to proceed with the import or `n` to abort the import. If the import is confirmed, the source data will be imported, processed and saved in the WeeWX database. Information on the progress of the import will be displayed similar to the following:
 
-            <li>Whilst <span class="code">wee_import</span> will advise of the number of records processed and the
-                number of unique records found, <span class="code">wee_import</span> does know how many, if any, of the
-                imported records were successfully saved to the database. You should look carefully through the WeeWX
-                log file covering the <span class="code">wee_import</span> session and take note of any records that
-                were not imported. The most common reason for imported records not being saved to the database is
-                because a record with that timestamp already exists in the database, in such cases something similar to
-                the following will be found in the log:
+    ```
+    Unique records processed: 18; Last timestamp: 2016-01-20 23:55:00 AEST (1453298100)
+    Period 2 ...
+    Unique records processed: 284; Last timestamp: 2016-01-21 23:55:00 AEST (1453384500)
+    Period 3 ...
+    Unique records processed: 284; Last timestamp: 2016-01-22 23:55:00 AEST (1453470900)
+    ```
+    
+    !!! Note
+        Any periods for which no data could be obtained will be skipped. The lack of data may be due to an incorrect station ID, an incorrect date or Weather Underground API problems. A short explanatory note to this effect will be displayed against the period concerned and an entry included in the log.
+    
+    The line commencing with `Unique records processed` should update as records are imported with progress information on number of records processed, number of unique records imported and the date time of the latest record processed. If the import spans multiple days then a new `Period` line is created for each day.
+    
+    Once the initial import is complete <span class="code">wee_import</span> will, if requested, calculate any missing derived observations and rebuild the daily summaries. A brief summary should be displayed similar to the following:
+    
+    ```
+    Calculating missing derived observations ...
+    Processing record: 204; Last record: 2016-01-22 23:55:00 AEST (1453470900)
+    Recalculating daily summaries...
+    Finished recalculating daily summaries
+    Finished calculating missing derived observations
+    ```
+    
+    When the import is complete a brief summary is displayed similar to the following:
+    
+    ```
+    Finished import
+    657 records were processed and 657 unique records imported in 78.97 seconds.
+    Those records with a timestamp already in the archive will not have been
+    imported. Confirm successful import in the WeeWX log file.
+    ```
+    
+    !!! Note
+        The new (2019) Weather Underground API appears to have an issue when obtaining historical data for the current day. The first time the API is queried the API returns all historical data up to and including the most recent record. However, subsequent later API queries during the same day return the same set of records rather than all records up to and including the time of the latest API query. Users importing Weather Underground data that includes data from the current day are advised to carefully check the WeeWX log to ensure that all expected records were imported. If some records are missing from the current day try running an import for the current day again using the `--date` option setting. If this fails then wait until the following day and perform another import for the day concerned again using the `--date` option setting. In all cases confirm what data has been imported by referring to the WeeWX log.
 
-                <pre class="tty">
-Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
-</pre>
+1. Whilst `wee_import` will advise of the number of records processed and the number of unique records found, `wee_import` does know how many, if any, of the imported records were successfully saved to the database. You should look carefully through the WeeWX log file covering the `wee_import` session and take note of any records that were not imported. The most common reason for imported records not being saved to the database is because a record with that timestamp already exists in the database, in such cases something similar to the following will be found in the log:
 
-                <p>In such cases you should take note of the timestamp of the record(s) concerned and make a decision
-                    about whether to delete the pre-existing record and re-import the record or retain the pre-existing
-                    record.
-                </p>
+    ```
+    Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
+    ```
+    
+    In such cases you should take note of the timestamp of the record(s) concerned and make a decision about whether to delete the pre-existing record and re-import the record or retain the pre-existing record.
 
-            </li>
-        </ol>
 
-        <h2>Importing from Cumulus</h2>
+## Importing from Cumulus
 
         <p class="warning">
             <strong>Warning!</strong><br/>Running WeeWX during a <span class="code">wee_import</span> session can lead to
@@ -2894,31 +2772,17 @@ Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 0
             </li>
         </ol>
 
-        <h2 id='import_failures'>Dealing with import failures</h2>
+## Dealing with import failures{#import_failures}
 
-        <p>Sometimes bad things happen during an import.</p>
+Sometimes bad things happen during an import.
 
-        <p>If errors were encountered, or if you suspect that the WeeWX database has been contaminated with incorrect
-            data, here are some things you can try to fix things up.
-        </p>
+If errors were encountered, or if you suspect that the WeeWX database has been contaminated with incorrect data, here are some things you can try to fix things up.
 
-        <ul>
-            <li>Manually delete the contaminated data. Use SQL commands to manipulate the data in the WeeWX archive
-                database. The simplicity of this process will depend on your ability to use SQL, the amount of data
-                imported, and whether the imported data was dispersed amongst existing. Once contaminated data have been
-                removed the daily summary tables will need to be rebuilt using the <span
-                    class="code">weectl database rebuild-daily</span> utility.
-            </li>
+* Manually delete the contaminated data. Use SQL commands to manipulate the data in the WeeWX archive database. The simplicity of this process will depend on your ability to use SQL, the amount of data imported, and whether the imported data was dispersed amongst existing. Once contaminated data have been removed the daily summary tables will need to be rebuilt using the `weectl database rebuild-daily` utility.
 
-            <li>Delete the database and start over. For SQLite, simply delete the database file. For MySQL, drop the
-                database. Then try the import again.
-                <p class="warning">
-                    <strong>Warning!</strong><br/>Deleting the database file or dropping the database will result in all
-                    data in the database being lost.
-                </p>
-            </li>
+* Delete the database and start over. For SQLite, simply delete the database file. For MySQL, drop the database. Then try the import again.
 
-            <li>If the above steps are not appropriate then the database should be restored from backup. You did make a
-                backup before starting the import?
-            </li>
-        </ul>
+    !!! Warning!
+        Deleting the database file or dropping the database will result in all data in the database being lost.
+
+* If the above steps are not appropriate then the database should be restored from backup. You did make a backup before starting the import?
