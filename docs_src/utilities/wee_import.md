@@ -401,16 +401,16 @@ The WeeWX `rain` field records rainfall that was recorded in the preceding archi
 
 WeeWX records wind direction in degrees as a number from 0 to 360 inclusive (no wind direction is recorded as `None/null`), whereas some data sources may provide wind direction as number over a different range (e.g., -180 to +180) or may use a particular value when there is no wind direction (e.g., 0 may represent no wind direction and 360 may represent a northerly wind, or -9999 (or some similar clearly invalid number) to represent there being no wind direction). `wee_import` handles such variations in data by defining a range over which imported wind direction values are accepted. Any value outside of this range is treated as there being no wind direction and is recorded as `None/null`. Any value inside the range is normalised to the range 0 to 360 inclusive (e.g., -180 would be normalised to 180). The `wind_direction` option consists of two comma separated numbers of the format lower, upper where lower and upper are inclusive. The operation of the `wind_direction` option is best illustrated through the following table:
 
-<table class="no_indent" style="width:50%">
-  <caption>Option <span class="code">wind_direction</span></caption>
+<table style="width:50%">
+  <caption>Option wind_direction</caption>
   <tbody>
-    <tr class="first_row">
-      <td><span class="code">wind_direction</span> option setting</td>
+    <tr>
+      <td>wind_direction option setting</td>
       <td>Source data wind direction value</td>
       <td>Imported wind direction value</td>
     </tr>
     <tr>
-      <td class="code first_col" rowspan='7'>0, 360</td>
+      <td rowspan='7'>0, 360</td>
       <td>0</td>
       <td>0</td>
     </tr>
@@ -424,22 +424,22 @@ WeeWX records wind direction in degrees as a number from 0 to 360 inclusive (no 
     </tr>
     <tr>
       <td>500</td>
-      <td><span class="code">None/null</span></td>
+      <td>None/null</td>
     </tr>
     <tr>
       <td>-45</td>
-      <td><span class="code">None/null</span></td>
+      <td>None/null</td>
     </tr>
     <tr>
       <td>-9999</td>
-      <td><span class="code">None/null</span></td>
+      <td>None/null</td>
     </tr>
     <tr>
       <td>No data</td>
-      <td><span class="code">None/null</span></td>
+      <td>None/null</td>
     </tr>
     <tr>
-      <td class="code first_col" rowspan='7'>-360, 360</td>
+      <td rowspan='7'>-360, 360</td>
       <td>0</td>
       <td>0</td>
     </tr>
@@ -453,36 +453,7 @@ WeeWX records wind direction in degrees as a number from 0 to 360 inclusive (no 
     </tr>
     <tr>
       <td>500</td>
-      <td><span class="code">None/null</span></td>
-    </tr>
-    <tr>
-      <td>-45</td>
-      <td>315</td>
-    </tr>
-    <tr>
-      <td>-9999</td>
-      <td><span class="code">None/null</span></td>
-    </tr>
-    <tr>
-      <td>No data</td>
-      <td><span class="code">None/null</span></td>
-    </tr>
-    <tr>
-      <td class="code first_col" rowspan='7'>-180, 180</td>
-      <td>0</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <td>160</td>
-      <td>160</td>
-    </tr>
-    <tr>
-      <td>360</td>
-      <td><span class="code">None/null</span></td>
-    </tr>
-    <tr>
-      <td>500</td>
-      <td><span class="code">None/null</span></td>
+      <td>None/null</td>
     </tr>
     <tr>
       <td>-45</td>
@@ -490,11 +461,40 @@ WeeWX records wind direction in degrees as a number from 0 to 360 inclusive (no 
     </tr>
     <tr>
       <td>-9999</td>
-      <td><span class="code">None/null</span></td>
+      <td>None/null</td>
     </tr>
     <tr>
       <td>No data</td>
-      <td><span class="code">None/null</span></td>
+      <td>None/null</td>
+    </tr>
+    <tr>
+      <td rowspan='7'>-180, 180</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>160</td>
+      <td>160</td>
+    </tr>
+    <tr>
+      <td>360</td>
+      <td>None/null</td>
+    </tr>
+    <tr>
+      <td>500</td>
+      <td>None/null</td>
+    </tr>
+    <tr>
+      <td>-45</td>
+      <td>315</td>
+    </tr>
+    <tr>
+      <td>-9999</td>
+      <td>None/null</td>
+    </tr>
+    <tr>
+      <td>No data</td>
+      <td>None/null</td>
     </tr>
   </tbody>
 </table>
@@ -890,7 +890,7 @@ The preferred method for defining the Weather Display log file units is through 
 
 #### `[[FieldMap]]`{#wd_fieldmap}
 
-The `[[FieldMap]]` stanza defines the mapping from the Weather Display monthly log data fields to WeeWX archive fields. By default imported Weather Display data is mapped to the corresponding WeeWX archive fields using a default field map. The default field map will likely suit most users; however, depending on the station capabilities and the in-use WeeWX database schema, a custom field map may be required if Weather Display monthly logs contain data from additional sensors that cannot be stored in the WeeWX archive using the default field map. A custom field map also makes it possible to limit the Weather Display monthly log data fields that are imported into WeeWX.
+The `[[FieldMap]]` stanza defines the mapping from the Weather Display monthly log data fields to WeeWX archive fields. By default, imported Weather Display data is mapped to the corresponding WeeWX archive fields using a default field map. The default field map will likely suit most users; however, depending on the station capabilities and the in-use WeeWX database schema, a custom field map may be required if Weather Display monthly logs contain data from additional sensors that cannot be stored in the WeeWX archive using the default field map. A custom field map also makes it possible to limit the Weather Display monthly log data fields that are imported into WeeWX.
 
 The field map consists of one row per field using the format:
 
@@ -898,116 +898,113 @@ The field map consists of one row per field using the format:
 weewx_archive_field_name = weather_display_field_name
 ```
 
-Where `>weewx_archive_field_name` is a field name in the in-use WeeWX archive table schema and `weather_display_field_name` is a Weather Display import field name. The available Weather Display import field names are listed in the table below.
+Where `weewx_archive_field_name` is a field name in the in-use WeeWX archive table schema and `weather_display_field_name` is a Weather Display import field name. The available Weather Display import field names are listed in the table below.
 
-<table class="indent" style="width:50%">
-    <caption>Available Weather Display import fields</caption>
-    <tbody>
-    <tr class="first_row">
+<table>
+    <tr>
         <td>Field name</td>
         <td>Description</td>
     </tr>
     <tr>
-        <td class="first_col code">barometer</td>
+        <td>barometer</td>
         <td>barometric pressure</td>
     </tr>
     <tr>
-        <td class="first_col code">dewpoint</td>
+        <td>dewpoint</td>
         <td>dew point</td>
     </tr>
     <tr>
-        <td class="first_col code">direction</td>
+        <td>direction</td>
         <td>wind direction</td>
     </tr>
     <tr>
-        <td class="first_col code">gustspeed</td>
+        <td>gustspeed</td>
         <td>wind gust speed</td>
     </tr>
     <tr>
-        <td class="first_col code">heatindex</td>
+        <td>heatindex</td>
         <td>heat index</td>
     </tr>
     <tr>
-        <td class="first_col code">humidity</td>
+        <td>humidity</td>
         <td>outside humidity</td>
     </tr>
     <tr>
-        <td class="first_col code">hum1</td>
+        <td>hum1</td>
         <td>extra humidity 1</td>
     </tr>
     <tr>
-        <td class="first_col code">hum2</td>
+        <td>hum2</td>
         <td>extra humidity 2</td>
     </tr>
     <tr>
-        <td class="first_col code">hum3</td>
+        <td>hum3</td>
         <td>extra humidity 3</td>
     </tr>
     <tr>
-        <td class="first_col code">hum4</td>
+        <td>hum4</td>
         <td>extra humidity 4</td>
     </tr>
     <tr>
-        <td class="first_col code">hum5</td>
+        <td>hum5</td>
         <td>extra humidity 5</td>
     </tr>
     <tr>
-        <td class="first_col code">hum6</td>
+        <td>hum6</td>
         <td>extra humidity 6</td>
     </tr>
     <tr>
-        <td class="first_col code">radiation</td>
+        <td>radiation</td>
         <td>solar radiation</td>
     </tr>
     <tr>
-        <td class="first_col code">rainlastmin</td>
+        <td>rainlastmin</td>
         <td>rainfall in the last 1 minute</td>
     </tr>
     <tr>
-        <td class="first_col code">soilmoist</td>
+        <td>soilmoist</td>
         <td>soil moisture</td>
     </tr>
     <tr>
-        <td class="first_col code">soiltemp</td>
+        <td>soiltemp</td>
         <td>soil temperature</td>
     </tr>
     <tr>
-        <td class="first_col code">temperature</td>
+        <td>temperature</td>
         <td>outside temperature</td>
     </tr>
     <tr>
-        <td class="first_col code">temp1</td>
+        <td>temp1</td>
         <td>extra temperature 1</td>
     </tr>
     <tr>
-        <td class="first_col code">temp2</td>
+        <td>temp2</td>
         <td>extra temperature 2</td>
     </tr>
     <tr>
-        <td class="first_col code">temp3</td>
+        <td>temp3</td>
         <td>extra temperature 3</td>
     </tr>
     <tr>
-        <td class="first_col code">temp4</td>
+        <td>temp4</td>
         <td>extra temperature 4</td>
     </tr>
     <tr>
-        <td class="first_col code">temp5</td>
+        <td>temp5</td>
         <td>extra temperature 5</td>
     </tr>
     <tr>
-        <td class="first_col code">temp6</td>
+        <td>temp6</td>
         <td>extra temperature 6</td>
     </tr>
     <tr>
-        <td class="first_col code">uv</td>
+        <td>uv</td>
         <td>UV index</td>
     </tr>
     <tr>
-        <td class="first_col code">windspeed</td>
+        <td>windspeed</td>
         <td>average wind speed</td>
     </tr>
-    </tbody>
 </table>
 
 A mapping is not required for every WeeWX archive field (e.g., the Weather Display monthly logs may not provide inside temperature so no `inTemp` field mapping is required) and neither does every Weather Display monthly log field need to be included in a mapping (e.g., the Weather Display monthly log field `soiltemp` may have no data as the station has no soil temperature probe).
@@ -1106,7 +1103,8 @@ strptime() format codes)[https://docs.python.org/2/library/datetime.html#strftim
 
 A CSV file suitable for import by `wee_import` may look like this:
 
-```Time,Barometer,Temp,Humidity,Windspeed,Dir,Gust,Dayrain,Radiation,Uv,Comment
+```
+Time,Barometer,Temp,Humidity,Windspeed,Dir,Gust,Dayrain,Radiation,Uv,Comment
 28/11/2017 08:00:00,1016.9,24.6,84,1.8,113,8,0,359,3.8,"start of observations"
 28/11/2017 08:05:00,1016.9,25.1,82,4.8,135,11.3,0,775,4.7,
 28/11/2017 08:10:00,1016.9,25.4,80,4.4,127,11.3,0,787,5.1,"note temperature"
@@ -1478,1299 +1476,988 @@ To import observations from a Weather Underground PWS history:
 
 ## Importing from Cumulus
 
-        <p class="warning">
-            <strong>Warning!</strong><br/>Running WeeWX during a <span class="code">wee_import</span> session can lead to
-            abnormal termination of the import. If WeeWX must remain running (e.g., so that live data is not lost) run
-            the <span class="code">wee_import</span> session on another machine or to a second database and merge the
-            in-use and second database once the import is complete.
-        </p>
-
-        <p><span class="code">wee_import</span> can import observational data from the one or more Cumulus monthly log
-            files. A Cumulus monthly log file records weather station observations for a single month. These files are
-            accumulated over time and can be considered analogous to the WeeWX archive table. When <span class="code">wee_import</span>
-            imports data from the Cumulus monthly log files each log file is considered a 'period'. <span class="code">wee_import</span>
-            processes one period at a time in chronological order (oldest to newest) and provides import summary data on
-            a per period basis.
-        </p>
-
-        <h3>Mapping data to archive fields</h3>
-
-        <p>A Cumulus monthly log file import will populate the WeeWX archive fields as follows:</p>
-
-        <ul>
-            <li>Provided data exists for each field in the Cumulus monthly logs, the following WeeWX archive fields will
-                be directly populated by imported data:
-
-                <ul>
-                    <li><span class="code">dateTime</span></li>
-                    <li><span class="code">barometer</span></li>
-                    <li><span class="code">dewpoint</span></li>
-                    <li><span class="code">heatindex</span></li>
-                    <li><span class="code">inHumidity</span></li>
-                    <li><span class="code">inTemp</span></li>
-                    <li><span class="code">outHumidity</span></li>
-                    <li><span class="code">outTemp</span></li>
-                    <li><span class="code">radiation</span></li>
-                    <li><span class="code">rain</span></li>
-                    <li><span class="code">rainRate</span></li>
-                    <li><span class="code">UV</span></li>
-                    <li><span class="code">windDir</span></li>
-                    <li><span class="code">windGust</span></li>
-                    <li><span class="code">windSpeed</span></li>
-                    <li><span class="code">windchill</span></li>
-                </ul>
-
-                <p class="note">
-                    <strong>Note</strong><br/>If a field in the Cumulus monthly log file has no data then the
-                    corresponding WeeWX archive field will be set to <span class="code">None/null</span>.
-                </p>
-            </li>
-
-            <li>The following WeeWX archive fields will be populated from other settings or configuration options:
-
-                <ul>
-                    <li><span class="code">interval</span></li>
-                    <li><span class="code">usUnits</span></li>
-                </ul>
-            </li>
-
-            <li>The following WeeWX archive fields will be populated with values derived from the imported data provided
-                <span class="code">calc_missing = True</span> is included in the <span class="code">[Cumulus]</span>
-                section of the import configuration file being used and the field exists in the in-use WeeWX archive
-                table schema.
-
-                <ul>
-                    <li><span class="code">altimeter</span></li>
-                    <li><span class="code">ET</span></li>
-                    <li><span class="code">pressure</span></li>
-                </ul>
-
-                <p class="note">
-                    <strong>Note</strong><br/>If <span class="code">calc_missing = False</span> is included in the
-                    <span class="code">[Cumulus]</span> section of the import configuration file being used then all of
-                    the above fields will be set to <span class="code">None/null</span>. The default setting of the
-                    <span class="code">calc_missing</span> option is <span class="code">True</span>
-                </p>
-            </li>
-        </ul>
-
-        <h3>Step-by-step instructions</h3>
-
-        <p>To import observations from one or more Cumulus monthly log files:</p>
-
-        <ol>
-            <li>Ensure the Cumulus monthly log file(s) to be used for the import are located in a directory accessible
-                by the machine that will run <span class="code">wee_import</span>. For the purposes of the following
-                examples, there are nine monthly logs files covering the period October 2016 to June 2017, inclusive,
-                located in the <span class="code">/var/tmp/cumulus</span> directory.
-            </li>
-
-            <li>Make a backup of the WeeWX database in case the import should go awry.
-            </li>
-
-            <li>Create an import configuration file. In this case we will make a copy of the example Cumulus import
-                configuration file and save it as <span class="code">cumulus.conf</span> in the <span class="code">/var/tmp</span>
-                directory:
-
-                <pre class="tty cmd">$ cp /home/weewx/util/import/cumulus-example.conf /var/tmp/cumulus.conf
-</pre>
-
-            <li>Confirm that the <span class="code">source</span> option is set to Cumulus:
-            <pre class="tty">source = Cumulus</pre>
-            </li>
-
+!!! Warning!
+    Running WeeWX during a `wee_import` session can lead to abnormal termination of the import. If WeeWX must remain running (e.g., so that live data is not lost) run the `wee_import` session on another machine or to a second database and merge the in-use and second database once the import is complete.
 
-            <li>Confirm that the following options in the <span class="code">[Cumulus]</span> section are correctly set:
-
-                <ul>
-                    <li><a href="#cumulus_directory"><strong><span class="code">directory</span></strong></a>. The full
-                        path to the directory containing the Cumulus monthly log files to be used as the source of the
-                        imported data.
-                    </li>
-                    <li><a href="#cumulus_interval"><strong><span class="code">interval</span></strong></a>. Determines
-                        how the WeeWX interval field is derived.
-                    </li>
-                    <li><a href="#cumulus_qc"><strong><span class="code">qc</span></strong></a>. Determines whether
-                        quality control checks are performed on the imported data.
-                    </li>
-                    <li><a href="#cumulus_calc_missing"><strong><span class="code">calc_missing</span></strong></a>.
-                        Determines whether missing derived observations will be calculated from the imported data.
-                    </li>
-                    <li><a href="#cumulus_separator"><strong><span class="code">separator</span></strong></a>. The date
-                        field separator used in the Cumulus monthly log files.
-                    </li>
-                    <li><a href="#cumulus_delimiter"><strong><span class="code">delimiter</span></strong></a>. The field
-                        delimiter used in the Cumulus monthly log files.
-                    </li>
-                    <li><a href="#cumulus_decimal"><strong><span class="code">decimal</span></strong></a>. The decimal
-                        point character used in the Cumulus monthly log files.
-                    </li>
-                    <li><a href="#cumulus_ignore_invalid_data"><strong><span
-                        class="code">ignore_invalid_data</span></strong></a>. Determines whether invalid data in a
-                        source field is ignored or the import aborted.
-                    </li>
-                    <li><a href="#cumulus_tranche"><strong><span class="code">tranche</span></strong></a>. The number of
-                        records written to the WeeWX database in each transaction.
-                    </li>
-                    <li><a href="#cumulus_UV"><strong><span class="code">UV_sensor</span></strong></a>. Whether a UV
-                        sensor was installed when the source data was produced.
-                    </li>
-                    <li><a href="#cumulus_solar"><strong><span class="code">solar_sensor</span></strong></a>. Whether a
-                        solar radiation sensor was installed when the source data was produced.
-                    </li>
-                    <li><a href="#cumulus_units"><strong><span class="code">[[Units]]</span></strong></a>. Defines the
-                        units used in the Cumulus monthly log files.
-                    </li>
-                </ul>
-            </li>
-
-            <li>When first importing data it is prudent to do a dry run import before any data is actually imported. A
-                dry run import will perform all steps of the import without actually writing imported data to the WeeWX
-                database. In addition, consideration should be given to any additional options to be used such as <span
-                    class="code">--date</span>.
-                <p>To perform a dry run enter the following command:</p>
-
-                <pre class="tty cmd">wee_import --import-config=/var/tmp/cumulus.conf --dry-run
-</pre>
-
-                <p>This will result in a short preamble with details on the data source, the destination of the imported
-                    data and some other details on how the data will be processed. The import will then be performed but
-                    no data will be written to the WeeWX database.
-                </p>
-                <p>The output should be similar to:</p>
-
-                <pre class="tty">Using WeeWX configuration file /home/weewx/weewx.conf
-Starting wee_import...
-Cumulus monthly log files in the '/var/tmp/cumulus' directory will be imported
-Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-Destination table 'archive' unit system is '0x01' (US).
-Missing derived observations will be calculated.
-This is a dry run, imported data will not be saved to archive.
-Starting dry run import ...
-Records covering multiple periods have been identified for import.
-Period 1 ...
-Unique records processed: 8858; Last timestamp: 2016-10-31 23:55:00 AEST (1477922100)
-Period 2 ...
-Unique records processed: 8636; Last timestamp: 2016-11-30 23:55:00 AEST (1480514100)
-Period 3 ...
-Unique records processed: 8925; Last timestamp: 2016-12-31 23:55:00 AEST (1483192500)
-Period 4 ...
-Unique records processed: 8908; Last timestamp: 2017-01-31 23:55:00 AEST (1485870900)
-Period 5 ...
-Unique records processed: 8029; Last timestamp: 2017-02-28 23:55:00 AEST (1488290100)
-Period 6 ...
-Unique records processed: 8744; Last timestamp: 2017-03-31 23:55:00 AEST (1490968500)
-Period 7 ...
-Unique records processed: 8489; Last timestamp: 2017-04-30 23:02:00 AEST (1493557320)
-Period 8 ...
-Unique records processed: 8754; Last timestamp: 2017-05-31 23:55:00 AEST (1496238900)
-Period 9 ...
-Unique records processed: 8470; Last timestamp: 2017-06-30 23:55:00 AEST (1498830900)
-Finished dry run import
-77813 records were processed and 77813 unique records would have been imported.
-</pre>
-
-                <p class="note">
-                    <strong>Note</strong><br/>The nine periods correspond to the nine monthly log files used for this
-                    import.
-                </p>
-                <p class="note">
-                    <strong>Note</strong><br/>Any periods for which no data could be obtained will be skipped. The lack
-                    of data may be due to a missing Cumulus monthly log file. A short explanatory note to this effect
-                    will be displayed against the period concerned and an entry included in the log.
-                </p>
-            </li>
-
-            <li>Once the dry run results are satisfactory the data can be imported using the following command:
-
-                <pre class="tty cmd">wee_import --import-config=/var/tmp/cumulus.conf
-</pre>
-
-                <p>This will result in a preamble similar to that of a dry run. At the end of the preamble there will be
-                    a prompt:
-                </p>
-
-                <pre class="tty">Using WeeWX configuration file /home/weewx/weewx.conf
-Starting wee_import...
-Cumulus monthly log files in the '/var/tmp/cumulus' directory will be imported
-Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-Destination table 'archive' unit system is '0x01' (US).
-Missing derived observations will be calculated.
-Starting import ...
-Records covering multiple periods have been identified for import.
-Period 1 ...
-Proceeding will save all imported records in the WeeWX archive.
-Are you sure you want to proceed (y/n)?
-</pre>
-
-                <p>If there is more than one Cumulus monthly log file then <span class="code">wee_import</span> will
-                    provide summary information on a per period basis during the import. In addition, if the <span
-                        class="code">--date</span> option is used then source data that falls outside the date or date
-                    range specified with the <span class="code">--date</span> option is ignored. In such cases the
-                    preamble may look similar to:
-                </p>
-
-                <pre class="tty">Using WeeWX configuration file /home/weewx/weewx.conf
-Starting wee_import...
-Cumulus monthly log files in the '/var/tmp/cumulus' directory will be imported
-Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-Destination table 'archive' unit system is '0x01' (US).
-Missing derived observations will be calculated.
-Starting import ...
-Records covering multiple periods have been identified for import.
-Period 1 ...
-Period 1 - no records identified for import.
-Period 2 ...
-Period 2 - no records identified for import.
-Period 3 ...
-Proceeding will save all imported records in the WeeWX archive.
-Are you sure you want to proceed (y/n)?
-</pre>
-            </li>
-
-            <li>If the import parameters are acceptable enter <span class="code">y</span> to proceed with the import or
-                <span class="code">n</span> to abort the import. If the import is confirmed, the source data will be
-                imported, processed and saved in the WeeWX database. Information on the progress of the import will be
-                displayed similar to the following:
-
-                <pre class="tty">Unique records processed: 2305; Last timestamp: 2016-12-30 00:00:00 AEST (1483020000)
-</pre>
-
-                <p>Again if there is more than one Cumulus monthly log file and if the <span class="code">--date</span>
-                    option is used then the progress information may instead look similar to:
-                </p>
-
-                <pre class="tty">Period 4 ...
-Unique records processed: 8908; Last timestamp: 2017-01-31 23:55:00 AEST (1485870900)
-Period 5 ...
-Unique records processed: 8029; Last timestamp: 2017-02-28 23:55:00 AEST (1488290100)
-Period 6 ...
-Unique records processed: 8744; Last timestamp: 2017-03-31 23:55:00 AEST (1490968500)
-</pre>
-
-                <p class="note">
-                    <strong>Note</strong><br/>Any periods for which no data could be obtained will be skipped. The lack
-                    of data may be due to a missing Cumulus monthly log file. A short explanatory note to this effect
-                    will be displayed against the period concerned and an entry included in the log.
-                </p>
-                <p>The line commencing with <span class="code">Unique records processed</span> should update as records
-                    are imported with progress information on number of records processed, number of unique records
-                    imported and the date time of the latest record processed. If the import spans multiple months (ie
-                    multiple monthly log files) then a new <span class="code">Period</span> line is created for each
-                    month.
-                </p>
-
-                <p>Once the initial import is complete <span class="code">wee_import</span> will, if requested, calculate
-                    any missing derived observations and rebuild the daily summaries. A brief summary should be displayed
-                    similar to the following:
-                </p>
-
-                <pre class="tty">Calculating missing derived observations ...
-Processing record: 77782; Last record: 2017-06-30 00:00:00 AEST (1519826400)
-Recalculating daily summaries...
-Records processed: 77000; Last date: 2017-06-28 11:45:00 AEST (1519811100)
-Finished recalculating daily summaries
-Finished calculating missing derived observations
-</pre>
-
-                <p>When the import is complete a brief summary is displayed similar to the following:
-                </p>
-
-                <pre class="tty">Finished import
-77813 records were processed and 77813 unique records imported in 106.96 seconds.
-Those records with a timestamp already in the archive will not have been
-imported. Confirm successful import in the WeeWX log file.
-</pre>
-            </li>
-
-            <li>Whilst <span class="code">wee_import</span> will advise of the number of records processed and the
-                number of unique records found, <span class="code">wee_import</span> does know how many, if any, of the
-                imported records were successfully saved to the database. You should look carefully through the WeeWX
-                log file covering the <span class="code">wee_import</span> session and take note of any records that
-                were not imported. The most common reason for imported records not being saved to the database is
-                because a record with that timestamp already exists in the database, in such cases something similar to
-                the following will be found in the log:
-
-                <pre class="tty">
-Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
-</pre>
-
-                <p>In such cases take note of the timestamp of the record(s) concerned and make a decision about whether
-                    to delete the pre-existing record and re-import the record or retain the pre-existing record.
-                </p>
-            </li>
-        </ol>
-
-        <h2>Importing from Weather Display</h2>
-
-        <p class="warning">
-            <strong>Warning!</strong><br/>Running WeeWX during a <span class="code">wee_import</span> session can lead to
-            abnormal termination of the import. If WeeWX must remain running (e.g., so that live data is not lost) run
-            the <span class="code">wee_import</span> session on another machine or to a second database and merge the
-            in-use and second database once the import is complete.
-        </p>
-
-        <p><span class="code">wee_import</span> can import observational data from the one or more Weather Display monthly
-            log files. Weather Display records observational data on a monthly basis in a number of either space delimited
-            (.txt) and/or comma separated (.csv) text files. <span class="code">wee_import</span> can import observational
-            data from the following Weather Display log files:
-        </p>
-
-        <ul>
-            <li>MMYYYYlg.txt</li>
-            <li>MMYYYYlgcsv.csv (csv format version of MMYYYYlg.txt)</li>
-            <li>MMYYYYvantagelog.txt</li>
-            <li>MMYYYYvantagelogcsv.csv (csv format version of MMYYYYvantagelog.txt)</li>
-            <li>MMYYYYvantageextrasensorslog.csv</li>
-
-        <p>where MM is a one or two digit month and YYYY is a four digit year</p>
-
-        </ul>
-
-        <p>The Weather Display monthly log files record observational data using a nominal 1 minute interval with each
-            file recording various observations for the month and year designated by the MM and YYYY components of the
-            file name. These files are accumulated over time and can be considered analogous to the WeeWX archive table.
-            When <span class="code">wee_import</span> imports data from the Weather Display monthly log files each set
-            of log files for a given month and year is considered a 'period'. <span class="code">wee_import</span>
-            processes one period at a time in chronological order (oldest to newest) and provides import summary data on
-            a per period basis.
-        </p>
-
-        <h3>Mapping data to archive fields</h3>
-
-        <p>The WeeWX archive fields populated during the import of Weather Display data depends on the field mapping
-            specified in <span class="code">[[FieldMap]]</span> stanza in the import configuration file. A given WeeWX
-            field will be populated if:
-        </p>
-
-        <ul>
-            <li>a valid field mapping exists,</li>
-            <li>the WeeWX field exists in the WeeWX archive table schema, and</li>
-            <li>the mapped Weather Display field contains valid data.</li>
-        </ul>
-
-        <p>The following WeeWX archive fields will be populated from other settings or configuration options and need not
-            be included in the field map:
-        </p>
-
-            <ul>
-                <li><span class="code">interval</span></li>
-                <li><span class="code">usUnits</span></li>
-            </ul>
-
-            <li>The following WeeWX archive fields will be populated with values derived from the imported data provided
-                <span class="code">calc_missing = True</span> is included in the <span class="code">[WD]</span>
-                section of the import configuration file being used and the field exists in the in-use WeeWX archive
-                table schema:
-
-                <ul>
-                    <li><span class="code">altimeter</span></li>
-                    <li><span class="code">pressure</span></li>
-                    <li><span class="code">rainRate</span></li>
-                    <li><span class="code">windchill</span></li>
-                </ul>
-
-                <p class="note">
-                    <strong>Note</strong><br/>If <span class="code">calc_missing = False</span> is included in the <span
-                    class="code">[WD]</span> section of the import configuration file being used then all of the above
-                    fields will be set to <span class="code">None/null</span>. The default setting of the <span
-                    class="code">calc_missing</span> option is <span class="code">True</span>
-                </p>
-            </li>
-        </ul>
-
-        <h3>Step-by-step instructions</h3>
-
-        <p>To import observations from one or more Weather Display monthly log files:</p>
-
-        <ol>
-            <li>Ensure the Weather Display monthly log file(s) to be used for the import are located in a directory
-                accessible by the machine that will run <span class="code">wee_import</span>. For the purposes of the
-                following examples, there are five months of logs files covering the period September 2018 to January 2019
-                inclusive located in the <span class="code">/var/tmp/wd</span> directory.
-            </li>
-
-            <li>Make a backup of the WeeWX database in case the import should go awry.
-            </li>
-
-            <li>Create an import configuration file, this is easily done by making a copy of the example Weather Display
-                import configuration file located in the <span class="code">/home/weewx/util/import</span> or
-                <span class="code">/etc/weewx/import</span> directory as applicable. In this case we will make a copy of
-                the example Weather Display import configuration file and save it as <span class="code">wd.conf</span> in
-                the <span class="code">/var/tmp</span> directory:
-
-                <pre class="tty cmd">$ cp /home/weewx/util/import/wd-example.conf /var/tmp/wd.conf</pre>
-            </li>
-
-            <li>Confirm that the <span class="code">source</span> option is set to WD:
-            <pre class="tty">source = WD</pre>
-            </li>
-
-
-            <li>Confirm that the following options in the <span class="code">[WD]</span> section are correctly set:
-
-                <ul>
-                    <li><a href="#wd_directory"><strong><span class="code">directory</span></strong></a>. The full
-                        path to the directory containing the Weather Display monthly log files to be used as the source
-                        of the imported data.
-                    </li>
-                    <li><a href="#wd_logs_to_process"><strong><span class="code">logs_to_process</span></strong></a>.
-                        Specifies the Weather Display monthly log files to be used to import data.
-                    </li>
-                    <li><a href="#wd_interval"><strong><span class="code">interval</span></strong></a>. Determines
-                        how the WeeWX interval field is derived.
-                    </li>
-                    <li><a href="#wd_qc"><strong><span class="code">qc</span></strong></a>. Determines whether
-                        quality control checks are performed on the imported data.
-                    </li>
-                    <li><a href="#wd_calc_missing"><strong><span class="code">calc_missing</span></strong></a>.
-                        Determines whether missing derived observations will be calculated from the imported data.
-                    </li>
-                    <li><a href="#wd_txt_delimiter"><strong><span class="code">txt_delimiter</span></strong></a>. The
-                        field delimiter used in the Weather Display space delimited (*.txt) monthly log files.
-                    </li>
-                    <li><a href="#wd_csv_delimiter"><strong><span class="code">csv_delimiter</span></strong></a>. The
-                        field delimiter used in the Weather Display monthly comma separated values (*.csv) monthly
-                        log files.
-                    </li>
-                    <li><a href="#wd_decimal"><strong><span class="code">decimal</span></strong></a>. The decimal
-                        point character used in the Weather Display monthly log files.
-                    </li>
-                    <li><a href="#wd_ignore_missing_log"><strong><span
-                        class="code">ignore_missing_log</span></strong></a>. Determines whether missing log files are to
-                        be ignored or the import aborted.
-                    </li>
-                    <li><a href="#wd_ignore_invalid_data"><strong><span
-                        class="code">ignore_invalid_data</span></strong></a>. Determines whether invalid data in a
-                        source field is ignored or the import aborted.
-                    </li>
-                    <li><a href="#wd_tranche"><strong><span class="code">tranche</span></strong></a>. The number of
-                        records written to the WeeWX database in each transaction.
-                    </li>
-                    <li><a href="#wd_UV"><strong><span class="code">UV_sensor</span></strong></a>. Whether a UV
-                        sensor was installed when the source data was produced.
-                    </li>
-                    <li><a href="#wd_solar"><strong><span class="code">solar_sensor</span></strong></a>. Whether a
-                        solar radiation sensor was installed when the source data was produced.
-                    </li>
-                    <li><a href="#wd_ignore_extreme_temp_hum"><strong><span class="code">ignore_extreme_temp_hum</span></strong></a>.
-                        Determines whether temperature and humidity values of 255 will be ignored.
-                    </li>
-                    <li><a href="#wd_units"><strong><span class="code">[[Units]]</span></strong></a>. Defines the
-                        units used in the Weather Display monthly log files.
-                    </li>
-                    <li><a href="#wd_fieldmap"><strong><span class="code">[[FieldMap]]</span></strong></a>. Defines the
-                        mapping between imported data fields and WeeWX archive fields.
-                    </li>
-                </ul>
-            </li>
-
-            <li>When first importing data it is prudent to do a dry run import before any data is actually imported. A
-                dry run import will perform all steps of the import without actually writing imported data to the WeeWX
-                database. In addition, consideration should be given to any additional options to be used such
-                as <span class="code">--date</span>.
-
-                <p class="note">
-                    <strong>Note</strong><br/>Due to some peculiarities of the Weather Display log structure it may be
-                    prudent to use the <span class="code">--suppress--warnings</span> option during the initial dry run
-                    so the overall progress of the import can be observed.
-                </p>
-
-                <p>To perform a dry run enter the following command:</p>
-
-                <pre class="tty cmd">wee_import --import-config=/var/tmp/wd.conf --dry-run --suppress-warnings
-</pre>
-
-                <p>This will result in a short preamble with details on the data source, the destination of the imported
-                    data and some other details on how the data will be processed. The import will then be performed but
-                    no data will be written to the WeeWX database.
-                </p>
-                <p>The output should be similar to:</p>
-
-                <pre class="tty">Using WeeWX configuration file /home/weewx/weewx.conf
-Starting wee_import...
-Weather Display monthly log files in the '/var/tmp/WD' directory will be imported
-Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-Destination table 'archive' unit system is '0x01' (US).
-Missing derived observations will be calculated.
-This is a dry run, imported data will not be saved to archive.
-Starting dry run import ...
-Records covering multiple periods have been identified for import.
-Period 1 ...
-Unique records processed: 43183; Last timestamp: 2018-09-30 23:59:00 AEST (1538315940)
-Period 2 ...
-Unique records processed: 44620; Last timestamp: 2018-10-31 23:59:00 AEST (1540994340)
-Period 3 ...
-Unique records processed: 43136; Last timestamp: 2018-11-30 23:59:00 AEST (1543586340)
-Period 4 ...
-Unique records processed: 44633; Last timestamp: 2018-12-31 23:59:00 AEST (1546264740)
-Period 5 ...
-Unique records processed: 8977; Last timestamp: 2019-01-07 05:43:00 AEST (1546803780)
-Finished dry run import
-184765 records were processed and 184549 unique records would have been imported.
-216 duplicate records were ignored.
-</pre>
-
-                <p class="note">
-                    <strong>Note</strong><br/>The five periods correspond to the five months of log files used for this
-                    import.
-                </p>
-                <p class="note">
-                    <strong>Note</strong><br/>Any periods for which no data could be obtained will be skipped. The lack
-                    of data may be due to a missing Weather Display log file. A short explanatory note to this effect
-                    will be displayed against the period concerned and an entry included in the log.
-                </p>
-            </li>
-
-            <li>If the <span class="code">--suppress--warnings</span> option was used it may be prudent to do a second
-                dry run this time without the <span class="code">--suppress--warnings</span> option. This will allow any
-                warnings generated by the dry run import to be observed:
-
-                <pre class="tty cmd">wee_import --import-config=/var/tmp/wd.conf --dry-run</pre>
-
-                <p>This will result in a short preamble with details on the data source, the destination of the imported
-                    data and some other details on how the data will be processed. The import will then be performed but
-                    no data will be written to the WeeWX database.
-                </p>
-
-                <p>The output should be similar to:</p>
-
-                <pre class="tty">Using WeeWX configuration file /home/weewx/weewx.conf
-Starting wee_import...
-Weather Display monthly log files in the '/var/tmp/WD' directory will be imported
-Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-Destination table 'archive' unit system is '0x01' (US).
-Missing derived observations will be calculated.
-This is a dry run, imported data will not be saved to archive.
-Starting dry run import ...
-Records covering multiple periods have been identified for import.
-Period 1 ...
-Warning: Import field 'radiation' is mapped to WeeWX field 'radiation' but the
-         import field 'radiation' could not be found in one or more records.
-         WeeWX field 'radiation' will be set to 'None' in these records.
-Warning: Import field 'soiltemp' is mapped to WeeWX field 'soilTemp1' but the
-         import field 'soiltemp' could not be found in one or more records.
-         WeeWX field 'soilTemp1' will be set to 'None' in these records.
-Warning: Import field 'soilmoist' is mapped to WeeWX field 'soilMoist1' but the
-         import field 'soilmoist' could not be found in one or more records.
-         WeeWX field 'soilMoist1' will be set to 'None' in these records.
-Warning: Import field 'humidity' is mapped to WeeWX field 'outHumidity' but the
-         import field 'humidity' could not be found in one or more records.
-         WeeWX field 'outHumidity' will be set to 'None' in these records.
-Warning: Import field 'heatindex' is mapped to WeeWX field 'heatindex' but the
-         import field 'heatindex' could not be found in one or more records.
-         WeeWX field 'heatindex' will be set to 'None' in these records.
-Warning: Import field 'windspeed' is mapped to WeeWX field 'windSpeed' but the
-         import field 'windspeed' could not be found in one or more records.
-         WeeWX field 'windSpeed' will be set to 'None' in these records.
-Warning: Import field 'barometer' is mapped to WeeWX field 'barometer' but the
-         import field 'barometer' could not be found in one or more records.
-         WeeWX field 'barometer' will be set to 'None' in these records.
-Warning: Import field 'dewpoint' is mapped to WeeWX field 'dewpoint' but the
-         import field 'dewpoint' could not be found in one or more records.
-         WeeWX field 'dewpoint' will be set to 'None' in these records.
-Warning: Import field 'rainlastmin' is mapped to WeeWX field 'rain' but the
-         import field 'rainlastmin' could not be found in one or more records.
-         WeeWX field 'rain' will be set to 'None' in these records.
-Warning: Import field 'direction' is mapped to WeeWX field 'windDir' but the
-         import field 'direction' could not be found in one or more records.
-         WeeWX field 'windDir' will be set to 'None' in these records.
-Warning: Import field 'temperature' is mapped to WeeWX field 'outTemp' but the
-         import field 'temperature' could not be found in one or more records.
-         WeeWX field 'outTemp' will be set to 'None' in these records.
-Warning: Import field 'gustspeed' is mapped to WeeWX field 'windGust' but the
-         import field 'gustspeed' could not be found in one or more records.
-         WeeWX field 'windGust' will be set to 'None' in these records.
-Unique records processed: 43183; Last timestamp: 2018-09-30 23:59:00 AEST (1538315940)
-Period 2 ...
-Unique records processed: 44620; Last timestamp: 2018-10-31 23:59:00 AEST (1540994340)
-Period 3 ...
-Unique records processed: 43136; Last timestamp: 2018-11-30 23:59:00 AEST (1543586340)
-Period 4 ...
-Unique records processed: 44633; Last timestamp: 2018-12-31 23:59:00 AEST (1546264740)
-Period 5 ...
-Unique records processed: 8977; Last timestamp: 2019-01-07 05:43:00 AEST (1546803780)
+`wee_import` can import observational data from the one or more Cumulus monthly log files. A Cumulus monthly log file records weather station observations for a single month. These files are accumulated over time and can be considered analogous to the WeeWX archive table. When `wee_import` imports data from the Cumulus monthly log files each log file is considered a 'period'. `wee_import` processes one period at a time in chronological order (oldest to newest) and provides import summary data on a per period basis.
+
+### Mapping data to archive fields
+
+A Cumulus monthly log file import will populate the WeeWX archive fields as follows:
+
+* Provided data exists for each field in the Cumulus monthly logs, the following WeeWX archive fields will be directly populated by imported data:
+
+  * `dateTime`
+  * `barometer`
+  * `dewpoint`
+  * `heatindex`
+  * `inHumidity`
+  * `inTemp`
+  * `outHumidity`
+  * `outTemp`
+  * `radiation`
+  * `rain`
+  * `rainRate`
+  * `UV`
+  * `windDir`
+  * `windGust`
+  * `windSpeed`
+* `windchill`
+
+  !!! Note
+      If a field in the Cumulus monthly log file has no data then the corresponding WeeWX archive field will be set to `None/null`.
+
+* The following WeeWX archive fields will be populated from other settings or configuration options:
+
+  * `interval`
+  * `usUnits`
+
+* The following WeeWX archive fields will be populated with values derived from the imported data provided `calc_missing = True` is included in the `[Cumulus]` section of the import configuration file being used and the field exists in the in-use WeeWX archive table schema.
+
+  * `altimeter`
+  * `ET`
+  * `pressure`
+
+    !!! Note
+        If `calc_missing = False` is included in the `[Cumulus]` section of the import configuration file being used then all of the above fields will be set to `None/null`. The default setting of the `calc_missing` option is `True`
+
+
+### Step-by-step instructions
+
+To import observations from one or more Cumulus monthly log files:
+
+1. Ensure the Cumulus monthly log file(s) to be used for the import are located in a directory accessible by the machine that will run `wee_import`. For the purposes of the following examples, there are nine monthly logs files covering the period October 2016 to June 2017, inclusive, located in the `/var/tmp/cumulus` directory.
+
+1. Make a backup of the WeeWX database in case the import should go awry.
+
+1. Create an import configuration file. In this case we will make a copy of the example Cumulus import configuration file and save it as `cumulus.conf` in the `/var/tmp` directory:
+
+    ```
+    $ cp /home/weewx/util/import/cumulus-example.conf /var/tmp/cumulus.conf
+    ```
+
+1. Confirm that the `source` option is set to Cumulus:
+
+    ``` 
+    source = Cumulus
+    ```
+
+1. Confirm that the following options in the `[Cumulus]` section are correctly set:
+
+   * [directory](#cumulus_directory). The full path to the directory containing the Cumulus monthly log files to be used as the source of the imported data.
+
+   * [interval](#cumulus_interval). Determines how the WeeWX interval field is derived.
+
+   * [qc](#cumulus_qc). Determines whether quality control checks are performed on the imported data.
+
+   * [calc_missing](#cumulus_calc_missing). Determines whether missing derived observations will be calculated from the imported data.
+
+   * [separator](#cumulus_separator). The date field separator used in the Cumulus monthly log files.
+
+   * [delimiter](#cumulus_delimiter). The field delimiter used in the Cumulus monthly log files.
+
+   * [decimal](#cumulus_decimal). The decimal point character used in the Cumulus monthly log files.
+
+   * [ignore_invalid_data](#cumulus_ignore_invalid_data). Determines whether invalid data in a source field is ignored or the import aborted.
+
+   * [tranche](#cumulus_tranche). The number of records written to the WeeWX database in each transaction.
+
+   * [UV_sensor](#cumulus_UV). Whether a UV sensor was installed when the source data was produced.
+
+   * [solar_sensor](#cumulus_solar). Whether a solar radiation sensor was installed when the source data was produced.
+
+   * [[[Units]]](#cumulus_units). Defines the units used in the Cumulus monthly log files.
+
+1. When first importing data it is prudent to do a dry run import before any data is actually imported. A dry run import will perform all steps of the import without actually writing imported data to the WeeWX database. In addition, consideration should be given to any additional options to be used such as `--date`.
+    
+    To perform a dry run enter the following command:
+
+    ```
+    wee_import --import-config=/var/tmp/cumulus.conf --dry-run
+    ```
+
+    This will result in a short preamble with details on the data source, the destination of the imported data and some other details on how the data will be processed. The import will then be performed but no data will be written to the WeeWX database.
+    
+    The output should be similar to:
+  
+    ```
+    Using WeeWX configuration file /home/weewx/weewx.conf
+    Starting wee_import...
+    Cumulus monthly log files in the '/var/tmp/cumulus' directory will be imported
+    Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
+    Destination table 'archive' unit system is '0x01' (US).
+    Missing derived observations will be calculated.
+    This is a dry run, imported data will not be saved to archive.
+    Starting dry run import ...
+    Records covering multiple periods have been identified for import.
+    Period 1 ...
+    Unique records processed: 8858; Last timestamp: 2016-10-31 23:55:00 AEST (1477922100)
+    Period 2 ...
+    Unique records processed: 8636; Last timestamp: 2016-11-30 23:55:00 AEST (1480514100)
+    Period 3 ...
+    Unique records processed: 8925; Last timestamp: 2016-12-31 23:55:00 AEST (1483192500)
+    Period 4 ...
+    Unique records processed: 8908; Last timestamp: 2017-01-31 23:55:00 AEST (1485870900)
+    Period 5 ...
+    Unique records processed: 8029; Last timestamp: 2017-02-28 23:55:00 AEST (1488290100)
+    Period 6 ...
+    Unique records processed: 8744; Last timestamp: 2017-03-31 23:55:00 AEST (1490968500)
+    Period 7 ...
+    Unique records processed: 8489; Last timestamp: 2017-04-30 23:02:00 AEST (1493557320)
+    Period 8 ...
+    Unique records processed: 8754; Last timestamp: 2017-05-31 23:55:00 AEST (1496238900)
+    Period 9 ...
+    Unique records processed: 8470; Last timestamp: 2017-06-30 23:55:00 AEST (1498830900)
+    Finished dry run import
+    77813 records were processed and 77813 unique records would have been imported.
+    ```
+  
+    !!! Note
+        The nine periods correspond to the nine monthly log files used for this import.
+  
+    !!! Note
+        Any periods for which no data could be obtained will be skipped. The lack of data may be due to a missing Cumulus monthly log file. A short explanatory note to this effect will be displayed against the period concerned and an entry included in the log.
+
+1. Once the dry run results are satisfactory the data can be imported using the following command:
+
+    ```
+    wee_import --import-config=/var/tmp/cumulus.conf
+    ```
+  
+    This will result in a preamble similar to that of a dry run. At the end of the preamble there will be a prompt:
+  
+    ```
+    Using WeeWX configuration file /home/weewx/weewx.conf
+    Starting wee_import...
+    Cumulus monthly log files in the '/var/tmp/cumulus' directory will be imported
+    Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
+    Destination table 'archive' unit system is '0x01' (US).
+    Missing derived observations will be calculated.
+    Starting import ...
+    Records covering multiple periods have been identified for import.
+    Period 1 ...
+    Proceeding will save all imported records in the WeeWX archive.
+    Are you sure you want to proceed (y/n)?
+    ```
+  
+    If there is more than one Cumulus monthly log file then `wee_import` will provide summary information on a per period basis during the import. In addition, if the `--date` option is used then source data that falls outside the date or date range specified with the `--date` option is ignored. In such cases the preamble may look similar to:
+  
+    ```
+    Using WeeWX configuration file /home/weewx/weewx.conf
+    Starting wee_import...
+    Cumulus monthly log files in the '/var/tmp/cumulus' directory will be imported
+    Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
+    Destination table 'archive' unit system is '0x01' (US).
+    Missing derived observations will be calculated.
+    Starting import ...
+    Records covering multiple periods have been identified for import.
+    Period 1 ...
+    Period 1 - no records identified for import.
+    Period 2 ...
+    Period 2 - no records identified for import.
+    Period 3 ...
+    Proceeding will save all imported records in the WeeWX archive.
+    Are you sure you want to proceed (y/n)?
+    ```
+
+1. If the import parameters are acceptable enter `y` to proceed with the import or `n` to abort the import. If the import is confirmed, the source data will be imported, processed and saved in the WeeWX database. Information on the progress of the import will be displayed similar to the following:
+
+    ```
+    Unique records processed: 2305; Last timestamp: 2016-12-30 00:00:00 AEST (1483020000)
+    ```
+  
+    Again if there is more than one Cumulus monthly log file and if the `--date` option is used then the progress information may instead look similar to:
+  
+    ```Period 4 ...
+    Unique records processed: 8908; Last timestamp: 2017-01-31 23:55:00 AEST (1485870900)
+    Period 5 ...
+    Unique records processed: 8029; Last timestamp: 2017-02-28 23:55:00 AEST (1488290100)
+    Period 6 ...
+    Unique records processed: 8744; Last timestamp: 2017-03-31 23:55:00 AEST (1490968500)
+    ```
+  
+    !!! Note
+        Any periods for which no data could be obtained will be skipped. The lack of data may be due to a missing Cumulus monthly log file. A short explanatory note to this effect will be displayed against the period concerned and an entry included in the log.
+  
+    The line commencing with `Unique records processed` should update as records are imported with progress information on number of records processed, number of unique records imported and the date time of the latest record processed. If the import spans multiple months (ie multiple monthly log files) then a new `Period` line is created for each month.
+  
+    Once the initial import is complete <span class="code">wee_import</span> will, if requested, calculate any missing derived observations and rebuild the daily summaries. A brief summary should be displayed similar to the following:
+  
+    ```
+    Calculating missing derived observations ...
+    Processing record: 77782; Last record: 2017-06-30 00:00:00 AEST (1519826400)
+    Recalculating daily summaries...
+    Records processed: 77000; Last date: 2017-06-28 11:45:00 AEST (1519811100)
+    Finished recalculating daily summaries
+    Finished calculating missing derived observations
+    ```
+  
+    When the import is complete a brief summary is displayed similar to the following:
+  
+    ```
+    Finished import
+    77813 records were processed and 77813 unique records imported in 106.96 seconds.
+    Those records with a timestamp already in the archive will not have been
+    imported. Confirm successful import in the WeeWX log file.
+    ```
+
+1. Whilst `wee_import` will advise of the number of records processed and the number of unique records found, `wee_import` does know how many, if any, of the imported records were successfully saved to the database. You should look carefully through the WeeWX log file covering the `wee_import` session and take note of any records that were not imported. The most common reason for imported records not being saved to the database is because a record with that timestamp already exists in the database, in such cases something similar to the following will be found in the log:
+
+    ```
+    Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
+    ```
+  
+    In such cases take note of the timestamp of the record(s) concerned and make a decision about whether to delete the pre-existing record and re-import the record or retain the pre-existing record.
+
+## Importing from Weather Display
+
+!!! Warning!
+    Running WeeWX during a `wee_import` session can lead to abnormal termination of the import. If WeeWX must remain running (e.g., so that live data is not lost) run the `wee_import` session on another machine or to a second database and merge the in-use and second database once the import is complete.
+
+`wee_import` can import observational data from the one or more Weather Display monthly log files. Weather Display records observational data on a monthly basis in a number of either space delimited (.txt) and/or comma separated (.csv) text files. `wee_import` can import observational data from the following Weather Display log files:
+
+* MMYYYYlg.txt
+* MMYYYYlgcsv.csv (csv format version of MMYYYYlg.txt)
+* MMYYYYvantagelog.txt
+* MMYYYYvantagelogcsv.csv (csv format version of MMYYYYvantagelog.txt)
+* MMYYYYvantageextrasensorslog.csv
+
+where MM is a one or two digit month and YYYY is a four digit year
+
+The Weather Display monthly log files record observational data using a nominal 1 minute interval with each file recording various observations for the month and year designated by the MM and YYYY components of the file name. These files are accumulated over time and can be considered analogous to the WeeWX archive table. When `wee_import` imports data from the Weather Display monthly log files each set of log files for a given month and year is considered a 'period'. `wee_import` processes one period at a time in chronological order (oldest to newest) and provides import summary data on a per period basis.
+
+### Mapping data to archive fields
+
+The WeeWX archive fields populated during the import of Weather Display data depends on the field mapping specified in `[[FieldMap]]` stanza in the import configuration file. A given WeeWX field will be populated if:
+
+* a valid field mapping exists,
+
+* the WeeWX field exists in the WeeWX archive table schema, and
+
+* the mapped Weather Display field contains valid data.
+
+The following WeeWX archive fields will be populated from other settings or configuration options and need not be included in the field map:
+
+* `interval`
+
+* `usUnits`
+
+The following WeeWX archive fields will be populated with values derived from the imported data provided `calc_missing = True` is included in the `[WD]` section of the import configuration file being used and the field exists in the in-use WeeWX archive table schema:
+
+* `altimeter`
+ 
+* `pressure`
+ 
+* `rainRate`
+
+* `windchill`
+
+!!! Note
+    If `calc_missing = False` is included in the `[WD]` section of the import configuration file being used then all of the above fields will be set to <span class="code">None/null</span>. The default setting of the `calc_missing` option is `True`.
+
+
+### Step-by-step instructions
+
+To import observations from one or more Weather Display monthly log files:
+
+1. Ensure the Weather Display monthly log file(s) to be used for the import are located in a directory accessible by the machine that will run <span class="code">wee_import</span>. For the purposes of the following examples, there are five months of logs files covering the period September 2018 to January 2019 inclusive located in the <span class="code">/var/tmp/wd</span> directory.
+
+1. Make a backup of the WeeWX database in case the import should go awry.
+
+1. Create an import configuration file, this is easily done by making a copy of the example Weather Display import configuration file located in the `/home/weewx/util/import` or `/etc/weewx/import` directory as applicable. In this case we will make a copy of the example Weather Display import configuration file and save it as `wd.conf` in the `/var/tmp` directory:
+
+    ```
+    $ cp /home/weewx/util/import/wd-example.conf /var/tmp/wd.conf
+    ```
+
+1. Confirm that the <span class="code">source</span> option is set to WD:
+
+    ```
+    source = WD
+    ```
+
+1. Confirm that the following options in the `[WD]` section are correctly set:
+
+   * [directory](#wd_directory). The full path to the directory containing the Weather Display monthly log files to be used as the source of the imported data.
+
+     * [logs_to_process](#wd_logs_to_process). Specifies the Weather Display monthly log files to be used to import data.
+
+     * [interval](#wd_interval). Determines how the WeeWX interval field is derived.
+
+     * [qc](#wd_qc). Determines whether quality control checks are performed on the imported data.
+
+     * [calc_missing](#wd_calc_missing). Determines whether missing derived observations will be calculated from the imported data.
+
+     * [txt_delimiter](#wd_txt_delimiter). The field delimiter used in the Weather Display space delimited (*.txt) monthly log files.
+
+     * [csv_delimiter](#wd_csv_delimiter). The field delimiter used in the Weather Display monthly comma separated values (*.csv) monthly log files.
+
+     * [decimal](#wd_decimal). The decimal point character used in the Weather Display monthly log files.
+
+     * [ignore_missing_log](#wd_ignore_missing_log). Determines whether missing log files are to be ignored or the import aborted.
+
+     * [ignore_invalid_data](#wd_ignore_invalid_data). Determines whether invalid data in a source field is ignored or the import aborted.
+
+     * [tranche](#wd_tranche). The number of records written to the WeeWX database in each transaction.
+
+     * [UV_sensor](#wd_UV). Whether a UV sensor was installed when the source data was produced.
+
+     * [solar_sensor](#wd_solar). Whether a solar radiation sensor was installed when the source data was produced.
+
+     * [ignore_extreme_temp_hum](#wd_ignore_extreme_temp_hum). Determines whether temperature and humidity values of 255 will be ignored.
+
+     * [[[Units]]](#wd_units). Defines the units used in the Weather Display monthly log files.
+
+     * [[[FieldMap]]](#wd_fieldmap). Defines the mapping between imported data fields and WeeWX archive fields.
+
+1. When first importing data it is prudent to do a dry run import before any data is actually imported. A dry run import will perform all steps of the import without actually writing imported data to the WeeWX database. In addition, consideration should be given to any additional options to be used such as `--date`.
+
+    !!! Note
+        Due to some peculiarities of the Weather Display log structure it may be prudent to use the `--suppress--warnings  option during the initial dry run so the overall progress of the import can be observed.
+
+    To perform a dry run enter the following command:
+
+    ```
+    wee_import --import-config=/var/tmp/wd.conf --dry-run --suppress-warnings
+    ```
+
+    This will result in a short preamble with details on the data source, the destination of the imported data and some other details on how the data will be processed. The import will then be performed but no data will be written to the WeeWX database.
+
+    The output should be similar to:
+
+    ```
+    Using WeeWX configuration file /home/weewx/weewx.conf
+    Starting wee_import...
+    Weather Display monthly log files in the '/var/tmp/WD' directory will be imported
+    Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
+    Destination table 'archive' unit system is '0x01' (US).
+    Missing derived observations will be calculated.
+    This is a dry run, imported data will not be saved to archive.
+    Starting dry run import ...
+    Records covering multiple periods have been identified for import.
+    Period 1 ...
+    Unique records processed: 43183; Last timestamp: 2018-09-30 23:59:00 AEST (1538315940)
+    Period 2 ...
+    Unique records processed: 44620; Last timestamp: 2018-10-31 23:59:00 AEST (1540994340)
+    Period 3 ...
+    Unique records processed: 43136; Last timestamp: 2018-11-30 23:59:00 AEST (1543586340)
+    Period 4 ...
+    Unique records processed: 44633; Last timestamp: 2018-12-31 23:59:00 AEST (1546264740)
+    Period 5 ...
+    Unique records processed: 8977; Last timestamp: 2019-01-07 05:43:00 AEST (1546803780)
+    Finished dry run import
+    184765 records were processed and 184549 unique records would have been imported.
+    216 duplicate records were ignored.
+    ```
+
+    !!! Note
+        The five periods correspond to the five months of log files used for this import.
+    
+    !!! Note
+        Any periods for which no data could be obtained will be skipped. The lack of data may be due to a missing Weather Display log file. A short explanatory note to this effect will be displayed against the period concerned and an entry included in the log.
+
+1. If the <span class="code">--suppress--warnings</span> option was used it may be prudent to do a second dry run this time without the <span class="code">--suppress--warnings</span> option. This will allow any warnings generated by the dry run import to be observed:
+
+    ```
+    wee_import --import-config=/var/tmp/wd.conf --dry-run
+    ```
+
+    This will result in a short preamble with details on the data source, the destination of the imported data and some other details on how the data will be processed. The import will then be performed but no data will be written to the WeeWX database.
+
+    The output should be similar to:
+
+    ```
+    Using WeeWX configuration file /home/weewx/weewx.conf
+    Starting wee_import...
+    Weather Display monthly log files in the '/var/tmp/WD' directory will be imported
+    Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
+    Destination table 'archive' unit system is '0x01' (US).
+    Missing derived observations will be calculated.
+    This is a dry run, imported data will not be saved to archive.
+    Starting dry run import ...
+    Records covering multiple periods have been identified for import.
+    Period 1 ...
+    Warning: Import field 'radiation' is mapped to WeeWX field 'radiation' but the
+    import field 'radiation' could not be found in one or more records.
+    WeeWX field 'radiation' will be set to 'None' in these records.
+    Warning: Import field 'soiltemp' is mapped to WeeWX field 'soilTemp1' but the
+    import field 'soiltemp' could not be found in one or more records.
+    WeeWX field 'soilTemp1' will be set to 'None' in these records.
+    Warning: Import field 'soilmoist' is mapped to WeeWX field 'soilMoist1' but the
+    import field 'soilmoist' could not be found in one or more records.
+    WeeWX field 'soilMoist1' will be set to 'None' in these records.
+    Warning: Import field 'humidity' is mapped to WeeWX field 'outHumidity' but the
+    import field 'humidity' could not be found in one or more records.
+    WeeWX field 'outHumidity' will be set to 'None' in these records.
+    Warning: Import field 'heatindex' is mapped to WeeWX field 'heatindex' but the
+    import field 'heatindex' could not be found in one or more records.
+    WeeWX field 'heatindex' will be set to 'None' in these records.
+    Warning: Import field 'windspeed' is mapped to WeeWX field 'windSpeed' but the
+    import field 'windspeed' could not be found in one or more records.
+    WeeWX field 'windSpeed' will be set to 'None' in these records.
+    Warning: Import field 'barometer' is mapped to WeeWX field 'barometer' but the
+    import field 'barometer' could not be found in one or more records.
+    WeeWX field 'barometer' will be set to 'None' in these records.
+    Warning: Import field 'dewpoint' is mapped to WeeWX field 'dewpoint' but the
+    import field 'dewpoint' could not be found in one or more records.
+    WeeWX field 'dewpoint' will be set to 'None' in these records.
+    Warning: Import field 'rainlastmin' is mapped to WeeWX field 'rain' but the
+    import field 'rainlastmin' could not be found in one or more records.
+    WeeWX field 'rain' will be set to 'None' in these records.
+    Warning: Import field 'direction' is mapped to WeeWX field 'windDir' but the
+    import field 'direction' could not be found in one or more records.
+    WeeWX field 'windDir' will be set to 'None' in these records.
+    Warning: Import field 'temperature' is mapped to WeeWX field 'outTemp' but the
+    import field 'temperature' could not be found in one or more records.
+    WeeWX field 'outTemp' will be set to 'None' in these records.
+    Warning: Import field 'gustspeed' is mapped to WeeWX field 'windGust' but the
+    import field 'gustspeed' could not be found in one or more records.
+    WeeWX field 'windGust' will be set to 'None' in these records.
+    Unique records processed: 43183; Last timestamp: 2018-09-30 23:59:00 AEST (1538315940)
+    Period 2 ...
+    Unique records processed: 44620; Last timestamp: 2018-10-31 23:59:00 AEST (1540994340)
+    Period 3 ...
+    Unique records processed: 43136; Last timestamp: 2018-11-30 23:59:00 AEST (1543586340)
+    Period 4 ...
+    Unique records processed: 44633; Last timestamp: 2018-12-31 23:59:00 AEST (1546264740)
+    Period 5 ...
+    Unique records processed: 8977; Last timestamp: 2019-01-07 05:43:00 AEST (1546803780)
     6 duplicate records were identified in period 5:
-        2019-01-04 10:31:00 AEST (1546561860)
-        2019-01-04 10:32:00 AEST (1546561920)
-        2019-01-04 10:33:00 AEST (1546561980)
-        2019-01-04 10:34:00 AEST (1546562040)
-        2019-01-04 10:35:00 AEST (1546562100)
-        2019-01-04 10:36:00 AEST (1546562160)
-Finished dry run import
-184555 records were processed and 184549 unique records would have been imported.
-6 duplicate records were ignored.
-</pre>
-
-                <p>In this case the following warnings are evident:</p>
-
-                    <ul>
-                        <li>
-                            Period one had 12 warnings for import fields that were mapped to WeeWX data fields but for
-                            which no data was found. This could be a sign that a complete month of data or a significant
-                            portion of the month could be missing or it could be a case of just the first record of the
-                            month is missing (a significant number of Weather Display monthly log files have been found
-                            to be missing the first record of the month). In most cases this warning can be ignored.
-                        </li>
-
-                        <li>
-                            Period five shows warnings for six entries in the period that have duplicate timestamps. This
-                            could be a sign that there is a problem in one or more of the Weather Display monthly log
-                            files for that month. However, anecdotally it has been found that duplicate entries often
-                            exist in one or more Weather Display monthly log files. If the duplicates are to be ignored
-                            then such warnings can be ignored otherwise the incorrect data should be removed from the
-                            affected log files before import.
-                        </li>
-                    </ul>
-
-            </li>
-
-            <li>Once the dry run results are satisfactory the data can be imported using the following command:
-
-                <pre class="tty cmd">wee_import --import-config=/var/tmp/wd.conf --suppress-warnings
-</pre>
-
-                <p class="note">
-                    <strong>Note</strong><br/>The <span class="code">--suppress--warnings</span> option has been used to
-                    suppress the previously encountered warnings.
-                </p>
-
-                <p>This will result in a preamble similar to that of a dry run. At the end of the preamble there will be
-                    a prompt:
-                </p>
-
-                <pre class="tty">Using WeeWX configuration file /home/weewx/weewx.conf
-Starting wee_import...
-Weather Display monthly log files in the '/var/tmp/WD' directory will be imported
-Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-Destination table 'archive' unit system is '0x01' (US).
-Missing derived observations will be calculated.
-Starting import ...
-Records covering multiple periods have been identified for import.
-Period 1 ...
-Proceeding will save all imported records in the WeeWX archive.
-Are you sure you want to proceed (y/n)?
-</pre>
-
-                <p>If there is more than one month of Weather Display monthly log files then
-                    <span class="code">wee_import</span> will provide summary information on a per period basis during
-                    the import. In addition, if the <span class="code">--date</span> option is used then source data
-                    that falls outside the date or date range specified with the <span class="code">--date</span> option
-                    is ignored. In such cases the preamble may look similar to:
-                </p>
-
-                <pre class="tty">Using WeeWX configuration file /home/weewx/weewx.conf
-Starting wee_import...
-Weather Display monthly log files in the '/var/tmp/WD' directory will be imported
-Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-Destination table 'archive' unit system is '0x01' (US).
-Missing derived observations will be calculated.
-Observations timestamped after 2018-10-12 00:00:00 AEST (1539266400) and up to and
-including 2018-10-13 00:00:00 AEST (1539352800) will be imported.
-Starting import ...
-Records covering multiple periods have been identified for import.
-Period 1 ...
-Period 1 - no records identified for import.
-Period 2 ...
-Proceeding will save all imported records in the WeeWX archive.
-Are you sure you want to proceed (y/n)?
-</pre>
-            </li>
-
-            <li>If the import parameters are acceptable enter <span class="code">y</span> to proceed with the import or
-                <span class="code">n</span> to abort the import. If the import is confirmed, the source data will be
-                imported, processed and saved in the WeeWX database. Information on the progress of the import will be
-                displayed similar to the following:
-
-                <pre class="tty">Unique records processed: 1250; Last timestamp: 2018-12-01 20:49:00 AEST (1543661340)
-</pre>
-
-                <p>Again if there is more than one month of Weather Display monthly log files and if the
-                    <span class="code">--date</span> option is used then the progress information may instead look
-                    similar to:
-                </p>
-
-                <pre class="tty">Period 2 ...
-Unique records processed: 44620; Last timestamp: 2018-10-31 23:59:00 AEST (1540994340)
-Period 3 ...
-Unique records processed: 43136; Last timestamp: 2018-11-30 23:59:00 AEST (1543586340)
-Period 4 ...
-Unique records processed: 12000; Last timestamp: 2018-12-09 07:59:00 AEST (1544306340)
-</pre>
-
-                <p class="note">
-                    <strong>Note</strong><br/>Any periods for which no data could be obtained will be skipped. The lack
-                    of data may be due to a missing Weather Display log file. A short explanatory note to this effect
-                    will be displayed against the period concerned and an entry included in the log.
-                </p>
-
-                <p>The line commencing with <span class="code">Unique records processed</span> should update as records
-                    are imported with progress information on number of unique records processed and the date time of the
-                    latest record processed. If the import spans multiple months then a new
-                    <span class="code">Period</span> line is created for each month.
-                </p>
-
-                <p>Once the initial import is complete <span class="code">wee_import</span> will, if requested, calculate
-                    any missing derived observations and rebuild the daily summaries. A brief summary should be displayed
-                    similar to the following:
-                </p>
-
-                <pre class="tty">Calculating missing derived observations ...
-Processing record: 184549; Last record: 2019-01-08 00:00:00 AEST (1546869600)
-Recalculating daily summaries...
-Records processed: 184000; Last date: 2019-01-06 20:34:00 AEST (1546770840)
-Finished recalculating daily summaries
-Finished calculating missing derived observations
-</pre>
-
-                <p>When the import is complete a brief summary is displayed similar to the following:
-                </p>
-
-                <pre class="tty">Finished import
-184765 records were processed and 184549 unique records imported in 699.27 seconds.
-216 duplicate records were ignored.
-Those records with a timestamp already in the archive will not have been
-imported. Confirm successful import in the WeeWX log file.
-</pre>
-            </li>
-
-            <li>Whilst <span class="code">wee_import</span> will advise of the number of unique records imported,
-                <span class="code">wee_import</span> does know how many, if any, of the imported records were successfully
-                saved to the database. You should look carefully through the WeeWX log file covering the
-                <span class="code">wee_import</span> session and take note of any records that were not imported. The most
-                common reason for imported records not being saved to the database is because a record with that timestamp
-                already exists in the database, in such cases something similar to the following will be found in the log:
-
-                <pre class="tty">
-Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
-</pre>
-
-                <p>In such cases take note of the timestamp of the record(s) concerned and make a decision about whether
-                    to delete the pre-existing record and re-import the record or retain the pre-existing record.
-                </p>
-            </li>
-        </ol>
-
-        <h2>Importing from WeatherCat</h2>
-
-        <p class="warning">
-            <strong>Warning!</strong><br/>Running WeeWX during a <span class="code">wee_import</span> session can lead to
-            abnormal termination of the import. If WeeWX must remain running (e.g., so that live data is not lost) run
-            the <span class="code">wee_import</span> session on another machine or to a second database and merge the
-            in-use and second database once the import is complete.
-        </p>
-
-        <p><span class="code">wee_import</span> can import observational data from the one or more WeatherCat monthly .cat
-            files. A WeatherCat monthly .cat file records weather station observations for a single month. These files are
-            accumulated over time and can be considered analogous to the WeeWX archive table.
-            When <span class="code">wee_import</span> imports data from the WeatherCat monthly .cat files each file is
-            considered a 'period'. <span class="code">wee_import</span> processes one period at a time in chronological
-            order (oldest to newest) and provides import summary data on a per period basis.
-        </p>
-
-        <h3>Mapping data to archive fields</h3>
-
-        <p>A WeatherCat import will populate the WeeWX archive fields as follows:</p>
-
-        <ul>
-            <li>Provided data exists for each field in the WeatherCat monthly .cat files, the following WeeWX archive
-                fields will be directly populated by imported data:
-
-                <ul>
-                    <li><span class="code">dateTime</span></li>
-                    <li><span class="code">barometer</span></li>
-                    <li><span class="code">dewpoint</span></li>
-                    <li><span class="code">heatindex</span></li>
-                    <li><span class="code">inHumidity</span></li>
-                    <li><span class="code">inTemp</span></li>
-                    <li><span class="code">outHumidity</span></li>
-                    <li><span class="code">outTemp</span></li>
-                    <li><span class="code">radiation</span></li>
-                    <li><span class="code">rain</span></li>
-                    <li><span class="code">rainRate</span></li>
-                    <li><span class="code">UV</span></li>
-                    <li><span class="code">windDir</span></li>
-                    <li><span class="code">windGust</span></li>
-                    <li><span class="code">windSpeed</span></li>
-                    <li><span class="code">windchill</span></li>
-                </ul>
-
-                <p class="note">
-                    <strong>Note</strong><br/>If a field in the WeatherCat monthly .cat file has no data then the
-                    corresponding WeeWX archive field will be set to <span class="code">None/null</span>.
-                </p>
-            </li>
-
-            <li>The following WeeWX archive fields will be populated from other settings or configuration options:
-
-                <ul>
-                    <li><span class="code">interval</span></li>
-                    <li><span class="code">usUnits</span></li>
-                </ul>
-            </li>
-
-            <li>The following WeeWX archive fields will be populated with values derived from the imported data provided
-                <span class="code">calc_missing = True</span> is included in the <span class="code">[WeatherCat]</span>
-                section of the import configuration file being used and the field exists in the in-use WeeWX archive
-                table schema.
-
-                <ul>
-                    <li><span class="code">altimeter</span></li>
-                    <li><span class="code">ET</span></li>
-                    <li><span class="code">pressure</span></li>
-                </ul>
-
-                <p class="note">
-                    <strong>Note</strong><br/>If <span class="code">calc_missing = False</span> is included in the
-                    <span class="code">[WeatherCat]</span> section of the import configuration file being used then all
-                    of the above fields will be set to <span class="code">None/null</span>. The default setting of the
-                    <span class="code">calc_missing</span> option is <span class="code">True</span>
-                </p>
-            </li>
-        </ul>
-
-        <h3>Step-by-step instructions</h3>
-
-        <p>To import observations from one or more WeatherCat monthly .cat files:</p>
-
-        <ol>
-            <li>Ensure the WeatherCat monthly .cat file(s) to be used for the import are located in year directories with
-                the year directories in turn located in a directory accessible by the machine that will
-                run <span class="code">wee_import</span>. For the purposes of the following examples, there are nine
-                monthly logs files covering the period October 2016 to June 2017 inclusive, located in
-                the <span class="code">/var/tmp/wcat/2016</span> and <span class="code">/var/tmp/wcat/2017</span>
-                directories respectively.
-            </li>
-
-            <li>Make a backup of the WeeWX database in case the import should go awry.
-            </li>
-
-            <li>Create an import configuration file. In this case we will make a copy of the example WeatherCat import
-                configuration file and save it as <span class="code">wcat.conf</span> in the <span class="code">/var/tmp</span>
-                directory:
-
-                <pre class="tty cmd">$ cp /home/weewx/util/import/weathercat-example.conf /var/tmp/wcat.conf
-</pre>
-
-            <li>Confirm that the <span class="code">source</span> option is set to WeatherCat:
-            <pre class="tty">source = WeatherCat</pre>
-            </li>
-
-            <li>Confirm that the following options in the <span class="code">[WeatherCat]</span> section are correctly set:
-
-                <ul>
-                    <li><a href="#wcat_directory"><strong><span class="code">directory</span></strong></a>. The full
-                        path to the directory containing the directories containing the WeatherCat monthly .cat files to
-                        be used as the source of the imported data.
-                    </li>
-                    <li><a href="#wcat_interval"><strong><span class="code">interval</span></strong></a>. Determines
-                        how the WeeWX interval field is derived.
-                    </li>
-                    <li><a href="#wcat_qc"><strong><span class="code">qc</span></strong></a>. Determines whether
-                        quality control checks are performed on the imported data.
-                    </li>
-                    <li><a href="#wcat_calc_missing"><strong><span class="code">calc_missing</span></strong></a>.
-                        Determines whether missing derived observations will be calculated from the imported data.
-                    </li>
-                    <li><a href="#wcat_decimal"><strong><span class="code">decimal</span></strong></a>. The decimal
-                        point character used in the WeatherCat monthly log files.
-                    </li>
-                    <li><a href="#wcat_tranche"><strong><span class="code">tranche</span></strong></a>. The number of
-                        records written to the WeeWX database in each transaction.
-                    </li>
-                    <li><a href="#wcat_UV"><strong><span class="code">UV_sensor</span></strong></a>. Whether a UV
-                        sensor was installed when the source data was produced.
-                    </li>
-                    <li><a href="#wcat_solar"><strong><span class="code">solar_sensor</span></strong></a>. Whether a
-                        solar radiation sensor was installed when the source data was produced.
-                    </li>
-                    <li><a href="#wcat_units"><strong><span class="code">[[Units]]</span></strong></a>. Defines the
-                        units used in the WeatherCat monthly .cat files.
-                    </li>
-                </ul>
-            </li>
-
-            <li>When first importing data it is prudent to do a dry run import before any data is actually imported. A
-                dry run import will perform all steps of the import without actually writing imported data to the WeeWX
-                database. In addition, consideration should be given to any additional options to be used such as <span
-                    class="code">--date</span>.
-
-                <p class="note">
-                    <strong>Note</strong><br/>Whilst WeatherCat monthly .cat files use a fixed set of fields the
-                    inclusion of fields other than <span class="code">t</span> (timestamp)
-                    and <span class="code">V</span> (validation) is optional. For this reason the field map used for
-                    WeatherCat imports includes fields that may not exist in some WeatherCat monthly .cat files
-                    resulting in warnings by <span class="code">wee_port</span> that there may be missing data in the
-                    import source. These warnings can be extensive and may detract from the ability of the user to monitor
-                    the progress of the import. It may be prudent to use the <span class="code">--suppress--warnings</span>
-                    option during the initial dry run so the overall progress of the import can be more easily observed.
-                </p>
-
-                <p>To perform a dry run enter the following command:</p>
-
-                <pre class="tty cmd">wee_import --import-config=/var/tmp/wcat.conf --dry-run --suppress-warnings
-</pre>
-
-                <p>This will result in a short preamble with details on the data source, the destination of the imported
-                    data and some other details on how the data will be processed. The import will then be performed but
-                    no data will be written to the WeeWX database.
-                </p>
-                <p>The output should be similar to:</p>
-
-                <pre class="tty">Using WeeWX configuration file /home/weewx/weewx.conf
-Starting wee_import...
-WeatherCat monthly .cat files in the '/var/tmp/wcat' directory will be imported
-Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-Destination table 'archive' unit system is '0x01' (US).
-Missing derived observations will be calculated.
-This is a dry run, imported data will not be saved to archive.
-Starting dry run import ...
-Records covering multiple periods have been identified for import.
-Period 1 ...
-Unique records processed: 39555; Last timestamp: 2016-10-31 23:59:00 AEST (1477922340)
-Period 2 ...
-Unique records processed: 38284; Last timestamp: 2016-11-30 23:59:00 AEST (1480514340)
-Period 3 ...
-Unique records processed: 39555; Last timestamp: 2016-12-31 23:59:00 AEST (1483192740)
-Period 4 ...
-Unique records processed: 39555; Last timestamp: 2017-01-31 23:59:00 AEST (1485871140)
-Period 5 ...
-Unique records processed: 35598; Last timestamp: 2017-02-28 23:59:00 AEST (1488290340)
-Period 6 ...
-Unique records processed: 39555; Last timestamp: 2017-03-31 23:59:00 AEST (1490968740)
-Period 7 ...
-Unique records processed: 38284; Last timestamp: 2017-04-30 23:59:00 AEST (1493560740)
-Period 8 ...
-Unique records processed: 38284; Last timestamp: 2017-06-30 23:59:00 AEST (1498831140)
-Finished dry run import
-308670 records were processed and 308670 unique records would have been imported.
-</pre>
-
-                <p class="note">
-                    <strong>Note</strong><br/>The eight periods correspond to the eight monthly .cat files used for this
-                    import.
-                </p>
-                <p class="note">
-                    <strong>Note</strong><br/>Any periods for which no data could be obtained will be skipped. The lack
-                    of data may be due to a missing WeatherCat monthly .cat file. A short explanatory note to this effect
-                    will be displayed against the period concerned and an entry included in the log.
-                </p>
-            </li>
-
-            <li>If the <span class="code">--suppress--warnings</span> option was used it may be prudent to do a second
-                dry run this time without the <span class="code">--suppress--warnings</span> option. This will allow any
-                warnings generated by the dry run import to be observed:
-
-                <pre class="tty cmd">wee_import --import-config=/var/tmp/wcat.conf --dry-run</pre>
-
-                <p>This will result in a short preamble with details on the data source, the destination of the imported
-                    data and some other details on how the data will be processed. The import will then be performed but
-                    no data will be written to the WeeWX database.
-                </p>
-
-                <p>The output should be similar to:</p>
-
-                <pre class="tty">Using WeeWX configuration file /home/weewx/weewx.conf
-Starting wee_import...
-WeatherCat monthly .cat files in the '/var/tmp/wcat' directory will be imported
-Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-Destination table 'archive' unit system is '0x01' (US).
-Missing derived observations will be calculated.
-This is a dry run, imported data will not be saved to archive.
-Starting dry run import ...
-Records covering multiple periods have been identified for import.
-Period 1 ...
-Warning: Import field 'T1' is mapped to WeeWX field 'extraTemp1' but the
-         import field 'T1' could not be found in one or more records.
-         WeeWX field 'extraTemp1' will be set to 'None' in these records.
-Warning: Import field 'T2' is mapped to WeeWX field 'extraTemp2' but the
-         import field 'T2' could not be found in one or more records.
-         WeeWX field 'extraTemp2' will be set to 'None' in these records.
-Warning: Import field 'T3' is mapped to WeeWX field 'extraTemp3' but the
-         import field 'T3' could not be found in one or more records.
-         WeeWX field 'extraTemp3' will be set to 'None' in these records.
-Warning: Import field 'H1' is mapped to WeeWX field 'extraHumid1' but the
-         import field 'H1' could not be found in one or more records.
-         WeeWX field 'extraHumid1' will be set to 'None' in these records.
-Warning: Import field 'H2' is mapped to WeeWX field 'extraHumid2' but the
-         import field 'H2' could not be found in one or more records.
-         WeeWX field 'extraHumid2' will be set to 'None' in these records.
-Warning: Import field 'Sm1' is mapped to WeeWX field 'soilMoist1' but the
-         import field 'Sm1' could not be found in one or more records.
-         WeeWX field 'soilMoist1' will be set to 'None' in these records.
-Warning: Import field 'Sm2' is mapped to WeeWX field 'soilMoist2' but the
-         import field 'Sm2' could not be found in one or more records.
-         WeeWX field 'soilMoist2' will be set to 'None' in these records.
-Warning: Import field 'Sm3' is mapped to WeeWX field 'soilMoist3' but the
-         import field 'Sm3' could not be found in one or more records.
-         WeeWX field 'soilMoist3' will be set to 'None' in these records.
-Warning: Import field 'Sm4' is mapped to WeeWX field 'soilMoist4' but the
-         import field 'Sm4' could not be found in one or more records.
-         WeeWX field 'soilMoist4' will be set to 'None' in these records.
-Warning: Import field 'Lw1' is mapped to WeeWX field 'leafWet1' but the
-         import field 'Lw1' could not be found in one or more records.
-         WeeWX field 'leafWet1' will be set to 'None' in these records.
-Warning: Import field 'Lw2' is mapped to WeeWX field 'leafWet2' but the
-         import field 'Lw2' could not be found in one or more records.
-         WeeWX field 'leafWet2' will be set to 'None' in these records.
-Warning: Import field 'St1' is mapped to WeeWX field 'soilTemp1' but the
-         import field 'St1' could not be found in one or more records.
-         WeeWX field 'soilTemp1' will be set to 'None' in these records.
-Warning: Import field 'St2' is mapped to WeeWX field 'soilTemp2' but the
-         import field 'St2' could not be found in one or more records.
-         WeeWX field 'soilTemp2' will be set to 'None' in these records.
-Warning: Import field 'St3' is mapped to WeeWX field 'soilTemp3' but the
-         import field 'St3' could not be found in one or more records.
-         WeeWX field 'soilTemp3' will be set to 'None' in these records.
-Warning: Import field 'St4' is mapped to WeeWX field 'soilTemp4' but the
-         import field 'St4' could not be found in one or more records.
-         WeeWX field 'soilTemp4' will be set to 'None' in these records.
-Warning: Import field 'Lt1' is mapped to WeeWX field 'leafTemp1' but the
-         import field 'Lt1' could not be found in one or more records.
-         WeeWX field 'leafTemp1' will be set to 'None' in these records.
-Warning: Import field 'Lt2' is mapped to WeeWX field 'leafTemp2' but the
-         import field 'Lt2' could not be found in one or more records.
-         WeeWX field 'leafTemp2' will be set to 'None' in these records.
-Unique records processed: 39555; Last timestamp: 2016-10-31 23:59:00 AEST (1477922340)
-Period 2 ...
-Warning: Import field 'T1' is mapped to WeeWX field 'extraTemp1' but the
-         import field 'T1' could not be found in one or more records.
-         WeeWX field 'extraTemp1' will be set to 'None' in these records.
-Warning: Import field 'T2' is mapped to WeeWX field 'extraTemp2' but the
-         import field 'T2' could not be found in one or more records.
-         WeeWX field 'extraTemp2' will be set to 'None' in these records.
-Warning: Import field 'T3' is mapped to WeeWX field 'extraTemp3' but the
-         import field 'T3' could not be found in one or more records.
-         WeeWX field 'extraTemp3' will be set to 'None' in these records.
-Warning: Import field 'H1' is mapped to WeeWX field 'extraHumid1' but the
-         import field 'H1' could not be found in one or more records.
-         WeeWX field 'extraHumid1' will be set to 'None' in these records.
-Warning: Import field 'H2' is mapped to WeeWX field 'extraHumid2' but the
-         import field 'H2' could not be found in one or more records.
-         WeeWX field 'extraHumid2' will be set to 'None' in these records.
-Warning: Import field 'Sm1' is mapped to WeeWX field 'soilMoist1' but the
-         import field 'Sm1' could not be found in one or more records.
-         WeeWX field 'soilMoist1' will be set to 'None' in these records.
-Warning: Import field 'Sm2' is mapped to WeeWX field 'soilMoist2' but the
-         import field 'Sm2' could not be found in one or more records.
-         WeeWX field 'soilMoist2' will be set to 'None' in these records.
-Warning: Import field 'Sm3' is mapped to WeeWX field 'soilMoist3' but the
-         import field 'Sm3' could not be found in one or more records.
-         WeeWX field 'soilMoist3' will be set to 'None' in these records.
-Warning: Import field 'Sm4' is mapped to WeeWX field 'soilMoist4' but the
-         import field 'Sm4' could not be found in one or more records.
-         WeeWX field 'soilMoist4' will be set to 'None' in these records.
-Warning: Import field 'Lw1' is mapped to WeeWX field 'leafWet1' but the
-         import field 'Lw1' could not be found in one or more records.
-         WeeWX field 'leafWet1' will be set to 'None' in these records.
-Warning: Import field 'Lw2' is mapped to WeeWX field 'leafWet2' but the
-         import field 'Lw2' could not be found in one or more records.
-         WeeWX field 'leafWet2' will be set to 'None' in these records.
-Warning: Import field 'St1' is mapped to WeeWX field 'soilTemp1' but the
-         import field 'St1' could not be found in one or more records.
-         WeeWX field 'soilTemp1' will be set to 'None' in these records.
-Warning: Import field 'St2' is mapped to WeeWX field 'soilTemp2' but the
-         import field 'St2' could not be found in one or more records.
-         WeeWX field 'soilTemp2' will be set to 'None' in these records.
-Warning: Import field 'St3' is mapped to WeeWX field 'soilTemp3' but the
-         import field 'St3' could not be found in one or more records.
-         WeeWX field 'soilTemp3' will be set to 'None' in these records.
-Warning: Import field 'St4' is mapped to WeeWX field 'soilTemp4' but the
-         import field 'St4' could not be found in one or more records.
-         WeeWX field 'soilTemp4' will be set to 'None' in these records.
-Warning: Import field 'Lt1' is mapped to WeeWX field 'leafTemp1' but the
-         import field 'Lt1' could not be found in one or more records.
-         WeeWX field 'leafTemp1' will be set to 'None' in these records.
-Warning: Import field 'Lt2' is mapped to WeeWX field 'leafTemp2' but the
-         import field 'Lt2' could not be found in one or more records.
-         WeeWX field 'leafTemp2' will be set to 'None' in these records.
-Unique records processed: 38284; Last timestamp: 2016-11-30 23:59:00 AEST (1480514340)
-
-... (identical entries for periods 3 to 7 omitted for conciseness)
-
-Period 8 ...
-Warning: Import field 'T1' is mapped to WeeWX field 'extraTemp1' but the
-         import field 'T1' could not be found in one or more records.
-         WeeWX field 'extraTemp1' will be set to 'None' in these records.
-Warning: Import field 'T2' is mapped to WeeWX field 'extraTemp2' but the
-         import field 'T2' could not be found in one or more records.
-         WeeWX field 'extraTemp2' will be set to 'None' in these records.
-Warning: Import field 'T3' is mapped to WeeWX field 'extraTemp3' but the
-         import field 'T3' could not be found in one or more records.
-         WeeWX field 'extraTemp3' will be set to 'None' in these records.
-Warning: Import field 'H1' is mapped to WeeWX field 'extraHumid1' but the
-         import field 'H1' could not be found in one or more records.
-         WeeWX field 'extraHumid1' will be set to 'None' in these records.
-Warning: Import field 'H2' is mapped to WeeWX field 'extraHumid2' but the
-         import field 'H2' could not be found in one or more records.
-         WeeWX field 'extraHumid2' will be set to 'None' in these records.
-Warning: Import field 'Sm1' is mapped to WeeWX field 'soilMoist1' but the
-         import field 'Sm1' could not be found in one or more records.
-         WeeWX field 'soilMoist1' will be set to 'None' in these records.
-Warning: Import field 'Sm2' is mapped to WeeWX field 'soilMoist2' but the
-         import field 'Sm2' could not be found in one or more records.
-         WeeWX field 'soilMoist2' will be set to 'None' in these records.
-Warning: Import field 'Sm3' is mapped to WeeWX field 'soilMoist3' but the
-         import field 'Sm3' could not be found in one or more records.
-         WeeWX field 'soilMoist3' will be set to 'None' in these records.
-Warning: Import field 'Sm4' is mapped to WeeWX field 'soilMoist4' but the
-         import field 'Sm4' could not be found in one or more records.
-         WeeWX field 'soilMoist4' will be set to 'None' in these records.
-Warning: Import field 'Lw1' is mapped to WeeWX field 'leafWet1' but the
-         import field 'Lw1' could not be found in one or more records.
-         WeeWX field 'leafWet1' will be set to 'None' in these records.
-Warning: Import field 'Lw2' is mapped to WeeWX field 'leafWet2' but the
-         import field 'Lw2' could not be found in one or more records.
-         WeeWX field 'leafWet2' will be set to 'None' in these records.
-Warning: Import field 'St1' is mapped to WeeWX field 'soilTemp1' but the
-         import field 'St1' could not be found in one or more records.
-         WeeWX field 'soilTemp1' will be set to 'None' in these records.
-Warning: Import field 'St2' is mapped to WeeWX field 'soilTemp2' but the
-         import field 'St2' could not be found in one or more records.
-         WeeWX field 'soilTemp2' will be set to 'None' in these records.
-Warning: Import field 'St3' is mapped to WeeWX field 'soilTemp3' but the
-         import field 'St3' could not be found in one or more records.
-         WeeWX field 'soilTemp3' will be set to 'None' in these records.
-Warning: Import field 'St4' is mapped to WeeWX field 'soilTemp4' but the
-         import field 'St4' could not be found in one or more records.
-         WeeWX field 'soilTemp4' will be set to 'None' in these records.
-Warning: Import field 'Lt1' is mapped to WeeWX field 'leafTemp1' but the
-         import field 'Lt1' could not be found in one or more records.
-         WeeWX field 'leafTemp1' will be set to 'None' in these records.
-Warning: Import field 'Lt2' is mapped to WeeWX field 'leafTemp2' but the
-         import field 'Lt2' could not be found in one or more records.
-         WeeWX field 'leafTemp2' will be set to 'None' in these records.
-Unique records processed: 38284; Last timestamp: 2017-06-30 23:59:00 AEST (1498831140)
-Finished dry run import
-308670 records were processed and 308670 unique records would have been imported.
-</pre>
-
-                <p>In this case warnings are evident for numerous import/WeeWX field pairs that are mapped but for which
-                    no data could be found. If the warnings relate to fields that are not included in the import source
-                    data the warning may be safely ignored. If the warning relate to fields that the user expects to be
-                    in the import source data the issue should be investigated further before the import is completed</p>
-
-            </li>
-
-            <li>Once the dry run results are satisfactory the data can be imported using the following command:
-
-                <pre class="tty cmd">wee_import --import-config=/var/tmp/wcat.conf --suppress-warnings
-</pre>
-
-                <p>This will result in a preamble similar to that of a dry run. At the end of the preamble there will be
-                    a prompt:
-                </p>
-
-                <pre class="tty">Using WeeWX configuration file /home/weewx/weewx.conf
-Starting wee_import...
-WeatherCat monthly .cat files in the '/var/tmp/wcat' directory will be imported
-Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-Destination table 'archive' unit system is '0x01' (US).
-Missing derived observations will be calculated.
-Starting import ...
-Records covering multiple periods have been identified for import.
-Period 1 ...
-Proceeding will save all imported records in the WeeWX archive.
-Are you sure you want to proceed (y/n)?
-</pre>
-
-                <p>If there is more than one WeatherCat monthly .cat file then <span class="code">wee_import</span> will
-                    provide summary information on a per period basis during the import. In addition, if
-                    the <span class="code">--date</span> option is used then source data that falls outside the date or
-                    date range specified with the <span class="code">--date</span> option is ignored. In such cases the
-                    preamble may look similar to:
-                </p>
-
-                <pre class="tty">Using WeeWX configuration file /home/weewx/weewx.conf
-Starting wee_import...
-WeatherCat monthly .cat files in the '/var/tmp/wcat' directory will be imported
-Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
-Destination table 'archive' unit system is '0x01' (US).
-Missing derived observations will be calculated.
-Starting import ...
-Records covering multiple periods have been identified for import.
-Period 1 ...
-Period 1 - no records identified for import.
-Period 2 ...
-Period 2 - no records identified for import.
-Period 3 ...
-Proceeding will save all imported records in the WeeWX archive.
-Are you sure you want to proceed (y/n)?
-</pre>
-            </li>
-
-            <li>If the import parameters are acceptable enter <span class="code">y</span> to proceed with the import or
-                <span class="code">n</span> to abort the import. If the import is confirmed, the source data will be
-                imported, processed and saved in the WeeWX database. Information on the progress of the import will be
-                displayed similar to the following:
-
-                <pre class="tty">Unique records processed: 2305; Last timestamp: 2016-12-30 00:00:00 AEST (1483020000)
-</pre>
-
-                <p>Again if there is more than one WeatherCat monthly .cat file and if the <span class="code">--date</span>
-                    option is used then the progress information may instead look similar to:
-                </p>
-
-                <pre class="tty">Period 4 ...
-Unique records processed: 8908; Last timestamp: 2017-01-31 23:59:00 AEST (1485870900)
-Period 5 ...
-Unique records processed: 8029; Last timestamp: 2017-02-28 23:59:00 AEST (1488290100)
-Period 6 ...
-Unique records processed: 8744; Last timestamp: 2017-03-31 23:59:00 AEST (1490968500)
-</pre>
-
-                <p class="note">
-                    <strong>Note</strong><br/>Any periods for which no data could be obtained will be skipped. The lack
-                    of data may be due to a missing WeatherCat monthly .cat file. A short explanatory note to this effect
-                    will be displayed against the period concerned and an entry included in the log.
-                </p>
-                <p>The line commencing with <span class="code">Unique records processed</span> should update as records
-                    are imported with progress information on number of records processed, number of unique records
-                    imported and the date time of the latest record processed. If the import spans multiple months (ie
-                    multiple monthly .cat files) then a new <span class="code">Period</span> line is created for each
-                    month.
-                </p>
-
-                <p>Once the initial import is complete <span class="code">wee_import</span> will, if requested, calculate
-                    any missing derived observations and rebuild the daily summaries. A brief summary should be displayed
-                    similar to the following:
-                </p>
-
-                <pre class="tty">Calculating missing derived observations ...
-Processing record: 77782; Last record: 2017-06-30 00:00:00 AEST (1519826400)
-Recalculating daily summaries...
-Records processed: 77000; Last date: 2017-06-28 11:45:00 AEST (1519811100)
-Finished recalculating daily summaries
-Finished calculating missing derived observations
-</pre>
-
-                <p>When the import is complete a brief summary is displayed similar to the following:
-                </p>
-
-                <pre class="tty">Finished import
-308670 records were processed and 308670 unique records imported in 1907.61 seconds.
-Those records with a timestamp already in the archive will not have been
-imported. Confirm successful import in the WeeWX log file.
-</pre>
-            </li>
-
-            <li>Whilst <span class="code">wee_import</span> will advise of the number of records processed and the
-                number of unique records found, <span class="code">wee_import</span> does know how many, if any, of the
-                imported records were successfully saved to the database. You should look carefully through the WeeWX
-                log file covering the <span class="code">wee_import</span> session and take note of any records that
-                were not imported. The most common reason for imported records not being saved to the database is
-                because a record with that timestamp already exists in the database, in such cases something similar to
-                the following will be found in the log:
-
-                <pre class="tty">
-Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
-</pre>
-
-                <p>In such cases take note of the timestamp of the record(s) concerned and make a decision about whether
-                    to delete the pre-existing record and re-import the record or retain the pre-existing record.
-                </p>
-            </li>
-        </ol>
+    2019-01-04 10:31:00 AEST (1546561860)
+    2019-01-04 10:32:00 AEST (1546561920)
+    2019-01-04 10:33:00 AEST (1546561980)
+    2019-01-04 10:34:00 AEST (1546562040)
+    2019-01-04 10:35:00 AEST (1546562100)
+    2019-01-04 10:36:00 AEST (1546562160)
+    Finished dry run import
+    184555 records were processed and 184549 unique records would have been imported.
+    6 duplicate records were ignored.
+    ```
+
+    In this case the following warnings are evident:
+
+    * Period one had 12 warnings for import fields that were mapped to WeeWX data fields but for which no data was found. This could be a sign that a complete month of data or a significant portion of the month could be missing or it could be a case of just the first record of the month is missing (a significant number of Weather Display monthly log files have been found to be missing the first record of the month). In most cases this warning can be ignored.
+
+    * Period five shows warnings for six entries in the period that have duplicate timestamps. This could be a sign that there is a problem in one or more of the Weather Display monthly log files for that month. However, anecdotally it has been found that duplicate entries often exist in one or more Weather Display monthly log files. If the duplicates are to be ignored then such warnings can be ignored otherwise the incorrect data should be removed from the affected log files before import.
+
+1. Once the dry run results are satisfactory the data can be imported using the following command:
+
+    ```
+    wee_import --import-config=/var/tmp/wd.conf --suppress-warnings
+    ```
+    
+    !!! Note
+        The `--suppress--warnings` option has been used to suppress the previously encountered warnings.
+    
+    This will result in a preamble similar to that of a dry run. At the end of the preamble there will be a prompt:
+
+    ```Using WeeWX configuration file /home/weewx/weewx.conf
+    Starting wee_import...
+    Weather Display monthly log files in the '/var/tmp/WD' directory will be imported
+    Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
+    Destination table 'archive' unit system is '0x01' (US).
+    Missing derived observations will be calculated.
+    Starting import ...
+    Records covering multiple periods have been identified for import.
+    Period 1 ...
+    Proceeding will save all imported records in the WeeWX archive.
+    Are you sure you want to proceed (y/n)?
+    ```
+
+    If there is more than one month of Weather Display monthly log files then `wee_import` will provide summary information on a per period basis during the import. In addition, if the `--date` option is used then source data that falls outside the date or date range specified with the `--date` option is ignored. In such cases the preamble may look similar to:
+    
+    ```
+    Using WeeWX configuration file /home/weewx/weewx.conf
+    Starting wee_import...
+    Weather Display monthly log files in the '/var/tmp/WD' directory will be imported
+    Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
+    Destination table 'archive' unit system is '0x01' (US).
+    Missing derived observations will be calculated.
+    Observations timestamped after 2018-10-12 00:00:00 AEST (1539266400) and up to and
+    including 2018-10-13 00:00:00 AEST (1539352800) will be imported.
+    Starting import ...
+    Records covering multiple periods have been identified for import.
+    Period 1 ...
+    Period 1 - no records identified for import.
+    Period 2 ...
+    Proceeding will save all imported records in the WeeWX archive.
+    Are you sure you want to proceed (y/n)?
+    ```
+
+1. If the import parameters are acceptable enter `y` to proceed with the import or `n` to abort the import. If the import is confirmed, the source data will be imported, processed and saved in the WeeWX database. Information on the progress of the import will be displayed similar to the following:
+
+    ```
+    Unique records processed: 1250; Last timestamp: 2018-12-01 20:49:00 AEST (1543661340)
+    ```
+
+    Again if there is more than one month of Weather Display monthly log files and if the `--date` option is used then the progress information may instead look similar to:
+
+    ```
+    Period 2 ...
+    Unique records processed: 44620; Last timestamp: 2018-10-31 23:59:00 AEST (1540994340)
+    Period 3 ...
+    Unique records processed: 43136; Last timestamp: 2018-11-30 23:59:00 AEST (1543586340)
+    Period 4 ...
+    Unique records processed: 12000; Last timestamp: 2018-12-09 07:59:00 AEST (1544306340)
+    ```
+    
+    !!! Note
+        Any periods for which no data could be obtained will be skipped. The lack of data may be due to a missing Weather Display log file. A short explanatory note to this effect will be displayed against the period concerned and an entry included in the log.
+
+    The line commencing with `Unique records processed` should update as records are imported with progress information on number of unique records processed and the date time of the latest record processed. If the import spans multiple months then a new `Period` line is created for each month.
+
+    Once the initial import is complete `wee_import` will, if requested, calculate any missing derived observations and rebuild the daily summaries. A brief summary should be displayed similar to the following:
+
+    ```
+    Calculating missing derived observations ...
+    Processing record: 184549; Last record: 2019-01-08 00:00:00 AEST (1546869600)
+    Recalculating daily summaries...
+    Records processed: 184000; Last date: 2019-01-06 20:34:00 AEST (1546770840)
+    Finished recalculating daily summaries
+    Finished calculating missing derived observations
+    ```
+
+    When the import is complete a brief summary is displayed similar to the following:
+
+    ```
+    Finished import
+    184765 records were processed and 184549 unique records imported in 699.27 seconds.
+    216 duplicate records were ignored.
+    Those records with a timestamp already in the archive will not have been
+    imported. Confirm successful import in the WeeWX log file.
+    ```
+
+1. Whilst `wee_import` will advise of the number of unique records imported, `wee_import` does know how many, if any, of the imported records were successfully saved to the database. You should look carefully through the WeeWX log file covering the `wee_import` session and take note of any records that were not imported. The most common reason for imported records not being saved to the database is because a record with that timestamp already exists in the database, in such cases something similar to the following will be found in the log:
+
+    ```
+    Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
+    ```
+
+    In such cases take note of the timestamp of the record(s) concerned and make a decision about whether to delete the pre-existing record and re-import the record or retain the pre-existing record.
+
+
+## Importing from WeatherCat
+
+!!! Warning!
+    Running WeeWX during a `wee_import` session can lead to abnormal termination of the import. If WeeWX must remain running (e.g., so that live data is not lost) run the `wee_import` session on another machine or to a second database and merge the in-use and second database once the import is complete.
+
+`wee_import` can import observational data from the one or more WeatherCat monthly .cat files. A WeatherCat monthly .cat file records weather station observations for a single month. These files are accumulated over time and can be considered analogous to the WeeWX archive table. When `wee_import` imports data from the WeatherCat monthly .cat files each file is considered a 'period'. `wee_import` processes one period at a time in chronological order (oldest to newest) and provides import summary data on a per period basis.
+
+
+### Mapping data to archive fields
+
+A WeatherCat import will populate the WeeWX archive fields as follows:</p>
+
+* Provided data exists for each field in the WeatherCat monthly .cat files, the following WeeWX archive fields will be directly populated by imported data:
+
+  * `dateTime`
+  * `barometer`
+  * `dewpoint`
+  * `heatindex`
+  * `inHumidity`
+  * `inTemp`
+  * `outHumidity`
+  * `outTemp`
+  * `radiation`
+  * `rain`
+  * `rainRate`
+  * `UV`
+  * `windDir`
+  * `windGust`
+  * `windSpeed`
+  * `windchill`
+
+    !!! Note
+    If a field in the WeatherCat monthly .cat file has no data then the corresponding WeeWX archive field will be set to <span class="code">None/null</span>.
+
+* The following WeeWX archive fields will be populated from other settings or configuration options:
+
+  * `interval`
+  * `usUnits`
+
+* The following WeeWX archive fields will be populated with values derived from the imported data provided `calc_missing = True` is included in the `[WeatherCat]` section of the import configuration file being used and the field exists in the in-use WeeWX archive table schema:
+
+  * `altimeter`
+  * `ET`
+  * `pressure`
+
+    !!! Note
+        If `calc_missing = False` is included in the `[WeatherCat]` section of the import configuration file being used then all of the above fields will be set to `None/null`. The default setting of the calc_missing` option is `True`.
+
+
+### Step-by-step instructions
+
+To import observations from one or more WeatherCat monthly .cat files:
+
+1. Ensure the WeatherCat monthly .cat file(s) to be used for the import are located in year directories with the year directories in turn located in a directory accessible by the machine that will run `wee_import`. For the purposes of the following examples, there are nine monthly logs files covering the period October 2016 to June 2017 inclusive, located in the `/var/tmp/wcat/2016` and `/var/tmp/wcat/2017` directories respectively.
+
+1. Make a backup of the WeeWX database in case the import should go awry.
+
+1. Create an import configuration file. In this case we will make a copy of the example WeatherCat import configuration file and save it as `wcat.conf` in the `/var/tmp` directory:
+
+    ```
+    $ cp /home/weewx/util/import/weathercat-example.conf /var/tmp/wcat.conf
+    ```
+
+1. Confirm that the `source` option is set to WeatherCat:
+
+    ```
+    source = WeatherCat</pre>
+    ```
+
+1. Confirm the following options in the `>[WeatherCat]` section are correctly set:
+
+    * [directory](#wcat_directory). The full path to the directory containing the directories containing the WeatherCat monthly .cat files to be used as the source of the imported data.
+
+    * [interval](#wcat_interval). Determines how the WeeWX interval field is derived.
+
+    * [qc](#wcat_qc). Determines whether quality control checks are performed on the imported data.
+
+    * [calc_missing](#wcat_calc_missing). Determines whether missing derived observations will be calculated from the imported data.
+
+    * [decimal](#wcat_decimal). The decimal point character used in the WeatherCat monthly log files.
+
+    * [tranche](#wcat_tranche). The number of records written to the WeeWX database in each transaction.
+
+    * [UV_sensor](#wcat_UV). Whether a UV sensor was installed when the source data was produced.
+
+    * [solar_sensor](#wcat_solar). Whether a solar radiation sensor was installed when the source data was produced.
+
+    * [[[Units]]](#wcat_units). Defines the units used in the WeatherCat monthly .cat files.
+
+1. When first importing data it is prudent to do a dry run import before any data is actually imported. A
+dry run import will perform all steps of the import without actually writing imported data to the WeeWX
+database. In addition, consideration should be given to any additional options to be used such as '--date'.
+
+    !!! Note
+        Whilst WeatherCat monthly .cat files use a fixed set of fields the inclusion of fields other than `t` (timestamp) and `V` (validation) is optional. For this reason the field map used for WeatherCat imports includes fields that may not exist in some WeatherCat monthly .cat files resulting in warnings by `wee_import` that there may be missing data in the import source. These warnings can be extensive and may detract from the ability of the user to monitor the progress of the import. It may be prudent to use the `--suppress--warnings` option during the initial dry run so the overall progress of the import can be more easily observed.
+
+    To perform a dry run enter the following command:
+
+    ```
+    wee_import --import-config=/var/tmp/wcat.conf --dry-run --suppress-warnings
+    ```
+
+    This will result in a short preamble with details on the data source, the destination of the imported data and some other details on how the data will be processed. The import will then be performed but no data will be written to the WeeWX database.
+    
+    The output should be similar to:
+    
+    ```
+    Using WeeWX configuration file /home/weewx/weewx.conf
+    Starting wee_import...
+    WeatherCat monthly .cat files in the '/var/tmp/wcat' directory will be imported
+    Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
+    Destination table 'archive' unit system is '0x01' (US).
+    Missing derived observations will be calculated.
+    This is a dry run, imported data will not be saved to archive.
+    Starting dry run import ...
+    Records covering multiple periods have been identified for import.
+    Period 1 ...
+    Unique records processed: 39555; Last timestamp: 2016-10-31 23:59:00 AEST (1477922340)
+    Period 2 ...
+    Unique records processed: 38284; Last timestamp: 2016-11-30 23:59:00 AEST (1480514340)
+    Period 3 ...
+    Unique records processed: 39555; Last timestamp: 2016-12-31 23:59:00 AEST (1483192740)
+    Period 4 ...
+    Unique records processed: 39555; Last timestamp: 2017-01-31 23:59:00 AEST (1485871140)
+    Period 5 ...
+    Unique records processed: 35598; Last timestamp: 2017-02-28 23:59:00 AEST (1488290340)
+    Period 6 ...
+    Unique records processed: 39555; Last timestamp: 2017-03-31 23:59:00 AEST (1490968740)
+    Period 7 ...
+    Unique records processed: 38284; Last timestamp: 2017-04-30 23:59:00 AEST (1493560740)
+    Period 8 ...
+    Unique records processed: 38284; Last timestamp: 2017-06-30 23:59:00 AEST (1498831140)
+    Finished dry run import
+    308670 records were processed and 308670 unique records would have been imported.
+    ```
+    
+    !!! Note
+        The eight periods correspond to the eight monthly .cat files used for this import.
+    
+    !!! Note
+        Any periods for which no data could be obtained will be skipped. The lack of data may be due to a missing WeatherCat monthly .cat file. A short explanatory note to this effect will be displayed against the period concerned and an entry included in the log.
+
+1. If the <span class="code">--suppress--warnings</span> option was used it may be prudent to do a second dry run this time without the <span class="code">--suppress--warnings</span> option. This will allow any warnings generated by the dry run import to be observed:
+
+    ```
+    wee_import --import-config=/var/tmp/wcat.conf --dry-run</pre>
+    ```
+    
+    This will result in a short preamble with details on the data source, the destination of the imported data and some other details on how the data will be processed. The import will then be performed but no data will be written to the WeeWX database.
+    
+    The output should be similar to:
+
+    ```
+    Using WeeWX configuration file /home/weewx/weewx.conf
+    Starting wee_import...
+    WeatherCat monthly .cat files in the '/var/tmp/wcat' directory will be imported
+    Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
+    Destination table 'archive' unit system is '0x01' (US).
+    Missing derived observations will be calculated.
+    This is a dry run, imported data will not be saved to archive.
+    Starting dry run import ...
+    Records covering multiple periods have been identified for import.
+    Period 1 ...
+    Warning: Import field 'T1' is mapped to WeeWX field 'extraTemp1' but the
+    import field 'T1' could not be found in one or more records.
+    WeeWX field 'extraTemp1' will be set to 'None' in these records.
+    Warning: Import field 'T2' is mapped to WeeWX field 'extraTemp2' but the
+    import field 'T2' could not be found in one or more records.
+    WeeWX field 'extraTemp2' will be set to 'None' in these records.
+    Warning: Import field 'T3' is mapped to WeeWX field 'extraTemp3' but the
+    import field 'T3' could not be found in one or more records.
+    WeeWX field 'extraTemp3' will be set to 'None' in these records.
+    Warning: Import field 'H1' is mapped to WeeWX field 'extraHumid1' but the
+    import field 'H1' could not be found in one or more records.
+    WeeWX field 'extraHumid1' will be set to 'None' in these records.
+    Warning: Import field 'H2' is mapped to WeeWX field 'extraHumid2' but the
+    import field 'H2' could not be found in one or more records.
+    WeeWX field 'extraHumid2' will be set to 'None' in these records.
+    Warning: Import field 'Sm1' is mapped to WeeWX field 'soilMoist1' but the
+    import field 'Sm1' could not be found in one or more records.
+    WeeWX field 'soilMoist1' will be set to 'None' in these records.
+    Warning: Import field 'Sm2' is mapped to WeeWX field 'soilMoist2' but the
+    import field 'Sm2' could not be found in one or more records.
+    WeeWX field 'soilMoist2' will be set to 'None' in these records.
+    Warning: Import field 'Sm3' is mapped to WeeWX field 'soilMoist3' but the
+    import field 'Sm3' could not be found in one or more records.
+    WeeWX field 'soilMoist3' will be set to 'None' in these records.
+    Warning: Import field 'Sm4' is mapped to WeeWX field 'soilMoist4' but the
+    import field 'Sm4' could not be found in one or more records.
+    WeeWX field 'soilMoist4' will be set to 'None' in these records.
+    Warning: Import field 'Lw1' is mapped to WeeWX field 'leafWet1' but the
+    import field 'Lw1' could not be found in one or more records.
+    WeeWX field 'leafWet1' will be set to 'None' in these records.
+    Warning: Import field 'Lw2' is mapped to WeeWX field 'leafWet2' but the
+    import field 'Lw2' could not be found in one or more records.
+    WeeWX field 'leafWet2' will be set to 'None' in these records.
+    Warning: Import field 'St1' is mapped to WeeWX field 'soilTemp1' but the
+    import field 'St1' could not be found in one or more records.
+    WeeWX field 'soilTemp1' will be set to 'None' in these records.
+    Warning: Import field 'St2' is mapped to WeeWX field 'soilTemp2' but the
+    import field 'St2' could not be found in one or more records.
+    WeeWX field 'soilTemp2' will be set to 'None' in these records.
+    Warning: Import field 'St3' is mapped to WeeWX field 'soilTemp3' but the
+    import field 'St3' could not be found in one or more records.
+    WeeWX field 'soilTemp3' will be set to 'None' in these records.
+    Warning: Import field 'St4' is mapped to WeeWX field 'soilTemp4' but the
+    import field 'St4' could not be found in one or more records.
+    WeeWX field 'soilTemp4' will be set to 'None' in these records.
+    Warning: Import field 'Lt1' is mapped to WeeWX field 'leafTemp1' but the
+    import field 'Lt1' could not be found in one or more records.
+    WeeWX field 'leafTemp1' will be set to 'None' in these records.
+    Warning: Import field 'Lt2' is mapped to WeeWX field 'leafTemp2' but the
+    import field 'Lt2' could not be found in one or more records.
+    WeeWX field 'leafTemp2' will be set to 'None' in these records.
+    Unique records processed: 39555; Last timestamp: 2016-10-31 23:59:00 AEST (1477922340)
+    Period 2 ...
+    Warning: Import field 'T1' is mapped to WeeWX field 'extraTemp1' but the
+    import field 'T1' could not be found in one or more records.
+    WeeWX field 'extraTemp1' will be set to 'None' in these records.
+    Warning: Import field 'T2' is mapped to WeeWX field 'extraTemp2' but the
+    import field 'T2' could not be found in one or more records.
+    WeeWX field 'extraTemp2' will be set to 'None' in these records.
+    Warning: Import field 'T3' is mapped to WeeWX field 'extraTemp3' but the
+    import field 'T3' could not be found in one or more records.
+    WeeWX field 'extraTemp3' will be set to 'None' in these records.
+    Warning: Import field 'H1' is mapped to WeeWX field 'extraHumid1' but the
+    import field 'H1' could not be found in one or more records.
+    WeeWX field 'extraHumid1' will be set to 'None' in these records.
+    Warning: Import field 'H2' is mapped to WeeWX field 'extraHumid2' but the
+    import field 'H2' could not be found in one or more records.
+    WeeWX field 'extraHumid2' will be set to 'None' in these records.
+    Warning: Import field 'Sm1' is mapped to WeeWX field 'soilMoist1' but the
+    import field 'Sm1' could not be found in one or more records.
+    WeeWX field 'soilMoist1' will be set to 'None' in these records.
+    Warning: Import field 'Sm2' is mapped to WeeWX field 'soilMoist2' but the
+    import field 'Sm2' could not be found in one or more records.
+    WeeWX field 'soilMoist2' will be set to 'None' in these records.
+    Warning: Import field 'Sm3' is mapped to WeeWX field 'soilMoist3' but the
+    import field 'Sm3' could not be found in one or more records.
+    WeeWX field 'soilMoist3' will be set to 'None' in these records.
+    Warning: Import field 'Sm4' is mapped to WeeWX field 'soilMoist4' but the
+    import field 'Sm4' could not be found in one or more records.
+    WeeWX field 'soilMoist4' will be set to 'None' in these records.
+    Warning: Import field 'Lw1' is mapped to WeeWX field 'leafWet1' but the
+    import field 'Lw1' could not be found in one or more records.
+    WeeWX field 'leafWet1' will be set to 'None' in these records.
+    Warning: Import field 'Lw2' is mapped to WeeWX field 'leafWet2' but the
+    import field 'Lw2' could not be found in one or more records.
+    WeeWX field 'leafWet2' will be set to 'None' in these records.
+    Warning: Import field 'St1' is mapped to WeeWX field 'soilTemp1' but the
+    import field 'St1' could not be found in one or more records.
+    WeeWX field 'soilTemp1' will be set to 'None' in these records.
+    Warning: Import field 'St2' is mapped to WeeWX field 'soilTemp2' but the
+    import field 'St2' could not be found in one or more records.
+    WeeWX field 'soilTemp2' will be set to 'None' in these records.
+    Warning: Import field 'St3' is mapped to WeeWX field 'soilTemp3' but the
+    import field 'St3' could not be found in one or more records.
+    WeeWX field 'soilTemp3' will be set to 'None' in these records.
+    Warning: Import field 'St4' is mapped to WeeWX field 'soilTemp4' but the
+    import field 'St4' could not be found in one or more records.
+    WeeWX field 'soilTemp4' will be set to 'None' in these records.
+    Warning: Import field 'Lt1' is mapped to WeeWX field 'leafTemp1' but the
+    import field 'Lt1' could not be found in one or more records.
+    WeeWX field 'leafTemp1' will be set to 'None' in these records.
+    Warning: Import field 'Lt2' is mapped to WeeWX field 'leafTemp2' but the
+    import field 'Lt2' could not be found in one or more records.
+    WeeWX field 'leafTemp2' will be set to 'None' in these records.
+    Unique records processed: 38284; Last timestamp: 2016-11-30 23:59:00 AEST (1480514340)
+    
+    ... (identical entries for periods 3 to 7 omitted for conciseness)
+    
+    Period 8 ...
+    Warning: Import field 'T1' is mapped to WeeWX field 'extraTemp1' but the
+    import field 'T1' could not be found in one or more records.
+    WeeWX field 'extraTemp1' will be set to 'None' in these records.
+    Warning: Import field 'T2' is mapped to WeeWX field 'extraTemp2' but the
+    import field 'T2' could not be found in one or more records.
+    WeeWX field 'extraTemp2' will be set to 'None' in these records.
+    Warning: Import field 'T3' is mapped to WeeWX field 'extraTemp3' but the
+    import field 'T3' could not be found in one or more records.
+    WeeWX field 'extraTemp3' will be set to 'None' in these records.
+    Warning: Import field 'H1' is mapped to WeeWX field 'extraHumid1' but the
+    import field 'H1' could not be found in one or more records.
+    WeeWX field 'extraHumid1' will be set to 'None' in these records.
+    Warning: Import field 'H2' is mapped to WeeWX field 'extraHumid2' but the
+    import field 'H2' could not be found in one or more records.
+    WeeWX field 'extraHumid2' will be set to 'None' in these records.
+    Warning: Import field 'Sm1' is mapped to WeeWX field 'soilMoist1' but the
+    import field 'Sm1' could not be found in one or more records.
+    WeeWX field 'soilMoist1' will be set to 'None' in these records.
+    Warning: Import field 'Sm2' is mapped to WeeWX field 'soilMoist2' but the
+    import field 'Sm2' could not be found in one or more records.
+    WeeWX field 'soilMoist2' will be set to 'None' in these records.
+    Warning: Import field 'Sm3' is mapped to WeeWX field 'soilMoist3' but the
+    import field 'Sm3' could not be found in one or more records.
+    WeeWX field 'soilMoist3' will be set to 'None' in these records.
+    Warning: Import field 'Sm4' is mapped to WeeWX field 'soilMoist4' but the
+    import field 'Sm4' could not be found in one or more records.
+    WeeWX field 'soilMoist4' will be set to 'None' in these records.
+    Warning: Import field 'Lw1' is mapped to WeeWX field 'leafWet1' but the
+    import field 'Lw1' could not be found in one or more records.
+    WeeWX field 'leafWet1' will be set to 'None' in these records.
+    Warning: Import field 'Lw2' is mapped to WeeWX field 'leafWet2' but the
+    import field 'Lw2' could not be found in one or more records.
+    WeeWX field 'leafWet2' will be set to 'None' in these records.
+    Warning: Import field 'St1' is mapped to WeeWX field 'soilTemp1' but the
+    import field 'St1' could not be found in one or more records.
+    WeeWX field 'soilTemp1' will be set to 'None' in these records.
+    Warning: Import field 'St2' is mapped to WeeWX field 'soilTemp2' but the
+    import field 'St2' could not be found in one or more records.
+    WeeWX field 'soilTemp2' will be set to 'None' in these records.
+    Warning: Import field 'St3' is mapped to WeeWX field 'soilTemp3' but the
+    import field 'St3' could not be found in one or more records.
+    WeeWX field 'soilTemp3' will be set to 'None' in these records.
+    Warning: Import field 'St4' is mapped to WeeWX field 'soilTemp4' but the
+    import field 'St4' could not be found in one or more records.
+    WeeWX field 'soilTemp4' will be set to 'None' in these records.
+    Warning: Import field 'Lt1' is mapped to WeeWX field 'leafTemp1' but the
+    import field 'Lt1' could not be found in one or more records.
+    WeeWX field 'leafTemp1' will be set to 'None' in these records.
+    Warning: Import field 'Lt2' is mapped to WeeWX field 'leafTemp2' but the
+    import field 'Lt2' could not be found in one or more records.
+    WeeWX field 'leafTemp2' will be set to 'None' in these records.
+    Unique records processed: 38284; Last timestamp: 2017-06-30 23:59:00 AEST (1498831140)
+    Finished dry run import
+    308670 records were processed and 308670 unique records would have been imported.
+    ```
+
+    In this case warnings are evident for numerous import/WeeWX field pairs that are mapped but for which no data could be found. If the warnings relate to fields that are not included in the import source data the warning may be safely ignored. If the warning relate to fields that the user expects to be in the import source data the issue should be investigated further before the import is completed.
+
+1. Once the dry run results are satisfactory the data can be imported using the following command:
+
+    ```
+    wee_import --import-config=/var/tmp/wcat.conf --suppress-warnings
+    ```
+    
+    This will result in a preamble similar to that of a dry run. At the end of the preamble there will be a prompt:
+    
+    ```
+    Using WeeWX configuration file /home/weewx/weewx.conf
+    Starting wee_import...
+    WeatherCat monthly .cat files in the '/var/tmp/wcat' directory will be imported
+    Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
+    Destination table 'archive' unit system is '0x01' (US).
+    Missing derived observations will be calculated.
+    Starting import ...
+    Records covering multiple periods have been identified for import.
+    Period 1 ...
+    Proceeding will save all imported records in the WeeWX archive.
+    Are you sure you want to proceed (y/n)?
+    ```
+    
+    If there is more than one WeatherCat monthly .cat file then <span class="code">wee_import</span> will provide summary information on a per period basis during the import. In addition, if the <span class="code">--date</span> option is used then source data that falls outside the date or date range specified with the <span class="code">--date</span> option is ignored. In such cases the preamble may look similar to:
+    
+    ```
+    Using WeeWX configuration file /home/weewx/weewx.conf
+    Starting wee_import...
+    WeatherCat monthly .cat files in the '/var/tmp/wcat' directory will be imported
+    Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
+    Destination table 'archive' unit system is '0x01' (US).
+    Missing derived observations will be calculated.
+    Starting import ...
+    Records covering multiple periods have been identified for import.
+    Period 1 ...
+    Period 1 - no records identified for import.
+    Period 2 ...
+    Period 2 - no records identified for import.
+    Period 3 ...
+    Proceeding will save all imported records in the WeeWX archive.
+    Are you sure you want to proceed (y/n)?
+    ```
+
+1. If the import parameters are acceptable enter `y` to proceed with the import or `n` to abort the import. If the import is confirmed, the source data will be imported, processed and saved in the WeeWX database. Information on the progress of the import will be displayed similar to the following:
+
+    ```
+    Unique records processed: 2305; Last timestamp: 2016-12-30 00:00:00 AEST (1483020000)
+    ```
+    
+    Again if there is more than one WeatherCat monthly .cat file and if the `--date` option is used then the progress information may instead look similar to:
+    
+    ```
+    Period 4 ...
+    Unique records processed: 8908; Last timestamp: 2017-01-31 23:59:00 AEST (1485870900)
+    Period 5 ...
+    Unique records processed: 8029; Last timestamp: 2017-02-28 23:59:00 AEST (1488290100)
+    Period 6 ...
+    Unique records processed: 8744; Last timestamp: 2017-03-31 23:59:00 AEST (1490968500)
+    ```
+    
+    !!! Note
+        Any periods for which no data could be obtained will be skipped. The lack of data may be due to a missing WeatherCat monthly .cat file. A short explanatory note to this effect will be displayed against the period concerned and an entry included in the log.
+    
+    The line commencing with `Unique records processed` should update as records are imported with progress information on number of records processed, number of unique records imported and the date time of the latest record processed. If the import spans multiple months (ie multiple monthly .cat files) then a new `Period` line is created for each month.
+    
+    Once the initial import is complete <span class="code">wee_import</span> will, if requested, calculate any missing derived observations and rebuild the daily summaries. A brief summary should be displayed similar to the following:
+    
+    ```
+    Calculating missing derived observations ...
+    Processing record: 77782; Last record: 2017-06-30 00:00:00 AEST (1519826400)
+    Recalculating daily summaries...
+    Records processed: 77000; Last date: 2017-06-28 11:45:00 AEST (1519811100)
+    Finished recalculating daily summaries
+    Finished calculating missing derived observations
+    ```
+    
+    When the import is complete a brief summary is displayed similar to the following:
+    
+    ```
+    Finished import
+    308670 records were processed and 308670 unique records imported in 1907.61 seconds.
+    Those records with a timestamp already in the archive will not have been
+    imported. Confirm successful import in the WeeWX log file.
+    ```
+
+1. Whilst `wee_import` will advise of the number of records processed and the number of unique records found, `wee_import` does know how many, if any, of the imported records were successfully saved to the database. You should look carefully through the WeeWX log file covering the `wee_import` session and take note of any records that were not imported. The most common reason for imported records not being saved to the database is because a record with that timestamp already exists in the database, in such cases something similar to the following will be found in the log:
+
+    ```
+    Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
+    ```
+    
+    In such cases take note of the timestamp of the record(s) concerned and make a decision about whether to delete the pre-existing record and re-import the record or retain the pre-existing record.
+
 
 ## Dealing with import failures{#import_failures}
 
