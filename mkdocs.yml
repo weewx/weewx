@@ -99,12 +99,12 @@ nav:
     - wee_import:
       - Introduction: utilities/wee_import-about.md
       - Command line options: utilities/wee_import-options.md
-      - "The import configuration file": utilities/wee_import-config.md
-      - Importing from CSV: utilities/wee_import-csv.md
-      - Importing from Weather Underground: utilities/wee_import-wu.md
-      - Importing from Cumulus: utilities/wee_import-cumulus.md
-      - Importing from Weather Display: utilities/wee_import-wd.md
-      - Importing from WeatherCat: utilities/wee_import-weathercat.md
+      - Import configuration file: utilities/wee_import-config.md
+      - CSV: utilities/wee_import-csv.md
+      - Weather Underground: utilities/wee_import-wu.md
+      - Cumulus: utilities/wee_import-cumulus.md
+      - Weather Display: utilities/wee_import-wd.md
+      - WeatherCat: utilities/wee_import-weathercat.md
       - Import failures: utilities/wee_import-failures.md
     - wee_reports: utilities/wee_reports.md
 
