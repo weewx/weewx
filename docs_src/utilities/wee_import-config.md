@@ -15,7 +15,7 @@ Following is the definitive guide to the options available in the import
 configuration file. Default values are provided for a number of options,
 meaning that if they are not listed in the import configuration file at all
 `wee_import` will pick sensible values. When the documentation below gives a
-"default value" this is the value that will be used if the option is omitted.
+default value this is the value that will be used if the option is omitted.
 
 #### `source`{#import_config_source}
 
@@ -32,7 +32,7 @@ There is no default.
 
 ### [CSV]
 
-The [CSV]` section contains the options relating to the import of
+The `[CSV]` section contains the options controlling the import of
 observational data from a CSV format file.
 
 #### `file`{#csv_file}
@@ -74,7 +74,7 @@ The default value is `derive`. If the CSV source data records are equally spaced
 
 #### `qc`{#csv_qc}
 
-Determines whether simple quality control checks are applied to imported data. Setting `qc = True` will result in `wee_import` applying the WeeWX `StdQC` minimum and maximum checks to any imported observations. `wee_import` quality control checks use the same configuration settings, and operate in the same manner, as the [_StdQC_](../../reference/weewx-options/stdqc) service. For example, for minimum/maximum quality checks, if an observation falls outside of the quality control range for that observation, then the observation will be set to `None`. In such cases you will be alerted through a short message similar to:
+Determines whether simple quality control checks are applied to imported data. Setting `qc = True` will result in `wee_import` applying the WeeWX `StdQC` minimum and maximum checks to any imported observations. `wee_import` quality control checks use the same configuration settings, and operate in the same manner, as the [_StdQC_](../../reference/weewx-options/stdqc) service. For example, for minimum/maximum quality checks, if an observation falls outside of the quality control range for that observation, the observation will be set to `None`. In such cases you will be alerted through a short message similar to:
 
 ```
 2016-01-12 10:00:00 AEST (1452556800) record value 'outTemp' 194.34 outside limits (0.0, 120.0)
@@ -118,7 +118,7 @@ The default is `True`.
 
 WeeWX records each record with a unique unix epoch timestamp, whereas many weather station applications or web sources export observational data with a human-readable date-time. This human-readable date-time is interpreted according to the format set by the `raw_datetime_format` option. This option consists of [Python strptime() format codes](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior) and literal characters to represent the date-time data being imported.
 
-For example, if the source data uses the format 23 January 2015 15:34 then the appropriate setting for `raw_datetime_format` would be `%d %B %Y %H:%M`, 9:25:00 12/28/16 would use `%H:%M:%S %m/%d/%y`. If the source data provides a unix epoch timestamp as the date-time field then the unix epoch timestamp is used directly and the `raw_datetime_format` option is ignored.
+For example, if the source data uses the format 23 January 2015 15:34 the appropriate setting for `raw_datetime_format` would be `%d %B %Y %H:%M`, 9:25:00 12/28/16 would use `%H:%M:%S %m/%d/%y`. If the source data provides a unix epoch timestamp as the date-time field the unix epoch timestamp is used directly and the `raw_datetime_format` option is ignored.
 
 The default is `%Y-%m-%d %H:%M:%S`.
 
@@ -150,16 +150,16 @@ The WeeWX `rain` field records rainfall that was recorded in the preceding archi
 
 WeeWX records wind direction in degrees as a number from 0 to 360 inclusive (no wind direction is recorded as `None/null`), whereas some data sources may provide wind direction as number over a different range (e.g., -180 to +180) or may use a particular value when there is no wind direction (e.g., 0 may represent no wind direction and 360 may represent a northerly wind, or -9999 (or some similar clearly invalid number) to represent there being no wind direction). `wee_import` handles such variations in data by defining a range over which imported wind direction values are accepted. Any value outside of this range is treated as there being no wind direction and is recorded as `None/null`. Any value inside the range is normalised to the range 0 to 360 inclusive (e.g., -180 would be normalised to 180). The `wind_direction` option consists of two comma separated numbers of the format lower, upper where lower and upper are inclusive. The operation of the `wind_direction` option is best illustrated through the following table:
 
-<table style="width:50%">
+<table id='wind_direction' class="indent" style="width:80%;text-align: center">
   <caption>Option wind_direction</caption>
   <tbody>
-    <tr>
+    <tr class="first_row">
       <td>wind_direction option setting</td>
       <td>Source data wind direction value</td>
       <td>Imported wind direction value</td>
     </tr>
     <tr>
-      <td rowspan='7'>0, 360</td>
+      <td class="code first_col" rowspan='7'>0, 360</td>
       <td>0</td>
       <td>0</td>
     </tr>
@@ -188,7 +188,7 @@ WeeWX records wind direction in degrees as a number from 0 to 360 inclusive (no 
       <td>None/null</td>
     </tr>
     <tr>
-      <td rowspan='7'>-360, 360</td>
+      <td class="code first_col" rowspan='7'>-360, 360</td>
       <td>0</td>
       <td>0</td>
     </tr>
@@ -217,7 +217,7 @@ WeeWX records wind direction in degrees as a number from 0 to 360 inclusive (no 
       <td>None/null</td>
     </tr>
     <tr>
-      <td rowspan='7'>-180, 180</td>
+      <td class="code first_col" rowspan='7'>-180, 180</td>
       <td>0</td>
       <td>0</td>
     </tr>
@@ -635,7 +635,7 @@ obs_type = weewx_unit_name
 
 Where `obs_type` is one of `temperature`, `pressure`, `rain` or `speed` and `weewx_unit_name is the WeeWX unit name of the units used by that particular `obs_type. As Weather Display supports a different suite of possible units only a subset of the available WeeWX unit names can be used for some settings.
 
-The preferred method for defining the Weather Display log file units is through the use of the `units` configuration option. When defining the import log file units either the `units` configuration option should be used or the individual `temperature`, `pressure`, `rain` and `>speed` units defined but not both. If both the `units` configuration option is defined as well as the individual `temperature`, `pressure`, `rain` and `speed` units defined then the `units` configuration option takes precedence and all other units settings are ignored.
+The preferred method for defining the Weather Display log file units is through the use of the `units` configuration option. When defining the import log file units either the `units` configuration option should be used or the individual `temperature`, `pressure`, `rain` and `>speed` units defined but not both. If both the `units` configuration option is defined as well as the individual `temperature`, `pressure`, `rain` and `speed` units defined the `units` configuration option takes precedence and all other units settings are ignored.
 
 #### `[[FieldMap]]`{#wd_fieldmap}
 

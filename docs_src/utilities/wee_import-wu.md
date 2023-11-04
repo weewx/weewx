@@ -60,7 +60,7 @@ To import observations from a Weather Underground PWS history:
     $ cp /home/weewx/util/import/wu-example.conf /var/tmp/wu.conf
     ```
 
-1. Confirm that the [`source`](#import_config_source) option is set to `WU`:
+1. Confirm that the [`source`](../wee_import-config#import_config_source) option is set to `WU`:
 
     ```
     source = WU
@@ -68,24 +68,24 @@ To import observations from a Weather Underground PWS history:
 
 1. Confirm that the following options in the `[WU]` section are correctly set:
 
-    * [station_id](#wu_station_id). The 11 or 12 character weather station ID of the Weather Underground PWS that will be the source of the imported data.
+    * [station_id](../wee_import-config#wu_station_id). The 11 or 12 character weather station ID of the Weather Underground PWS that will be the source of the imported data.
 
-    * [api_key](#wu_api_key). The 32 character API key to be used to access the Weather Underground API.
+    * [api_key](../wee_import-config#wu_api_key). The 32 character API key to be used to access the Weather Underground API.
 
-    * [interval](#wu_interval). Determines how the WeeWX interval field is derived.
+    * [interval](../wee_import-config#wu_interval). Determines how the WeeWX interval field is derived.
 
-    * [qc](#wu_qc). Determines whether quality control checks are performed on the imported data.
+    * [qc](../wee_import-config#wu_qc). Determines whether quality control checks are performed on the imported data.
 
         !!! Note
             As Weather Underground imports at times contain nonsense values, particularly for fields for which no data were uploaded to Weather Underground by the PWS, the use of quality control checks on imported data can prevent these nonsense values from being imported and contaminating the WeeWX database.
 
-    * [calc_missing](#wu_calc_missing). Determines whether missing derived observations will be calculated from the imported data.
+    * [calc_missing](../wee_import-config#wu_calc_missing). Determines whether missing derived observations will be calculated from the imported data.
 
-    * [ignore_invalid_data](#wu_ignore_invalid_data). Determines whether invalid data in a source field is ignored or the import aborted.
+    * [ignore_invalid_data](../wee_import-config#wu_ignore_invalid_data). Determines whether invalid data in a source field is ignored or the import aborted.
 
-    * [tranche](#wu_tranche). The number of records written to the WeeWX database in each transaction.
+    * [tranche](../wee_import-config#wu_tranche). The number of records written to the WeeWX database in each transaction.
 
-    * [wind_direction](#wu_wind_direction). Determines how imported wind direction fields are interpreted.
+    * [wind_direction](../wee_import-config#wu_wind_direction). Determines how imported wind direction fields are interpreted.
 
 1. When first importing data it is prudent to do a dry run import before any data is actually imported. A dry run import will perform all steps of the import without actually writing imported data to the WeeWX database. In addition, consideration should be given to any additional options to be used such as `--date`, `--from` or `--to`.
                 

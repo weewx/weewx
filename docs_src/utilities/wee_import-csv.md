@@ -50,7 +50,7 @@ Time,Barometer,Temp,Humidity,Windspeed,Dir,Gust,Dayrain,Radiation,Uv
 The WeeWX archive fields populated during a CSV import depend on the CSV-to-WeeWX field mappings specified in `[[FieldMap]]` stanza in the import configuration file. If a valid field mapping exists, the WeeWX field exists in the WeeWX archive table schema and provided the mapped CSV field contains valid data, the corresponding WeeWX field will be populated. Note that the CSV import is the only import supported by `wee_import` that allows any WeeWX archive field to be populated.
 
 !!! Note
-    The use of the [calc_missing](#csv_calc_missing) option in the import configuration file may result in a number of derived fields being calculated from the imported data. If these derived fields exist in the in-use database schema they will be saved to the database as well.
+    The use of the [calc_missing](../wee_import-config#csv_calc_missing) option in the import configuration file may result in a number of derived fields being calculated from the imported data. If these derived fields exist in the in-use database schema they will be saved to the database as well.
 
 ### Step-by-step instructions
 
@@ -66,7 +66,7 @@ To import observations from a CSV file:
     $ cp /home/weewx/util/import/csv-example.conf /var/tmp/csv.conf
     ```
 
-1. Confirm that the [`source`](#import_config_source) option is set to CSV:
+1. Confirm that the [`source`](../wee_import-config#import_config_source) option is set to CSV:
  
     ```
     source = CSV
@@ -74,31 +74,31 @@ To import observations from a CSV file:
 
 1. Confirm the following options in the `[CSV]` section are set:
 
-     * [file](#csv_file). The full path and file name of the file containing the CSV formatted data to be imported.
+     * [file](../wee_import-config#csv_file). The full path and file name of the file containing the CSV formatted data to be imported.
 
-     * [delimiter](#csv_delimiter). The single character used to separate fields.
+     * [delimiter](../wee_import-config#csv_delimiter). The single character used to separate fields.
 
-     * [interval](#csv_interval). Determines how the WeeWX interval field is derived.
+     * [interval](../wee_import-config#csv_interval). Determines how the WeeWX interval field is derived.
 
-     * [qc](#csv_qc). Determines whether quality control checks are performed on the imported data.
+     * [qc](../wee_import-config#csv_qc). Determines whether quality control checks are performed on the imported data.
 
-     * [calc_missing](#csv_calc_missing). Determines whether missing derived observations will be calculated from the imported data.
+     * [calc_missing](../wee_import-config#csv_calc_missing). Determines whether missing derived observations will be calculated from the imported data.
 
-     * [ignore_invalid_data](#csv_ignore_invalid_data). Determines whether invalid data in a source field is ignored or the import aborted.
+     * [ignore_invalid_data](../wee_import-config#csv_ignore_invalid_data). Determines whether invalid data in a source field is ignored or the import aborted.
 
-     * [tranche](#csv_tranche). The number of records written to the WeeWX database in each transaction.
+     * [tranche](../wee_import-config#csv_tranche). The number of records written to the WeeWX database in each transaction.
 
-     * [UV_sensor](#csv_UV). Whether a UV sensor was installed when the source data was produced.
+     * [UV_sensor](../wee_import-config#csv_UV). Whether a UV sensor was installed when the source data was produced.
 
-     * [solar_sensor](#csv_solar). Whether a solar radiation sensor was installed when the source data was produced.
+     * [solar_sensor](../wee_import-config#csv_solar). Whether a solar radiation sensor was installed when the source data was produced.
 
-     * [raw_datetime_format](#csv_raw_datetime_format). The format of the imported date time field.
+     * [raw_datetime_format](../wee_import-config#csv_raw_datetime_format). The format of the imported date time field.
 
-     * [rain](#csv_rain). Determines how the WeeWX rain field is derived.
+     * [rain](../wee_import-config#csv_rain). Determines how the WeeWX rain field is derived.
 
-     * [wind_direction](#csv_wind_direction). Determines how imported wind direction fields are interpreted.
+     * [wind_direction](../wee_import-config#csv_wind_direction). Determines how imported wind direction fields are interpreted.
 
-     * [[[FieldMap]]](#csv_fieldmap). Defines the mapping between imported data fields and WeeWX archive fields. Also defines the units of measure for each imported field.
+     * [[[FieldMap]]](../wee_import-config#csv_fieldmap). Defines the mapping between imported data fields and WeeWX archive fields. Also defines the units of measure for each imported field.
 
 1. When first importing data it is prudent to do a dry run import before any data are actually imported. A dry run import will perform all steps of the import without actually writing imported data to the WeeWX database. In addition, consideration should be given to any additional options such as `--date`.
 
@@ -148,7 +148,7 @@ To import observations from a CSV file:
     Are you sure you want to proceed (y/n)?
     ```
 
-1. If the import parameters are acceptable enter `y` to proceed with the import or `n` to abort the import. If the import is confirmed then the source data will be imported, processed and saved in the WeeWX database. Information on the progress of the import will be displayed similar to the following:
+1. If the import parameters are acceptable enter `y` to proceed with the import or `n` to abort the import. If the import is confirmed the source data will be imported, processed and saved in the WeeWX database. Information on the progress of the import will be displayed similar to the following:
 
     ```
     Unique records processed: 3250; Last timestamp: 2017-12-09 14:45:00 AEST (1512794700)

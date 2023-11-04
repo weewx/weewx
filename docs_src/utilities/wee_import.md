@@ -325,7 +325,7 @@ The default value is `derive`. If the CSV source data records are equally spaced
 
 #### `qc`{#csv_qc}
 
-Determines whether simple quality control checks are applied to imported data. Setting `qc = True` will result in `wee_import` applying the WeeWX `StdQC` minimum and maximum checks to any imported observations. `wee_import` quality control checks use the same configuration settings, and operate in the same manner, as the [_StdQC_](../../reference/weewx-options/stdqc) service. For example, for minimum/maximum quality checks, if an observation falls outside of the quality control range for that observation, then the observation will be set to `None`. In such cases you will be alerted through a short message similar to:
+Determines whether simple quality control checks are applied to imported data. Setting `qc = True` will result in `wee_import` applying the WeeWX `StdQC` minimum and maximum checks to any imported observations. `wee_import` quality control checks use the same configuration settings, and operate in the same manner, as the [_StdQC_](../../reference/weewx-options/stdqc) service. For example, for minimum/maximum quality checks, if an observation falls outside of the quality control range for that observation, the observation will be set to `None`. In such cases you will be alerted through a short message similar to:
 
 ```
 2016-01-12 10:00:00 AEST (1452556800) record value 'outTemp' 194.34 outside limits (0.0, 120.0)
@@ -369,7 +369,7 @@ The default is `True`.
 
 WeeWX records each record with a unique unix epoch timestamp, whereas many weather station applications or web sources export observational data with a human-readable date-time. This human-readable date-time is interpreted according to the format set by the `raw_datetime_format` option. This option consists of [Python strptime() format codes](https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior) and literal characters to represent the date-time data being imported.
 
-For example, if the source data uses the format 23 January 2015 15:34 then the appropriate setting for `raw_datetime_format` would be `%d %B %Y %H:%M`, 9:25:00 12/28/16 would use `%H:%M:%S %m/%d/%y`. If the source data provides a unix epoch timestamp as the date-time field then the unix epoch timestamp is used directly and the `raw_datetime_format` option is ignored.
+For example, if the source data uses the format 23 January 2015 15:34 the appropriate setting for `raw_datetime_format` would be `%d %B %Y %H:%M`, 9:25:00 12/28/16 would use `%H:%M:%S %m/%d/%y`. If the source data provides a unix epoch timestamp as the date-time field the unix epoch timestamp is used directly and the `raw_datetime_format` option is ignored.
 
 The default is `%Y-%m-%d %H:%M:%S`.
 
@@ -886,7 +886,7 @@ obs_type = weewx_unit_name
 
 Where `obs_type` is one of `temperature`, `pressure`, `rain` or `speed` and `weewx_unit_name is the WeeWX unit name of the units used by that particular `obs_type. As Weather Display supports a different suite of possible units only a subset of the available WeeWX unit names can be used for some settings.
 
-The preferred method for defining the Weather Display log file units is through the use of the `units` configuration option. When defining the import log file units either the `units` configuration option should be used or the individual `temperature`, `pressure`, `rain` and `>speed` units defined but not both. If both the `units` configuration option is defined as well as the individual `temperature`, `pressure`, `rain` and `speed` units defined then the `units` configuration option takes precedence and all other units settings are ignored.
+The preferred method for defining the Weather Display log file units is through the use of the `units` configuration option. When defining the import log file units either the `units` configuration option should be used or the individual `temperature`, `pressure`, `rain` and `>speed` units defined but not both. If both the `units` configuration option is defined as well as the individual `temperature`, `pressure`, `rain` and `speed` units defined the `units` configuration option takes precedence and all other units settings are ignored.
 
 #### `[[FieldMap]]`{#wd_fieldmap}
 
@@ -1236,7 +1236,7 @@ To import observations from a CSV file:
     Are you sure you want to proceed (y/n)?
     ```
 
-1. If the import parameters are acceptable enter `y` to proceed with the import or `n` to abort the import. If the import is confirmed then the source data will be imported, processed and saved in the WeeWX database. Information on the progress of the import will be displayed similar to the following:
+1. If the import parameters are acceptable enter `y` to proceed with the import or `n` to abort the import. If the import is confirmed the source data will be imported, processed and saved in the WeeWX database. Information on the progress of the import will be displayed similar to the following:
 
     ```
     Unique records processed: 3250; Last timestamp: 2017-12-09 14:45:00 AEST (1512794700)
@@ -1511,7 +1511,7 @@ A Cumulus monthly log file import will populate the WeeWX archive fields as foll
     * `windchill`
 
     !!! Note
-        If a field in the Cumulus monthly log file has no data then the corresponding WeeWX archive field will be set to `None/null`.
+        If a field in the Cumulus monthly log file has no data the corresponding WeeWX archive field will be set to `None/null`.
 
 * The following WeeWX archive fields will be populated from other settings or configuration options:
 
@@ -1672,7 +1672,7 @@ To import observations from one or more Cumulus monthly log files:
     Unique records processed: 2305; Last timestamp: 2016-12-30 00:00:00 AEST (1483020000)
     ```
   
-    Again if there is more than one Cumulus monthly log file and if the `--date` option is used then the progress information may instead look similar to:
+    Again if there is more than one Cumulus monthly log file and if the `--date` option is used the progress information may instead look similar to:
   
     ```
     Period 4 ...
@@ -1998,7 +1998,7 @@ To import observations from one or more Weather Display monthly log files:
     Unique records processed: 1250; Last timestamp: 2018-12-01 20:49:00 AEST (1543661340)
     ```
 
-    Again if there is more than one month of Weather Display monthly log files and if the `--date` option is used then the progress information may instead look similar to:
+    Again if there is more than one month of Weather Display monthly log files and if the `--date` option is used the progress information may instead look similar to:
 
     ```
     Period 2 ...
@@ -2076,7 +2076,7 @@ A WeatherCat import will populate the WeeWX archive fields as follows:</p>
     * `windchill`
 
     !!! Note
-        If a field in the WeatherCat monthly .cat file has no data then the corresponding WeeWX archive field will be set to `None/null`.
+        If a field in the WeatherCat monthly .cat file has no data the corresponding WeeWX archive field will be set to `None/null`.
 
 * The following WeeWX archive fields will be populated from other settings or configuration options:
 
@@ -2422,7 +2422,7 @@ database. In addition, consideration should be given to any additional options t
     Unique records processed: 2305; Last timestamp: 2016-12-30 00:00:00 AEST (1483020000)
     ```
     
-    Again if there is more than one WeatherCat monthly .cat file and if the `--date` option is used then the progress information may instead look similar to:
+    Again if there is more than one WeatherCat monthly .cat file and if the `--date` option is used the progress information may instead look similar to:
     
     ```
     Period 4 ...
@@ -2480,4 +2480,4 @@ If errors were encountered, or if you suspect that the WeeWX database has been c
     !!! Warning!
         Deleting the database file or dropping the database will result in all data in the database being lost.
 
-* If the above steps are not appropriate then the database should be restored from backup. You did make a backup before starting the import?
+* If the above steps are not appropriate the database should be restored from backup. You did make a backup before starting the import?

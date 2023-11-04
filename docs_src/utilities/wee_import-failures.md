@@ -8,7 +8,7 @@ If errors were encountered, or if you suspect that the WeeWX database has been c
 
 * Delete the database and start over. For SQLite, simply delete the database file. For MySQL, drop the database. Then try the import again.
 
-    !!! Warning!
+    !!! Warning
         Deleting the database file or dropping the database will result in all data in the database being lost.
 
-* If the above steps are not appropriate then the database should be restored from backup. You did make a backup before starting the import?
+* If the above steps are not appropriate the database should be restored from backup. You did make a backup before starting the import?

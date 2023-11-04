@@ -29,7 +29,7 @@ A Cumulus monthly log file import will populate the WeeWX archive fields as foll
     * `windchill`
 
     !!! Note
-        If a field in the Cumulus monthly log file has no data then the corresponding WeeWX archive field will be set to `None/null`.
+        If a field in the Cumulus monthly log file has no data the corresponding WeeWX archive field will be set to `None/null`.
 
 * The following WeeWX archive fields will be populated from other settings or configuration options:
 
@@ -60,7 +60,7 @@ To import observations from one or more Cumulus monthly log files:
     $ cp /home/weewx/util/import/cumulus-example.conf /var/tmp/cumulus.conf
     ```
 
-1. Confirm the [`source`](#import_config_source) option is set to Cumulus:
+1. Confirm the [`source`](../wee_import-config#import_config_source) option is set to Cumulus:
 
     ``` 
     source = Cumulus
@@ -68,29 +68,29 @@ To import observations from one or more Cumulus monthly log files:
 
 1. Confirm that the following options in the `[Cumulus]` section are correctly set:
 
-     * [directory](#cumulus_directory). The full path to the directory containing the Cumulus monthly log files to be used as the source of the imported data.
+     * [directory](../wee_import-config#cumulus_directory). The full path to the directory containing the Cumulus monthly log files to be used as the source of the imported data.
 
-     * [interval](#cumulus_interval). Determines how the WeeWX interval field is derived.
+     * [interval](../wee_import-config#cumulus_interval). Determines how the WeeWX interval field is derived.
 
-     * [qc](#cumulus_qc). Determines whether quality control checks are performed on the imported data.
+     * [qc](../wee_import-config#cumulus_qc). Determines whether quality control checks are performed on the imported data.
 
-     * [calc_missing](#cumulus_calc_missing). Determines whether missing derived observations will be calculated from the imported data.
+     * [calc_missing](../wee_import-config#cumulus_calc_missing). Determines whether missing derived observations will be calculated from the imported data.
 
-     * [separator](#cumulus_separator). The date field separator used in the Cumulus monthly log files.
+     * [separator](../wee_import-config#cumulus_separator). The date field separator used in the Cumulus monthly log files.
 
-     * [delimiter](#cumulus_delimiter). The field delimiter used in the Cumulus monthly log files.
+     * [delimiter](../wee_import-config#cumulus_delimiter). The field delimiter used in the Cumulus monthly log files.
 
-     * [decimal](#cumulus_decimal). The decimal point character used in the Cumulus monthly log files.
+     * [decimal](../wee_import-config#cumulus_decimal). The decimal point character used in the Cumulus monthly log files.
 
-     * [ignore_invalid_data](#cumulus_ignore_invalid_data). Determines whether invalid data in a source field is ignored or the import aborted.
+     * [ignore_invalid_data](../wee_import-config#cumulus_ignore_invalid_data). Determines whether invalid data in a source field is ignored or the import aborted.
 
-     * [tranche](#cumulus_tranche). The number of records written to the WeeWX database in each transaction.
+     * [tranche](../wee_import-config#cumulus_tranche). The number of records written to the WeeWX database in each transaction.
 
-     * [UV_sensor](#cumulus_UV). Whether a UV sensor was installed when the source data was produced.
+     * [UV_sensor](../wee_import-config#cumulus_UV). Whether a UV sensor was installed when the source data was produced.
 
-     * [solar_sensor](#cumulus_solar). Whether a solar radiation sensor was installed when the source data was produced.
+     * [solar_sensor](../wee_import-config#cumulus_solar). Whether a solar radiation sensor was installed when the source data was produced.
 
-     * [[[Units]]](#cumulus_units). Defines the units used in the Cumulus monthly log files.
+     * [[[Units]]](../wee_import-config#cumulus_units). Defines the units used in the Cumulus monthly log files.
 
 1. When first importing data it is prudent to do a dry run import before any data is actually imported. A dry run import will perform all steps of the import without actually writing imported data to the WeeWX database. In addition, consideration should be given to any additional options to be used such as `--date`.
     
@@ -190,7 +190,7 @@ To import observations from one or more Cumulus monthly log files:
     Unique records processed: 2305; Last timestamp: 2016-12-30 00:00:00 AEST (1483020000)
     ```
   
-    Again if there is more than one Cumulus monthly log file and if the `--date` option is used then the progress information may instead look similar to:
+    Again if there is more than one Cumulus monthly log file and if the `--date` option is used the progress information may instead look similar to:
   
     ```
     Period 4 ...
