@@ -36,7 +36,9 @@ observational data from a CSV format file.
 ### `file`{#csv_file}
 
 The file containing the CSV format data to be used as the source during the
-import. Include full path and filename. There is no default.
+import. Include full path and filename.
+
+There is no default.
 
 ### `source_encoding`{#csv_encoding}
 
@@ -44,7 +46,7 @@ The source file encoding. This parameter is optional and should only need be
 used if the source file uses an encoding other than UTF-8 or an ASCII
 compatible encoding. If used, the setting used should be a <a href="https://docs.python.org/3/library/codecs.html#standard-encodings">Python Standard Encoding</a>.
 
-The default value is `utf-8-sig`.
+The default is `utf-8-sig`.
 
 ### `delimiter`{#csv_delimiter}
 
@@ -54,7 +56,9 @@ The character used to separate fields. Default is `,` (comma).
 
 The character used as the decimal point in the source files. A full stop is
 frequently used, but it may be another character. This parameter must be
-included in quotation marks. Default is `'.'`.
+included in quotation marks.
+
+The default is `'.'`.
 
 ### `interval`{#csv_interval}
 
@@ -68,7 +72,9 @@ of three methods:
 
 * The interval can be set to a fixed number of minutes. This setting is useful if the source data was recorded at fixed intervals but there are some missing records and the fixed interval is different to the `archive_interval` setting under `[StdArchive]` in `weewx.conf`. Select this method by setting `interval = x` where `x` is an integer number of minutes.
 
-The default value is `derive`. If the CSV source data records are equally spaced in time, but some records are missing, then a better result may be achieved using `conf` or a fixed interval setting.
+If the CSV source data records are equally spaced in time, but some records are missing, then a better result may be achieved using `conf` or a fixed interval setting.
+
+The default is `derive`. 
 
 ### `qc`{#csv_qc}
 
@@ -377,7 +383,7 @@ The default is `250` which should suit most users.
 
 Determines the range of acceptable wind direction values in degrees. This option is identical in operation to the CSV [wind_direction](#csv_wind_direction) option but applies to Weather Underground imports only.
 
-The default is `0, 360` which should suit most users.
+The default is `0, 360`.
 
 
 ## [Cumulus]
@@ -418,19 +424,19 @@ The default is `True`.
 
 The character used as the date field separator in the Cumulus monthly log file. A solidus (/) is frequently used, but it may be another character depending on the settings on the machine that produced the Cumulus monthly log files. This parameter must be included in quotation marks.
 
-Default is `/`.
+The default is `/`.
 
 ### `delimiter`{#cumulus_delimiter}
 
 The character used as the field delimiter in the Cumulus monthly log file. A comma is frequently used, but it may be another character depending on the settings on the machine that produced the Cumulus monthly log files. This parameter must be included in quotation marks.
 
-Default is `,`.
+The default is `,`.
 
 ### `decimal`{#cumulus_decimal}
 
 The character used as the decimal point in the Cumulus monthly log files. A full stop is frequently used, but it may be another character depending on the settings on the machine that produced the Cumulus monthly log files. This parameter must be included in quotation marks.
 
-Default is `.`.
+The default is `.`.
 
 ### `ignore_invalid_data`{#cumulus_ignore_invalid_data}
 
@@ -574,7 +580,9 @@ The default is `' '`.
 
 ### `csv_delimiter`{#wd_csv_delimiter}
 
-The character used as the field delimiter in Weather Display csv format monthly log files (.csv files). A comma is normally used but another character may be used if necessary. This parameter must be included in quotation marks. Default is `,`.
+The character used as the field delimiter in Weather Display csv format monthly log files (.csv files). A comma is normally used but another character may be used if necessary. This parameter must be included in quotation marks.
+
+The default is `,`.
 
 ### `decimal`{#wd_decimal}
 
@@ -584,7 +592,9 @@ The default is `.`.
 
 ### `ignore_missing_log`{#wd_ignore_missing_log}
 
-Determines whether missing log files are to be ignored or the import aborted. Weather Display log files are complete in themselves and a missing log file will have no effect other than there will be no imported data for the period covered by the missing log file. The default is `True`.
+Determines whether missing log files are to be ignored or the import aborted. Weather Display log files are complete in themselves and a missing log file will have no effect other than there will be no imported data for the period covered by the missing log file.
+
+The default is `True`.
 
 ### `ignore_invalid_data`{#wd_ignore_invalid_data}
 
@@ -762,7 +772,9 @@ A mapping is not required for every WeeWX archive field (e.g., the Weather Displ
 !!! Note
     Any WeeWX archive fields that are derived (e.g., `dewpoint`) and for which there is no field mapping may be calculated during import by use of the `calc_missing` option in the `[WD]` section of the import configuration file.
 
-The example Weather Display import configuration file located in the `/home/weewx/util/import]` or the `/etc/weewx/import directory contains an example field map in the import configuration file comments. There is no default.
+The example Weather Display import configuration file located in the `/home/weewx/util/import]` or the `/etc/weewx/import directory contains an example field map in the import configuration file comments.
+
+There is no default.
 
 
 ## [WeatherCat]
@@ -832,3 +844,5 @@ obs_type = weewx_unit_name
 ```
 
 Where `obs_type` is one of `temperature`, `pressure`, `rain` or `speed` and `weewx_unit_name` is the WeeWX unit name of the units used by that particular `obs_type` (refer to the [_Units_](../../reference/units) for details of available WeeWX unit names). As WeatherCat supports a different suite of possible units only a subset of the available WeeWX unit names can be used for some settings.
+
+There is no default.

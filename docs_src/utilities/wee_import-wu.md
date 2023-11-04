@@ -39,7 +39,7 @@ A Weather Underground import will populate WeeWX archive fields as follows:
     * `pressure`
 
 !!! Note
-    If `calc_missing = False` is included in the `[WU]` section of the import configuration file being used then all of the above fields will be set to `None/null`. The default setting for the `calc_missing` option is `True`.
+    If `calc_missing = False` is included in the `[WU]` section of the import configuration file being used then all of the above fields will be set to `None/null`. The `calc_missing` option default is `True`.
 
 
 ## Step-by-step instructions

@@ -41,7 +41,7 @@ A Cumulus monthly log file import will populate the WeeWX archive fields as foll
     * `pressure`
 
     !!! Note
-        If `calc_missing = False` is included in the `[Cumulus]` section of the import configuration file being used then all of the above fields will be set to `None/null`. The default setting of the `calc_missing` option is `True`
+        If `calc_missing = False` is included in the `[Cumulus]` section of the import configuration file being used then all of the above fields will be set to `None/null`. The `calc_missing` option default is `True`.
 
 
 ## Step-by-step instructions
