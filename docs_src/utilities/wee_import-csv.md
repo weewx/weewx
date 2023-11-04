@@ -1,5 +1,3 @@
-## Importing from CSV files
-
 !!! Warning
     Running WeeWX during a `wee_import` session can lead to abnormal termination of the import. If WeeWX must remain running (e.g., so that live data is not lost) run the `wee_import` session on another machine or to a second database and merge the in-use and second database once the import is complete.
 
@@ -45,14 +43,14 @@ Time,Barometer,Temp,Humidity,Windspeed,Dir,Gust,Dayrain,Radiation,Uv
 !!! Note
     [Cardinal, intercardinal and/or secondary intercardinal directions](https://en.wikipedia.org/wiki/Cardinal_direction) may be represented by one, two or three letter abbreviations e.g., N, SE or SSW; by a single word e.g., North, Southwest or Southsouthwest or by hyphenated or spaced words e.g., North West or South-south-west. Capitalisation is ignored as are any spaces, hyphens or other white space. At present only English abbreviations and directions are supported.
 
-### Mapping data to archive fields
+## Mapping data to archive fields
 
 The WeeWX archive fields populated during a CSV import depend on the CSV-to-WeeWX field mappings specified in `[[FieldMap]]` stanza in the import configuration file. If a valid field mapping exists, the WeeWX field exists in the WeeWX archive table schema and provided the mapped CSV field contains valid data, the corresponding WeeWX field will be populated. Note that the CSV import is the only import supported by `wee_import` that allows any WeeWX archive field to be populated.
 
 !!! Note
     The use of the [calc_missing](../wee_import-config#csv_calc_missing) option in the import configuration file may result in a number of derived fields being calculated from the imported data. If these derived fields exist in the in-use database schema they will be saved to the database as well.
 
-### Step-by-step instructions
+## Step-by-step instructions
 
 To import observations from a CSV file:
 

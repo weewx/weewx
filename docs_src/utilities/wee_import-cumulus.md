@@ -1,11 +1,9 @@
-## Importing from Cumulus
-
 !!! Warning
     Running WeeWX during a `wee_import` session can lead to abnormal termination of the import. If WeeWX must remain running (e.g., so that live data is not lost) run the `wee_import` session on another machine or to a second database and merge the in-use and second database once the import is complete.
 
 `wee_import` can import observational data from the one or more Cumulus monthly log files. A Cumulus monthly log file records weather station observations for a single month. These files are accumulated over time and can be considered analogous to the WeeWX archive table. When `wee_import` imports data from the Cumulus monthly log files each log file is considered a 'period'. `wee_import` processes one period at a time in chronological order (oldest to newest) and provides import summary data on a per period basis.
 
-### Mapping data to archive fields
+## Mapping data to archive fields
 
 A Cumulus monthly log file import will populate the WeeWX archive fields as follows:
 
@@ -46,7 +44,7 @@ A Cumulus monthly log file import will populate the WeeWX archive fields as foll
         If `calc_missing = False` is included in the `[Cumulus]` section of the import configuration file being used then all of the above fields will be set to `None/null`. The default setting of the `calc_missing` option is `True`
 
 
-### Step-by-step instructions
+## Step-by-step instructions
 
 To import observations from one or more Cumulus monthly log files:
 

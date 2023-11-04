@@ -1,5 +1,3 @@
-## Importing from Weather Display
-
 !!! Warning
     Running WeeWX during a `wee_import` session can lead to abnormal termination of the import. If WeeWX must remain running (e.g., so that live data is not lost) run the `wee_import` session on another machine or to a second database and merge the in-use and second database once the import is complete.
 
@@ -15,7 +13,7 @@ where MM is a one or two-digit month and YYYY is a four digit year
 
 The Weather Display monthly log files record observational data using a nominal one-minute interval with each file recording various observations for the month and year designated by the MM and YYYY components of the file name. These files are accumulated over time and can be considered analogous to the WeeWX archive table. When `wee_import` imports data from the Weather Display monthly log files each set of log files for a given month and year is considered a 'period'. `wee_import` processes one period at a time in chronological order (oldest to newest) and provides import summary data on a per period basis.
 
-### Mapping data to archive fields
+## Mapping data to archive fields
 
 The WeeWX archive fields populated during the import of Weather Display data depends on the field mapping specified in `[[FieldMap]]` stanza in the import configuration file. A given WeeWX field will be populated if:
 
@@ -45,7 +43,7 @@ The following WeeWX archive fields will be populated with values derived from th
     If `calc_missing = False` is included in the `[WD]` section of the import configuration file being used then all of the above fields will be set to `None/null`. The default setting of the `calc_missing` option is `True`.
 
 
-### Step-by-step instructions
+## Step-by-step instructions
 
 To import observations from one or more Weather Display monthly log files:
 

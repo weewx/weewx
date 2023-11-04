@@ -98,14 +98,14 @@ nav:
       - weectl station: utilities/weectl-station.md
     - wee_import:
       - Introduction: utilities/wee_import-about.md
-      - Command line options: utilities/wee_import-options.md
-      - Import configuration file: utilities/wee_import-config.md
+      - Common options: utilities/wee_import-common_opt.md
+      - Configuration options: utilities/wee_import-config_opt.md
       - CSV: utilities/wee_import-csv.md
       - Weather Underground: utilities/wee_import-wu.md
       - Cumulus: utilities/wee_import-cumulus.md
       - Weather Display: utilities/wee_import-wd.md
       - WeatherCat: utilities/wee_import-weathercat.md
-      - Import failures: utilities/wee_import-failures.md
+      - Troubleshooting: utilities/wee_import-troubleshoot.md
     - wee_reports: utilities/wee_reports.md
 
   - "Hardware guide":

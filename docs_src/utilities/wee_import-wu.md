@@ -1,11 +1,9 @@
-## Importing from Weather Underground
-
 !!! Warning
     Running WeeWX during a `wee_import` session can lead to abnormal termination of the import. If WeeWX must remain running (e.g., so that live data is not lost) run the `wee_import` session on another machine or to a second database and merge the in-use and second database once the import is complete.
 
 `wee_import` can import historical observation data for a Weather Underground PWS via the Weather Underground API. The Weather Underground API provides historical weather station observations received by Weather Underground for the PWS concerned on a day by day basis. As such, the data is analogous to the WeeWX archive table. When `wee_import` imports data from the Weather Underground API each day is considered a 'period'. `wee_import` processes one period at a time in chronological order (oldest to newest) and provides import summary data on a per period basis.
 
-### Mapping data to archive fields
+## Mapping data to archive fields
 
 A Weather Underground import will populate WeeWX archive fields as follows:
 
@@ -44,7 +42,7 @@ A Weather Underground import will populate WeeWX archive fields as follows:
     If `calc_missing = False` is included in the `[WU]` section of the import configuration file being used then all of the above fields will be set to `None/null`. The default setting for the `calc_missing` option is `True`.
 
 
-### Step-by-step instructions
+## Step-by-step instructions
 
 To import observations from a Weather Underground PWS history:
 
