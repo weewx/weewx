@@ -131,12 +131,10 @@ class WeatherCatSource(weeimport.Source):
                               }
 
     def __init__(self, config_dict, config_path, weathercat_config_dict, import_config_path,
-                 options):
+                 args):
 
         # call our parents __init__
-        super().__init__(config_dict,
-                                               weathercat_config_dict,
-                                               options)
+        super().__init__(config_dict, weathercat_config_dict, args)
 
         # save our import config path
         self.import_config_path = import_config_path
@@ -226,11 +224,11 @@ class WeatherCatSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        if options.date:
-            _msg = "     date=%s" % options.date
+        if args.date:
+            _msg = "     date=%s" % args.date
         else:
             # we must have --from and --to
-            _msg = "     from=%s, to=%s" % (options.date_from, options.date_to)
+            _msg = "     from=%s, to=%s" % (args.date_from, args.date_to)
         if self.verbose:
             print(_msg)
         log.debug(_msg)
@@ -265,7 +263,7 @@ class WeatherCatSource(weeimport.Source):
             print("All WeeWX UV fields will be set to None.")
         if not self.solar_sensor:
             print("All WeeWX radiation fields will be set to None.")
-        if options.date or options.date_from:
+        if args.date or args.date_from:
             print("Observations timestamped after %s and "
                   "up to and" % (timestamp_to_string(self.first_ts),))
             print("including %s will be imported." % (timestamp_to_string(self.last_ts),))

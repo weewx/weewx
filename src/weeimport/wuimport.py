@@ -65,12 +65,10 @@ class WUSource(weeimport.Source):
                    }
     _extras = ['pressureMin', 'pressureMax']
 
-    def __init__(self, config_dict, config_path, wu_config_dict, import_config_path, options):
+    def __init__(self, config_dict, config_path, wu_config_dict, import_config_path, args):
 
         # call our parents __init__
-        super().__init__(config_dict,
-                                       wu_config_dict,
-                                       options)
+        super().__init__(config_dict, wu_config_dict, args)
 
         # save our import config path
         self.import_config_path = import_config_path
@@ -138,13 +136,13 @@ class WUSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        if options.date:
-            _msg = "     station=%s, date=%s" % (self.station_id, options.date)
+        if args.date:
+            _msg = "     station=%s, date=%s" % (self.station_id, args.date)
         else:
             # we must have --from and --to
             _msg = "     station=%s, from=%s, to=%s" % (self.station_id,
-                                                        options.date_from,
-                                                        options.date_to)
+                                                        args.date_from,
+                                                        args.date_to)
         if self.verbose:
             print(_msg)
         log.debug(_msg)
@@ -176,7 +174,7 @@ class WUSource(weeimport.Source):
         log.info(_msg)
         if self.calc_missing:
             print("Missing derived observations will be calculated.")
-        if options.date or options.date_from:
+        if args.date or args.date_from:
             print("Observations timestamped after %s and up to and" % timestamp_to_string(self.first_ts))
             print("including %s will be imported." % timestamp_to_string(self.last_ts))
         if self.dry_run:

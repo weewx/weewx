@@ -709,9 +709,9 @@ Adding a New Import Source
 """
 
 # Python imports
+import argparse
 import importlib
 import logging
-import optparse
 
 # WeeWX imports
 import weecfg
@@ -724,15 +724,15 @@ import weeutil.weeutil
 log = logging.getLogger(__name__)
 
 # wee_import version number
-WEE_IMPORT_VERSION = '0.8'
+WEE_IMPORT_VERSION = '0.9'
 # minimum WeeWX version required for this version of wee_import
 REQUIRED_WEEWX = "4.0.0"
 
 description = """Import observation data into a WeeWX archive."""
 
-usage = """wee_import --help
-       wee_import --version
-       wee_import --import-config=IMPORT_CONFIG_FILE
+usage = """%(prog)s --help
+       %(prog)s --version
+       %(prog)s --import-config=IMPORT_CONFIG_FILE
             [--config=CONFIG_FILE]
             [--date=YYYY-mm-dd | --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]]
             [--dry-run]
@@ -741,7 +741,7 @@ usage = """wee_import --help
             [--suppress-warnings]
 """
 
-epilog = """wee_import will import data from an external source into a WeeWX
+epilog = """%(prog)s will import data from an external source into a WeeWX
             archive. Daily summaries are updated as each archive record is
             imported so there should be no need to separately rebuild the daily
             summaries."""
@@ -751,38 +751,37 @@ def main():
     """The main routine that kicks everything off."""
 
     # Create a command line parser:
-    parser = optparse.OptionParser(description=description,
-                                   usage=usage,
-                                   epilog=epilog)
+    parser = argparse.ArgumentParser(description=description, usage=usage, epilog=epilog,
+                                     prog='wee_import')
 
-    # Add the various options:
-    parser.add_option("--config", dest="config_path", type=str,
-                      metavar="CONFIG_FILE",
-                      help="Use configuration file CONFIG_FILE.")
-    parser.add_option("--import-config", dest="import_config_path", type=str,
-                      metavar="IMPORT_CONFIG_FILE",
-                      help="Use import configuration file IMPORT_CONFIG_FILE.")
-    parser.add_option("--dry-run", dest="dry_run", action="store_true",
-                      help="Print what would happen but do not do it.")
-    parser.add_option("--date", dest="date", type=str, metavar="YYYY-mm-dd",
-                      help="Import data for this date. Format is YYYY-mm-dd.")
-    parser.add_option("--from", dest="date_from", type=str, metavar="YYYY-mm-dd[THH:MM]",
-                      help="Import data starting at this date or date-time. "
-                           "Format is YYYY-mm-dd[THH:MM].")
-    parser.add_option("--to", dest="date_to", type=str, metavar="YYYY-mm-dd[THH:MM]",
-                      help="Import data up until this date or date-time. Format "
-                           "is YYYY-mm-dd[THH:MM].")
-    parser.add_option("--verbose", action="store_true", dest="verbose",
-                      help="Print and log useful extra output.")
-    parser.add_option("--no-prompt", action="store_true", dest="no_prompt",
-                      help="Do not prompt. Accept relevant defaults and all y/n prompts.")
-    parser.add_option("--suppress-warnings", action="store_true", dest="suppress",
-                      help="Suppress warnings to stdout. Warnings are still logged.")
-    parser.add_option("--version", dest="version", action="store_true",
-                      help="Display wee_import version number.")
+    # Add the various arguments:
+    parser.add_argument("--config", dest="config_path", type=str,
+                        metavar="CONFIG_FILE",
+                        help="Use configuration file CONFIG_FILE.")
+    parser.add_argument("--import-config", dest="import_config_path", type=str,
+                        metavar="IMPORT_CONFIG_FILE",
+                        help="Use import configuration file IMPORT_CONFIG_FILE.")
+    parser.add_argument("--dry-run", dest="dry_run", action="store_true",
+                        help="Print what would happen but do not do it.")
+    parser.add_argument("--date", dest="date", type=str, metavar="YYYY-mm-dd",
+                        help="Import data for this date. Format is YYYY-mm-dd.")
+    parser.add_argument("--from", dest="date_from", type=str, metavar="YYYY-mm-dd[THH:MM]",
+                        help="Import data starting at this date or date-time. "
+                             "Format is YYYY-mm-dd[THH:MM].")
+    parser.add_argument("--to", dest="date_to", type=str, metavar="YYYY-mm-dd[THH:MM]",
+                        help="Import data up until this date or date-time. Format "
+                             "is YYYY-mm-dd[THH:MM].")
+    parser.add_argument("--verbose", action="store_true", dest="verbose",
+                        help="Print and log useful extra output.")
+    parser.add_argument("--no-prompt", action="store_true", dest="no_prompt",
+                        help="Do not prompt. Accept relevant defaults and all y/n prompts.")
+    parser.add_argument("--suppress-warnings", action="store_true", dest="suppress",
+                        help="Suppress warnings to stdout. Warnings are still logged.")
+    parser.add_argument("--version", dest="version", action="store_true",
+                        help="Display wee_import version number.")
 
     # Now we are ready to parse the command line:
-    (options, args) = parser.parse_args()
+    args = parser.parse_args()
 
     # check WeeWX version number for compatibility
     if weeutil.weeutil.version_compare(weewx.__version__, REQUIRED_WEEWX) < 0:
@@ -791,7 +790,7 @@ def main():
         exit(1)
 
     # get config_dict to use
-    config_path, config_dict = weecfg.read_config(options.config_path, args)
+    config_path, config_dict = weecfg.read_config(args.config_path)
     print("Using WeeWX configuration file %s" % config_path)
 
     # Now that we have the configuration dictionary, we can add the path to the user
@@ -807,13 +806,13 @@ def main():
     weeutil.logger.setup('wee_import', config_dict)
 
     # display wee_import version info
-    if options.version:
+    if args.version:
         print("wee_import version: %s" % WEE_IMPORT_VERSION)
         exit(0)
 
     # to do anything more we need an import config file, check if one was
     # provided
-    if options.import_config_path:
+    if args.import_config_path:
         # we have something so try to start
 
         # advise the user we are starting up
@@ -824,8 +823,7 @@ def main():
         # object from our factory and try to import. Be prepared to catch any
         # errors though.
         try:
-            source_obj = weeimport.weeimport.Source.sourceFactory(options,
-                                                                  args)
+            source_obj = weeimport.weeimport.Source.sourceFactory(args)
             source_obj.run()
         except weeimport.weeimport.WeeImportOptionError as e:
             print("**** Command line option error.")

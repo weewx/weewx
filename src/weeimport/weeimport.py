@@ -288,7 +288,7 @@ class Source(object):
         self.period_duplicates = set()
 
     @staticmethod
-    def sourceFactory(options, args):
+    def sourceFactory(args):
         """Factory to produce a Source object.
 
         Returns an appropriate object depending on the source type. Raises a
@@ -297,11 +297,11 @@ class Source(object):
 
         # get some key WeeWX parameters
         # first the config dict to use
-        config_path, config_dict = weecfg.read_config(options.config_path, args)
+        config_path, config_dict = weecfg.read_config(args.config_path, args)
         # get wee_import config dict if it exists
         import_config_path, import_config_dict = weecfg.read_config(None,
                                                                     args,
-                                                                    file_name=options.import_config_path)
+                                                                    file_name=args.import_config_path)
         # we should have a source parameter at the root of out import config
         # file, try to get it but be prepared to catch the error.
         try:
@@ -326,7 +326,7 @@ class Source(object):
                                         config_path,
                                         import_config_dict.get(source, {}),
                                         import_config_path,
-                                        options)
+                                        args)
 
     def run(self):
         """Main entry point for importing from an external source.
