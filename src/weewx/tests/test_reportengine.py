@@ -198,6 +198,54 @@ class TestReportEngine(unittest.TestCase):
         skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
         self.assertFalse(skin_dict['log_success'])
 
+    def test_defaults_locale(self):
+        """Test adding a locale spec to a report, it can set the language when lang is not specified otherwise
+        """
+        # Specify that the default locale is German/Austria
+        self.config_dict['StdReport']['Defaults']['locale'] = 'de_AT'
+        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        # That should change set the language and thus the unit system, as well as make translation texts available.
+        self.assertEqual(skin_dict['Units']['Groups']['group_rain'], 'mm')
+        self.assertEqual(skin_dict['Units']['Labels']['day'], [" Tag", " Tage"])
+
+    def test_defaults_locale_lang(self):
+        """Test adding a locale spec to a report, and set the language explicitly"""
+        # Specify that the default locale is English/US
+        self.config_dict['StdReport']['Defaults']['locale'] = 'en_US'
+        # Specify that the default lang is German
+        self.config_dict['StdReport']['Defaults']['lang'] = 'de'
+        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        # That should change set the language and thus the unit system, as well as make translation texts available.
+        self.assertEqual(skin_dict['Units']['Groups']['group_rain'], 'mm')
+        self.assertEqual(skin_dict['Units']['Labels']['day'], [" Tag", " Tage"])
+
+    def test_report_locale(self):
+        """Test adding a locale spec to a specific report"""
+        # Specify that the default should be English/US...
+        self.config_dict['StdReport']['Defaults']['locale'] = 'en_US'
+        # ... but ask for German/Austria for this report.
+        self.config_dict['StdReport']['SeasonsReport']['locale'] = 'de_AT'
+        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        # The results should reflect German
+        self.assertEqual(skin_dict['Units']['Groups']['group_rain'], 'mm')
+        self.assertEqual(skin_dict['Units']['Labels']['day'], [" Tag", " Tage"])
+
+    def test_report_locale_lang(self):
+        """Test adding a locale spec to a specific report"""
+        # Specify that the default should be English/US...
+        self.config_dict['StdReport']['Defaults']['locale'] = 'en_US'
+        # Specify that the default lang is English
+        self.config_dict['StdReport']['Defaults']['lang'] = 'en'
+        # ... but ask for German/Austria for this report.
+        self.config_dict['StdReport']['SeasonsReport']['locale'] = 'de_AT'
+        # Specify that the report lang is German
+        self.config_dict['StdReport']['Defaults']['lang'] = 'de'
+        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        # The results should reflect German
+        self.assertEqual(skin_dict['Units']['Groups']['group_rain'], 'mm')
+        self.assertEqual(skin_dict['Units']['Labels']['day'], [" Tag", " Tage"])
+
+
 
 if __name__ == '__main__':
     unittest.main()

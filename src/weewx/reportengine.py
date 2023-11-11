@@ -14,6 +14,7 @@ import os.path
 import threading
 import time
 import traceback
+import locale
 
 # 3rd party imports
 import configobj
@@ -142,6 +143,18 @@ class StdReportEngine(threading.Thread):
                 log.error("   ****       Report ignored")
                 continue
 
+            # Save the current locale
+            default_locale = locale.getlocale()
+
+            if 'locale' in skin_dict:
+                try:
+                    # Set locale if supported
+                    locale.setlocale(locale.LC_ALL, (skin_dict["locale"]))
+                except locale.Error as e:
+                    # Inform the requested locale couldn't be set
+                    log.error("Confguration error: %s", e)
+                    log.error("   ****       Couldn't set locale to '%s', previous setting '%s' wasn't changed.", skin_dict["locale"], default_locale)
+
             # Default action is to run the report. Only reason to not run it is
             # if we have a valid report report_timing, and it did not trigger.
             if self.record:
@@ -219,6 +232,9 @@ class StdReportEngine(threading.Thread):
             # Restore the current working directory
             os.chdir(cwd)
 
+             # Restore the previously set locale
+            locale.setlocale(locale.LC_ALL, default_locale)
+
 
 def _build_skin_dict(config_dict, report):
     """Find and build the skin_dict for the given report"""
@@ -267,6 +283,9 @@ def _build_skin_dict(config_dict, report):
         raise
     else:
         log.debug("Found configuration file %s for report '%s'", skin_config_path, report)
+        # If a locale is specified, honor it.
+        if 'locale' in merge_dict:
+            merge_locale(merge_dict, skin_dict)
         # If a language is specified, honor it.
         if 'lang' in merge_dict:
             merge_lang(merge_dict['lang'], config_dict, report, skin_dict)
@@ -281,6 +300,9 @@ def _build_skin_dict(config_dict, report):
     if 'Defaults' in config_dict['StdReport']:
         # Because we will be modifying the results, make a deep copy of the section.
         merge_dict = weeutil.config.deep_copy(config_dict)['StdReport']['Defaults']
+        # If a locale is specified, honor it.
+        if 'locale' in merge_dict:
+            merge_locale(merge_dict, skin_dict)
         # If a language is specified, honor it
         if 'lang' in merge_dict:
             merge_lang(merge_dict['lang'], config_dict, report, skin_dict)
@@ -297,6 +319,9 @@ def _build_skin_dict(config_dict, report):
     if report in config_dict['StdReport']:
         # Because we will be modifying the results, make a deep copy of the section.
         merge_dict = weeutil.config.deep_copy(config_dict)['StdReport'][report]
+        # If a locale is specified, honor it.
+        if 'locale' in merge_dict:
+            merge_locale(merge_dict, skin_dict)
         # If a language is specified, honor it
         if 'lang' in merge_dict:
             merge_lang(merge_dict['lang'], config_dict, report, skin_dict)
@@ -370,6 +395,15 @@ def merge_lang(lang_spec, config_dict, report, skin_dict):
     if 'unit_system' in lang_dict:
         merge_unit_system(lang_dict['unit_system'], skin_dict)
     weeutil.config.merge_config(skin_dict, lang_dict)
+    return skin_dict
+
+def merge_locale(merge_dict, skin_dict):
+    locale_spec = merge_dict['locale']
+    # If a language is not specified otherwise, take language from locale
+    if 'lang' not in merge_dict:
+        merge_dict['lang'] = locale_spec.split("_")[0]
+    # Set
+    skin_dict['locale'] = locale_spec
     return skin_dict
 
 
