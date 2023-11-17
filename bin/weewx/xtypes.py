@@ -1084,12 +1084,8 @@ class WindVecDaily(XType):
         if aggregate_type not in ['avg', 'not_null']:
             raise weewx.UnknownAggregation(aggregate_type)
 
-        # We cannot use the day summaries if the starting and ending times of the aggregation
-        # interval are not on midnight boundaries, and are not the first or last records in the
-        # database.
-        if not (isStartOfDay(timespan.start) or timespan.start == db_manager.first_timestamp) \
-                or not (isStartOfDay(timespan.stop) or timespan.stop == db_manager.last_timestamp):
-            raise weewx.UnknownAggregation(aggregate_type)
+        # Check to see whether we can use the daily summaries:
+        DailySummaries._check_eligibility('wind', timespan, db_manager, aggregate_type)
 
         if aggregate_type == 'not_null':
             # Aggregate type 'not_null' is actually run against 'wind'.
