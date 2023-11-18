@@ -41,9 +41,21 @@ I run WeeWX on a vintage 32-bit Fit-PC with a 500 MHz AMD Geode processor and
 of virtual memory, and 50 MB of real memory.
 
 WeeWX also runs great on a Raspberry Pi, although report generation will take
-longer. For example, the 12 "To Date" templates of the "Standard" report take
-about 5.1 seconds on a RPi B+, compared to 3.0 seconds on the Fit-PC, and 0.3
-seconds on a NUC with a 4th gen i5 processor.
+longer. For example, here are some generation times for the 21 HTML files and 68
+images used by the _Seasons_ skin. See the Wiki article [_Benchmarks of file and
+image generation_
+](https://github.com/weewx/weewx/wiki/Benchmarks-of-file-and-image-generation)
+for details.
+
+| Hardware               | Files (21) | Images (68) |
+|------------------------|-----------:|------------:|
+| Mac Mini, M1 2020      |      0.60s |       1.06s |
+| NUC Intel i7, 11th gen |      0.89s |       1.14s |
+| RPI 5                  |      1.63s |       2.03s |
+| RPi 4                  |      6.24s |       6.39s |
+| RPi 3                  |     13.06s |      14.07s |       
+| RPi 2 (32-bit)         |     24.27s |      25.95s |
+| Rpi Zero W (32-bit)    |     53.97s |      57.79s |
 
 
 ### Time
