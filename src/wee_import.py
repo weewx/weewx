@@ -123,15 +123,12 @@ import weeutil.weeutil
 
 log = logging.getLogger(__name__)
 
-# wee_import version number
-WEE_IMPORT_VERSION = '0.9'
 # minimum WeeWX version required for this version of wee_import
 REQUIRED_WEEWX = "4.0.0"
 
 description = """Import observation data into a WeeWX archive."""
 
 usage = """%(prog)s --help
-       %(prog)s --version
        %(prog)s --import-config=IMPORT_CONFIG_FILE
             [--config=CONFIG_FILE]
             [--date=YYYY-mm-dd | --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]]
@@ -177,8 +174,6 @@ def main():
                         help="Do not prompt. Accept relevant defaults and all y/n prompts.")
     parser.add_argument("--suppress-warnings", action="store_true", dest="suppress",
                         help="Suppress warnings to stdout. Warnings are still logged.")
-    parser.add_argument("--version", dest="version", action="store_true",
-                        help="Display wee_import version number.")
 
     # Now we are ready to parse the command line:
     namespace = parser.parse_args()
@@ -204,11 +199,6 @@ def main():
 
     # Set up any customized logging:
     weeutil.logger.setup('wee_import', config_dict)
-
-    # display wee_import version info
-    if namespace.version:
-        print("wee_import version: %s" % WEE_IMPORT_VERSION)
-        exit(0)
 
     # to do anything more we need an import config file, check if one was
     # provided
