@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com> and Gary Roderick
+#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com> and Gary Roderick
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -28,68 +28,112 @@ from . import weeimport
 
 log = logging.getLogger(__name__)
 
+
 # ============================================================================
 #                             class WUSource
 # ============================================================================
 
-
 class WUSource(weeimport.Source):
     """Class to interact with the Weather Underground API.
 
-    Uses PWS history call via http to obtain historical daily weather
-    observations for a given PWS. Unlike the previous WU import module the use
-    of the API requires an API key.
+    Uses the WU PWS history API call via http to obtain historical weather
+    observations for a given PWS. Unlike the previous WU import module that
+    was based on an earlier API, the use of the v2 API requires an API key.
+
+    The Weather Company PWS historical data API v2 documentation:
+    https://docs.google.com/document/d/1w8jbqfAk0tfZS5P7hYnar1JiitM0gQZB-clxDfG3aD0/edit
     """
 
-    # Dict to map all possible WU field names to WeeWX archive field names and
-    # units
-    _header_map = {'epoch': {'units': 'unix_epoch', 'map_to': 'dateTime'},
-                   'tempAvg': {'units': 'degree_F', 'map_to': 'outTemp'},
-                   'dewptAvg': {'units': 'degree_F', 'map_to': 'dewpoint'},
-                   'heatindexAvg': {'units': 'degree_F', 'map_to': 'heatindex'},
-                   'windchillAvg': {'units': 'degree_F', 'map_to': 'windchill'},
-                   'pressureAvg': {'units': 'inHg', 'map_to': 'barometer'},
-                   'winddirAvg': {'units': 'degree_compass',
-                                  'map_to': 'windDir'},
-                   'windspeedAvg': {'units': 'mile_per_hour',
-                                    'map_to': 'windSpeed'},
-                   'windgustHigh': {'units': 'mile_per_hour',
-                                    'map_to': 'windGust'},
-                   'humidityAvg': {'units': 'percent', 'map_to': 'outHumidity'},
-                   'precipTotal': {'units': 'inch', 'map_to': 'rain'},
-                   'precipRate': {'units': 'inch_per_hour',
-                                  'map_to': 'rainRate'},
-                   'solarRadiationHigh': {'units': 'watt_per_meter_squared',
-                                          'map_to': 'radiation'},
-                   'uvHigh': {'units': 'uv_index', 'map_to': 'UV'}
-                   }
-    _extras = ['pressureMin', 'pressureMax']
+    # Dict containing default mapping of WU fields to WeeWX archive fields. The
+    # user may modify this mapping by including a [[FieldMap]] and/or a
+    # [[FieldMapExtensions]] stanza in the import config file.
+    default_map = {
+        'dateTime': {
+            'source_field': 'epoch', 
+            'unit': 'unix_epoch'},
+        'outTemp': {
+            'source_field': 'tempAvg', 
+            'unit': 'degree_F'},
+        'outHumidity': {
+            'source_field': 'humidityAvg', 
+            'unit': 'percent'},
+        'dewpoint': {
+            'source_field': 'dewptAvg', 
+            'unit': 'degree_F'},
+        'heatindex': {
+            'source_field': 'heatindexAvg', 
+            'unit': 'degree_F'},
+        'windchill': {
+            'source_field': 'windchillAvg', 
+            'unit': 'degree_F'},
+        'barometer': {
+            'source_field': 'pressureAvg', 
+            'unit': 'inHg'},
+        'rain': {
+            'source_field': 'precipTotal', 
+            'unit': 'inch', 
+            'cumulative': True}, 
+        'rainRate': {
+            'source_field': 'precipRate', 
+            'unit': 'inch_per_hour'},
+        'windSpeed': {
+            'source_field': 'windspeedAvg', 
+            'unit': 'mile_per_hour'},
+        'windDir': {
+            'source_field': 'winddirAvg', 
+            'unit': 'degree_compass'},
+        'windGust': {
+            'source_field': 'windgustHigh', 
+            'unit': 'mile_per_hour'},
+        'radiation': {
+            'source_field': 'solarRadiationHigh', 
+            'unit': 'watt_per_meter_squared', 
+            'cumulative': False},
+        'UV': {
+            'source_field': 'uvHigh',
+            'unit': 'uv_index'}
+    }
+    # additional fields required for (in this case) calculation of barometer
+    _extra_fields = ['pressureMin', 'pressureMax']
 
-    def __init__(self, config_dict, config_path, wu_config_dict, import_config_path, args):
+    def __init__(self, config_dict, config_path, wu_config_dict,
+                 import_config_path, options):
 
         # call our parents __init__
-        super().__init__(config_dict, wu_config_dict, args)
+        super().__init__(config_dict, wu_config_dict, options)
 
         # save our import config path
         self.import_config_path = import_config_path
         # save our import config dict
         self.wu_config_dict = wu_config_dict
 
-        # get our WU station ID
+        # get the WU station ID
         try:
             self.station_id = wu_config_dict['station_id']
         except KeyError:
             _msg = "Weather Underground station ID not specified in '%s'." % import_config_path
             raise weewx.ViolatedPrecondition(_msg)
 
-        # get our WU API key
+        # get the WU API key
         try:
             self.api_key = wu_config_dict['api_key']
         except KeyError:
             _msg = "Weather Underground API key not specified in '%s'." % import_config_path
             raise weewx.ViolatedPrecondition(_msg)
 
-        # wind dir bounds
+        # Is our rain discrete or cumulative. Legacy import config files used
+        # the 'rain' config option to determine whether the imported rainfall
+        # value was a discrete per period value or a cumulative value. This is
+        # now handled on a per-field basis through the field map; however, we
+        # need ot be able to support old import config files that use the
+        # legacy rain config option.
+        _rain = self.wu_config_dict.get('rain')
+        # set our rain property only if the rain config option was explicitly
+        # set
+        if _rain is not None:
+            self.rain = _rain
+
+        # wind direction bounds
         _wind_direction = option_as_list(wu_config_dict.get('wind_direction',
                                                             '0,360'))
         try:
@@ -104,12 +148,15 @@ class WUSource(weeimport.Source):
         # some properties we know because of the format of the returned WU data
         # WU returns a fixed format date-time string
         self.raw_datetime_format = '%Y-%m-%d %H:%M:%S'
-        # WU only provides hourly rainfall and a daily cumulative rainfall.
-        # We use the latter so force 'cumulative' for rain.
-        self.rain = 'cumulative'
 
-        # initialise our import field-to-WeeWX archive field map
-        self.map = None
+        # construct our import field-to-WeeWX archive field map
+        _map = dict(WUSource.default_map)
+        # create the final field map based on the default field map and any
+        # field map options provided by the user
+        self.map = self.parse_map(_map,
+                                  self.wu_config_dict.get('FieldMap', {}),
+                                  self.wu_config_dict.get('FieldMapExtensions', {}))
+        print("self.map=%s" % (self.map,))
         # For a WU import we might have to import multiple days but we can only
         # get one day at a time from WU. So our start and end properties
         # (counters) are datetime objects and our increment is a timedelta.
@@ -122,6 +169,9 @@ class WUSource(weeimport.Source):
 
         # property holding the current period being processed
         self.period = None
+
+        # property holding dict of last seen values for cumulative observations
+        self.last_values = {}
 
         # tell the user/log what we intend to do
         _msg = "Observation history for Weather Underground station '%s' will be imported." % self.station_id
@@ -136,13 +186,13 @@ class WUSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        if args.date:
-            _msg = "     station=%s, date=%s" % (self.station_id, args.date)
+        if options.date:
+            _msg = "     station=%s, date=%s" % (self.station_id, options.date)
         else:
             # we must have --from and --to
             _msg = "     station=%s, from=%s, to=%s" % (self.station_id,
-                                                        args.date_from,
-                                                        args.date_to)
+                                                        options.date_from,
+                                                        options.date_to)
         if self.verbose:
             print(_msg)
         log.debug(_msg)
@@ -172,17 +222,17 @@ class WUSource(weeimport.Source):
                                                                         unit_nicknames[self.archive_unit_sys])
         print(_msg)
         log.info(_msg)
+        self.print_map()
         if self.calc_missing:
             print("Missing derived observations will be calculated.")
-        if args.date or args.date_from:
+        if options.date or options.date_from:
             print("Observations timestamped after %s and up to and" % timestamp_to_string(self.first_ts))
             print("including %s will be imported." % timestamp_to_string(self.last_ts))
         if self.dry_run:
             print("This is a dry run, imported data will not be saved to archive.")
 
-    def getRawData(self, period):
-        """Get raw observation data and construct a map from WU to WeeWX
-            archive fields.
+    def get_raw_data(self, period):
+        """Get raw observation data for a WU PWS for a given period.
 
         Obtain raw observational data from WU via the WU API. This raw data
         needs some basic processing to place it in a format suitable for
@@ -264,7 +314,7 @@ class WUSource(weeimport.Source):
                 # initialise a dict to hold the resulting data for this record
                 _flat_record = {}
                 # iterate over each WU API response field that we can use
-                _fields = list(self._header_map) + self._extras
+                _fields = [c['source_field'] for c in self.map.values()] + self._extra_fields
                 for obs in _fields:
                     # The field may appear as a top level field in the WU data
                     # or it may be embedded in the dict in the WU data that
@@ -304,8 +354,6 @@ class WUSource(weeimport.Source):
                 # append the data dict for the current record to the list of
                 # dicts for this period
                 wu_data.append(_flat_record)
-        # finally, get our database-source mapping
-        self.map = self.parseMap('WU', wu_data, self.wu_config_dict)
         # return our dict
         return wu_data
 

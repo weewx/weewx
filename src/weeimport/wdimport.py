@@ -117,76 +117,91 @@ class WDSource(weeimport.Source):
                                   }
             }
 
-    # dict to map WD log field units based on metric or US
+    # dict to lookup WD log field units based on the WD logging Metric or US
+    # unit system
     wd_unit_sys = {'temperature': {'METRIC': 'degree_C', 'US': 'degree_F'},
-                   'dewpoint': {'METRIC': 'degree_C', 'US': 'degree_F'},
-                   'barometer': {'METRIC': 'hPa', 'US': 'inHg'},
-                   'direction': {'METRIC': 'degree_compass',
-                                 'US': 'degree_compass'},
-                   'windspeed': {'METRIC': 'knot', 'US': 'mile_per_hour'},
-                   'heatindex': {'METRIC': 'degree_C', 'US': 'degree_F'},
-                   'gustspeed': {'METRIC': 'knot', 'US': 'mile_per_hour'},
-                   'humidity': {'METRIC': 'percent', 'US': 'percent'},
-                   'rainlastmin': {'METRIC': 'mm', 'US': 'inch'},
-                   'radiation': {'METRIC': 'watt_per_meter_squared',
-                                 'US': 'watt_per_meter_squared'},
-                   'uv': {'METRIC': 'uv_index', 'US': 'uv_index'},
-                   'soilmoist': {'METRIC': 'centibar', 'US': 'centibar'},
-                   'soiltemp': {'METRIC': 'degree_C', 'US': 'degree_F'},
-                   'temp1': {'METRIC': 'degree_C', 'US': 'degree_F'},
-                   'hum1': {'METRIC': 'percent', 'US': 'percent'},
-                   'temp2': {'METRIC': 'degree_C', 'US': 'degree_F'},
-                   'hum2': {'METRIC': 'percent', 'US': 'percent'},
-                   'temp3': {'METRIC': 'degree_C', 'US': 'degree_F'},
-                   'hum3': {'METRIC': 'percent', 'US': 'percent'},
-                   'temp4': {'METRIC': 'degree_C', 'US': 'degree_F'},
-                   'hum4': {'METRIC': 'percent', 'US': 'percent'},
-                   'temp5': {'METRIC': 'degree_C', 'US': 'degree_F'},
-                   'hum5': {'METRIC': 'percent', 'US': 'percent'},
-                   'temp6': {'METRIC': 'degree_C', 'US': 'degree_F'},
-                   'hum6': {'METRIC': 'percent', 'US': 'percent'},
-                   'temp7': {'METRIC': 'degree_C', 'US': 'degree_F'},
-                   'hum7': {'METRIC': 'percent', 'US': 'percent'}
+                   'pressure': {'METRIC': 'hPa', 'US': 'inHg'},
+                   'rain': {'METRIC': 'mm', 'US': 'inch'},
+                   'speed': {'METRIC': 'knot', 'US': 'mile_per_hour'}
                    }
+
+    # tuple of fields using 'temperature' units
+    _temperature_fields = ('temperature', 'dewpoint', 'heatindex', 'soiltemp',
+                           'temp1', 'temp2', 'temp3', 'temp4', 'temp5',
+                           'temp6', 'temp7')
+    # tuple of fields using 'pressure' units
+    _pressure_fields = ('barometer', )
+    # tuple of fields using 'rain' units
+    _rain_fields = ('rainlastmin', 'daily_rain', 'monthlyrain', 'yearlyrain', 'dailyet')
+    # tuple of fields using 'speed' units
+    _speed_fields = ('windspeed', 'gustspeed')
 
     # dict to map all possible WD field names (refer _field_list) to WeeWX
     # archive field names and units
-    _header_map = {'datetime': {'units': 'unix_epoch', 'map_to': 'dateTime'},
-                   'temperature': {'map_to': 'outTemp'},
-                   'dewpoint': {'map_to': 'dewpoint'},
-                   'barometer': {'map_to': 'barometer'},
-                   'direction': {'units': 'degree_compass',
-                                 'map_to': 'windDir'},
-                   'windspeed': {'map_to': 'windSpeed'},
-                   'heatindex': {'map_to': 'heatindex'},
-                   'gustspeed': {'map_to': 'windGust'},
-                   'humidity': {'units': 'percent', 'map_to': 'outHumidity'},
-                   'rainlastmin': {'map_to': 'rain'},
-                   'radiation': {'units': 'watt_per_meter_squared',
-                                 'map_to': 'radiation'},
-                   'uv': {'units': 'uv_index', 'map_to': 'UV'},
-                   'soilmoist': {'units': 'centibar', 'map_to': 'soilMoist1'},
-                   'soiltemp': {'map_to': 'soilTemp1'},
-                   'temp1': {'map_to': 'extraTemp1'},
-                   'hum1': {'units': 'percent', 'map_to': 'extraHumid1'},
-                   'temp2': {'map_to': 'extraTemp2'},
-                   'hum2': {'units': 'percent', 'map_to': 'extraHumid2'},
-                   'temp3': {'map_to': 'extraTemp3'},
-                   'hum3': {'units': 'percent', 'map_to': 'extraHumid3'},
-                   'temp4': {'map_to': 'extraTemp4'},
-                   'hum4': {'units': 'percent', 'map_to': 'extraHumid4'},
-                   'temp5': {'map_to': 'extraTemp5'},
-                   'hum5': {'units': 'percent', 'map_to': 'extraHumid5'},
-                   'temp6': {'map_to': 'extraTemp6'},
-                   'hum6': {'units': 'percent', 'map_to': 'extraHumid6'},
-                   'temp7': {'map_to': 'extraTemp7'},
-                   'hum7': {'units': 'percent', 'map_to': 'extraHumid7'}
-                   }
+    default_map = {
+        'dateTime': {
+            'source_field': 'datetime',
+            'unit': 'unix_epoch'},
+        'outTemp': {
+            'source_field': 'temperature'},
+        'outHumidity': {
+            'source_field': 'humidity'},
+        'dewpoint': {
+            'source_field': 'dewpoint'},
+        'heatindex': {
+            'source_field': 'heatindex'},
+        'barometer': {
+            'source_field': 'barometer'},
+        'rain': {
+            'source_field': 'rainlastmin'},
+        'windSpeed': {
+            'source_field': 'windspeed'},
+        'windDir': {
+            'source_field': 'direction'},
+        'windGust': {
+            'source_field': 'gustspeed'},
+        'radiation': {
+            'source_field': 'radiation'},
+        'UV': {
+            'source_field': 'uv'},
+        'soilMoist1': {
+            'source_field': 'soilmoist'},
+        'soilTemp1': {
+            'source_field': 'soiltemp'},
+        'extraTemp1': {
+            'source_field': 'temp1'},
+        'extraHumid1': {
+            'source_field': 'humid1'},
+        'extraTemp2': {
+            'source_field': 'temp2'},
+        'extraHumid2': {
+            'source_field': 'humid2'},
+        'extraTemp3': {
+            'source_field': 'temp3'},
+        'extraHumid3': {
+            'source_field': 'humid3'},
+        'extraTemp4': {
+            'source_field': 'temp4'},
+        'extraHumid4': {
+            'source_field': 'humid4'},
+        'extraTemp5': {
+            'source_field': 'temp5'},
+        'extraHumid5': {
+            'source_field': 'humid5'},
+        'extraTemp6': {
+            'source_field': 'temp6'},
+        'extraHumid6': {
+            'source_field': 'humid6'},
+        'extraTemp7': {
+            'source_field': 'temp7'},
+        'extraHumid7': {
+            'source_field': 'humid7'}
+    }
 
-    def __init__(self, config_dict, config_path, wd_config_dict, import_config_path, args):
+    def __init__(self, config_dict, config_path, wd_config_dict, import_config_path, options):
 
         # call our parents __init__
-        super().__init__(config_dict, wd_config_dict, args)
+        super().__init__(config_dict, wd_config_dict, options)
 
         # save the import config path
         self.import_config_path = import_config_path
@@ -201,16 +216,6 @@ class WDSource(weeimport.Source):
         # wind dir bounds
         self.wind_dir = [0, 360]
 
-        # How the WeeWX field 'rain' is populated depends on the source rain
-        # data. If the only data available is cumulative then the WeeWX rain
-        # field is calculated as the difference between successive cumulative
-        # values. WD provides a rain per interval field so that data can be
-        # used to map directly to the WeeWX rain field. If rain is to be
-        # calculated from a cumulative value then self.rain must be set to
-        # 'cumulative', to map directly to the WeeWX rain field self.rain must
-        # be set to None.
-        self.rain = None
-
         # field delimiter used in text format monthly log files, default to
         # space
         self.txt_delimiter = str(wd_config_dict.get('txt_delimiter', ' '))
@@ -223,7 +228,12 @@ class WDSource(weeimport.Source):
                                                                         True))
 
         # initialise the import field-to-WeeWX archive field map
-        self.map = None
+        _map = dict(WDSource.default_map)
+        # create the final field map based on the default field map and any
+        # field map options provided by the user
+        self.map = self.parse_map(_map,
+                                  self.wd_config_dict.get('FieldMap', {}),
+                                  self.wd_config_dict.get('FieldMapExtensions', {}))
 
         # property holding the current log file name being processed
         self.file_name = None
@@ -244,109 +254,79 @@ class WDSource(weeimport.Source):
         log_unit_config = wd_config_dict.get('Units')
         if log_unit_config is not None:
             # get the units config option
-            log_unit_sys = wd_config_dict['Units'].get('units')
-            # accept any capitalization of USA as == US
-            log_unit_sys = log_unit_sys if log_unit_sys.upper() != 'USA' else 'US'
+            log_unit_sys = log_unit_config.get('units')
             # does the units config option specify a valid log unit system
             if log_unit_sys is None or log_unit_sys.upper() not in ['METRIC', 'US']:
-                # log unit system not specified look for individual entries
-                # temperature
-                temp_u = wd_config_dict['Units'].get('temperature')
-                if temp_u is not None:
-                    # temperature units vary between unit systems so we can verify a
-                    # valid temperature unit simply by checking for membership of
-                    # weewx.units.conversionDict keys
-                    if temp_u in weewx.units.conversionDict.keys():
-                        self._header_map['temperature']['units'] = temp_u
-                        self._header_map['dewpoint']['units'] = temp_u
-                        self._header_map['heatindex']['units'] = temp_u
-                        self._header_map['soiltemp']['units'] = temp_u
-                        self._header_map['temp1']['units'] = temp_u
-                        self._header_map['temp2']['units'] = temp_u
-                        self._header_map['temp3']['units'] = temp_u
-                        self._header_map['temp4']['units'] = temp_u
-                        self._header_map['temp5']['units'] = temp_u
-                        self._header_map['temp6']['units'] = temp_u
-                        self._header_map['temp7']['units'] = temp_u
-                    else:
-                        _msg = "Unknown units '%s' specified for Weather Display " \
-                               "temperature fields in %s." % (temp_u, self.import_config_path)
+                # log unit system not specified so look for individual entries.
+                # First do a quick check to see if we have all the individual
+                # unit specifiers, if we don't raise an error as we have no
+                # unit information.
+                if {'temperature', 'pressure', 'rain', 'speed'}.issubset(set(log_unit_config.keys())):
+                    # we have all the individual unit specifiers so proceed to
+                    # process them
+                    # temperature
+                    temp_u = log_unit_config.get('temperature')
+                    if temp_u is None or temp_u not in ['degree_C', 'degree_F']:
+                        _msg = "No units specified for Weather Display temperature " \
+                               "fields in %s." % (self.import_config_path,)
                         raise weewx.UnitError(_msg)
-                else:
-                    _msg = "No units specified for Weather Display temperature " \
-                           "fields in %s." % (self.import_config_path,)
-                    raise weewx.UnitError(_msg)
-
-                # pressure
-                press_u = wd_config_dict['Units'].get('pressure')
-                if press_u is not None:
-                    if press_u in ['inHg', 'hPa']:
-                        self._header_map['barometer']['units'] = press_u
-                    else:
-                        _msg = "Unknown units '%s' specified for Weather Display " \
-                               "pressure fields in %s." % (press_u, self.import_config_path)
+                    # pressure
+                    press_u = log_unit_config.get('pressure')
+                    if press_u is None or press_u not in ['inHg', 'hPa']:
+                        _msg = "No units specified for Weather Display pressure " \
+                               "fields in %s." % (self.import_config_path,)
                         raise weewx.UnitError(_msg)
-                else:
-                    _msg = "No units specified for Weather Display pressure " \
-                           "fields in %s." % (self.import_config_path,)
-                    raise weewx.UnitError(_msg)
-
-                # rain
-                rain_u = wd_config_dict['Units'].get('rain')
-                if rain_u is not None:
-                    if rain_u in ['inch', 'mm']:
-                        self._header_map['rainlastmin']['units'] = rain_u
-                        self._header_map['dailyrain']['units'] = rain_u
-                        self._header_map['monthlyrain']['units'] = rain_u
-                        self._header_map['yearlyrain']['units'] = rain_u
-                        self._header_map['dailyet']['units'] = rain_u
-                    else:
+                    # rain
+                    rain_u = log_unit_config.get('rain')
+                    if rain_u is None or rain_u not in ['inch', 'mm']:
                         _msg = "Unknown units '%s' specified for Weather Display " \
                                "rain fields in %s." % (rain_u, self.import_config_path)
                         raise weewx.UnitError(_msg)
-                else:
-                    _msg = "No units specified for Weather Display rain fields " \
-                           "in %s." % (self.import_config_path,)
-                    raise weewx.UnitError(_msg)
-
-                # speed
-                speed_u = wd_config_dict['Units'].get('speed')
-                if speed_u is not None:
-                    if speed_u in ['inch', 'mm']:
-                        self._header_map['windspeed']['units'] = speed_u
-                        self._header_map['gustspeed']['units'] = speed_u
-                    else:
-                        _msg = "Unknown units '%s' specified for Weather Display " \
-                               "speed fields in %s." % (speed_u, self.import_config_path)
+                    # speed
+                    speed_u = log_unit_config.get('speed')
+                    # oddly, WD logs wind speed in knots when WD logging is set to Metric
+                    if speed_u is None or speed_u not in ['knot', 'mile_per_hour']:
+                        _msg = "No units specified for Weather Display speed fields " \
+                               "in %s." % (self.import_config_path,)
                         raise weewx.UnitError(_msg)
                 else:
-                    _msg = "No units specified for Weather Display speed fields " \
-                           "in %s." % (self.import_config_path,)
-                    raise weewx.UnitError(_msg)
-
+                    raise weewx.UnitError("Invalid or incomplete [Units] config option.")
             else:
-                # log unit system specified
+                # we have a unit system specified
                 _unit_sys = log_unit_sys.upper()
-                # do we have a valid log unit system
-                if _unit_sys in ['METRIC', 'US']:
-                    # valid log unit system so assign units as applicable
-                    self._header_map['temperature']['units'] = self.wd_unit_sys['temperature'][_unit_sys]
-                    self._header_map['dewpoint']['units'] = self.wd_unit_sys['temperature'][_unit_sys]
-                    self._header_map['heatindex']['units'] = self.wd_unit_sys['temperature'][_unit_sys]
-                    self._header_map['barometer']['units'] = self.wd_unit_sys['barometer'][_unit_sys]
-                    self._header_map['windspeed']['units'] = self.wd_unit_sys['windspeed'][_unit_sys]
-                    self._header_map['gustspeed']['units'] = self.wd_unit_sys['gustspeed'][_unit_sys]
-                    self._header_map['rainlastmin']['units'] = self.wd_unit_sys['rainlastmin'][_unit_sys]
-                    self._header_map['soiltemp']['units'] = self.wd_unit_sys['soiltemp'][_unit_sys]
-                    for _num in range(1, 8):
-                        _temp = 'temp%s' % _num
-                        self._header_map[_temp]['units'] = self.wd_unit_sys[_temp][_unit_sys]
-                else:
-                    # no valid Units config found, we can't go on so raise an error
-                    raise weewx.UnitError("Invalid setting for 'units' config option.")
+                temp_u = self.wd_unit_sys['temperature'][_unit_sys]
+                press_u = self.wd_unit_sys['pressure'][_unit_sys]
+                rain_u = self.wd_unit_sys['rain'][_unit_sys]
+                speed_u = self.wd_unit_sys['speed'][_unit_sys]
+            # If we made it here we have units for temperature, pressure,
+            # rainfall and speed. Now set the units for our field map entries.
+            # temperature entries
+            for field in WDSource._temperature_fields:
+                for config in self.map.values():
+                    if config['source_field'] == field:
+                        config['unit'] = temp_u
+                        break
+            # pressure entries
+            for field in WDSource._pressure_fields:
+                for config in self.map.values():
+                    if config['source_field'] == field:
+                        config['unit'] = press_u
+                        break
+            # rain entries
+            for field in WDSource._rain_fields:
+                for config in self.map.values():
+                    if config['source_field'] == field:
+                        config['unit'] = rain_u
+                        break
+            # speed entries
+            for field in WDSource._speed_fields:
+                for config in self.map.values():
+                    if config['source_field'] == field:
+                        config['unit'] = speed_u
+                        break
         else:
             # there is no Units config, we can't go on so raise an error
-            raise weewx.UnitError("No Weather Display units config found.")
+            raise weewx.UnitError("No Weather Display [Units] config found.")
 
         # obtain a list of logs files to be processed
         _to_process = wd_config_dict.get('logs_to_process', list(self.logs.keys()))
@@ -399,6 +379,9 @@ class WDSource(weeimport.Source):
         for log_to_process in self.logs_to_process:
             self.extras[log_to_process] = []
 
+        # property holding dict of last seen values for cumulative observations
+        self.last_values = {}
+
         # tell the user/log what we intend to do
         _msg = "Weather Display monthly log files in the '%s' " \
                "directory will be imported" % self.source
@@ -413,11 +396,11 @@ class WDSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        if args.date:
-            _msg = "     date=%s" % args.date
+        if options.date:
+            _msg = "     date=%s" % options.date
         else:
             # we must have --from and --to
-            _msg = "     from=%s, to=%s" % (args.date_from, args.date_to)
+            _msg = "     from=%s, to=%s" % (options.date_from, options.date_to)
         if self.verbose:
             print(_msg)
         log.debug(_msg)
@@ -471,20 +454,21 @@ class WDSource(weeimport.Source):
                                      unit_nicknames[self.archive_unit_sys])
         print(_msg)
         log.info(_msg)
+        self.print_map()
         if self.calc_missing:
             print("Missing derived observations will be calculated.")
         if not self.UV_sensor:
             print("All WeeWX UV fields will be set to None.")
         if not self.solar_sensor:
             print("All WeeWX radiation fields will be set to None.")
-        if args.date or args.date_from:
+        if options.date or options.date_from:
             print("Observations timestamped after %s and "
                   "up to and" % timestamp_to_string(self.first_ts))
             print("including %s will be imported." % timestamp_to_string(self.last_ts))
         if self.dry_run:
             print("This is a dry run, imported data will not be saved to archive.")
 
-    def getRawData(self, period):
+    def get_raw_data(self, period):
         """ Obtain raw observation data from a log file.
 
         The getRawData() method must return a single iterable containing the
@@ -528,7 +512,7 @@ class WDSource(weeimport.Source):
                 # log file does not exist ignore it if we are allowed else
                 # raise it
                 if self.ignore_missing_log:
-                    pass
+                    continue
                 else:
                     _msg = "Weather Display monthly log file '%s' could " \
                            "not be found." % _path_file_name
@@ -650,8 +634,6 @@ class WDSource(weeimport.Source):
         # presented with a more legible display as the import progresses if
         # the data is in ascending dateTime order.
         _sorted = sorted(list(d.values()), key=operator.itemgetter('datetime'))
-        # finally, get our database-source mapping
-        self.map = self.parseMap('WD', _sorted, self.wd_config_dict)
         # return our sorted data
         return _sorted
 

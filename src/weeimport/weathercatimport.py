@@ -27,7 +27,6 @@ log = logging.getLogger(__name__)
 #                             class WeatherCatSource
 # ============================================================================
 
-
 class WeatherCatSource(weeimport.Source):
     """Class to interact with a WeatherCat monthly data (.cat) files.
 
@@ -46,95 +45,137 @@ class WeatherCatSource(weeimport.Source):
     one file at a time. Units of measure are not specified in the monthly data
     files so the units of measure must be specified in the import config file
     being used.
+
+    WeatherCat supports the following units:
+    - temperature: °C and °F
+    - dewpoint: °C and °F but set independently of temperature
+    - pressure: inHg, hPa and mBar
+    - rain: inch and mm
+    - wind speed: km/hr, mph, knots and m/s
     """
 
     # dict to map all possible WeatherCat .cat file field names to WeeWX
     # archive field names and units
-    default_header_map = {'dateTime': {'field_name': 'dateTime',
-                                       'units': 'unix_epoch'},
-                          'usUnits': {'units': None},
-                          'interval': {'units': 'minute'},
-                          'outTemp': {'field_name': 'T',
-                                      'units': 'degree_C'},
-                          'inTemp': {'field_name': 'Ti',
-                                     'units': 'degree_C'},
-                          'extraTemp1': {'field_name': 'T1',
-                                         'units': 'degree_C'},
-                          'extraTemp2': {'field_name': 'T2',
-                                         'units': 'degree_C'},
-                          'extraTemp3': {'field_name': 'T3',
-                                         'units': 'degree_C'},
-                          'dewpoint': {'field_name': 'D',
-                                       'units': 'degree_C'},
-                          'barometer': {'field_name': 'Pr',
-                                        'units': 'mbar'},
-                          'windSpeed': {'field_name': 'W',
-                                        'units': 'km_per_hour'},
-                          'windDir': {'field_name': 'Wd',
-                                      'units': 'degree_compass'},
-                          'windchill': {'field_name': 'Wc',
-                                        'units': 'degree_C'},
-                          'windGust': {'field_name': 'Wg',
-                                       'units': 'km_per_hour'},
-                          'rainRate': {'field_name': 'Ph',
-                                       'units': 'mm_per_hour'},
-                          'rain': {'field_name': 'P',
-                                   'units': 'mm'},
-                          'outHumidity': {'field_name': 'H',
-                                          'units': 'percent'},
-                          'inHumidity': {'field_name': 'Hi',
-                                         'units': 'percent'},
-                          'extraHumid1': {'field_name': 'H1',
-                                          'units': 'percent'},
-                          'extraHumid2': {'field_name': 'H2',
-                                          'units': 'percent'},
-                          'radiation': {'field_name': 'S',
-                                        'units': 'watt_per_meter_squared'},
-                          'soilMoist1': {'field_name': 'Sm1',
-                                         'units': 'centibar'},
-                          'soilMoist2': {'field_name': 'Sm2',
-                                         'units': 'centibar'},
-                          'soilMoist3': {'field_name': 'Sm3',
-                                         'units': 'centibar'},
-                          'soilMoist4': {'field_name': 'Sm4',
-                                         'units': 'centibar'},
-                          'leafWet1': {'field_name': 'Lw1',
-                                       'units': 'count'},
-                          'leafWet2': {'field_name': 'Lw2',
-                                       'units': 'count'},
-                          'soilTemp1': {'field_name': 'St1',
-                                        'units': 'degree_C'},
-                          'soilTemp2': {'field_name': 'St2',
-                                        'units': 'degree_C'},
-                          'soilTemp3': {'field_name': 'St3',
-                                        'units': 'degree_C'},
-                          'soilTemp4': {'field_name': 'St4',
-                                        'units': 'degree_C'},
-                          'leafTemp1': {'field_name': 'Lt1',
-                                        'units': 'degree_C'},
-                          'leafTemp2': {'field_name': 'Lt2',
-                                        'units': 'degree_C'},
-                          'UV': {'field_name': 'U',
-                                 'units': 'uv_index'}
-                          }
-
-    weathercat_unit_groups = {'temperature': ('outTemp', 'inTemp',
-                                              'extraTemp1', 'extraTemp2',
-                                              'extraTemp3', 'windchill',
-                                              'soilTemp1', 'soilTemp2',
-                                              'soilTemp3', 'soilTemp4',
-                                              'leafTemp1', 'leafTemp2'),
-                              'dewpoint': ('dewpoint',),
-                              'pressure': ('barometer',),
-                              'windspeed': ('windSpeed', 'windGust'),
-                              'precipitation': ('rain',)
-                              }
+    default_map = {
+        'dateTime': {
+            'source_field': 'datetime',
+            'unit': 'unix_epoch'},
+        'outTemp': {
+            'source_field': 'T',
+            'unit': 'degree_C'},
+        'inTemp': {
+            'source_field': 'Ti',
+            'unit': 'degree_C'},
+        'extraTemp1': {
+            'source_field': 'T1',
+            'unit': 'degree_C'},
+        'extraTemp2': {
+            'source_field': 'T2',
+            'unit': 'degree_C'},
+        'extraTemp3': {
+            'source_field': 'T3',
+            'unit': 'degree_C'},
+        'dewpoint': {
+            'source_field': 'D',
+            'unit': 'degree_C'},
+        'barometer': {
+            'source_field': 'Pr',
+            'unit': 'mbar'},
+        'windSpeed': {
+            'source_field': 'W',
+            'unit': 'km_per_hour'},
+        'windDir': {
+            'source_field': 'Wd',
+            'unit': 'degree_compass'},
+        'windchill': {
+            'source_field': 'Wc',
+            'unit': 'degree_C'},
+        'windGust': {
+            'source_field': 'Wg',
+            'unit': 'km_per_hour'},
+        'rainRate': {
+            'source_field': 'Ph',
+            'unit': 'mm_per_hour'},
+        'rain': {
+            'source_field': 'P',
+            'unit': 'mm'},
+        'outHumidity': {
+            'source_field': 'H',
+            'unit': 'percent'},
+        'inHumidity': {
+            'source_field': 'Hi',
+            'unit': 'percent'},
+        'extraHumid1': {
+            'source_field': 'H1',
+            'unit': 'percent'},
+        'extraHumid2': {
+            'source_field': 'H2',
+            'unit': 'percent'},
+        'radiation': {
+            'source_field': 'S',
+            'unit': 'watt_per_meter_squared'},
+        'soilMoist1': {
+            'source_field': 'Sm1',
+            'unit': 'centibar'},
+        'soilMoist2': {
+            'source_field': 'Sm2',
+            'unit': 'centibar'},
+        'soilMoist3': {
+            'source_field': 'Sm3',
+            'unit': 'centibar'},
+        'soilMoist4': {
+            'source_field': 'Sm4',
+            'unit': 'centibar'},
+        'leafWet1': {
+            'source_field': 'Lw1',
+            'unit': 'count'},
+        'leafWet2': {
+            'source_field': 'Lw2',
+            'unit': 'count'},
+        'soilTemp1': {
+            'source_field': 'St1',
+            'unit': 'degree_C'},
+        'soilTemp2': {
+            'source_field': 'St2',
+            'unit': 'degree_C'},
+        'soilTemp3': {
+            'source_field': 'St3',
+            'unit': 'degree_C'},
+        'soilTemp4': {
+            'source_field': 'St4',
+            'unit': 'degree_C'},
+        'leafTemp1': {
+            'source_field': 'Lt1',
+            'unit': 'degree_C'},
+        'leafTemp2': {
+            'source_field': 'Lt2',
+            'unit': 'degree_C'},
+        'UV': {
+            'source_field': 'U',
+            'unit': 'uv_index'}
+    }
+    # unit groups used to specify units used by WeatherCat field
+    weathercat_unit_groups = ('temperature', 'dewpoint', 'pressure',
+                              'windspeed', 'precipitation')
+    # tuple of fields using 'temperature' units
+    _temperature_fields = ('T', 'Ti', 'T1', 'T2', 'T3', 'Wc', 'St1', 'St2',
+                           'St3', 'St4', 'Lt1', 'Lt2')
+    # tuple of fields using 'dewpoint' units
+    _dewpoint_fields = ('D', )
+    # tuple of fields using 'pressure' units
+    _pressure_fields = ('Pr', )
+    # tuple of fields using 'precipitation' units
+    _precipitation_fields = ('P', )
+    # tuple of fields using 'precipitation rate' units
+    _precipitation_rate_fields = ('Ph', )
+    # tuple of fields using 'windspeed' units
+    _windspeed_fields = ('W', 'Wg')
 
     def __init__(self, config_dict, config_path, weathercat_config_dict, import_config_path,
-                 args):
+                 options):
 
         # call our parents __init__
-        super().__init__(config_dict, weathercat_config_dict, args)
+        super().__init__(config_dict, weathercat_config_dict, options)
 
         # save our import config path
         self.import_config_path = import_config_path
@@ -154,26 +195,159 @@ class WeatherCatSource(weeimport.Source):
         # can specify the units used in the monthly data files, so first
         # construct a default field map then go through and adjust the units
         # where necessary.
-        # first initialise with a default field map
-        self.map = self.default_header_map
+        # construct our import field-to-WeeWX archive field map
+        _map = dict(WeatherCatSource.default_map)
+        # create the final field map based on the default field map and any
+        # field map options provided by the user
+        self.map = self.parse_map(_map,
+                                  self.weathercat_config_dict.get('FieldMap', {}),
+                                  self.weathercat_config_dict.get('FieldMapExtensions', {}))
         # now check the [[Units]] stanza in the import config file and adjust
         # any units as required
-        if 'Units' in weathercat_config_dict and len(weathercat_config_dict['Units']) > 0:
-            # we have [[Units]] settings so iterate over each
-            for group, value in weathercat_config_dict['Units'].items():
-                # is this group (eg 'temperature', 'rain', etc.) one that we know
-                # about
-                if group in self.weathercat_unit_groups:
-                    # it is, so iterate over each import field that could be affected by
-                    # this unit setting
-                    for field in self.weathercat_unit_groups[group]:
-                        # set the units field accordingly
-                        self.map[field]['units'] = value
-                    # We have one special 'derived' unit setting, rainRate. The
-                    # rainRate units are derived from the rain units by simply
-                    # appending '_per_hour'
-                    if group == 'precipitation':
-                        self.map['rainRate']['units'] = ''.join([value, '_per_hour'])
+        _unit_config = weathercat_config_dict.get('Units')
+        if _unit_config is not None:
+            # first do a quick check to see if we have all the mandatory unit
+            # specifiers (dewpoint is optional), if we don't raise an error as
+            # we have insufficient unit information to proceed
+            if {'temperature', 'pressure', 'precipitation', 'windspeed'}.issubset(set(_unit_config.keys())):
+                # we have all the mandatory unit specifiers so process each
+                # option
+                # temperature fields
+                # obtain the temperature unit setting
+                temp_u = _unit_config.get('temperature')
+                # do we have a non-None valid setting
+                if temp_u is not None and temp_u in ['degree_C', 'degree_F']:
+                    # We have a valid unit setting, we need to find and set the
+                    # unit used for each field map entry that uses a WeatherCat
+                    # field that is a temperature. So step through each
+                    # WeatherCat temperature field.
+                    for field in WeatherCatSource._temperature_fields:
+                        # now iterate over each of our field map entries
+                        # grabbing the config options for each entry
+                        for config in self.map.values():
+                            # check the source field, if it matches the current
+                            # WeatherCat temperature field we need to set the
+                            # units setting for field map entry
+                            if config['source_field'] == field:
+                                config['unit'] = temp_u
+                                # we only support one mapping per source field
+                                # so we can break and move to the next source
+                                # field
+                                break
+                else:
+                    # we either have an invalid or unknown unit setting, raise
+                    # an appropriate exception
+                    _msg = "Invalid or unknown units '%s' specified for WeatherCat " \
+                           "temperature fields in %s." % (temp_u, self.import_config_path)
+                    raise weewx.UnitError(_msg)
+                # dewpoint fields
+                # obtain the dewpoint unit setting, in this case we fall back
+                # to the temperature unit setting if we do not have a dewpoint
+                # option entry
+                dp_u = _unit_config.get('dewpoint', temp_u)
+                # do we have a non-None valid setting
+                if dp_u is not None and dp_u in ['degree_C', 'degree_F']:
+                    # We have a valid unit setting, we need to find and set the
+                    # unit used for each field map entry that uses a WeatherCat
+                    # field that is a dewpoint. So step through each
+                    # WeatherCat dewpoint field.
+                    for field in WeatherCatSource._dewpoint_fields:
+                        for config in self.map.values():
+                            if config['source_field'] == field:
+                                config['unit'] = dp_u
+                                # we only support one mapping per source field
+                                # so we can break and move to the next source
+                                # field
+                                break
+                else:
+                    # we either have an invalid or unknown unit setting, raise
+                    # an appropriate exception
+                    _msg = "Invalid or unknown units '%s' specified for WeatherCat " \
+                           "dewpoint fields in %s." % (dp_u, self.import_config_path)
+                    raise weewx.UnitError(_msg)
+                # pressure entries
+                # obtain the pressure unit setting
+                press_u = _unit_config.get('pressure')
+                # do we have a non-None valid setting
+                if press_u is not None and press_u in ['mbar', 'hPa', 'inHg']:
+                    # We have a valid unit setting, we need to find and set the
+                    # unit used for each field map entry that uses a WeatherCat
+                    # field that is a pressure. So step through each
+                    # WeatherCat pressure field.
+                    for field in WeatherCatSource._pressure_fields:
+                        for config in self.map.values():
+                            if config['source_field'] == field:
+                                config['unit'] = press_u
+                                # we only support one mapping per source field
+                                # so we can break and move to the next source
+                                # field
+                                break
+                else:
+                    # we either have an invalid or unknown unit setting, raise
+                    # an appropriate exception
+                    _msg = "Invalid or unknown units '%s' specified for WeatherCat " \
+                           "pressure fields in %s." % (press_u, self.import_config_path)
+                    raise weewx.UnitError(_msg)
+                # precipitation entries
+                # obtain the precipitation unit setting
+                precip_u = _unit_config.get('precipitation')
+                # do we have a non-None valid setting
+                if precip_u is not None and precip_u in ['inch', 'mm']:
+                    # We have a valid unit setting, we need to find and set the
+                    # unit used for each field map entry that uses a WeatherCat
+                    # field that is a precipitation. So step through each
+                    # WeatherCat precipitation field.
+                    for field in WeatherCatSource._precipitation_fields:
+                        for config in self.map.values():
+                            if config['source_field'] == field:
+                                config['unit'] = precip_u
+                                # we only support one mapping per source field
+                                # so we can break and move to the next source
+                                # field
+                                break
+                    # rain rate units are derived from the precipitation units by
+                    # simply appending '_per_hour'
+                    rate_u = ''.join([precip_u, '_per_hour'])
+                    for field in WeatherCatSource._precipitation_rate_fields:
+                        for config in self.map.values():
+                            if config['source_field'] == field:
+                                config['unit'] = rate_u
+                                break
+                else:
+                    # we either have an invalid or unknown unit setting, raise
+                    # an appropriate exception
+                    _msg = "Invalid or unknown units '%s' specified for WeatherCat " \
+                           "precipitation fields in %s." % (precip_u, self.import_config_path)
+                    raise weewx.UnitError(_msg)
+                # windspeed entries
+                # obtain the windspeed unit setting
+                wspeed_u = _unit_config.get('windspeed')
+                # do we have a non-None valid setting
+                if wspeed_u is not None and wspeed_u in ['km_per_hour', 'mile_per_hour',
+                                                         'knot', 'meter_per_second']:
+                    # We have a valid unit setting, we need to find and set the
+                    # unit used for each field map entry that uses a WeatherCat
+                    # field that is a windspeed. So step through each
+                    # WeatherCat windspeed field.
+                    for field in WeatherCatSource._windspeed_fields:
+                        for config in self.map.values():
+                            if config['source_field'] == field:
+                                config['unit'] = wspeed_u
+                                # we only support one mapping per source field
+                                # so we can break and move to the next source
+                                # field
+                                break
+                else:
+                    # we either have an invalid or unknown unit setting, raise
+                    # an appropriate exception
+                    _msg = "Invalid or unknown units '%s' specified for WeatherCat " \
+                           "windspeed fields in %s." % (wspeed_u, self.import_config_path)
+                    raise weewx.UnitError(_msg)
+            else:
+                raise weewx.UnitError("Invalid or incomplete [Units] config option.")
+        else:
+            # there is no Units config, we can't go on so raise an error
+            raise weewx.UnitError("No WeatherCat [Units] config found.")
 
         # property holding the current log file name being processed
         self.file_name = None
@@ -210,6 +384,9 @@ class WeatherCatSource(weeimport.Source):
             raise weeimport.WeeImportIOError(
                 "No WeatherCat monthly .cat files found in directory '%s'." % self.source)
 
+        # property holding dict of last seen values for cumulative observations
+        self.last_values = {}
+
         # tell the user/log what we intend to do
         _msg = "WeatherCat monthly .cat files in the '%s' directory " \
                "will be imported" % self.source
@@ -224,11 +401,11 @@ class WeatherCatSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        if args.date:
-            _msg = "     date=%s" % args.date
+        if options.date:
+            _msg = "     date=%s" % options.date
         else:
             # we must have --from and --to
-            _msg = "     from=%s, to=%s" % (args.date_from, args.date_to)
+            _msg = "     from=%s, to=%s" % (options.date_from, options.date_to)
         if self.verbose:
             print(_msg)
         log.debug(_msg)
@@ -257,20 +434,21 @@ class WeatherCatSource(weeimport.Source):
                                      unit_nicknames[self.archive_unit_sys])
         print(_msg)
         log.info(_msg)
+        self.print_map()
         if self.calc_missing:
             print("Missing derived observations will be calculated.")
         if not self.UV_sensor:
             print("All WeeWX UV fields will be set to None.")
         if not self.solar_sensor:
             print("All WeeWX radiation fields will be set to None.")
-        if args.date or args.date_from:
+        if options.date or options.date_from:
             print("Observations timestamped after %s and "
                   "up to and" % (timestamp_to_string(self.first_ts),))
             print("including %s will be imported." % (timestamp_to_string(self.last_ts),))
         if self.dry_run:
             print("This is a dry run, imported data will not be saved to archive.")
 
-    def getRawData(self, period):
+    def get_raw_data(self, period):
         """Get the raw data and create WeatherCat to WeeWX archive field map.
 
         Create a WeatherCat to WeeWX archive field map and instantiate a
@@ -295,8 +473,6 @@ class WeatherCatSource(weeimport.Source):
 
         # confirm the source exists
         if os.path.isfile(period):
-            # set WeatherCat to WeeWX archive field map
-            self.map = dict(self.default_header_map)
             # obtain year from the directory containing the monthly data file
             _year = os.path.basename(os.path.dirname(period))
             # obtain the month number from the monthly data filename, we need
@@ -332,7 +508,7 @@ class WeatherCatSource(weeimport.Source):
                             _ymt = ''.join([_year, _month, _row['t']])
                             try:
                                 _datetm = time.strptime(_ymt, "%Y%m%d%H%M")
-                                _row['dateTime'] = str(int(time.mktime(_datetm)))
+                                _row['datetime'] = str(int(time.mktime(_datetm)))
                             except ValueError:
                                 raise ValueError("Cannot convert '%s' to timestamp." % _ymt)
                         yield _row

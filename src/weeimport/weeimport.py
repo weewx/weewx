@@ -32,19 +32,12 @@ from weewx.units import unit_constants, unit_nicknames, convertStd, to_std_syste
 log = logging.getLogger(__name__)
 
 # List of sources we support
-SUPPORTED_SOURCES = ['CSV', 'WU', 'Cumulus', 'WD', 'WeatherCat']
-
-# Minimum requirements in any explicit or implicit WeeWX field-to-import field
-# map
-MINIMUM_MAP = {'dateTime': {'units': 'unix_epoch'},
-               'usUnits': {'units': None},
-               'interval': {'units': 'minute'}}
+SUPPORTED_SOURCES = ['CSV', 'WU', 'Cumulus', 'WD', 'WeatherCat', 'Ecowitt']
 
 
 # ============================================================================
 #                                Error Classes
 # ============================================================================
-
 
 class WeeImportOptionError(Exception):
     """Base class of exceptions thrown when encountering an error with a
@@ -79,10 +72,9 @@ class WeeImportDecodeError(Exception):
 #                                class Source
 # ============================================================================
 
-
 class Source(object):
-    """ Abstract base class used for interacting with an external data source
-        to import records into the WeeWX archive.
+    """Base class used for interacting with an external data source to import
+    records into the WeeWX archive.
 
     __init__() must define the following properties:
         dry_run             - Is this a dry run (ie do not save imported records
@@ -98,7 +90,7 @@ class Source(object):
                               ['config'|'derive'|x] where x is an integer.
 
     Child classes are used to interact with a specific source (eg CSV file,
-    WU). Any such child classes must define a getRawData() method which:
+    WU). Any such child classes must define a get_raw_data() method which:
         -   gets the raw observation data and returns an iterable yielding data
             dicts whose fields can be mapped to a WeeWX archive field
         -   defines an import data field-to-WeeWX archive field map (self.map)
@@ -116,7 +108,9 @@ class Source(object):
     # reg expression to match any HTML tag of the form <...>
     _tags = re.compile(r'\<.*\>')
 
-    def __init__(self, config_dict, import_config_dict, options):
+    special_processing_fields = ('dateTime', 'usUnits', 'interval')
+
+    def __init__(self, config_dict, import_config_dict, namespace):
         """A generic initialisation.
 
         Set some realistic default values for options read from the import
@@ -183,11 +177,11 @@ class Source(object):
             mm_dict = {}
         self.import_QC = weewx.qc.QC(mm_dict)
 
-        # Process our command line options
-        self.dry_run = options.dry_run
-        self.verbose = options.verbose
-        self.no_prompt = options.no_prompt
-        self.suppress = options.suppress
+        # process our command line options
+        self.dry_run = namespace.dry_run
+        self.verbose = namespace.verbose
+        self.no_prompt = namespace.no_prompt
+        self.suppress = namespace.suppress
 
         # By processing any --date, --from and --to options we need to derive
         # self.first_ts and self.last_ts; the earliest (exclusive) and latest
@@ -196,10 +190,10 @@ class Source(object):
         # for each import type).
         # First we see if we have a valid --date, if not then we look for
         # --from and --to.
-        if options.date or options.date == "":
+        if namespace.date or namespace.date == "":
             # there is a --date but is it valid
             try:
-                _first_dt = dt.strptime(options.date, "%Y-%m-%d")
+                _first_dt = dt.strptime(namespace.date, "%Y-%m-%d")
             except ValueError:
                 # Could not convert --date. If we have a --date it must be
                 # valid otherwise we can't continue so raise it.
@@ -210,15 +204,15 @@ class Source(object):
                 _last_dt = _first_dt + datetime.timedelta(days=1)
                 self.first_ts = time.mktime(_first_dt.timetuple())
                 self.last_ts = time.mktime(_last_dt.timetuple())
-        elif options.date_from or options.date_to or options.date_from == '' or options.date_to == '':
+        elif namespace.date_from or namespace.date_to or namespace.date_from == '' or namespace.date_to == '':
             # There is a --from and/or a --to, but do we have both and are
             # they valid.
             # try --from first
             try:
-                if 'T' in options.date_from:
-                    _from_dt = dt.strptime(options.date_from, "%Y-%m-%dT%H:%M")
+                if 'T' in namespace.date_from:
+                    _from_dt = dt.strptime(namespace.date_from, "%Y-%m-%dT%H:%M")
                 else:
-                    _from_dt = dt.strptime(options.date_from, "%Y-%m-%d")
+                    _from_dt = dt.strptime(namespace.date_from, "%Y-%m-%d")
                 _from_ts = time.mktime(_from_dt.timetuple())
             except TypeError:
                 # --from not specified we can't continue so raise it
@@ -230,10 +224,10 @@ class Source(object):
                 raise WeeImportOptionError(_msg)
             # try --to
             try:
-                if 'T' in options.date_to:
-                    _to_dt = dt.strptime(options.date_to, "%Y-%m-%dT%H:%M")
+                if 'T' in namespace.date_to:
+                    _to_dt = dt.strptime(namespace.date_to, "%Y-%m-%dT%H:%M")
                 else:
-                    _to_dt = dt.strptime(options.date_to, "%Y-%m-%d")
+                    _to_dt = dt.strptime(namespace.date_to, "%Y-%m-%d")
                     # since it is just a date we want the end of the day
                     _to_dt += datetime.timedelta(days=1)
                 _to_ts = time.mktime(_to_dt.timetuple())
@@ -288,7 +282,7 @@ class Source(object):
         self.period_duplicates = set()
 
     @staticmethod
-    def sourceFactory(args):
+    def source_factory(namespace):
         """Factory to produce a Source object.
 
         Returns an appropriate object depending on the source type. Raises a
@@ -297,11 +291,11 @@ class Source(object):
 
         # get some key WeeWX parameters
         # first the config dict to use
-        config_path, config_dict = weecfg.read_config(args.config_path, args)
+        config_path, config_dict = weecfg.read_config(namespace.config_option)
         # get wee_import config dict if it exists
         import_config_path, import_config_dict = weecfg.read_config(None,
-                                                                    args,
-                                                                    file_name=args.import_config_path)
+                                                                    None,
+                                                                    file_name=namespace.import_config_option)
         # we should have a source parameter at the root of out import config
         # file, try to get it but be prepared to catch the error.
         try:
@@ -326,7 +320,7 @@ class Source(object):
                                         config_path,
                                         import_config_dict.get(source, {}),
                                         import_config_path,
-                                        args)
+                                        namespace)
 
     def run(self):
         """Main entry point for importing from an external source.
@@ -372,7 +366,7 @@ class Source(object):
                     print(_msg)
                 log.info(_msg)
                 try:
-                    _raw_data = self.getRawData(period)
+                    _raw_data = self.get_raw_data(period)
                 except WeeImportIOError as e:
                     print("**** Unable to load source data for period %d." % self.period_no)
                     log.info("**** Unable to load source data for period %d." % self.period_no)
@@ -411,7 +405,7 @@ class Source(object):
                 if self.verbose:
                     print(_msg)
                 log.info(_msg)
-                _mapped_data = self.mapRawData(_raw_data, self.archive_unit_sys)
+                _mapped_data = self.map_raw_data(_raw_data, self.archive_unit_sys)
                 _msg = 'Raw import data mapped successfully for period %d.' % self.period_no
                 if self.verbose:
                     print(_msg)
@@ -424,7 +418,7 @@ class Source(object):
                     if self.verbose:
                         print(_msg)
                     log.info(_msg)
-                self.saveToArchive(archive, _mapped_data)
+                self.save_to_archive(archive, _mapped_data)
                 # advise the user and log, but only if it's not a dry run
                 if not self.dry_run:
                     _msg = 'Mapped data saved to archive successfully ' \
@@ -527,175 +521,171 @@ class Source(object):
                           "in the archive will not have been")
                     print("imported. Confirm successful import in the WeeWX log file.")
 
-    def parseMap(self, source_type, source, import_config_dict):
-        """Produce a source field-to-WeeWX archive field map.
+    def parse_map(self, map, field_map, field_map_extensions):
+        """Update a field map with a field map and/or field map extension.
 
-        Data from an external source can be mapped to the WeeWX archive using:
-        - a fixed field map (WU),
-        - a fixed field map with user specified source units (Cumulus), or
-        - a user defined field/units map.
-
-        All user defined mapping is specified in the import config file.
-
-        To generate the field map first look to see if we have a fixed map, if
-        we do validate it and return the resulting map. Otherwise, look for
-        user specified mapping in the import config file, construct the field
-        map and return it. If there is neither a fixed map nor a user specified
-        mapping then raise an error.
-
-        Input parameters:
-
-            source_type: String holding name of the section in
-                         import_config_dict that holds config details for the
-                         source being used.
-
-            source: Iterable holding the source data. Used if import field
-                    names are included in the source data (eg CSV).
-
-            import_config_dict: config dict from import config file.
-
-        Returns a map as a dictionary of elements with each element structured
-        as follows:
-
-            'archive_field_name': {'field_name': 'source_field_name',
-                                   'units': 'unit_name'}
-
-            where:
-
-                - archive_field_name is an observation name in the WeeWX
-                  database schema
-                - source_field_name is the name of a field from the external
-                  source
-                - unit_name is the WeeWX unit name of the units used by
-                  source_field_name
+        The user may alter the default field map in two ways: through use of a
+        new field map (defined in the [[FieldMap]] stanza) and/or a by altering an
+        existing field map with one or more field map extensions (defined in the
+        [[FieldMapExtensions]] stanza). If specified, the [[FieldMap]] stanza is
+        used as the base-line field map for the import (if it is not specified the
+        default field map is used as the base-line field map). The base-line field
+        map can be further altered using the [[FieldMapExtensions]] stanza.
         """
 
-        # start with the minimum map
-        _map = dict(MINIMUM_MAP)
+        # first of all get our baseline field map, it will be as defined in
+        # field_map (the [[FieldMap]] stanza) or if field_map has no entries it
+        # will be the default field map
+        if field_map is not None and len(field_map) > 0:
+            # We have a field_map, but is it a legacy CSV field map or a new common
+            # source field map. A legacy field map will consist of scalars only,
+            # whereas a new common source field map will be None (ie no field map)
+            # or it will have one or more sections.
+            if len(field_map.scalars) > 0:
+                # we likely have a legacy field map
+                _map = self.parse_legacy_field_map(field_map)
+            else:
+                # so use it
+                _map = dict(field_map)
+        else:
+            # we have no field map so use the default field map
+            _map = dict(map)
+        # obtain a list of source fields that will be mapped
+        _mapped_source_fields = [config['source_field'] for field, config in _map.items()]
+        # we may need to modify the baseline field map so make a working copy
+        _ext_map = dict(_map)
+        # iterate over any field map extension entries
+        for field, config in field_map_extensions.items():
+            # we can only map a given source field to a single WeeWX field, if a
+            # field map extension maps a source field that is already mapped then
+            # we need to remove the pre-existing mapping
+            if 'source_field' in config and config['source_field'] in _mapped_source_fields:
+                # we have a source field that is already mapped, so look through
+                # our existing field map to find it
+                for w, c in dict(_ext_map).items():
+                    if c['source_field'] == config['source_field']:
+                        # found it, so pop the map entry from our base line map
+                        _map.pop(w)
+                # add ur field map extension entry to our base line map
+                _map[field] = config
+        # return the finished field map
+        return _map
 
-        # Do the easy one first, do we have a fixed mapping, if so validate it
-        if self._header_map:
-            # We have a static map that maps header fields to WeeWX (eg WU).
-            # Our static map may have entries for fields that don't exist in our
-            # source data so step through each field name in our source data and
-            # only add those that exist to our resulting map.
+    def parse_legacy_field_map(self, field_map):
 
-            # first get a list of fields, source could be a DictReader object
-            # or a list of dicts, a DictReader will have a fieldnames property
-            try:
-                _field_names = source.fieldnames
-            except AttributeError:
-                # Not a DictReader so need to obtain the dict keys, could just
-                # pick a record and extract its keys but some records may have
-                # different keys to others. Use sets and a generator
-                # comprehension.
-                _field_names = set().union(*(list(d.keys()) for d in source))
-            # now iterate over the field names
-            for _key in _field_names:
-                # if we know about the field name add it to our map
-                if _key in self._header_map:
-                    _map[self._header_map[_key]['map_to']] = {'field_name': _key,
-                                                              'units': self._header_map[_key]['units']}
-        # Do we have a user specified map, if so construct our field map
-        elif 'FieldMap' in import_config_dict:
-            # we have a user specified map so construct our map dict
-            for _key, _item in import_config_dict['FieldMap'].items():
-                _entry = option_as_list(_item)
-                # expect 2 parameters for each option: source field, units
-                if len(_entry) == 2:
-                    # we have 2 parameter so that's field and units
-                    _map[_key] = {'field_name': _entry[0],
-                                  'units': _entry[1]}
-                # if the entry is not empty then it might be valid ie just a
-                # field name (eg if usUnits is specified)
-                elif _entry != [''] and len(_entry) == 1:
-                    # we have 1 parameter so it must be just name
-                    _map[_key] = {'field_name': _entry[0]}
-                else:
-                    # otherwise it's invalid so ignore it
-                    pass
+        _map = dict()
+        for _key, _item in field_map.items():
+            _entry = option_as_list(_item)
+            # expect 2 parameters for each option: source field, units
+            if len(_entry) == 2:
+                # we have 2 parameter so that's field and units
+                _map[_key] = {'source_field': _entry[0],
+                              'unit': _entry[1]}
+            # if the entry is not empty then it might be valid ie just a
+            # field name (eg if usUnits is specified)
+            elif _entry != [''] and len(_entry) == 1:
+                # we have 1 parameter so it must be just name
+                _map[_key] = {'source_field': _entry[0]}
+            else:
+                # otherwise it's invalid so ignore it
+                pass
 
-            # now do some crude error checking
+        # now do some crude error checking
 
-            # dateTime. We must have a dateTime mapping. Check for a
-            # 'field_name' field under 'dateTime' and be prepared to catch the
-            # error if it does not exist.
-            try:
-                if _map['dateTime']['field_name']:
-                    # we have a 'field_name' entry so continue
-                    pass
-                else:
-                    # something is wrong; we have a 'field_name' entry, but it
-                    # is not valid so raise an error
-                    _msg = "Invalid mapping specified in '%s' for " \
-                           "field 'dateTime'." % self.import_config_path
-                    raise WeeImportMapError(_msg)
-            except KeyError:
-                _msg = "No mapping specified in '%s' for field " \
-                       "'dateTime'." % self.import_config_path
+        # dateTime. We must have a dateTime mapping. Check for a
+        # 'field_name' field under 'dateTime' and be prepared to catch the
+        # error if it does not exist.
+        try:
+            if _map['dateTime']['source_field']:
+                # we have a 'source_field' entry so continue
+                pass
+            else:
+                # something is wrong; we have a 'source_field' entry, but it is not
+                # valid so raise an error
+                _msg = "Invalid legacy mapping specified in '%s' " \
+                       "for field 'dateTime'." % self.import_config_path
                 raise WeeImportMapError(_msg)
+        except KeyError:
+            _msg = "No legacy mapping specified in '%s' for " \
+                   "field 'dateTime'." % self.import_config_path
+            raise WeeImportMapError(_msg)
 
-            # usUnits. We don't have to have a mapping for usUnits but if we
-            # don't then we must have 'units' specified for each field mapping.
-            if 'usUnits' not in _map or _map['usUnits'].get('field_name') is None:
-                # no unit system mapping do we have units specified for
-                # each individual field
-                for _key, _val in _map.items():
-                    # we don't need to check dateTime and usUnits
-                    if _key not in ['dateTime', 'usUnits']:
-                        if 'units' in _val:
-                            # we have a units field, do we know about it
-                            if _val['units'] not in weewx.units.conversionDict \
-                                    and _val['units'] not in weewx.units.USUnits.values() \
-                                    and _val['units'] != 'text':
-                                # we have an invalid unit string so tell the
-                                # user and exit
-                                _msg = "Unknown units '%s' specified for " \
-                                       "field '%s' in %s." % (_val['units'],
-                                                              _key,
-                                                              self.import_config_path)
-                                raise weewx.UnitError(_msg)
-                        else:
-                            # we don't have a units field, that's not allowed
-                            # so raise an error
-                            _msg = "No units specified for source field " \
-                                   "'%s' in %s." % (_key,
-                                                    self.import_config_path)
-                            raise WeeImportMapError(_msg)
+        # usUnits. We don't have to have a mapping for usUnits but if we
+        # don't then we must have 'units' specified for each field mapping.
+        if 'usUnits' not in _map or _map['usUnits'].get('source_field') is None:
+            # no unit system mapping do we have units specified for
+            # each individual field
+            for _key, _val in _map.items():
+                # we don't need to check dateTime and usUnits
+                if _key not in ['dateTime', 'usUnits']:
+                    if 'unit' in _val:
+                        # we have a unit field, do we know about it
+                        if _val['unit'] not in weewx.units.conversionDict \
+                                and _val['unit'] not in weewx.units.USUnits.values() \
+                                and _val['unit'] != 'text':
+                            # we have an invalid unit string so tell the
+                            # user and exit
+                            _msg = "Unknown units '%s' specified for " \
+                                   "field '%s' in %s." % (_val['unit'],
+                                                          _key,
+                                                          self.import_config_path)
+                            raise weewx.UnitError(_msg)
+                    else:
+                        # we don't have a unit field, that's not allowed
+                        # so raise an error
+                        _msg = "No units specified for source field " \
+                               "'%s' in %s." % (_val['source_field'],
+                                                self.import_config_path)
+                        raise WeeImportMapError(_msg)
+        # if we got this far we have a usable map to return
+        return _map
 
-            # if we got this far we have a usable map, advise the user what we
-            # will use
-            _msg = "The following imported field-to-WeeWX field map will be used:"
+    def print_map(self):
+        """Display/log the field map.
+
+        Display and/or log the field map in use. The field map is only
+        displayed on the console if --verbose was used. the field map is always
+        logged.
+        """
+
+        _msg = "The following imported field-to-WeeWX field map will be used:"
+        if self.verbose:
+            print(_msg)
+        log.info(_msg)
+        # iterate over the field map entries
+        for weewx_field, source_field_config in self.map.items():
+            _unit_msg = ""
+            if 'unit' in source_field_config:
+                if source_field_config['unit'] == 'text':
+                    _unit_msg = " as text"
+                else:
+                    _unit_msg = " in units '%s'" % source_field_config['unit']
+            _msg = "     source field '%s'%s --> WeeWX field '%s'" % (source_field_config['source_field'],
+                                                                      _unit_msg,
+                                                                      weewx_field)
             if self.verbose:
                 print(_msg)
             log.info(_msg)
-            for _key, _val in _map.items():
-                if 'field_name' in _val:
-                    _units_msg = ""
-                    if 'units' in _val:
-                        if _val['units'] == 'text':
-                            _units_msg = " as text"
-                        else:
-                            _units_msg = " in units '%s'" % _val['units']
-                    _msg = "     source field '%s'%s --> WeeWX field '%s'" % (_val['field_name'],
-                                                                              _units_msg,
-                                                                              _key)
-                    if self.verbose:
-                        print(_msg)
-                    log.info(_msg)
-        else:
-            # no [[FieldMap]] stanza and no _header_map so raise an error as we
-            # don't know what to map
-            _msg = "No '%s' field map found in %s." % (source_type,
-                                                       self.import_config_path)
-            raise WeeImportMapError(_msg)
-        return _map
+            # display a message if the source field is marked as cumulative
+            if 'cumulative' in source_field_config and source_field_config['cumulative']:
+                _msg = ("       (source field '%s' will be treated as a cumulative "
+                        "value)" % source_field_config['source_field'])
+                if self.verbose:
+                    print(_msg)
+                log.info(_msg)
+            # we could have a legacy rain = cumulative option
+            elif weewx_field == 'rain' and hasattr(self, 'rain') and self.rain == 'cumulative':
+                _msg = ("       (WeeWX field '%s' will be calculated from "
+                        "a cumulative value)" % weewx_field)
+                if self.verbose:
+                    print(_msg)
+                log.info(_msg)
 
-    def mapRawData(self, data, unit_sys=weewx.US):
+    def map_raw_data(self, data, unit_sys=weewx.US):
         """Maps raw data to WeeWX archive record compatible dictionaries.
 
         Takes an iterable source of raw data observations, maps the fields of
-        each row to a list of WeeWX compatible archive records and performs any
+        each row to a WeeWX field based on the field map and performs any
         necessary unit conversion.
 
         Input parameters:
@@ -722,13 +712,13 @@ class Source(object):
             _rec = {}
             # first off process the fields that require special processing
             # dateTime
-            if 'field_name' in self.map['dateTime']:
+            if 'source_field' in self.map['dateTime']:
                 # we have a map for dateTime
                 try:
-                    _raw_dateTime = _row[self.map['dateTime']['field_name']]
+                    _raw_dateTime = _row[self.map['dateTime']['source_field']]
                 except KeyError:
                     _msg = "Field '%s' not found in source "\
-                           "data." % self.map['dateTime']['field_name']
+                           "data." % self.map['dateTime']['source_field']
                     raise WeeImportFieldError(_msg)
                 # now process the raw date time data
                 if isinstance(_raw_dateTime, numbers.Number) or _raw_dateTime.isdigit():
@@ -739,7 +729,7 @@ class Source(object):
                         _rec_dateTime = int(_raw_dateTime)
                     except ValueError:
                         _msg = "Invalid '%s' field. Cannot convert '%s' to " \
-                               "timestamp." % (self.map['dateTime']['field_name'],
+                               "timestamp." % (self.map['dateTime']['source_field'],
                                                _raw_dateTime)
                         raise ValueError(_msg)
                 else:
@@ -751,7 +741,7 @@ class Source(object):
                         _rec_dateTime = int(time.mktime(_datetm))
                     except ValueError:
                         _msg = "Invalid '%s' field. Cannot convert '%s' to " \
-                               "timestamp." % (self.map['dateTime']['field_name'],
+                               "timestamp." % (self.map['dateTime']['source_field'],
                                                _raw_dateTime)
                         raise ValueError(_msg)
                 # if we have a timeframe of concern does our record fall within
@@ -774,15 +764,15 @@ class Source(object):
                 raise ValueError("No mapping for WeeWX field 'dateTime'.")
             # usUnits
             _units = None
-            if 'field_name' in self.map['usUnits']:
+            if 'usUnits' in self.map.keys() and 'source_field' in self.map['usUnits']:
                 # we have a field map for a unit system
                 try:
                     # The mapped field is in _row so try to get the raw data.
                     # If it's not there then raise an error.
-                    _raw_units = int(_row[self.map['usUnits']['field_name']])
+                    _raw_units = int(_row[self.map['usUnits']['source_field']])
                 except KeyError:
                     _msg = "Field '%s' not found in "\
-                           "source data." % self.map['usUnits']['field_name']
+                           "source data." % self.map['usUnits']['source_field']
                     raise WeeImportFieldError(_msg)
                 # we have a value but is it valid
                 if _raw_units in unit_nicknames:
@@ -795,14 +785,14 @@ class Source(object):
                                                                     _raw_units)
                     raise weewx.UnitError(_msg)
             # interval
-            if 'field_name' in self.map['interval']:
+            if 'interval' in self.map.keys() and 'source_field' in self.map['interval']:
                 # We have a map for interval so try to get the raw data. If
                 # it's not there raise an error.
                 try:
-                    _tfield = _row[self.map['interval']['field_name']]
+                    _tfield = _row[self.map['interval']['source_field']]
                 except KeyError:
                     _msg = "Field '%s' not found in "\
-                           "source data." % self.map['interval']['field_name']
+                           "source data." % self.map['interval']['source_field']
                     raise WeeImportFieldError(_msg)
                 # now process the raw interval data
                 if _tfield is not None and _tfield != '':
@@ -810,21 +800,21 @@ class Source(object):
                         _rec['interval'] = int(_tfield)
                     except ValueError:
                         _msg = "Invalid '%s' field. Cannot convert '%s' to " \
-                               "an integer." % (self.map['interval']['field_name'],
+                               "an integer." % (self.map['interval']['source_field'],
                                                 _tfield)
                         raise ValueError(_msg)
                 else:
                     # if it happens to be None then raise an error
                     _msg = "Invalid value '%s' for mapped field '%s' at " \
                            "timestamp '%s'." % (_tfield,
-                                                self.map['interval']['field_name'],
+                                                self.map['interval']['source_field'],
                                                 timestamp_to_string(_rec['dateTime']))
                     raise ValueError(_msg)
             else:
                 # we have no mapping so calculate it, wrap in a try..except in
                 # case it cannot be calculated
                 try:
-                    _rec['interval'] = self.getInterval(_last_ts, _rec['dateTime'])
+                    _rec['interval'] = self.get_interval(_last_ts, _rec['dateTime'])
                 except WeeImportFieldError as e:
                     # We encountered a WeeImportFieldError, which means we
                     # cannot calculate the interval value, possibly because
@@ -839,38 +829,38 @@ class Source(object):
             # the fields that don't require special processing
             for _field in self.map:
                 # skip those that have had special processing
-                if _field in MINIMUM_MAP:
+                if _field in self.special_processing_fields:
                     continue
                 # process everything else
                 else:
                     # is our mapped field in the record
-                    if self.map[_field]['field_name'] in _row:
+                    if self.map[_field]['source_field'] in _row:
                         # yes it is
                         # first check to see if this is a text field
-                        if 'units' in self.map[_field] and self.map[_field]['units'] == 'text':
+                        if 'unit' in self.map[_field] and self.map[_field]['unit'] == 'text':
                             # we have a text field, so accept the field
                             # contents as is
-                            _rec[_field] = _row[self.map[_field]['field_name']]
+                            _rec[_field] = _row[self.map[_field]['source_field']]
                         else:
                             # we have a non-text field so try to get a value
                             # for the obs but if we can't, catch the error
                             try:
-                                _value = float(_row[self.map[_field]['field_name']].strip())
+                                _value = float(_row[self.map[_field]['source_field']].strip())
                             except AttributeError:
                                 # the data has no strip() attribute so chances
                                 # are it's a number already, or it could
                                 # (somehow ?) be None
-                                if _row[self.map[_field]['field_name']] is None:
+                                if _row[self.map[_field]['source_field']] is None:
                                     _value = None
                                 else:
                                     try:
-                                        _value = float(_row[self.map[_field]['field_name']])
+                                        _value = float(_row[self.map[_field]['source_field']])
                                     except TypeError:
                                         # somehow we have data that is not a
                                         # number or a string
                                         _msg = "%s: cannot convert '%s' to float at " \
                                                "timestamp '%s'." % (_field,
-                                                                    _row[self.map[_field]['field_name']],
+                                                                    _row[self.map[_field]['source_field']],
                                                                     timestamp_to_string(_rec['dateTime']))
                                         raise TypeError(_msg)
                             except ValueError:
@@ -888,7 +878,7 @@ class Source(object):
                                 # using float() again after replacing the
                                 # decimal seperator
                                 if self.decimal_sep is not None:
-                                    _data = _row[self.map[_field]['field_name']].replace(self.decimal_sep,
+                                    _data = _row[self.map[_field]['source_field']].replace(self.decimal_sep,
                                                                                          '.')
                                     try:
                                         _value = float(_data)
@@ -903,7 +893,7 @@ class Source(object):
                                 # can convert to degrees
 
                                 if _value is None and hasattr(self, 'wind_dir_map') and \
-                                        self.map[_field]['units'] == 'degree_compass':
+                                        self.map[_field]['unit'] == 'degree_compass':
                                     # we have a csv import and we are mapping
                                     # to a direction field, so try a cardinal
                                     # conversion
@@ -911,7 +901,7 @@ class Source(object):
                                     # first strip any whitespace and hyphens
                                     # from the data
                                     _stripped = re.sub(r'[\s-]+', '',
-                                                       _row[self.map[_field]['field_name']])
+                                                       _row[self.map[_field]['source_field']])
                                     # try to use the data as the key in a dict
                                     # mapping directions to degrees, if there
                                     # is no match we will have None returned
@@ -926,20 +916,22 @@ class Source(object):
                                 if _value is None and not self.ignore_invalid_data:
                                     _msg = "%s: cannot convert '%s' to float at " \
                                            "timestamp '%s'." % (_field,
-                                                                _row[self.map[_field]['field_name']],
+                                                                _row[self.map[_field]['source_field']],
                                                                 timestamp_to_string(_rec['dateTime']))
                                     raise ValueError(_msg)
 
                             # some fields need some special processing
 
-                            # rain - if our imported 'rain' field is cumulative
-                            # (self.rain == 'cumulative') then we need to calculate
-                            # the discrete rainfall for this archive period
-                            if _field == "rain":
-                                if self.rain == "cumulative":
-                                    _rain = self.getRain(_last_rain, _value)
-                                    _last_rain = _value
-                                    _value = _rain
+                            # data from cumulative fields needs special processing,
+                            # also required for the WeeWX 'rain' field where the
+                            # legacy 'rain = cumulative' option is used in the
+                            # import config file
+                            if ('cumulative' in self.map[_field] and self.map[_field]['cumulative']) \
+                                    or (_field == "rain" and getattr(self, 'rain', 'discrete') == "cumulative"):
+                                # we have a cumulative field, so process as such
+                                _value = self.process_cumulative(self.map[_field]['source_field'],
+                                                                 _value)
+
                             # wind - check any wind direction fields are within our
                             # bounds and convert to 0 to 360 range
                             elif _field == "windDir" or _field == "windGustDir":
@@ -965,7 +957,7 @@ class Source(object):
                             # check and ignore if required temperature and humidity
                             # values of 255.0 and greater
                             if self.ignore_extr_th \
-                                    and self.map[_field]['units'] in ['degree_C', 'degree_F', 'percent'] \
+                                    and self.map[_field]['unit'] in ['degree_C', 'degree_F', 'percent'] \
                                     and _value >= 255.0:
                                 _value = None
 
@@ -973,7 +965,7 @@ class Source(object):
                             # have to do field by field unit conversions
                             if _units is None:
                                 _vt = ValueTuple(_value,
-                                                 self.map[_field]['units'],
+                                                 self.map[_field]['unit'],
                                                  weewx.units.obs_group_dict[_field])
                                 _conv_vt = convertStd(_vt, unit_sys)
                                 _rec[_field] = _conv_vt.value
@@ -988,15 +980,15 @@ class Source(object):
                         _rec[_field] = None
                         # now warn the user about this field if we have not
                         # already done so
-                        if self.map[_field]['field_name'] not in _warned:
+                        if self.map[_field]['source_field'] not in _warned:
                             _msg = "Warning: Import field '%s' is mapped to WeeWX " \
-                                   "field '%s' but the" % (self.map[_field]['field_name'],
+                                   "field '%s' but the" % (self.map[_field]['source_field'],
                                                            _field)
                             if not self.suppress:
                                 print(_msg)
                             log.info(_msg)
                             _msg = "         import field '%s' could not be found " \
-                                   "in one or more records." % self.map[_field]['field_name']
+                                   "in one or more records." % self.map[_field]['source_field']
                             if not self.suppress:
                                 print(_msg)
                             log.info(_msg)
@@ -1006,7 +998,7 @@ class Source(object):
                                 print(_msg)
                             log.info(_msg)
                             # make sure we do this warning once only
-                            _warned.append(self.map[_field]['field_name'])
+                            _warned.append(self.map[_field]['source_field'])
             # if we have a mapped field for a unit system with a valid value,
             # then all we need do is set 'usUnits', bulk conversion is taken
             # care of by saveToArchive()
@@ -1092,7 +1084,7 @@ class Source(object):
             # we have no records to return so return None
             return None
 
-    def getInterval(self, last_ts, current_ts):
+    def get_interval(self, last_ts, current_ts):
         """Determine an interval value for a record.
 
         The interval field can be determined in one of the following ways:
@@ -1149,43 +1141,48 @@ class Source(object):
                    "setting in %s." % self.import_config_path
             raise ValueError(_msg)
 
-    @staticmethod
-    def getRain(last_rain, current_rain):
-        """Determine period rainfall from two cumulative rainfall values.
+    def process_cumulative(self, source_field, current_value):
+        """Determine a per-period obs value for a cumulative field.
 
-        If the data source provides rainfall as a cumulative value then the
-        rainfall in a period is the simple difference between the two values.
+        If the data source provides the obs value as a cumulative value then
+        the per-period value is the simple difference between the two values.
         But we need to take into account some special cases:
 
-        No last_rain value. Will occur for very first record or maybe in an
-                            error condition. Need to return 0.0.
-        last_rain > current_rain. Occurs when rain counter was reset (maybe
-                                  daily or some other period). Need to return
-                                  current_rain.
-        current_rain is None. Could occur if imported rainfall value could not
-                              be converted to a numeric and config option
-                              ignore_invalid_data is set.
+        No last value. Will occur for very first record or maybe in an error
+                       condition. Need to return 0.0.
+        last value > current value. Occurs when the cumulative value was reset
+                                    (maybe daily or some other period). Need to
+                                    return the current value.
+        current value is None. Could occur if the imported value could not be
+                               converted to a numeric and config option
+                               ignore_invalid_data is set.
 
         Input parameters:
 
-            last_rain. Previous rainfall total.
-            current_rain. Current rainfall total.
+            source_field. The source field containing the cumulative data
+            current_value. Current cumulative value.
 
-        Returns the rainfall in the period.
+        Returns the per-period value.
         """
 
-        if last_rain is not None:
+        if source_field in self.last_values and self.last_values[source_field] is not None:
             # we have a value for the previous period
-            if current_rain is not None and current_rain >= last_rain:
-                # just return the difference
-                return current_rain - last_rain
+            if current_value is not None and current_value >= self.last_values[source_field]:
+                # we just want the difference
+                result = current_value - self.last_values[source_field]
             else:
-                # we are at a cumulative reset point or we current_rain is None,
-                # either way we just want current_rain
-                return current_rain
+                # we are at a cumulative reset point or current_value is None,
+                # either way we just want the current_value
+                result = current_value
         else:
-            # we have no previous rain value so return zero
-            return 0.0
+            # we have not seen this source field before or if we have it's last
+            # value was None, so save the current value as the last value and
+            # return 0.0
+            result = 0.0
+        # set our last value to the current value
+        self.last_values[source_field] = current_value
+        # return the result
+        return result
 
     def qc(self, data_dict, data_type):
         """ Apply weewx.conf QC to a record.
@@ -1204,7 +1201,7 @@ class Source(object):
         if self.apply_qc:
             self.import_QC.apply_qc(data_dict, data_type=data_type)
 
-    def saveToArchive(self, archive, records):
+    def save_to_archive(self, archive, records):
         """ Save records to the WeeWX archive.
 
         Supports saving one or more records to archive. Each collection of
@@ -1347,7 +1344,6 @@ class Source(object):
 # ============================================================================
 #                             Utility functions
 # ============================================================================
-
 
 def get_binding(config_dict):
     """Get the binding for the WeeWX database."""

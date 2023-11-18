@@ -25,14 +25,10 @@ from weewx.units import unit_nicknames
 
 log = logging.getLogger(__name__)
 
-# Dict to lookup rainRate units given rain units
-rain_units_dict = {'inch': 'inch_per_hour', 'mm': 'mm_per_hour'}
-
 
 # ============================================================================
 #                             class CumulusSource
 # ============================================================================
-
 
 class CumulusSource(weeimport.Source):
     """Class to interact with a Cumulus generated monthly log files.
@@ -61,37 +57,103 @@ class CumulusSource(weeimport.Source):
                    'cur_dewpoint', 'avg_wind_speed', 'gust_wind_speed',
                    'avg_wind_bearing', 'cur_rain_rate', 'day_rain', 'cur_slp',
                    'rain_counter', 'curr_in_temp', 'cur_in_hum',
-                   'lastest_wind_gust', 'cur_windchill', 'cur_heatindex',
+                   'latest_wind_gust', 'cur_windchill', 'cur_heatindex',
                    'cur_uv', 'cur_solar', 'cur_et', 'annual_et',
                    'cur_app_temp', 'cur_tmax_solar', 'day_sunshine_hours',
                    'cur_wind_bearing', 'day_rain_rg11', 'midnight_rain']
-    # Dict to map all possible Cumulus field names (refer _field_list) to WeeWX
-    # archive field names and units.
-    _header_map = {'datetime': {'units': 'unix_epoch', 'map_to': 'dateTime'},
-                   'cur_out_temp': {'map_to': 'outTemp'},
-                   'curr_in_temp': {'map_to': 'inTemp'},
-                   'cur_dewpoint': {'map_to': 'dewpoint'},
-                   'cur_slp': {'map_to': 'barometer'},
-                   'avg_wind_bearing': {'units': 'degree_compass',
-                                        'map_to': 'windDir'},
-                   'avg_wind_speed': {'map_to': 'windSpeed'},
-                   'cur_heatindex': {'map_to': 'heatindex'},
-                   'gust_wind_speed': {'map_to': 'windGust'},
-                   'cur_windchill': {'map_to': 'windchill'},
-                   'cur_out_hum': {'units': 'percent', 'map_to': 'outHumidity'},
-                   'cur_in_hum': {'units': 'percent', 'map_to': 'inHumidity'},
-                   'midnight_rain': {'map_to': 'rain'},
-                   'cur_rain_rate': {'map_to': 'rainRate'},
-                   'cur_solar': {'units': 'watt_per_meter_squared',
-                                 'map_to': 'radiation'},
-                   'cur_uv': {'units': 'uv_index', 'map_to': 'UV'},
-                   'cur_app_temp': {'map_to': 'appTemp'}
-                   }
+    # tuple of fields using 'temperature' units
+    _temperature_fields = ('cur_out_temp', 'cur_dewpoint', 'curr_in_temp',
+                           'cur_windchill', 'cur_heatindex','cur_app_temp')
+    # tuple of fields using 'pressure' units
+    _pressure_fields = ('cur_slp', )
+    # tuple of fields using 'rain' units
+    _rain_fields = ('day_rain', 'cur_et', 'annual_et',
+                    'day_rain_rg11', 'midnight_rain')
+    # tuple of fields using 'rain rate' units
+    _rain_rate_fields = ('cur_rain_rate')
+    # tuple of fields using 'speed' units
+    _speed_fields = ('avg_wind_speed', 'gust_wind_speed', 'latest_wind_gust')
+    # dict to lookup rain rate units given rain units
+    rain_units_dict = {'inch': 'inch_per_hour', 'mm': 'mm_per_hour'}
+    # Dict containing default mapping of Cumulus fields (refer to _field_list)
+    # to WeeWX archive fields. The user may modify this mapping by including a
+    # [[FieldMap]] and/or a [[FieldMapExtensions]] stanza in the import config
+    # file.
+    default_map = {
+        'dateTime': {
+            'source_field': 'datetime',
+            'unit': 'unix_epoch',
+            'cumulative': False},
+        'outTemp': {
+            'source_field': 'cur_out_temp',
+            'unit': None,
+            'cumulative': False},
+        'inTemp': {
+            'source_field': 'cur_in_temp',
+            'unit': None,
+            'cumulative': False},
+        'outHumidity': {
+            'source_field': 'cur_out_hum',
+            'unit': 'percent',
+            'cumulative': False},
+        'inHumidity': {
+            'source_field': 'cur_in_hum',
+            'unit': 'percent',
+            'cumulative': False},
+        'dewpoint': {
+            'source_field': 'cur_dewpoint',
+            'unit': None,
+            'cumulative': False},
+        'heatindex': {
+            'source_field': 'cur_heatindex',
+            'unit': None,
+            'cumulative': False},
+        'windchill': {
+            'source_field': 'cur_windchill',
+            'unit': None,
+            'cumulative': False},
+        'appTemp': {
+            'source_field': 'cur_app_temp',
+            'unit': None,
+            'cumulative': False},
+        'barometer': {
+            'source_field': 'cur_slp',
+            'unit': None,
+            'cumulative': False},
+        'rain': {
+            'source_field': 'midnight_rain',
+            'unit': None,
+            'cumulative': True},
+        'rainRate': {
+            'source_field': 'cur_rain_rate',
+            'unit': None,
+            'cumulative': False},
+        'windSpeed': {
+            'source_field': 'avg_wind_speed',
+            'unit': None,
+            'cumulative': False},
+        'windDir': {
+            'source_field': 'avg_wind_bearing',
+            'unit': 'degree_compass',
+            'cumulative': False},
+        'windGust': {
+            'source_field': 'gust_wind_speed',
+            'unit': None,
+            'cumulative': False},
+        'radiation': {
+            'source_field': 'cur_solar',
+            'unit': 'watt_per_meter_squared',
+            'cumulative': False},
+        'UV': {
+            'source_field': 'cur_uv',
+            'unit': 'uv_index',
+            'cumulative': False}
+    }
 
-    def __init__(self, config_dict, config_path, cumulus_config_dict, import_config_path, args):
+    def __init__(self, config_dict, config_path, cumulus_config_dict, import_config_path, options):
 
         # call our parents __init__
-        super().__init__(config_dict, cumulus_config_dict, args)
+        super().__init__(config_dict, cumulus_config_dict, options)
 
         # save our import config path
         self.import_config_path = import_config_path
@@ -117,7 +179,12 @@ class CumulusSource(weeimport.Source):
         self.rain = 'cumulative'
 
         # initialise our import field-to-WeeWX archive field map
-        self.map = None
+        _map = dict(CumulusSource.default_map)
+        # create the final field map based on the default field map and any
+        # field map options provided by the user
+        self.map = self.parse_map(_map,
+                                  self.cumulus_config_dict.get('FieldMap', {}),
+                                  self.cumulus_config_dict.get('FieldMapExtensions', {}))
 
         # Cumulus log files have a number of 'rain' fields that can be used to
         # derive the WeeWX rain field. Which one is available depends on the
@@ -136,7 +203,7 @@ class CumulusSource(weeimport.Source):
         # missing unit data in the header map. Do some basic error checking and
         # validation, if one of the fields is missing or invalid then we need
         # to catch the error and raise it as we can't go on.
-        # Temperature
+        # temperature
         try:
             temp_u = cumulus_config_dict['Units'].get('temperature')
         except KeyError:
@@ -144,22 +211,21 @@ class CumulusSource(weeimport.Source):
                    "fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
-            # temperature units vary between unit systems so we can verify a
-            # valid temperature unit simply by checking for membership of
+            # temperature units vary between unit systems, so we can verify a
+            # valid temperature unit simply by checking its membership of
             # weewx.units.conversionDict keys
             if temp_u in weewx.units.conversionDict.keys():
-                self._header_map['cur_out_temp']['units'] = temp_u
-                self._header_map['curr_in_temp']['units'] = temp_u
-                self._header_map['cur_dewpoint']['units'] = temp_u
-                self._header_map['cur_heatindex']['units'] = temp_u
-                self._header_map['cur_windchill']['units'] = temp_u
-                self._header_map['cur_app_temp']['units'] = temp_u
+                for field in CumulusSource._temperature_fields:
+                    for config in self.map.values():
+                        if config['source_field'] == field:
+                            config['unit'] = temp_u
+                            break
             else:
                 _msg = "Unknown units '%s' specified for Cumulus " \
                        "temperature fields in %s." % (temp_u,
                                                       self.import_config_path)
                 raise weewx.UnitError(_msg)
-        # Pressure
+        # pressure
         try:
             press_u = cumulus_config_dict['Units'].get('pressure')
         except KeyError:
@@ -168,13 +234,17 @@ class CumulusSource(weeimport.Source):
             raise weewx.UnitError(_msg)
         else:
             if press_u in ['inHg', 'mbar', 'hPa']:
-                self._header_map['cur_slp']['units'] = press_u
+                for field in CumulusSource._pressure_fields:
+                    for config in self.map.values():
+                        if config['source_field'] == field:
+                            config['unit'] = press_u
+                            break
             else:
                 _msg = "Unknown units '%s' specified for Cumulus " \
                        "pressure fields in %s." % (press_u,
                                                    self.import_config_path)
                 raise weewx.UnitError(_msg)
-        # Rain
+        # rain
         try:
             rain_u = cumulus_config_dict['Units'].get('rain')
         except KeyError:
@@ -182,16 +252,23 @@ class CumulusSource(weeimport.Source):
                    "rain fields in %s." % (self.import_config_path, )
             raise weewx.UnitError(_msg)
         else:
-            if rain_u in rain_units_dict:
-                self._header_map['midnight_rain']['units'] = rain_u
-                self._header_map['cur_rain_rate']['units'] = rain_units_dict[rain_u]
-
+            if rain_u in CumulusSource.rain_units_dict:
+                for field in CumulusSource._rain_fields:
+                    for config in self.map.values():
+                        if config['source_field'] == field:
+                            config['unit'] = rain_u
+                            break
+                for field in CumulusSource._rain_rate_fields:
+                    for config in self.map.values():
+                        if config['source_field'] == field:
+                            config['unit'] = CumulusSource.rain_units_dict[rain_u]
+                            break
             else:
                 _msg = "Unknown units '%s' specified for Cumulus " \
                        "rain fields in %s." % (rain_u,
                                                self.import_config_path)
                 raise weewx.UnitError(_msg)
-        # Speed
+        # speed
         try:
             speed_u = cumulus_config_dict['Units'].get('speed')
         except KeyError:
@@ -203,8 +280,11 @@ class CumulusSource(weeimport.Source):
             # speed unit simply by checking for membership of
             # weewx.units.conversionDict keys
             if speed_u in weewx.units.conversionDict.keys():
-                self._header_map['avg_wind_speed']['units'] = speed_u
-                self._header_map['gust_wind_speed']['units'] = speed_u
+                for field in CumulusSource._speed_fields:
+                    for config in self.map.values():
+                        if config['source_field'] == field:
+                            config['unit'] = speed_u
+                            break
             else:
                 _msg = "Unknown units '%s' specified for Cumulus " \
                        "speed fields in %s." % (speed_u,
@@ -234,6 +314,9 @@ class CumulusSource(weeimport.Source):
             raise weeimport.WeeImportIOError(
                 "No Cumulus monthly logs found in directory '%s'." % self.source)
 
+        # property holding dict of last seen values for cumulative observations
+        self.last_values = {}
+
         # tell the user/log what we intend to do
         _msg = "Cumulus monthly log files in the '%s' directory will be imported" % self.source
         print(_msg)
@@ -247,11 +330,11 @@ class CumulusSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        if args.date:
-            _msg = "     date=%s" % args.date
+        if options.date:
+            _msg = "     date=%s" % options.date
         else:
             # we must have --from and --to
-            _msg = "     from=%s, to=%s" % (args.date_from, args.date_to)
+            _msg = "     from=%s, to=%s" % (options.date_from, options.date_to)
         if self.verbose:
             print(_msg)
         log.debug(_msg)
@@ -282,20 +365,21 @@ class CumulusSource(weeimport.Source):
                                      unit_nicknames[self.archive_unit_sys])
         print(_msg)
         log.info(_msg)
+        self.print_map()
         if self.calc_missing:
             print("Missing derived observations will be calculated.")
         if not self.UV_sensor:
             print("All WeeWX UV fields will be set to None.")
         if not self.solar_sensor:
             print("All WeeWX radiation fields will be set to None.")
-        if args.date or args.date_from:
+        if options.date or options.date_from:
             print("Observations timestamped after %s and "
                   "up to and" % timestamp_to_string(self.first_ts))
             print("including %s will be imported." % timestamp_to_string(self.last_ts))
         if self.dry_run:
             print("This is a dry run, imported data will not be saved to archive.")
 
-    def getRawData(self, period):
+    def get_raw_data(self, period):
         """Get raw observation data and construct a map from Cumulus monthly
             log fields to WeeWX archive fields.
 
@@ -365,8 +449,6 @@ class CumulusSource(weeimport.Source):
         # Now create a dictionary CSV reader
         _reader = csv.DictReader(_clean_data, fieldnames=self._field_list,
                                  delimiter=self.delimiter)
-        # Finally, get our database-source mapping
-        self.map = self.parseMap('Cumulus', _reader, self.cumulus_config_dict)
         # Return our dict reader
         return _reader
 
@@ -415,17 +497,15 @@ class CumulusSource(weeimport.Source):
             pass
         elif _row['day_rain'] is not None:
             # we have data in day_rain so use that as our rain source
-            self._header_map['day_rain'] = self._header_map['midnight_rain']
-            del self._header_map['midnight_rain']
+            self.map['rain']['source'] = 'day_rain'
         elif _row['rain_counter'] is not None:
             # we have data in rain_counter so use that as our rain source
-            self._header_map['rain_counter'] = self._header_map['midnight_rain']
-            del self._header_map['midnight_rain']
+            self.map['rain']['source'] = 'rain_counter'
         else:
             # We should never end up in this state but....
             # We have no suitable rain source so we can't import so remove the
             # rain field entry from the header map.
-            del self._header_map['midnight_rain']
+            del self.map['rain']
         # we only need to do this once so set our flag to True
         self.rain_source_confirmed = True
         return

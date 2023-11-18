@@ -5,9 +5,7 @@
 #    See the file LICENSE.txt for your full rights.
 #
 
-"""Module to interact with a CSV file and import raw observational data for
-use with wee_import.
-"""
+"""Module to process a CSV data file and for import by wee_import."""
 
 # Python imports
 import csv
@@ -30,7 +28,6 @@ log = logging.getLogger(__name__)
 #                             class CSVSource
 # ============================================================================
 
-
 class CSVSource(weeimport.Source):
     """Class to interact with a CSV format text file.
 
@@ -39,8 +36,9 @@ class CSVSource(weeimport.Source):
     """
 
     # Define a dict to map CSV fields to WeeWX archive fields. For a CSV import
-    # these details are specified by the user in the wee_import config file.
-    _header_map = None
+    # the default map is empty as the field map is specified by the user in the
+    # wee_import config file.
+    default_map = {}
     # define a dict to map cardinal, intercardinal and secondary intercardinal
     # directions to degrees
     wind_dir_map = {'N': 0.0, 'NNE': 22.5, 'NE': 45.0, 'ENE': 67.5,
@@ -57,10 +55,11 @@ class CSVSource(weeimport.Source):
                     'NORTHWEST': 315.0, 'NORTHNORTHWEST': 337.5
                     }
 
-    def __init__(self, config_dict, config_path, csv_config_dict, import_config_path, args):
+    def __init__(self, config_dict, config_path, csv_config_dict,
+                 import_config_path, options):
 
         # call our parents __init__
-        super().__init__(config_dict, csv_config_dict, args)
+        super().__init__(config_dict, csv_config_dict, options)
 
         # save our import config path
         self.import_config_path = import_config_path
@@ -73,8 +72,17 @@ class CSVSource(weeimport.Source):
         # string format used to decode the imported field holding our dateTime
         self.raw_datetime_format = self.csv_config_dict.get('raw_datetime_format',
                                                             '%Y-%m-%d %H:%M:%S')
-        # is our rain discrete or cumulative
-        self.rain = self.csv_config_dict.get('rain', 'cumulative')
+        # Is our rain discrete or cumulative. Legacy import config files used
+        # the 'rain' config option to determine whether the imported rainfall
+        # value was a discrete per period value or a cumulative value. This is
+        # now handled on a per-field basis through the field map; however, we
+        # need to be able to support old import config files that use the
+        # legacy rain config option.
+        _rain = self.csv_config_dict.get('rain')
+        # set our rain property only if the rain config option was explicitly
+        # set
+        if _rain is not None:
+            self.rain = _rain
         # determine valid range for imported wind direction
         _wind_direction = option_as_list(self.csv_config_dict.get('wind_direction',
                                                                   '0,360'))
@@ -96,11 +104,19 @@ class CSVSource(weeimport.Source):
         self.source_encoding = self.csv_config_dict.get('source_encoding',
                                                         'utf-8-sig')
         # initialise our import field-to-WeeWX archive field map
-        self.map = None
+        _map = dict(CSVSource.default_map)
+        # create the final field map based on the default field map and any
+        # field map options provided by the user
+        self.map = self.parse_map(_map,
+                                  self.csv_config_dict.get('FieldMap', {}),
+                                  self.csv_config_dict.get('FieldMapExtensions', {}))
         # initialise some other properties we will need
         self.start = 1
         self.end = 1
         self.increment = 1
+
+        # property holding dict of last seen values for cumulative observations
+        self.last_values = {}
 
         # tell the user/log what we intend to do
         _msg = "A CSV import from source file '%s' has been requested." % self.source
@@ -115,13 +131,13 @@ class CSVSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        if args.date:
-            _msg = "     source=%s, date=%s" % (self.source, args.date)
+        if options.date:
+            _msg = "     source=%s, date=%s" % (self.source, options.date)
         else:
             # we must have --from and --to
             _msg = "     source=%s, from=%s, to=%s" % (self.source,
-                                                       args.date_from,
-                                                       args.date_to)
+                                                       options.date_from,
+                                                       options.date_to)
         if self.verbose:
             print(_msg)
         log.debug(_msg)
@@ -139,9 +155,13 @@ class CSVSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        _msg = "     delimiter='%s', rain=%s, wind_direction=%s" % (self.delimiter,
-                                                                    self.rain,
-                                                                    self.wind_dir)
+        if hasattr(self, 'rain'):
+            _msg = "     delimiter='%s', rain=%s, wind_direction=%s" % (self.delimiter,
+                                                                        self.rain,
+                                                                        self.wind_dir)
+        else:
+            _msg = "     delimiter='%s', wind_direction=%s" % (self.delimiter,
+                                                               self.wind_dir)
         if self.verbose:
             print(_msg)
         log.debug(_msg)
@@ -160,6 +180,7 @@ class CSVSource(weeimport.Source):
                                      unit_nicknames[self.archive_unit_sys])
         print(_msg)
         log.info(_msg)
+        self.print_map()
         if self.calc_missing:
             _msg = "Missing derived observations will be calculated."
             print(_msg)
@@ -173,7 +194,7 @@ class CSVSource(weeimport.Source):
             _msg = "All WeeWX radiation fields will be set to None."
             print(_msg)
             log.info(_msg)
-        if args.date or args.date_from:
+        if options.date or options.date_from:
             _msg = "Observations timestamped after %s and " \
                    "up to and" % timestamp_to_string(self.first_ts)
             print(_msg)
@@ -186,7 +207,7 @@ class CSVSource(weeimport.Source):
             print(_msg)
             log.info(_msg)
 
-    def getRawData(self, period):
+    def get_raw_data(self, period):
         """Obtain an iterable containing the raw data to be imported.
 
         Raw data is read and any clean-up/pre-processing carried out before the
@@ -212,8 +233,8 @@ class CSVSource(weeimport.Source):
                 raise weeimport.WeeImportDecodeError(e)
         else:
             # if it doesn't we can't go on so raise it
-            raise weeimport.WeeImportIOError(
-                "CSV source file '%s' could not be found." % self.source)
+            raise weeimport.WeeImportIOError("CSV source file '%s' could " \
+                                             "not be found." % self.source)
 
         # just in case the data has been sourced from the web we will remove
         # any HTML tags and blank lines that may exist
@@ -235,9 +256,6 @@ class CSVSource(weeimport.Source):
 
         # create a dictionary CSV reader, using the first line as the set of keys
         _csv_reader = csv.DictReader(_clean_data, delimiter=self.delimiter)
-
-        # finally, get our source-to-database mapping
-        self.map = self.parseMap('CSV', _csv_reader, self.csv_config_dict)
 
         # return our CSV dict reader
         return _csv_reader
