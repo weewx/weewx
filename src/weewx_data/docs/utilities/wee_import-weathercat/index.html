@@ -1,0 +1,2720 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="Tom Keffer <tkeffer@gmail.com>">
+      
+      
+        <link rel="canonical" href="https://www.weewx.com/utilities/wee_import-weathercat/">
+      
+      <link rel="icon" href="../../images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-8.5.10">
+    
+    
+      
+        <title>WeatherCat - WeeWX 5.0</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.975780f9.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.2505c338.min.css">
+        
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CInconsolata+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Inconsolata Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../css/weewx_ui.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="white">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#mapping-data-to-archive-fields" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="WeeWX 5.0" class="md-header__button md-logo" aria-label="WeeWX 5.0" data-md-component="logo">
+      
+  <img src="../../images/logo-weewx.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            WeeWX 5.0
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              WeatherCat
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          
+          
+          <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="white"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4zM7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+            </label>
+          
+        
+          
+          
+          
+          <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3Z"/></svg>
+            </label>
+          
+        
+      </form>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="WeeWX 5.0" class="md-nav__button md-logo" aria-label="WeeWX 5.0" data-md-component="logo">
+      
+  <img src="../../images/logo-weewx.png" alt="logo">
+
+    </a>
+    WeeWX 5.0
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_2">
+          Quick start
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Quick start" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Quick start
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstarts/debian/" class="md-nav__link">
+        Debian
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstarts/redhat/" class="md-nav__link">
+        RedHat
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstarts/suse/" class="md-nav__link">
+        SuSE
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstarts/pip/" class="md-nav__link">
+        pip
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quickstarts/git/" class="md-nav__link">
+        git
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_3">
+          User's guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="User's guide" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          User's guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/installing/" class="md-nav__link">
+        Installing WeeWX
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/where/" class="md-nav__link">
+        Where to find things
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/running/" class="md-nav__link">
+        Running WeeWX
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/webserver/" class="md-nav__link">
+        Web server integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/backup/" class="md-nav__link">
+        Backup & restore
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/mysql-mariadb/" class="md-nav__link">
+        MySQL/MariaDB
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_8" type="checkbox" id="__nav_3_8" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_3_8">
+          Troubleshooting
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Troubleshooting" data-md-level="2">
+        <label class="md-nav__title" for="__nav_3_8">
+          <span class="md-nav__icon md-icon"></span>
+          Troubleshooting
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/troubleshooting/what-to-do/" class="md-nav__link">
+        What to do
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/troubleshooting/hardware/" class="md-nav__link">
+        Hardware problems
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/troubleshooting/software/" class="md-nav__link">
+        Software problems
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../usersguide/troubleshooting/meteo/" class="md-nav__link">
+        Meteorological problems
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_4">
+          Customization guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Customization guide" data-md-level="1">
+        <label class="md-nav__title" for="__nav_4">
+          <span class="md-nav__icon md-icon"></span>
+          Customization guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom/custom-reports/" class="md-nav__link">
+        Customizing reports
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom/report-scheduling/" class="md-nav__link">
+        Scheduling reports
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom/cheetah-generator/" class="md-nav__link">
+        The Cheetah generator
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom/image-generator/" class="md-nav__link">
+        The Image generator
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom/localization/" class="md-nav__link">
+        Localization
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom/database/" class="md-nav__link">
+        Customizing the database
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom/units/" class="md-nav__link">
+        Customizing units
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom/multiple-bindings/" class="md-nav__link">
+        Multiple data bindings
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom/sle/" class="md-nav__link">
+        Search lists
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom/service-engine/" class="md-nav__link">
+        Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom/derived/" class="md-nav__link">
+        Derived types
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom/drivers/" class="md-nav__link">
+        Drivers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../custom/extensions/" class="md-nav__link">
+        Extensions
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" checked>
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_5">
+          Utilities guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Utilities guide" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Utilities guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../weewxd/" class="md-nav__link">
+        weewxd
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_2" type="checkbox" id="__nav_5_2" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_5_2">
+          weectl
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="weectl" data-md-level="2">
+        <label class="md-nav__title" for="__nav_5_2">
+          <span class="md-nav__icon md-icon"></span>
+          weectl
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../weectl-about/" class="md-nav__link">
+        weectl
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../weectl-database/" class="md-nav__link">
+        weectl database
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../weectl-debug/" class="md-nav__link">
+        weectl debug
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../weectl-device/" class="md-nav__link">
+        weectl device
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../weectl-extension/" class="md-nav__link">
+        weectl extension
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../weectl-station/" class="md-nav__link">
+        weectl station
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5_3" type="checkbox" id="__nav_5_3" checked>
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_5_3">
+          wee_import
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="wee_import" data-md-level="2">
+        <label class="md-nav__title" for="__nav_5_3">
+          <span class="md-nav__icon md-icon"></span>
+          wee_import
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wee_import-about/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wee_import-common_opt/" class="md-nav__link">
+        Common options
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wee_import-config_opt/" class="md-nav__link">
+        Configuration options
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wee_import-csv/" class="md-nav__link">
+        CSV
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wee_import-wu/" class="md-nav__link">
+        Weather Underground
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wee_import-cumulus/" class="md-nav__link">
+        Cumulus
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wee_import-wd/" class="md-nav__link">
+        Weather Display
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          WeatherCat
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        WeatherCat
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#mapping-data-to-archive-fields" class="md-nav__link">
+    Mapping data to archive fields
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-by-step-instructions" class="md-nav__link">
+    Step-by-step instructions
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wee_import-troubleshoot/" class="md-nav__link">
+        Troubleshooting
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../wee_reports/" class="md-nav__link">
+        wee_reports
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_6">
+          Hardware guide
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Hardware guide" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          Hardware guide
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/drivers/" class="md-nav__link">
+        Drivers
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/acurite/" class="md-nav__link">
+        AcuRite
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/cc3000/" class="md-nav__link">
+        CC3000
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/fousb/" class="md-nav__link">
+        FineOffset
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/te923/" class="md-nav__link">
+        TE923
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/ultimeter/" class="md-nav__link">
+        Ultimeter
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/vantage/" class="md-nav__link">
+        Vantage
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/wmr100/" class="md-nav__link">
+        WMR100
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/wmr300/" class="md-nav__link">
+        WMR300
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/wmr9x8/" class="md-nav__link">
+        WMR9x8
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/ws1/" class="md-nav__link">
+        WS1
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/ws23xx/" class="md-nav__link">
+        WS23xx
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/ws28xx/" class="md-nav__link">
+        WS28xx
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../upgrade/" class="md-nav__link">
+        Upgrade guide
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8">
+          Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_8">
+          <span class="md-nav__icon md-icon"></span>
+          Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8_1" type="checkbox" id="__nav_8_1" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8_1">
+          Application options
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Application options" data-md-level="2">
+        <label class="md-nav__title" for="__nav_8_1">
+          <span class="md-nav__icon md-icon"></span>
+          Application options
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/general/" class="md-nav__link">
+        General options
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stations/" class="md-nav__link">
+        [Station]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stdrestful/" class="md-nav__link">
+        [StdRESTful]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stdreport/" class="md-nav__link">
+        [StdReport]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stdconvert/" class="md-nav__link">
+        [StdConvert]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stdcalibrate/" class="md-nav__link">
+        [StdCalibrate]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stdqc/" class="md-nav__link">
+        [StdQC]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stdwxcalculate/" class="md-nav__link">
+        [StdWXCalculate]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stdarchive/" class="md-nav__link">
+        [StdArchive]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/stdtimesynch/" class="md-nav__link">
+        [StdTimeSynch]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/data-bindings/" class="md-nav__link">
+        [DataBindings]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/databases/" class="md-nav__link">
+        [Databases]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/database-types/" class="md-nav__link">
+        [DatabaseTypes]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/weewx-options/engine/" class="md-nav__link">
+        [Engine]
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8_2" type="checkbox" id="__nav_8_2" >
+      
+      
+      
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      
+        <label class="md-nav__link" for="__nav_8_2">
+          Skin options
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Skin options" data-md-level="2">
+        <label class="md-nav__title" for="__nav_8_2">
+          <span class="md-nav__icon md-icon"></span>
+          Skin options
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/introduction/" class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/extras/" class="md-nav__link">
+        [Extras]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/labels/" class="md-nav__link">
+        [Labels]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/almanac/" class="md-nav__link">
+        [Almanac]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/units/" class="md-nav__link">
+        [Units]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/texts/" class="md-nav__link">
+        [Texts]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/cheetahgenerator/" class="md-nav__link">
+        [CheetahGenerator]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/imagegenerator/" class="md-nav__link">
+        [ImageGenerator]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/copygenerator/" class="md-nav__link">
+        [CopyGenerator]
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/skin-options/generators/" class="md-nav__link">
+        [Generators]
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/aggtypes/" class="md-nav__link">
+        Aggregation types
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/durations/" class="md-nav__link">
+        Durations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/units/" class="md-nav__link">
+        Units
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/valuetuple/" class="md-nav__link">
+        ValueTuple
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/valuehelper/" class="md-nav__link">
+        ValueHelper
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../devnotes/" class="md-nav__link">
+        Notes for developers
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changes/" class="md-nav__link">
+        Change log
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#mapping-data-to-archive-fields" class="md-nav__link">
+    Mapping data to archive fields
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-by-step-instructions" class="md-nav__link">
+    Step-by-step instructions
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  <h1>WeatherCat</h1>
+
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Running WeeWX during a <code>wee_import</code> session can lead to abnormal termination of the import. If WeeWX must remain running (e.g., so that live data is not lost) run the <code>wee_import</code> session on another machine or to a second database and merge the in-use and second database once the import is complete.</p>
+</div>
+<p><code>wee_import</code> can import observational data from the one or more WeatherCat monthly .cat files. A WeatherCat monthly .cat file records weather station observations for a single month. These files are accumulated over time and can be considered analogous to the WeeWX archive table. When <code>wee_import</code> imports data from the WeatherCat monthly .cat files each file is considered a 'period'. <code>wee_import</code> processes one period at a time in chronological order (oldest to newest) and provides import summary data on a per period basis.</p>
+<h2 id="mapping-data-to-archive-fields">Mapping data to archive fields<a class="headerlink" href="#mapping-data-to-archive-fields" title="Permanent link">&para;</a></h2>
+<p>A WeatherCat import will populate the WeeWX archive fields as follows:</p></p>
+<ul>
+<li>
+<p>Provided data exists for each field in the WeatherCat monthly .cat files, the following WeeWX archive fields will be directly populated by imported data:</p>
+<ul>
+<li><code>dateTime</code></li>
+<li><code>barometer</code></li>
+<li><code>dewpoint</code></li>
+<li><code>heatindex</code></li>
+<li><code>inHumidity</code></li>
+<li><code>inTemp</code></li>
+<li><code>outHumidity</code></li>
+<li><code>outTemp</code></li>
+<li><code>radiation</code></li>
+<li><code>rain</code></li>
+<li><code>rainRate</code></li>
+<li><code>UV</code></li>
+<li><code>windDir</code></li>
+<li><code>windGust</code></li>
+<li><code>windSpeed</code></li>
+<li><code>windchill</code></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If a field in the WeatherCat monthly .cat file has no data the corresponding WeeWX archive field will be set to <code>None/null</code>.</p>
+</div>
+</li>
+<li>
+<p>The following WeeWX archive fields will be populated from other settings or configuration options:</p>
+<ul>
+<li><code>interval</code></li>
+<li><code>usUnits</code></li>
+</ul>
+</li>
+<li>
+<p>The following WeeWX archive fields will be populated with values derived from the imported data provided <code>calc_missing = True</code> is included in the <code>[WeatherCat]</code> section of the import configuration file being used and the field exists in the in-use WeeWX archive table schema:</p>
+<ul>
+<li><code>altimeter</code></li>
+<li><code>ET</code></li>
+<li><code>pressure</code></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code>calc_missing = False</code> is included in the <code>[WeatherCat]</code> section of the import configuration file being used then all of the above fields will be set to <code>None/null</code>. The <code>calc_missing</code> option default is <code>True</code>.</p>
+</div>
+</li>
+</ul>
+<h2 id="step-by-step-instructions">Step-by-step instructions<a class="headerlink" href="#step-by-step-instructions" title="Permanent link">&para;</a></h2>
+<p>To import observations from one or more WeatherCat monthly .cat files:</p>
+<ol>
+<li>
+<p>Ensure the WeatherCat monthly .cat file(s) to be used for the import are located in year directories with the year directories in turn located in a directory accessible by the machine that will run <code>wee_import</code>. For the purposes of the following examples, there are nine monthly logs files covering the period October 2016 to June 2017 inclusive, located in the <code>/var/tmp/wcat/2016</code> and <code>/var/tmp/wcat/2017</code> directories respectively.</p>
+</li>
+<li>
+<p>Make a backup of the WeeWX database in case the import should go awry.</p>
+</li>
+<li>
+<p>Create an import configuration file. In this case we will make a copy of the example WeatherCat import configuration file and save it as <code>wcat.conf</code> in the <code>/var/tmp</code> directory:</p>
+<div class="highlight"><pre><span></span><code>$ cp /home/weewx/util/import/weathercat-example.conf /var/tmp/wcat.conf
+</code></pre></div>
+</li>
+<li>
+<p>Confirm that the <a href="../wee_import-config#import_config_source"><code>source</code></a> option is set to <code>WeatherCat</code>:</p>
+<div class="highlight"><pre><span></span><code>source = WeatherCat
+</code></pre></div>
+</li>
+<li>
+<p>Confirm the following options in the <code>[WeatherCat]</code> section are correctly set:</p>
+<ul>
+<li>
+<p><a href="../wee_import-config#wcat_directory">directory</a>. The full path to the directory containing the directories containing the WeatherCat monthly .cat files to be used as the source of the imported data.</p>
+</li>
+<li>
+<p><a href="../wee_import-config#wcat_interval">interval</a>. Determines how the WeeWX interval field is derived.</p>
+</li>
+<li>
+<p><a href="../wee_import-config#wcat_qc">qc</a>. Determines whether quality control checks are performed on the imported data.</p>
+</li>
+<li>
+<p><a href="../wee_import-config#wcat_calc_missing">calc_missing</a>. Determines whether missing derived observations will be calculated from the imported data.</p>
+</li>
+<li>
+<p><a href="../wee_import-config#wcat_decimal">decimal</a>. The decimal point character used in the WeatherCat monthly log files.</p>
+</li>
+<li>
+<p><a href="../wee_import-config#wcat_tranche">tranche</a>. The number of records written to the WeeWX database in each transaction.</p>
+</li>
+<li>
+<p><a href="../wee_import-config#wcat_UV">UV_sensor</a>. Whether a UV sensor was installed when the source data was produced.</p>
+</li>
+<li>
+<p><a href="../wee_import-config#wcat_solar">solar_sensor</a>. Whether a solar radiation sensor was installed when the source data was produced.</p>
+</li>
+<li>
+<p><a href="../wee_import-config#wcat_units">[[Units]]</a>. Defines the units used in the WeatherCat monthly .cat files.</p>
+</li>
+</ul>
+</li>
+<li>
+<p>When first importing data it is prudent to do a dry run import before any data is actually imported. A
+dry run import will perform all steps of the import without actually writing imported data to the WeeWX
+database. In addition, consideration should be given to any additional options to be used such as <code>--date</code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Whilst WeatherCat monthly .cat files use a fixed set of fields the inclusion of fields other than <code>t</code> (timestamp) and <code>V</code> (validation) is optional. For this reason the field map used for WeatherCat imports includes fields that may not exist in some WeatherCat monthly .cat files resulting in warnings by <code>wee_import</code> that there may be missing data in the import source. These warnings can be extensive and may detract from the ability of the user to monitor the progress of the import. It may be prudent to use the <code>--suppress-warnings</code> option during the initial dry run so the overall progress of the import can be more easily observed.</p>
+</div>
+<p>To perform a dry run enter the following command:</p>
+<div class="highlight"><pre><span></span><code>wee_import --import-config=/var/tmp/wcat.conf --dry-run --suppress-warnings
+</code></pre></div>
+<p>This will result in a short preamble with details on the data source, the destination of the imported data and some other details on how the data will be processed. The import will then be performed but no data will be written to the WeeWX database.</p>
+<p>The output should be similar to:</p>
+<div class="highlight"><pre><span></span><code>Using WeeWX configuration file /home/weewx/weewx.conf
+Starting wee_import...
+WeatherCat monthly .cat files in the &#39;/var/tmp/wcat&#39; directory will be imported
+Using database binding &#39;wx_binding&#39;, which is bound to database &#39;weewx.sdb&#39;
+Destination table &#39;archive&#39; unit system is &#39;0x01&#39; (US).
+Missing derived observations will be calculated.
+This is a dry run, imported data will not be saved to archive.
+Starting dry run import ...
+Records covering multiple periods have been identified for import.
+Period 1 ...
+Unique records processed: 39555; Last timestamp: 2016-10-31 23:59:00 AEST (1477922340)
+Period 2 ...
+Unique records processed: 38284; Last timestamp: 2016-11-30 23:59:00 AEST (1480514340)
+Period 3 ...
+Unique records processed: 39555; Last timestamp: 2016-12-31 23:59:00 AEST (1483192740)
+Period 4 ...
+Unique records processed: 39555; Last timestamp: 2017-01-31 23:59:00 AEST (1485871140)
+Period 5 ...
+Unique records processed: 35598; Last timestamp: 2017-02-28 23:59:00 AEST (1488290340)
+Period 6 ...
+Unique records processed: 39555; Last timestamp: 2017-03-31 23:59:00 AEST (1490968740)
+Period 7 ...
+Unique records processed: 38284; Last timestamp: 2017-04-30 23:59:00 AEST (1493560740)
+Period 8 ...
+Unique records processed: 38284; Last timestamp: 2017-06-30 23:59:00 AEST (1498831140)
+Finished dry run import
+308670 records were processed and 308670 unique records would have been imported.
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The eight periods correspond to the eight monthly .cat files used for this import.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Any periods for which no data could be obtained will be skipped. The lack of data may be due to a missing WeatherCat monthly .cat file. A short explanatory note to this effect will be displayed against the period concerned and an entry included in the log.</p>
+</div>
+</li>
+<li>
+<p>If the <code>--suppress-warnings</code> option was used it may be prudent to do a second dry run this time without the <code>--suppress-warnings</code> option. This will allow any warnings generated by the dry run import to be observed:</p>
+<div class="highlight"><pre><span></span><code>wee_import --import-config=/var/tmp/wcat.conf --dry-run&lt;/pre&gt;
+</code></pre></div>
+<p>This will result in a short preamble with details on the data source, the destination of the imported data and some other details on how the data will be processed. The import will then be performed but no data will be written to the WeeWX database.</p>
+<p>The output should be similar to:</p>
+<div class="highlight"><pre><span></span><code>Using WeeWX configuration file /home/weewx/weewx.conf
+Starting wee_import...
+WeatherCat monthly .cat files in the &#39;/var/tmp/wcat&#39; directory will be imported
+Using database binding &#39;wx_binding&#39;, which is bound to database &#39;weewx.sdb&#39;
+Destination table &#39;archive&#39; unit system is &#39;0x01&#39; (US).
+Missing derived observations will be calculated.
+This is a dry run, imported data will not be saved to archive.
+Starting dry run import ...
+Records covering multiple periods have been identified for import.
+Period 1 ...
+Warning: Import field &#39;T1&#39; is mapped to WeeWX field &#39;extraTemp1&#39; but the
+import field &#39;T1&#39; could not be found in one or more records.
+WeeWX field &#39;extraTemp1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;T2&#39; is mapped to WeeWX field &#39;extraTemp2&#39; but the
+import field &#39;T2&#39; could not be found in one or more records.
+WeeWX field &#39;extraTemp2&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;T3&#39; is mapped to WeeWX field &#39;extraTemp3&#39; but the
+import field &#39;T3&#39; could not be found in one or more records.
+WeeWX field &#39;extraTemp3&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;H1&#39; is mapped to WeeWX field &#39;extraHumid1&#39; but the
+import field &#39;H1&#39; could not be found in one or more records.
+WeeWX field &#39;extraHumid1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;H2&#39; is mapped to WeeWX field &#39;extraHumid2&#39; but the
+import field &#39;H2&#39; could not be found in one or more records.
+WeeWX field &#39;extraHumid2&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Sm1&#39; is mapped to WeeWX field &#39;soilMoist1&#39; but the
+import field &#39;Sm1&#39; could not be found in one or more records.
+WeeWX field &#39;soilMoist1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Sm2&#39; is mapped to WeeWX field &#39;soilMoist2&#39; but the
+import field &#39;Sm2&#39; could not be found in one or more records.
+WeeWX field &#39;soilMoist2&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Sm3&#39; is mapped to WeeWX field &#39;soilMoist3&#39; but the
+import field &#39;Sm3&#39; could not be found in one or more records.
+WeeWX field &#39;soilMoist3&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Sm4&#39; is mapped to WeeWX field &#39;soilMoist4&#39; but the
+import field &#39;Sm4&#39; could not be found in one or more records.
+WeeWX field &#39;soilMoist4&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Lw1&#39; is mapped to WeeWX field &#39;leafWet1&#39; but the
+import field &#39;Lw1&#39; could not be found in one or more records.
+WeeWX field &#39;leafWet1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Lw2&#39; is mapped to WeeWX field &#39;leafWet2&#39; but the
+import field &#39;Lw2&#39; could not be found in one or more records.
+WeeWX field &#39;leafWet2&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;St1&#39; is mapped to WeeWX field &#39;soilTemp1&#39; but the
+import field &#39;St1&#39; could not be found in one or more records.
+WeeWX field &#39;soilTemp1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;St2&#39; is mapped to WeeWX field &#39;soilTemp2&#39; but the
+import field &#39;St2&#39; could not be found in one or more records.
+WeeWX field &#39;soilTemp2&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;St3&#39; is mapped to WeeWX field &#39;soilTemp3&#39; but the
+import field &#39;St3&#39; could not be found in one or more records.
+WeeWX field &#39;soilTemp3&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;St4&#39; is mapped to WeeWX field &#39;soilTemp4&#39; but the
+import field &#39;St4&#39; could not be found in one or more records.
+WeeWX field &#39;soilTemp4&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Lt1&#39; is mapped to WeeWX field &#39;leafTemp1&#39; but the
+import field &#39;Lt1&#39; could not be found in one or more records.
+WeeWX field &#39;leafTemp1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Lt2&#39; is mapped to WeeWX field &#39;leafTemp2&#39; but the
+import field &#39;Lt2&#39; could not be found in one or more records.
+WeeWX field &#39;leafTemp2&#39; will be set to &#39;None&#39; in these records.
+Unique records processed: 39555; Last timestamp: 2016-10-31 23:59:00 AEST (1477922340)
+Period 2 ...
+Warning: Import field &#39;T1&#39; is mapped to WeeWX field &#39;extraTemp1&#39; but the
+import field &#39;T1&#39; could not be found in one or more records.
+WeeWX field &#39;extraTemp1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;T2&#39; is mapped to WeeWX field &#39;extraTemp2&#39; but the
+import field &#39;T2&#39; could not be found in one or more records.
+WeeWX field &#39;extraTemp2&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;T3&#39; is mapped to WeeWX field &#39;extraTemp3&#39; but the
+import field &#39;T3&#39; could not be found in one or more records.
+WeeWX field &#39;extraTemp3&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;H1&#39; is mapped to WeeWX field &#39;extraHumid1&#39; but the
+import field &#39;H1&#39; could not be found in one or more records.
+WeeWX field &#39;extraHumid1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;H2&#39; is mapped to WeeWX field &#39;extraHumid2&#39; but the
+import field &#39;H2&#39; could not be found in one or more records.
+WeeWX field &#39;extraHumid2&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Sm1&#39; is mapped to WeeWX field &#39;soilMoist1&#39; but the
+import field &#39;Sm1&#39; could not be found in one or more records.
+WeeWX field &#39;soilMoist1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Sm2&#39; is mapped to WeeWX field &#39;soilMoist2&#39; but the
+import field &#39;Sm2&#39; could not be found in one or more records.
+WeeWX field &#39;soilMoist2&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Sm3&#39; is mapped to WeeWX field &#39;soilMoist3&#39; but the
+import field &#39;Sm3&#39; could not be found in one or more records.
+WeeWX field &#39;soilMoist3&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Sm4&#39; is mapped to WeeWX field &#39;soilMoist4&#39; but the
+import field &#39;Sm4&#39; could not be found in one or more records.
+WeeWX field &#39;soilMoist4&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Lw1&#39; is mapped to WeeWX field &#39;leafWet1&#39; but the
+import field &#39;Lw1&#39; could not be found in one or more records.
+WeeWX field &#39;leafWet1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Lw2&#39; is mapped to WeeWX field &#39;leafWet2&#39; but the
+import field &#39;Lw2&#39; could not be found in one or more records.
+WeeWX field &#39;leafWet2&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;St1&#39; is mapped to WeeWX field &#39;soilTemp1&#39; but the
+import field &#39;St1&#39; could not be found in one or more records.
+WeeWX field &#39;soilTemp1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;St2&#39; is mapped to WeeWX field &#39;soilTemp2&#39; but the
+import field &#39;St2&#39; could not be found in one or more records.
+WeeWX field &#39;soilTemp2&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;St3&#39; is mapped to WeeWX field &#39;soilTemp3&#39; but the
+import field &#39;St3&#39; could not be found in one or more records.
+WeeWX field &#39;soilTemp3&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;St4&#39; is mapped to WeeWX field &#39;soilTemp4&#39; but the
+import field &#39;St4&#39; could not be found in one or more records.
+WeeWX field &#39;soilTemp4&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Lt1&#39; is mapped to WeeWX field &#39;leafTemp1&#39; but the
+import field &#39;Lt1&#39; could not be found in one or more records.
+WeeWX field &#39;leafTemp1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Lt2&#39; is mapped to WeeWX field &#39;leafTemp2&#39; but the
+import field &#39;Lt2&#39; could not be found in one or more records.
+WeeWX field &#39;leafTemp2&#39; will be set to &#39;None&#39; in these records.
+Unique records processed: 38284; Last timestamp: 2016-11-30 23:59:00 AEST (1480514340)
+
+... (identical entries for periods 3 to 7 omitted for conciseness)
+
+Period 8 ...
+Warning: Import field &#39;T1&#39; is mapped to WeeWX field &#39;extraTemp1&#39; but the
+import field &#39;T1&#39; could not be found in one or more records.
+WeeWX field &#39;extraTemp1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;T2&#39; is mapped to WeeWX field &#39;extraTemp2&#39; but the
+import field &#39;T2&#39; could not be found in one or more records.
+WeeWX field &#39;extraTemp2&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;T3&#39; is mapped to WeeWX field &#39;extraTemp3&#39; but the
+import field &#39;T3&#39; could not be found in one or more records.
+WeeWX field &#39;extraTemp3&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;H1&#39; is mapped to WeeWX field &#39;extraHumid1&#39; but the
+import field &#39;H1&#39; could not be found in one or more records.
+WeeWX field &#39;extraHumid1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;H2&#39; is mapped to WeeWX field &#39;extraHumid2&#39; but the
+import field &#39;H2&#39; could not be found in one or more records.
+WeeWX field &#39;extraHumid2&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Sm1&#39; is mapped to WeeWX field &#39;soilMoist1&#39; but the
+import field &#39;Sm1&#39; could not be found in one or more records.
+WeeWX field &#39;soilMoist1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Sm2&#39; is mapped to WeeWX field &#39;soilMoist2&#39; but the
+import field &#39;Sm2&#39; could not be found in one or more records.
+WeeWX field &#39;soilMoist2&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Sm3&#39; is mapped to WeeWX field &#39;soilMoist3&#39; but the
+import field &#39;Sm3&#39; could not be found in one or more records.
+WeeWX field &#39;soilMoist3&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Sm4&#39; is mapped to WeeWX field &#39;soilMoist4&#39; but the
+import field &#39;Sm4&#39; could not be found in one or more records.
+WeeWX field &#39;soilMoist4&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Lw1&#39; is mapped to WeeWX field &#39;leafWet1&#39; but the
+import field &#39;Lw1&#39; could not be found in one or more records.
+WeeWX field &#39;leafWet1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Lw2&#39; is mapped to WeeWX field &#39;leafWet2&#39; but the
+import field &#39;Lw2&#39; could not be found in one or more records.
+WeeWX field &#39;leafWet2&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;St1&#39; is mapped to WeeWX field &#39;soilTemp1&#39; but the
+import field &#39;St1&#39; could not be found in one or more records.
+WeeWX field &#39;soilTemp1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;St2&#39; is mapped to WeeWX field &#39;soilTemp2&#39; but the
+import field &#39;St2&#39; could not be found in one or more records.
+WeeWX field &#39;soilTemp2&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;St3&#39; is mapped to WeeWX field &#39;soilTemp3&#39; but the
+import field &#39;St3&#39; could not be found in one or more records.
+WeeWX field &#39;soilTemp3&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;St4&#39; is mapped to WeeWX field &#39;soilTemp4&#39; but the
+import field &#39;St4&#39; could not be found in one or more records.
+WeeWX field &#39;soilTemp4&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Lt1&#39; is mapped to WeeWX field &#39;leafTemp1&#39; but the
+import field &#39;Lt1&#39; could not be found in one or more records.
+WeeWX field &#39;leafTemp1&#39; will be set to &#39;None&#39; in these records.
+Warning: Import field &#39;Lt2&#39; is mapped to WeeWX field &#39;leafTemp2&#39; but the
+import field &#39;Lt2&#39; could not be found in one or more records.
+WeeWX field &#39;leafTemp2&#39; will be set to &#39;None&#39; in these records.
+Unique records processed: 38284; Last timestamp: 2017-06-30 23:59:00 AEST (1498831140)
+Finished dry run import
+308670 records were processed and 308670 unique records would have been imported.
+</code></pre></div>
+<p>In this case warnings are evident for numerous import/WeeWX field pairs that are mapped but for which no data could be found. If the warnings relate to fields that are not included in the import source data the warning may be safely ignored. If the warning relate to fields that the user expects to be in the import source data the issue should be investigated further before the import is completed.</p>
+</li>
+<li>
+<p>Once the dry run results are satisfactory the data can be imported using the following command:</p>
+<div class="highlight"><pre><span></span><code>wee_import --import-config=/var/tmp/wcat.conf --suppress-warnings
+</code></pre></div>
+<p>This will result in a preamble similar to that of a dry run. At the end of the preamble there will be a prompt:</p>
+<div class="highlight"><pre><span></span><code>Using WeeWX configuration file /home/weewx/weewx.conf
+Starting wee_import...
+WeatherCat monthly .cat files in the &#39;/var/tmp/wcat&#39; directory will be imported
+Using database binding &#39;wx_binding&#39;, which is bound to database &#39;weewx.sdb&#39;
+Destination table &#39;archive&#39; unit system is &#39;0x01&#39; (US).
+Missing derived observations will be calculated.
+Starting import ...
+Records covering multiple periods have been identified for import.
+Period 1 ...
+Proceeding will save all imported records in the WeeWX archive.
+Are you sure you want to proceed (y/n)?
+</code></pre></div>
+<p>If there is more than one WeatherCat monthly .cat file then <code>wee_import</code> will provide summary information on a per period basis during the import. In addition, if the <code>--date</code> option is used then source data that falls outside the date or date range specified with the <code>--date</code> option is ignored. In such cases the preamble may look similar to:</p>
+<div class="highlight"><pre><span></span><code>Using WeeWX configuration file /home/weewx/weewx.conf
+Starting wee_import...
+WeatherCat monthly .cat files in the &#39;/var/tmp/wcat&#39; directory will be imported
+Using database binding &#39;wx_binding&#39;, which is bound to database &#39;weewx.sdb&#39;
+Destination table &#39;archive&#39; unit system is &#39;0x01&#39; (US).
+Missing derived observations will be calculated.
+Starting import ...
+Records covering multiple periods have been identified for import.
+Period 1 ...
+Period 1 - no records identified for import.
+Period 2 ...
+Period 2 - no records identified for import.
+Period 3 ...
+Proceeding will save all imported records in the WeeWX archive.
+Are you sure you want to proceed (y/n)?
+</code></pre></div>
+</li>
+<li>
+<p>If the import parameters are acceptable enter <code>y</code> to proceed with the import or <code>n</code> to abort the import. If the import is confirmed, the source data will be imported, processed and saved in the WeeWX database. Information on the progress of the import will be displayed similar to the following:</p>
+<div class="highlight"><pre><span></span><code>Unique records processed: 2305; Last timestamp: 2016-12-30 00:00:00 AEST (1483020000)
+</code></pre></div>
+<p>Again if there is more than one WeatherCat monthly .cat file and if the <code>--date</code> option is used the progress information may instead look similar to:</p>
+<div class="highlight"><pre><span></span><code>Period 4 ...
+Unique records processed: 8908; Last timestamp: 2017-01-31 23:59:00 AEST (1485870900)
+Period 5 ...
+Unique records processed: 8029; Last timestamp: 2017-02-28 23:59:00 AEST (1488290100)
+Period 6 ...
+Unique records processed: 8744; Last timestamp: 2017-03-31 23:59:00 AEST (1490968500)
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Any periods for which no data could be obtained will be skipped. The lack of data may be due to a missing WeatherCat monthly .cat file. A short explanatory note to this effect will be displayed against the period concerned and an entry included in the log.</p>
+</div>
+<p>The line commencing with <code>Unique records processed</code> should update as records are imported with progress information on number of records processed, number of unique records imported and the date time of the latest record processed. If the import spans multiple months (ie multiple monthly .cat files) then a new <code>Period</code> line is created for each month.</p>
+<p>Once the initial import is complete <code>wee_import</code> will, if requested, calculate any missing derived observations and rebuild the daily summaries. A brief summary should be displayed similar to the following:</p>
+<div class="highlight"><pre><span></span><code>Calculating missing derived observations ...
+Processing record: 77782; Last record: 2017-06-30 00:00:00 AEST (1519826400)
+Recalculating daily summaries...
+Records processed: 77000; Last date: 2017-06-28 11:45:00 AEST (1519811100)
+Finished recalculating daily summaries
+Finished calculating missing derived observations
+</code></pre></div>
+<p>When the import is complete a brief summary is displayed similar to the following:</p>
+<div class="highlight"><pre><span></span><code>Finished import
+308670 records were processed and 308670 unique records imported in 1907.61 seconds.
+Those records with a timestamp already in the archive will not have been
+imported. Confirm successful import in the WeeWX log file.
+</code></pre></div>
+</li>
+<li>
+<p>Whilst <code>wee_import</code> will advise of the number of records processed and the number of unique records found, <code>wee_import</code> does know how many, if any, of the imported records were successfully saved to the database. You should look carefully through the WeeWX log file covering the <code>wee_import</code> session and take note of any records that were not imported. The most common reason for imported records not being saved to the database is because a record with that timestamp already exists in the database, in such cases something similar to the following will be found in the log:</p>
+<div class="highlight"><pre><span></span><code>Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database &#39;weewx.sdb&#39;: UNIQUE constraint failed: archive.dateTime
+</code></pre></div>
+<p>In such cases take note of the timestamp of the record(s) concerned and make a decision about whether to delete the pre-existing record and re-import the record or retain the pre-existing record.</p>
+</li>
+</ol>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+          <a href="#" class="md-top md-icon" data-md-component="top" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+            Back to top
+          </a>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
+        
+        <a href="../wee_import-wd/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Weather Display" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Weather Display
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../wee_import-troubleshoot/" class="md-footer__link md-footer__link--next" aria-label="Next: Troubleshooting" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Troubleshooting
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright © 2009-2023 Thomas Keffer, Matthew Wall, and Gary Roderick, all rights reserved
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.indexes", "navigation.top", "toc.follow", "search.highlight", "search.share", "search.suggest", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.16e2a7d4.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.5a2dcb6a.min.js"></script>
+      
+    
+    
+  </body>
+</html>
