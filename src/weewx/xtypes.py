@@ -568,7 +568,7 @@ class DailySummaries(XType):
             raise weewx.UnknownAggregation(aggregate_type)
 
         # Check to see whether we can use the daily summaries:
-        DailySummaries._check_eligibility(obs_type, timespan, db_manager, aggregate_type)
+        DailySummaries.check_eligibility(obs_type, timespan, db_manager, aggregate_type)
 
         val = option_dict.get('val')
         if val is None:
@@ -694,7 +694,7 @@ class DailySummaries(XType):
             raise weewx.UnknownAggregation(aggregate_type)
 
         # Check to see whether we can use the daily summaries:
-        DailySummaries._check_eligibility(obs_type, timespan, db_manager, aggregate_type)
+        DailySummaries.check_eligibility(obs_type, timespan, db_manager, aggregate_type)
 
         # We also have to make sure the aggregation interval is either the length of a nominal
         # month or year, or some multiple of a calendar day.
@@ -758,7 +758,7 @@ class DailySummaries(XType):
                 ValueTuple(data_list, unit, unit_group))
 
     @staticmethod
-    def _check_eligibility(obs_type, timespan, db_manager, aggregate_type):
+    def check_eligibility(obs_type, timespan, db_manager, aggregate_type):
 
         # It has to be a type we know about
         if not hasattr(db_manager, 'daykeys') or obs_type not in db_manager.daykeys:
@@ -1200,7 +1200,7 @@ class WindVecDaily(XType):
             raise weewx.UnknownAggregation(aggregate_type)
 
         # Check to see whether we can use the daily summaries:
-        DailySummaries._check_eligibility('wind', timespan, db_manager, aggregate_type)
+        DailySummaries.check_eligibility('wind', timespan, db_manager, aggregate_type)
 
         if aggregate_type == 'not_null':
             # Aggregate type 'not_null' is actually run against 'wind'.
