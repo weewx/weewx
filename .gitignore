@@ -15,6 +15,7 @@ MANIFEST
 build
 dist
 
-# Ignore archive database and HTML directories
+# Ignore database, HTML directories, and built documentation
 src/weewx_data/archive/
 src/weewx_data/public_html/
+src/weewx_data/docs
