@@ -45,7 +45,7 @@ dependencies:
     # If you want extended celestial information:
     python3 -m pip install ephem
     # If you use MySQL or Maria
-    python3 -m pip install PyMySQL[rsa]
+    python3 -m pip install "PyMySQL[rsa]"
     ```
 
 ## Get the code
