@@ -128,6 +128,7 @@ restart.
 Change from old Google Analytics UA code to the GA4 tag system in the Standard
 and Seasons skins. Fixes issue [#892](https://github.com/weewx/weewx/issues/892).
 
+All `wee_import` sources now include support for a field map meaning any source field can be imported to any WeeWX archive field.
 
 ### 4.10.2 02/22/2023
 
