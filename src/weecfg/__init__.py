@@ -19,6 +19,7 @@ import configobj
 import weeutil.config
 import weeutil.weeutil
 from weeutil.weeutil import bcolors
+from weeutil.printer import Printer
 
 major_comment_block = ["",
                        "#######################################"
@@ -31,19 +32,6 @@ default_config_path = os.path.join(default_weewx_root, 'weewx.conf')
 
 class ExtensionError(IOError):
     """Errors when installing or uninstalling an extension"""
-
-
-class Logger(object):
-    def __init__(self, verbosity=0, fd=sys.stdout):
-        self.verbosity = verbosity
-        self.fd = fd
-
-    def log(self, msg, level=0):
-        if self.verbosity >= level:
-            print("%s%s" % ('  ' * (level - 1), msg), file=self.fd)
-
-    def set_verbosity(self, verbosity):
-        self.verbosity = verbosity
 
 
 # ==============================================================================
@@ -659,20 +647,20 @@ def extract_roots(config_dict):
     return root_dict
 
 
-def extract_tar(filename, target_dir, logger=None):
+def extract_tar(filename, target_dir, printer=None):
     """Extract files from a tar archive into a given directory
 
     Args:
         filename (str): Path to the tarfile
         target_dir (str): Path to the directory to which the contents will be extracted
-        logger (weecfg.Logger): Logger to use
+        printer (Printer): Indenting Printer to use
 
     Returns:
         list[str]: A list of the extracted files
     """
     import tarfile
-    logger = logger or Logger()
-    logger.log(f"Extracting from tar archive {filename}", level=1)
+    printer = printer or Printer()
+    printer.out(f"Extracting from tar archive {filename}", level=1)
 
     with tarfile.open(filename, mode='r') as tar_archive:
         member_names = [os.path.normpath(x.name) for x in tar_archive.getmembers()]
@@ -686,20 +674,20 @@ def extract_tar(filename, target_dir, logger=None):
     return member_names
 
 
-def extract_zip(filename, target_dir, logger=None):
+def extract_zip(filename, target_dir, printer=None):
     """Extract files from a zip archive into the specified directory.
 
     Args:
         filename (str): Path to the zip file
         target_dir (str): Path to the directory to which the contents will be extracted
-        logger (weecfg.Logger): Logger to use
+        printer (Printer): Indenting printer to use
 
     Returns:
         list[str]: A list of the extracted files
     """
     import zipfile
-    logger = logger or Logger()
-    logger.log(f"Extracting from zip archive {filename}", level=1)
+    printer = printer or Printer()
+    printer.out(f"Extracting from zip archive {filename}", level=1)
 
     with zipfile.ZipFile(filename) as zip_archive:
         member_names = zip_archive.namelist()

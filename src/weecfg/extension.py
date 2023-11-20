@@ -17,7 +17,7 @@ import weecfg
 import weeutil.config
 import weeutil.weeutil
 import weewx
-from weecfg import Logger
+from weeutil.printer import Printer
 
 # Very old extensions did:
 #   from setup import ExtensionInstaller
@@ -46,7 +46,7 @@ class ExtensionEngine(object):
         'skins': 'SKIN_DIR'
     }
 
-    def __init__(self, config_path, config_dict, dry_run=False, logger=None):
+    def __init__(self, config_path, config_dict, dry_run=False, printer=None):
         """Initializer for ExtensionEngine.
 
         Args:
@@ -56,16 +56,16 @@ class ExtensionEngine(object):
                 file at config_path.
             dry_run (bool): If Truthy, all the steps will be printed out, but nothing will
                 actually be done.
-            logger (weecfg.Logger): An instance of weecfg.Logger. This will be used to print
-                things to the console.
+            printer (Printer): An instance of weeutil.printer.Printer. This will be used to print
+                things to the console while honoring verbosity levels.
         """
         self.config_path = config_path
         self.config_dict = config_dict
-        self.logger = logger or Logger()
+        self.printer = printer or Printer()
         self.dry_run = dry_run
 
         self.root_dict = weewx.extract_roots(self.config_dict)
-        self.logger.log("root dictionary: %s" % self.root_dict, 4)
+        self.printer.out("root dictionary: %s" % self.root_dict, 4)
 
     def enumerate_extensions(self):
         """Print info about all installed extensions to the logger."""
@@ -73,18 +73,18 @@ class ExtensionEngine(object):
         try:
             exts = sorted(os.listdir(ext_dir))
             if exts:
-                self.logger.log("%-18s%-10s%s" % ("Extension Name", "Version", "Description"),
+                self.printer.out("%-18s%-10s%s" % ("Extension Name", "Version", "Description"),
                                 level=0)
                 for f in exts:
                     info = self.get_extension_info(f)
                     msg = "%(name)-18s%(version)-10s%(description)s" % info
-                    self.logger.log(msg, level=0)
+                    self.printer.out(msg, level=0)
             else:
-                self.logger.log("Extension cache is '%s'." % ext_dir, level=2)
-                self.logger.log("No extensions installed.", level=0)
+                self.printer.out("Extension cache is '%s'." % ext_dir, level=2)
+                self.printer.out("No extensions installed.", level=0)
         except OSError:
-            self.logger.log("No extension cache '%s'." % ext_dir, level=2)
-            self.logger.log("No extensions installed.", level=0)
+            self.printer.out("No extension cache '%s'." % ext_dir, level=2)
+            self.printer.out("No extensions installed.", level=0)
 
     def get_extension_info(self, ext_name):
         ext_cache_dir = os.path.join(self.root_dict['EXT_DIR'], ext_name)
@@ -97,9 +97,9 @@ class ExtensionEngine(object):
         Args:
             extension_path(str): Either a file path, a directory path, or an URL.
         """
-        self.logger.log(f"Request to install '{extension_path}'.")
+        self.printer.out(f"Request to install '{extension_path}'.")
         if self.dry_run:
-            self.logger.log("This is a dry run. Nothing will actually be done.")
+            self.printer.out("This is a dry run. Nothing will actually be done.")
 
         # Figure out what extension_path is
         if extension_path.startswith('http'):
@@ -126,9 +126,9 @@ class ExtensionEngine(object):
         else:
             raise InstallError(f"Unrecognized type for {extension_path}")
 
-        self.logger.log(f"Finished installing extension {extension_name} from {extension_path}.")
+        self.printer.out(f"Finished installing extension {extension_name} from {extension_path}.")
         if self.dry_run:
-            self.logger.log("This was a dry run. Nothing was actually done.")
+            self.printer.out("This was a dry run. Nothing was actually done.")
 
     def _install_from_file(self, filepath, filetype):
         """Install an extension from a file.
@@ -141,10 +141,10 @@ class ExtensionEngine(object):
         # Make a temporary directory into which to extract the file.
         with tempfile.TemporaryDirectory() as dir_name:
             if filetype == 'zip':
-                member_names = weecfg.extract_zip(filepath, dir_name, self.logger)
+                member_names = weecfg.extract_zip(filepath, dir_name, self.printer)
             else:
                 # Assume it's a tarfile
-                member_names = weecfg.extract_tar(filepath, dir_name, self.logger)
+                member_names = weecfg.extract_tar(filepath, dir_name, self.printer)
             extension_reldir = os.path.commonprefix(member_names)
             if not extension_reldir:
                 raise InstallError(f"Unable to install from {filepath}: no common path "
@@ -157,14 +157,14 @@ class ExtensionEngine(object):
 
     def install_from_dir(self, extension_dir):
         """Install the extension whose components are in extension_dir"""
-        self.logger.log(f"Request to install extension found in directory {extension_dir}.",
+        self.printer.out(f"Request to install extension found in directory {extension_dir}.",
                         level=2)
 
         # The "installer" is actually a dictionary containing what is to be installed and where.
         # The "installer_path" is the path to the file containing that dictionary.
         installer_path, installer = weecfg.get_extension_installer(extension_dir)
         extension_name = installer.get('name', 'Unknown')
-        self.logger.log(f"Found extension with name '{extension_name}'.", level=2)
+        self.printer.out(f"Found extension with name '{extension_name}'.", level=2)
 
         # Install any files:
         if 'files' in installer:
@@ -174,7 +174,7 @@ class ExtensionEngine(object):
 
         # Go through all the possible service groups and see if the extension
         # includes any services that belong in any of them.
-        self.logger.log("Adding services to service lists.", level=2)
+        self.printer.out("Adding services to service lists.", level=2)
         for service_group in weewx.all_service_groups:
             if service_group in installer:
                 extension_svcs = weeutil.weeutil.option_as_list(installer[service_group])
@@ -192,7 +192,7 @@ class ExtensionEngine(object):
                             svc_list.append(svc)
                             self.config_dict['Engine']['Services'][service_group] = svc_list
                             save_config = True
-                        self.logger.log(f"Added new service {svc} to {service_group}.", level=3)
+                        self.printer.out(f"Added new service {svc} to {service_group}.", level=3)
 
         # Give the installer a chance to do any customized configuration
         save_config |= installer.configure(self)
@@ -203,7 +203,7 @@ class ExtensionEngine(object):
         # Save the extension's install.py file in the extension's installer
         # directory for later use enumerating and uninstalling
         extension_installer_dir = os.path.join(self.root_dict['EXT_DIR'], extension_name)
-        self.logger.log(f"Saving installer file to {extension_installer_dir}.")
+        self.printer.out(f"Saving installer file to {extension_installer_dir}.")
         if not self.dry_run:
             try:
                 os.makedirs(os.path.join(extension_installer_dir))
@@ -213,7 +213,7 @@ class ExtensionEngine(object):
 
         if save_config:
             backup_path = weecfg.save_with_backup(self.config_dict, self.config_path)
-            self.logger.log(f"Saved configuration dictionary. Backup copy at {backup_path}.")
+            self.printer.out(f"Saved configuration dictionary. Backup copy at {backup_path}.")
 
         return extension_name
 
@@ -233,7 +233,7 @@ class ExtensionEngine(object):
             int: How many files were installed.
         """
 
-        self.logger.log("Copying new files...", level=2)
+        self.printer.out("Copying new files...", level=2)
         N = 0
 
         for source_path, destination_path in ExtensionEngine._gen_file_paths(
@@ -242,10 +242,10 @@ class ExtensionEngine(object):
                 file_list):
 
             if self.dry_run:
-                self.logger.log(f"Fake copying from '{source_path}' to '{destination_path}'",
+                self.printer.out(f"Fake copying from '{source_path}' to '{destination_path}'",
                                 level=3)
             else:
-                self.logger.log(f"Copying from '{source_path}' to '{destination_path}'",
+                self.printer.out(f"Copying from '{source_path}' to '{destination_path}'",
                                 level=3)
                 try:
                     os.makedirs(os.path.dirname(destination_path))
@@ -255,9 +255,9 @@ class ExtensionEngine(object):
             N += 1
 
         if self.dry_run:
-            self.logger.log(f"Fake copied {N:d} files.", level=2)
+            self.printer.out(f"Fake copied {N:d} files.", level=2)
         else:
-            self.logger.log(f"Copied {N:d} files.", level=2)
+            self.printer.out(f"Copied {N:d} files.", level=2)
         return N
 
     @staticmethod
@@ -295,7 +295,7 @@ class ExtensionEngine(object):
         
         Returns True if it modified the config file, False otherwise.
         """
-        self.logger.log("Adding sections to configuration file", level=2)
+        self.printer.out("Adding sections to configuration file", level=2)
         # Make a copy, so we can modify the sections to fit the existing configuration
         if isinstance(extension_config, configobj.Section):
             cfg = weeutil.config.deep_copy(extension_config)
@@ -336,7 +336,7 @@ class ExtensionEngine(object):
             self._reorder(cfg)
             save_config = True
 
-        self.logger.log("Merged extension settings into configuration file", level=3)
+        self.printer.out("Merged extension settings into configuration file", level=3)
         return save_config
 
     def _reorder(self, cfg):
@@ -371,9 +371,9 @@ class ExtensionEngine(object):
                 its name.
         """
 
-        self.logger.log(f"Request to remove extension '{extension_name}'.")
+        self.printer.out(f"Request to remove extension '{extension_name}'.")
         if self.dry_run:
-            self.logger.log("This is a dry run. Nothing will actually be done.")
+            self.printer.out("This is a dry run. Nothing will actually be done.")
 
         # Find the subdirectory containing this extension's installer
         extension_installer_dir = os.path.join(self.root_dict['EXT_DIR'], extension_name)
@@ -410,10 +410,10 @@ class ExtensionEngine(object):
         if save_config:
             weecfg.save_with_backup(self.config_dict, self.config_path)
 
-        self.logger.log(f"Finished removing extension '{extension_name}'")
+        self.printer.out(f"Finished removing extension '{extension_name}'")
 
         if self.dry_run:
-            self.logger.log("This was a dry run. Nothing was actually done.")
+            self.printer.out("This was a dry run. Nothing was actually done.")
 
     def uninstall_files(self, file_list):
         """Delete files that were installed for this extension
@@ -423,7 +423,7 @@ class ExtensionEngine(object):
                 relative paths to files that are used by the extension.
         """
 
-        self.logger.log("Removing files.", level=2)
+        self.printer.out("Removing files.", level=2)
 
         directory_set = set()
         N = 0
@@ -442,7 +442,7 @@ class ExtensionEngine(object):
             # Add its directory to the set of directories we've encountered
             directory_set.add(os.path.dirname(destination_path))
 
-        self.logger.log(f"Removed {N:d} files.", level=2)
+        self.printer.out(f"Removed {N:d} files.", level=2)
 
         N_dir = 0
         # Now delete all the empty directories. Start by finding the directory closest to root
@@ -451,7 +451,7 @@ class ExtensionEngine(object):
         for dirpath, _, _ in os.walk(most_root, topdown=False):
             if dirpath in directory_set:
                 N_dir += self.delete_directory(dirpath)
-        self.logger.log(f"Removed {N_dir:d} directores.", level=2)
+        self.printer.out(f"Removed {N_dir:d} directores.", level=2)
 
     def delete_file(self, filename, report_errors=True):
         """
@@ -467,14 +467,14 @@ class ExtensionEngine(object):
         """
         n_deleted = 0
         for fn in glob.glob(filename):
-            self.logger.log("Deleting file %s" % fn, level=2)
+            self.printer.out("Deleting file %s" % fn, level=2)
             if not self.dry_run:
                 try:
                     os.remove(fn)
                     n_deleted += 1
                 except OSError as e:
                     if report_errors:
-                        self.logger.log("Delete failed: %s" % e, level=4)
+                        self.printer.out("Delete failed: %s" % e, level=4)
         return n_deleted
 
     def delete_directory(self, directory, report_errors=True):
@@ -492,15 +492,15 @@ class ExtensionEngine(object):
         n_deleted = 0
         try:
             if os.listdir(directory):
-                self.logger.log(f"Directory '{directory}' not empty.", level=2)
+                self.printer.out(f"Directory '{directory}' not empty.", level=2)
             else:
-                self.logger.log(f"Deleting directory '{directory}'.", level=2)
+                self.printer.out(f"Deleting directory '{directory}'.", level=2)
                 if not self.dry_run:
                     shutil.rmtree(directory)
                     n_deleted += 1
         except OSError as e:
             if report_errors:
-                self.logger.log(f"Delete failed on directory '{directory}': {e}", level=2)
+                self.printer.out(f"Delete failed on directory '{directory}': {e}", level=2)
         return n_deleted
 
     @staticmethod
@@ -523,30 +523,30 @@ class ExtensionEngine(object):
     #     if not os.path.isdir(root_src_dir):
     #         sys.exit(f"{root_src_dir} is not a directory")
     #     root_dst_dir = self.root_dict['USER_DIR']
-    #     self.logger.log(f"Transferring contents of {root_src_dir} to {root_dst_dir}", 1)
+    #     self.printer.out(f"Transferring contents of {root_src_dir} to {root_dst_dir}", 1)
     #     if self.dry_run:
-    #         self.logger.log(f"This is a {bcolors.BOLD}dry run{bcolors.ENDC}. "
+    #         self.printer.out(f"This is a {bcolors.BOLD}dry run{bcolors.ENDC}. "
     #                         f"Nothing will actually be done.")
     #
     #     for dirpath, dirnames, filenames in os.walk(root_src_dir):
     #         if os.path.basename(dirpath) in {'__pycache__', '.init'}:
-    #             self.logger.log(f"Skipping {dirpath}.", 3)
+    #             self.printer.out(f"Skipping {dirpath}.", 3)
     #             continue
     #         dst_dir = dirpath.replace(root_src_dir, root_dst_dir, 1)
-    #         self.logger.log(f"Making directory {dst_dir}", 3)
+    #         self.printer.out(f"Making directory {dst_dir}", 3)
     #         if not self.dry_run:
     #             os.makedirs(dst_dir, exist_ok=True)
     #         for f in filenames:
     #             if ".pyc" in f:
-    #                 self.logger.log(f"Skipping {f}", 3)
+    #                 self.printer.out(f"Skipping {f}", 3)
     #                 continue
     #             dst_file = os.path.join(dst_dir, f)
     #             if os.path.exists(dst_file):
-    #                 self.logger.log(f"File {dst_file} already exists. Not replacing.", 2)
+    #                 self.printer.out(f"File {dst_file} already exists. Not replacing.", 2)
     #             else:
     #                 src_file = os.path.join(dirpath, f)
-    #                 self.logger.log(f"Copying file {src_file} to {dst_dir}", 3)
+    #                 self.printer.out(f"Copying file {src_file} to {dst_dir}", 3)
     #                 if not self.dry_run:
     #                     shutil.copy(src_file, dst_dir)
     #     if self.dry_run:
-    #         self.logger.log("This was a dry run. Nothing was actually done")
+    #         self.printer.out("This was a dry run. Nothing was actually done")

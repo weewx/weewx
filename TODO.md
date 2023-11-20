@@ -1,5 +1,9 @@
 # V5.0 "To Do"
 
+## `weectl`
+
+Some of the routines should probably ask for a confirmation before proceeding.
+For example, `weectl extension uninstall` just uninstalls without confirmation. 
 
 ## Package installers
 

@@ -19,6 +19,7 @@ import weecfg.extension
 import weecfg.update_config
 import weeutil.config
 import weeutil.weeutil
+from weeutil.printer import Printer
 
 # Redirect the import of setup:
 sys.modules['setup'] = weecfg.extension
@@ -365,7 +366,7 @@ class ExtensionInstallTest(unittest.TestCase):
         # Initialize the install engine.
         self.engine = weecfg.extension.ExtensionEngine(self.config_path,
                                                        self.config_dict,
-                                                       logger=weecfg.Logger(verbosity=-1))
+                                                       printer=Printer(verbosity=-1))
 
     def tearDown(self):
         "Remove any installed test configuration"

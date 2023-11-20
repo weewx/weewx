@@ -114,7 +114,7 @@ def generate_extension_info(config_path, config_dict, fd):
     print("\nCurrently installed extensions", file=fd)
     ext = weecfg.extension.ExtensionEngine(config_path=config_path,
                                            config_dict=config_dict,
-                                           logger=weecfg.extension.Logger(fd=fd))
+                                           printer=weecfg.extension.Logger(fd=fd))
     ext.enumerate_extensions()
 
 

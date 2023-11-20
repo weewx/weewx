@@ -6,10 +6,10 @@
 """Install and remove extensions."""
 import weecfg
 import weecfg.extension
-import weecfg.extension
 import weeutil.logger
 import weewx
 from weeutil.weeutil import bcolors, to_int
+from weeutil.printer import Printer
 
 extension_list_usage = f"""{bcolors.BOLD}weectl extension list
             [--config=FILENAME]{bcolors.ENDC}
@@ -127,6 +127,6 @@ def _get_extension_engine(config_path, dry_run=False, verbosity=1):
     ext = weecfg.extension.ExtensionEngine(config_path=config_path,
                                            config_dict=config_dict,
                                            dry_run=dry_run,
-                                           logger=weecfg.Logger(verbosity=verbosity))
+                                           printer=Printer(verbosity=verbosity))
 
     return ext
