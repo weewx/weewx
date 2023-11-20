@@ -578,9 +578,14 @@ class Source(object):
             _entry = option_as_list(_item)
             # expect 2 parameters for each option: source field, units
             if len(_entry) == 2:
-                # we have 2 parameter so that's field and units
-                _map[_key] = {'source_field': _entry[0],
-                              'unit': _entry[1]}
+                # we have 2 parameter so that's field and units, but units
+                # could be 'text' indicating a text field
+                if _entry[1] != 'text':
+                    _map[_key] = {'source_field': _entry[0],
+                                  'unit': _entry[1]}
+                else:
+                    _map[_key] = {'source_field': _entry[0],
+                                  'is_text': True}
             # if the entry is not empty then it might be valid ie just a
             # field name (eg if usUnits is specified)
             elif _entry != [''] and len(_entry) == 1:
@@ -616,13 +621,13 @@ class Source(object):
             # no unit system mapping do we have units specified for
             # each individual field
             for _key, _val in _map.items():
-                # we don't need to check dateTime and usUnits
-                if _key not in ['dateTime', 'usUnits']:
+                # we don't need to check dateTime and usUnits or fields that
+                # are marked as text
+                if _key not in ['dateTime', 'usUnits'] or not _val.get('is_text', False):
                     if 'unit' in _val:
                         # we have a unit field, do we know about it
                         if _val['unit'] not in weewx.units.conversionDict \
-                                and _val['unit'] not in weewx.units.USUnits.values() \
-                                and _val['unit'] != 'text':
+                                and _val['unit'] not in weewx.units.USUnits.values():
                             # we have an invalid unit string so tell the
                             # user and exit
                             _msg = "Unknown units '%s' specified for " \
@@ -656,10 +661,9 @@ class Source(object):
         for weewx_field, source_field_config in self.map.items():
             _unit_msg = ""
             if 'unit' in source_field_config:
-                if source_field_config['unit'] == 'text':
-                    _unit_msg = " as text"
-                else:
-                    _unit_msg = " in units '%s'" % source_field_config['unit']
+                _unit_msg = " in units '%s'" % source_field_config['unit']
+            if source_field_config.get('text', False):
+                _unit_msg = " as text"
             _msg = "     source field '%s'%s --> WeeWX field '%s'" % (source_field_config['source_field'],
                                                                       _unit_msg,
                                                                       weewx_field)
@@ -667,7 +671,7 @@ class Source(object):
                 print(_msg)
             log.info(_msg)
             # display a message if the source field is marked as cumulative
-            if 'cumulative' in source_field_config and source_field_config['cumulative']:
+            if 'is_cumulative' in source_field_config and source_field_config['is_cumulative']:
                 _msg = ("       (source field '%s' will be treated as a cumulative "
                         "value)" % source_field_config['source_field'])
                 if self.verbose:
@@ -837,7 +841,7 @@ class Source(object):
                     if self.map[_field]['source_field'] in _row:
                         # yes it is
                         # first check to see if this is a text field
-                        if 'unit' in self.map[_field] and self.map[_field]['unit'] == 'text':
+                        if self.map[_field].get('text', False):
                             # we have a text field, so accept the field
                             # contents as is
                             _rec[_field] = _row[self.map[_field]['source_field']]
@@ -926,7 +930,7 @@ class Source(object):
                             # also required for the WeeWX 'rain' field where the
                             # legacy 'rain = cumulative' option is used in the
                             # import config file
-                            if ('cumulative' in self.map[_field] and self.map[_field]['cumulative']) \
+                            if ('is_cumulative' in self.map[_field] and self.map[_field]['is_cumulative']) \
                                     or (_field == "rain" and getattr(self, 'rain', 'discrete') == "cumulative"):
                                 # we have a cumulative field, so process as such
                                 _value = self.process_cumulative(self.map[_field]['source_field'],
