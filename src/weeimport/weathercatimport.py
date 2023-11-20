@@ -185,11 +185,6 @@ class WeatherCatSource(weeimport.Source):
         # wind dir bounds
         self.wind_dir = [0, 360]
 
-        # WeatherCat data files provide a number of cumulative rainfall fields.
-        # We use field 'P' the total precipitation and treat it as a cumulative
-        # value.
-        self.rain = 'cumulative'
-
         # The WeatherCatData.cat file structure is well-defined, so we can
         # construct our import field-to-WeeWX archive field map now. The user
         # can specify the units used in the monthly data files, so first

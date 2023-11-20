@@ -72,7 +72,7 @@ class WUSource(weeimport.Source):
         'rain': {
             'source_field': 'precipTotal', 
             'unit': 'inch', 
-            'cumulative': True}, 
+            'is_cumulative': True},
         'rainRate': {
             'source_field': 'precipRate', 
             'unit': 'inch_per_hour'},
@@ -87,8 +87,7 @@ class WUSource(weeimport.Source):
             'unit': 'mile_per_hour'},
         'radiation': {
             'source_field': 'solarRadiationHigh', 
-            'unit': 'watt_per_meter_squared', 
-            'cumulative': False},
+            'unit': 'watt_per_meter_squared'},
         'UV': {
             'source_field': 'uvHigh',
             'unit': 'uv_index'}

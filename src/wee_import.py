@@ -120,7 +120,7 @@ import weeimport
 import weeimport.weeimport
 import weeutil.logger
 import weeutil.weeutil
-
+from weeutil.weeutil import bcolors
 log = logging.getLogger(__name__)
 
 # minimum WeeWX version required for this version of wee_import
@@ -128,15 +128,14 @@ REQUIRED_WEEWX = "4.0.0"
 
 description = """Import observation data into a WeeWX archive."""
 
-usage = """%(prog)s --help
+usage = f"""{bcolors.BOLD}%(prog)s --help
        %(prog)s --import-config=IMPORT_CONFIG_FILE
             [--config=CONFIG_FILE]
             [--date=YYYY-mm-dd | --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]]
             [--dry-run]
             [--verbose]
             [--no-prompt]
-            [--suppress-warnings]
-"""
+            [--suppress-warnings]{bcolors.ENDC}"""
 
 epilog = """%(prog)s will import data from an external source into a WeeWX
             archive. Daily summaries are updated as each archive record is

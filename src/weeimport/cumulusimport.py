@@ -82,72 +82,56 @@ class CumulusSource(weeimport.Source):
     default_map = {
         'dateTime': {
             'source_field': 'datetime',
-            'unit': 'unix_epoch',
-            'cumulative': False},
+            'unit': 'unix_epoch'},
         'outTemp': {
             'source_field': 'cur_out_temp',
-            'unit': None,
-            'cumulative': False},
+            'unit': None},
         'inTemp': {
             'source_field': 'cur_in_temp',
-            'unit': None,
-            'cumulative': False},
+            'unit': None},
         'outHumidity': {
             'source_field': 'cur_out_hum',
-            'unit': 'percent',
-            'cumulative': False},
+            'unit': 'percent'},
         'inHumidity': {
             'source_field': 'cur_in_hum',
-            'unit': 'percent',
-            'cumulative': False},
+            'unit': 'percent'},
         'dewpoint': {
             'source_field': 'cur_dewpoint',
-            'unit': None,
-            'cumulative': False},
+            'unit': None},
         'heatindex': {
             'source_field': 'cur_heatindex',
-            'unit': None,
-            'cumulative': False},
+            'unit': None},
         'windchill': {
             'source_field': 'cur_windchill',
-            'unit': None,
-            'cumulative': False},
+            'unit': None},
         'appTemp': {
             'source_field': 'cur_app_temp',
-            'unit': None,
-            'cumulative': False},
+            'unit': None},
         'barometer': {
             'source_field': 'cur_slp',
-            'unit': None,
-            'cumulative': False},
+            'unit': None},
         'rain': {
             'source_field': 'midnight_rain',
             'unit': None,
-            'cumulative': True},
+            'is_cumulative': True},
         'rainRate': {
             'source_field': 'cur_rain_rate',
-            'unit': None,
-            'cumulative': False},
+            'unit': None},
         'windSpeed': {
             'source_field': 'avg_wind_speed',
-            'unit': None,
-            'cumulative': False},
+            'unit': None},
         'windDir': {
             'source_field': 'avg_wind_bearing',
-            'unit': 'degree_compass',
-            'cumulative': False},
+            'unit': 'degree_compass'},
         'windGust': {
             'source_field': 'gust_wind_speed',
-            'unit': None,
-            'cumulative': False},
+            'unit': None},
         'radiation': {
             'source_field': 'cur_solar',
-            'unit': 'watt_per_meter_squared',
-            'cumulative': False},
+            'unit': 'watt_per_meter_squared'},
         'UV': {
             'source_field': 'cur_uv',
-            'unit': 'uv_index',
-            'cumulative': False}
+            'unit': 'uv_index'}
     }
 
     def __init__(self, config_dict, config_path, cumulus_config_dict, import_config_path, options):
@@ -171,12 +155,6 @@ class CumulusSource(weeimport.Source):
         # we combine Cumulus date and time fields to give a fixed format
         # date-time string
         self.raw_datetime_format = separator.join(('%d', '%m', '%y %H:%M'))
-
-        # Cumulus log files provide a number of cumulative rainfall fields. We
-        # cannot use the daily rainfall as this may reset at some time of day
-        # other than midnight (as required by WeeWX). So we use field 26, total
-        # rainfall since midnight and treat it as a cumulative value.
-        self.rain = 'cumulative'
 
         # initialise our import field-to-WeeWX archive field map
         _map = dict(CumulusSource.default_map)
