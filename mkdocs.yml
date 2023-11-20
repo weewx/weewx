@@ -98,8 +98,8 @@ nav:
       - weectl station: utilities/weectl-station.md
     - wee_import:
       - Introduction: utilities/wee_import-about.md
-      - Common options: utilities/wee_import-common_opt.md
-      - Configuration options: utilities/wee_import-config_opt.md
+      - Common options: utilities/wee_import-common-opt.md
+      - Configuration options: utilities/wee_import-config-opt.md
       - CSV: utilities/wee_import-csv.md
       - Weather Underground: utilities/wee_import-wu.md
       - Cumulus: utilities/wee_import-cumulus.md
