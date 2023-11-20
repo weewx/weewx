@@ -12,7 +12,7 @@ templates incomprehensible to anyone but a Python programmer, WeeWX adopts
 a very small subset of its power.
 
 The Cheetah generator is controlled by the configuration options in the
-section [`[CheetahGenerator]`](../../reference/skin-options/cheetahgenerator)
+section [`[CheetahGenerator]`](../reference/skin-options/cheetahgenerator.md)
 of the skin configuration file.
 
 Let's take a look at how this works.
@@ -215,7 +215,7 @@ the log file. Many errors are obvious — Cheetah will display a line number and
 list the template file in which the error occurred. Unfortunately, in other
 cases, the error message can be very cryptic and not very useful. So make
 small changes and test often. Use the utility
-[wee_reports](../../utilities/wee_reports) to speed up the process.
+[wee_reports](../utilities/wee_reports.md) to speed up the process.
 
 Here are some examples of tags:
 
@@ -250,11 +250,11 @@ Max for the month is 68.8°F, which occurred at 07-Oct-2009 15:15
 </span>
 
 The format that was used to format the temperature (`51.0`) is specified in
-section [`[Units][[StringFormat]]`](../../reference/skin-options/units/#stringformats).
+section [`[Units][[StringFormat]]`](../reference/skin-options/units.md#stringformats).
 The unit label `°F` is from section
-[`[Units][[Labels]]`](../../reference/skin-options/units/#labels), while the
+[`[Units][[Labels]]`](../reference/skin-options/units.md#labels), while the
 time format is from
-[`[Units][[TimeFormats]]`](../../reference/skin-options/units/#timeformats).
+[`[Units][[TimeFormats]]`](../reference/skin-options/units.md#timeformats).
 
 As we saw above, the tags can be very simple:
 
@@ -284,7 +284,7 @@ data emitted by the station console, augmented by any derived variables
 (_e.g._, wind chill) that you might have specified. If the observation type
 cannot be found there, the most recent record in the database will be searched.
 If it still cannot be found, WeeWX will attempt to calculate it using the
-[xtypes system](../derived).
+[xtypes system](derived.md).
 
 The most general tag for a "current" observation looks like:
 
@@ -309,7 +309,7 @@ seconds away would be acceptable.
 
 _`data_binding`_ is a _binding name_ to a database. An example would be
 `wx_binding`. See the section
-_[Binding names](../../reference/weewx-options/data-bindings)_
+_[Binding names](../reference/weewx-options/data-bindings.md)_
 for more details.
 
 _`obstype`_ is an _observation type_, such as `barometer`. This type must appear
@@ -335,7 +335,7 @@ value will appear. See the section _[Formatting options](#formatting-options)_.
 Time period `$latest` is very similar to `$current`, except that it uses the
 last available timestamp in a database. Usually, `$current` and `$latest` are
 the same, but if a data binding points to a remote database, they may not be.
-See the section _[Using multiple bindings](../../custom/multiple-bindings)_
+See the section _[Using multiple bindings](multiple-bindings.md)_
 for an example where this happened.
 
 ### Aggregation periods
@@ -367,7 +367,7 @@ done. Possible choices are listed in the
 
 _`data_binding`_ is a _binding name_ to a database. An example would be
 `wx_binding`. See the section
-_[Binding names](../../reference/weewx-options/data-bindings)_
+_[Binding names](../reference/weewx-options/data-bindings.md)_
 for more details.
 
 _`ago`_ is a keyword that depends on the aggregation period. For example, for
@@ -386,7 +386,7 @@ aggregations are supported for all types.
 _`aggregation`_ is an _aggregation type_. If you ask for `$month.outTemp.avg`
 you are asking for the _average_ outside temperature for the month. Possible
 aggregation types are given in the reference [_Aggregation
-types_](../../reference/aggtypes).
+types_](../reference/aggtypes.md).
 
 _`unit_conversion`_ is an optional unit conversion tag. If provided, the results
 will be converted into the specified units, otherwise the default units
@@ -575,7 +575,7 @@ default), then all digits will be retained.
 
 A variety of options are available to you to customize the formatting of the
 final observation value. They can be used whenever a tag results in a
-[`ValueHelper`](../../reference/valuehelper), which is almost all the time.
+[`ValueHelper`](../reference/valuehelper.md), which is almost all the time.
 This table summarizes the options:
 
 <table class="indent">
@@ -648,7 +648,7 @@ Here is the meaning of each of the optional arguments:
         <td>
 If set, use the supplied string to format the value. Otherwise, if set to
 <span class="code">None</span>, then an appropriate value from
-<span class="code"><a href="../../reference/skin-options/units/#stringformats">[Units][[StringFormats]]</a></span>
+<span class="code"><a href="../reference/skin-options/units.md#stringformats">[Units][[StringFormats]]</a></span>
 will be used.
 	</td>
     </tr>
@@ -659,7 +659,7 @@ Should the observation value be <span class="code">NONE</span>,	then use the
 supplied string (typically, something like "N/A"). If
 <span class="code">None_string</span> is set to <span class="code">None</span>,
 then the value for <span class="code">NONE</span> in
-<span class="code"><a href="../../reference/skin-options/units/#stringformats">[Units][[StringFormats]]</a></span>
+<span class="code"><a href="../reference/skin-options/units.md#stringformats">[Units][[StringFormats]]</a></span>
 will be used.
         </td>
     </tr>
@@ -822,7 +822,7 @@ Here are the examples:
         <td class="code">45.2°F</td>
         <td class="code">str</td>
         <td>
-String formatting from <span class="code"><a href="../../reference/skin-options/units/#stringformats">[Units][[StringFormats]]</a></span>. Label from <span class="code"><a href="../../reference/skin-options/units/#labels">[Units][[Labels]]</a></span>.
+String formatting from <span class="code"><a href="../reference/skin-options/units.md#stringformats">[Units][[StringFormats]]</a></span>. Label from <span class="code"><a href="../reference/skin-options/units.md#labels">[Units][[Labels]]</a></span>.
         </td>
     </tr>
     <tr>
@@ -846,7 +846,7 @@ String formatting from <span class="code"><a href="../../reference/skin-options/
         <td class="code">45.200°F</td>
         <td class="code">str</td>
         <td>
-            Specified string format used; label from <span class="code"><a href="../../reference/skin-options/units/#labels">[Units][[Labels]]</a></span>.
+            Specified string format used; label from <span class="code"><a href="../reference/skin-options/units.md#labels">[Units][[Labels]]</a></span>.
         </td>
     </tr>
     <tr>
@@ -862,7 +862,7 @@ String formatting from <span class="code"><a href="../../reference/skin-options/
         <td class="code">45.2</td>
         <td class="code">str</td>
         <td>
-            No label. The string formatting is from <span class="code"><a href="../../reference/skin-options/units/#stringformats">[Units][[StringFormats]]</a></span>.
+            No label. The string formatting is from <span class="code"><a href="../reference/skin-options/units.md#stringformats">[Units][[StringFormats]]</a></span>.
         </td>
     </tr>
     <tr>
@@ -870,7 +870,7 @@ String formatting from <span class="code"><a href="../../reference/skin-options/
         <td class="code">N/A</td>
         <td class="code">str</td>
         <td>
-            The string specified by option <span class="code">NONE</span> in <span class="code"> <a href="../../reference/skin-options/units/#stringformats">[Units][[StringFormats]]</a></span>.
+            The string specified by option <span class="code">NONE</span> in <span class="code"> <a href="../reference/skin-options/units.md#stringformats">[Units][[StringFormats]]</a></span>.
         </td>
     </tr>
     <tr>
@@ -886,7 +886,7 @@ String formatting from <span class="code"><a href="../../reference/skin-options/
         <td class="code">138&deg;</td>
         <td class="code">str</td>
         <td>
-            Formatting is from option <span class="code">degree_compass</span> in <span class="code"> <a href="../../reference/skin-options/units/#stringformats">[Units][[StringFormats]]</a></span>.
+            Formatting is from option <span class="code">degree_compass</span> in <span class="code"> <a href="../reference/skin-options/units.md#stringformats">[Units][[StringFormats]]</a></span>.
         </td>
     </tr>
     <tr>
@@ -902,7 +902,7 @@ String formatting from <span class="code"><a href="../../reference/skin-options/
         <td class="code">02-Apr-2010 16:25</td>
         <td class="code">str</td>
         <td>
-            Time formatting from <span class="code"><a href="../../reference/skin-options/units/#timeformats">[Units][[TimeFormats]]</a></span> is being used.
+            Time formatting from <span class="code"><a href="../reference/skin-options/units.md#timeformats">[Units][[TimeFormats]]</a></span> is being used.
         </td>
     </tr>
     <tr>
@@ -1058,7 +1058,7 @@ pressure. Here are some examples:
 Note how you can explicitly specify a time interval in the tag itself (2nd row
 in the table above). If you do not specify a value, then a default time
 interval, set by option
-[`time_delta`](../../reference/skin-options/units/#time_delta) in the skin
+[`time_delta`](../reference/skin-options/units.md#time_delta) in the skin
 configuration file, will be used. This value can be retrieved by using the
 syntax `$trend.time_delta` (4th row in the table).
 
@@ -1089,7 +1089,7 @@ Where:
 
 _`data_binding`_ is a _binding name_ to a database. An example would be
 `wx_binding`. See the section
-_[Binding names](../../reference/weewx-options/data-bindings)_
+_[Binding names](../reference/weewx-options/data-bindings.md)_
 for more details.
 
 _`delta`_ is one or more comma separated delta settings from the table below.
@@ -1107,7 +1107,7 @@ _`obstype`_ is an _observation type_, such as `outTemp`.
 
 _`aggregation`_ is an _aggregation type_. If you ask for `$month.outTemp.avg`
 you are asking for the _average_ outside temperature for the month. Possible
-aggregation types are given in the reference _[Aggregation types](../../reference/aggtypes)_.
+aggregation types are given in the reference _[Aggregation types](../reference/aggtypes.md)_.
 
 _`unit_conversion`_ is an optional unit conversion tag. If provided,
 the results will be converted into the specified units, otherwise the default
@@ -1198,7 +1198,7 @@ essentially reproducing the results of the simpler tag `$day.outTemp.max`.
 
 The labels used for the various observation types are available using tag
 `$obs`. These are basically the values given in the skin dictionary, section
-[`[Labels][[Generic]]`](../../reference/skin-options/labels/#generic).
+[`[Labels][[Generic]]`](../reference/skin-options/labels.md#generic).
 
 | Tag                  | Results             |
 |----------------------|---------------------|
@@ -2149,7 +2149,7 @@ is available?
 
 If you wish to introduce a static tag, that is, one that will not change with
 time (such as a Google Analytics tracker ID, or your name), then this is very
-easy: put it in section [`[Extras]`](../../reference/skin-options/extras) in
+easy: put it in section [`[Extras]`](../reference/skin-options/extras.md) in
 the skin configuration file. More information on how to do this can be found
 there.
 
@@ -2159,4 +2159,4 @@ section won't do, because then it cannot change.
 
 The answer is to write a *search list extension*. Complete directioins on how
 to do this are in the document
-[*Writing search list extensions*](../../custom/sle).
+[*Writing search list extensions*](sle.md).

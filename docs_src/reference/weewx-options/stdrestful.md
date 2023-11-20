@@ -16,14 +16,14 @@ services such as:
 #### log_success
 
 If you set a value for `log_success` here, it will override the value set at
-the [top-level](../general/#log_success) and will apply only to RESTful
+the [top-level](general.md#log_success) and will apply only to RESTful
 services. In addition, `log_success` can be set for individual services by
 putting them under the appropriate subsection (*e.g.*, under `[[CWOP]]`).
 
 #### log_failure
 
 If you set a value for `log_failure` here, it will override the value set at
-the [top-level](../general/#log_failure) and will apply only to RESTful
+the [top-level](general.md#log_failure) and will apply only to RESTful
 services. In addition, `log_failure` can be set for individual services by
 putting them under the appropriate subsection (*e.g.*, under `[[CWOP]]`).
 
@@ -65,12 +65,12 @@ Set this to `true` to register the weather station.
 #### description
 
 A description of the station. If no description is specified, the 
-[`location`](../stations#location) from section `[Station]` will be used.
+[`location`](stations.md#location) from section `[Station]` will be used.
 
 #### station_url
 
 The URL to the weather station. If no URL is specified, the
-[`station_url`](../stations#station_url) from section `[Station]`
+[`station_url`](stations.md#station_url) from section `[Station]`
 will be used. It must be a valid URL. In particular, it must start with either
 `http://` or `https://`.
 

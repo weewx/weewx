@@ -28,7 +28,7 @@ are run _first_, then the reports that move them to a webserver, `FTP` and
 results are sent off.
 
 Details for how to customize reports are in the section
-[*Customizing reports*](../../../custom/custom-reports/), in the
+[*Customizing reports*](../../custom/custom-reports.md), in the
 *Customization Guide*.
 
 #### SKIN_ROOT
@@ -36,7 +36,7 @@ Details for how to customize reports are in the section
 The directory where the skins live.
 
 If a relative path is specified, it is relative to
-[`WEEWX_ROOT`](../general/#weewx_root).
+[`WEEWX_ROOT`](general.md#weewx_root).
 
 #### HTML_ROOT
 
@@ -44,26 +44,26 @@ The target directory for the generated files. Generated files and images wil
 l be put here.
 
 If a relative path is specified, it is relative to
-[`WEEWX_ROOT`](../general/#weewx_root).
+[`WEEWX_ROOT`](general.md#weewx_root).
 
 #### log_success
 
 If you set a value for `log_success` here, it will override the value set at
-the [top-level](../general/#log_success) and will apply only to reporting.
+the [top-level](general.md#log_success) and will apply only to reporting.
 In addition, `log_success` can be set for individual reports by putting them
 under the appropriate subsection (*e.g.*, under `[[Seasons]]`).
 
 #### log_failure
 
 If you set a value for log_failure here, it will override the value set at
-the [top-level](../general/#log_failure) and will apply only to reporting.
+the [top-level](general.md#log_failure) and will apply only to reporting.
 In addition, `log_failure` can be set for individual reports by putting them
 under the appropriate subsection (*e.g.*, under `[[Seasons]]`).
 
 #### data_binding
 
 The data source to be used for the reports. It should match a binding given
-in section [`[DataBindings]`](../data-bindings/). The binding can be
+in section [`[DataBindings]`](data-bindings.md). The binding can be
 overridden in individual reports. Optional. Default is `wx_binding`.
 
 #### report_timing
@@ -71,7 +71,7 @@ overridden in individual reports. Optional. Default is `wx_binding`.
 This parameter uses a cron-like syntax that determines when a report will be
 run. The setting can be overridden in individual reports, so it is possible
 to run each report with a different schedule. Refer to the separate document
-[_Scheduling report generation_](../../../custom/report-scheduling) for how
+[_Scheduling report generation_](../../custom/report-scheduling.md) for how
 to control when reports are run. Optional. By default, a value is missing,
 which causes each report to run on each archive interval.
 
@@ -105,9 +105,9 @@ subdirectory `lang` in the skin's directory. For example, if you see a file
 #### unit_system
 
 Which unit system to use with the skin. Choices are `US`, `METRIC`, or
-`METRICWX`. See the reference section [*Units*](../units) for definitions of
+`METRICWX`. See the reference section [*Units*](../units.md) for definitions of
 these unit systems. Individual units can be overridden. See the section
-[*Changing unit systems*](../../../custom/custom-reports/#changing-unit-systems)
+[*Changing unit systems*](../../custom/custom-reports.md#changing-unit-systems)
 in the *Customization Guide* for more details.
 
 #### enable
@@ -288,4 +288,4 @@ This section defines default values for all reports. You can set:
 * Labels to be used
 * Calculation options for some derived values.
 
-See the section [*Processing order*](../../../custom/custom-reports#processing-order) in the *Customization Guide* for more details.
+See the section [*Processing order*](../../custom/custom-reports.md#processing-order) in the *Customization Guide* for more details.

@@ -14,14 +14,14 @@ information about your installation of WeeWX. This includes things such as:
     method. For example, if you installed using pip, then the nominal location
     is `~/weewx-data/weewx.conf`. For other installation methods, the location
     depends on your operating system. See the section
-    [*Where to find things*](../../../usersguide/where).
+    [*Where to find things*](../../usersguide/where.md).
 
 
 !!! note
     There is another configuration file for presentation-specific options.
     This file is called `skin.conf`, and there is one for each skin. It is
     described in the reference guide 
-    [*Skin options*](../../skin-options/introduction).
+    [*Skin options*](../skin-options/introduction.md).
 
 
 The following sections are the definitive guide to the many configuration

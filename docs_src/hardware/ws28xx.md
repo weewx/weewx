@@ -102,7 +102,7 @@ WeeWX, and the WeeWX alarms can do much more than the console alarms anyway.
 ## Configuring with `weectl device` {id=ws28xx_configuration}
 
 The WS28xx stations can be configured with the utility
-[`weectl device`](../../utilities/weectl-device/).
+[`weectl device`](../utilities/weectl-device.md).
 
 !!! Note
     Make sure you stop `weewxd` before running `weectl device`.

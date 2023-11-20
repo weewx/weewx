@@ -5,7 +5,7 @@ Redhat, including Fedora, CentOS, or Rocky.
 
 WeeWX V5 requires Python 3.7 or greater, which is only available on Redhat 8 or
 later.  For older systems, either use WeeWX V4, or install Python 3.7 then
-[install WeeWX V5 using pip](../pip).
+[install WeeWX V5 using pip](pip.md).
 
 
 ## Install pre-requisites
@@ -79,9 +79,9 @@ sudo systemctl start weewx
 ## Customize
 
 To enable uploads or to customize reports, modify the configuration file.
-See the [*Customization Guide*](../../custom/introduction) for instructions,
-and the [application](../../reference/weewx-options/introduction) and
-[skin](../../reference/skin-options/introduction) references for all
+See the [*Customization Guide*](../custom/introduction.md) for instructions,
+and the [application](../reference/weewx-options/introduction.md) and
+[skin](../reference/skin-options/introduction.md) references for all
 the options.
 
 Use any text editor, such as `nano`:

@@ -4,8 +4,8 @@ Some WeeWX users will have historical data from another source (e.g., other weat
 
 The `wee_import` utility supports importing observational data from the following sources:
 
-* a single [Comma Separated Values (CSV)](../wee_import-csv) format file
-* the historical observations of a [Weather Underground](../wee_import-wu) personal weather station
-* one or more [Cumulus](../wee_import-cumulus) monthly log files
-* one or more [Weather Display](../wee_import-wd) monthly log files
-* one or more [WeatherCat](../wee_import-weathercat) monthly .cat files
+* a single [Comma Separated Values (CSV)](wee_import-csv.md) format file
+* the historical observations of a [Weather Underground](wee_import-wu.md) personal weather station
+* one or more [Cumulus](wee_import-cumulus.md) monthly log files
+* one or more [Weather Display](wee_import-wd.md) monthly log files
+* one or more [WeatherCat](wee_import-weathercat.md) monthly .cat files

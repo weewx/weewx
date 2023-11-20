@@ -14,7 +14,7 @@ The sqlite driver name. Required.
 #### SQLITE_ROOT
 
 The location of the directory that contains the SQLite database files. If this
-is a relative path, it is relative to [`WEEWX_ROOT`](../general#weewx_root).
+is a relative path, it is relative to [`WEEWX_ROOT`](general.md#weewx_root).
 
 #### timeout
 

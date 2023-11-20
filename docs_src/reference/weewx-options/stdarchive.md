@@ -44,17 +44,17 @@ emits lots of spiky data, setting to `false` may help. Default is `true`.
 #### log_success
 
 If you set a value for `log_success` here, it will override the value set at
-the [top-level](../general/#log_success)  and will apply only to archiving
+the [top-level](general.md#log_success)  and will apply only to archiving
 operations.
 
 #### log_failure
 
 If you set a value for `log_failure` here, it will override the value set at
-the [top-level](../general/#log_failure)  and will apply only to archiving
+the [top-level](general.md#log_failure)  and will apply only to archiving
 operations.
 
 #### data_binding
 
 The data binding to be used to store the data. This should match one of the
-bindings in the [`[DataBindings]`](../data-bindings/) section. Optional.
+bindings in the [`[DataBindings]`](data-bindings.md) section. Optional.
 Default is `wx_binding`.

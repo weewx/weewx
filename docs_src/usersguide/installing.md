@@ -3,12 +3,12 @@
 If you're an old hand at installing software on Unix systems, you may be able to
 use one of our _Quickstart guides_:
 
-* [Debian](../../quickstarts/debian) - including Ubuntu, Mint, Raspberry Pi 
+* [Debian](../quickstarts/debian.md) - including Ubuntu, Mint, Raspberry Pi 
   OS, Devuan. Uses `apt`.
-* [Redhat](../../quickstarts/redhat) - including Fedora, CentOS, Rocky. Uses `yum`.
-* [SUSE](../../quickstarts/suse) - including openSUSE. Uses `zypper`.
-* [pip](../../quickstarts/pip) - any operating system. Uses `pip`
-* [git](../../quickstarts/git) - any operating system. Run directly from repository.
+* [Redhat](../quickstarts/redhat.md) - including Fedora, CentOS, Rocky. Uses `yum`.
+* [SUSE](../quickstarts/suse.md) - including openSUSE. Uses `zypper`.
+* [pip](../quickstarts/pip.md) - any operating system. Uses `pip`
+* [git](../quickstarts/git.md) - any operating system. Run directly from repository.
 
 Otherwise, continue on...
 
@@ -42,7 +42,7 @@ If you get stuck, there is a very active
 
 This is an outline of the process to install, configure, and run WeeWX:
 
-* Check the [_Hardware guide_](../../hardware/drivers).  This will let you
+* Check the [_Hardware guide_](../hardware/drivers.md).  This will let you
   know of any features, limitations, or quirks of your hardware. If your weather
   station is not in the guide, you will have to download the driver after you
   install WeeWX.
@@ -57,19 +57,19 @@ This is an outline of the process to install, configure, and run WeeWX:
 * Configure the hardware. This involves setting things like the onboard
   archive interval, rain bucket size, etc. You may have to follow directions
   given by your hardware manufacturer, or you may be able to use the utility
-  [weectl device](../../utilities/weectl-device).
+  [weectl device](../utilities/weectl-device.md).
 
 * Run WeeWX by launching the `weewxd` program, either
-  [directly](../running/#running-directly), or as a
-  [daemon](../running/#running-as-a-daemon).
+  [directly](running.md#running-directly), or as a
+  [daemon](running.md#running-as-a-daemon).
 
 * Customize the installation. Typically, this is done by changing settings in
   the WeeWX [application configuration
-  file](../../reference/weewx-options/introduction/) (typically, `weewx.conf`).
+  file](../reference/weewx-options/introduction.md) (typically, `weewx.conf`).
   For example, you might want to [register your
-  station](../../reference/weewx-options/stdrestful/#stationregistry), so it
+  station](../reference/weewx-options/stdrestful.md#stationregistry), so it
   shows up on a world-wide map of WeeWX installations. To make changes to reports,
-  see the [_Customization Guide_](../../custom/introduction/).
+  see the [_Customization Guide_](../custom/introduction.md).
 
 
 ## Installation methods
@@ -79,7 +79,7 @@ There are several different ways to install WeeWX.
 <table>
   <tr><td>Installer</td><td>Systems</td><td>Best for...</td></tr>
   <tr>
-    <td><a href="../../quickstarts/debian">Debian</a></td>
+    <td><a href="../quickstarts/debian.md">Debian</a></td>
     <td>including Ubuntu, Mint, Raspberry Pi OS, Devuan</td>
     <td rowspan=3>
       The Debian, Redhat, and SUSE package installers use <em>apt</em>, 
@@ -89,15 +89,15 @@ There are several different ways to install WeeWX.
     </td>
   </tr>
   <tr>
-    <td><a href="../../quickstarts/redhat">Redhat</a></td>
+    <td><a href="../quickstarts/redhat.md">Redhat</a></td>
     <td>including Fedora, CentOS, Rocky</td>
   </tr>
   <tr>
-    <td><a href="../../quickstarts/suse">SUSE</a></td>
+    <td><a href="../quickstarts/suse.md">SUSE</a></td>
     <td>including openSUSE</td>
   </tr>
   <tr>
-    <td><a href="../../quickstarts/pip">pip</a></td>
+    <td><a href="../quickstarts/pip.md">pip</a></td>
     <td>any operating system</td>
     <td>
 The pip installer will work on any operating system. Use this approach for macOS
@@ -109,7 +109,7 @@ extension. Root access is not needed to install, but may be needed to run.
     </td>
   </tr>
   <tr>
-    <td><a href="../../quickstarts/git">git</a></td>
+    <td><a href="../quickstarts/git.md">git</a></td>
     <td>any operating system</td>
     <td>
 If you want to install WeeWX on a system with very little storage, or if you
@@ -141,4 +141,4 @@ weectl station reconfigure
 ```
 
 See the documentation for [`weectl
-extension`](../../utilities/weectl-extension) for details.
+extension`](../utilities/weectl-extension.md) for details.

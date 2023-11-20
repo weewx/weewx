@@ -12,7 +12,7 @@ With pip installs, station data is stored in `~/weewx-data` by default,
 instead of `/home/weewx`. This allows pip installs to be done without
 root privileges. However, `/home/weewx` can still be used.
 
-The new utility [`weectl`](../utilities/weectl-about/) replaces `wee_database`,
+The new utility [`weectl`](utilities/weectl-about.md) replaces `wee_database`,
 `wee_debug`, `wee_device`, `wee_extension`, and `wee_config`. Try `weectl
 --help` to see how to use it.
 
@@ -102,7 +102,7 @@ Fix problem that prevented database from getting hit when calculating
 `pressure`. Fixes issue [#875](https://github.com/weewx/weewx/issues/875).
 
 Fix problem that prevented option
-[`stale_age`](../reference/skin-options/imagegenerator/#stale_age) from being
+[`stale_age`](reference/skin-options/imagegenerator.md#stale_age) from being
 honored in image generation. Thanks to user Ian for
 [PR #879](https://github.com/weewx/weewx/pull/879)!
 
@@ -121,7 +121,7 @@ Fix bug that caused the extension installer to crash if one of the service
 groups was missing in the configuration file. Fixes issue 
 [#886](https://github.com/weewx/weewx/issues/886).
 
-New option [`retry_wait`](../reference/weewx-options/general/#retry_wait). If
+New option [`retry_wait`](reference/weewx-options/general.md#retry_wait). If
 `weewxd` encounters a critical error, it will sleep this long before doing a
 restart.
 

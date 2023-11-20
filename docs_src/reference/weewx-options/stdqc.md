@@ -17,7 +17,7 @@ from the hardware. They are not applied to derived calculations since the
 
 In this section you list the observation types you wish to have checked, along
 with their minimum and maximum values. If not specified, the units should are
-in the same unit system as specified in [`[StdConvert]`](../stdconvert).
+in the same unit system as specified in [`[StdConvert]`](stdconvert.md).
 
 For example,
 

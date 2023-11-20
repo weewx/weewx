@@ -1,6 +1,6 @@
 # Scheduling report generation
 
-Normal WeeWX operation is to run each _[report](../../reference/weewx-options/stdreport)_
+Normal WeeWX operation is to run each _[report](../reference/weewx-options/stdreport.md)_
 defined in `weewx.conf` every archive period. While this may suit most
 situations, there may be occasions when it is desirable to run a report less
 frequently than every archive period. For example, the archive interval might
@@ -12,7 +12,7 @@ when files are generated. The _`stale_age`_ option allows control over the
 age of a file before it is regenerated, and the _`report_timing`_ option
 allows precise control over when individual reports are run.
 
-WeeWX also includes a utility [wee_reports](../../utilities/wee_reports) for
+WeeWX also includes a utility [wee_reports](../utilities/wee_reports.md) for
 those times when you need to run a report independent of the interval timing.
 For example, you might not want to wait for an archive interval to see if
 your customizations worked.
@@ -34,7 +34,7 @@ is specified, the file will be (re)generaed only when it is older than the
 indicated age. The age is specified in seconds.
 
 Details for the `stale_age` option are in the
-[`[CheetahGenerator]`](../../reference/skin-options/cheetahgenerator/#stale_age) reference.
+[`[CheetahGenerator]`](../reference/skin-options/cheetahgenerator.md#stale_age) reference.
 
 ## The report_timing option
 

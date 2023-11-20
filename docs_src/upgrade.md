@@ -12,11 +12,11 @@
 
 The instructions for upgrading WeeWX are in the quick start guides:
 
-* [Upgrading using Debian DEB](../quickstarts/debian/#upgrade)
-* [Upgrading using Redhat RPM](../quickstarts/redhat/#upgrade)
-* [Upgrading using SUSE RPM](../quickstarts/suse/#upgrade)
-* [Upgrading using pip](../quickstarts/pip/#upgrade)
-* [Upgrading using git](../quickstarts/git/#upgrade)
+* [Upgrading using Debian DEB](quickstarts/debian.md#upgrade)
+* [Upgrading using Redhat RPM](quickstarts/redhat.md#upgrade)
+* [Upgrading using SUSE RPM](quickstarts/suse.md#upgrade)
+* [Upgrading using pip](quickstarts/pip.md#upgrade)
+* [Upgrading using git](quickstarts/git.md#upgrade)
 
 The rest of this document describes the changes in each WeeWX release.
 

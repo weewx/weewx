@@ -2,12 +2,12 @@
 
 This document covers the customization of WeeWX. It assumes that you have read,
 and are reasonably familiar with, the [_Users
-Guide_](../../usersguide/introduction).
+Guide_](../usersguide/introduction.md).
 
 The introduction contains an overview of the architecture. If you are only
 interested in customizing the generated reports you can probably skip the
 introduction and proceed directly to the section
-[_Customizing reports_](../custom-reports). With this approach you can easily
+[_Customizing reports_](custom-reports.md). With this approach you can easily
 add new plot images, change the titles of images, change the units used in
 the reports, and so on.
 
@@ -16,7 +16,7 @@ RSS feeds, _etc._, then it would be worth your while to read about the
 internal architecture.
 
 Most of the guide applies to any hardware, but the exact data types are
-hardware-specific. See the [_WeeWX Hardware Guide_](../../hardware/drivers)
+hardware-specific. See the [_WeeWX Hardware Guide_](../hardware/drivers.md)
 for details of how different observation types are handled by different types
 hardware.
 
@@ -89,7 +89,7 @@ solar radiation, there are also many useful dependent types, such as wind
 chill, heat index, or ET, which are calculated from the primary data. The
 firmware in some weather stations are capable of doing many of these
 calculations on their own. For the rest, should you choose to do so, the WeeWX
-service [StdWXCalculate](../../reference/weewx-options/stdwxcalculate) can
+service [StdWXCalculate](../reference/weewx-options/stdwxcalculate.md) can
 fill in the gaps. Sometimes the firmware simply does it wrong, and you may
 choose to have WeeWX do the calculation, despite the type's presence in LOOP
 packets.
@@ -188,7 +188,7 @@ file `weewx.conf` as the first argument. Optionally, you can tell it what to
 use as the "Current" time, using either option `--epoch`, or some combination
 of `--date` and `--time`. 
 
-For more information about `wee_reports`, see the [Utilities Guide](../../utilities/wee_reports)
+For more information about `wee_reports`, see the [Utilities Guide](../utilities/wee_reports.md)
 
 
 ## The WeeWX service architecture
@@ -265,7 +265,7 @@ install of WeeWX includes the following services:
 It is easy to extend old services or to add new ones. The source distribution
 includes an example new service called MyAlarm, which sends an email when an
 arbitrary expression evaluates True. These advanced topics are covered later
-in the section [_Customizing the WeeWX service engine_](../service-engine).
+in the section [_Customizing the WeeWX service engine_](service-engine.md).
 
 
 ## The standard reporting service `StdReport`
@@ -366,7 +366,7 @@ to as _`SKIN_ROOT`_.
 !!! Note
     The symbol _`SKIN_ROOT`_ is a symbolic name to the location of the
     directory where your skins are located. It is not to be taken literally.
-    Consult the section [*Where to find things*](../../usersguide/where) in the
+    Consult the section [*Where to find things*](../usersguide/where.md) in the
     *User's Guide* for its exact location, dependent on how you installed
     WeeWX and what operating system you are using
 
@@ -414,7 +414,7 @@ Note that the three generators `FtpGenerator`, `RsyncGenerator`, and
 presentation layer. Instead, they just move files around.
 
 Which generators are to be run for a given skin is specified in the skin's
-configuration file, in the section [[Generators]](../../reference/skin-options/generators).
+configuration file, in the section [[Generators]](../reference/skin-options/generators.md).
 
 ### Templates
 
@@ -537,7 +537,7 @@ the type, such as the minimum and maximum value seen during the day, and at
 what time. These tables have names such as `archive_day_outTemp` or
 `archive_day_barometer`. They are there to optimize certain types of queries
 &mdash; their existence is generally transparent to the user. For more details,
-see the section [_Daily summaries_](../../devnotes#daily-summaries) in the
+see the section [_Daily summaries_](../devnotes.md#daily-summaries) in the
 _Developer's Notes_.
 
 ### Binding names
@@ -560,7 +560,7 @@ database to use, you specify which _binding_. Bindings do not change with the
 database implementation, so, for example, you know that `wx_binding` will
 always point to the weather database, no matter if its implementation is a
 sqlite database or a MySQL database. Bindings are listed in section
-[`[DataBindings]`](../../reference/weewx-options/data-bindings/) in the
+[`[DataBindings]`](../reference/weewx-options/data-bindings.md) in the
 WeeWX configuration file.
 
 The standard weather database binding that WeeWX uses is `wx_binding`. This

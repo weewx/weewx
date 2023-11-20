@@ -82,7 +82,7 @@ then the image file will be generated every time the generator runs.
 #### unit
 
 Normally, the unit used in a plot is set by whatever [unit group the
-types are in](../../../custom/custom-reports/#mixed-units). However,
+types are in](../../custom/custom-reports.md#mixed-units). However,
 this option allows overriding the unit used in a specific plot.
 
 ## Label options
@@ -197,7 +197,7 @@ The nominal number of ticks along the y-axis. The default is
 #### time_length
 
 The nominal length of the time period to be covered in seconds. Alternatively,
-a [duration notation](../../durations) can be used. The exact length of the
+a [duration notation](../durations.md) can be used. The exact length of the
 x-axis is chosen by the plotting engine to cover this period. Optional.
 Default is `86400` (one day).
 
@@ -278,7 +278,7 @@ These are options that are set for individual lines.
 #### aggregate_interval
 
 The time period over which the data should be aggregated, in seconds. 
-Alternatively, a [duration notation](../../durations) can be used. 
+Alternatively, a [duration notation](../durations.md) can be used. 
 Required if `aggregate_type` has been set. 
 
 #### aggregate_type
@@ -298,7 +298,7 @@ Default is to use the color in [`chart_line_colors`](#chart_line_colors).
 
 The SQL data type to be used for this plot line. For more information,
 see the section *[Including a type more than once in a
-plot](../../../custom/image-generator#include-same-sql-type-2x)*.
+plot](../../custom/image-generator.md#include-same-sql-type-2x)*.
 Optional. The default is to use the section name.
 
 #### fill_color
@@ -315,7 +315,7 @@ default is to use the SQL variable name.
 
 If there is a gap between data points bigger than this fractional amount
 of the x-axis, then a gap will be drawn, rather than a connecting line.
-See Section *[Line gaps](../../../custom/image-generator/#line-gaps)*.
+See Section *[Line gaps](../../custom/image-generator.md#line-gaps)*.
 Optional. The default is to always draw the line.
 
 #### line_type

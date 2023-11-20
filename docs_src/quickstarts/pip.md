@@ -297,9 +297,9 @@ probably want to switch to using real hardware. This is how to reconfigure.
 ## Customize
 
 To enable uploads or to customize reports, modify the configuration file.
-See the [*Customization Guide*](../../custom/introduction) for instructions,
-and the [application](../../reference/weewx-options/introduction) and
-[skin](../../reference/skin-options/introduction) references for all
+See the [*Customization Guide*](../custom/introduction.md) for instructions,
+and the [application](../reference/weewx-options/introduction.md) and
+[skin](../reference/skin-options/introduction.md) references for all
 the options.
 
 Use any text editor, such as `nano`:

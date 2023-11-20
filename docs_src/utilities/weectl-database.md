@@ -133,7 +133,7 @@ schema specified in `weewx.conf`. Finally, it copies over the data from your
 old database into the new database.
 
 See the section [_Changing the database unit system in an existing
-database_](../../custom/database/#change-unit-system) in the _Customization
+database_](../custom/database.md#change-unit-system) in the _Customization
 Guide_ for step-by-step instructions that use this option.
 
 
@@ -226,9 +226,9 @@ database before performing this action.
 
 For further information on interval weighting and recalculation of daily
 `windSpeed` maximum values, see the sections
-[_Changes to daily summaries_](../../upgrade/#changes-to-daily-summaries) and
-[_Recalculation of wind speed maximum values_](../../upgrade/#recalculation-of-windspeed-maximum-values)
-in the [_Upgrade Guide_](../../upgrade).
+[_Changes to daily summaries_](../upgrade.md#changes-to-daily-summaries) and
+[_Recalculation of wind speed maximum values_](../upgrade.md#recalculation-of-windspeed-maximum-values)
+in the [_Upgrade Guide_](../upgrade.md).
 
 
 ## Recalculate daily summary weights

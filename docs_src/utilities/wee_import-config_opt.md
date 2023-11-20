@@ -78,7 +78,7 @@ The default is `derive`.
 
 ### `qc`{#csv_qc}
 
-Determines whether simple quality control checks are applied to imported data. Setting `qc = True` will result in `wee_import` applying the WeeWX `StdQC` minimum and maximum checks to any imported observations. `wee_import` quality control checks use the same configuration settings, and operate in the same manner, as the [_StdQC_](../../reference/weewx-options/stdqc) service. For example, for minimum/maximum quality checks, if an observation falls outside of the quality control range for that observation, the observation will be set to `None`. In such cases you will be alerted through a short message similar to:
+Determines whether simple quality control checks are applied to imported data. Setting `qc = True` will result in `wee_import` applying the WeeWX `StdQC` minimum and maximum checks to any imported observations. `wee_import` quality control checks use the same configuration settings, and operate in the same manner, as the [_StdQC_](../reference/weewx-options/stdqc.md) service. For example, for minimum/maximum quality checks, if an observation falls outside of the quality control range for that observation, the observation will be set to `None`. In such cases you will be alerted through a short message similar to:
 
 ```
 2016-01-12 10:00:00 AEST (1452556800) record value 'outTemp' 194.34 outside limits (0.0, 120.0)
@@ -90,7 +90,7 @@ The default is `True`.
 
 ### `calc_missing`{#csv_calc_missing}
 
-Determines whether any missing derived observations will be calculated from the imported data. Setting `calc_missing = True` will result in `wee_import` using the WeeWX `StdWXCalculate` service to calculate any missing derived observations from the imported data. Setting `calc_missing = False` will result in WeeWX leaving any missing derived observations as `None`. See [_[StdWXCalculate]_](../../reference/weewx-options/stdwxcalculate) for details of the observations the `StdWXCalculate` service can calculate.
+Determines whether any missing derived observations will be calculated from the imported data. Setting `calc_missing = True` will result in `wee_import` using the WeeWX `StdWXCalculate` service to calculate any missing derived observations from the imported data. Setting `calc_missing = False` will result in WeeWX leaving any missing derived observations as `None`. See [_[StdWXCalculate]_](../reference/weewx-options/stdwxcalculate.md) for details of the observations the `StdWXCalculate` service can calculate.
 
 The default is `True`.
 
@@ -843,6 +843,6 @@ The `[[Units]]` stanza defines the units used in the WeatherCat monthly .cat fil
 obs_type = weewx_unit_name
 ```
 
-Where `obs_type` is one of `temperature`, `pressure`, `rain` or `speed` and `weewx_unit_name` is the WeeWX unit name of the units used by that particular `obs_type` (refer to the [_Units_](../../reference/units) for details of available WeeWX unit names). As WeatherCat supports a different suite of possible units only a subset of the available WeeWX unit names can be used for some settings.
+Where `obs_type` is one of `temperature`, `pressure`, `rain` or `speed` and `weewx_unit_name` is the WeeWX unit name of the units used by that particular `obs_type` (refer to the [_Units_](../reference/units.md) for details of available WeeWX unit names). As WeatherCat supports a different suite of possible units only a subset of the available WeeWX unit names can be used for some settings.
 
 There is no default.

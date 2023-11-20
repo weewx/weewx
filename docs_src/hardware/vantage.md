@@ -7,7 +7,7 @@ or TCP/IP interface.
 ## Configuring with `weectl device` {id=vantage_configuration}
 
 The Vantage stations can be configured with the utility
-[`weectl device`](../../utilities/weectl-device/).
+[`weectl device`](../utilities/weectl-device.md).
 
 !!! NOTE
 

@@ -5,7 +5,7 @@ calibration errors in your instruments. It is very general and flexible.
 
 Because this service is normally run after `StdConvert`, the units to be used
 should be the same as the target unit system chosen in
-[`StdConvert`](../stdconvert). It is also important that this service be run
+[`StdConvert`](stdconvert.md). It is also important that this service be run
 before the archiving service `StdArchive`, so that it is the corrected data
 that are stored.
 

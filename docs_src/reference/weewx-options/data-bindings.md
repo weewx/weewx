@@ -1,7 +1,7 @@
 # [DataBindings]
 
 A "data binding" associates storage characteristics with a specific database.
-Each binding contains a database from the [`[Databases]`](../databases)
+Each binding contains a database from the [`[Databases]`](databases.md)
 section plus parameters such as schema, table name, and mechanism for
 aggregating data.
 
@@ -23,9 +23,9 @@ What follows is more detailed information about each of the binding options.
 #### database
 
 The actual database to be used &mdash; it should match one of the sections in
-[`[Databases]`](../databases). Should you decide to use a MySQL database,
+[`[Databases]`](databases.md). Should you decide to use a MySQL database,
 instead of the default SQLite database, this is the place to change it. See
-the section [*Configuring MySQL/MariaDB*](../../../usersguide/mysql-mariadb)
+the section [*Configuring MySQL/MariaDB*](../../usersguide/mysql-mariadb.md)
 for details.
 
 Required.

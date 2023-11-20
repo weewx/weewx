@@ -180,7 +180,7 @@ No default.
 ### --units=UNIT_SYSTEM
 
 What units to use for your reports. Options are `us`, `metricwx`, or `metric`.
-See the Appendix [_Units_](../../custom/appendix/#units) for details. Default
+See the section [_Units_](../reference/units.md) for details. Default
 is `us`.
 
 ### --config=FILENAME

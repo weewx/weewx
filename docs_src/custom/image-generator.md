@@ -5,7 +5,7 @@ like how they look, or you want to generate different plots, perhaps with
 different aggregation types?
 
 The Image generator is controlled by the configuration options in the
-reference [_[ImageGenerator]_](../../reference/skin-options/imagegenerator).
+reference [_[ImageGenerator]_](../reference/skin-options/imagegenerator.md).
 
 These options are specified in the `[ImageGenerator]` section of a skin
 configuration file. Let's take a look at the beginning part of this section.
@@ -237,12 +237,12 @@ today's outside temperature and dewpoint:
 
 Both `outTemp` and `dewpoint` belong to unit group
 `group_temperature`, so this plot will use whatever unit has been specified
-for that group. See the section [*Mixed units*](../custom-reports/#mixed-units)
+for that group. See the section [*Mixed units*](custom-reports.md#mixed-units)
 for details.
 
 However, supposed you'd like to offer both Metric and US Customary
 versions of the same plot? You can do this by using option
-[`unit`](../../reference/skin-options/imagegenerator/#unit)
+[`unit`](../reference/skin-options/imagegenerator.md/#unit)
 to override the unit used for individual plots:
 
 ``` ini hl_lines="4 9"
@@ -266,7 +266,7 @@ degrees Celsius.
 ## Line gaps {#line-gaps}
 
 If there is a time gap in the data, the option
-[`line_gap_fraction`](../../reference/skin-options/imagegenerator/#line_gap_fraction) controls how line plots will be drawn.
+[`line_gap_fraction`](../reference/skin-options/imagegenerator.md/#line_gap_fraction) controls how line plots will be drawn.
 Here's what a plot looks like without and with this option being specified:
 
 | ![Gap not shown](../images/day-gap-not-shown.png) |

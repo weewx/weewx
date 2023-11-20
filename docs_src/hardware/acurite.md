@@ -73,7 +73,7 @@ consoles are always in USB mode 4.
 
 ## Configuring with `weectl device` {id=acurite_configuration}
 
-The [`weectl device`](../../utilities/weectl-device/) utility cannot be used to
+The [`weectl device`](../utilities/weectl-device.md) utility cannot be used to
 configure AcuRite stations.
 
 ## Station data {id=acurite_data}

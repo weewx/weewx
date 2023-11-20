@@ -20,14 +20,14 @@ of supported stations, and for pictures to help identify your hardware!  The
 many types of hardware, including some not yet supported by WeeWX.
 
 The WeeWX distribution includes drivers for many types of hardware. These
-are listed in the driver list in the [Hardware Guide](hardware/drivers).
+are listed in the driver list in the [Hardware Guide](hardware/drivers.md).
 See the [WeeWX Wiki](https://github.com/weewx/weewx/wiki) for additional
 drivers and other extensions.
 
 
 ## Installation
 
-See the section [_Installing WeeWX_](./usersguide/installing) in the _User's
+See the section [_Installing WeeWX_](usersguide/installing.md) in the _User's
 Guide_.
 
 ## Documentation
@@ -36,18 +36,18 @@ WeeWX includes extensive documentation, and the WeeWX developers work hard to
 keep it relevant and up to date. If you have questions, please consult the
 documentation first.
 
-* [User's Guide](usersguide/introduction) - installation, getting started, where
+* [User's Guide](usersguide/introduction.md) - installation, getting started, where
   to find things, backup/restore, troubleshooting
-* [Customization Guide](custom/introduction) - instructions for customizing
+* [Customization Guide](custom/introduction.md) - instructions for customizing
   reports and plots, localization, formatting, writing extensions
-* [Utilities Guide](utilities/weewxd) - tools to manage stations, reports, and
+* [Utilities Guide](utilities/weewxd.md) - tools to manage stations, reports, and
   data
-* [Hardware Guide](hardware/drivers) - how to configure hardware, features of
+* [Hardware Guide](hardware/drivers.md) - how to configure hardware, features of
   supported hardware
-* [Upgrade Guide](upgrade) - detailed changes in each release
-* [Reference](reference/weewx-options/introduction) - application options, skin
+* [Upgrade Guide](upgrade.md) - detailed changes in each release
+* [Reference](reference/weewx-options/introduction.md) - application options, skin
   options, definition of units and unit systems
-* [Notes for developers](devnotes) - things you should know if you write drivers
+* [Notes for developers](devnotes.md) - things you should know if you write drivers
   or skins
 
 ## Support
@@ -86,5 +86,5 @@ discussions about developing drivers, extensions, or working on the core code.
 
 WeeWX is licensed under the GNU Public License v3.
 
-© [Copyright](copyright) 2009-2023 Thomas Keffer, Matthew Wall, and Gary
+© [Copyright](copyright.md) 2009-2023 Thomas Keffer, Matthew Wall, and Gary
 Roderick

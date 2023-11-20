@@ -7,7 +7,7 @@ to `skin.conf` only.
 
 This is the list of search list objects that will be scanned by the
 template engine, looking for tags. See the section *[Defining new
-tags](../../../custom/cheetah-generator/#defining-new-tags)* and the [Cheetah
+tags](../../custom/cheetah-generator.md#defining-new-tags)* and the [Cheetah
 documentation](https://cheetahtemplate.org/) for details on search
 lists. If no `search_list` is specified, a default list will be used.
 
@@ -88,7 +88,7 @@ runs.
     Precise control over when a run is available through use of the
     `report_timing` option. The `report_timing` option uses a CRON-like
     syntax to specify precisely when a report should be run. See the guide
-    *[Scheduling report generation](../../../custom/report-scheduling)*
+    *[Scheduling report generation](../../custom/report-scheduling.md)*
     for details.
 
 ## [[SummaryByDay]]

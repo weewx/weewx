@@ -7,7 +7,7 @@ The station emits partial packets, which may confuse some online services.
 ## Configuring with `weectl device` {id=wmr9x8_configuration}
 
 The WMR9x8 stations cannot be configured with the utility
-[`weectl device`](../../utilities/weectl-device/).
+[`weectl device`](../utilities/weectl-device.md).
 
 
 ## Station data {id=wmr9x8_data}

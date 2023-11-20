@@ -66,7 +66,7 @@ starting point, then modify it. Put the results in the `user` subdirectory,
 where it will be safe from upgrades. For example, suppose you like the
 `schemas.wview_small` schema, but you need to store the type `electricity`
 from the example
-[*Adding a second data source*](../service-engine/#add-data-source). The type
+[*Adding a second data source*](service-engine.md#add-data-source). The type
 `electricity` does not appear in the schema, so you'll have to add it before
 starting up WeeWX. We will call the resulting new schema
 `user.myschema.schema`.
@@ -152,7 +152,7 @@ database. But, what if you already have a database, and you want to modify
 its schema, perhaps by adding a column or two? Creating a new starting schema
 is not going to work because it is only used when the database is first
 created. Here is where the command
-[`weectl database`](../../utilities/weectl-database) can be useful.
+[`weectl database`](../utilities/weectl-database.md) can be useful.
 
 There are two ways to do this. Both are covered below.
 
@@ -172,13 +172,13 @@ If you want to make some minor modifications to an existing database, perhaps
 adding or removing a column, then this can easily be done using the command
 `weectl database` with an appropriate action. We will cover the cases of
 adding, removing, and renaming a type. See the documentation for [`weectl
-database`](../../utilities/weectl-database) for more details.
+database`](../utilities/weectl-database.md) for more details.
 
 #### Adding a type {#add-archive-type}
 
 Suppose you have an existing database, to which you want to add a type, such as
 the type `electricity` from the example [*Adding a second data
-source*](../service-engine/#add-data-source). This can be done in one easy
+source*](service-engine.md#add-data-source). This can be done in one easy
 step using the action `weectl database add-column`:
 
 ``` shell
@@ -240,7 +240,7 @@ Here is the general strategy to do this.
 3.  Make sure you have the necessary permissions to create the new database.
 
 4.  Use the action
-    [`weectl database reconfigure`](../../utilities/weectl-database/#reconfigure-a-database)
+    [`weectl database reconfigure`](../utilities/weectl-database.md/#reconfigure-a-database)
     to create the new database and populate it with data from the old
     database.
 
@@ -314,7 +314,7 @@ Here are the details:
     rebuilding the daily summaries inside the new database. This will be
     done automatically by `weewxd` at the next startup. Alternatively, it
     can be done manually using the
-    [`weectl database rebuild-daily`](../../utilities/weectl-database/) action:
+    [`weectl database rebuild-daily`](../utilities/weectl-database.md/) action:
 
     ``` shell
     weectl database rebuild-daily
@@ -325,7 +325,7 @@ Here are the details:
 Normally, data are stored in the databases using US Customary units, and you
 shouldn't care; it is an "implementation detail". Data can always be displayed
 using any set of units you want &mdash; the section [*Changing unit
-systems*](../custom-reports/#changing-unit-systems) explains how to change
+systems*](custom-reports.md#changing-unit-systems) explains how to change
 the reporting units. Nevertheless, there may be special situations where you
 wish to store the data in Metric units. For example, you may need to allow
 direct programmatic access to the database from another piece of software that
@@ -334,7 +334,7 @@ expects metric units.
 You should not change the database unit system midstream. That is, do
 not start with one unit system then, some time later, switch to another.
 WeeWX cannot handle databases with mixed unit systems &mdash; see the
-section [`[StdConvert]`](../../reference/weewx-options/stdconvert) in the
+section [`[StdConvert]`](../reference/weewx-options/stdconvert.md) in the
 WeeWX User's Guide. However, you can reconfigure the database by
 copying it to a new database, performing the unit conversion along the
 way. You then use this new database.
@@ -344,7 +344,7 @@ The general strategy is identical to the strategy outlined above in the section
 only difference is that instead of specifying a new starting schema, you specify
 a different database unit system. This means that instead of steps 1 and 2
 above, you edit the configuration file and change option `target_unit` in
-section [`[StdConvert]`](../../reference/weewx-options/stdconvert) to reflect
+section [`[StdConvert]`](../reference/weewx-options/stdconvert.md) to reflect
 your choice. For example, if you are switching to metric units, the option will
 look like:
 

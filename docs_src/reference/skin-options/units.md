@@ -23,7 +23,7 @@ Celsius.
 
 Note that the measurement unit is always specified in the singular. That is,
 specify `degree_C` or `foot`, not `degrees_C` or `feet`. See the reference
-section *[Units](../../units)* for more information, including a concise summary
+section *[Units](../units.md)* for more information, including a concise summary
 of the groups, their members, and which options can be used for each group.
 
 #### group_altitude
@@ -174,7 +174,7 @@ The specifiers `%x`, `%X`, and `%A` code locale dependent date, time, and
 weekday names, respectively. Hence, if you set an appropriate environment
 variable `LANG`, then the date and times should follow local conventions (see
 section [Environment variable
-LANG](../../../custom/localization/#environment-variable-LANG) for details on
+LANG](../../custom/localization.md#environment-variable-LANG) for details on
 how to do this). However, the results may not look particularly nice, and you
 may want to change them. For example, I use this in the U.S.:
 
@@ -225,7 +225,7 @@ growing_base = 50.0, degree_F
 #### time_delta
 
 Set to the time difference over which you want trends to be calculated.
-Alternatively, a [duration notation](../../durations) can be used. The default
+Alternatively, a [duration notation](../durations.md) can be used. The default
 is 3 hours.
 
 #### time_grace

@@ -1,8 +1,8 @@
 # [Engine] 
 
 This section is used to configure the internal service engine in WeeWX. It is
-for advanced customization. Details on how to do this can be found in the
-[*Services*](../../../custom/services) section of the *Customization Guide*.
+for advanced customization. Details on how to do this can be found in the section
+[*Customizing the service engine*](../../custom/service-engine.md) of the *Customization Guide*.
 
 ## [[Services]]
 

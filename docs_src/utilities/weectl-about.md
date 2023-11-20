@@ -25,15 +25,15 @@ Available subcommands:
     station             Create, modify, or upgrade a station data area.
 ```
 
-## [weectl database](../weectl-database)
+## [weectl database](weectl-database.md)
 Use this subcommand to manage your WeeWX database
 
-## [weectl debug](../weectl-debug)
+## [weectl debug](weectl-debug.md)
 Use this subcommand to generate output that captures your WeeWX environment
 and configuration file. This is useful for remote debugging.
 
-## [weectl extension](../weectl-extension)
+## [weectl extension](weectl-extension.md)
 Use this subcommand to install, uninstall, and list WeeWX extensions.
 
-## [weectl station](../weectl-station)
+## [weectl station](weectl-station.md)
 Use this subcommand to create and manage stations.

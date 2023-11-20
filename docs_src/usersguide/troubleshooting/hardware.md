@@ -41,7 +41,7 @@ Most hardware with data-logging includes a parameter to specify the archive
 interval used by the logger. If the hardware and driver support it, WeeWX will
 use this interval as the archive interval. If not, WeeWX will fall back to using
 option `archive_interval` specified in
-[[StdArchive]](../../../reference/weewx-options/stdarchive/). The default 
+[[StdArchive]](../../reference/weewx-options/stdarchive.md). The default 
 fallback value is 300 seconds (5 minutes).
 
 If the hardware archive interval is large, it will take a long time before
@@ -55,7 +55,7 @@ Since reports are generated when a new archive record arrives, a large archive
 interval means that reports will be generated infrequently.
 
 If you want data and reports closer to real-time, use the
-[weectl device](../../../utilities/weectl-device) utility to change the 
+[weectl device](../../utilities/weectl-device.md) utility to change the 
 interval.
 
 

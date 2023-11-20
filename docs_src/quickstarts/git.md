@@ -124,9 +124,9 @@ If you have problems, check the system log for entries from `weewxd`.
 ## Customize
 
 To enable uploads or to customize reports, modify the configuration file.
-See the [*Customization Guide*](../../custom/introduction) for instructions,
-and the [application](../../reference/weewx-options/introduction) and
-[skin](../../reference/skin-options/introduction) references for all the 
+See the [*Customization Guide*](../custom/introduction.md) for instructions,
+and the [application](../reference/weewx-options/introduction.md) and
+[skin](../reference/skin-options/introduction.md) references for all the 
 options.
 
     nano ~/weewx-data/weewx.conf

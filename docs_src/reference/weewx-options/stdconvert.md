@@ -13,7 +13,7 @@ choose a unit system and then stick with it. This means that users coming from
 wview (which uses US Customary) should not change the default setting. Having
 said this, there is a way of reconfiguring the database to use another unit
 system. See the section [*Changing the unit system in an existing
-database*](../../../custom/database/#change-unit-system) in the
+database*](../../custom/database.md#change-unit-system) in the
 *Customization Guide*.
 
 !!! note
@@ -21,7 +21,7 @@ database*](../../../custom/database/#change-unit-system) in the
     it has nothing to do with what units are displayed in plots or files.
     Those units are specified in the skin configuration file, as described
     in the *Customization Guide*, under section
-    [*Changing unit systems*](../../../custom/custom-reports/#changing-unit-systems).
+    [*Changing unit systems*](../../custom/custom-reports.md#changing-unit-systems).
     Because of this, unless you have a special purpose application, there is
     really no good reason to change from the default, which is `US`.
 
@@ -35,6 +35,6 @@ database*](../../../custom/database/#change-unit-system) in the
 Set to either `US`, `METRICWX`, or `METRIC`. The difference between `METRICWX`
 and `METRIC` is that the former uses `mm` instead of `cm` for rain, and `m/s`
 instead of `km/hr` for wind speed. See the reference section
-[*Units*](../../units) for the exact differences beween each of these options.
+[*Units*](../units.md) for the exact differences beween each of these options.
 
 Default is `US`.

@@ -281,7 +281,7 @@ English to German, edit `weewx.conf`, and change the highlighted line:
 
 By contrast, if the skin has been internationalized, but there is no
 localization file for your language, then you will have to supply one. See
-the section [_Internationalized, but your language is missing_](../localization/#internationalized-missing-language).
+the section [_Internationalized, but your language is missing_](localization.md#internationalized-missing-language).
 
 
 ## Changing date and time formats
@@ -357,10 +357,10 @@ For example, this would result in a date/time string such as
 Each _unit system_ is a set of units. For example, the `METRIC` unit system
 uses centimeters for rain, kilometers per hour for wind speed, and degree
 Celsius for temperature. The option
-[`unit_system`](../../reference/weewx-options/stdreport/#unit_system)
+[`unit_system`](../reference/weewx-options/stdreport.md#unit_system)
 controls which unit system will be used in your reports. The available choices
 are `US`, `METRIC`, or `METRICWX`. The option is case-insensitive. See
-[_Units_](../../reference/units) for the units defined in each of these unit
+[_Units_](../reference/units.md) for the units defined in each of these unit
 systems.
 
 By default, WeeWX uses `US` (US Customary) system. Suppose you would rather

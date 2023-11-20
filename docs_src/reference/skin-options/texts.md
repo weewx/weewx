@@ -14,7 +14,7 @@ For example,
 
 would cause "Aktuelle Werte" to be used whereever `$gettext("Current
 Conditions"` appeared. See the section on
-[`$gettext`](../cheetah/#internationalization-support-with-gettext).
+[`$gettext`](../../custom/cheetah-generator.md#gettext-internationalization).
 
 !!! Note
     Strings that include commas must be included in single or double quotes.

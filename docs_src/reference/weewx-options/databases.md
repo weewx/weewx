@@ -15,12 +15,12 @@ memory efficient. For most purposes it serves nicely.
 
 Set to `SQLite` to signal that this is a SQLite database. The definitions that
 go with type `SQLite` are defined in section
-[`[DatabaseTypes] / [[SQLite]]`](../database-types#sqlite).
+[`[DatabaseTypes] / [[SQLite]]`](database-types.md#sqlite).
 
 #### database_name
 
 The path to the SQLite file. If the path is relative, it is relative to
-[`SQLITE_ROOT`](../database-types#sqlite_root). Default is `weewx.sdb`.
+[`SQLITE_ROOT`](database-types.md#sqlite_root). Default is `weewx.sdb`.
 
 #### timeout
 
@@ -36,7 +36,7 @@ highly-scalable, but more complicated to administer.
 
 Set to `MySQL` to signal that this is a MySQL database. The definitions that
 go with type `MySQL` are defined in section
-[`[DatabaseTypes] / [[MySQL]]`](../database-types#mysql).
+[`[DatabaseTypes] / [[MySQL]]`](database-types.md#mysql).
 
 #### database_name
 

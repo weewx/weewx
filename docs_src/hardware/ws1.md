@@ -6,7 +6,7 @@ The WS1 stations produce data every 1/2 second or so.
 ## Configuring with `weectl device` {id=ws1_configuration}
 
 The WS1 stations cannot be configured with the utility
-[`weectl device`](../../utilities/weectl-device/).
+[`weectl device`](../utilities/weectl-device.md).
 
 
 ## Station data {id=ws1_data}

@@ -16,7 +16,7 @@ WeeWX includes support for many types of weather stations. In addition to
 hardware support, WeeWX comes with a software simulator, useful for testing
 and evaluation.
 
-The [driver compatibility table](../../hardware/drivers/) in the _Hardware
+The [driver compatibility table](../hardware/drivers.md) in the _Hardware
 guide_ has a detailed list of the manufacturers and models supported by the
 drivers that come with WeeWX. If you do not see your hardware in this table,
 check the list of [supported hardware](https://weewx.com/hardware.html); the

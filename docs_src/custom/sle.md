@@ -59,7 +59,7 @@ Class `Station` has such an attribute, so Cheetah evaluates it.
 
 What this attribute returns is not a raw value, say `700`, nor
 even a string. Instead, it returns an instance of the class
-[`ValueHelper`](../../reference/valuehelper), a special class defined in module
+[`ValueHelper`](../reference/valuehelper.md), a special class defined in module
 `weewx.units`. Internally, it holds not only the raw value, but
 also references to the formats, labels, and conversion targets you
 specified in your configuration file. Its job is to make sure that the
@@ -246,7 +246,7 @@ Going through the example, line by line:
         `TimeSpan`. This will contain the valid start and ending
         times used by the template. Normally, this is all valid times,
         but if your template appears under one of the
-        ["Summary By"](../../reference/skin-options/cheetahgenerator/#summarybyday)
+        ["Summary By"](../reference/skin-options/cheetahgenerator.md#summarybyday)
         sections in the `[CheetahGenerator]` section of `skin.conf`, then
         it will contain the timespan of that time period.
     -   `db_lookup` This is a function supplied by the generator.
@@ -276,7 +276,7 @@ Going through the example, line by line:
         to be used. We simply pass in `db_lookup`.
     -   The third, `context`, is the time *context* to be used
         when formatting times. The set of possible choices is given by
-        sub-section [`[[TimeFormats]]`](../../reference/skin-options/units/#timeformats)
+        sub-section [`[[TimeFormats]]`](../reference/skin-options/units.md#timeformats)
         in the configuration file. Our new tag, `$seven_day`
         is pretty similar to `$week`, so we will just use
         `'week'`, indicating that we want a time format that is
@@ -592,7 +592,7 @@ Going through the example, line by line:
 
 2.  However, in this example, notice that the argument to
     `colorize()` is an instance of class
-    [`ValueHelper`](../../reference/valuehelper), instead of a
+    [`ValueHelper`](../reference/valuehelper.md), instead of a
     simple float.
 
     As before, we do not define an initializer, `__init__()`,
@@ -600,7 +600,7 @@ Going through the example, line by line:
 
 3.  The argument `value_vh` will contain many things, including
     formatting and preferred units, but, for now, we are only interested
-    in the [`ValueTuple`](../../reference/valuetuple) contained
+    in the [`ValueTuple`](../reference/valuetuple.md) contained
     within, which can be extracted with the attribute `value_t`.
 
 4.  The variable `value_vt` could be in any unit that measures
