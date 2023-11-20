@@ -5,8 +5,7 @@ how `wee_import` is used:
 wee_import --help
 ```
 ```
-Usage: wee_import --help
-       wee_import --version
+usage: wee_import --help
        wee_import --import-config=IMPORT_CONFIG_FILE
             [--config=CONFIG_FILE]
             [--date=YYYY-mm-dd | --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]]
@@ -20,15 +19,15 @@ Import observation data into a WeeWX archive.
 
 Options:
   -h, --help            show this help message and exit
-  --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
-  --import-config=IMPORT_CONFIG_FILE
+  --config CONFIG_FILE  Use configuration file CONFIG_FILE.
+  --import-config IMPORT_CONFIG_FILE
                         Use import configuration file IMPORT_CONFIG_FILE.
   --dry-run             Print what would happen but do not do it.
-  --date=YYYY-mm-dd     Import data for this date. Format is YYYY-mm-dd.
-  --from=YYYY-mm-dd[THH:MM]
+  --date YYYY-mm-dd     Import data for this date. Format is YYYY-mm-dd.
+  --from YYYY-mm-dd[THH:MM]
                         Import data starting at this date or date-time. Format
                         is YYYY-mm-dd[THH:MM].
-  --to=YYYY-mm-dd[THH:MM]
+  --to YYYY-mm-dd[THH:MM]
                         Import data up until this date or date-time. Format is
                         YYYY-mm-dd[THH:MM].
   --verbose             Print and log useful extra output.
@@ -36,7 +35,6 @@ Options:
                         prompts.
   --suppress-warnings   Suppress warnings to stdout. Warnings are still
                         logged.
-  --version             Display wee_import version number.
 
 wee_import will import data from an external source into a WeeWX
 archive. Daily summaries are updated as each archive record is
