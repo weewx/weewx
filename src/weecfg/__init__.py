@@ -676,7 +676,11 @@ def extract_tar(filename, target_dir, logger=None):
 
     with tarfile.open(filename, mode='r') as tar_archive:
         member_names = [os.path.normpath(x.name) for x in tar_archive.getmembers()]
-        tar_archive.extractall(target_dir)
+        # If the version of Python offers data filtering, use it.
+        if hasattr(tarfile, 'data_filter'):
+            tar_archive.extractall(target_dir, filter='data')
+        else:
+            tar_archive.extractall(target_dir)
 
     del tarfile
     return member_names
