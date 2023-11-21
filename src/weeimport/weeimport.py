@@ -110,7 +110,7 @@ class Source(object):
 
     special_processing_fields = ('dateTime', 'usUnits', 'interval')
 
-    def __init__(self, config_dict, import_config_dict, namespace):
+    def __init__(self, config_dict, import_config_dict, **kwargs):
         """A generic initialisation.
 
         Set some realistic default values for options read from the import
@@ -178,10 +178,10 @@ class Source(object):
         self.import_QC = weewx.qc.QC(mm_dict)
 
         # process our command line options
-        self.dry_run = namespace.dry_run
-        self.verbose = namespace.verbose
-        self.no_prompt = namespace.no_prompt
-        self.suppress = namespace.suppress
+        self.dry_run = kwargs['dry_run']
+        self.verbose = kwargs['verbose']
+        self.no_prompt = kwargs['no_prompt']
+        self.suppress_warning = kwargs['suppress_warning']
 
         # By processing any --date, --from and --to options we need to derive
         # self.first_ts and self.last_ts; the earliest (exclusive) and latest
@@ -190,10 +190,10 @@ class Source(object):
         # for each import type).
         # First we see if we have a valid --date, if not then we look for
         # --from and --to.
-        if namespace.date or namespace.date == "":
+        if kwargs['date'] or kwargs['date'] == "":
             # there is a --date but is it valid
             try:
-                _first_dt = dt.strptime(namespace.date, "%Y-%m-%d")
+                _first_dt = dt.strptime(kwargs['date'], "%Y-%m-%d")
             except ValueError:
                 # Could not convert --date. If we have a --date it must be
                 # valid otherwise we can't continue so raise it.
@@ -204,15 +204,15 @@ class Source(object):
                 _last_dt = _first_dt + datetime.timedelta(days=1)
                 self.first_ts = time.mktime(_first_dt.timetuple())
                 self.last_ts = time.mktime(_last_dt.timetuple())
-        elif namespace.date_from or namespace.date_to or namespace.date_from == '' or namespace.date_to == '':
+        elif kwargs['from_datetime'] or kwargs['to_datetime'] or kwargs['from_datetime'] == '' or kwargs['to_datetime'] == '':
             # There is a --from and/or a --to, but do we have both and are
             # they valid.
             # try --from first
             try:
-                if 'T' in namespace.date_from:
-                    _from_dt = dt.strptime(namespace.date_from, "%Y-%m-%dT%H:%M")
+                if 'T' in kwargs['from_datetime']:
+                    _from_dt = dt.strptime(kwargs['from_datetime'], "%Y-%m-%dT%H:%M")
                 else:
-                    _from_dt = dt.strptime(namespace.date_from, "%Y-%m-%d")
+                    _from_dt = dt.strptime(kwargs['from_datetime'], "%Y-%m-%d")
                 _from_ts = time.mktime(_from_dt.timetuple())
             except TypeError:
                 # --from not specified we can't continue so raise it
@@ -224,10 +224,10 @@ class Source(object):
                 raise WeeImportOptionError(_msg)
             # try --to
             try:
-                if 'T' in namespace.date_to:
-                    _to_dt = dt.strptime(namespace.date_to, "%Y-%m-%dT%H:%M")
+                if 'T' in kwargs['to_datetime']:
+                    _to_dt = dt.strptime(kwargs['to_datetime'], "%Y-%m-%dT%H:%M")
                 else:
-                    _to_dt = dt.strptime(namespace.date_to, "%Y-%m-%d")
+                    _to_dt = dt.strptime(kwargs['to_datetime'], "%Y-%m-%d")
                     # since it is just a date we want the end of the day
                     _to_dt += datetime.timedelta(days=1)
                 _to_ts = time.mktime(_to_dt.timetuple())
@@ -282,20 +282,17 @@ class Source(object):
         self.period_duplicates = set()
 
     @staticmethod
-    def source_factory(namespace):
+    def source_factory(config_path, config_dict, import_config, **kwargs):
         """Factory to produce a Source object.
 
         Returns an appropriate object depending on the source type. Raises a
         weewx.UnsupportedFeature error if an object could not be created.
         """
 
-        # get some key WeeWX parameters
-        # first the config dict to use
-        config_path, config_dict = weecfg.read_config(namespace.config_option)
         # get wee_import config dict if it exists
         import_config_path, import_config_dict = weecfg.read_config(None,
                                                                     None,
-                                                                    file_name=namespace.import_config_option)
+                                                                    file_name=import_config)
         # we should have a source parameter at the root of out import config
         # file, try to get it but be prepared to catch the error.
         try:
@@ -316,11 +313,11 @@ class Source(object):
         module_class = '.'.join(['weeimport',
                                  source.lower() + 'import',
                                  source + 'Source'])
-        return get_object(module_class)(config_dict,
-                                        config_path,
-                                        import_config_dict.get(source, {}),
+        return get_object(module_class)(config_path,
+                                        config_dict,
                                         import_config_path,
-                                        namespace)
+                                        import_config_dict.get(source, {}),
+                                        **kwargs)
 
     def run(self):
         """Main entry point for importing from an external source.
@@ -964,7 +961,6 @@ class Source(object):
                                     and self.map[_field]['unit'] in ['degree_C', 'degree_F', 'percent'] \
                                     and _value >= 255.0:
                                 _value = None
-
                             # if there is no mapped field for a unit system we
                             # have to do field by field unit conversions
                             if _units is None:
@@ -988,17 +984,17 @@ class Source(object):
                             _msg = "Warning: Import field '%s' is mapped to WeeWX " \
                                    "field '%s' but the" % (self.map[_field]['source_field'],
                                                            _field)
-                            if not self.suppress:
+                            if not self.suppress_warning:
                                 print(_msg)
                             log.info(_msg)
                             _msg = "         import field '%s' could not be found " \
                                    "in one or more records." % self.map[_field]['source_field']
-                            if not self.suppress:
+                            if not self.suppress_warning:
                                 print(_msg)
                             log.info(_msg)
                             _msg = "         WeeWX field '%s' will be "\
                                    "set to 'None' in these records." % _field
-                            if not self.suppress:
+                            if not self.suppress_warning:
                                 print(_msg)
                             log.info(_msg)
                             # make sure we do this warning once only
@@ -1314,12 +1310,12 @@ class Source(object):
                         _msg = "    %d duplicate records were identified "\
                                "in period %d:" % (num_duplicates,
                                                   self.period_no)
-                    if not self.suppress:
+                    if not self.suppress_warning:
                         print(_msg)
                     log.info(_msg)
                     for ts in sorted(self.period_duplicates):
                         _msg = "        %s" % timestamp_to_string(ts)
-                        if not self.suppress:
+                        if not self.suppress_warning:
                             print(_msg)
                         log.info(_msg)
                     # add the period duplicates to the overall duplicates

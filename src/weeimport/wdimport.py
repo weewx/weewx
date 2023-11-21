@@ -145,7 +145,8 @@ class WDSource(weeimport.Source):
         'outTemp': {
             'source_field': 'temperature'},
         'outHumidity': {
-            'source_field': 'humidity'},
+            'source_field': 'humidity',
+            'unit': 'percent'},
         'dewpoint': {
             'source_field': 'dewpoint'},
         'heatindex': {
@@ -157,15 +158,19 @@ class WDSource(weeimport.Source):
         'windSpeed': {
             'source_field': 'windspeed'},
         'windDir': {
-            'source_field': 'direction'},
+            'source_field': 'direction',
+            'unit': 'degree_compass'},
         'windGust': {
             'source_field': 'gustspeed'},
         'radiation': {
-            'source_field': 'radiation'},
+            'source_field': 'radiation',
+            'unit': 'watt_per_meter_squared'},
         'UV': {
-            'source_field': 'uv'},
+            'source_field': 'uv',
+            'unit': 'uv_index'},
         'soilMoist1': {
-            'source_field': 'soilmoist'},
+            'source_field': 'soilmoist',
+            'unit': 'centibar'},
         'soilTemp1': {
             'source_field': 'soiltemp'},
         'extraTemp1': {
@@ -198,10 +203,11 @@ class WDSource(weeimport.Source):
             'source_field': 'humid7'}
     }
 
-    def __init__(self, config_dict, config_path, wd_config_dict, import_config_path, options):
+    def __init__(self, config_path, config_dict, import_config_path,
+                 wd_config_dict, **kwargs):
 
         # call our parents __init__
-        super().__init__(config_dict, wd_config_dict, options)
+        super().__init__(config_dict, wd_config_dict, **kwargs)
 
         # save the import config path
         self.import_config_path = import_config_path
@@ -396,11 +402,11 @@ class WDSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        if options.date:
-            _msg = "     date=%s" % options.date
+        if kwargs['date']:
+            _msg = "     date=%s" % kwargs['date']
         else:
             # we must have --from and --to
-            _msg = "     from=%s, to=%s" % (options.date_from, options.date_to)
+            _msg = "     from=%s, to=%s" % (kwargs['from_datetime'], kwargs['to_datetime'])
         if self.verbose:
             print(_msg)
         log.debug(_msg)
@@ -461,7 +467,7 @@ class WDSource(weeimport.Source):
             print("All WeeWX UV fields will be set to None.")
         if not self.solar_sensor:
             print("All WeeWX radiation fields will be set to None.")
-        if options.date or options.date_from:
+        if kwargs['date'] or kwargs['from_datetime']:
             print("Observations timestamped after %s and "
                   "up to and" % timestamp_to_string(self.first_ts))
             print("including %s will be imported." % timestamp_to_string(self.last_ts))

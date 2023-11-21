@@ -55,11 +55,11 @@ class CSVSource(weeimport.Source):
                     'NORTHWEST': 315.0, 'NORTHNORTHWEST': 337.5
                     }
 
-    def __init__(self, config_dict, config_path, csv_config_dict,
-                 import_config_path, options):
+    def __init__(self, config_path, config_dict, import_config_path,
+                 csv_config_dict, **kwargs):
 
         # call our parents __init__
-        super().__init__(config_dict, csv_config_dict, options)
+        super().__init__(config_dict, csv_config_dict, **kwargs)
 
         # save our import config path
         self.import_config_path = import_config_path
@@ -127,17 +127,17 @@ class CSVSource(weeimport.Source):
             print(_msg)
         log.debug(_msg)
         _msg = "     config=%s, import-config=%s" % (config_path,
-                                                     self.import_config_path)
+                                                     import_config_path)
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        if options.date:
-            _msg = "     source=%s, date=%s" % (self.source, options.date)
+        if kwargs['date']:
+            _msg = "     source=%s, date=%s" % (self.source, kwargs['date'])
         else:
             # we must have --from and --to
             _msg = "     source=%s, from=%s, to=%s" % (self.source,
-                                                       options.date_from,
-                                                       options.date_to)
+                                                       kwargs['from_datetime'],
+                                                       kwargs['to_datetime'])
         if self.verbose:
             print(_msg)
         log.debug(_msg)
@@ -194,7 +194,7 @@ class CSVSource(weeimport.Source):
             _msg = "All WeeWX radiation fields will be set to None."
             print(_msg)
             log.info(_msg)
-        if options.date or options.date_from:
+        if kwargs['date'] or kwargs['from_datetime']:
             _msg = "Observations timestamped after %s and " \
                    "up to and" % timestamp_to_string(self.first_ts)
             print(_msg)

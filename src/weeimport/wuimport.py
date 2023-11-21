@@ -95,11 +95,11 @@ class WUSource(weeimport.Source):
     # additional fields required for (in this case) calculation of barometer
     _extra_fields = ['pressureMin', 'pressureMax']
 
-    def __init__(self, config_dict, config_path, wu_config_dict,
-                 import_config_path, options):
+    def __init__(self, config_path, config_dict, import_config_path,
+                 wu_config_dict, **kwargs):
 
         # call our parents __init__
-        super().__init__(config_dict, wu_config_dict, options)
+        super().__init__(config_dict, wu_config_dict, **kwargs)
 
         # save our import config path
         self.import_config_path = import_config_path
@@ -155,7 +155,6 @@ class WUSource(weeimport.Source):
         self.map = self.parse_map(_map,
                                   self.wu_config_dict.get('FieldMap', {}),
                                   self.wu_config_dict.get('FieldMapExtensions', {}))
-        print("self.map=%s" % (self.map,))
         # For a WU import we might have to import multiple days but we can only
         # get one day at a time from WU. So our start and end properties
         # (counters) are datetime objects and our increment is a timedelta.
@@ -185,13 +184,13 @@ class WUSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        if options.date:
-            _msg = "     station=%s, date=%s" % (self.station_id, options.date)
+        if kwargs['date']:
+            _msg = "     station=%s, date=%s" % (self.station_id, kwargs['date'])
         else:
             # we must have --from and --to
             _msg = "     station=%s, from=%s, to=%s" % (self.station_id,
-                                                        options.date_from,
-                                                        options.date_to)
+                                                        kwargs['from_datetime'],
+                                                        kwargs['to_datetime'])
         if self.verbose:
             print(_msg)
         log.debug(_msg)
@@ -224,7 +223,7 @@ class WUSource(weeimport.Source):
         self.print_map()
         if self.calc_missing:
             print("Missing derived observations will be calculated.")
-        if options.date or options.date_from:
+        if kwargs['date'] or kwargs['from_datetime']:
             print("Observations timestamped after %s and up to and" % timestamp_to_string(self.first_ts))
             print("including %s will be imported." % timestamp_to_string(self.last_ts))
         if self.dry_run:
