@@ -51,6 +51,10 @@ Change parameter `description`.
 
 Update the logging wiki.
 
+Log to `~/weewx-data/weewx.log` by default. Use 
+[TimedRotatingFileHandler](https://docs.python.org/3/library/logging.handlers.html#timedrotatingfilehandler)
+
+
 ## Wiki
 
 Update the wiki entries for going from MySQL to SQLite and for SQLite to MySQL,
