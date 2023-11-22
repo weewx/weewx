@@ -136,7 +136,7 @@ class StdReportEngine(threading.Thread):
 
             # Fetch and build the skin_dict:
             try:
-                skin_dict = _build_skin_dict(self.config_dict, report)
+                skin_dict = build_skin_dict(self.config_dict, report)
             except SyntaxError as e:
                 log.error("Syntax error: %s", e)
                 log.error("   ****       Report ignored")
@@ -220,7 +220,7 @@ class StdReportEngine(threading.Thread):
             os.chdir(cwd)
 
 
-def _build_skin_dict(config_dict, report):
+def build_skin_dict(config_dict, report):
     """Find and build the skin_dict for the given report"""
 
     #######################################################################

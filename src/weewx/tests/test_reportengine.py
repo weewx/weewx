@@ -13,7 +13,7 @@ import weeutil.config
 import weeutil.logger
 import weeutil.weeutil
 import weewx
-from weewx.reportengine import _build_skin_dict
+from weewx.reportengine import build_skin_dict
 
 log = logging.getLogger(__name__)
 weewx.debug = 1
@@ -47,7 +47,7 @@ class TestReportEngine(unittest.TestCase):
         self.config_dict = weeutil.config.deep_copy(CONFIG_DICT)
 
     def test_default(self):
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         self.assertEqual(skin_dict['Units']['Groups']['group_pressure'], 'inHg')
         self.assertEqual(skin_dict['Units']['Labels']['day'], [" day", " days"])
         # Without a 'lang' entry, there should not be a 'Texts' section:
@@ -58,7 +58,7 @@ class TestReportEngine(unittest.TestCase):
         # Override the units to be used for group pressure
         self.config_dict['StdReport']['Defaults'].update(
             {'Units': {'Groups': {'group_pressure': 'mbar'}}})
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         self.assertEqual(skin_dict['Units']['Groups']['group_pressure'], 'mbar')
 
     def test_defaults_with_reports_override(self):
@@ -66,21 +66,21 @@ class TestReportEngine(unittest.TestCase):
         # Override the units to be used for group pressure
         self.config_dict['StdReport']['SeasonsReport'].update(
             {'Units': {'Groups': {'group_pressure': 'mbar'}}})
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         self.assertEqual(skin_dict['Units']['Groups']['group_pressure'], 'mbar')
 
     def test_override_unit_system_in_defaults(self):
         """Test specifying a unit system in [[Defaults]]"""
         # Specify that metric be used by default
         self.config_dict['StdReport']['Defaults']['unit_system'] = 'metricwx'
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         self.assertEqual(skin_dict['Units']['Groups']['group_pressure'], 'mbar')
 
     def test_override_unit_system_in_report(self):
         """Test specifying a unit system for a specific report"""
         # Specify that metric be used for this specific report
         self.config_dict['StdReport']['SeasonsReport']['unit_system'] = 'metricwx'
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         self.assertEqual(skin_dict['Units']['Groups']['group_pressure'], 'mbar')
 
     def test_override_unit_system_in_report_and_defaults(self):
@@ -91,7 +91,7 @@ class TestReportEngine(unittest.TestCase):
         # But override the default unit to be used for pressure
         self.config_dict['StdReport']['Defaults'].update(
             {'Units': {'Groups': {'group_pressure': 'mbar'}}})
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         # Because the override for the specific report has precedence,
         # the units should be unchanged.
         self.assertEqual(skin_dict['Units']['Groups']['group_pressure'], 'inHg')
@@ -104,7 +104,7 @@ class TestReportEngine(unittest.TestCase):
         # But override the default unit to be used for pressure for a specific report
         self.config_dict['StdReport']['SeasonsReport'].update(
             {'Units': {'Groups': {'group_pressure': 'mbar'}}})
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         # The override for the specific report should take precedence.
         self.assertEqual(skin_dict['Units']['Groups']['group_pressure'], 'mbar')
 
@@ -112,7 +112,7 @@ class TestReportEngine(unittest.TestCase):
         """Test adding a lang spec to a report"""
         # Specify that the default language is German
         self.config_dict['StdReport']['Defaults']['lang'] = 'de'
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         # That should change the unit system, as well as make translation texts available.
         self.assertEqual(skin_dict['Units']['Groups']['group_rain'], 'mm')
         self.assertEqual(skin_dict['Units']['Labels']['day'], [" Tag", " Tage"])
@@ -123,7 +123,7 @@ class TestReportEngine(unittest.TestCase):
         self.config_dict['StdReport']['Defaults']['lang'] = 'fr'
         # ... but ask for German for this report.
         self.config_dict['StdReport']['SeasonsReport']['lang'] = 'de'
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         # The results should reflect German
         self.assertEqual(skin_dict['Units']['Groups']['group_rain'], 'mm')
         self.assertEqual(skin_dict['Units']['Labels']['day'], [" Tag", " Tage"])
@@ -134,7 +134,7 @@ class TestReportEngine(unittest.TestCase):
         self.config_dict['StdReport']['Defaults'].update(
             {'Labels': {'Generic': {'inTemp': 'foo'}}}
         )
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         self.assertEqual(skin_dict['Labels']['Generic']['inTemp'], 'foo')
 
     def test_override_lang2(self):
@@ -143,7 +143,7 @@ class TestReportEngine(unittest.TestCase):
         self.config_dict['StdReport']['SeasonsReport'].update(
             {'Labels': {'Generic': {'inTemp': 'foo'}}}
         )
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         self.assertEqual(skin_dict['Labels']['Generic']['inTemp'], 'foo')
 
     def test_override_lang3(self):
@@ -152,7 +152,7 @@ class TestReportEngine(unittest.TestCase):
         self.config_dict['StdReport']['Defaults'].update(
             {'Labels': {'Generic': {'inTemp': 'foo'}}}
         )
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         # Because the override for the specific report has precedence, we should stay with German.
         self.assertEqual(skin_dict['Labels']['Generic']['inTemp'], 'Raumtemperatur')
 
@@ -161,7 +161,7 @@ class TestReportEngine(unittest.TestCase):
         Test [[Defaults]]"""
         self.config_dict['StdReport']['Defaults']['lang'] = 'de'
         self.config_dict['StdReport']['Defaults']['unit_system'] = 'metric'
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         # The unit_system override should win. NB: 'metric' uses cm for rain. 'metricwx' uses mm.
         self.assertEqual(skin_dict['Units']['Groups']['group_rain'], 'cm')
 
@@ -170,32 +170,32 @@ class TestReportEngine(unittest.TestCase):
         Test a specific report"""
         self.config_dict['StdReport']['SeasonsReport']['lang'] = 'de'
         self.config_dict['StdReport']['SeasonsReport']['unit_system'] = 'metric'
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         # The unit_system override should win. NB: 'metric' uses cm for rain. 'metricwx' uses mm.
         self.assertEqual(skin_dict['Units']['Groups']['group_rain'], 'cm')
 
     def test_override_root(self):
         self.config_dict['StdReport']['SeasonsReport']['SKIN_ROOT'] = 'alt_skins'
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         self.assertEqual(skin_dict['SKIN_ROOT'], 'alt_skins')
 
     def test_default_log_specs(self):
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         self.assertTrue(skin_dict['log_success'])
 
     def test_override_defaults_log_specs(self):
         self.config_dict['StdReport']['Defaults']['log_success'] = False
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         self.assertFalse(skin_dict['log_success'])
 
     def test_override_report_log_specs(self):
         self.config_dict['StdReport']['log_success'] = False
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         self.assertFalse(skin_dict['log_success'])
 
     def test_global_override_log_specs(self):
         self.config_dict['log_success'] = False
-        skin_dict = _build_skin_dict(self.config_dict, 'SeasonsReport')
+        skin_dict = build_skin_dict(self.config_dict, 'SeasonsReport')
         self.assertFalse(skin_dict['log_success'])
 
 
