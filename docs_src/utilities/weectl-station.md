@@ -16,6 +16,7 @@ See the section [_Options_](#options) below for details of the various options.
         [--latitude=LATITUDE] [--longitude=LONGITUDE]
         [--register=(y,n) [--station-url=URL]]
         [--units=(us|metricwx|metric)]
+        [--weewx-root=DIRECTORY]
         [--skin-root=DIRECTORY]
         [--sqlite-root=DIRECTORY]
         [--html-root=DIRECTORY]

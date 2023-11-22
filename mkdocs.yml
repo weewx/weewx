@@ -95,6 +95,7 @@ nav:
       - weectl debug: utilities/weectl-debug.md
       - weectl device: utilities/weectl-device.md
       - weectl extension: utilities/weectl-extension.md
+      - weectl report: utilities/weectl-report.md
       - weectl station: utilities/weectl-station.md
     - wee_import:
       - Introduction: utilities/wee_import-about.md
@@ -106,7 +107,6 @@ nav:
       - Weather Display: utilities/wee_import-wd.md
       - WeatherCat: utilities/wee_import-weathercat.md
       - Troubleshooting: utilities/wee_import-troubleshoot.md
-    - wee_reports: utilities/wee_reports.md
 
   - "Hardware guide":
     - Drivers: hardware/drivers.md

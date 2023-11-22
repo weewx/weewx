@@ -90,7 +90,7 @@ def add_subparser(subparsers):
     database_parser = subparsers.add_parser('database',
                                             usage=database_usage,
                                             description='Manages WeeWX databases',
-                                            help="Manages WeeWX databases.",
+                                            help="Manage WeeWX databases.",
                                             epilog=epilog)
     # In the following, the 'prog' argument is necessary to get a proper error message.
     # See Python issue https://bugs.python.org/issue42297

@@ -145,7 +145,7 @@ class StdReportEngine(threading.Thread):
             # Default action is to run the report. Only reason to not run it is
             # if we have a valid report report_timing, and it did not trigger.
             if self.record:
-                # StdReport called us not wee_reports so look for a report_timing
+                # StdReport called us not "weectl report run" so look for a report_timing
                 # entry if we have one.
                 timing_line = skin_dict.get('report_timing')
                 if timing_line:

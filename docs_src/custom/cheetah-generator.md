@@ -4,7 +4,8 @@ File generation is done using the [Cheetah](https://cheetahtemplate.org/)
 templating engine, which processes a _template_, replacing any symbolic _tags_,
 then produces an output file. Typically, it runs after each new archive record
 (usually about every five minutes), but it can also run on demand using the
-utility `wee_reports`.
+utility 
+[`weectl report run`](../utilities/weectl-report.md#run-reports-on-demand).
 
 The Cheetah engine is very powerful, essentially letting you have the full
 semantics of Python available in your templates. As this would make the
@@ -213,9 +214,10 @@ of how that happens.
 If there is a tag error during template generation, the error will show up in
 the log file. Many errors are obvious — Cheetah will display a line number and
 list the template file in which the error occurred. Unfortunately, in other
-cases, the error message can be very cryptic and not very useful. So make
-small changes and test often. Use the utility
-[wee_reports](../utilities/wee_reports.md) to speed up the process.
+cases, the error message can be very cryptic and not very useful. So make small
+changes and test often. Use the utility [weectl report
+run](../utilities/weectl-report.md#run-reports-on-demand) to speed up the
+process.
 
 Here are some examples of tags:
 
