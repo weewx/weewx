@@ -31,7 +31,7 @@ def list_reports(config_path):
     weeutil.logger.setup('weectl', config_dict)
 
     print(
-        f"\n{bcolors.BOLD}{'Report' : >20}  {'Enabled':^8} {'Units':^8} {'Language':^8}{bcolors.ENDC}")
+        f"\n{bcolors.BOLD}{'Report' : >20}  {'Skin':<12} {'Enabled':^8} {'Units':^8} {'Language':^8}{bcolors.ENDC}")
     for report in config_dict['StdReport'].sections:
         if report == 'Defaults':
             continue
@@ -42,11 +42,14 @@ def list_reports(config_path):
         except SyntaxError as e:
             unit_system = "N/A"
             lang = "N/A"
+            skin = "N/A"
         else:
             unit_system = skin_dict["unit_system"].upper()
             lang = skin_dict["lang"].upper()
+            skin = skin_dict['skin']
 
-        print(f"{report : >20}  {'Y' if enabled else 'N':^8} {unit_system:^8} {lang:^8}")
+        print(f"{report : >20}  {skin:<12} {'Y' if enabled else 'N':^8} "
+              f"{unit_system:^8} {lang:^8}")
 
 
 def run_reports(config_path,
