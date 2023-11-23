@@ -1,6 +1,6 @@
 #!/bin/sh
 # postinst script for weewx debian package
-# Copyright 2013-2019 Matthew Wall
+# Copyright 2013-2023 Matthew Wall
 #
 # ways this script might be invoked:
 #
@@ -19,6 +19,11 @@ set -e
 
 cfgfile=/etc/weewx/weewx.conf
 cfgapp=/usr/bin/weectl
+
+# FIXME: get these from /etc/default/weewx?
+WEEWX_USER=weewx
+WEEWX_GROUP=weewx
+WEEWX_HOME=/var/lib/weewx
 
 # insert the driver and stanza into the configuration file
 insert_driver() {
@@ -218,6 +223,35 @@ get_conf_version() {
     echo $(grep '^version.*=' $1 | sed -e 's/\s*version\s*=\s*//' | sed -e 's/-.*//')
 }
 
+# create the user that the daemon will run as, but only if not already exist
+create_user() {
+    if ! getent group | grep -q "^$WEEWX_GROUP:"; then
+        echo -n "adding group $WEEWX_GROUP..."
+        addgroup --quiet --system $WEEWX_GROUP || true
+        echo "done"
+    fi
+    if ! getent passwd | grep -q "^$WEEWX_USER:"; then
+        echo -n "adding system user $WEEWX_USER..."
+        adduser --quiet --system --ingroup $WEEWX_GROUP \
+                --no-create-home --disabled-password weewx || true
+        echo "done"
+    fi
+    test -d $WEEWX_HOME || mkdir $WEEWX_HOME
+    usermod -d $WEEWX_HOME -g $WEEWX_GROUP $WEEWX_USER > /dev/null 2>&1
+}
+
+# set the permissions on the data and logs so they are owned by weewx user
+set_permissions() {
+    if getent passwd | grep -q "^$WEEWX_USER:"; then
+        chmod 2755 /etc/weewx
+        chmod 2755 /var/lib/weewx
+        chmod 2755 /var/log/weewx
+        chown -R $WEEWX_USER:adm /etc/weewx
+        chown -R $WEEWX_USER:adm /var/lib/weewx
+        chown -R $WEEWX_USER:adm /var/log/weewx
+    fi
+}
+
 case "$1" in
 configure)
         if [ "$2" != "" ]; then
@@ -226,15 +260,11 @@ configure)
         else
             # virgin install so insert debconf values into the config file
             install_weewxconf
-
-            # create the weewx user
-            addgroup --quiet --system weewx
-            adduser --quiet --system --ingroup weewx --no-create-home --disabled-password weewx
-            # set permissions
-            chown -R weewx:weewx /etc/weewx
-            chown -R weewx:adm /var/lib/weewx
-            chown -R weewx:adm /var/log/weewx
         fi
+
+        # create weewx user and set permissions (if needed)
+        create_user
+        set_permissions
 
         # precompile the bytecode
         python3 -m compileall /usr/share/weewx > /dev/null

@@ -1,6 +1,6 @@
 #!/bin/sh
 # prerm script for weewx debian package
-# Copyright 2013 Matthew Wall
+# Copyright 2013-2023 Matthew Wall
 #
 # ways this script might be invoked:
 #
@@ -17,11 +17,11 @@ set -e
 case "$1" in
 remove|upgrade)
         # stop the weewx daemon
-        invoke-rc.d weewx stop
+        systemctl stop weewx
 
         # remove any bytecompiled code
         find /usr/share/weewx -name '*.pyc' -delete
-	      find /usr/share/weewx -name __pycache__ -delete
+	find /usr/share/weewx -name __pycache__ -delete
         ;;
 esac
 
