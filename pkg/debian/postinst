@@ -246,9 +246,11 @@ set_permissions() {
         chmod 2755 /etc/weewx
         chmod 2755 /var/lib/weewx
         chmod 2755 /var/log/weewx
+        chmod 2775 /var/www/html/weewx
         chown -R $WEEWX_USER:adm /etc/weewx
         chown -R $WEEWX_USER:adm /var/lib/weewx
         chown -R $WEEWX_USER:adm /var/log/weewx
+        chown -R $WEEWX_USER:adm /var/www/html/weewx
     fi
 }
 

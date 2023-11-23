@@ -7,14 +7,16 @@ For example, `weectl extension uninstall` just uninstalls without confirmation.
 
 ## Package installers
 
-/var/run/weewxd.pid is not a valid default for pid, at least not systemd
-specifying pid only works for root, otherwise must ensure permissions
-weewx vs weewxd for log label?
-Make weewxd logging go to /var/log/weewx/weewxd.log
-Make weectl logging go to /var/log/weewx/weectl.log
-Get pre-log-initialization output to show up properly
-Verify that process name still works on non-systemd systems
-Try /usr/share/weewx/user as USER_ROOT, since /etc is *not* for code
+- /var/run/weewxd.pid is not a valid default for pid, at least not systemd
+- specifying pid only works for root, otherwise must ensure permissions
+- weewx vs weewxd for log label?
+- Make weewxd logging go to /var/log/weewx/weewxd.log
+- Make weectl logging go to /var/log/weewx/weectl.log 
+- Get pre-log-initialization output to show up properly
+- Verify that process name still works on non-systemd systems
+- Try /usr/share/weewx/user as USER_ROOT, since /etc is *not* for code
+- need to set permissions for cc3000 and vantage udev devices
+- verify the weewx-multi scenario using systemd
 
 For new install:
 * Set `WEEWX_ROOT=/etc/weewx`
@@ -35,10 +37,21 @@ rename `/usr/share/weewx/user` to `/usr/share/weewx/user-YYmmdd`
 - should we use /home/weewx/weewx-data instead of /etc/weewx?  if so, should
    an upgrade leave /etc/weewx in place, or move it to /home/weewx/weewx-data?
 
-when installing with pip, the weewx installation belongs to the user who did
-the install.  when installing using apt/yum/zypper, the installation belongs
-to the system, so a weewx user owns it all.  pip is for developer/tinkerer,
-whereas apt/yum is for appliance.  git is for developer.
+For the documentation:
+
+Ehen installing with pip, the weewx installation belongs to the user who did
+the install.  When installing using apt/yum/zypper, the installation belongs
+to the system, so a weewx user owns it all.
+
+  pip - tinkerer, developer, system without apt/yum/zypper
+  apt/yum/zypper - easiest install, appliance
+  git(src) - developer, minimal system, multiple python configurations
+
+Ee want /var/log/weewx so that weewx-multi will emit single log for each
+weewxd instance.
+
+Ee want all logs to /var/log/weewx/weewx.log so that it is clear if someone
+is running weewxd and weectl at the same time.
 
 
 ## Testing

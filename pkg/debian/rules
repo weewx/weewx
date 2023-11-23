@@ -44,6 +44,7 @@ install:
 	mkdir -p $(DST)/etc/udev/rules.d
 	mkdir -p $(DST)/var/lib/weewx
 	mkdir -p $(DST)/var/log/weewx
+	mkdir -p $(DST)/var/www/html/weewx
 
 # copy the weewx code
 	cp -r $(SRC)/src/* $(DST_BINDIR)
@@ -76,7 +77,7 @@ install:
 	cp $(DST_CFGDIR)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist
 
 # create the system init configuration
-# FIXME: if no systemd, then install init.d script
+# FIXME: if no systemd, then install sysV script
 	cat $(SRC)/src/weewx_data/util/systemd/weewx.service | sed \
  -e 's%ExecStart=.*%ExecStart=/usr/bin/weewxd --daemon --pidfile=/var/lib/weewx/weewxd.pid /etc/weewx/weewx.conf%' \
  -e 's%#Type=.*%Type=forking%' \
