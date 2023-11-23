@@ -79,9 +79,11 @@ install:
 # create the system init configuration
 # FIXME: if no systemd, then install sysV script
 	cat $(SRC)/src/weewx_data/util/systemd/weewx.service | sed \
- -e 's%ExecStart=.*%ExecStart=/usr/bin/weewxd --daemon --pidfile=/var/lib/weewx/weewxd.pid /etc/weewx/weewx.conf%' \
+ -e 's%ExecStart=.*%ExecStart=/usr/bin/weewxd --daemon --pidfile=/run/weewx/weewxd.pid /etc/weewx/weewx.conf%' \
  -e 's%#Type=.*%Type=forking%' \
- -e 's%#PIDFile=.*%PIDFile=/var/lib/weewx/weewxd.pid%' \
+ -e 's%#RuntimeDirectory=.*%RuntimeDirectory=weewx%' \
+ -e 's%#RuntimeDirectoryMode=.*%RuntimeDirectoryMode=775%' \
+ -e 's%#PIDFile=.*%PIDFile=/run/weewx/weewxd.pid%' \
  -e 's%#User=weewx%User=weewx%' \
  -e 's%#Group=weewx%Group=weewx%' \
  > $(DST)/etc/systemd/system/weewx.service

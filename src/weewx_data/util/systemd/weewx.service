@@ -14,7 +14,9 @@ After=time-sync.target
 ExecStart=weewxd weewx.conf
 StandardOutput=null
 #Type=forking
-#PIDFile=/run/weewxd.pid
+#RuntimeDirectory=weewx
+#RuntimeDirectoryMode=775
+#PIDFile=/run/weewx/weewxd.pid
 #User=weewx
 #Group=weewx
 
