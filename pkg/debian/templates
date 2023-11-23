@@ -27,9 +27,7 @@ Template: weewx/register
 Type: boolean
 Default: false
 Description: register this station?
- You can register your station on weewx.com, where it will be included in a map.
- If you choose to do so, you will also need a unique URL to identify your station
- (such as a website, or a WeatherUnderground link).
+ You can register your station on weewx.com, where it will be included in a map. If you choose to do so, you will also need a unique URL to identify your station (such as a website, or a WeatherUnderground link).
 
 Template: weewx/station_url
 Type: string
