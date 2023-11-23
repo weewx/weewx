@@ -198,22 +198,22 @@ merge_weewxconf() {
         if [ -f $cfgfile.dist ]; then
             DSTVER=$(get_conf_version $cfgfile.dist)
             if dpkg --compare-versions $DSTVER eq $NEWVER; then
-                echo saving previous config file as $cfgfile-$OLDVER
+                echo "Saving previous config file as $cfgfile-$OLDVER"
                 cp -p $cfgfile $cfgfile-$OLDVER
-                echo saving distribution config file as $cfgfile-$NEWVER
+                echo "Saving distribution config file as $cfgfile-$NEWVER"
                 cp -p $cfgfile.dist $cfgfile-$NEWVER
-                echo merging previous and distribution into $cfgfile
+                echo "Merging previous and distribution into $cfgfile"
                 # Upgrade the configuration file only.
                 $cfgapp station upgrade --config=$cfgfile --dist-config=$cfgfile-$NEWVER --what=config --no-prompt --no-backup
             else
-                echo distribution config file is wrong version for merging
+                echo "Distribution config file is wrong version for merging"
             fi
         else
-            echo no distribution config with which to merge
+            echo "No distribution config with which to merge"
         fi
     else
         # this is a new config, so just insert debconf values into it
-        echo using debconf configuration values from previous install
+        echo "Using debconf configuration values from previous install"
         install_weewxconf
     fi
 }
@@ -226,12 +226,12 @@ get_conf_version() {
 # create the user that the daemon will run as, but only if not already exist
 create_user() {
     if ! getent group | grep -q "^$WEEWX_GROUP:"; then
-        echo -n "adding group $WEEWX_GROUP..."
+        echo -n "Adding group $WEEWX_GROUP..."
         addgroup --quiet --system $WEEWX_GROUP || true
         echo "done"
     fi
     if ! getent passwd | grep -q "^$WEEWX_USER:"; then
-        echo -n "adding system user $WEEWX_USER..."
+        echo -n "Adding system user $WEEWX_USER..."
         adduser --quiet --system --ingroup $WEEWX_GROUP \
                 --no-create-home --disabled-password weewx || true
         echo "done"
