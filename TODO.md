@@ -7,6 +7,7 @@ For example, `weectl extension uninstall` just uninstalls without confirmation.
 
 ## Package installers
 
+- need to test all of this on older versions of systemd (e.g., debian 10)
 - /var/run/weewxd.pid is not a valid default for pid, at least not systemd
 - specifying pid only works for root, otherwise must ensure permissions
 - weewx vs weewxd for log label?
