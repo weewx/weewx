@@ -12,7 +12,7 @@ SRC=$(CURDIR)
 DST=$(CURDIR)/debian/$(PKG)
 DST_BINDIR=$(DST)/usr/share/weewx
 DST_CFGDIR=$(DST)/etc/weewx
-DST_USERDIR=$(DST)/etc/weewx/user
+DST_USERDIR=$(DST)/usr/share/weewx/user
 
 # these are the entry points
 ENTRIES=weewxd weectl
@@ -66,7 +66,7 @@ install:
 
 # create the default configuration
 	cat $(SRC)/src/weewx_data/weewx.conf | sed \
- -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /etc/weewx%' \
+ -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /etc/weewx\nUSER_ROOT = /usr/share/weewx/user%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = skins%' \
  -e 's%HTML_ROOT = public_html%HTML_ROOT = /var/www/html/weewx%' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
@@ -78,7 +78,9 @@ install:
 # create the system init configuration
 # FIXME: if no systemd, then install init.d script
 	cat $(SRC)/src/weewx_data/util/systemd/weewx.service | sed \
- -e 's%ExecStart=.*%ExecStart=/usr/bin/weewxd /etc/weewx/weewx.conf%' \
+ -e 's%ExecStart=.*%ExecStart=/usr/bin/weewxd --daemon --pidfile=/var/lib/weewx/weewxd.pid /etc/weewx/weewx.conf%' \
+ -e 's%#Type=.*%Type=forking%' \
+ -e 's%#PIDFile=.*%PIDFile=/var/lib/weewx/weewxd.pid%' \
  -e 's%#User=weewx%User=weewx%' \
  -e 's%#Group=weewx%Group=weewx%' \
  > $(DST)/etc/systemd/system/weewx.service
