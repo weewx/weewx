@@ -11,6 +11,7 @@ Priority: optional
 Architecture: all
 Pre-Depends: debconf
 Depends:
+ adduser (>= 3.11),
  python3 (>=3.7) | python (>=3.7),
  python3-configobj,
  python3-cheetah,

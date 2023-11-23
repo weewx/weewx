@@ -10,15 +10,12 @@ PKG=weewx
 PYTHON=python3
 SRC=$(CURDIR)
 DST=$(CURDIR)/debian/$(PKG)
-DST_EXECDIR=$(DST)/usr/bin
-DST_BINDIR =$(DST)/usr/share/weewx
-DST_DOCDIR =$(DST)/usr/share/doc/weewx
-DST_CFGDIR =$(DST)/etc/weewx
-DST_USERDIR =$(DST)/etc/weewx/user
-DST_SYSTEMDDIR=$(DST)/etc/systemd/system
+DST_BINDIR=$(DST)/usr/share/weewx
+DST_CFGDIR=$(DST)/etc/weewx
+DST_USERDIR=$(DST)/etc/weewx/user
 
 # these are the entry points
-ENTRIES=weewxd weectl wee_import wee_reports
+ENTRIES=weewxd weectl
 
 %:
 	dh $@ --with python3
@@ -28,7 +25,9 @@ override_dh_auto_clean:
 	rm -rf build dist
 	rm -f *.egg-info
 
-# this install rule duplicates what the weewx setup.py would do
+# this rule grabs all of the bits from the source tree and puts them into
+# a staging area that has the directory structure of a debian system.  it
+# explicitly does *not* do things the 'python way' using pip.
 install:
 	dh_testdir
 	dh_testroot
@@ -36,40 +35,36 @@ install:
 	dh_installdirs
 
 # create the directory structure
-	mkdir -p $(DST_EXECDIR)
 	mkdir -p $(DST_BINDIR)
-	mkdir -p $(DST_DOCDIR)
 	mkdir -p $(DST_CFGDIR)
 	mkdir -p $(DST_USERDIR)
+	mkdir -p $(DST)/usr/bin
 	mkdir -p $(DST)/etc/default
-	mkdir -p $(DST_SYSTEMDDIR)
+	mkdir -p $(DST)/etc/systemd/system
+	mkdir -p $(DST)/etc/udev/rules.d
+	mkdir -p $(DST)/var/lib/weewx
+	mkdir -p $(DST)/var/log/weewx
 
 # copy the weewx code
 	cp -r $(SRC)/src/* $(DST_BINDIR)
 
-# get rid of the stuff we do not want or need
-	rm -rf $(DST_BINDIR)/weewx_data/util
-	for d in weecfg weectllib weedb weeplot weeutil weewx/drivers weewx; do \
-  rm -rf $(DST_BINDIR)/$d; \
-done
-
-# create the inital user code area
-	cp $(SRC)/src/weewx_data/bin/user/__init__.py $(DST_USERDIR)
-	cp $(SRC)/src/weewx_data/bin/user/extensions.py $(DST_USERDIR)
-
-# copy the ancillary files to the correct location
-	cp -r $(SRC)/src/weewx_data/docs/* $(DST_DOCDIR)
-	cp -r $(SRC)/src/weewx_data/examples $(DST_DOCDIR)
+# copy selected ancillary files to the config dir
+	cp -r $(SRC)/src/weewx_data/examples $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/skins $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/apache $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/import $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/logrotate.d $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/logwatch $(DST_CFGDIR)
+	cp -r $(SRC)/src/weewx_data/util/newsyslog.d $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/rsyslog.d $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/tmpfiles.d $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/udev $(DST_CFGDIR)
 
-# create the weewx configuration
+# create the user code directory
+	cp $(SRC)/src/weewx_data/bin/user/__init__.py $(DST_USERDIR)
+	cp $(SRC)/src/weewx_data/bin/user/extensions.py $(DST_USERDIR)
+
+# create the default configuration
 	cat $(SRC)/src/weewx_data/weewx.conf | sed \
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /etc/weewx%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = skins%' \
@@ -80,23 +75,28 @@ done
 # make a virgin copy of the configuration file
 	cp $(DST_CFGDIR)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist
 
-# create the init configuration
+# create the system init configuration
+# FIXME: if no systemd, then install init.d script
 	cat $(SRC)/src/weewx_data/util/systemd/weewx.service | sed \
  -e 's%ExecStart=.*%ExecStart=/usr/bin/weewxd /etc/weewx/weewx.conf%' \
- > $(DST_SYSTEMDDIR)/weewx.service
+ -e 's%#User=weewx%User=weewx%' \
+ -e 's%#Group=weewx%Group=weewx%' \
+ > $(DST)/etc/systemd/system/weewx.service
 
 # create the entry points
 	for f in $(ENTRIES); do \
   cp $(SRC)/src/weewx_data/util/scripts/$$f $(DST)/usr/bin; \
 done
 
-# configure defaults
+# the defaults file indicates which python and weewx to use
 	cat $(SRC)/src/weewx_data/util/default/weewx | sed \
  -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
  -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
- -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
  -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
  > $(DST)/etc/default/weewx
+
+# put the udev rules in place
+	cp $(SRC)/src/weewx_data/util/udev/rules.d/weewx.rules $(DST)/etc/udev/rules.d
 
 # additional debian control files that dpkg-buildpackage seems to ignore
 	mkdir -p $(DST)/DEBIAN

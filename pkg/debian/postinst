@@ -226,10 +226,18 @@ configure)
         else
             # virgin install so insert debconf values into the config file
             install_weewxconf
+
+            # create the weewx user
+            addgroup --quiet --system weewx
+            adduser --quiet --system --ingroup weewx --no-create-home --disabled-password weewx
+            # set permissions
+            chown -R weewx:weewx /etc/weewx
+            chown -R weewx:adm /var/lib/weewx
+            chown -R weewx:adm /var/log/weewx
         fi
 
         # precompile the bytecode
-        python3 -m compileall /usr/share/weewx
+        python3 -m compileall /usr/share/weewx > /dev/null
 
         # configure for system startup
         systemctl enable weewx

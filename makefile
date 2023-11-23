@@ -234,7 +234,7 @@ DEBPKG=weewx_$(DEBVER)_$(DEBARCH).deb
 ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
-debian-package: build-docs deb-package-prep
+debian-package: deb-package-prep
 	cp pkg/debian/control $(DEBBLDDIR)/debian/control
 	rm -f $(DEBBLDDIR)/debian/files
 	rm -rf $(DEBBLDDIR)/debian/weewx*
