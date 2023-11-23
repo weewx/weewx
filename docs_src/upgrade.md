@@ -90,7 +90,7 @@ cp -r /usr/share/weewx/user/ /etc/weewx/bin/
 ### New utilities
 
 Most of the old utilities have been collected and put under one master utility,
-`weectl`. This make it easy to use the `--help` option to see which one you
+`weectl`. This make it easy to use `weectl --help` to see which one you
 want.
 
 | Old utility     | New utility        |
@@ -99,10 +99,10 @@ want.
 | `wee_debug`     | `weectl debug`     |
 | `wee_device`    | `weectl device`    |
 | `wee_extension` | `weectl extension` |
+| `wee_import`    | `weectl import`    |
+| `wee_reports`   | `weectl report`    |
 | `wee_config`    | `weectl station`   |
 
-The utilities `wee_reports` and `wee_import` have not been changed and should
-still be invoked under their own names.
 
 ### Utility `wunderfixer` has been removed.
 

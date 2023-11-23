@@ -176,19 +176,17 @@ need to restart `weewxd`. The change will be adopted at the next reporting
 cycle, typically at the end of an archive interval.
 
 
-## The utility `wee_reports`
+## The utility `weectl report run`
 
 If you make changes, how do you know what the results will look like? You
 could just run `weewxd` and wait until the next reporting cycle kicks off but,
 depending on your archive interval, that could be a 30-minute wait or more.
 
-The utility `wee_reports` allows you to run a report whenever you like. To use
-it, just run it from a command line, with the location of your configuration
-file `weewx.conf` as the first argument. Optionally, you can tell it what to
-use as the "Current" time, using either option `--epoch`, or some combination
-of `--date` and `--time`. 
-
-For more information about `wee_reports`, see the [Utilities Guide](../utilities/wee_reports.md)
+The utility [`weectl report
+run`](../utilities/weectl-report.md#run-reports-on-demand) allows you to run a
+report whenever you like. To use it, just run it from a command line.
+Optionally, you can tell it what to use as the "Current" time, using either
+option `--epoch`, or by using the combination of `--date` and `--time`.
 
 
 ## The WeeWX service architecture

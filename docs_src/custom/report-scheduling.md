@@ -12,7 +12,8 @@ when files are generated. The _`stale_age`_ option allows control over the
 age of a file before it is regenerated, and the _`report_timing`_ option
 allows precise control over when individual reports are run.
 
-WeeWX also includes a utility [wee_reports](../utilities/wee_reports.md) for
+WeeWX also includes a utility [`weectl report
+run`](../utilities/weectl-report.md#run-reports-on-demand) for
 those times when you need to run a report independent of the interval timing.
 For example, you might not want to wait for an archive interval to see if
 your customizations worked.
@@ -24,7 +25,7 @@ your customizations worked.
     period.
 
     If your reports contain data that change more frequently that each archive
-    interval, then you could run `wee_reports` separately, or consider
+    interval, then you could run `weectl report run` separately, or consider
     uploading data to a real-time reporting solution such as MQTT.
 
 ## The stale_age option
@@ -133,7 +134,7 @@ reports to be run more than once.
     rather the date and time of the latest data the report is based upon. If
     you like, it is the effective date and time of the report. For normal
     WeeWX operation, the report time aligns with the dateTime of the most
-    recent archive record. When reports are run using the wee_reports utility,
+    recent archive record. When reports are run using the `weectl report run` utility,
     the report time is either the dateTime of the most recent archive record
     (the default) or the optional timestamp command line argument.
 
@@ -354,6 +355,6 @@ would be run.
 </tr>
 </table>
 
-### The wee_reports utility and the report_timing option
+### The `weectl report run` utility and the report_timing option
 
-The report_timing option is ignored when using the `wee_reports` utility.
+The `report_timing` option is ignored when using the `weectl report run` utility.
