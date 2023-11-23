@@ -7,6 +7,15 @@ For example, `weectl extension uninstall` just uninstalls without confirmation.
 
 ## Package installers
 
+/var/run/weewxd.pid is not a valid default for pid, at least not systemd
+specifying pid only works for root, otherwise must ensure permissions
+weewx vs weewxd for log label?
+Make weewxd logging go to /var/log/weewx/weewxd.log
+Make weectl logging go to /var/log/weewx/weectl.log
+Get pre-log-initialization output to show up properly
+Verify that process name still works on non-systemd systems
+Try /usr/share/weewx/user as USER_ROOT, since /etc is *not* for code
+
 For new install:
 * Set `WEEWX_ROOT=/etc/weewx`
 * Create user+group `weewx`, then run as `weewx.weewx`
@@ -17,6 +26,19 @@ For upgrades:
 * Copy contents of `/usr/share/weewx/user` to `/etc/weewx/bin/user`, then
 rename `/usr/share/weewx/user` to `/usr/share/weewx/user-YYmmdd`
 * Do not changeover to running as weewx.weewx
+
+- if all logging is specified in the config file, then no need for log-label?
+   only if logging is initialized *after* config file is read.  what happens
+   to weewxd output before reading config file, or if there are config probs?
+- no need for loop-on-init arg to weewxd?
+- still need --daemon, but is it correct?  see daemonize.Daemonize
+- should we use /home/weewx/weewx-data instead of /etc/weewx?  if so, should
+   an upgrade leave /etc/weewx in place, or move it to /home/weewx/weewx-data?
+
+when installing with pip, the weewx installation belongs to the user who did
+the install.  when installing using apt/yum/zypper, the installation belongs
+to the system, so a weewx user owns it all.  pip is for developer/tinkerer,
+whereas apt/yum is for appliance.  git is for developer.
 
 
 ## Testing
