@@ -162,13 +162,13 @@ cp src/weewx_data/util/udev/rules.d/weewx.rules %{buildroot}/etc/udev/rules.d
 if [ "$1" = "2" ]; then
   # this is an upgrade
   if [ -f %{cfg_file} ]; then
-    echo saving previous config as %{cfg_file}.prev
+    echo Saving previous config as %{cfg_file}.prev
     cp -p %{cfg_file} %{cfg_file}.prev
   fi
 else
   # this is a new install, so ensure that we run as weewx user, not root
   /usr/bin/getent group weewx || /usr/sbin/groupadd -r weewx
-  /usr/bin/getent passwd weewx || /usr/sbin/useradd -r -M -s /sbin/nologin weewx
+  /usr/bin/getent passwd weewx || /usr/sbin/useradd -r -g weewx -M -s /sbin/nologin weewx
 fi
 
 %post
@@ -177,7 +177,7 @@ fi
 if [ "$1" = "1" ]; then
   # this is a new installation
   # create a sane configuration file with simulator as the station type
-  /usr/bin/wee_config --install --dist-config=/etc/weewx/weewx.conf.dist --output=/etc/weewx/weewx.conf --driver=weewx.drivers.simulator --no-prompt --no-backup
+  /usr/bin/weectl station reconfigure --config=%{cfg-file} --driver=weewx.drivers.simulator --no-prompt --no-backup
   systemctl enable weewx
   systemctl start weewx
 elif [ "$1" = "2" ]; then
@@ -185,10 +185,10 @@ elif [ "$1" = "2" ]; then
   # update previous config and merge with dist into to weewx.conf
   if [ -f %{cfg_file}.dist -a -f %{cfg_file}.prev ]; then
     OLDVER=`grep version %{cfg_file}.prev | sed -e 's/\s*version\s*=\s*//'`
-    echo saving previous config as %{cfg_file}-$OLDVER
+    echo Saving previous config as %{cfg_file}-$OLDVER
     mv %{cfg_file}.prev %{cfg_file}-$OLDVER
-    echo merging configs into %{cfg_file}
-    /usr/bin/wee_config --upgrade --config=%{cfg_file}-$OLDVER --dist-config=%{cfg_file}.dist --output=%{cfg_file} --no-prompt --no-backup
+    echo Merging configs into %{cfg_file}
+    /usr/bin/weectl station upgrade --config=%{cfg_file} --dist-config=%{cfg-file}.dist --what=config --no-prompt --no-backup
   fi
   # do a full restart not just a HUP
   systemctl stop weewx
