@@ -75,6 +75,7 @@ URL: http://www.weewx.com
 License: GPLv3
 AutoReqProv: no
 Requires: %{deps}
+Requires(pre): /usr/bin/getent, /usr/sbin/groupadd, /usr/sbin/useradd
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-%(%{__id_u} -n)
 BuildArch: noarch
 
@@ -153,6 +154,10 @@ cat src/weewx_data/util/default/weewx | sed \
  -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
  > %{buildroot}/etc/default/weewx
 
+# udev rules for known devices
+cp src/weewx_data/util/udev/rules.d/weewx.rules %{buildroot}/etc/udev/rules.d
+
+
 %pre
 if [ "$1" = "2" ]; then
   # this is an upgrade
@@ -160,6 +165,10 @@ if [ "$1" = "2" ]; then
     echo saving previous config as %{cfg_file}.prev
     cp -p %{cfg_file} %{cfg_file}.prev
   fi
+else
+  # this is a new install, so ensure that we run as weewx user, not root
+  /usr/bin/getent group weewx || /usr/sbin/groupadd -r weewx
+  /usr/bin/getent passwd weewx || /usr/sbin/useradd -r -M -s /sbin/nologin weewx
 fi
 
 %post
@@ -199,11 +208,16 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root)
-%{initdir}/weewx.service
-%{_sysconfdir}/default/weewx
-%{dst_bin_dir}/
 %{_bindir}/weewxd
 %{_bindir}/weectl
-%config(noreplace) %{dst_cfg_dir}/
+%{initdir}/weewx.service
+%{_sysconfdir}/default/weewx
+%{_sysconfdir}/udev/rules.d/weewx.rules
 %config(noreplace) %{dst_user_dir}/
+%{dst_bin_dir}/
+# FIXME: set these permissions only if weewx user exists
+%config(noreplace) %attr(775, weewx, weewx) %{dst_cfg_dir}/
+%dir %attr(775, weewx, weewx) /var/log/weewx
+%dir %attr(775, weewx, weewx) /var/lib/weewx
+%dir %attr(775, weewx, weewx) /var/www/html/weewx
 %changelog
