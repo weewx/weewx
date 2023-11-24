@@ -50,6 +50,9 @@
 %define deps python3, python3-setuptools, python3-configobj, python3-pillow, python3-pyserial, python3-pyusb
 %define python python3
 %define html_root /var/www/html/weewx
+# disable shebang mangling
+# see https://github.com/atom/atom/issues/21937
+%undefine __brp_mangle_shebangs
 %endif
 
 %global relnum RPMREVISION
@@ -57,7 +60,7 @@
 
 %global dst_bin_dir  %{_datadir}/%{name}
 %global dst_cfg_dir  %{_sysconfdir}/%{name}
-%global dst_user_dir %{_datadir}/user
+%global dst_user_dir %{_datadir}/%{name}/user
 %global cfg_file     %{dst_cfg_dir}/weewx.conf
 
 %define entry_points weewxd weectl
@@ -202,4 +205,5 @@ rm -rf %{buildroot}
 %{_bindir}/weewxd
 %{_bindir}/weectl
 %config(noreplace) %{dst_cfg_dir}/
+%config(noreplace) %{dst_user_dir}/
 %changelog
