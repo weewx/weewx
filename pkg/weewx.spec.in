@@ -213,11 +213,12 @@ rm -rf %{buildroot}
 %{initdir}/weewx.service
 %{_sysconfdir}/default/weewx
 %{_sysconfdir}/udev/rules.d/weewx.rules
-%config(noreplace) %{dst_user_dir}/
 %{dst_bin_dir}/
+%exclude %{dst_user_dir}/
+%config(noreplace) %{dst_user_dir}/
 # FIXME: set these permissions only if weewx user exists
-%config(noreplace) %attr(775, weewx, weewx) %{dst_cfg_dir}/
-%dir %attr(775, weewx, weewx) /var/log/weewx
-%dir %attr(775, weewx, weewx) /var/lib/weewx
-%dir %attr(775, weewx, weewx) /var/www/html/weewx
+%config(noreplace) %attr(-,weewx,weewx) %{dst_cfg_dir}/
+%dir %attr(-,weewx,weewx) /var/log/weewx
+%dir %attr(-,weewx,weewx) /var/lib/weewx
+%dir %attr(-,weewx,weewx) /var/www/html/weewx
 %changelog
