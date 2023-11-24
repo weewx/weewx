@@ -43,7 +43,7 @@
 %define relos .el9
 %endif
 # cheetah must be installed separately from epel
-%define deps python3, python3-setuptools, python3-configobj, python3-pillow, python3-pyserial, python3-pyusb
+%define deps python3 >= 3.7, python3-setuptools, python3-configobj, python3-pillow, python3-pyserial, python3-pyusb
 %define python python3
 %define html_root /var/www/html/weewx
 # disable shebang mangling
@@ -169,7 +169,6 @@ fi
 
 %post
 # pre-compile the python code
-%{python} -V
 %{python} -m compileall %{dst_bin_dir}
 if [ "$1" = "1" ]; then
   # this is a new installation
