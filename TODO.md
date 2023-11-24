@@ -8,39 +8,38 @@ For example, `weectl extension uninstall` just uninstalls without confirmation.
 ## Package installers
 
 - need to test all of this on older versions of systemd (e.g., debian 10)
-- /var/run/weewxd.pid is not a valid default for pid, at least not systemd
-- specifying pid only works for root, otherwise must ensure permissions
-- weewx vs weewxd for log label?
-- Make weewxd logging go to /var/log/weewx/weewxd.log
-- Make weectl logging go to /var/log/weewx/weectl.log 
 - Get pre-log-initialization output to show up properly
 - Verify that process name still works on non-systemd systems
-- Try /usr/share/weewx/user as USER_ROOT, since /etc is *not* for code
 - need to set permissions for cc3000 and vantage udev devices
 - verify the weewx-multi scenario using systemd
 
-For new install:
-* Set `WEEWX_ROOT=/etc/weewx`
-* Create user+group `weewx`, then run as `weewx.weewx`
-* Install the udev file with permissions set for user `weewx`
-
 For upgrades:
 * Convert `WEEWX_ROOT=/` to`WEEWX_ROOT=/etc/weewx`
-* Copy contents of `/usr/share/weewx/user` to `/etc/weewx/bin/user`, then
-rename `/usr/share/weewx/user` to `/usr/share/weewx/user-YYmmdd`
 * Do not changeover to running as weewx.weewx
+
+Issues:
 
 - if all logging is specified in the config file, then no need for log-label?
    only if logging is initialized *after* config file is read.  what happens
    to weewxd output before reading config file, or if there are config probs?
 - no need for loop-on-init arg to weewxd?
 - still need --daemon, but is it correct?  see daemonize.Daemonize
-- should we use /home/weewx/weewx-data instead of /etc/weewx?  if so, should
-   an upgrade leave /etc/weewx in place, or move it to /home/weewx/weewx-data?
+- for deb/rpm, should we use /home/weewx/weewx-data instead of /etc/weewx?
+   if so, should an upgrade leave /etc/weewx in place, or move it to
+   /home/weewx/weewx-data?
+- for deb/rpm upgrades, if we do not change to run-as-weewx, then we need
+   a mechanism to conditionally *not* change file ownership in weewx.spec
+- for logging, use weewx vs weewxd for log label?
+- if separate log file, we just do one: ~/weewx-data/log/weewx.log
+- for the weewx multi case, you want further log splits:
+    - make weewxd logging go to /var/log/weewx/weewxd.log
+    - make weewx-sdr go to /var/log/weewx/sdr.log, etc
+    - make weectl logging go to /var/log/weewx/weectl.log 
+
 
 For the documentation:
 
-Ehen installing with pip, the weewx installation belongs to the user who did
+When installing with pip, the weewx installation belongs to the user who did
 the install.  When installing using apt/yum/zypper, the installation belongs
 to the system, so a weewx user owns it all.
 
@@ -48,11 +47,33 @@ to the system, so a weewx user owns it all.
   apt/yum/zypper - easiest install, appliance
   git(src) - developer, minimal system, multiple python configurations
 
-Ee want /var/log/weewx so that weewx-multi will emit single log for each
+We want /var/log/weewx so that weewx-multi will emit single log for each
 weewxd instance.
 
-Ee want all logs to /var/log/weewx/weewx.log so that it is clear if someone
+We want all logs to /var/log/weewx/weewx.log so that it is clear if someone
 is running weewxd and weectl at the same time.
+
+For deb/rpm upgrades, the config file is only modified if you select the
+'take maintainer changes' option.  That takes your old config and 'upgrades'
+it.  (This is always a questionable thing to do, since it depends on the
+'version' label, which cannot be trusted and may not even exist.  Note that
+this *could* be trusted if we ensure that the uprade is based on
+structure/contents, not the 'version' label.)  The 'maintainer' version of the
+config file is always emitted, whether or not you choose it.
+
+
+Done:
+
+For new install:
+* Set `WEEWX_ROOT=/etc/weewx`
+* Create user+group `weewx`, then run as `weewx.weewx`
+* Install the udev file with permissions set for user `weewx`
+
+Punt:
+
+For upgrades:
+* Copy contents of `/usr/share/weewx/user` to `/etc/weewx/bin/user`, then
+rename `/usr/share/weewx/user` to `/usr/share/weewx/user-YYmmdd`
 
 
 ## Testing
