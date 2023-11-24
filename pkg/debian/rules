@@ -58,7 +58,6 @@ install:
 	cp -r $(SRC)/src/weewx_data/util/logwatch $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/newsyslog.d $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/rsyslog.d $(DST_CFGDIR)
-	cp -r $(SRC)/src/weewx_data/util/tmpfiles.d $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/udev $(DST_CFGDIR)
 
 # create the user code directory
@@ -67,7 +66,8 @@ install:
 
 # create the default configuration
 	cat $(SRC)/src/weewx_data/weewx.conf | sed \
- -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /etc/weewx\nUSER_ROOT = /usr/share/weewx/user%' \
+ -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /etc/weewx%' \
+ -e 's%^USER_ROOT =.*%USER_ROOT = /usr/share/weewx/user%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = skins%' \
  -e 's%HTML_ROOT = public_html%HTML_ROOT = /var/www/html/weewx%' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
@@ -90,7 +90,7 @@ install:
 
 # create the entry points
 	for f in $(ENTRIES); do \
-  cp $(SRC)/src/weewx_data/util/scripts/$$f $(DST)/usr/bin; \
+  cp $(SRC)/bin/$$f $(DST)/usr/bin; \
 done
 
 # the defaults file indicates which python and weewx to use
