@@ -10,7 +10,6 @@
 %if 0%{?suse_version} && "%{os_target}" == "12"
 %define relos .suse12
 %define platform suse
-%define initdir /etc/systemd/system
 %define deps python , python-configobj , python-cheetah , python-imaging , python-pyserial, python-usb
 %define python python
 %define html_root /srv/www/htdocs/weewx
@@ -20,7 +19,6 @@
 %if 0%{?suse_version} && "%{os_target}" == "15"
 %define relos .suse15
 %define platform suse
-%define initdir /etc/systemd/system
 %define deps python3, python3-setuptools, python3-configobj, python3-Cheetah3, python3-Pillow, python3-pyserial, python3-usb
 %define python python3
 %define html_root /var/www/html/weewx
@@ -30,7 +28,6 @@
 %if 0%{?sles_version}
 %define relos .sles
 %define platform suse
-%define initdir /etc/systemd/system
 %define deps python , python-configobj , python-cheetah , python-imaging , python-pyserial, python-usb
 %define python python
 %define html_root /srv/www/htdocs/weewx
@@ -45,7 +42,6 @@
 %if "%{os_target}" == "9"
 %define relos .el9
 %endif
-%define initdir %{_initrddir}
 # cheetah must be installed separately from epel
 %define deps python3, python3-setuptools, python3-configobj, python3-pillow, python3-pyserial, python3-pyusb
 %define python python3
@@ -96,7 +92,7 @@ mkdir -p %{buildroot}%{dst_bin_dir}
 mkdir -p %{buildroot}%{dst_cfg_dir}
 mkdir -p %{buildroot}%{dst_user_dir}
 mkdir -p %{buildroot}/etc/default
-mkdir -p %{buildroot}%{initdir}
+mkdir -p %{buildroot}/etc/systemd/system
 mkdir -p %{buildroot}/etc/udev/rules.d
 mkdir -p %{buildroot}/var/lib/weewx
 mkdir -p %{buildroot}/var/log/weewx
@@ -140,7 +136,7 @@ cat src/weewx_data/util/systemd/weewx.service | sed \
  -e 's%#PIDFile=.*%PIDFile=/run/weewx/weewxd.pid%' \
  -e 's%#User=weewx%User=weewx%' \
  -e 's%#Group=weewx%Group=weewx%' \
- > %{buildroot}%{initdir}/weewx.service
+ > %{buildroot}/etc/systemd/system/weewx.service
 
 # create the entry points
 for f in %{entry_points}; do \
@@ -173,6 +169,7 @@ fi
 
 %post
 # pre-compile the python code
+%{python} -V
 %{python} -m compileall %{dst_bin_dir}
 if [ "$1" = "1" ]; then
   # this is a new installation
@@ -210,7 +207,7 @@ rm -rf %{buildroot}
 %defattr(-,root,root)
 %{_bindir}/weewxd
 %{_bindir}/weectl
-%{initdir}/weewx.service
+%{_sysconfdir}/systemd/system/weewx.service
 %{_sysconfdir}/default/weewx
 %{_sysconfdir}/udev/rules.d/weewx.rules
 %{dst_bin_dir}/
