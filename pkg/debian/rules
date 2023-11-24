@@ -49,6 +49,10 @@ install:
 # copy the weewx code
 	cp -r $(SRC)/src/* $(DST_BINDIR)
 
+# create the user extensions directory
+	cp $(SRC)/src/weewx_data/bin/user/__init__.py $(DST_USERDIR)
+	cp $(SRC)/src/weewx_data/bin/user/extensions.py $(DST_USERDIR)
+
 # copy selected ancillary files to the config dir
 	cp -r $(SRC)/src/weewx_data/examples $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/skins $(DST_CFGDIR)
@@ -56,13 +60,8 @@ install:
 	cp -r $(SRC)/src/weewx_data/util/import $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/logrotate.d $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/logwatch $(DST_CFGDIR)
-	cp -r $(SRC)/src/weewx_data/util/newsyslog.d $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/rsyslog.d $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/udev $(DST_CFGDIR)
-
-# create the user code directory
-	cp $(SRC)/src/weewx_data/bin/user/__init__.py $(DST_USERDIR)
-	cp $(SRC)/src/weewx_data/bin/user/extensions.py $(DST_USERDIR)
 
 # create the default configuration
 	cat $(SRC)/src/weewx_data/weewx.conf | sed \

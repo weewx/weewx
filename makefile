@@ -292,7 +292,7 @@ fi
 RPMARCH=noarch
 RPMBLDDIR=$(BLDDIR)/weewx-$(RPMVER).$(RPMOS)$(OSREL).$(RPMARCH)
 RPMPKG=weewx-$(RPMVER).$(RPMOS)$(OSREL).$(RPMARCH).rpm
-rpm-package: build-docs $(DSTDIR)/$(SRCPKG)
+rpm-package: $(DSTDIR)/$(SRCPKG)
 	rm -rf $(RPMBLDDIR)
 	mkdir -p -m 0755 $(RPMBLDDIR)
 	mkdir -p -m 0755 $(RPMBLDDIR)/BUILD

@@ -36,7 +36,7 @@
 %define html_root /srv/www/htdocs/weewx
 %endif
 
-# rh8: python3 on redhat, fedora, centos
+# rh: python3 on redhat, fedora, centos
 %if "%{_vendor}" == "redhat"
 %define platform redhat
 %if "%{os_target}" == "8"
@@ -46,7 +46,7 @@
 %define relos .el9
 %endif
 %define initdir %{_initrddir}
-# cheetah is not available - must be installed separately from epel
+# cheetah must be installed separately from epel
 %define deps python3, python3-setuptools, python3-configobj, python3-pillow, python3-pyserial, python3-pyusb
 %define python python3
 %define html_root /var/www/html/weewx
@@ -56,12 +56,11 @@
 %global release %{relnum}%{?relos:%{relos}}
 
 %global dst_bin_dir  %{_datadir}/%{name}
-%global dst_doc_dir  %{_defaultdocdir}/%{name}-%{version}
 %global dst_cfg_dir  %{_sysconfdir}/%{name}
+%global dst_user_dir %{_datadir}/user
 %global cfg_file     %{dst_cfg_dir}/weewx.conf
-%global dst_user_dir %{dst_cfg_dir}/user
 
-%define entry_points weewxd weectl wee_import wee_reports
+%define entry_points weewxd weectl
 
 Summary: weather software
 Name: weewx
@@ -90,40 +89,36 @@ PWSweather.com, or CWOP.
 rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{dst_bin_dir}
-mkdir -p %{buildroot}%{dst_doc_dir}
 mkdir -p %{buildroot}%{dst_cfg_dir}
 mkdir -p %{buildroot}%{dst_user_dir}
-mkdir -p %{buildroot}%{initdir}
 mkdir -p %{buildroot}/etc/default
+mkdir -p %{buildroot}%{initdir}
+mkdir -p %{buildroot}/etc/udev/rules.d
+mkdir -p %{buildroot}/var/lib/weewx
+mkdir -p %{buildroot}/var/log/weewx
+mkdir -p %{buildroot}/var/www/html/weewx
 
 # copy the weewx code
 cp -r src/* %{buildroot}%{dst_bin_dir}
 
-# get rid of all the stuff we do not want or need
-rm -rf %{buildroot}%{dst_bin_dir}/weewx_data/util
-for d in weecfg weectllib weedb weeplot weeutil weewx/drivers weewx; do
-  rm -rf %{buildroot}%{dst_bin_dir}/$d
-done
-
-# create the initial user code area
+# create the user extensions directory
 cp src/weewx_data/bin/user/__init__.py %{buildroot}%{dst_user_dir}
 cp src/weewx_data/bin/user/extensions.py %{buildroot}%{dst_user_dir}
 
 # copy the ancillary files to the correct location
-cp -r src/weewx_data/docs/* %{buildroot}%{dst_doc_dir}
-cp -r src/weewx_data/examples %{buildroot}%{dst_doc_dir}
+cp -r src/weewx_data/examples %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/skins %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/apache %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/import %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/logrotate.d %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/logwatch %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/rsyslog.d %{buildroot}%{dst_cfg_dir}
-cp -r src/weewx_data/util/tmpfiles.d %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/udev %{buildroot}%{dst_cfg_dir}
 
 # create the weewx configuration
 cat src/weewx_data/weewx.conf | sed \
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /etc/weewx%' \
+ -e 's%^USER_ROOT =.*%USER_ROOT = /usr/share/weewx/user%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
  -e 's:HTML_ROOT = public_html:HTML_ROOT = %{html_root}:' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
@@ -134,19 +129,24 @@ cp %{buildroot}%{dst_cfg_dir}/weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf.d
 
 # create the init configuration
 cat src/weewx_data/util/systemd/weewx.service | sed \
- -e 's%ExecStart=.*%ExecStart=/usr/bin/weewxd /etc/weewx/weewx.conf%' \
+ -e 's%ExecStart=.*%ExecStart=/usr/bin/weewxd --daemon --pidfile=/run/weewx/weewxd.pid /etc/weewx/weewx.conf%' \
+ -e 's%#Type=.*%Type=forking%' \
+ -e 's%#RuntimeDirectory=.*%RuntimeDirectory=weewx%' \
+ -e 's%#RuntimeDirectoryMode=.*%RuntimeDirectoryMode=775%' \
+ -e 's%#PIDFile=.*%PIDFile=/run/weewx/weewxd.pid%' \
+ -e 's%#User=weewx%User=weewx%' \
+ -e 's%#Group=weewx%Group=weewx%' \
  > %{buildroot}%{initdir}/weewx.service
 
 # create the entry points
 for f in %{entry_points}; do \
-  cp src/weewx_data/util/scripts/$f %{buildroot}%{_bindir}/$f; \
+  cp bin/$f %{buildroot}%{_bindir}/$f; \
 done
 
 # configure defaults
 cat src/weewx_data/util/default/weewx | sed \
  -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=%{python}%' \
  -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
- -e 's%WEEWX_BIN=.*%WEEWX_BIN=/usr/bin/weewxd%' \
  -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
  > %{buildroot}/etc/default/weewx
 
@@ -201,8 +201,5 @@ rm -rf %{buildroot}
 %{dst_bin_dir}/
 %{_bindir}/weewxd
 %{_bindir}/weectl
-%{_bindir}/wee_import
-%{_bindir}/wee_reports
-%doc %{dst_doc_dir}/
 %config(noreplace) %{dst_cfg_dir}/
 %changelog
