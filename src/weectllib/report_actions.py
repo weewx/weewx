@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 def list_reports(config_path):
     # Read the configuration file
     config_path, config_dict = weecfg.read_config(config_path)
-    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
+    print(f"Using configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
 
     # Customize the logging with user settings.
     weeutil.logger.setup('weectl', config_dict)

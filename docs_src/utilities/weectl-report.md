@@ -14,7 +14,7 @@ with which skin they use, and other information. For example:
 
 ```
 $ weectl report list
-The configuration file /Users/ted_user/weewx-data/weewx.conf will be used.
+Using configuration file /Users/ted_user/weewx-data/weewx.conf
 
               Report  Skin         Enabled   Units   Language
        SeasonsReport  Seasons         Y        US       EN   
@@ -29,7 +29,7 @@ The configuration file /Users/ted_user/weewx-data/weewx.conf will be used.
 
     weectl report run
         [--config=FILENAME]
-        [--epoch=EPOCH_TIME | --date=YYY-MM-DD --time=HH:MM] 
+        [--epoch=EPOCH_TIME | --date=YYYY-mm-dd --time=HH:MM] 
 
 In normal operation, WeeWX generates reports at each archive interval after new
 data has arrived. The action `weectl report run` is used to generate reports on
@@ -74,8 +74,8 @@ Path to the configuration file. Default is `~/weewx-data/weewx.conf`.
 
 Generate the reports so that they are current as of the given unix epoch time.
 
-### --date=YYYY-MM-DD and --time=HH:MM
+### --date=YYYY-mm-dd and --time=HH:MM
 
 Generate the reports so that they are current as of the given date
-and time. The date should be given in the form `YYYY-MM-DD` and the time should
-be given as `HH:DD`.
+and time. The date should be given in the form `YYYY-mm-dd` and the time should
+be given as `HH:MM`.

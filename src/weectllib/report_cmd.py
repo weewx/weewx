@@ -15,7 +15,7 @@ report_list_usage = f"""{bcolors.BOLD}weectl report list
             [--config=FILENAME]{bcolors.ENDC}"""
 report_run_usage = f"""  {bcolors.BOLD}weectl report run
             [--config=FILENAME]
-            [--epoch=EPOCH_TIME | --date=YYY-MM-DD --time=HH:MM] {bcolors.ENDC}"""
+            [--epoch=EPOCH_TIME | --date=YYYY-mm-dd --time=HH:MM] {bcolors.ENDC}"""
 
 report_usage = '\n     '.join((report_list_usage, report_run_usage))
 
@@ -57,7 +57,7 @@ def add_subparser(subparsers):
                                         f'Default is "{weecfg.default_config_path}".')
     run_report_parser.add_argument("--epoch", metavar="EPOCH_TIME",
                                    help="Time of the report in unix epoch time")
-    run_report_parser.add_argument("--date", metavar="YYYY-MM-DD",
+    run_report_parser.add_argument("--date", metavar="YYYY-mm-dd",
                                    type=lambda d: time.strptime(d, '%Y-%m-%d'),
                                    help="Date for the report")
     run_report_parser.add_argument("--time", metavar="HH:MM",
