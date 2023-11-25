@@ -38,8 +38,8 @@ This is an outline of the process to install, configure, and run WeeWX:
 * Install WeeWX. Use the step-by-step instructions in one of the
   [installation methods](#installation-methods).
 
-* If the driver for your hardware if it is not included with WeeWX, install
-  the driver as explained in the [installing a driver](#installing-a-driver)
+* If the driver for your hardware is not included with WeeWX, install the
+  driver as explained in the [installing a driver](#installing-a-driver)
   section.
 
 * Configure the hardware. This involves setting things like the onboard
