@@ -30,7 +30,7 @@ weewx.debug = 1
 
 log = logging.getLogger(__name__)
 # Set up logging using the defaults.
-weeutil.logger.setup('test_aggregate', {})
+weeutil.logger.setup('test_aggregate')
 
 # Find the configuration file. It's assumed to be in the same directory as me:
 config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")

@@ -958,7 +958,7 @@ if __name__ == '__main__':
 
     weewx.debug = 1
 
-    weeutil.logger.setup('acurite', {})
+    weeutil.logger.setup('acurite')
 
     usage = """%prog [options] [--help]"""
 

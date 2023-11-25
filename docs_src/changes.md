@@ -13,8 +13,8 @@ instead of `/home/weewx`. This allows pip installs to be done without
 root privileges. However, `/home/weewx` can still be used.
 
 The new utility [`weectl`](utilities/weectl-about.md) replaces `wee_database`,
-`wee_debug`, `wee_device`, `wee_extension`, and `wee_config`. Try `weectl
---help` to see how to use it.
+`wee_debug`, `wee_device`, `wee_extension`, `wee_import`, `wee_reports`, 
+and `wee_config`. Try `weectl --help` to see how to use it.
 
 Documentation now uses [MkDocs](https://www.mkdocs.org/).
 
@@ -23,15 +23,12 @@ Package installs now use `systemd` instead of the old System V `/etc/init.d`.
 Removed all references to the deprecated package `distutils`, which is due to
 be removed in Python v3.12.
 
-Removed the utility `wunderfixer`. The Weather Underground seems to no longer
-allow posting past-dated records.
+Removed the utility `wunderfixer`. The Weather Underground no longer
+allows posting past-dated records.
 
-Logging handler `rotate` has been removed. Its need to access the privileged
-location `/var/log/` on start up would cause crashes, even if it was never
-used. Users can opt to add it back in by following the wiki on 
-[Logging](https://github.com/weewx/weewx/wiki/WeeWX-v4-and-logging).
-
-MacOS now logs to `syslog` like any other system, rather than `rotate`.
+For new installs, logging output is now sent to a file, which rotates at
+midnight. Syslog is no longer used. Old installs continue to use whatever they
+were using before.
 
 Method `ImageDraw.textsize()` and constants `ImageFont.LAYOUT_BASIC`, and
 `Image.ANTIALIAS` were deprecated in Pillow 9.2 (1-Jul-2022), then removed in

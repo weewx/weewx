@@ -148,7 +148,7 @@ if __name__ == '__main__':
 
     weewx.debug = 1
 
-    weeutil.logger.setup('rsyncupload', {})
+    weeutil.logger.setup('rsyncupload')
 
     if len(sys.argv) < 2:
         print("""Usage: rsyncupload.py path-to-configuration-file [path-to-be-rsync'd]""")

@@ -6,6 +6,7 @@
 """WeeWX logging facility"""
 
 import logging.config
+import os.path
 import sys
 from io import StringIO
 
@@ -83,7 +84,7 @@ else:
     facility = 'user'
 
 
-def setup(process_name, user_log_dict):
+def setup(process_name, config_dict=None):
     """Set up the weewx logging facility"""
 
     global address, facility
@@ -96,13 +97,17 @@ def setup(process_name, user_log_dict):
     # value, then restore later. However, the incoming dictionary may be a simple
     # Python dictionary and not have interpolation. Hence, the try block.
     try:
-        old_interpolation = user_log_dict.interpolation
-        user_log_dict.interpolation = False
+        old_interpolation = config_dict.interpolation
+        config_dict.interpolation = False
     except AttributeError:
         old_interpolation = None
 
     # Merge in the user additions / changes:
-    log_config.merge(user_log_dict)
+    if config_dict:
+        log_config.merge(config_dict)
+        weewx_root = config_dict.get("WEEWX_ROOT")
+    else:
+        weewx_root = None
 
     # Adjust the logging level in accordance to whether the 'debug' flag is on
     log_level = 'DEBUG' if weewx.debug else 'INFO'
@@ -122,6 +127,9 @@ def setup(process_name, user_log_dict):
                                                address=address,
                                                facility=facility,
                                                process_name=process_name)
+            if key == 'filename' and weewx_root:
+                section[key] = os.path.join(weewx_root, section[key])
+                os.makedirs(os.path.dirname(section[key]), exist_ok=True)
 
     # Using the function, walk the 'Logging' part of the structure
     log_config['Logging'].walk(_fix)
@@ -137,7 +145,7 @@ def setup(process_name, user_log_dict):
 
     # Restore the old interpolation value
     if old_interpolation is not None:
-        user_log_dict.interpolation = old_interpolation
+        config_dict.interpolation = old_interpolation
 
 
 def log_traceback(log_fn, prefix=''):

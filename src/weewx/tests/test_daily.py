@@ -29,7 +29,7 @@ weewx.debug = 1
 
 log = logging.getLogger(__name__)
 # Set up logging using the defaults.
-weeutil.logger.setup('test_daily', {})
+weeutil.logger.setup('test_daily')
 
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()

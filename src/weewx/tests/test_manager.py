@@ -29,7 +29,7 @@ import weewx.manager
 
 log = logging.getLogger(__name__)
 
-weeutil.logger.setup('test_manager', {})
+weeutil.logger.setup('test_manager')
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
 

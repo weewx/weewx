@@ -2338,7 +2338,7 @@ if __name__ == '__main__':
         if options.debug:
             weewx.debug = 1
 
-        weeutil.logger.setup('te923', {})
+        weeutil.logger.setup('te923')
 
         if (options.format.lower() != FMT_TE923TOOL and
             options.format.lower() != FMT_TABLE and
