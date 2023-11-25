@@ -3,9 +3,9 @@
 This is a guide to installing WeeWX from a DEB package on systems based on
 Debian, including Ubuntu, Mint, and Raspberry Pi OS.
 
-WeeWX V5 requires Python 3.7 or greater, which is only available on Debian 10
-or later.  For older systems, either use WeeWX V4, or install Python 3.7 then
-[install WeeWX V5 using pip](pip.md).
+WeeWX V5 requires Python 3.7 or greater, which is only available as a Debian
+package, with required modules, on Debian 10 or later.  For older systems,
+install Python 3.7 then [install WeeWX using pip](pip.md).
 
 
 ## Configure `apt`

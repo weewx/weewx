@@ -36,19 +36,25 @@
 # rh: python3 on redhat, fedora, centos
 %if "%{_vendor}" == "redhat"
 %define platform redhat
+%define html_root /var/www/html/weewx
+# disable shebang mangling. see https://github.com/atom/atom/issues/21937
+%undefine __brp_mangle_shebangs
 %if "%{os_target}" == "8"
 %define relos .el8
+# rh8 ships with python 3.6, and that is what python3 refers to.  we can
+# specify python38 or python39, but unfortunately none of the python modules
+# that we need are packaged for python38 or python39 (at least as of nov2023).
+# so rh8 must be unsupported for python3; you can only use python2+weewx4, or
+# you must do a pip install.
+%define deps epel-release, python38, python38-setuptools, python38-configobj, python38-cheetah, python38-pillow, python38-pyserial, python38-pyusb
+%define python python3.8
 %endif
 %if "%{os_target}" == "9"
 %define relos .el9
-%endif
-# cheetah must be installed separately from epel
-%define deps python3 >= 3.7, python3-setuptools, python3-configobj, python3-pillow, python3-pyserial, python3-pyusb
+# rh9 ships with python 3.9, which is sufficient, so do not specify more.
+%define deps python3, python3-setuptools, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
 %define python python3
-%define html_root /var/www/html/weewx
-# disable shebang mangling
-# see https://github.com/atom/atom/issues/21937
-%undefine __brp_mangle_shebangs
+%endif
 %endif
 
 %global relnum RPMREVISION

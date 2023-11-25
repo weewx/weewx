@@ -49,9 +49,9 @@ help: info
 	@echo "   suse-changelog prepend stub changelog entry for suse"
 	@echo ""
 	@echo "  pypi-packages create wheel and source tarball suitable for pypi"
-	@echo "debian-package  create the debian package"
-	@echo "redhat-package  create the redhat package"
-	@echo "  suse-package  create the suse package"
+	@echo "debian-package  create the debian package(s)"
+	@echo "redhat-package  create the redhat package(s)"
+	@echo "  suse-package  create the suse package(s)"
 	@echo ""
 	@echo "     check-deb  check the deb package"
 	@echo "     check-rpm  check the rpm package"
@@ -319,10 +319,7 @@ endif
 redhat-changelog:
 	make rpm-changelog RPMOS=el
 
-redhat-packages: rpm-package-rh8 rpm-package-rh9
-
-rpm-package-rh8:
-	make rpm-package RPMOS=el OSREL=8
+redhat-package: rpm-package-rh9
 
 rpm-package-rh9:
 	make rpm-package RPMOS=el OSREL=9
@@ -330,7 +327,7 @@ rpm-package-rh9:
 suse-changelog:
 	make rpm-changelog RPMOS=suse
 
-suse-packages: rpm-package-suse12 rpm-package-suse15
+suse-package: rpm-package-suse12 rpm-package-suse15
 
 rpm-package-suse12:
 	make rpm-package RPMOS=suse OSREL=12
@@ -354,20 +351,18 @@ upload-suse:
 	make upload-rpm RPMOS=suse OSREL=15
 
 # shortcut to upload all packages from a single machine
-DEB2_PKG=python-weewx_$(DEBVER)_$(DEBARCH).deb
 DEB3_PKG=python3-weewx_$(DEBVER)_$(DEBARCH).deb
-RHEL7_PKG=weewx-$(RPMVER).el7.$(RPMARCH).rpm
-RHEL8_PKG=weewx-$(RPMVER).el8.$(RPMARCH).rpm
+RHEL9_PKG=weewx-$(RPMVER).el9.$(RPMARCH).rpm
 SUSE12_PKG=weewx-$(RPMVER).suse12.$(RPMARCH).rpm
 SUSE15_PKG=weewx-$(RPMVER).suse15.$(RPMARCH).rpm
 upload-pkgs:
-	scp $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(DEB2_PKG) $(DSTDIR)/$(DEB3_PKG) $(DSTDIR)/$(RHEL7_PKG) $(DSTDIR)/$(RHEL8_PKG) $(DSTDIR)/$(SUSE12_PKG) $(DSTDIR)/$(SUSE15_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+	scp $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(DEB3_PKG) $(DSTDIR)/$(RHEL9_PKG) $(DSTDIR)/$(SUSE12_PKG) $(DSTDIR)/$(SUSE15_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # move files from the upload directory to the release directory and set up the
 # symlinks to them from the download root directory
 DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
 RELDIR=$(WEEWX_DOWNLOADS)/released_versions
-ARTIFACTS=$(DEB2_PKG) $(DEB3_PKG) $(RHEL7_PKG) $(RHEL8_PKG) $(SUSE12_PKG) $(SUSE15_PKG) $(SRCPKG)
+ARTIFACTS=$(DEB3_PKG) $(RHEL9_PKG) $(SUSE12_PKG) $(SUSE15_PKG) $(SRCPKG)
 release:
 	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
 	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
