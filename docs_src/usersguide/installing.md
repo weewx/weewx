@@ -1,17 +1,5 @@
 # Installing WeeWX
 
-If you're an old hand at installing software on Unix systems, you may be able to
-use one of our _Quickstart guides_:
-
-* [Debian](../quickstarts/debian.md) - including Ubuntu, Mint, Raspberry Pi 
-  OS, Devuan. Uses `apt`.
-* [Redhat](../quickstarts/redhat.md) - including Fedora, CentOS, Rocky. Uses `yum`.
-* [SUSE](../quickstarts/suse.md) - including openSUSE. Uses `zypper`.
-* [pip](../quickstarts/pip.md) - any operating system. Uses `pip`
-* [git](../quickstarts/git.md) - any operating system. Run directly from repository.
-
-Otherwise, continue on...
-
 ## Required skills
 
 In the world of open-source hobbyist software, WeeWX is pretty easy to install
