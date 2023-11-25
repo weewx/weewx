@@ -4,9 +4,13 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Package weewx, containing modules specific to the weewx runtime engine."""
+import importlib
 import os.path
 import sys
 import time
+
+import weeutil.logger
+from weeutil.weeutil import to_int
 
 __version__ = "5.0.0b15"
 
@@ -219,3 +223,19 @@ def extract_roots(config_dict):
         pass
 
     return root_dict
+
+
+def initialize(config_dict, log_label):
+    """Set debug, set up the logger, and add the user path"""
+    global debug
+
+    # Set weewx.debug as necessary:
+    debug = to_int(config_dict.get('debug', 0))
+
+    # Customize the logging with user settings.
+    weeutil.logger.setup(log_label, config_dict)
+
+    # Add the 'user' package to PYTHONPATH
+    add_user_path(config_dict)
+    # Now we can import user.extensions
+    importlib.import_module('user.extensions')

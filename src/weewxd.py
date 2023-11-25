@@ -87,18 +87,9 @@ def main():
         weeutil.logger.log_traceback(log.critical, "    ****  ")
         sys.exit(weewx.CMD_ERROR)
 
-    # Now that we have the configuration dictionary, we can add the path to the user
-    # directory to PYTHONPATH.
-    weewx.add_user_path(config_dict)
-    # Now we can import user extensions
-    importlib.import_module('user.extensions')
-
-    # Look for the debug flag. If set, ask for extra logging
-    weewx.debug = int(config_dict.get('debug', 0))
-
-    # Now that we have the config_dict and debug setting, we can customize the
-    # logging with user additions
-    weeutil.logger.setup(namespace.log_label, config_dict)
+    # Now that we have the configuration dictionary, we can set up logging, debug, and
+    # other housekeeping chores:
+    weewx.initialize(config_dict, namespace.log_label)
 
     # Log key bits of information.
     log.info("Initializing weewx version %s", weewx.__version__)

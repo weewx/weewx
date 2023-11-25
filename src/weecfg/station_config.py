@@ -538,19 +538,19 @@ def copy_docs(config_dict, docs_root=None, dry_run=False, force=False):
     if os.path.isdir(docs_dir) and not force:
         print(f"Directory {docs_dir} already exists.")
         return None
-    with weeutil.weeutil.get_resource_path('weewx_data', 'docs') as docs_resources:
-        # Check whether new docs are actually available.
-        if os.path.isdir(docs_resources):
-            # They are available. Proceed.
+    # If the documentation has not been built, then a FileNotFoundError will be raised. Be
+    # prepared to catch it.
+    try:
+        with weeutil.weeutil.get_resource_path('weewx_data', 'docs') as docs_resources:
             print(f"Removing {docs_dir}.")
             if not dry_run:
                 shutil.rmtree(docs_dir, ignore_errors=True)
             print(f"Copying new docs into {docs_dir}.")
             if not dry_run:
                 shutil.copytree(docs_resources, docs_dir)
-        else:
-            print(f"{bcolors.WARNING}Documentation not available at {docs_resources}. "
-                  f"Try building them using mkdocs.{bcolors.ENDC}", file=sys.stderr)
+    except FileNotFoundError:
+        print(f"{bcolors.WARNING}Documentation not available. "
+              f"Try building them using mkdocs.{bcolors.ENDC}", file=sys.stderr)
     return docs_dir
 
 
