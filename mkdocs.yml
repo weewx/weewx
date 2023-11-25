@@ -89,14 +89,13 @@ nav:
 
   - Utilities guide:
     - weewxd: utilities/weewxd.md
-    - weectl:
-      - weectl: utilities/weectl-about.md
-      - weectl database: utilities/weectl-database.md
-      - weectl debug: utilities/weectl-debug.md
-      - weectl device: utilities/weectl-device.md
-      - weectl extension: utilities/weectl-extension.md
-      - weectl report: utilities/weectl-report.md
-      - weectl station: utilities/weectl-station.md
+    - weectl: utilities/weectl-about.md
+    - weectl database: utilities/weectl-database.md
+    - weectl debug: utilities/weectl-debug.md
+    - weectl device: utilities/weectl-device.md
+    - weectl extension: utilities/weectl-extension.md
+    - weectl report: utilities/weectl-report.md
+    - weectl station: utilities/weectl-station.md
     - wee_import:
       - Introduction: utilities/wee_import-about.md
       - Common options: utilities/wee_import-common-opt.md

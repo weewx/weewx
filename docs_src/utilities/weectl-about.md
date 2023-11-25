@@ -11,6 +11,8 @@ usage: weectl -v|--version
        weectl database --help
        weectl debug --help
        weectl extension --help
+       weectl import --help
+       weectl report --help
        weectl station --help
 
 optional arguments:
@@ -22,18 +24,7 @@ Available subcommands:
     database            Manages WeeWX databases.
     debug               Generate debug info.
     extension           List, install, or uninstall extensions.
+    import              Import observation data.
+    report              List and run WeeWX reports.
     station             Create, modify, or upgrade a station data area.
 ```
-
-## [weectl database](weectl-database.md)
-Use this subcommand to manage your WeeWX database
-
-## [weectl debug](weectl-debug.md)
-Use this subcommand to generate output that captures your WeeWX environment
-and configuration file. This is useful for remote debugging.
-
-## [weectl extension](weectl-extension.md)
-Use this subcommand to install, uninstall, and list WeeWX extensions.
-
-## [weectl station](weectl-station.md)
-Use this subcommand to create and manage stations.
