@@ -30,13 +30,13 @@ drivers and other extensions.
 If you're an old hand at installing software on Unix systems, you may be able
 to use one of our _Quickstart guides_:
 
-* [Debian](../quickstarts/debian.md) - including Ubuntu, Mint, Raspberry Pi 
+* [Debian](quickstarts/debian.md) - including Ubuntu, Mint, Raspberry Pi 
   OS, Devuan. Uses `apt`.
-* [Redhat](../quickstarts/redhat.md) - including Fedora, CentOS, Rocky. Uses
+* [Redhat](quickstarts/redhat.md) - including Fedora, CentOS, Rocky. Uses
   `yum`.
-* [SUSE](../quickstarts/suse.md) - including openSUSE. Uses `zypper`.
-* [pip](../quickstarts/pip.md) - any operating system. Uses `pip`
-* [git](../quickstarts/git.md) - any operating system. Run directly from
+* [SUSE](quickstarts/suse.md) - including openSUSE. Uses `zypper`.
+* [pip](quickstarts/pip.md) - any operating system. Uses `pip`
+* [git](quickstarts/git.md) - any operating system. Run directly from
   repository.
 
 Otherwise, see the section [_Installing WeeWX_](usersguide/installing.md) in
