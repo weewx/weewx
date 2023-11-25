@@ -172,7 +172,7 @@ test-clean:
 build-docs: $(DOC_BUILT)
 
 $(DOC_BUILT): $(shell find $(DOC_SRC) -type f)
-	@rm -r $(DOC_BUILT)
+	@rm -rf $(DOC_BUILT)
 	@mkdir -p $(DOC_BUILT)
 	@echo "Building documents"
 	$(PYTHON) -m mkdocs --quiet build --site-dir=$(DOC_BUILT)
