@@ -130,3 +130,30 @@ weectl station reconfigure
 
 See the documentation for [`weectl
 extension`](../utilities/weectl-extension.md) for details.
+
+## Installing a skin, uploader or other extension
+
+There are many skins and other extensions available that add features and
+functionality to the core WeeWX capabilities.  Use the WeeWX extension
+management utility to download, install, and manage these extensions.
+
+Start by looking in the extensions section of the
+[WeeWX Wiki](https;//github.com/weewx/weewx/wiki).  When you find an
+extension you like, make note of the URL to that extension. The URL will refer
+to a `zip` or `tgz` file.
+
+Then install the extension, using the URL:
+```
+weectl extension install https://github.com/path/to/extension.zip
+```
+
+Some extensions work with no further changes required.  Others might require
+changes to the WeeWX configuration file, for example, login credentials
+required to upload data to an MQTT broker.  If so, modify the WeeWX
+configuration file using a text editor such as `nano`, and see the
+extension documentation for details.
+
+In most cases, you will then have to restart `weewxd`.
+
+See the documentation for [`weectl
+extension`](../utilities/weectl-extension.md) for details.

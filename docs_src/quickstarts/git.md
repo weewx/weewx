@@ -132,9 +132,18 @@ To enable uploads or to customize reports, modify the configuration file.
 See the [*Customization Guide*](../custom/introduction.md) for instructions,
 and the [application](../reference/weewx-options/introduction.md) and
 [skin](../reference/skin-options/introduction.md) references for all the 
-options.
+options. Use any text editor, such as `nano`:
 
-    nano ~/weewx-data/weewx.conf
+```{.shell .copy}
+nano ~/weewx-data/weewx.conf
+```
+
+To install new skins, drivers, or other extensions, use the `weectl` utility
+and the URL to the extension.
+
+```{.shell .copy}
+weectl extension install https://github.com/path/to/extension.zip
+```
 
 The executable `weewxd` must be restarted for the changes to take effect.
 
