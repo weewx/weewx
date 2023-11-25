@@ -72,7 +72,7 @@ def run_reports(config_path,
     config_path, config_dict = weecfg.read_config(config_path)
     print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
 
-    weectllib.initialize(config_dict)
+    weewx.initialize(config_dict, 'weectl')
 
     # We want to generate all reports irrespective of any report_timing settings that may exist.
     # The easiest way to do this is walk the config dict, resetting any report_timing settings
