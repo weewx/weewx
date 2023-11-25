@@ -56,7 +56,7 @@
 
 %global dst_bin_dir  %{_datadir}/%{name}
 %global dst_cfg_dir  %{_sysconfdir}/%{name}
-%global dst_user_dir %{_datadir}/%{name}/user
+%global dst_user_dir %{dst_cfg-dir}/bin/user
 %global cfg_file     %{dst_cfg_dir}/weewx.conf
 
 %define entry_points weewxd weectl
@@ -118,7 +118,6 @@ cp -r src/weewx_data/util/udev %{buildroot}%{dst_cfg_dir}
 # create the weewx configuration
 cat src/weewx_data/weewx.conf | sed \
  -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /etc/weewx%' \
- -e 's%^USER_ROOT =.*%USER_ROOT = /usr/share/weewx/user%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
  -e 's:HTML_ROOT = public_html:HTML_ROOT = %{html_root}:' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
@@ -161,11 +160,10 @@ if [ "$1" = "2" ]; then
     echo Saving previous config as %{cfg_file}.prev
     cp -p %{cfg_file} %{cfg_file}.prev
   fi
-else
-  # this is a new install, so ensure that we run as weewx user, not root
-  /usr/bin/getent group weewx || /usr/sbin/groupadd -r weewx
-  /usr/bin/getent passwd weewx || /usr/sbin/useradd -r -g weewx -M -s /sbin/nologin weewx
 fi
+# ensure that we run as weewx user, not root
+/usr/bin/getent group weewx || /usr/sbin/groupadd -r weewx
+/usr/bin/getent passwd weewx || /usr/sbin/useradd -r -g weewx -M -s /sbin/nologin weewx
 
 %post
 # pre-compile the python code
@@ -210,9 +208,6 @@ rm -rf %{buildroot}
 %{_sysconfdir}/default/weewx
 %{_sysconfdir}/udev/rules.d/weewx.rules
 %{dst_bin_dir}/
-%exclude %{dst_user_dir}/
-%config(noreplace) %{dst_user_dir}/
-# FIXME: set these permissions only if weewx user exists
 %config(noreplace) %attr(-,weewx,weewx) %{dst_cfg_dir}/
 %dir %attr(-,weewx,weewx) /var/log/weewx
 %dir %attr(-,weewx,weewx) /var/lib/weewx

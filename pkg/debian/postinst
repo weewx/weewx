@@ -185,7 +185,10 @@ install_weewxconf() {
     insert_driver
 }
 
-# use weewx setup utilities to merge new features into existing weewx.conf
+# use weewx setup utilities to merge new features into existing weewx.conf.
+# user will be prompted about whether to accept maintainers version (the
+# merged config that we create here), or the previous config.  either way,
+# the previous and new are saved.
 merge_weewxconf() {
     if [ ! -f $cfgfile ]; then
         return
@@ -257,7 +260,7 @@ set_permissions() {
 case "$1" in
 configure)
         if [ "$2" != "" ]; then
-            # this is an upgrade so attempt to merge
+            # this is an upgrade so create a maintainers version by merging
             merge_weewxconf
         else
             # virgin install so insert debconf values into the config file
