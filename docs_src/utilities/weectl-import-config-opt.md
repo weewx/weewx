@@ -1,24 +1,10 @@
-`wee_import` requires a second configuration file, the import configuration
-file, in addition to the standard WeeWX configuration file. The import
-configuration file specifies the import type and various options associated
-with each type of import. The import configuration file is specified using the
-mandatory `--import-config` option. How you construct the import configuration
-file is up to you; however, the recommended method is to copy one of the
-example import configuration files located in the `/home/weewx/util/import` or
-`/etc/weewx/import` directory as applicable, modify the configuration options
-in the newly copied file to suit the import to be performed and then use this
-file as the import configuration file.
+`wee_import` requires a second configuration file, the import configuration file, in addition to the standard WeeWX configuration file. The import configuration file specifies the import type and various options associated with each type of import. The import configuration file is specified using the mandatory `--import-config` option. How you construct the import configuration file is up to you; however, the recommended method is to copy one of the example import configuration files located in the `util/import` directory as applicable, modify the configuration options in the newly copied file to suit the import to be performed and then use this file as the import configuration file.
 
-Following is the definitive guide to the options available in the import
-configuration file. Default values are provided for a number of options,
-meaning that if they are not listed in the import configuration file at all
-`wee_import` will pick sensible values. When the documentation below gives a
-default value this is the value that will be used if the option is omitted.
+Following is the definitive guide to the options available in the import configuration file. Default values are provided for a number of options, meaning that if they are not listed in the import configuration file at all `wee_import` will pick sensible values. When the documentation below gives a default value this is the value that will be used if the option is omitted.
 
 ### `source`{#import_config_source}
 
-The `source` option determines the type of import to be performed by
-`wee_import`. The option is mandatory and must be set to one of the following:
+The `source` option determines the type of import to be performed by `wee_import`. The option is mandatory and must be set to one of the following:
 
 * `CSV` to import from a single CSV format file.
 * `WU` to import from a Weather Underground PWS history
@@ -30,21 +16,17 @@ There is no default.
 
 ## [CSV]
 
-The `[CSV]` section contains the options controlling the import of
-observational data from a CSV format file.
+The `[CSV]` section contains the options controlling the import of observational data from a CSV format file.
 
 ### `file`{#csv_file}
 
-The file containing the CSV format data to be used as the source during the
-import. Include full path and filename.
+The file containing the CSV format data to be used as the source during the import. Include full path and filename.
 
 There is no default.
 
 ### `source_encoding`{#csv_encoding}
 
-The source file encoding. This parameter is optional and should only need be
-used if the source file uses an encoding other than UTF-8 or an ASCII
-compatible encoding. If used, the setting used should be a <a href="https://docs.python.org/3/library/codecs.html#standard-encodings">Python Standard Encoding</a>.
+The source file encoding. This parameter is optional and should only need be used if the source file uses an encoding other than UTF-8 or an ASCII compatible encoding. If used, the setting used should be a <a href="https://docs.python.org/3/library/codecs.html#standard-encodings">Python Standard Encoding</a>.
 
 The default is `utf-8-sig`.
 
@@ -54,17 +36,13 @@ The character used to separate fields. Default is `,` (comma).
 
 ### `decimal`{#csv_decimal}
 
-The character used as the decimal point in the source files. A full stop is
-frequently used, but it may be another character. This parameter must be
-included in quotation marks.
+The character used as the decimal point in the source files. A full stop is frequently used, but it may be another character. This parameter must be included in quotation marks.
 
 The default is `'.'`.
 
 ### `interval`{#csv_interval}
 
-Determines how the time interval (WeeWX archive table field `interval`)
-between successive observations is derived. The interval can be derived by one
-of three methods:
+Determines how the time interval (WeeWX archive table field `interval`) between successive observations is derived. The interval can be derived by one of three methods:
 
 * The interval can be calculated as the time, rounded to the nearest minute, between the date-time of successive records. This method is suitable when the data was recorded at fixed intervals and there are NO missing records in the source data. Use of this method when there are missing records in the source data can compromise the integrity of the WeeWX statistical data. Select this method by setting `interval = derive`.
 
@@ -127,28 +105,7 @@ For example, if the source data uses the format 23 January 2015 15:34 the approp
 The default is `%Y-%m-%d %H:%M:%S`.
 
 !!! Note
-    `wee_import` does not support the construction of the unique record date
-    time stamp from separate date and time fields, rather the date-time
-    information for each imported record must be contained in a single
-    field. CSV data containing separate date and time fields may require
-    further manual processing before they can be imported.
-
-### `rain`{#csv_rain}
-
-The WeeWX `rain` field records rainfall that was recorded in the preceding archive period, so for a five-minute archive period the `rain` field in each archive record would contain the total rainfall that fell in the previous five minutes. Many weather station applications provide a daily or yearly total. `wee_import` can derive the WeeWX `rain` field in one of two ways:
-
-* If the imported rainfall data is a running total then `wee_import` can derive the WeeWX `rain` field from successive totals. For this method use `rain = cumulative`.
-
-* If the imported rainfall data is a discrete value per date-time period then `rain = discrete` should be used.
-
-!!! Note
-    `wee_import` only supports cumulative rainfall data that resets on a
-    midnight boundary, cumulative rainfall data that resets at some other
-    time; e.g., 9am, is not supported. In such cases the rainfall data will
-    need to be converted to either reset on a midnight boundary or a discrete
-    value per date-time period and `rain = discrete` used. The former may be
-    possible by selecting another rainfall field (if available) in the source
-    data, otherwise it will require manual manipulation of the source data.
+    `wee_import` does not support the construction of the unique record date time stamp from separate date and time fields, rather the date-time information for each imported record must be contained in a single field. CSV data containing separate date and time fields may require further manual processing before they can be imported.
 
 ### `wind_direction`{#csv_wind_direction}
 
@@ -256,26 +213,24 @@ The default is `0, 360`.
 
 ### `[[FieldMap]]`{#csv_fieldmap}
 
-The `[[FieldMap]]` stanza defines the mapping from the source data fields to WeeWX archive fields. The map consists of one row per field being imported using either of the following formats:
+The `[[FieldMap]]` stanza defines the mapping from the source data fields to WeeWX archive fields. The map consists of one stanza per WeeWX archive field being populated using the following format:
 
 ```
-weewx_archive_field_name = csv_field_name, weewx_unit_name
+    [[[weewx_archive_field_name]]]
+        source_field = csv_field_name
+        unit = weewx_unit_name | text
+        cumulative = True | False
 ```
 
-or
+Where `weewx_archive_field_name` is a field name in the in-use WeeWX archive table schema.
 
-```
-weewx_archive_field_name = csv_field_name, text
-```
+Each WeeWX archive field stanza supports the following options:
 
-Where:
+* `source_field`. The name of the CSV field to be mapped to the WeeWX archive field. Mandatory.
+* `unit`. The WeeWX unit name of the units used by `source_field`. Text fields may be imported by setting the unit option to `text`. Mandatory.
+* `cumulative`. Whether the `source_field` is a cumulative value or not (e.g, daily rainfall). Optional boolean value. Default is `False`.
 
-* `weewx_archive_field_name` is a field name in the in-use WeeWX archive table schema
-* `csv_field_name` is the name of a field from the CSV file
-* `weewx_unit_name` is the WeeWX unit name of the units used by `csv_field_name`
-* `text` is the literal word text
-
-This mapping allows `wee_import` to take a source data field, do the appropriate unit conversion and store the resulting value in the appropriate WeeWX archive field. Source data text fields may be mapped to a WeeWX text archive field by using the second form of the field map entry where the literal `text` is used in place of a WeeWX unit name. A mapping is not required for every WeeWX archive field (e.g., the source may not provide inside temperature so no `inTemp` field mapping is required) and neither does every CSV field need to be included in a mapping (e.g., the source data field `monthrain` may have no use if the source data field `rain` provides the data for the WeeWX archive `rain field). Unused field mapping lines will not be used and may be omitted.
+This mapping allows `wee_import` to take a source data field, perform the appropriate unit conversion and store the resulting value in the appropriate WeeWX archive field. Source data text fields may be mapped to a WeeWX text archive field by using the second form of the field map entry where the literal `text` is used in place of a WeeWX unit name. A mapping is not required for every WeeWX archive field (e.g., the source may not provide inside temperature so no `inTemp` field mapping is required) and neither does every CSV field need to be included in a mapping (e.g., the source data field `monthrain` may have no use if the source data field `dayrain` provides the data for the WeeWX archive `rain` field).
 
 !!! Note
     Importing of text data into text fields in the WeeWX archive is only supported for WeeWX archive fields that have been configured as text fields. Refer to the Wiki page [Storing text in the database](https://github.com/weewx/weewx/wiki/Storing-text-in-the-database) for details.
@@ -285,28 +240,46 @@ If the source data includes a field that contains a WeeWX unit system code (i.e.
 For example, source CSV data with the following structure:
 
 ```
-date_and_time,temp,humid,wind,dir,rainfall,rad,river
-23 May 2018 13:00,17.4,56,3.0,45,0.0,956,340
-23 May 2018 13:05,17.6,56,1.0,22.5,0.4,746,341
+date_and_time,temp,humid,wind,dir,dayrain,rad,river,decsription
+23 May 2018 13:00,17.4,56,3.0,45,10.0,956,340,'cloudy'
+23 May 2018 13:05,17.6,56,1.0,22.5,10.4,746,341,'showers developing'
 ```
 
-where `temp` is temperature in Celsius, `humid` is humidity in percent, `wind` is wind speed in km/h, `dir` is wind direction in degrees, `rainfall` is rain in mm, `rad` is radiation in watts per square meter and `river` is river height in mm might use a field map as follows:
+where `temp` is temperature in Celsius, `humid` is humidity in percent, `wind` is wind speed in km/h, `dir` is wind direction in degrees, `rainfall` is rain in mm, `rad` is radiation in watts per square meter, `river` is river height in mm and `description` is a text might use a field map as follows:
 
 ```
 [[FieldMap]]
-    dateTime    = date_and_time, unix_epoch
-    outTemp     = temp, degree_C
-    outHumidity = humid, percent
-    windSpeed   = wind, km_per_hour
-    windDir     = dir, degree_compass
-    rain        = rainfall, mm
-    radiation   = rad, watt_per_meter_squared
+    [[[dateTime]]]
+        source_field = date_and_time
+        unit = unix_epoch
+    [[[outTemp]]]
+        source_field = temp
+        unit = degree_C
+    [[[outHumidity]]]
+        source_field = humid
+        unit = percent
+    [[[windSpeed]]]
+        source = wind
+        unoit = km_per_hour
+    [[[windDir]]]
+        source_field = dir
+        unit = degree_compass
+    [[[rain]]]
+        source_field = dayrain
+        unit = mm
+        cumulative = True
+    [[[radiation]]]
+        source_field = rad
+        unit = watt_per_meter_squared
+    [[[outlook]]]
+        source_field = description
+        unit = text
 ```
 
 If the same source CSV data included a field `unit_info` that contains WeeWX unit system data as follows:
 
 ```
-date_and_time,temp,humid,wind,dir,rainfall,rad,river,unit_info
+date_and_time,temp,humid,wind,dir,dayrain,rad,river,unit_info
 23 May 2018 13:00,17.4,56,3.0,45,0.0,956,340,1
 23 May 2018 13:05,17.6,56,1.0,22.5,0.4,746,341,16
 ```
@@ -315,14 +288,30 @@ then a field map such as the following might be used:
 
 ```
 [[FieldMap]]
-    dateTime    = date_and_time, unix_epoch
-    usUnits     = unit_info
-    outTemp     = temp
-    outHumidity = humid
-    windSpeed   = wind
-    windDir     = dir
-    rain        = rainfall
-    radiation   = rad
+    [[[dateTime]]]
+        source_field = date_and_time
+        unit = unix_epoch
+    [[[usUnits]]]
+        source_field = unit_info
+    [[[outTemp]]]
+        source_field = temp
+        unit = degree_C
+    [[[outHumidity]]]
+        source_field = humid
+        unit = percent
+    [[[windSpeed]]]
+        source = wind
+        unoit = km_per_hour
+    [[[windDir]]]
+        source_field = dir
+        unit = degree_compass
+    [[[rain]]]
+        source_field = dayrain
+        unit = mm
+        cumulative = True
+    [[[radiation]]]
+        source_field = rad
+        unit = watt_per_meter_squared
 ```
 
 !!! Note

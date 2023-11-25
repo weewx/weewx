@@ -94,18 +94,18 @@ nav:
     - weectl debug: utilities/weectl-debug.md
     - weectl device: utilities/weectl-device.md
     - weectl extension: utilities/weectl-extension.md
+    - weectl import:
+      - Introduction: utilities/weectl-import-about.md
+      - Common options: utilities/weectl-import-common-opt.md
+      - Configuration options: utilities/weectl-import-config-opt.md
+      - CSV: utilities/weectl-import-csv.md
+      - Weather Underground: utilities/weectl-import-wu.md
+      - Cumulus: utilities/weectl-import-cumulus.md
+      - Weather Display: utilities/weectl-import-wd.md
+      - WeatherCat: utilities/weectl-import-weathercat.md
+      - Troubleshooting: utilities/weectl-import-troubleshoot.md
     - weectl report: utilities/weectl-report.md
     - weectl station: utilities/weectl-station.md
-    - wee_import:
-      - Introduction: utilities/wee_import-about.md
-      - Common options: utilities/wee_import-common-opt.md
-      - Configuration options: utilities/wee_import-config-opt.md
-      - CSV: utilities/wee_import-csv.md
-      - Weather Underground: utilities/wee_import-wu.md
-      - Cumulus: utilities/wee_import-cumulus.md
-      - Weather Display: utilities/wee_import-wd.md
-      - WeatherCat: utilities/wee_import-weathercat.md
-      - Troubleshooting: utilities/wee_import-troubleshoot.md
 
   - "Hardware guide":
     - Drivers: hardware/drivers.md
