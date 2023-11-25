@@ -5,7 +5,9 @@ hardware, processes the data, archives the data, then generates reports
 from the data.
 
 It can be run directly, or in the background as a daemon.  When it is run
-directly, `weewxd` emits LOOP and ARCHIVE data to stdout.
+directly, `weewxd` emits LOOP and ARCHIVE data to stdout.  When it is run
+as a daemon, it will fork, output will go to log, and the process ID will be
+written to the `pidfile`.
 
 Specify `--help` to see how it is used:
 ```
@@ -40,6 +42,3 @@ Options:
   -n LABEL, --log-label=LABEL
                         Label to use in syslog entries
 ```
-
-Note that options `--daemon` and `--pidfile` are not necessary when running
-under systemd.
