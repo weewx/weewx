@@ -51,7 +51,7 @@ dependencies:
 ## Get the code
 
 Use `git` to clone the WeeWX repository into a directory called `weewx` in
-your home directory[^1]:
+your home directory:
 
 ```{.shell .copy}
 git clone https://github.com/weewx/weewx ~/weewx
@@ -63,6 +63,11 @@ git clone https://github.com/weewx/weewx ~/weewx
     ``` {.shell .copy}
     git clone --depth 1 https://github.com/weewx/weewx ~/weewx
     ```
+
+!!! Note
+    Of course, the directory you clone into does not have to be `~/weewx`.
+    It can be any directory. Just be sure to replace `~/weewx` with your
+    directory's path in the rest of the instructions.
 
 
 ## Provision a new station
@@ -160,7 +165,3 @@ If desired, delete the data directory:
 ```shell
 rm -r ~/weewx-data
 ```
-
-[^1]: Of course, the directory you clone into does not have to be `~/weewx`.
-It can be any directory. Just be sure to replace `~/weewx` with your directory's
-path in the rest of the instructions.
