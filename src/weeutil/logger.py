@@ -128,7 +128,9 @@ def setup(process_name, config_dict=None):
                                                facility=facility,
                                                process_name=process_name)
             if key == 'filename' and weewx_root:
+                # Allow relative file paths, in which case they are relative to WEEWX_ROOT:
                 section[key] = os.path.join(weewx_root, section[key])
+                # Create any intervening directories:
                 os.makedirs(os.path.dirname(section[key]), exist_ok=True)
 
     # Using the function, walk the 'Logging' part of the structure

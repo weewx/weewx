@@ -17,8 +17,7 @@ documentation.
     | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`             |
     | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`               |
     | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`          |
-    | Log                     |                  | See below                       |
-    | Documentation           |                  |  https://weewx.com/docs/5.0     |
+    | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx/`         |
 
 === "RedHat"
 
@@ -31,7 +30,6 @@ documentation.
     | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`             |
     | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`               |
     | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`          |
-    | Log                     |                  | See below                       |
     | Documentation           |                  |  https://weewx.com/docs/5.0     |
 
 === "openSUSE"
@@ -45,7 +43,6 @@ documentation.
     | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`         |
     | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`           |
     | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`      |
-    | Log                     |                  | See below                   |
     | Documentation           |                  |  https://weewx.com/docs/5.0 |
 
 === "pip"
@@ -59,7 +56,6 @@ documentation.
     | Executables             | _`BIN_ROOT`_     | varies                      |
     | SQLite databases        | _`SQLITE_ROOT`_  | `archive/`                  |
     | Web pages and images    | _`HTML_ROOT`_    | `public_html/`              |
-    | Log                     |                  | `log/weewx.log`             |
     | Documentation           |                  |  https://weewx.com/docs/5.0 |
 
 !!! Note
@@ -70,35 +66,8 @@ documentation.
 
 ## Log files
 
-Logging is configured by the `[Logging]` section in the configuration file,
-`weewx.conf`. The section that comes with WeeWX Version 5 looks like this:
-
-``` ini linenums="1" hl_lines="12 14 16"
-[Logging]
-    [[root]]
-      handlers = timed_rotate,
-
-    [[handlers]]
-        # Log to a set of rotating files
-        [[[timed_rotate]]]
-            level = DEBUG
-            formatter = verbose
-            class = logging.handlers.TimedRotatingFileHandler
-            # File to log to, relative to WEEWX_ROOT
-            filename = log/weewx.log
-            # When to rotate:
-            when = midnight
-            # How many log files to save
-            backupCount = 7
-```
-
-This says to use a timed file rotation to log file `log/weewx.log` (line 12).
-Note that this is _relative to `WEEWX_ROOT`_, so the actual file is likely to be
-`~/weewx-data/log/weewx.log`. The file should be rotated at midnight (line 14).
-A week's worth of backups should be saved (line 16).
-
-If you don't have such a section, then the system log will
-be used. This is where to find the system log for each platform.
+In the default configuration, WeeWX logs to the system log. This is where to
+find the system log for each platform.
 
 === "Debian"
 
@@ -128,7 +97,6 @@ be used. This is where to find the system log for each platform.
     !!! note
         On macOS, the log file is likely to contain only severe log messages.
 
-
 See the wiki article [WeeWX logging](https://github.com/weewx/weewx/wiki/WeeWX-v4-and-logging)
 for more information on how to control logging in WeeWX.
 
@@ -148,5 +116,3 @@ the executables will depend on how the installation was done.
 | Virtual environment with `--user`<br/>(not allowed) | `python3 -m venv ~/ve`<br/>`source ~/ve/bin/activate`<br/>`pip3 install weewx --user` | N/A                     |
 
 (1) Checked on Ubuntu 22.02 and Rocky v9.1
-
-

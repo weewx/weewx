@@ -24,7 +24,7 @@ For upgrades:
 * Copy contents of `/usr/share/weewx/user` to `/etc/weewx/bin/user`, then
 rename `/usr/share/weewx/user` to `/usr/share/weewx/user-YYmmdd`
 
-Resolved:
+## Resolved
 
 - no need for loop-on-init arg to weewxd?
    KEEP IT
@@ -46,8 +46,11 @@ Resolved:
 - for logging, use weewx vs weewxd for log label?
   WEEWX
 
-- if separate log file, we just do one: ~/weewx-data/log/weewx.log
-  ONLY weewx.log
+- Continue logging to system log. Unfortunately, the Python logging module is
+  not process safe, so we would be unable to have multiple processes write to
+  it. So, we stick with syslog.
+  
+
 
 Done:
 
@@ -72,11 +75,6 @@ to the system, so a weewx user owns it all.
   apt/yum/zypper - easiest install, appliance
   git(src) - developer, minimal system, multiple python configurations
 
-We want /var/log/weewx so that weewx-multi will emit single log for each
-weewxd instance.
-
-We want all logs to /var/log/weewx/weewx.log so that it is clear if someone
-is running weewxd and weectl at the same time.
 
 For deb/rpm upgrades, the config file is only modified if you select the
 'take maintainer changes' option.  That takes your old config and 'upgrades'
@@ -114,13 +112,6 @@ package install.
 ## `pyproject.toml`
 
 Change parameter `description`.
-
-## Logging
-
-Update the logging wiki.
-
-Log to `~/weewx-data/weewx.log` by default. Use 
-[TimedRotatingFileHandler](https://docs.python.org/3/library/logging.handlers.html#timedrotatingfilehandler)
 
 
 ## Wiki
