@@ -87,6 +87,13 @@ sudo mkdir /etc/weewx/bin
 cp -r /usr/share/weewx/user/ /etc/weewx/bin/
 ```
 
+### New logging location
+
+New installs will log to `weewx.log`, whose location depends on the install
+method. See the section 
+
+Old installs continue to log to syslog.
+
 ### New utilities
 
 Most of the old utilities have been collected and put under one master utility,

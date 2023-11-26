@@ -129,8 +129,8 @@ be used. This is where to find the system log for each platform.
         On macOS, the log file is likely to contain only severe log messages.
 
 
-See the wiki article [WeeWX V4 and logging](https://github.com/weewx/weewx/wiki/WeeWX-v4-and-logging)
-for more information on controlling logging in WeeWX.
+See the wiki article [WeeWX logging](https://github.com/weewx/weewx/wiki/WeeWX-v4-and-logging)
+for more information on how to control logging in WeeWX.
 
 
 ## Location of executables in a pip install
