@@ -8,6 +8,9 @@ SIGN=1
 # WWW server
 WEEWX_COM:=weewx.com
 
+BLDDIR=build
+DSTDIR=dist
+
 # location of the html documentation
 WEEWX_HTMLDIR=/var/www/html
 # location of weewx downloads
@@ -17,18 +20,16 @@ WEEWX_STAGING=$(WEEWX_HTMLDIR)/downloads/development_versions
 # Location of doc sources
 DOC_SRC=docs_src
 # Location of built docs
-DOC_BUILT=src/weewx_data/docs
+DOC_BUILT=$(BLDDIR)/docs
 # Location of the skins
 SKINLOC=src/weewx_data/skins
 
+CWD=$(shell pwd)
 # extract version to be used in package controls and labels
 VERSION:=$(shell sed -ne 's/^version = "\(.*\)"/\1/p;' pyproject.toml)
 # just the major.minor part of the version
 MMVERSION:=$(shell echo "$(VERSION)" | sed -e 's%.[0-9a-z]*$$%%')
 
-CWD=$(shell pwd)
-BLDDIR=build
-DSTDIR=dist
 SRCPKG=weewx-$(VERSION).tgz
 WHEELSRC=weewx-$(VERSION).tar.gz
 WHEEL=weewx-$(VERSION)-py3-none-any.whl

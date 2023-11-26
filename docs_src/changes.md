@@ -16,7 +16,8 @@ The new utility [`weectl`](utilities/weectl-about.md) replaces `wee_database`,
 `wee_debug`, `wee_device`, `wee_extension`, `wee_import`, `wee_reports`, 
 and `wee_config`. Try `weectl --help` to see how to use it.
 
-Documentation now uses [MkDocs](https://www.mkdocs.org/).
+Documentation now uses [MkDocs](https://www.mkdocs.org/). It is no longer included in the
+distribution, but can always be accessed online at https://weewx.com/docs.
 
 Package installs now use `systemd` instead of the old System V `/etc/init.d`.
 
