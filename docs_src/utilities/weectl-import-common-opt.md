@@ -8,7 +8,8 @@ wee_import --help
 usage: wee_import --help
        wee_import --import-config=IMPORT_CONFIG_FILE
             [--config=CONFIG_FILE]
-            [--date=YYYY-mm-dd | --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd[THH:MM]]
+            [--date=YYYY-mm-dd | --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd
+            [THH:MM]]
             [--dry-run]
             [--verbose]
             [--no-prompt]
@@ -52,7 +53,8 @@ but if you have an unusual installation or multiple stations, you may have to
 tell it explicitly.
 
 ```
-wee_import --config=/this/directory/weewx.conf --import-config=/directory/import.conf
+wee_import --config=/this/directory/weewx.conf 
+--import-config=/directory/import.conf
 ```
 
 ### `--import-config=FILENAME`
@@ -71,9 +73,9 @@ wee_import --import-config=/directory/import.conf
 
 ### `--dry-run`
 
-The `--dry-run` option will cause the import to proceed but no actual data will
-be saved to the database. This is a useful option to use when first importing
-data.
+The `--dry-run` option will cause the import to proceed but no actual data 
+will be saved to the database. This is a useful option to use when first 
+importing data.
 
 ```
 wee_import --import-config=/directory/import.conf --dry-run
@@ -81,14 +83,20 @@ wee_import --import-config=/directory/import.conf --dry-run
 
 ### `--date=YYYY-mm-dd`
 
-Records from a single date can be imported by use of the `--date` option. The `--date` option accepts strings of the format `YYYY-mm-dd`. Whilst the use of the `--date` option will limit the imported data to that of a single date, the default action if the `--date` option (and the `--from` and `--to` options) is omitted may vary depending on the source. The operation of the `--date` option is summarised in the following table:
+Records from a single date can be imported by use of the `--date` option. 
+The `--date` option accepts strings of the format `YYYY-mm-dd`. Whilst the 
+use of the `--date` option will limit the imported data to that of a single 
+date, the default action if the `--date` option (and the `--from` and `--to` 
+options) is omitted may vary depending on the source. The operation of the 
+`--date` option is summarised in the following table:
 
 <table class="no_indent">
   <caption>Option <span class="code">--date</span></caption>
   <tbody>
     <tr class="first_row">
       <td>option</td>
-      <td>Records imported for a CSV, Cumulus, Weather Display or WeatherCat import</td>
+      <td>Records imported for a CSV, Cumulus, Weather Display or WeatherCat 
+import</td>
       <td>Records imported for a Weather Underground import</td>
     </tr>
     <tr>
@@ -98,8 +106,10 @@ Records from a single date can be imported by use of the `--date` option. The `-
     </tr>
     <tr>
       <td class="code first_col">--date=2015-12-22</td>
-      <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-23 00:00 (inclusive)</td>
-      <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-23 00:00 (inclusive)</td>
+      <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-23 00:00 
+(inclusive)</td>
+      <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-23 00:00 
+(inclusive)</td>
     </tr>
   </tbody>
 </table>
@@ -119,28 +129,30 @@ Records from a single date can be imported by use of the `--date` option. The `-
 
 ### `--from` and `--to`
 
-Whilst the `--date` option allows imported data to be limited to a single date,
-the `--from` and `--to` options allow finer control by importing only the
-records that fall within the date or date-time range specified by the `--from`
-and `--to` options. The `--from` option determines the earliest (inclusive),
-and the `--to` option determines the latest (exclusive), date or date-time of
-the records being imported. The `--from` and `--to` options accept a string of
-the format `YYYY-mm-dd[THH:MM]`. The T literal is mandatory if specifying a
-date-time.
+Whilst the `--date` option allows imported data to be limited to a single 
+date, the `--from` and `--to` options allow finer control by importing 
+only the records that fall within the date or date-time range specified by 
+the `--from` and `--to` options. The `--from` option determines the 
+earliest (inclusive), and the `--to` option determines the latest 
+(exclusive), date or date-time of the records being imported. The `--from` 
+and `--to` options accept a string of the format `YYYY-mm-dd[THH:MM]`. The 
+T literal is mandatory if specifying a date-time.
 
 !!! Note
     The `--from` and `--to` options must be used as a pair, they cannot be
     used individually or in conjunction with the `--date`option.
 
-The operation of the `--from` and `--to` options is summarised in the following
-table:
+The operation of the `--from` and `--to` options is summarised in the 
+following table:
 
 <table class="no_indent">
-  <caption>Options <span class="code">--from</span> and <span class="code">--to</span></caption>
+  <caption>Options <span class="code">--from</span> and <span 
+class="code">--to</span></caption>
   <tbody>
     <tr class="first_row">
       <td colspan='2'>options</td>
-      <td>Records imported for a CSV, Cumulus, Weather Display or WeatherCat import</td>
+      <td>Records imported for a CSV, Cumulus, Weather Display or WeatherCat 
+import</td>
       <td>Records imported for a Weather Underground import</td>
     </tr>
     <tr>
@@ -152,26 +164,34 @@ table:
     <tr>
       <td class="code first_col">--from=2015-12-22</td>
       <td class="code first_col">--to=2015-12-29</td>
-      <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-30 00:00 (inclusive)</td>
-      <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-30 00:00 (inclusive)</td>
+      <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-30 00:00 
+(inclusive)</td>
+      <td>All records from 2015-12-22 00:00 (exclusive) to 2015-12-30 00:00 
+(inclusive)</td>
     </tr>
     <tr>
       <td class="code first_col">--from=2016-7-18T15:29</td>
       <td class="code first_col">--to=2016-7-25</td>
-      <td>All records from 2016-7-18 15:29 (exclusive) to 2016-7-26 00:00 (inclusive)</td>
-      <td>All records from 2016-7-18 15:29 (exclusive) to 2016-7-26 00:00 (inclusive)</td>
+      <td>All records from 2016-7-18 15:29 (exclusive) to 2016-7-26 00:00 
+(inclusive)</td>
+      <td>All records from 2016-7-18 15:29 (exclusive) to 2016-7-26 00:00 
+(inclusive)</td>
     </tr>
     <tr>
       <td class="code first_col">--from=2016-5-12</td>
       <td class="code first_col">--to=2016-7-22T22:15</td>
-      <td>All records from 2016-5-12 00:00 (exclusive) to 2016-7-22 22:15 (inclusive)</td>
-      <td>All records from 2016-5-12 00:00 (exclusive) to 2016-7-22 22:15 (inclusive)</td>
+      <td>All records from 2016-5-12 00:00 (exclusive) to 2016-7-22 22:15 
+(inclusive)</td>
+      <td>All records from 2016-5-12 00:00 (exclusive) to 2016-7-22 22:15 
+(inclusive)</td>
     </tr>
     <tr>
       <td class="code first_col">--from=2016-3-18T15:29</td>
       <td class="code first_col">--to=2016-6-20T22:00</td>
-      <td>All records from 2016-3-18 15:29 (exclusive) to 2016-6-20 22:00 (inclusive)</td>
-      <td>All records from 2016-3-18 15:29 (exclusive) to 2016-6-20 22:00 (inclusive)</td>
+      <td>All records from 2016-3-18 15:29 (exclusive) to 2016-6-20 22:00 
+(inclusive)</td>
+      <td>All records from 2016-3-18 15:29 (exclusive) to 2016-6-20 22:00 
+(inclusive)</td>
     </tr>
   </tbody>
 </table>
@@ -209,11 +229,11 @@ wee_import --import-config=/directory/import.conf --no-prompt
 ```
 
 !!! Warning
-    Care must be taken when using the `--no-prompt` option as ignoring warnings
-    during the import process can lead to unexpected results. Whilst existing
-    data will be protected, the use or acceptance of an incorrect or unexpected
-    parameter or default may lead to significant amounts of unwanted data being
-    imported.
+    Care must be taken when using the `--no-prompt` option as ignoring 
+    warnings during the import process can lead to unexpected results. Whilst 
+    existing data will be protected, the use or acceptance of an 
+    incorrect or unexpected parameter or default may lead to significant 
+    amounts of unwanted data being imported.
 
 ### `--suppress-warnings`
 
