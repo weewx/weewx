@@ -138,7 +138,7 @@ functionality to the core WeeWX capabilities.  Use the WeeWX extension
 management utility to download, install, and manage these extensions.
 
 Start by looking in the extensions section of the
-[WeeWX Wiki](https;//github.com/weewx/weewx/wiki).  When you find an
+[WeeWX Wiki](https://github.com/weewx/weewx/wiki).  When you find an
 extension you like, make note of the URL to that extension. The URL will refer
 to a `zip` or `tgz` file.
 
