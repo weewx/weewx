@@ -1,46 +1,39 @@
 Before starting, it's worth running the utility with the `--help` flag to see
-how `wee_import` is used:
+how `weectl import` is used:
 
 ```
-wee_import --help
+weectl import --help
 ```
 ```
-usage: wee_import --help
-       wee_import --import-config=IMPORT_CONFIG_FILE
-            [--config=CONFIG_FILE]
-            [--date=YYYY-mm-dd | --from=YYYY-mm-dd[THH:MM] --to=YYYY-mm-dd
-            [THH:MM]]
-            [--dry-run]
-            [--verbose]
-            [--no-prompt]
-            [--suppress-warnings]
-
+usage: weectl import --help
+       weectl import --import-config=IMPORT_CONFIG_FILE
+                     [--config=CONFIG_FILE]
+                     [[--date=YYYY-mm-dd] | [[--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]]
+                     [--dry-run][--verbose]
+                     [--no-prompt][--suppress-warnings]
 
 Import observation data into a WeeWX archive.
 
-Options:
+optional arguments:
   -h, --help            show this help message and exit
-  --config CONFIG_FILE  Use configuration file CONFIG_FILE.
+  --config FILENAME     Path to configuration file.
   --import-config IMPORT_CONFIG_FILE
-                        Use import configuration file IMPORT_CONFIG_FILE.
+                        Path to import configuration file.
   --dry-run             Print what would happen but do not do it.
   --date YYYY-mm-dd     Import data for this date. Format is YYYY-mm-dd.
   --from YYYY-mm-dd[THH:MM]
-                        Import data starting at this date or date-time. Format
-                        is YYYY-mm-dd[THH:MM].
+                        Import data starting at this date or date-time. Format is YYYY-
+                        mm-dd[THH:MM].
   --to YYYY-mm-dd[THH:MM]
-                        Import data up until this date or date-time. Format is
-                        YYYY-mm-dd[THH:MM].
+                        Import data up until this date or date-time. Format is YYYY-mm-
+                        dd[THH:MM].
   --verbose             Print and log useful extra output.
-  --no-prompt           Do not prompt. Accept relevant defaults and all y/n
-                        prompts.
-  --suppress-warnings   Suppress warnings to stdout. Warnings are still
-                        logged.
+  --no-prompt           Do not prompt. Accept relevant defaults and all y/n prompts.
+  --suppress-warnings   Suppress warnings to stdout. Warnings are still logged.
 
-wee_import will import data from an external source into a WeeWX
-archive. Daily summaries are updated as each archive record is
-imported so there should be no need to separately rebuild the daily
-summaries.
+Import data from an external source into a WeeWX archive. Daily summaries are updated as
+each archive record is imported so there should be no need to separately rebuild the
+daily summaries.
 ```
 
 ## Options
@@ -53,22 +46,21 @@ but if you have an unusual installation or multiple stations, you may have to
 tell it explicitly.
 
 ```
-wee_import --config=/this/directory/weewx.conf 
---import-config=/directory/import.conf
+weectl import --config=/this/directory/weewx.conf --import-config=/directory/import.conf
 ```
 
 ### `--import-config=FILENAME`
 
-`wee_import` uses a secondary configuration file, known as the import
+`weectl import` uses a secondary configuration file, known as the import
 configuration file, to store various import parameters. The `--import-config`
 option is mandatory for all imports. Example import configuration files for
-each type of import supported by `wee_import` are provided in the
+each type of import supported by `weectl import` are provided in the
 `util/import` directory. These example files are best used by making a copy of
 into a working directory and then modifying the copy to suit your needs. The
 `--import-config` option is used as follows:
 
 ```
-wee_import --import-config=/directory/import.conf
+weectl import --import-config=/directory/import.conf
 ```
 
 ### `--dry-run`
@@ -78,7 +70,7 @@ will be saved to the database. This is a useful option to use when first
 importing data.
 
 ```
-wee_import --import-config=/directory/import.conf --dry-run
+weectl import --import-config=/directory/import.conf --dry-run
 ```
 
 ### `--date=YYYY-mm-dd`
@@ -212,20 +204,20 @@ import</td>
 ### `--verbose`
 
 Inclusion of the `--verbose` option will cause additional information to be
-printed during `wee_import` execution.
+printed during `weectl import` execution.
 
 ```
-wee_import --import-config=/directory/import.conf --verbose
+weectl import --import-config=/directory/import.conf --verbose
 ```
 
 ### `--no-prompt`
 
-Inclusion of the `--no-prompt` option will run `wee_import` without prompts.
+Inclusion of the `--no-prompt` option will run `weectl import` without prompts.
 Relevant defaults will be used and all y/n prompts are automatically accepted
-as 'y'. This may be useful for unattended use of `wee_import`.
+as 'y'. This may be useful for unattended use of `weectl import`.
 
 ```
-wee_import --import-config=/directory/import.conf --no-prompt
+weectl import --import-config=/directory/import.conf --no-prompt
 ```
 
 !!! Warning
@@ -237,8 +229,8 @@ wee_import --import-config=/directory/import.conf --no-prompt
 
 ### `--suppress-warnings`
 
-The `--suppress-warnings` option suppresses `wee_import` warning messages from
-being displayed on the console during the import. `wee_import` may issue a
+The `--suppress-warnings` option suppresses `weectl import` warning messages from
+being displayed on the console during the import. `weectl import` may issue a
 number of warnings during import. These warnings may be due to the source
 containing more than one entry for a given timestamp or there being no data
 found for a mapped import field. These warnings do not necessarily require
@@ -247,5 +239,5 @@ to follow the import progress. Irrespective of whether `--suppress-warnings`
 is used all warnings are sent to log.
 
 ```
-wee_import --import-config=/directory/import.conf --suppress-warnings
+weectl import --import-config=/directory/import.conf --suppress-warnings
 ```
