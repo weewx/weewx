@@ -1417,7 +1417,7 @@ if __name__ == '__main__':
         DEBUG_OPENCLOSE = 1
         weewx.debug = 1
 
-    weeutil.logger.setup('cc3000', {})
+    weeutil.logger.setup('cc3000')
 
     if options.testcrc:
         _check_crc(b'OK')

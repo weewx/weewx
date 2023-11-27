@@ -126,7 +126,7 @@ if __name__ == "__main__":
     import weewx
 
     weewx.debug = 1
-    weeutil.logger.setup('fileparse', {})
+    weeutil.logger.setup('fileparse')
 
     driver = FileParseDriver()
     for packet in driver.genLoopPackets():

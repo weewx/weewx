@@ -20,7 +20,7 @@ extension_install_usage = f"""  {bcolors.BOLD}weectl extension install (FILE|DIR
 """
 extension_uninstall_usage = f"""  {bcolors.BOLD}weectl extension uninstall NAME
             [--config=FILENAME]
-            [--dry-run] [--verbosity=N]{bcolors.ENDC}
+            [--dry-run] [--verbosity=N] [-y]{bcolors.ENDC}
 """
 extension_usage = '\n     '.join((extension_list_usage,
                                   extension_install_usage,
@@ -97,6 +97,9 @@ def add_subparser(subparsers):
                                                  'do it.')
     uninstall_extension_parser.add_argument('--verbosity', type=int, default=1, metavar='N',
                                             help="How much information to display (0|1|2|3).")
+    uninstall_extension_parser.add_argument('-y', '--yes', action='store_true',
+                                            dest="noprompt",
+                                            help="Don't ask for confirmation. Just do it.")
     uninstall_extension_parser.set_defaults(func=uninstall_extension)
 
 
@@ -112,7 +115,7 @@ def install_extension(namespace):
 
 def uninstall_extension(namespace):
     ext = _get_extension_engine(namespace.config, namespace.dry_run, namespace.verbosity)
-    ext.uninstall_extension(namespace.name)
+    ext.uninstall_extension(namespace.name, namespace.noprompt)
 
 
 def _get_extension_engine(config_path, dry_run=False, verbosity=1):

@@ -349,7 +349,7 @@ python3 -m pip install weewx --upgrade
 
 Optional: You may want to upgrade your documentation and examples.
 ```
-weectl station upgrade --what docs examples util
+weectl station upgrade --what examples util
 ```
 
 Optional: You may want to upgrade your skins, although this may break or

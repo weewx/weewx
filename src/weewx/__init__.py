@@ -12,7 +12,7 @@ import time
 import weeutil.logger
 from weeutil.weeutil import to_int
 
-__version__ = "5.0.0b15"
+__version__ = "5.0.0b16"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'

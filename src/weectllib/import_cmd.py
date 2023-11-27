@@ -10,12 +10,12 @@ import weecfg.extension
 import weectllib.import_actions
 from weeutil.weeutil import bcolors
 
-import_usage = f"""{bcolors.BOLD}weectl import
-            --import-config=IMPORT_CONFIG_FILE
-            [--config=CONFIG_FILE]
-            [[--date=YYYY-mm-dd] | [[--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]]
-            [--dry-run][--verbose]
-            [--no-prompt][--suppress-warnings]{bcolors.ENDC}
+import_usage = f"""{bcolors.BOLD}weectl import --help
+       weectl import --import-config=IMPORT_CONFIG_FILE
+                     [--config=CONFIG_FILE]
+                     [[--date=YYYY-mm-dd] | [[--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]]
+                     [--dry-run][--verbose]
+                     [--no-prompt][--suppress-warnings]{bcolors.ENDC}
 """
 
 import_description = """

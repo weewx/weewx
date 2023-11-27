@@ -26,7 +26,7 @@ weewx.debug = 1
 
 log = logging.getLogger(__name__)
 # Set up logging using the defaults.
-weeutil.logger.setup('test_wxxtypes', {})
+weeutil.logger.setup('test_wxxtypes')
 
 altitude_vt = weewx.units.ValueTuple(700, "foot", "group_altitude")
 latitude = 45

@@ -116,8 +116,18 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
     locations for weewx.conf. Returns the filename of the actual configuration
     file, as well as the ConfigObj.
 
-    Args:
+    Special handling for key "WEEWX_ROOT":
+        - If it is missing from the config file, then it is added and set to the directory
+        where the configuration file was found.
+        - If it is a relative path, then it is converted to an absolute path by
+        prepending the directory where the configuration file was found.
 
+    This version also adds two entries to the returned ConfigObj:
+        config_path: Location of the actual configuration file that was used.
+        WEEWX_ROOT_ORIG: The original value of WEEWX_ROOT, or None if there
+            was no original value
+
+    Args:
         config_path (str|None): configuration filename.
         args (list[str]|None): command-line arguments.
         locations (list[str]): A list of directories to search.

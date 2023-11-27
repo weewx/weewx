@@ -31,7 +31,6 @@ log = logging.getLogger(__name__)
 def station_create(config_path, *args,
                    dist_config_path=None,
                    weewx_root=None,
-                   docs_root=None,
                    examples_root=None,
                    user_root=None,
                    dry_run=False,
@@ -47,8 +46,7 @@ def station_create(config_path, *args,
     It then:
       1. If no_prompt is false, it creates the configuration file by prompting the user. If true,
          it uses defaults.
-      2. It then copies the documentation out of package resources and into WEEWX_ROOT.
-      3. Same with the examples and utility files.
+      2. Copies the examples and utility files out of package resources and into WEEWX_ROOT.
     """
 
     if dry_run:
@@ -80,7 +78,6 @@ def station_create(config_path, *args,
                   *args, **kwargs)
     copy_skins(dist_config_dict, dry_run=dry_run)
     copy_util(config_path, dist_config_dict, dry_run=dry_run)
-    copy_docs(dist_config_dict, docs_root=docs_root, dry_run=dry_run)
     copy_examples(dist_config_dict, examples_root=examples_root, dry_run=dry_run)
     copy_user(dist_config_dict, user_root=user_root, dry_run=dry_run)
 
@@ -514,46 +511,6 @@ def copy_skins(config_dict, dry_run=False):
                 shutil.copytree(src, dest)
 
 
-def copy_docs(config_dict, docs_root=None, dry_run=False, force=False):
-    """Copy documentation from package resources to the DOCS_ROOT directory.
-
-    Args:
-        config_dict (dict): A configuration dictionary
-        docs_root (str): Path to where the docs should be put, relative to WEEWX_ROOT.
-        dry_run (bool): True to not actually do anything. Just show what would happen.
-        force (bool): True to overwrite existing docs. Otherwise, do nothing if they exist.
-
-    Returns:
-        str|None: Path to the freshly written docs, or None if they already exist and `force`
-            was False.
-    """
-
-    # If the user didn't specify a value, use a default
-    if not docs_root:
-        docs_root = 'docs'
-
-    # DOCS_ROOT is relative to WEEWX_PATH. Join them to get the absolute path.
-    docs_dir = os.path.join(config_dict['WEEWX_ROOT'], docs_root)
-
-    if os.path.isdir(docs_dir) and not force:
-        print(f"Directory {docs_dir} already exists.")
-        return None
-    # If the documentation has not been built, then a FileNotFoundError will be raised. Be
-    # prepared to catch it.
-    try:
-        with weeutil.weeutil.get_resource_path('weewx_data', 'docs') as docs_resources:
-            print(f"Removing {docs_dir}.")
-            if not dry_run:
-                shutil.rmtree(docs_dir, ignore_errors=True)
-            print(f"Copying new docs into {docs_dir}.")
-            if not dry_run:
-                shutil.copytree(docs_resources, docs_dir)
-    except FileNotFoundError:
-        print(f"{bcolors.WARNING}Documentation not available. "
-              f"Try building them using mkdocs.{bcolors.ENDC}", file=sys.stderr)
-    return docs_dir
-
-
 def copy_examples(config_dict, examples_root=None, dry_run=False, force=False):
     """Copy the examples to the EXAMPLES_ROOT directory.
 
@@ -678,12 +635,12 @@ def copy_util(config_path, config_dict, dry_run=False):
     return dstdir
 
 
-def station_upgrade(config_path, dist_config_path=None, docs_root=None, examples_root=None,
+def station_upgrade(config_path, dist_config_path=None, examples_root=None,
                     skin_root=None, what=None, no_prompt=False, no_backup=False, dry_run=False):
     """Upgrade the user data for the configuration file found at config_path"""
 
     if what is None:
-        what = ('config', 'docs', 'examples', 'util')
+        what = ('config', 'examples', 'util')
 
     if dry_run:
         print("This is a dry run. Nothing will actually be done.")
@@ -692,7 +649,6 @@ def station_upgrade(config_path, dist_config_path=None, docs_root=None, examples
     config_path, config_dict = weecfg.read_config(config_path)
 
     abbrev = {'config': 'configuration file',
-              'docs': 'documentation',
               'util': 'utility files'}
     choices = ', '.join([abbrev.get(p, p) for p in what])
     msg = f"\nUpgrade {choices} in {config_dict['WEEWX_ROOT']}? (Y/n) "
@@ -720,11 +676,6 @@ def station_upgrade(config_path, dist_config_path=None, docs_root=None, examples
         backup_path = weecfg.save(config_dict, config_path, not no_backup)
         if backup_path:
             print(f"Saved old configuration file as {backup_path}")
-
-    if 'docs' in what:
-        docs_dir = copy_docs(config_dict, docs_root=docs_root,
-                             dry_run=dry_run, force=True)
-        print(f"Finished upgrading docs at {docs_dir}")
 
     if 'examples' in what:
         examples_dir = copy_examples(config_dict, examples_root=examples_root,

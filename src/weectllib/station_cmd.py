@@ -22,7 +22,6 @@ station_create_usage = f"""{bcolors.BOLD}weectl station create
             [--sqlite-root=DIRECTORY]
             [--html-root=DIRECTORY]
             [--user-root=DIRECTORY]
-            [--docs-root=DIRECTORY]
             [--examples-root=DIRECTORY]
             [--no-prompt]
             [--config=FILENAME]
@@ -46,10 +45,9 @@ station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure
             [--dry-run]{bcolors.ENDC}
 """
 station_upgrade_usage = f"""{bcolors.BOLD}weectl station upgrade
-            [--docs-root=DIRECTORY]
             [--examples-root=DIRECTORY]
             [--skin-root=DIRECTORY]
-            [--what (docs|examples|util|config|skins)...]
+            [--what (examples|util|config|skins)...]
             [--no-backup]
             [--no-prompt]
             [--config=FILENAME]
@@ -68,7 +66,7 @@ CREATE_DESCRIPTION = """Create a new station data area, including a configuratio
                      + WEEWX_ROOT_DESCRIPTION
 
 UPGRADE_DESCRIPTION = """Upgrade an existing station data area, including any combination of the 
-docs, examples, utility files, configuration file, and skins. """ + WEEWX_ROOT_DESCRIPTION
+examples, utility files, configuration file, and skins. """ + WEEWX_ROOT_DESCRIPTION
 
 
 def add_subparser(subparsers):
@@ -95,10 +93,6 @@ def add_subparser(subparsers):
                                        metavar='DIRECTORY',
                                        help='Where to put the "user" directory, relative to '
                                             'WEEWX_ROOT. Default is "bin/user"')
-    station_create_parser.add_argument('--docs-root',
-                                       metavar='DIRECTORY',
-                                       help='Where to put the documentation, relative to '
-                                            'WEEWX_ROOT. Default is "docs".')
     station_create_parser.add_argument('--examples-root',
                                        metavar='DIRECTORY',
                                        help='Where to put the examples, relative to '
@@ -147,13 +141,9 @@ def add_subparser(subparsers):
         action_parser.add_parser('upgrade',
                                  usage=station_upgrade_usage,
                                  description=UPGRADE_DESCRIPTION,
-                                 help='Upgrade any combination of the docs, examples, utility '
+                                 help='Upgrade any combination of the examples, utility '
                                       'files, configuration file, and skins.')
 
-    station_upgrade_parser.add_argument('--docs-root',
-                                        metavar='DIRECTORY',
-                                        help='Where to put the new documentation, relative to '
-                                             'WEEWX_ROOT. Default is "docs".')
     station_upgrade_parser.add_argument('--examples-root',
                                         metavar='DIRECTORY',
                                         help='Where to put the new examples, relative to '
@@ -163,11 +153,11 @@ def add_subparser(subparsers):
                                         help='Where to put the skins, relative to '
                                              'WEEWX_ROOT. Default is "skins".')
     station_upgrade_parser.add_argument('--what',
-                                        choices=['docs', 'examples', 'util', 'config', 'skins'],
-                                        default=['docs', 'examples', 'util'],
+                                        choices=['examples', 'util', 'config', 'skins'],
+                                        default=['examples', 'util'],
                                         nargs='+',
                                         help='What to upgrade. Default is to upgrade the '
-                                             'documentation, examples, and utility files.')
+                                             'examples, and utility files.')
     station_upgrade_parser.add_argument('--no-backup', action='store_true',
                                         help='Do not backup the old configuration file.')
     station_upgrade_parser.add_argument('--no-prompt', action='store_true',
@@ -211,7 +201,6 @@ def create_station(namespace):
                                              skin_root=namespace.skin_root,
                                              sqlite_root=namespace.sqlite_root,
                                              html_root=namespace.html_root,
-                                             docs_root=namespace.docs_root,
                                              examples_root=namespace.examples_root,
                                              no_prompt=namespace.no_prompt,
                                              dry_run=namespace.dry_run)
@@ -245,7 +234,6 @@ def reconfigure_station(namespace):
 def upgrade_station(namespace):
     weecfg.station_config.station_upgrade(config_path=namespace.config,
                                           dist_config_path=namespace.dist_config,
-                                          docs_root=namespace.docs_root,
                                           examples_root=namespace.examples_root,
                                           skin_root=namespace.skin_root,
                                           what=namespace.what,

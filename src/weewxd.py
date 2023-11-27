@@ -5,7 +5,6 @@
 #
 """Entry point to the weewx weather system."""
 import argparse
-import importlib
 import locale
 import logging
 import os
@@ -73,9 +72,14 @@ def main():
         print(weewx.__version__)
         sys.exit(0)
 
+    # Set up a rudimentary logger until we can read the configuration file.
+    log.addHandler(logging.handlers.SysLogHandler( address = weeutil.logger.address,
+                                                   facility = weeutil.logger.facility))
+
     # User can specify the config file as either a positional argument, or as an option
     # argument, but not both.
     if namespace.config_option and namespace.config_arg:
+        log.critical(epilog)
         sys.exit(epilog)
 
     # Read the configuration file
@@ -83,12 +87,14 @@ def main():
         config_path, config_dict = weecfg.read_config(namespace.config_arg,
                                                       [namespace.config_option])
     except (IOError, configobj.ConfigObjError) as e:
-        print("Error parsing config file: %s" % e, file=sys.stderr)
+        msg = "Error parsing config file: %s" % e
+        print(msg, file=sys.stderr)
+        log.critical(msg)
         weeutil.logger.log_traceback(log.critical, "    ****  ")
         sys.exit(weewx.CMD_ERROR)
 
-    # Now that we have the configuration dictionary, we can set up logging, debug, and
-    # other housekeeping chores:
+    # Now that we have the configuration dictionary, we can set up the user-configured logging and
+    # debug, as well as perform other housekeeping chores:
     weewx.initialize(config_dict, namespace.log_label)
 
     # Log key bits of information.
@@ -117,8 +123,9 @@ def main():
     n = 0
     while weewx.launchtime_ts < sane:
         # Log any problems every minute.
-        if n % 120 == 0:
-            log.info("Waiting for sane time. Current time is %s",
+        if n % 10 == 0:
+            log.info("Waiting for sane time. File time is %s; current time is %s",
+                     weeutil.weeutil.timestamp_to_string(sane),
                      weeutil.weeutil.timestamp_to_string(weewx.launchtime_ts))
         n += 1
         time.sleep(0.5)

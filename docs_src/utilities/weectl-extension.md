@@ -9,15 +9,16 @@ weectl extension --help
 
 ## List installed extensions
 
-    weectl extension list
-        [--config=FILENAME] [--dry-run]
+    weectl extension list [--config=FILENAME]
 
 This action will list all the extensions that you have installed.
 
 
 ## Install an extension
 
-    weectl extension install (FILE|DIR|URL)
+     weectl extension install (FILE|DIR|URL)
+        [--config=FILENAME]
+        [--dry-run] [--verbosity=N]
 
 This action will install an extension from a zip file, tar file, directory, or
 URL.
@@ -44,6 +45,8 @@ weectl extension install ~/Downloads/windy-0.1.zip
 ## Uninstall an extension 
 
     weectl extension uninstall NAME
+        [--config=FILENAME]
+        [--dry-run] [--verbosity=N] [-y]
 
 This action uninstalls an extension. Use the `list` action to see what to use
 for `NAME`. 
@@ -100,10 +103,10 @@ Extension Name    Version   Description
 windy             0.7       Upload weather data to Windy.
 ```
 
-Uninstall the extension:
+Uninstall the extension without asking for confirmation:
 
 ```
-% weectl extension uninstall windy
+% weectl extension uninstall windy -y
 Request to remove extension 'windy'
 Finished removing extension 'windy'
 ```
@@ -130,4 +133,6 @@ writable changes.
 
 How much information to display (0-3).
 
+### -y | --yes
 
+Do not ask for confirmation. Just do it.
