@@ -98,7 +98,6 @@ def add_subparser(subparsers):
     uninstall_extension_parser.add_argument('--verbosity', type=int, default=1, metavar='N',
                                             help="How much information to display (0|1|2|3).")
     uninstall_extension_parser.add_argument('-y', '--yes', action='store_true',
-                                            dest="noprompt",
                                             help="Don't ask for confirmation. Just do it.")
     uninstall_extension_parser.set_defaults(func=uninstall_extension)
 
@@ -115,7 +114,7 @@ def install_extension(namespace):
 
 def uninstall_extension(namespace):
     ext = _get_extension_engine(namespace.config, namespace.dry_run, namespace.verbosity)
-    ext.uninstall_extension(namespace.name, namespace.noprompt)
+    ext.uninstall_extension(namespace.name, no_confirm=namespace.yes)
 
 
 def _get_extension_engine(config_path, dry_run=False, verbosity=1):

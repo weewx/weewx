@@ -13,43 +13,43 @@ from weeutil.weeutil import bcolors
 
 create_usage = f"""{bcolors.BOLD}weectl database create
             [--config=FILENAME] [--binding=BINDING-NAME]
-            [--dry-run]{bcolors.ENDC}"""
+            [--dry-run] [-y]{bcolors.ENDC}"""
 drop_daily_usage = f"""{bcolors.BOLD}weectl database drop-daily
             [--config=FILENAME] [--binding=BINDING-NAME]
-            [--dry-run]{bcolors.ENDC}"""
+            [--dry-run] [-y]{bcolors.ENDC}"""
 rebuild_usage = f"""{bcolors.BOLD}weectl database rebuild-daily
             [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
             [--config=FILENAME] [--binding=BINDING-NAME] 
-            [--dry-run]{bcolors.ENDC}"""
+            [--dry-run] [-y]{bcolors.ENDC}"""
 add_column_usage = f"""{bcolors.BOLD}weectl database add-column NAME
             [--type=(REAL|INTEGER)]
             [--config=FILENAME] [--binding=BINDING-NAME]
-            [--dry-run]{bcolors.ENDC}"""
+            [--dry-run] [-y]{bcolors.ENDC}"""
 rename_column_usage = f"""{bcolors.BOLD}weectl database rename-column FROM-NAME TO-NAME
             [--config=FILENAME] [--binding=BINDING-NAME]
-            [--dry-run]{bcolors.ENDC}"""
+            [--dry-run] [-y]{bcolors.ENDC}"""
 drop_columns_usage = f"""{bcolors.BOLD}weectl database drop-columns NAME...
             [--config=FILENAME] [--binding=BINDING-NAME]
-            [--dry-run]{bcolors.ENDC}"""
+            [--dry-run] [-y]{bcolors.ENDC}"""
 reconfigure_usage = f"""{bcolors.BOLD}weectl database reconfigure 
             [--config=FILENAME] [--binding=BINDING-NAME]
-            [--dry-run]{bcolors.ENDC}"""
+            [--dry-run] [-y]{bcolors.ENDC}"""
 transfer_usage = f"""{bcolors.BOLD}weectl database transfer --dest-binding=BINDING-NAME
             [--config=FILENAME] [--binding=BINDING-NAME]
-            [--dry-run]{bcolors.ENDC}"""
+            [--dry-run] [-y]{bcolors.ENDC}"""
 calc_missing_usage = f"""{bcolors.BOLD}weectl database calc-missing
             [--date=YYYY-mm-dd | [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
             [--config=FILENAME] [--binding=BINDING-NAME]
-            [--dry-run]{bcolors.ENDC}"""
+            [--dry-run] [-y]{bcolors.ENDC}"""
 check_usage = f"""{bcolors.BOLD}weectl database check
             [--config=FILENAME] [--binding=BINDING-NAME]{bcolors.ENDC}"""
 update_usage = f"""{bcolors.BOLD}weectl database update
             [--config=FILENAME] [--binding=BINDING-NAME]
-            [--dry-run]{bcolors.ENDC}"""
+            [--dry-run] [-y]{bcolors.ENDC}"""
 reweight_usage = f"""{bcolors.BOLD}weectl database reweight
             [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
             [--config=FILENAME] [--binding=BINDING-NAME] 
-            [--dry-run]{bcolors.ENDC}"""
+            [--dry-run] [-y]{bcolors.ENDC}"""
 
 database_usage = '\n       '.join((create_usage,
                                    drop_daily_usage,
@@ -292,14 +292,16 @@ def create_database(namespace):
 
     weectllib.database_actions.create_database(namespace.config,
                                                db_binding=namespace.binding,
-                                               dry_run=namespace.dry_run)
+                                               dry_run=namespace.dry_run,
+                                               no_confirm=namespace.yes)
 
 
 def drop_daily(namespace):
     """Drop the daily summary from a WeeWX database"""
     weectllib.database_actions.drop_daily(namespace.config,
                                           db_binding=namespace.binding,
-                                          dry_run=namespace.dry_run)
+                                          dry_run=namespace.dry_run,
+                                          no_confirm=namespace.yes)
 
 
 def rebuild_daily(namespace):
@@ -309,7 +311,8 @@ def rebuild_daily(namespace):
                                              from_date=namespace.from_date,
                                              to_date=namespace.to_date,
                                              db_binding=namespace.binding,
-                                             dry_run=namespace.dry_run)
+                                             dry_run=namespace.dry_run,
+                                             no_confirm=namespace.yes)
 
 
 def add_column(namespace):
@@ -321,7 +324,8 @@ def add_column(namespace):
                                           column_name=namespace.column_name,
                                           column_type=column_type,
                                           db_binding=namespace.binding,
-                                          dry_run=namespace.dry_run)
+                                          dry_run=namespace.dry_run,
+                                          no_confirm=namespace.yes)
 
 
 def rename_column(namespace):
@@ -330,7 +334,8 @@ def rename_column(namespace):
                                              from_name=namespace.from_name,
                                              to_name=namespace.to_name,
                                              db_binding=namespace.binding,
-                                             dry_run=namespace.dry_run)
+                                             dry_run=namespace.dry_run,
+                                             no_confirm=namespace.yes)
 
 
 def drop_columns(namespace):
@@ -338,14 +343,16 @@ def drop_columns(namespace):
     weectllib.database_actions.drop_columns(namespace.config,
                                             column_names=namespace.column_names,
                                             db_binding=namespace.binding,
-                                            dry_run=namespace.dry_run)
+                                            dry_run=namespace.dry_run,
+                                             no_confirm=namespace.yes)
 
 
 def reconfigure_database(namespace):
     """Replicate a database, using current configuration settings."""
     weectllib.database_actions.reconfigure_database(namespace.config,
                                                     db_binding=namespace.binding,
-                                                    dry_run=namespace.dry_run)
+                                                    dry_run=namespace.dry_run,
+                                                    no_confirm=namespace.yes)
 
 
 def transfer_database(namespace):
@@ -353,7 +360,8 @@ def transfer_database(namespace):
     weectllib.database_actions.transfer_database(namespace.config,
                                                  dest_binding=namespace.dest_binding,
                                                  db_binding=namespace.binding,
-                                                 dry_run=namespace.dry_run)
+                                                 dry_run=namespace.dry_run,
+                                                 no_confirm=namespace.yes)
 
 
 def calc_missing(namespace):
@@ -363,7 +371,8 @@ def calc_missing(namespace):
                                             from_date=namespace.from_date,
                                             to_date=namespace.to_date,
                                             db_binding=namespace.binding,
-                                            dry_run=namespace.dry_run)
+                                            dry_run=namespace.dry_run,
+                                            no_confirm=namespace.yes)
 
 
 def check(namespace):
@@ -375,7 +384,8 @@ def check(namespace):
 def update_database(namespace):
     weectllib.database_actions.update_database(namespace.config,
                                                db_binding=namespace.binding,
-                                               dry_run=namespace.dry_run)
+                                               dry_run=namespace.dry_run,
+                                               no_confirm=namespace.yes)
 
 
 def reweight_daily(namespace):
@@ -385,7 +395,8 @@ def reweight_daily(namespace):
                                               from_date=namespace.from_date,
                                               to_date=namespace.to_date,
                                               db_binding=namespace.binding,
-                                              dry_run=namespace.dry_run)
+                                              dry_run=namespace.dry_run,
+                                              no_confirm=namespace.yes)
 
 
 def _add_common_args(subparser):
@@ -399,3 +410,5 @@ def _add_common_args(subparser):
     subparser.add_argument('--dry-run',
                            action='store_true',
                            help='Print what would happen, but do not actually do it.')
+    subparser.add_argument('-y', '--yes', action='store_true',
+                           help="Don't ask for confirmation. Just do it.")

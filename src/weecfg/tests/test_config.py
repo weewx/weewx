@@ -421,7 +421,7 @@ class ExtensionInstallTest(unittest.TestCase):
         # First install...
         self.engine.install_extension('./pmon.tgz')
         # ... then uninstall it:
-        self.engine.uninstall_extension('pmon', noprompt=True)
+        self.engine.uninstall_extension('pmon', no_confirm=True)
 
         # Assert that everything got removed correctly:
         self.assertFalse(os.path.exists(os.path.join(self.engine.root_dict['USER_DIR'],

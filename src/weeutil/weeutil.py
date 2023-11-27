@@ -1758,7 +1758,15 @@ def to_sorted_string(rec, simple_sort=False):
 
 
 def y_or_n(msg, noprompt=False, default=None):
-    """Prompt and look for a 'y' or 'n' response"""
+    """Prompt and look for a 'y' or 'n' response
+
+    Args:
+        msg(str): A prompting message
+        noprompt(bool): If truthy, don't prompt the user. Just do it.
+        default(str|None): Value to be returned if no prompting has been requested
+    Returns:
+        str: Either 'y', or 'n'.
+    """
 
     # If noprompt is truthy, return the default
     if noprompt:
