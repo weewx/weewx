@@ -364,16 +364,22 @@ class ExtensionEngine(object):
         except KeyError:
             pass
 
-    def uninstall_extension(self, extension_name):
+    def uninstall_extension(self, extension_name, noprompt=False):
         """Uninstall an extension.
         Args:
             extension_name(str): The name of the extension. Use 'weectl extension list' to find
                 its name.
+            noprompt(bool): If False, ask for a confirmation before uninstalling. Otherwise,
+                just do it.
         """
 
-        self.printer.out(f"Request to remove extension '{extension_name}'.")
         if self.dry_run:
             self.printer.out("This is a dry run. Nothing will actually be done.")
+
+        ans = weeutil.weeutil.y_or_n(f"Uninstall extension '{extension_name}'? ", noprompt)
+        if ans == 'n':
+            self.printer.out("Nothing done.")
+            return
 
         # Find the subdirectory containing this extension's installer
         extension_installer_dir = os.path.join(self.root_dict['EXT_DIR'], extension_name)
