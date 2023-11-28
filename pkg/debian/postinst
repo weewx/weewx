@@ -257,17 +257,31 @@ set_permissions() {
     fi
 }
 
+# if there are any existing extensions in the V4 location, copy them to the
+# V5 location, then move aside the old location
+migrate_extensions() {
+    if [ -d /usr/share/weewx/user ]; then
+        echo "Migrating old extensions to /etc/weewx/bin/user"
+        cp -rp /usr/share/weewx/user/* /etc/weewx/bin/user
+        ts = `date +"%Y%m%d%H%M%S"`
+        echo "Saving old extensions to /usr/share/weewx/user-$ts"
+        mv /usr/share/weewx/user /usr/share/weewx/user-$ts
+    fi
+}
+
 case "$1" in
 configure)
         if [ "$2" != "" ]; then
             # this is an upgrade so create a maintainers version by merging
             merge_weewxconf
+            # migrate any extensions from V4 location to V5
+            migrate_extensions
         else
             # virgin install so insert debconf values into the config file
             install_weewxconf
         fi
 
-        # create weewx user and set permissions (if needed)
+        # create weewx user and set permissions
         create_user
         set_permissions
 
@@ -282,8 +296,6 @@ configure)
         ;;
 
 abort-remove)
-        # precompile the bytecode
-        #python -m compileall /usr/share/weewx
         ;;
 esac
 

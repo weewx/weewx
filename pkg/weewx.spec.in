@@ -167,7 +167,7 @@ if [ "$1" = "2" ]; then
     cp -p %{cfg_file} %{cfg_file}.prev
   fi
 fi
-# ensure that we run as weewx user, not root
+# create the weewx user and group
 /usr/bin/getent group weewx || /usr/sbin/groupadd -r weewx
 /usr/bin/getent passwd weewx || /usr/sbin/useradd -r -g weewx -M -s /sbin/nologin weewx
 
@@ -182,13 +182,21 @@ if [ "$1" = "1" ]; then
   systemctl start weewx
 elif [ "$1" = "2" ]; then
   # this is an upgrade
-  # update previous config and merge with dist into to weewx.conf
+  # update previous config and merge with dist into a maintainer's version
   if [ -f %{cfg_file}.dist -a -f %{cfg_file}.prev ]; then
     OLDVER=`grep version %{cfg_file}.prev | sed -e 's/\s*version\s*=\s*//'`
     echo Saving previous config as %{cfg_file}-$OLDVER
     mv %{cfg_file}.prev %{cfg_file}-$OLDVER
     echo Merging configs into %{cfg_file}
     /usr/bin/weectl station upgrade --config=%{cfg_file} --dist-config=%{cfg-file}.dist --what=config --no-prompt --no-backup
+  fi
+  # if this is an upgrade from V4, migrate any extensions to the V5 location
+  if [ -d /usr/share/weewx/user ]; then
+    echo "Migrating old extensions to /etc/weewx/bin/user"
+    cp -rp /usr/share/weewx/user/* /etc/weewx/bin/user
+    ts = `date +"%Y%m%d%H%M%S"`
+    echo "Saving old extensions to /usr/share/weewx/user-$ts"
+    mv /usr/share/weewx/user /usr/share/weewx/user-$ts
   fi
   # do a full restart not just a HUP
   systemctl stop weewx
