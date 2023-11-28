@@ -126,8 +126,11 @@ restart.
 Change from old Google Analytics UA code to the GA4 tag system in the Standard
 and Seasons skins. Fixes issue [#892](https://github.com/weewx/weewx/issues/892).
 
-All `wee_import` sources now include support for a field map meaning any source
-field can be imported to any WeeWX archive field.
+All `weectl import` sources now include support for a field map meaning any 
+source field can be imported to any WeeWX archive field.
+
+Units for `weectl import` sources that require user specified source data 
+units are now specified in the `[[FieldMap]]` stanza. 
 
 Fixed problem when plotting wind vectors from a database that does not include
 daily summaries.
