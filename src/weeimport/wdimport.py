@@ -168,6 +168,9 @@ class WDSource(weeimport.Source):
         'UV': {
             'source_field': 'uv',
             'unit': 'uv_index'},
+        'ET': {
+            'source_field': 'dailyet',
+            'cumulative': True},
         'soilMoist1': {
             'source_field': 'soilmoist',
             'unit': 'centibar'},
@@ -243,96 +246,6 @@ class WDSource(weeimport.Source):
 
         # property holding the current log file name being processed
         self.file_name = None
-
-        # WD logs use either US or Metric units. The units used in each case
-        # are:
-        # Metric units: C, knots, hPa, mm
-        # US units: F, mph, inHg, inch
-        #
-        # The user must specify the units to be used in the import config file.
-        # This can be by either by specifying the log units as Metric or US
-        # using the 'units' config option. Alternatively temperature, pressure,
-        # rainfall and speed units can be specified individually under the
-        # [Units] stanza. First check for a valid 'units' config option then
-        # check for individual group units. Do some basic error checking and
-        # validation, if one of the fields is missing or invalid then we need
-        # to catch the error and raise it as we can't go on.
-        log_unit_config = wd_config_dict.get('Units')
-        if log_unit_config is not None:
-            # get the units config option
-            log_unit_sys = log_unit_config.get('units')
-            # does the units config option specify a valid log unit system
-            if log_unit_sys is None or log_unit_sys.upper() not in ['METRIC', 'US']:
-                # log unit system not specified so look for individual entries.
-                # First do a quick check to see if we have all the individual
-                # unit specifiers, if we don't raise an error as we have no
-                # unit information.
-                if {'temperature', 'pressure', 'rain', 'speed'}.issubset(set(log_unit_config.keys())):
-                    # we have all the individual unit specifiers so proceed to
-                    # process them
-                    # temperature
-                    temp_u = log_unit_config.get('temperature')
-                    if temp_u is None or temp_u not in ['degree_C', 'degree_F']:
-                        _msg = "No units specified for Weather Display temperature " \
-                               "fields in %s." % (self.import_config_path,)
-                        raise weewx.UnitError(_msg)
-                    # pressure
-                    press_u = log_unit_config.get('pressure')
-                    if press_u is None or press_u not in ['inHg', 'hPa']:
-                        _msg = "No units specified for Weather Display pressure " \
-                               "fields in %s." % (self.import_config_path,)
-                        raise weewx.UnitError(_msg)
-                    # rain
-                    rain_u = log_unit_config.get('rain')
-                    if rain_u is None or rain_u not in ['inch', 'mm']:
-                        _msg = "Unknown units '%s' specified for Weather Display " \
-                               "rain fields in %s." % (rain_u, self.import_config_path)
-                        raise weewx.UnitError(_msg)
-                    # speed
-                    speed_u = log_unit_config.get('speed')
-                    # oddly, WD logs wind speed in knots when WD logging is set to Metric
-                    if speed_u is None or speed_u not in ['knot', 'mile_per_hour']:
-                        _msg = "No units specified for Weather Display speed fields " \
-                               "in %s." % (self.import_config_path,)
-                        raise weewx.UnitError(_msg)
-                else:
-                    raise weewx.UnitError("Invalid or incomplete [Units] config option.")
-            else:
-                # we have a unit system specified
-                _unit_sys = log_unit_sys.upper()
-                temp_u = self.wd_unit_sys['temperature'][_unit_sys]
-                press_u = self.wd_unit_sys['pressure'][_unit_sys]
-                rain_u = self.wd_unit_sys['rain'][_unit_sys]
-                speed_u = self.wd_unit_sys['speed'][_unit_sys]
-            # If we made it here we have units for temperature, pressure,
-            # rainfall and speed. Now set the units for our field map entries.
-            # temperature entries
-            for field in WDSource._temperature_fields:
-                for config in self.map.values():
-                    if config['source_field'] == field:
-                        config['unit'] = temp_u
-                        break
-            # pressure entries
-            for field in WDSource._pressure_fields:
-                for config in self.map.values():
-                    if config['source_field'] == field:
-                        config['unit'] = press_u
-                        break
-            # rain entries
-            for field in WDSource._rain_fields:
-                for config in self.map.values():
-                    if config['source_field'] == field:
-                        config['unit'] = rain_u
-                        break
-            # speed entries
-            for field in WDSource._speed_fields:
-                for config in self.map.values():
-                    if config['source_field'] == field:
-                        config['unit'] = speed_u
-                        break
-        else:
-            # there is no Units config, we can't go on so raise an error
-            raise weewx.UnitError("No Weather Display [Units] config found.")
 
         # obtain a list of logs files to be processed
         _to_process = wd_config_dict.get('logs_to_process', list(self.logs.keys()))
@@ -417,26 +330,6 @@ class WDSource(weeimport.Source):
         if self.verbose:
             print(_msg)
         log.debug(_msg)
-        if log_unit_sys is not None and log_unit_sys.upper() in ['METRIC', 'US']:
-            # valid unit system specified
-            _msg = "     monthly logs are in %s units" % log_unit_sys.upper()
-            if self.verbose:
-                print(_msg)
-            log.debug(_msg)
-        else:
-            # group units specified
-            _msg = "     monthly logs use the following units:"
-            if self.verbose:
-                print(_msg)
-            log.debug(_msg)
-            _msg = "       temperature=%s pressure=%s" % (temp_u, press_u)
-            if self.verbose:
-                print(_msg)
-            log.debug(_msg)
-            _msg = "       rain=%s speed=%s" % (rain_u, speed_u)
-            if self.verbose:
-                print(_msg)
-            log.debug(_msg)
         _msg = "     tranche=%s, interval=%s" % (self.tranche,
                                                  self.interval)
         if self.verbose:
