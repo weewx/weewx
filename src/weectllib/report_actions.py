@@ -7,10 +7,10 @@
 
 import logging
 import socket
+import sys
 import time
 
 import weecfg
-import weectllib
 import weeutil.logger
 import weewx
 import weewx.engine
@@ -54,7 +54,17 @@ def list_reports(config_path):
 
 def run_reports(config_path,
                 epoch=None,
-                report_date=None, report_time=None):
+                report_date=None, report_time=None,
+                reports=None):
+    # Read the configuration file
+    config_path, config_dict = weecfg.read_config(config_path)
+    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
+
+    if reports:
+        print(f"The following reports will be run: {', '.join(reports)}")
+    else:
+        print("All enabled reports will be run.")
+
     # If the user specified a time, retrieve it. Otherwise, set to None
     if epoch:
         gen_ts = int(epoch)
@@ -67,10 +77,6 @@ def run_reports(config_path,
         print(f"Generating for requested time {timestamp_to_string(gen_ts)}")
     else:
         print("Generating as of last timestamp in the database.")
-
-    # Read the configuration file
-    config_path, config_dict = weecfg.read_config(config_path)
-    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
 
     weewx.initialize(config_dict, 'weectl')
 
@@ -101,11 +107,16 @@ def run_reports(config_path,
     # Instantiate the report engine with the retrieved record and required timestamp
     t = weewx.reportengine.StdReportEngine(config_dict, stn_info, record=record, gen_ts=ts)
 
-    # Although the report engine inherits from Thread, we can just run it in the main thread:
-    t.run()
+    try:
+        # Although the report engine inherits from Thread, we can just run it in the main thread:
+        t.run(reports)
+    except KeyError as e:
+        print(f"Unknown report: {e}", file=sys.stderr)
 
     # Shut down any running services,
     engine.shutDown()
+
+    print("Done.")
 
 
 def get_epoch_time(d_tt, t_tt):

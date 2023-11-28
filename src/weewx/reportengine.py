@@ -108,10 +108,13 @@ class StdReportEngine(threading.Thread):
         self.gen_ts = gen_ts
         self.first_run = first_run
 
-    def run(self):
+    def run(self, reports=None):
         """This is where the actual work gets done.
 
-        Runs through the list of reports. """
+        Args:
+            reports(list[str]|None): If None, run all enabled reports. If a list, run only the
+                reports in the list, whether they are enabled or not.
+        """
 
         if self.gen_ts:
             log.debug("Running reports for time %s",
@@ -119,18 +122,24 @@ class StdReportEngine(threading.Thread):
         else:
             log.debug("Running reports for latest time in the database.")
 
+        # If we have not been given a list of reports to run, then run all reports (although not
+        # all of them may be enabled).
+        run_reports = reports or self.config_dict['StdReport'].sections
+
         # Iterate over each requested report
-        for report in self.config_dict['StdReport'].sections:
+        for report in run_reports:
 
             # Ignore the [[Defaults]] section
             if report == 'Defaults':
                 continue
 
-            # See if this report is disabled
-            enabled = to_bool(self.config_dict['StdReport'][report].get('enable', True))
-            if not enabled:
-                log.debug("Report '%s' not enabled. Skipping.", report)
-                continue
+            # If reports is None, then we need to check whether this particular report has
+            # been enabled.
+            if reports is None:
+                enabled = to_bool(self.config_dict['StdReport'][report].get('enable', True))
+                if not enabled:
+                    log.debug("Report '%s' not enabled. Skipping.", report)
+                    continue
 
             log.debug("Running report '%s'", report)
 

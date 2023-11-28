@@ -13,9 +13,9 @@ from weeutil.weeutil import bcolors
 
 report_list_usage = f"""{bcolors.BOLD}weectl report list
             [--config=FILENAME]{bcolors.ENDC}"""
-report_run_usage = f"""  {bcolors.BOLD}weectl report run
+report_run_usage = f"""  {bcolors.BOLD}weectl report run [NAME ...]
             [--config=FILENAME]
-            [--epoch=EPOCH_TIME | --date=YYYY-mm-dd --time=HH:MM] {bcolors.ENDC}"""
+            [--epoch=EPOCH_TIME | --date=YYYY-mm-dd --time=HH:MM]{bcolors.ENDC}"""
 
 report_usage = '\n     '.join((report_list_usage, report_run_usage))
 
@@ -47,9 +47,9 @@ def add_subparser(subparsers):
 
     # ---------- Action 'run' ----------
     run_report_parser = action_parser.add_parser('run',
-                                                 description="Run all installed reports",
+                                                 description="Runs reports",
                                                  usage=report_run_usage,
-                                                 help='Run all installed reports',
+                                                 help='Run one or more reports',
                                                  epilog=run_epilog)
     run_report_parser.add_argument('--config',
                                    metavar='FILENAME',
@@ -63,6 +63,12 @@ def add_subparser(subparsers):
     run_report_parser.add_argument("--time", metavar="HH:MM",
                                    type=lambda t: time.strptime(t, '%H:%M'),
                                    help="Time of day for the report")
+    run_report_parser.add_argument('reports',
+                                   nargs="*",
+                                   metavar='NAME',
+                                   help="Reports to be run, separated by spaces. "
+                                        "Names are case sensitive. "
+                                        "If not given, all enabled reports will be run.")
     run_report_parser.set_defaults(func=run_reports)
 
 
@@ -81,4 +87,5 @@ def run_reports(namespace):
 
     weectllib.report_actions.run_reports(namespace.config,
                                          epoch=namespace.epoch,
-                                         report_date=namespace.date, report_time=namespace.time)
+                                         report_date=namespace.date, report_time=namespace.time,
+                                         reports=namespace.reports)

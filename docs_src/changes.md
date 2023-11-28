@@ -16,6 +16,9 @@ The new utility [`weectl`](utilities/weectl-about.md) replaces `wee_database`,
 `wee_debug`, `wee_device`, `wee_extension`, `wee_import`, `wee_reports`, 
 and `wee_config`. Try `weectl --help` to see how to use it.
 
+Individual reports can now be run using `weectl report run`. For example,
+`weectl report run MobileReport`.
+
 Documentation now uses [MkDocs](https://www.mkdocs.org/). It is no longer included in the
 distribution, but can always be accessed online at https://weewx.com/docs.
 
@@ -26,10 +29,6 @@ be removed in Python v3.12.
 
 Removed the utility `wunderfixer`. The Weather Underground no longer
 allows posting past-dated records.
-
-For new installs, logging output is now sent to a file, which rotates at
-midnight. Syslog is no longer used. Old installs continue to use whatever they
-were using before.
 
 Method `ImageDraw.textsize()` and constants `ImageFont.LAYOUT_BASIC`, and
 `Image.ANTIALIAS` were deprecated in Pillow 9.2 (1-Jul-2022), then removed in

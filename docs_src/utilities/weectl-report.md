@@ -27,7 +27,7 @@ Using configuration file /Users/ted_user/weewx-data/weewx.conf
 
 ## Run reports on demand
 
-    weectl report run
+    weectl report run [NAME ...]
         [--config=FILENAME]
         [--epoch=EPOCH_TIME | --date=YYYY-mm-dd --time=HH:MM] 
 
@@ -35,9 +35,23 @@ In normal operation, WeeWX generates reports at each archive interval after new
 data has arrived. The action `weectl report run` is used to generate reports on
 demand. It uses the same configuration file that `weewxd` uses.
 
+The names of the reports to be run can be given on the command line, separated
+by spaces. It does not matter whether the report has been enabled or not: it
+will be run. Note: names are _case sensitive!_ Use `weectl report list` to 
+determine the names. 
+
+For example, to run the reports `MobileReport` and `SmartphoneReport`:
+
+    weectl report run MobileReport SmartphoneReport
+
+If no report names are given, then all enabled reports will be run:
+
+    # Run all enabled reports:    
+    weectl report run
+
 By default, the reports are generated as of the last timestamp in the database,
 however, an explicit time can be given by using either option `--epoch`, or by
-using options `--date` and `--time`.
+using options `--date` and `--time` together.
 
 For example, to specify an explicit unix epoch time, use option `--epoch`:
 
