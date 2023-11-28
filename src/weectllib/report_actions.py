@@ -44,9 +44,9 @@ def list_reports(config_path):
             lang = "N/A"
             skin = "N/A"
         else:
-            unit_system = skin_dict["unit_system"].upper()
-            lang = skin_dict["lang"].upper()
-            skin = skin_dict['skin']
+            unit_system = skin_dict.get("unit_system", "N/A").upper()
+            lang = skin_dict.get("lang", "N/A")
+            skin = skin_dict.get('skin', "Unknown")
 
         print(f"{report : >20}  {skin:<12} {'Y' if enabled else 'N':^8} "
               f"{unit_system:^8} {lang:^8}")
