@@ -386,7 +386,7 @@ class CalcMissing(DatabaseFix):
         self.start_ts = int(calc_missing_config_dict.get('start_ts'))
         # the stop timestamp of the period to calc missing
         self.stop_ts = int(calc_missing_config_dict.get('stop_ts'))
-        # number of days per db transaction, default to 50.
+        # number of days per db transaction, default to 10.
         self.trans_days = int(calc_missing_config_dict.get('trans_days', 10))
         # is this a dry run, default to true
         self.dry_run = to_bool(calc_missing_config_dict.get('dry_run', True))
