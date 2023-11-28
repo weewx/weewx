@@ -4,27 +4,20 @@
 
 Some of the routines should probably ask for a confirmation before proceeding.
 For example, `weectl extension uninstall` just uninstalls without confirmation. 
+- Get pre-log-initialization output to show up properly
 
 ## Package installers
 
+- ensure that maintainer's version of weewx.conf is created but no used; ensure
+    that existing weewx.conf is not overwritten
 - need to test all of this on older versions of systemd (e.g., debian 10)
-- Get pre-log-initialization output to show up properly
 - Verify that process name still works on non-systemd systems
-- need to set permissions for cc3000 and vantage udev devices
-- still need --daemon, but is it correct?  see daemonize.Daemonize
-- new installs default to separate log file for weewx
 - verify the weewx-multi scenario using systemd
-- for weewx-multi, ensure that this will work:
-    - make weewxd logging go to /var/log/weewx/weewxd.log
-    - make weewx-sdr go to /var/log/weewx/sdr.log, etc
-    - make weectl logging go to /var/log/weewx/weectl.log 
 
 For upgrades:
 * Convert `WEEWX_ROOT=/` to`WEEWX_ROOT=/etc/weewx`
-* Copy contents of `/usr/share/weewx/user` to `/etc/weewx/bin/user`, then
-rename `/usr/share/weewx/user` to `/usr/share/weewx/user-YYmmdd`
 
-## Resolved
+## Resolved (push these to docs and/or design doc)
 
 - no need for loop-on-init arg to weewxd?
    KEEP IT
@@ -50,19 +43,31 @@ rename `/usr/share/weewx/user` to `/usr/share/weewx/user-YYmmdd`
   not process safe, so we would be unable to have multiple processes write to
   it. So, we stick with syslog.
   
-
+- for weewx-multi, ensure that this will work:
+    - make weewxd logging go to /var/log/weewx/weewxd.log
+    - make weewx-sdr go to /var/log/weewx/sdr.log, etc
+    - make weectl logging go to /var/log/weewx/weectl.log 
+  YES. this can be handled using rsyslog.d/weewx.conf, or it can be done with
+  a logging configuration in the weewx.conf for each instance.  the latter is
+  somewhat dangerous, since a single config file might be use by multiple
+  executables concurrently - syslog will handle that, but weewx logging will
+  not.
 
 Done:
 
+- need to set permissions for cc3000 and vantage udev devices
 For new install:
 * Set `WEEWX_ROOT=/etc/weewx`
 * Create user+group `weewx`, then run as `weewx.weewx`
 * Install the udev file with permissions set for user `weewx`
+For upgrades:
+* Copy contents of `/usr/share/weewx/user` to `/etc/weewx/bin/user`, then
+rename `/usr/share/weewx/user` to `/usr/share/weewx/user-YYmmdd`
 
 Punt:
 
-For upgrades:
-* Do not changeover to running as weewx.weewx
+- new installs default to separate log file for weewx
+- For upgrades: Do not changeover to running as weewx.weewx
 
 
 For the documentation:
