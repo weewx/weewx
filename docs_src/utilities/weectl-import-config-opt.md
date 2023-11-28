@@ -412,7 +412,7 @@ field map as follows:
         unit = percent
     [[[windSpeed]]]
         source = wind
-        unoit = km_per_hour
+        unit = km_per_hour
     [[[windDir]]]
         source_field = dir
         unit = degree_compass
@@ -763,7 +763,7 @@ field map as follows:
         unit = percent
     [[[windSpeed]]]
         source = wind
-        unoit = km_per_hour
+        unit = km_per_hour
     [[[windDir]]]
         source_field = dir
         unit = degree_compass
