@@ -451,6 +451,7 @@ def calc_missing(config_path,
                  from_date=None,
                  to_date=None,
                  db_binding='wx_binding',
+                 tranche=10,
                  dry_run=False,
                  no_confirm=False):
     """Calculate any missing derived observations and save to database."""
@@ -518,7 +519,7 @@ def calc_missing(config_path,
                                 'binding': db_binding,
                                 'start_ts': start_ts,
                                 'stop_ts': stop_ts,
-                                'trans_days': 20,
+                                'trans_days': tranche,
                                 'dry_run': dry_run}
 
     # obtain a CalcMissing object

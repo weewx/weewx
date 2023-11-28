@@ -39,7 +39,7 @@ transfer_usage = f"""{bcolors.BOLD}weectl database transfer --dest-binding=BINDI
             [--dry-run] [-y]{bcolors.ENDC}"""
 calc_missing_usage = f"""{bcolors.BOLD}weectl database calc-missing
             [--date=YYYY-mm-dd | [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
-            [--config=FILENAME] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME] [--tranche=TRANCHE-SIZE]
             [--dry-run] [-y]{bcolors.ENDC}"""
 check_usage = f"""{bcolors.BOLD}weectl database check
             [--config=FILENAME] [--binding=BINDING-NAME]{bcolors.ENDC}"""
@@ -236,6 +236,12 @@ def add_subparser(subparsers):
                                      metavar="YYYY-mm-ddTHH:MM:SS",
                                      dest='to_date',
                                      help="Calculate ending with this datetime.")
+    calc_missing_parser.add_argument("--tranche",
+                                     metavar="TRANCHE",
+                                     type=int,
+                                     default=10,
+                                     help="Perform database transactions on TRANCHE days "
+                                          "of records at a time. Default is 10.")
     _add_common_args(calc_missing_parser)
     calc_missing_parser.set_defaults(func=calc_missing)
 
@@ -371,6 +377,7 @@ def calc_missing(namespace):
                                             from_date=namespace.from_date,
                                             to_date=namespace.to_date,
                                             db_binding=namespace.binding,
+                                            tranche=namespace.tranche,
                                             dry_run=namespace.dry_run,
                                             no_confirm=namespace.yes)
 
