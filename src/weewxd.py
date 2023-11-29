@@ -23,8 +23,6 @@ import weewx.engine
 from weeutil.weeutil import to_bool, to_float
 from weewx import daemon
 
-log = logging.getLogger(__name__)
-
 description = """The main entry point for WeeWX. This program will gather data from your 
 station, archive its data, then generate reports."""
 
@@ -73,13 +71,15 @@ def main():
         sys.exit(0)
 
     # Set up a rudimentary logger until we can read the configuration file.
-    log.addHandler(logging.handlers.SysLogHandler( address = weeutil.logger.address,
-                                                   facility = weeutil.logger.facility))
+    startup_logger = logging.getLogger("weewx-startup")
+    # It will only log to the syslog
+    startup_logger.addHandler(logging.handlers.SysLogHandler(address=weeutil.logger.address,
+                                                             facility=weeutil.logger.facility))
 
     # User can specify the config file as either a positional argument, or as an option
     # argument, but not both.
     if namespace.config_option and namespace.config_arg:
-        log.critical(epilog)
+        startup_logger.critical(epilog)
         sys.exit(epilog)
 
     # Read the configuration file
@@ -89,14 +89,16 @@ def main():
     except (IOError, configobj.ConfigObjError) as e:
         msg = "Error parsing config file: %s" % e
         print(msg, file=sys.stderr)
-        log.critical(msg)
-        weeutil.logger.log_traceback(log.critical, "    ****  ")
+        startup_logger.critical(msg)
+        weeutil.logger.log_traceback(startup_logger.critical, "    ****  ")
         sys.exit(weewx.CMD_ERROR)
 
     # Now that we have the configuration dictionary, we can set up the user-configured logging and
     # debug, as well as perform other housekeeping chores:
     weewx.initialize(config_dict, namespace.log_label)
 
+    # Get a new logger. This one will have the custom configuration:
+    log = logging.getLogger(__name__)
     # Log key bits of information.
     log.info("Initializing weewx version %s", weewx.__version__)
     log.info("Using Python %s", sys.version)
