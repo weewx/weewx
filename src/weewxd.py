@@ -59,7 +59,7 @@ def main():
                         help="Exit on I/O and database errors instead of restarting")
     parser.add_argument("-r", "--loop-on-init", action="store_true", dest="loop_on_init",
                         help="Retry forever if device is not ready on startup")
-    parser.add_argument("-n", "--log-label", dest="log_label", metavar="LABEL", default="weewx",
+    parser.add_argument("-n", "--log-label", dest="log_label", metavar="LABEL", default="weewxd",
                         help="Label to use in syslog entries")
     parser.add_argument("config_arg", nargs='?', metavar="FILENAME")
 
