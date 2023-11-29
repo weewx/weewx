@@ -36,9 +36,6 @@ For upgrades:
    a mechanism to conditionally *not* change file ownership in weewx.spec
    NOT AN ISSUE - upgrade will shift all to weewx.weewx
 
-- for logging, use weewx vs weewxd for log label?
-  WEEWX
-
 - Continue logging to system log. Unfortunately, the Python logging module is
   not process safe, so we would be unable to have multiple processes write to
   it. So, we stick with syslog.
@@ -55,6 +52,7 @@ For upgrades:
 
 Done:
 
+- for logging, use weewx vs weewxd for log label? default to 'weewxd'
 - need to set permissions for cc3000 and vantage udev devices
 For new install:
 * Set `WEEWX_ROOT=/etc/weewx`
