@@ -64,6 +64,9 @@ def run_reports(config_path,
         print(f"The following reports will be run: {', '.join(reports)}")
     else:
         print("All enabled reports will be run.")
+        # If the user has not specified any reports, then "reports" will be an empty list.
+        # Convert it to None
+        reports = None
 
     # If the user specified a time, retrieve it. Otherwise, set to None
     if epoch:

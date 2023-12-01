@@ -87,18 +87,15 @@ class StdReportEngine(threading.Thread):
     def __init__(self, config_dict, stn_info, record=None, gen_ts=None, first_run=True):
         """Initializer for the report engine.
 
-        config_dict: The configuration dictionary.
-
-        stn_info: An instance of weewx.station.StationInfo, with static
+        Args:
+            config_dict(dict): The configuration dictionary.
+            stn_info(StationInfo): An instance of weewx.station.StationInfo, with static
                   station information.
-
-        record: The current archive record [Optional; default is None]
-
-        gen_ts: The timestamp for which the output is to be current
-        [Optional; default is the last time in the database]
-
-        first_run: True if this is the first time the report engine has been
-        run.  If this is the case, then any 'one time' events should be done.
+            record(dict|None): The current archive record [Optional; default is None]
+            gen_ts(float|int|None): The timestamp for which the output is to be current
+                [Optional; default is the last time in the database]
+            first_run(bool): True if this is the first time the report engine has been
+                run.  If this is the case, then any 'one time' events should be done.
         """
         threading.Thread.__init__(self, name="ReportThread")
 
