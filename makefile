@@ -264,7 +264,7 @@ deb-package-prep: $(DSTDIR)/$(SRCPKG)
 
 # run lintian on the deb package
 check-deb:
-	lintian -Ivi $(DSTDIR)/$(DEBPKG)
+	lintian -Ivi $(DSTDIR)/python3-$(DEBPKG)
 
 upload-debian:
 	scp $(DSTDIR)/python3-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
