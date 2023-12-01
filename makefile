@@ -45,7 +45,7 @@ help: info
 	@echo "          info  display values of variables we care about"
 	@echo "       version  get version from pyproject.toml and insert elsewhere"
 	@echo ""
-	@echo "    deb-changelog prepend stub changelog entry for deb"
+	@echo " debian-changelog prepend stub changelog entry for debian"
 	@echo " redhat-changelog prepend stub changelog entry for redhat"
 	@echo "   suse-changelog prepend stub changelog entry for suse"
 	@echo ""
@@ -54,8 +54,9 @@ help: info
 	@echo "redhat-package  create the redhat package(s)"
 	@echo "  suse-package  create the suse package(s)"
 	@echo ""
-	@echo "     check-deb  check the deb package"
-	@echo "     check-rpm  check the rpm package"
+	@echo "  check-debian  check the debian package"
+	@echo "  check-redhat  check the redhat package"
+	@echo "    check-suse  check the suse package"
 	@echo "    check-docs  run weblint on the docs"
 	@echo ""
 	@echo "    upload-src  upload the src package to $(WEEWX_COM)"
@@ -219,7 +220,7 @@ upload-pypi: $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL)
 DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)
 # add a skeleton entry to deb changelog
-deb-changelog:
+debian-changelog:
 	if [ "`grep $(DEBVER) pkg/debian/changelog`" = "" ]; then \
   pkg/mkchangelog.pl --action stub --format debian --release-version $(DEBVER) > pkg/debian/changelog.new; \
   cat pkg/debian/changelog >> pkg/debian/changelog.new; \
@@ -238,7 +239,6 @@ endif
 debian-package: deb-package-prep
 	cp pkg/debian/control $(DEBBLDDIR)/debian/control
 	rm -f $(DEBBLDDIR)/debian/files
-	rm -rf $(DEBBLDDIR)/debian/weewx*
 	(cd $(DEBBLDDIR); dpkg-buildpackage $(DPKG_OPT))
 	mkdir -p $(DSTDIR)
 	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python3-$(DEBPKG)
@@ -261,9 +261,10 @@ deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	cp pkg/debian/rules $(DEBBLDDIR)/debian
 	cp pkg/debian/source/format $(DEBBLDDIR)/debian/source
 	cp pkg/debian/templates $(DEBBLDDIR)/debian
+	cp pkg/debian/weewx.lintian-overrides $(DEBBLDDIR)/debian
 
 # run lintian on the deb package
-check-deb:
+check-debian:
 	lintian -Ivi $(DSTDIR)/python3-$(DEBPKG)
 
 upload-debian:
@@ -340,12 +341,17 @@ rpm-package-suse15:
 check-rpm:
 	rpmlint $(DSTDIR)/$(RPMPKG)
 
+check-redhat:
+	make check-rpm RPMOS=el OSREL=9
+
+check-suse:
+	make check-rpm RPMOS=suse OSREL=15
+
 upload-rpm:
 	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 upload-redhat:
-	make upload-rpm RPMOS=el OSREL=7
-	make upload-rpm RPMOS=el OSREL=8
+	make upload-rpm RPMOS=el OSREL=9
 
 upload-suse:
 	make upload-rpm RPMOS=suse OSREL=12
