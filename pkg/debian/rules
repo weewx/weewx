@@ -40,11 +40,16 @@ install:
 	mkdir -p $(DST_USERDIR)
 	mkdir -p $(DST)/usr/bin
 	mkdir -p $(DST)/etc/default
-	mkdir -p $(DST)/etc/systemd/system
-	mkdir -p $(DST)/etc/udev/rules.d
+	mkdir -p $(DST)/lib/systemd/system
+	mkdir -p $(DST)/lib/udev/rules.d
 	mkdir -p $(DST)/var/lib/weewx
 	mkdir -p $(DST)/var/log/weewx
 	mkdir -p $(DST)/var/www/html/weewx
+	mkdir -p $(DST)/usr/share/doc/weewx
+
+# debian says we must have a copyright file
+	cp docs_src/copyright.md $(DST)/usr/share/doc/weewx/copyright
+	cp LICENSE.txt $(DST)/usr/share/doc/weewx/license
 
 # copy the weewx code
 	cp -r $(SRC)/src/* $(DST_BINDIR)
@@ -84,7 +89,7 @@ install:
  -e 's%#PIDFile=.*%PIDFile=/run/weewx/weewxd.pid%' \
  -e 's%#User=weewx%User=weewx%' \
  -e 's%#Group=weewx%Group=weewx%' \
- > $(DST)/etc/systemd/system/weewx.service
+ > $(DST)/lib/systemd/system/weewx.service
 
 # create the entry points
 	for f in $(ENTRIES); do \
@@ -99,7 +104,7 @@ done
  > $(DST)/etc/default/weewx
 
 # put the udev rules in place
-	cp $(SRC)/src/weewx_data/util/udev/rules.d/weewx.rules $(DST)/etc/udev/rules.d
+	cp $(SRC)/src/weewx_data/util/udev/rules.d/weewx.rules $(DST)/lib/udev/rules.d
 
 # additional debian control files that dpkg-buildpackage seems to ignore
 	mkdir -p $(DST)/DEBIAN
@@ -111,6 +116,7 @@ binary-indep: install
 	dh_fixperms
 	dh_installdeb
 	dh_gencontrol
+	dh_lintian
 	dh_md5sums
 	dh_builddeb -- -Zgzip
 

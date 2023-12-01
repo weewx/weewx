@@ -236,7 +236,8 @@ create_user() {
     if ! getent passwd | grep -q "^$WEEWX_USER:"; then
         echo -n "Adding system user $WEEWX_USER..."
         adduser --quiet --system --ingroup $WEEWX_GROUP \
-                --no-create-home --disabled-password weewx || true
+                --no-create-home --home /nonexistant \
+                --disabled-password weewx || true
         echo "done"
     fi
     test -d $WEEWX_HOME || mkdir $WEEWX_HOME
@@ -246,14 +247,14 @@ create_user() {
 # set the permissions on the data and logs so they are owned by weewx user
 set_permissions() {
     if getent passwd | grep -q "^$WEEWX_USER:"; then
-        chmod 2755 /etc/weewx
-        chmod 2755 /var/lib/weewx
+        chmod 2775 /etc/weewx
+        chmod 2775 /var/lib/weewx
         chmod 2755 /var/log/weewx
         chmod 2775 /var/www/html/weewx
-        chown -R $WEEWX_USER:adm /etc/weewx
-        chown -R $WEEWX_USER:adm /var/lib/weewx
-        chown -R $WEEWX_USER:adm /var/log/weewx
-        chown -R $WEEWX_USER:adm /var/www/html/weewx
+        chown -R $WEEWX_USER:$WEEWX_GROUP /etc/weewx
+        chown -R $WEEWX_USER:$WEEWX_GROUP /var/lib/weewx
+        chown -R $WEEWX_USER:$WEEWX_GROUP /var/log/weewx
+        chown -R $WEEWX_USER:$WEEWX_GROUP /var/www/html/weewx
     fi
 }
 
@@ -290,7 +291,6 @@ configure)
 
         # configure for system startup
         systemctl enable weewx
-
         # start the weewx daemon
         systemctl start weewx
         ;;

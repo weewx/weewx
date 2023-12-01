@@ -7,9 +7,11 @@ weewx: extra-license-file *
 weewx: font-outside-font-dir *
 weewx: font-in-non-font-package *
 weewx: duplicate-font-file *
-weewx: changelog-file-not-compressed *
-weewx: dir-or-file-in-var-www *
-weewx: maintainer-script-should-not-use-recursive-chown-or-chmod *
 weewx: python-script-but-no-python-dep usr/share/weewx/weewx_data/util/i18n/i18n-report #!python
-weewx: binary-without-manpage *
+weewx: changelog-file-not-compressed *
+weewx: binary-without-manpage usr/bin/weectl
+weewx: binary-without-manpage usr/bin/weewxd
+weewx: dir-or-file-in-var-www var/www/html/
+weewx: dir-or-file-in-var-www var/www/html/weewx/
+weewx: maintainer-script-should-not-use-recursive-chown-or-chmod *
 weewx: maintainer-script-calls-systemctl *
