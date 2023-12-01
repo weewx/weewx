@@ -50,7 +50,7 @@ that there is likely a configuration problem and so retries are useless.
 However, in some cases, drivers can fail to load for intermittent reasons, such
 as a network failure. In these cases, it may be useful to have WeeWX do a retry.
 Setting this option to `true` will cause WeeWX to keep retrying indefinitely.
-Default is `false`.`
+Default is `false`.
 
 #### retry_wait
 
