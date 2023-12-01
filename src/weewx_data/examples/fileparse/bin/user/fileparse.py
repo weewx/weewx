@@ -1,5 +1,3 @@
-#!/usr/bin/python
-#
 # Copyright 2014 Matthew Wall
 #
 # weewx driver that reads data from a file
