@@ -27,7 +27,7 @@ Suggests:
  python3-pip
 Description: weather software
  WeeWX interacts with a weather station to produce graphs, reports, and HTML
- pages. WeeWX can upload data to many weather services including WeatherUnderground,
- PWSweather.com, CWOP, and others.
+ pages. WeeWX can upload data to many weather services including
+ WeatherUnderground, PWSweather.com, CWOP, and others.
  .
  This version requires Python 3.7 or greater.
