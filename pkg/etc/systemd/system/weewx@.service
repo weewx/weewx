@@ -8,6 +8,3 @@
 [Service]
 ExecStart=weewxd --daemon --pidfile /run/weewx/weewxd-%i.pid --log-label weewx-%i /etc/weewx/weewx-%i.conf
 PIDFile=/run/weewx/weewxd-%i.pid
-
-[Install]
-WantedBy=multi-user.target
