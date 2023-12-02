@@ -62,7 +62,7 @@
 
 %global dst_bin_dir  %{_datadir}/%{name}
 %global dst_cfg_dir  %{_sysconfdir}/%{name}
-%global dst_user_dir %{dst_cfg-dir}/bin/user
+%global dst_user_dir %{dst_cfg_dir}/bin/user
 %global cfg_file     %{dst_cfg_dir}/weewx.conf
 
 %define entry_points weewxd weectl
@@ -98,11 +98,17 @@ mkdir -p %{buildroot}%{dst_bin_dir}
 mkdir -p %{buildroot}%{dst_cfg_dir}
 mkdir -p %{buildroot}%{dst_user_dir}
 mkdir -p %{buildroot}/etc/default
-mkdir -p %{buildroot}/etc/systemd/system
-mkdir -p %{buildroot}/etc/udev/rules.d
+mkdir -p %{buildroot}/etc/logrotate.d
+mkdir -p %{buildroot}/lib/systemd/system
+mkdir -p %{buildroot}/lib/udev/rules.d
 mkdir -p %{buildroot}/var/lib/weewx
 mkdir -p %{buildroot}/var/log/weewx
 mkdir -p %{buildroot}/var/www/html/weewx
+mkdir -p %{buildroot}/usr/share/weewx-doc
+
+# rpm wants copyright and license even if no docs
+cp docs_src/copyright.md %{buildroot}/usr/share/weewx-doc/copyright
+cp LICENSE.txt %{buildroot}/usr/share/weewx-doc/license
 
 # copy the weewx code
 cp -r src/* %{buildroot}%{dst_bin_dir}
@@ -141,7 +147,7 @@ cat src/weewx_data/util/systemd/weewx.service | sed \
  -e 's%#PIDFile=.*%PIDFile=/run/weewx/weewxd.pid%' \
  -e 's%#User=weewx%User=weewx%' \
  -e 's%#Group=weewx%Group=weewx%' \
- > %{buildroot}/etc/systemd/system/weewx.service
+ > %{buildroot}/lib/systemd/system/weewx.service
 
 # create the entry points
 for f in %{entry_points}; do \
@@ -155,8 +161,11 @@ cat src/weewx_data/util/default/weewx | sed \
  -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
  > %{buildroot}/etc/default/weewx
 
+# logrotate script
+cp src/weewx_data/util/logrotate.d/weewx.redhat %{buildroot}/etc/logrotate.d/weewx
+
 # udev rules for known devices
-cp src/weewx_data/util/udev/rules.d/weewx.rules %{buildroot}/etc/udev/rules.d
+cp src/weewx_data/util/udev/rules.d/weewx.rules %{buildroot}/lib/udev/rules.d
 
 
 %pre
@@ -194,7 +203,7 @@ elif [ "$1" = "2" ]; then
   if [ -d /usr/share/weewx/user ]; then
     echo "Migrating old extensions to /etc/weewx/bin/user"
     cp -rp /usr/share/weewx/user/* /etc/weewx/bin/user
-    ts = `date +"%Y%m%d%H%M%S"`
+    ts = `date +"%%Y%%m%%d%%H%%M%%S"`
     echo "Saving old extensions to /usr/share/weewx/user-$ts"
     mv /usr/share/weewx/user /usr/share/weewx/user-$ts
   fi
@@ -218,10 +227,12 @@ rm -rf %{buildroot}
 %defattr(-,root,root)
 %{_bindir}/weewxd
 %{_bindir}/weectl
-%{_sysconfdir}/systemd/system/weewx.service
-%{_sysconfdir}/default/weewx
-%{_sysconfdir}/udev/rules.d/weewx.rules
+/lib/systemd/system/weewx.service
+/lib/udev/rules.d/weewx.rules
 %{dst_bin_dir}/
+%doc /usr/share/weewx-doc
+%config(noreplace) %{_sysconfdir}/default/weewx
+%config(noreplace) %{_sysconfdir}/logrotate.d/weewx
 %config(noreplace) %attr(-,weewx,weewx) %{dst_cfg_dir}/
 %dir %attr(-,weewx,weewx) /var/log/weewx
 %dir %attr(-,weewx,weewx) /var/lib/weewx

@@ -40,6 +40,7 @@ install:
 	mkdir -p $(DST_USERDIR)
 	mkdir -p $(DST)/usr/bin
 	mkdir -p $(DST)/etc/default
+	mkdir -p $(DST)/etc/logrotate.d
 	mkdir -p $(DST)/lib/systemd/system
 	mkdir -p $(DST)/lib/udev/rules.d
 	mkdir -p $(DST)/var/lib/weewx
@@ -102,6 +103,9 @@ done
  -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
  -e 's%WEEWX_CFG=.*%WEEWX_CFG=/etc/weewx/weewx.conf%' \
  > $(DST)/etc/default/weewx
+
+# install logrotate configuration
+	cp $(SRC)/src/weewx_data/util/logrotate.d/weewx.debian $(DST)/etc/logrotate.d/weewx
 
 # put the udev rules in place
 	cp $(SRC)/src/weewx_data/util/udev/rules.d/weewx.rules $(DST)/lib/udev/rules.d
