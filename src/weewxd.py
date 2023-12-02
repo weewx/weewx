@@ -247,6 +247,7 @@ class Terminate(Exception):
 
 
 def sigTERMhandler(signum, _frame):
+    log = logging.getLogger(__name__)
     log.info("Received signal TERM (%s).", signum)
     raise Terminate
 
