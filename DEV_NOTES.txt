@@ -54,8 +54,9 @@ checklist for doing a release:
 
 pre-requisites ----------------------------------------------------------------
 
-Building anything other than the src tarball requires mkdocs.
+Building the documentation requires mkdocs, which is installed using pip.
 Signing packages requires gpg and local copy of authorized private+public keys.
+Verifying the packages requires rpmlint/lintian.
 The debian repo management requires aptly.
 The redhat repo management requires createrepo.
 The suse repo management requires createrepo.
@@ -69,12 +70,15 @@ To build debian package install the following (use 'apt-get install'):
   rsync
   gpg
   debhelper
+  lintian
 
 To build redhat package install the following (use 'yum install'):
   git
   rsync
+  gnupg
   rpm-build
   rpm-sign
+  rpmlint
 
 To build suse package install the following (use 'zypper install'):
   git
@@ -320,17 +324,24 @@ than a tight coupling to the operating system's python as an error and refuse
 to accept it.  however, the bsd platforms prefer this as the shebang, and the
 other approach fails on bsd.  macos uses something else.
 
-weewx supports python 2.7 and any python 3.5+ so it should not be tightly
-coupled to any specific python installation.
+since weewx5 supports any python 3.7+. older weewx supports python 2.7 and any
+python 3.5+, weewx does not have to be tightly coupled to any specific python
+installation on the system.
 
-so use the source code should use the '/usr/bin/env python' shebang.  on
-platforms that refuse to accept this, replace the package builder will replace
-this with whatever that platform will accept.  the /etc/default/weewx plus
-shell stubs in /usr/bin/wee* is used in platform installations to provide
-python flexibility so that users do not have to install weewx multiple times
-to experiment with different versions of python.  users who run weewx directly
-from a git clone get all of the 'env python' goodness of being able to specify
-whatever python interpreter they want.
+so the source code should use the '/usr/bin/env python' shebang.  on platforms
+that refuse to accept this, the package builder will replace this with
+whatever that platform will accept.  for pip installs, pip does the shebang
+mangling and sets entry points that are appropriate for its configuration.
+for everything else, using the env in shebang and making the entry points
+executable enables either 'python foo.py' or 'foo.py' invocation.
+
+the /etc/default/weewx plus shell stubs in /usr/bin/wee* is used in deb/rpm
+and non-linux installations to provide python flexibility, so that users can
+use a single weewx installation to experiment with different python versions.
+this is particularly helpful when running weewx directly from source in a git
+clone, it also works in the deb/rpm installs where the python is managed
+separately from the system's python, as well as the non-linux, non-pip
+installations.
 
 
 unit tests --------------------------------------------------------------------
@@ -364,7 +375,7 @@ testing -----------------------------------------------------------------------
 what to test when creating debian and redhat packages:
   install, upgrade, remove, purge
   install, modify files, remove
-  install, modify files, upgrade
+  install previous release, modify files, upgrade, remove
 
 Using pip:
 
