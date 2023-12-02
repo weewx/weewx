@@ -339,7 +339,7 @@ rpm-package-suse15:
 
 # run rpmlint on the rpm package
 check-rpm:
-	rpmlint $(DSTDIR)/$(RPMPKG)
+	rpmlint -f pkg/rpmlint.$(RPMOS) $(DSTDIR)/$(RPMPKG)
 
 check-redhat:
 	make check-rpm RPMOS=el OSREL=9
