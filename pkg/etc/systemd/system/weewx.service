@@ -1,0 +1,19 @@
+# unit file for WeeWX
+
+[Unit]
+Description=WeeWX weather system
+Documentation=https://weewx.com/docs
+Requires=time-sync.target
+After=time-sync.target
+
+[Service]
+ExecStart=weewxd --daemon --pidfile /run/weewx/weewxd.pid /etc/weewx/weewx.conf
+Type=forking
+RuntimeDirectory=weewx
+RuntimeDirectoryMode=775
+PIDFile=/run/weewx/weewxd.pid
+User=weewx
+Group=weewx
+
+[Install]
+WantedBy=multi-user.target

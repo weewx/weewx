@@ -1,0 +1,13 @@
+# unit file for WeeWX named instance
+#
+# Inherit the standard weewx service settings, then make them unique for a
+# specific instance of the WeeWX daemon.
+
+.include /lib/systemd/system/weewx.service
+
+[Service]
+ExecStart=weewxd --daemon --pidfile /run/weewx/weewxd-%i.pid --log-label weewx-%i /etc/weewx/weewx-%i.conf
+PIDFile=/run/weewx/weewxd-%i.pid
+
+[Install]
+WantedBy=multi-user.target
