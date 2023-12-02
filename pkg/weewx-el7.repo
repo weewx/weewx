@@ -1,0 +1,5 @@
+[weewx]
+name=weewx
+baseurl=http://weewx.com/yum/weewx/el7
+enabled=1
+gpgcheck=0

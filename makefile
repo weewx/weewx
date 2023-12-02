@@ -49,7 +49,7 @@ help: info
 	@echo " redhat-changelog prepend stub changelog entry for redhat"
 	@echo "   suse-changelog prepend stub changelog entry for suse"
 	@echo ""
-	@echo "  pypi-packages create wheel and source tarball suitable for pypi"
+	@echo "  pypi-package  create wheel and source tarball for pypi"
 	@echo "debian-package  create the debian package(s)"
 	@echo "redhat-package  create the redhat package(s)"
 	@echo "  suse-package  create the suse package(s)"
@@ -422,20 +422,19 @@ release-apt-repo:
 
 YUM_REPO=~/.yum/weewx
 yum-repo:
-	mkdir -p $(YUM_REPO)/{el7,el8}/RPMS
+	mkdir -p $(YUM_REPO)/{el7,el8,el9}/RPMS
 	cp -p pkg/index-yum.html ~/.yum/index.html
 	cp -p pkg/weewx-el7.repo ~/.yum
 	cp -p pkg/weewx-el8.repo ~/.yum
+	cp -p pkg/weewx-el9.repo ~/.yum
 
 pull-yum-repo:
 	mkdir -p $(YUM_REPO)
 	rsync -Oarvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ ~/.yum
 
 update-yum-repo:
-	cp -p $(DSTDIR)/weewx-$(RPMVER).el7.$(RPMARCH).rpm $(YUM_REPO)/el7/RPMS
-	createrepo $(YUM_REPO)/el7
-	cp -p $(DSTDIR)/weewx-$(RPMVER).el8.$(RPMARCH).rpm $(YUM_REPO)/el8/RPMS
-	createrepo $(YUM_REPO)/el8
+	cp -p $(DSTDIR)/weewx-$(RPMVER).el9.$(RPMARCH).rpm $(YUM_REPO)/el9/RPMS
+	createrepo $(YUM_REPO)/el9
 
 push-yum-repo:
 	find ~/.yum -type f -exec chmod 664 {} \;
