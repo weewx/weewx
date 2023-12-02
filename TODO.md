@@ -10,12 +10,8 @@ For example, `weectl extension uninstall` just uninstalls without confirmation.
 
 - ensure that maintainer's version of weewx.conf is created but no used; ensure
     that existing weewx.conf is not overwritten
-- need to test all of this on older versions of systemd (e.g., debian 10)
 - Verify that process name still works on non-systemd systems
 - verify the weewx-multi scenario using systemd
-
-For upgrades:
-* Convert `WEEWX_ROOT=/` to`WEEWX_ROOT=/etc/weewx`
 
 ## Resolved (push these to docs and/or design doc)
 
@@ -49,9 +45,17 @@ For upgrades:
   somewhat dangerous, since a single config file might be use by multiple
   executables concurrently - syslog will handle that, but weewx logging will
   not.
+  
+* For upgrades: in the weewx config, we convert `WEEWX_ROOT=/` to
+  `WEEWX_ROOT=/etc/weewx` only when the config file is explicitly upgraded
+  using 'weectl station upgrade'.  The deb/rpm upgrade will *not* touch the
+  config file (unless the user requests the maintainer's version).  The
+  maintainer's version of the config file *will* include the change to
+  WEEWX_ROOT.
 
 Done:
 
+- need to test all of this on older versions of systemd (e.g., debian 10)
 - for logging, use weewx vs weewxd for log label? default to 'weewxd'
 - need to set permissions for cc3000 and vantage udev devices
 For new install:
