@@ -91,20 +91,20 @@ sudo systemctl restart weewx
 
 ## Upgrade
 
+The upgrade process will only upgrade the WeeWX software; it does not modify
+the database, configuration file, extensions, or skins.
+
 Upgrade to the latest version like this:
 ```{.shell .copy}
 sudo zypper update weewx
 ```
 
-The upgrade process will not modify the WeeWX databases.
+Unmodified files will be upgraded. If modifications have been made to any
+files, you will see a message about any differences between the modified
+files and the new files. Any new changes from the upgrade will be noted as
+files with a `.rpmnew` extension and the modified files will be left untouched.
 
-Unmodified files will be upgraded. If modifications have been made to the
-configuration, `rpm` will display a message about any differences between the
-changes and the new configuration. Any new changes from the upgrade will be
-noted as files with a `.rpmnew` extension and the modified files will be left
-untouched.
-
-For example, if `/etc/weewx/weewx.conf` was modified, `rpm` will present a
+For example, if `/etc/weewx/weewx.conf` was modified, `zypper` will present a
 message something like this:
 
 ```

@@ -100,6 +100,9 @@ sudo systemctl restart weewx
 
 ## Upgrade
 
+The upgrade process will only upgrade the WeeWX software; it does not modify
+the database, configuration file, extensions, or skins.
+
 Upgrade to the latest version like this:
 
 ```{.shell .copy}
@@ -107,12 +110,10 @@ sudo apt update
 sudo apt install weewx
 ```
 
-The upgrade process will not modify the WeeWX databases.
-
-Unmodified files will be upgraded. If modifications have been made to the
-WeeWX configuration, you will be prompted whether you want to keep the
-existing configuration or accept the new configuration. Either way, a copy of
-the option you did not choose will be saved.
+Unmodified files will be upgraded. If modifications have been made to any
+files, you will be prompted whether you want to keep the existing, modified
+files, or accept the new files. Either way, a copy of the option you did not
+choose will be saved.
 
 For example, if `/etc/weewx/weewx.conf` was modified, you will see a message
 something like this:
@@ -130,7 +131,7 @@ Configuration file `/etc/weewx/weewx.conf'
 *** weewx.conf (Y/I/N/O/D/Z) [default=N] ?
 ```
 
-Choosing `Y` or `I` (install the new version) will place your old
+Choosing `Y` or `I` (install the new version) will place the old
 configuration in `/etc/weewx/weewx.conf.dpkg-old`, where it can be
 compared with the new version in `/etc/weewx/weewx.conf`.
 
