@@ -119,9 +119,17 @@ To uninstall WeeWX, deleting configuration files but retaining data:
 ```{.shell .copy}
 sudo zypper remove weewx
 ```
-To delete data:
+
+When you use `zypper` to uninstall WeeWX, it does not touch WeeWX data, logs,
+or any changes you might have made to the WeeWX configuration.  It also leaves
+the `weewx` user, since data and configuration files were owned by that user.
+To remove the remaining WeeWX bits:
 
 ```{.shell .copy}
-sudo rm -r /var/lib/weewx
+sudo zypper remove weewx
 sudo rm -r /var/www/html/weewx
+sudo rm -r /var/lib/weewx
+sudo rm -r /var/log/weewx
+sudo rm -r /etc/weewx
+sudo userdel weewx
 ```
