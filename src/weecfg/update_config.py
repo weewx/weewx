@@ -52,6 +52,8 @@ def update_config(config_dict):
 
     update_to_v43(config_dict)
 
+    update_to_v50(config_dict)
+
 
 def merge_config(config_dict, template_dict):
     """Merge the template (distribution) dictionary into the user's dictionary.
@@ -703,7 +705,7 @@ def update_to_v36(config_dict):
                                   'et_period', 'wind_height', 'atc',
                                   'nfac', 'max_delta_12h']:
                     config_dict['StdWXCalculate']['Calculations'][scalar] = \
-                    config_dict['StdWXCalculate'][scalar]
+                        config_dict['StdWXCalculate'][scalar]
                     config_dict['StdWXCalculate'].pop(scalar)
             # Insert the old comment at the top of the new stanza:
             try:
@@ -954,6 +956,19 @@ def update_to_v43(config_dict):
         config_dict['StdReport']['log_failure'] = True
 
     config_dict['version'] = '4.3.0'
+
+
+def update_to_v50(config_dict):
+    """Update a configuration file to V5.0
+
+    - If the config file uses '/' for WEEWX_ROOT, set it to '/etc/weewx'
+    """
+    if 'WEEWX_ROOT' in config_dict and config_dict['WEEWX_ROOT'] == '/':
+        config_dict['WEEWX_ROOT'] = '/etc/weewx'
+    if 'WEEWX_ROOT_ORIG' in config_dict and config_dict['WEEWX_ROOT_ORIGIN'] == '/':
+        config_dict['WEEWX_ROOT_ORIG'] = '/etc/weewx'
+
+    config_dict['version'] = '5.0.0'
 
 
 # ==============================================================================
