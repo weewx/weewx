@@ -166,6 +166,8 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
     if 'WEEWX_ROOT' not in config_dict:
         # If missing, set WEEWX_ROOT to the directory the config file is in
         config_dict['WEEWX_ROOT'] = os.path.dirname(config_path)
+    elif config_dict['WEEWX_ROOT'] == '/':
+        config_dict['WEEWX_ROOT'] == '/etc/weewx'
     # In case WEEWX_ROOT is a relative path, join it with the location of the config file, then
     # convert it to an absolute path.
     config_dict['WEEWX_ROOT'] = os.path.abspath(os.path.join(os.path.dirname(config_path),
