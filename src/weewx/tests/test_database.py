@@ -17,7 +17,7 @@ import weedb
 import weeutil.weeutil
 import weeutil.logger
 
-weeutil.logger.setup('test_database')
+weeutil.logger.setup('weetest_database')
 
 archive_sqlite = {'database_name': '/var/tmp/weewx_test/weedb.sdb', 'driver':'weedb.sqlite'}
 archive_mysql  = {'database_name': 'test_weedb', 'user':'weewx1', 'password':'weewx1', 'driver':'weedb.mysql'}

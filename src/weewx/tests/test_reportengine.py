@@ -37,7 +37,7 @@ WEEWX_ROOT = '../../..'
 CONFIG_DICT = weeutil.config.config_from_str(CONFIG_DICT_INI)
 CONFIG_DICT['WEEWX_ROOT'] = os.path.normpath(os.path.join(os.path.dirname(__file__), '../../..'))
 
-weeutil.logger.setup('test_reportengine', CONFIG_DICT)
+weeutil.logger.setup('weetest_reportengine', CONFIG_DICT)
 
 
 class TestReportEngine(unittest.TestCase):

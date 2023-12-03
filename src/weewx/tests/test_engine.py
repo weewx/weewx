@@ -44,7 +44,7 @@ except configobj.ConfigObjError:
     print("Error while parsing configuration file %s" % config_path, file=sys.stderr)
     raise
 
-weeutil.logger.setup('test_engine', config_dict)
+weeutil.logger.setup('weetest_engine', config_dict)
 
 
 class TestEngine(unittest.TestCase):

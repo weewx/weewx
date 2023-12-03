@@ -28,7 +28,7 @@ import weewx.xtypes
 from weeutil.weeutil import TimeSpan
 
 log = logging.getLogger(__name__)
-weeutil.logger.setup('test_vaporpressure')
+weeutil.logger.setup('weetest_vaporpressure')
 
 weewx.debug = 1
 

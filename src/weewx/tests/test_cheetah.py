@@ -19,7 +19,7 @@ weewx.debug = 1
 
 log = logging.getLogger(__name__)
 # Set up logging using the defaults.
-weeutil.logger.setup('test_cheetah')
+weeutil.logger.setup('weetest_cheetah')
 
 
 class RaiseException(object):
