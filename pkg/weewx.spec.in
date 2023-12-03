@@ -5,6 +5,8 @@
 # the operating system release number is specified externaly, so that we can
 # do cross-release (but not cross-platform) packaging.
 %define os_target OSREL
+%global relnum RPMREVISION
+%define weewx_version WEEWX_VERSION
 
 # suse 12: python2
 %if 0%{?suse_version} && "%{os_target}" == "12"
@@ -33,7 +35,7 @@
 %define html_root /srv/www/htdocs/weewx
 %endif
 
-# rh: python3 on redhat, fedora, centos
+# rh: python3 on redhat, fedora, centos, rocky
 %if "%{_vendor}" == "redhat"
 %define platform redhat
 %define html_root /var/www/html/weewx
@@ -51,29 +53,31 @@
 %endif
 %if "%{os_target}" == "9"
 %define relos .el9
-# rh9 ships with python 3.9, which is sufficient, so do not specify more.
+# rh9 ships with python 3.9, which is sufficient.
 %define deps python3, python3-setuptools, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
 %define python python3
 %endif
 %endif
 
-%global relnum RPMREVISION
 %global release %{relnum}%{?relos:%{relos}}
 
-%global dst_code_dir %{_datadir}/%{name}
-%global dst_cfg_dir  %{_sysconfdir}/%{name}
+%global dst_code_dir %{_datadir}/weewx
+%global dst_cfg_dir  %{_sysconfdir}/weewx
 %global dst_user_dir %{dst_cfg_dir}/bin/user
+%global dst_doc_dir  %{_datadir}/weewx-doc
 %global cfg_file     %{dst_cfg_dir}/weewx.conf
 
 %define entry_points weewxd weectl
+%define weewx_user weewx
+%define weewx_group weewx
 
 Summary: weather software
 Name: weewx
-Version: WEEWX_VERSION
+Version: %{weewx_version}
 Release: %{release}
 Group: Applications/Science
 Source: %{name}-%{version}.tar.gz
-URL: http://www.weewx.com
+URL: https://www.weewx.com
 License: GPLv3
 AutoReqProv: no
 Requires: %{deps}
@@ -97,6 +101,7 @@ mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{dst_code_dir}
 mkdir -p %{buildroot}%{dst_cfg_dir}
 mkdir -p %{buildroot}%{dst_user_dir}
+mkdir -p %{buildroot}%{dst_doc_dir}
 mkdir -p %{buildroot}/etc/default
 mkdir -p %{buildroot}/etc/logrotate.d
 mkdir -p %{buildroot}/lib/systemd/system
@@ -104,11 +109,10 @@ mkdir -p %{buildroot}/lib/udev/rules.d
 mkdir -p %{buildroot}/var/lib/weewx
 mkdir -p %{buildroot}/var/log/weewx
 mkdir -p %{buildroot}/var/www/html/weewx
-mkdir -p %{buildroot}/usr/share/weewx-doc
 
 # rpm wants copyright and license even if no docs
-cp docs_src/copyright.md %{buildroot}/usr/share/weewx-doc/copyright
-cp LICENSE.txt %{buildroot}/usr/share/weewx-doc/license
+cp docs_src/copyright.md %{buildroot}%{dst_doc_dir}/copyright
+cp LICENSE.txt %{buildroot}%{dst_doc_dir}/license
 
 # copy the weewx code
 cp -r src/* %{buildroot}%{dst_code_dir}
@@ -122,7 +126,7 @@ cp -r src/weewx_data/examples %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/skins %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/import %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/logwatch %{buildroot}%{dst_cfg_dir}
-cp -r src/weewx_data/util/rsyslog.d %{buildroot}%{dst_cfg_dir}
+cp -r pkg/etc/rsyslog.d %{buildroot}%{dst_cfg_dir}
 
 # create the weewx configuration
 cat src/weewx_data/weewx.conf | sed \
@@ -133,7 +137,7 @@ cat src/weewx_data/weewx.conf | sed \
  > %{buildroot}%{dst_cfg_dir}/weewx.conf
 
 # make a copy of the generic configuration file
-cp %{buildroot}%{dst_cfg_dir}/weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf.dist
+cp %{buildroot}%{dst_cfg_dir}/weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf.%{weewx_version}
 
 # create the init configuration
 cp pkg/etc/systemd/system/weewx.service %{buildroot}/lib/systemd/system
@@ -165,12 +169,13 @@ if [ "$1" = "2" ]; then
   fi
 fi
 # create the weewx user and group
-/usr/bin/getent group weewx || /usr/sbin/groupadd -r weewx
-/usr/bin/getent passwd weewx || /usr/sbin/useradd -r -g weewx -M -s /sbin/nologin weewx
+/usr/bin/getent group %{weewx_group} || /usr/sbin/groupadd -r %{weewx_group}
+/usr/bin/getent passwd %{weewx_user} || /usr/sbin/useradd -r -g %{weewx_group} -M -s /sbin/nologin %{weewx_user}
 
 %post
 # pre-compile the python code
-%{python} -m compileall %{dst_code_dir}
+echo Precompile using %{python} in %{dst_code_dir}
+%{python} -m compileall %{dst_code_dir} > /dev/null
 if [ "$1" = "1" ]; then
   # this is a new installation
   # create a sane configuration file with simulator as the station type
@@ -179,20 +184,29 @@ if [ "$1" = "1" ]; then
   systemctl start weewx
 elif [ "$1" = "2" ]; then
   # this is an upgrade
-  # update previous config and merge with dist into a maintainer's version
-  if [ -f %{cfg_file}.dist -a -f %{cfg_file}.prev ]; then
+  # upgrade the previous config to create the maintainer's version, but do not
+  # touch the user's configuration.
+  #   weewx.conf - user's conf (old)
+  #   weewx.conf.latest - new conf for this weewx version
+  #   weewx.conf.old-latest - user's conf upgraded to this weewx version
+  if [ -f %{cfg_file}.%{weewx_version} -a -f %{cfg_file}.prev ]; then
     OLDVER=`grep version %{cfg_file}.prev | sed -e 's/\s*version\s*=\s*//'`
-    echo Saving previous config as %{cfg_file}-$OLDVER
-    mv %{cfg_file}.prev %{cfg_file}-$OLDVER
-    echo Merging configs into %{cfg_file}
-    /usr/bin/weectl station upgrade --config=%{cfg_file} --dist-config=%{cfg-file}.dist --what=config --no-prompt --no-backup
+    if [ "$OLDVER" = "" ]; then
+      # someone might have messed with the version string
+      OLDVER="xxx"
+    fi
+    MNT=${OLDVER}-%{weewx_version}
+    echo Creating maintainer version of configuration as %{cfg_file}.$MNT
+    mv %{cfg_file}.prev %{cfg_file}.$MNT
+    /usr/bin/weectl station upgrade --config=%{cfg_file}.$MNT --dist-config=%{cfg-file}.%{weewx_version} --what=config --no-prompt --no-backup
+    # FIXME: do we copy this onto the original?
   fi
-  # if this is an upgrade from V4, migrate any extensions to the V5 location
+  # if this is an upgrade from V4, copy any extensions to the V5 location
   if [ -d /usr/share/weewx/user ]; then
-    echo "Migrating old extensions to /etc/weewx/bin/user"
+    echo "Copying old extensions to /etc/weewx/bin/user"
     cp -rp /usr/share/weewx/user/* /etc/weewx/bin/user
     ts = `date +"%%Y%%m%%d%%H%%M%%S"`
-    echo "Saving old extensions to /usr/share/weewx/user-$ts"
+    echo "Moving old extensions to /usr/share/weewx/user-$ts"
     mv /usr/share/weewx/user /usr/share/weewx/user-$ts
   fi
   # do a full restart not just a HUP
@@ -219,11 +233,12 @@ rm -rf %{buildroot}
 /lib/systemd/system/weewx@.service
 /lib/udev/rules.d/weewx.rules
 %{dst_code_dir}/
-%doc /usr/share/weewx-doc
+%license %{dst_doc_dir}/license
+%doc %{dst_doc_dir}/
 %config(noreplace) %{_sysconfdir}/default/weewx
 %config(noreplace) %{_sysconfdir}/logrotate.d/weewx
-%config(noreplace) %attr(-,weewx,weewx) %{dst_cfg_dir}/
-%dir %attr(-,weewx,weewx) /var/log/weewx
-%dir %attr(-,weewx,weewx) /var/lib/weewx
-%dir %attr(-,weewx,weewx) /var/www/html/weewx
+%config(noreplace) %attr(-,%{weewx_user},%{weewx_group}) %{dst_cfg_dir}/
+%ghost %attr(-,%{weewx_user},%{weewx_group}) /var/log/weewx
+%ghost %attr(-,%{weewx_user},%{weewx_group}) /var/lib/weewx
+%ghost %attr(-,%{weewx_user},%{weewx_group}) /var/www/html/weewx
 %changelog
