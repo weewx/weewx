@@ -13,8 +13,6 @@ For example, `weectl extension uninstall` just uninstalls without confirmation.
 - the driver files have a shebang, but since they are never invoked directly
     (always 'python xxx.py' and never just 'xxx.py') then why have shebang?
     and if they do have shebang, they should be executable
-- weectl should use 'weectl' as the process name. only 'weectl database' does
-    this properly?
 
 ## Resolved (push these to docs and/or design doc)
 
