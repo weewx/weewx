@@ -28,7 +28,7 @@ def list_reports(config_path):
     print(f"Using configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
 
     # Customize the logging with user settings.
-    weeutil.logger.setup('weectl', config_dict)
+    weeutil.logger.setup('wee_report', config_dict)
 
     print(
         f"\n{bcolors.BOLD}{'Report' : >20}  {'Skin':<12} {'Enabled':^8} {'Units':^8} {'Language':^8}{bcolors.ENDC}")
@@ -81,7 +81,7 @@ def run_reports(config_path,
     else:
         print("Generating as of last timestamp in the database.")
 
-    weewx.initialize(config_dict, 'weectl')
+    weewx.initialize(config_dict, 'wee_report')
 
     # We want to generate all reports irrespective of any report_timing settings that may exist.
     # The easiest way to do this is walk the config dict, resetting any report_timing settings
