@@ -532,14 +532,16 @@ def copy_examples(config_dict, examples_root=None, dry_run=False, force=False):
     # examples_root is relative to WEEWX_PATH. Join them to get the absolute path.
     examples_dir = os.path.join(config_dict['WEEWX_ROOT'], examples_root)
 
-    if os.path.isdir(examples_dir) and not force:
-        print(f"Directory {examples_dir} already exists.")
-        return None
-    print(f"Removing directory {examples_dir}")
-    if not dry_run:
-        shutil.rmtree(examples_dir, ignore_errors=True)
+    if os.path.isdir(examples_dir):
+        if not force:
+            print(f"Directory {examples_dir} already exists.")
+            return None
+        else:
+            print(f"Removing example directory {examples_dir}")
+            if not dry_run:
+                shutil.rmtree(examples_dir, ignore_errors=True)
     with weeutil.weeutil.get_resource_path('weewx_data', 'examples') as examples_resources:
-        print(f"Copying new examples into {examples_dir}")
+        print(f"Copying examples into {examples_dir}")
         if not dry_run:
             shutil.copytree(examples_resources, examples_dir)
     return examples_dir
@@ -565,7 +567,7 @@ def copy_user(config_dict, user_root=None, dry_run=False):
                                 ignore=shutil.ignore_patterns('*.pyc', '__pycache__', ))
 
 
-def copy_util(config_path, config_dict, dry_run=False):
+def copy_util(config_path, config_dict, dry_run=False, force=False):
     import weewxd
     weewxd_path = weewxd.__file__
     username = getpass.getuser()
@@ -621,18 +623,26 @@ def copy_util(config_path, config_dict, dry_run=False):
                                               'rsyslog.d', 'scripts', 'solaris',
                                               'tmpfiles.d')
 
+    util_dir = os.path.join(weewx_root, 'util')
+    if os.path.isdir(util_dir):
+        if not force:
+            print(f"Utility directory {util_dir} already exists. Nothing done.")
+            return None
+        else:
+            print(f"Removing utility directory {util_dir}")
+            if not dry_run:
+                shutil.rmtree(util_dir, ignore_errors=True)
+
     with weeutil.weeutil.get_resource_path('weewx_data', 'util') as util_resources:
-        dstdir = os.path.join(weewx_root, 'util')
-        print(f"Creating utility files in {dstdir}")
+        print(f"Copying utility files into {util_dir}")
         if not dry_run:
             # Copy the tree rooted in 'util_resources' to 'dstdir', while ignoring files given
             # by _ignore_function. While copying, use the function _patch_file() to massage
             # the files.
-            shutil.copytree(util_resources, dstdir,
+            shutil.copytree(util_resources, util_dir,
                             ignore=_ignore_function,
                             copy_function=_patch_file)
-
-    return dstdir
+    return util_dir
 
 
 def station_upgrade(config_path, dist_config_path=None, examples_root=None,
@@ -683,7 +693,7 @@ def station_upgrade(config_path, dist_config_path=None, examples_root=None,
         print(f"Finished upgrading examples at {examples_dir}")
 
     if 'util' in what:
-        util_dir = copy_util(config_path, config_dict, dry_run=dry_run)
+        util_dir = copy_util(config_path, config_dict, dry_run=dry_run, force=True)
         if util_dir:
             print(f"Finished upgrading utilities directory at {util_dir}")
         else:

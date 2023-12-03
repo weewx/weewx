@@ -395,7 +395,7 @@ formula to calculate reception quality for wireless stations. Default is `1`.
 #### timeout
 
 How many seconds to wait for a response from the station before giving up.
-Default is `5`.
+Default is `4`.
 
 #### wait_before_retry
 
