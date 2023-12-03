@@ -32,6 +32,12 @@ For example, `weectl extension uninstall` just uninstalls without confirmation.
     sudo rm -rf /var/www/html/weewx
 
 - verify the weewx-multi scenario using systemd
+    configs should be XXX.conf, so log label is weewxd-XXX
+      log files are /var/log/weewx/weewxd-XXX.log
+      configs are /etc/weewx/XXX.conf
+      database should be /var/lib/weewx/XXX.sdb
+      html root should be /var/www/html/XXX/ (many variants possible here)
+
     create config files - unique: Station.location, HTML_ROOT, database_name
       /etc/weewx/XXX.conf
       /etc/weewx/YYY.conf
@@ -41,6 +47,25 @@ For example, `weectl extension uninstall` just uninstalls without confirmation.
     start/stop
       sudo systemctl start weewx@XXX
       sudo systemctl start weewx@YYY
+
+- ensure logging goes to the right place.  most important part is to use colon
+    after the process name in the log string.  otherwise the process name is
+    either 'python', or, on systems where systemd has hijacked the logging with
+    journald, 'python' OR 'journal', depending on what tool you use to look at
+    the log.  this applies only to the syslog handler.  so if you use the
+    syslog handler, use the 'standard' log message format.  there is no need
+    for the timestamp in the 'verbose' format if you are using syslog.
+
+    the drivers have 'wee_' prepended to their name so that their logs are
+    easily matched by syslog rules.  each of the weectl subcommands uses
+    wee_XXX so that their logs can go to separate files (default behavior
+    for a deb/rpm install).  all of the unit tests start with 'weetest' for
+    the same reason.
+
+    for a pip install, everything will go to system log, but at least this way
+    you can easily grep to find what you need.  and if you prefer to use the
+    systemd-journald, it still works with that, without breaking standard
+    syslog behavior on every other platform.
 
 - no need for loop-on-init arg to weewxd?
    KEEP IT
