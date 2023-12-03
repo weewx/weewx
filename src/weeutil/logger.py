@@ -21,7 +21,7 @@ import weewx
 #
 LOGGING_STR = """[Logging]
     version = 1
-    disable_existing_loggers = True
+    disable_existing_loggers = False
 
     # Root logger
     [[root]]

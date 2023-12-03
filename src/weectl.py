@@ -7,12 +7,9 @@
 
 import argparse
 import importlib
-import logging
 import sys
 
 import weewx
-
-log = logging.getLogger(__name__)
 
 usagestr = """%(prog)s -v|--version
        %(prog)s -h|--help
