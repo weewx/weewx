@@ -253,7 +253,7 @@ Arguments:
     print("Using configuration file %s" % config_path)
 
     # Set logging configuration:
-    weeutil.logger.setup('lowBattery', config_dict)
+    weeutil.logger.setup('wee_lowBattery', config_dict)
 
     if 'Alarm' not in config_dict:
         exit("No [Alarm] section in the configuration file %s" % config_path)
