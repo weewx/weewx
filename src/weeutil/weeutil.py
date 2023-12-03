@@ -1678,7 +1678,6 @@ def max_with_none(x_seq):
 
 def move_with_timestamp(path):
     """Save a file or directory to a path with a timestamp."""
-    import shutil
     # Sometimes the target has a trailing '/'. This will take care of it:
     path = os.path.normpath(path)
     newpath = path + time.strftime(".%Y%m%d%H%M%S")
@@ -1798,12 +1797,8 @@ def deep_copy_path(path, dest_dir):
     else:
         # path is a file. Get the directory it's in.
         d = os.path.dirname(os.path.join(dest_dir, path))
-        # Make the destination directory, wrapping it in a try block in
-        # case it already exists:
-        try:
-            os.makedirs(d)
-        except OSError:
-            pass
+        # Make the destination directory:
+        os.makedirs(d, exist_ok=True)
         # This version of copy does not copy over modification time,
         # so it will look like a new file, causing it to be (for
         # example) ftp'd to the server:
@@ -1856,7 +1851,6 @@ def version_compare(v1, v2):
 def get_resource_path(package, resource):
     """Return a path to a resource within a package. The resource can be a directory or a file."""
     import sys
-    import importlib.resources
 
     if sys.version_info.major == 3 and sys.version_info.minor < 9:
         # For earlier Python versions, use the deprecated function path()
@@ -1869,7 +1863,6 @@ def get_resource_path(package, resource):
 def get_resource_fd(package, resource):
     """Return a file descriptor to a resource within a package."""
     import sys
-    import importlib.resources
 
     if sys.version_info.major == 3 and sys.version_info.minor < 9:
         # For earlier Python versions, use the deprecated function open_text
