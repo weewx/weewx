@@ -6,5 +6,4 @@
 .include /lib/systemd/system/weewx.service
 
 [Service]
-ExecStart=weewxd --daemon --pidfile /run/weewx/weewxd-%i.pid --log-label weewx-%i /etc/weewx/weewx-%i.conf
-PIDFile=/run/weewx/weewxd-%i.pid
+ExecStart=weewxd --log-label weewxd-%i /etc/weewx/weewx-%i.conf

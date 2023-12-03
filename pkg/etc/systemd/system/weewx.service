@@ -7,11 +7,10 @@ Requires=time-sync.target
 After=time-sync.target
 
 [Service]
-ExecStart=weewxd --daemon --pidfile /run/weewx/weewxd.pid /etc/weewx/weewx.conf
-Type=forking
+ExecStart=weewxd /etc/weewx/weewx.conf
+StandardOutput=null
 RuntimeDirectory=weewx
 RuntimeDirectoryMode=775
-PIDFile=/run/weewx/weewxd.pid
 User=weewx
 Group=weewx
 
