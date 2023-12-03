@@ -6,4 +6,5 @@
   delaycompress
   copytruncate
   notifempty
+  create 644 root weewx
 }

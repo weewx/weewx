@@ -104,6 +104,7 @@ mkdir -p %{buildroot}%{dst_user_dir}
 mkdir -p %{buildroot}%{dst_doc_dir}
 mkdir -p %{buildroot}/etc/default
 mkdir -p %{buildroot}/etc/logrotate.d
+mkdir -p %{buildroot}/etc/rsyslog.d
 mkdir -p %{buildroot}/lib/systemd/system
 mkdir -p %{buildroot}/lib/udev/rules.d
 mkdir -p %{buildroot}/var/lib/weewx
@@ -126,7 +127,6 @@ cp -r src/weewx_data/examples %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/skins %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/import %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/logwatch %{buildroot}%{dst_cfg_dir}
-cp -r pkg/etc/rsyslog.d %{buildroot}%{dst_cfg_dir}
 
 # create the weewx configuration
 cat src/weewx_data/weewx.conf | sed \
@@ -153,8 +153,9 @@ cat pkg/etc/default/weewx | sed \
  -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=%{python}%' \
  > %{buildroot}/etc/default/weewx
 
-# logrotate script
+# log handling
 cp pkg/etc/logrotate.d/weewx %{buildroot}/etc/logrotate.d
+cp pkg/etc/rsyslog.d/weewx.conf %{buildroot}/etc/rsyslog.d
 
 # udev rules for known devices
 cp pkg/etc/udev/rules.d/weewx.rules %{buildroot}/lib/udev/rules.d
@@ -173,6 +174,9 @@ fi
 /usr/bin/getent passwd %{weewx_user} || /usr/sbin/useradd -r -g %{weewx_group} -M -s /sbin/nologin %{weewx_user}
 
 %post
+# restart syslog so that it picks up the weewx logging directives
+# FIXME: what if rsyslog not installed?
+systemctl restart rsyslog
 # pre-compile the python code
 echo Precompile using %{python} in %{dst_code_dir}
 %{python} -m compileall %{dst_code_dir} > /dev/null
@@ -233,12 +237,13 @@ rm -rf %{buildroot}
 /lib/systemd/system/weewx@.service
 /lib/udev/rules.d/weewx.rules
 %{dst_code_dir}/
-%license %{dst_doc_dir}/license
 %doc %{dst_doc_dir}/
 %config(noreplace) %{_sysconfdir}/default/weewx
 %config(noreplace) %{_sysconfdir}/logrotate.d/weewx
-%config(noreplace) %attr(-,%{weewx_user},%{weewx_group}) %{dst_cfg_dir}/
-%ghost %attr(-,%{weewx_user},%{weewx_group}) /var/log/weewx
-%ghost %attr(-,%{weewx_user},%{weewx_group}) /var/lib/weewx
-%ghost %attr(-,%{weewx_user},%{weewx_group}) /var/www/html/weewx
+%config(noreplace) %{_sysconfdir}/rsyslog.d/weewx.conf
+%defattr(664,%{weewx_user},%{weewx_group},2775)
+%config(noreplace) %{dst_cfg_dir}/
+%dir %attr(0755,%{weewx_user},%{weewx_group}) /var/log/weewx
+%dir %attr(2775,%{weewx_user},%{weewx_group}) /var/lib/weewx
+%dir %attr(2775,%{weewx_user},%{weewx_group}) /var/www/html/weewx
 %changelog
