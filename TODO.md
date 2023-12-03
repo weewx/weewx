@@ -8,12 +8,39 @@ For example, `weectl extension uninstall` just uninstalls without confirmation.
 
 ## Package installers
 
-- ensure that maintainer's version of weewx.conf is created but no used; ensure
-    that existing weewx.conf is not overwritten
-- Verify that process name still works on non-systemd systems
-- verify the weewx-multi scenario using systemd
+- verify upgrade behavior on skin files in /etc/weewx/skins.  do the non-
+    modified skin files get upgraded from apt/yum?
+- the driver files have a shebang, but since they are never invoked directly
+    (always 'python xxx.py' and never just 'xxx.py') then why have shebang?
+    and if they do have shebang, they should be executable
+- weectl should use 'weectl' as the process name. only 'weectl database' does
+    this properly?
 
 ## Resolved (push these to docs and/or design doc)
+
+- ensure that maintainer's version of weewx.conf is created but no used; ensure
+    that existing weewx.conf is not overwritten
+    /etc/weewx/weewx.conf - untouched config
+    /etc/weewx/weewx.conf.OLD-LATEST - maintainer; 'weewctl upgrade'
+    /etc/weewx/weewx.conf.LATEST - distribution
+
+- add steps to purging.  these are for deb/rpm installs
+    sudo userdel weewx
+    sudo rm -rf /etc/weewx
+    sudo rm -rf /var/lib/weewx
+    sudo rm -rf /var/log/weewx
+    sudo rm -rf /var/www/html/weewx
+
+- verify the weewx-multi scenario using systemd
+    create config files - unique: Station.location, HTML_ROOT, database_name
+      /etc/weewx/XXX.conf
+      /etc/weewx/YYY.conf
+    enable
+      sudo systemctl enable weewx@XXX
+      sudo systemctl enable weewx@YYY
+    start/stop
+      sudo systemctl start weewx@XXX
+      sudo systemctl start weewx@YYY
 
 - no need for loop-on-init arg to weewxd?
    KEEP IT
@@ -55,6 +82,7 @@ For example, `weectl extension uninstall` just uninstalls without confirmation.
 
 Done:
 
+- Verify that process name still works on non-systemd systems
 - need to test all of this on older versions of systemd (e.g., debian 10)
 - for logging, use weewx vs weewxd for log label? default to 'weewxd'
 - need to set permissions for cc3000 and vantage udev devices
