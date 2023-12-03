@@ -201,15 +201,17 @@ merge_weewxconf() {
         if [ -f $cfgfile.dist ]; then
             DSTVER=$(get_conf_version $cfgfile.dist)
             if dpkg --compare-versions $DSTVER eq $NEWVER; then
-                echo "Saving previous config file as $cfgfile-$OLDVER"
-                cp -p $cfgfile $cfgfile-$OLDVER
+		MNT=$OLDVER-$NEWVER
+                echo "Copy previous config file to $cfgfile-$MNT"
+                cp -p $cfgfile $cfgfile-$MNT
                 echo "Saving distribution config file as $cfgfile-$NEWVER"
                 cp -p $cfgfile.dist $cfgfile-$NEWVER
-                echo "Merging previous and distribution into $cfgfile"
+		echo "Creating maintainer version of config as $cfgfile-$MNT"
                 # Upgrade the configuration file only.
-                $cfgapp station upgrade --config=$cfgfile --dist-config=$cfgfile-$NEWVER --what=config --no-prompt --no-backup
+                $cfgapp station upgrade --config=$cfgfile-$MNT --dist-config=$cfgfile-$NEWVER --what=config --no-prompt --no-backup
+		# FIXME: do we copy this onto original?
             else
-                echo "Distribution config file is wrong version for merging"
+                echo "Distribution config has wrong version: dst=$DSTVER new=$NEWVER"
             fi
         else
             echo "No distribution config with which to merge"
