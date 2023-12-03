@@ -724,7 +724,7 @@ if __name__ == '__main__':
 
     weewx.debug = 2
 
-    weeutil.logger.setup('wmr9x8')
+    weeutil.logger.setup('wee_wmr9x8')
 
     usage = """Usage: %prog --help
        %prog --version

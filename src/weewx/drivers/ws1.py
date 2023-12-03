@@ -513,7 +513,7 @@ if __name__ == '__main__':
         weewx.debug = 2
         DEBUG_READ = 2
 
-    weeutil.logger.setup('ws1')
+    weeutil.logger.setup('wee_ws1')
 
     Station = StationSerial
     if options.addr is not None:

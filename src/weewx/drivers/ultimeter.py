@@ -449,7 +449,7 @@ if __name__ == '__main__':
     if options.debug:
         weewx.debug = 1
 
-    weeutil.logger.setup('ultimeter')
+    weeutil.logger.setup('wee_ultimeter')
 
     with Station(options.port, debug_serial=options.debug) as station:
         station.set_logger_mode()

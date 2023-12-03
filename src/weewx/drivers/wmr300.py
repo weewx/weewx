@@ -1991,7 +1991,7 @@ if __name__ == '__main__':
 
     weewx.debug = 1
 
-    weeutil.logger.setup('wmr300')
+    weeutil.logger.setup('wee_wmr300')
 
     usage = """%prog [options] [--help]"""
 

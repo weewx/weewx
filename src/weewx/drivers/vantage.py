@@ -3055,7 +3055,7 @@ if __name__ == '__main__':
 
     weewx.debug = 1
 
-    weeutil.logger.setup('vantage')
+    weeutil.logger.setup('wee_vantage')
 
     usage = """Usage: python -m weewx.drivers.vantage --help
        python -m weewx.drivers.vantage --version

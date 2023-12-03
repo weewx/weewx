@@ -2107,7 +2107,7 @@ if __name__ == '__main__':
     if options.debug:
         weewx.debug = 1
 
-    weeutil.logger.setup('ws23xx')
+    weeutil.logger.setup('wee_ws23xx')
 
     if options.port:
         port = options.port
