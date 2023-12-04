@@ -303,7 +303,7 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
 	mkdir -p -m 0755 $(RPMBLDDIR)/SOURCES
 	mkdir -p -m 0755 $(RPMBLDDIR)/SPECS
 	mkdir -p -m 0755 $(RPMBLDDIR)/SRPMS
-	sed -e 's%Version:.*%Version: $(VERSION)%' \
+	sed -e 's%WEEWX_VERSION%$(VERSION)%' \
             -e 's%RPMREVISION%$(RPMREVISION)%' \
             -e 's%OSREL%$(OSREL)%' \
             pkg/weewx.spec.in > $(RPMBLDDIR)/SPECS/weewx.spec
