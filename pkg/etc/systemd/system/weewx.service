@@ -1,7 +1,7 @@
-# Unit file for WeeWX
+# systemd service configuration file for WeeWX
 
 [Unit]
-Description=WeeWX weather system
+Description=WeeWX
 Documentation=https://weewx.com/docs
 Requires=time-sync.target
 After=time-sync.target

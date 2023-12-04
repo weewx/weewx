@@ -1,4 +1,4 @@
-# systemd unit configuration file for WeeWX
+# systemd service configuration file for WeeWX
 #
 # For information about running WeeWX under systemd, see:
 #   https://github.com/weewx/weewx/wiki/systemd
@@ -13,10 +13,6 @@ After=time-sync.target
 [Service]
 ExecStart=weewxd weewx.conf
 StandardOutput=null
-#Type=forking
-#RuntimeDirectory=weewx
-#RuntimeDirectoryMode=775
-#PIDFile=/run/weewx/weewxd.pid
 #User=weewx
 #Group=weewx
 
