@@ -44,18 +44,18 @@ h2 {
 
 <body>
 
-<h1 class="title">SUSE repository for weeWX</h1>
+<h1 class="title">SUSE repository for WeeWX</h1>
 
 <h2>Tell the system to trust weewx.com</h2>
 
 <pre class='tty'>sudo rpm --import http://weewx.com/keys.html</pre>
 
-<h2>Configure</h2>
+<h2>Tell zypper where to find the WeeWX repository</h2>
 
-For python3 (suse 15):
+For WeeWX5 and Python3 (suse 15):
 <pre class='tty'>curl -s http://weewx.com/suse/weewx-suse15.repo | sudo tee /etc/zypp/repos.d/weewx.repo</pre>
 
-For python2 (suse 12):
+For WeeWX4 and Python2 (suse 12):
 <pre class='tty'>curl -s http://weewx.com/suse/weewx-suse12.repo | sudo tee /etc/zypp/repos.d/weewx.repo</pre>
 
 <h2>Install weeWX</h2>

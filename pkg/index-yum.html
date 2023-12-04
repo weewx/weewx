@@ -50,12 +50,15 @@ h2 {
 
 <pre class='tty'>sudo rpm --import http://weewx.com/keys.html</pre>
 
-<h2>Configure yum</h2>
+<h2>Tell yum where to find the WeeWX repository</h2>
 
-For python3 (redhat 8):
+For WeeWX5 and Python3 (redhat 9):
+<pre class='tty'>curl -s http://weewx.com/yum/weewx-el9.repo | sudo tee /etc/yum.repos.d/weewx.repo</pre>
+
+For WeeWX4 and Python3 (redhat 8):
 <pre class='tty'>curl -s http://weewx.com/yum/weewx-el8.repo | sudo tee /etc/yum.repos.d/weewx.repo</pre>
 
-For python2 (redhat 7):
+For WeeWX4 and Python2 (redhat 7):
 <pre class='tty'>curl -s http://weewx.com/yum/weewx-el7.repo | sudo tee /etc/yum.repos.d/weewx.repo</pre>
 
 <h2>Install weeWX</h2>

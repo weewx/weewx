@@ -48,12 +48,16 @@ h2 {
 
 <h2>Tell the system to trust weewx.com</h2>
 
-<pre class='tty'>wget -qO - https://weewx.com/keys.html | sudo gpg --dearmor --output /etc/apt/trusted.gpg.d/weewx.gpg</pre>
+<pre class='tty'>sudo apt-get -y install wget gnupg
+wget -qO - https://weewx.com/keys.html | sudo gpg --dearmor --output /etc/apt/trusted.gpg.d/weewx.gpg</pre>
 
-<h2>Configure apt</h2>
+<h2>Tell apt where to find the WeeWX repository</h2>
 
-<p>Run the following command to tell apt where to find the WeeWX Python 3 repository.</p>
+For WeeWX5 and Python3 (debian 10 and later):
 <pre class='tty'>echo "deb [arch=all] https://weewx.com/apt/python3 buster main" | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+
+For WeeWX4 and Python2 (debian 9 and earlier):
+<pre class='tty'>echo "deb [arch=all] https://weewx.com/apt/python2 squeeze main" | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
 
 <h2>Install and/or Upgrade WeeWX</h2>
 <pre class='tty'>sudo apt-get update
