@@ -246,4 +246,5 @@ rm -rf %{buildroot}
 %dir %attr(0755,%{weewx_user},%{weewx_group}) /var/log/weewx
 %dir %attr(2775,%{weewx_user},%{weewx_group}) /var/lib/weewx
 %dir %attr(2775,%{weewx_user},%{weewx_group}) /var/www/html/weewx
+
 %changelog
