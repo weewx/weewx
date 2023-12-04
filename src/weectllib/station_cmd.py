@@ -47,7 +47,7 @@ station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure
 station_upgrade_usage = f"""{bcolors.BOLD}weectl station upgrade
             [--examples-root=DIRECTORY]
             [--skin-root=DIRECTORY]
-            [--what (examples|util|config|skins)...]
+            [--what ITEM [ITEM ...]
             [--no-backup]
             [--no-prompt]
             [--config=FILENAME]
@@ -156,8 +156,12 @@ def add_subparser(subparsers):
                                         choices=['examples', 'util', 'config', 'skins'],
                                         default=['examples', 'util'],
                                         nargs='+',
-                                        help='What to upgrade. Default is to upgrade the '
-                                             'examples, and utility files.')
+                                        metavar='ITEM',
+                                        help="What to upgrade. Choose from 'examples', 'util', "
+                                             "'skins', 'config', or some combination, separated "
+                                             "by spaces. Default is to upgrade the examples, "\
+                                             "and "
+                                             "utility files.")
     station_upgrade_parser.add_argument('--no-backup', action='store_true',
                                         help='Do not backup the old configuration file.')
     station_upgrade_parser.add_argument('--no-prompt', action='store_true',

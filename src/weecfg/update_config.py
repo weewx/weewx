@@ -965,7 +965,7 @@ def update_to_v50(config_dict):
     """
     if 'WEEWX_ROOT' in config_dict and config_dict['WEEWX_ROOT'] == '/':
         config_dict['WEEWX_ROOT'] = '/etc/weewx'
-    if 'WEEWX_ROOT_ORIG' in config_dict and config_dict['WEEWX_ROOT_ORIGIN'] == '/':
+    if 'WEEWX_ROOT_ORIG' in config_dict and config_dict['WEEWX_ROOT_ORIG'] == '/':
         config_dict['WEEWX_ROOT_ORIG'] = '/etc/weewx'
 
     config_dict['version'] = '5.0.0'
