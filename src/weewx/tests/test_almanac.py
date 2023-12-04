@@ -20,6 +20,14 @@ FALL_TIMESTAMP   = 1254078000  # 2009-09-27 12:00:00 PDT
 
 default_formatter = weewx.units.get_default_formatter()
 
+def pyephem_installed():
+    try:
+        import pyephem
+    except ImportError:
+        return False
+    return True
+
+
 class AlmanacTest(unittest.TestCase):
 
     def setUp(self):
@@ -42,21 +50,30 @@ class AlmanacTest(unittest.TestCase):
         self.assertAlmostEqual(self.almanac._moon_fullness, 3, 2)
         self.assertEqual(self.almanac.moon_phase, 'new (totally dark)')
 
+    @unittest.skipIf(not pyephem_installed(), "pyephem is not installed")
+    def test_moon_extended(self):
         # Now test a more precise result for fullness of the moon:
         self.assertAlmostEqual(self.almanac.moon.moon_fullness, 1.70, 2)
         self.assertEqual(str(self.almanac.moon.rise), "06:59:14")
         self.assertEqual(str(self.almanac.moon.transit), "14:01:57")
         self.assertEqual(str(self.almanac.moon.set), "21:20:06")
 
-        self.assertEqual(str(self.almanac.next_full_moon), "04/09/09 07:55:49")
-        self.assertEqual(str(self.almanac.next_new_moon), "04/24/09 20:22:33")
-        self.assertEqual(str(self.almanac.next_first_quarter_moon), "04/02/09 07:33:42")
-
         # Location of the moon
         self.assertAlmostEqual(self.almanac.moon.az, 133.55, 2)
         self.assertAlmostEqual(self.almanac.moon.alt, 47.89, 2)
 
+        self.assertEqual(str(self.almanac.next_full_moon), "04/09/09 07:55:49")
+        self.assertEqual(str(self.almanac.next_new_moon), "04/24/09 20:22:33")
+        self.assertEqual(str(self.almanac.next_first_quarter_moon), "04/02/09 07:33:42")
+
+    @unittest.skipIf(pyephem_installed(), "pyephem is installed")
     def test_sun(self):
+        # Test backwards compatibility
+        self.assertEqual(str(self.almanac.sunrise), "06:55:59")
+        self.assertEqual(str(self.almanac.sunset), "19:30:22")
+
+    @unittest.skipIf(not pyephem_installed(), "pyephem is not installed")
+    def test_sun_extended(self):
         # Test backwards compatibility
         self.assertEqual(str(self.almanac.sunrise), "06:56:36")
         self.assertEqual(str(self.almanac.sunset), "19:30:41")
@@ -85,12 +102,14 @@ class AlmanacTest(unittest.TestCase):
         almanac = Almanac(FALL_TIMESTAMP, LATITUDE, LONGITUDE, formatter=default_formatter)
         self.assertEqual(str(almanac.sun.visible_change().long_form()), "3 minutes, 13 seconds")
 
+    @unittest.skipIf(not pyephem_installed(), "pyephem is not installed")
     def test_mars(self):
         self.assertEqual(str(self.almanac.mars.rise), "06:08:57")
         self.assertEqual(str(self.almanac.mars.transit), "11:34:13")
         self.assertEqual(str(self.almanac.mars.set), "17:00:04")
         self.assertAlmostEqual(self.almanac.mars.sun_distance, 1.3857, 4)
 
+    @unittest.skipIf(not pyephem_installed(), "pyephem is not installed")
     def test_jupiter(self):
         # Specialized attribute for Jupiter:
         self.assertEqual(str(self.almanac.jupiter.cmlI), "310:55:32.7")
@@ -98,14 +117,17 @@ class AlmanacTest(unittest.TestCase):
         with self.assertRaises(AttributeError):
             self.almanac.venus.cmlI
 
+    @unittest.skipIf(not pyephem_installed(), "pyephem is not installed")
     def test_star(self):
         self.assertAlmostEqual(self.almanac.castor.rise.raw, 1238178997, 0)
         self.assertAlmostEqual(self.almanac.castor.transit.raw, 1238210429, 0)
         self.assertAlmostEqual(self.almanac.castor.set.raw, 1238155697, 0)
 
+    @unittest.skipIf(not pyephem_installed(), "pyephem is not installed")
     def test_sidereal(self):
         self.assertAlmostEqual(self.almanac.sidereal_time, 348.3400, 4)
 
+    @unittest.skipIf(not pyephem_installed(), "pyephem is not installed")
     def test_always_up(self):
         # Time and location where the sun is always up
         t = 1371044003  # 2013-06-12 06:33:23 PDT (1371044003)
@@ -124,6 +146,7 @@ class AlmanacTest(unittest.TestCase):
         self.assertEqual(almanac(horizon=-6).sun(use_center=1).visible.long_form(),
                          "0 hours, 0 minutes, 0 seconds")
 
+    @unittest.skipIf(not pyephem_installed(), "pyephem is not installed")
     def test_naval_observatory(self):
         #
         # pyephem "Naval Observatory" example.
@@ -140,11 +163,17 @@ class AlmanacTest(unittest.TestCase):
         # Try sun rise again, to make sure the horizon value cleared:
         self.assertAlmostEqual(atlanta.sun.previous_rising.raw, 1252235697, 0)
 
+    @unittest.skipIf(pyephem_installed(), "pyephem is installed")
     def test_exceptions(self):
+        # Try a nonsense tag
+        with self.assertRaises(AttributeError):
+            self.almanac.sun.foo
+
+    @unittest.skipIf(not pyephem_installed(), "pyephem is not installed")
+    def test_exceptions_pyephem(self):
         # Try a nonsense body
         with self.assertRaises(KeyError):
             self.almanac.bar.rise
-
         # Try a nonsense tag
         with self.assertRaises(AttributeError):
             self.almanac.sun.foo

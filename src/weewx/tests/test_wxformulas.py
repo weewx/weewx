@@ -71,6 +71,11 @@ class WXFormulasTest(unittest.TestCase):
         self.assertIsNone(weewx.wxformulas.altimeter_pressure_Metric(948.08, None))
 
     def test_solar_rad(self):
+        try:
+            import pyephem
+        except ImportError as e:
+            raise unittest.case.SkipTest(e)
+
         results = [weewx.wxformulas.solar_rad_Bras(42, -72, 0, t * 3600 + 1422936471) for t in range(24)]
         expected = [0, 0, 0, 0, 0, 0, 0, 0, 1.86, 100.81, 248.71,
                     374.68, 454.90, 478.76, 443.47, 353.23, 220.51, 73.71, 0, 0, 0,
