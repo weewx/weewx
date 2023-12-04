@@ -210,7 +210,7 @@ elif [ "$1" = "2" ]; then
   if [ -d /usr/share/weewx/user ]; then
     echo "Copying old extensions to /etc/weewx/bin/user"
     cp -rp /usr/share/weewx/user/* /etc/weewx/bin/user
-    ts = `date +"%%Y%%m%%d%%H%%M%%S"`
+    ts=`/usr/bin/date +"%%Y%%m%%d%%H%%M%%S"`
     echo "Moving old extensions to /usr/share/weewx/user-$ts"
     mv /usr/share/weewx/user /usr/share/weewx/user-$ts
   fi

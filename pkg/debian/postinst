@@ -202,10 +202,10 @@ merge_weewxconf() {
             DSTVER=$(get_conf_version $cfgfile.dist)
             if dpkg --compare-versions $DSTVER eq $NEWVER; then
 		MNT=$OLDVER-$NEWVER
-                echo "Copy previous config file to $cfgfile-$MNT"
+                echo "Copying previous config file to $cfgfile-$MNT"
                 cp -p $cfgfile $cfgfile-$MNT
                 echo "Saving distribution config file as $cfgfile-$NEWVER"
-                cp -p $cfgfile.dist $cfgfile-$NEWVER
+                mv $cfgfile.dist $cfgfile-$NEWVER
 		echo "Creating maintainer version of config as $cfgfile-$MNT"
                 # Upgrade the configuration file only.
                 $cfgapp station upgrade --config=$cfgfile-$MNT --dist-config=$cfgfile-$NEWVER --what=config --no-prompt --no-backup
@@ -266,7 +266,7 @@ migrate_extensions() {
     if [ -d /usr/share/weewx/user ]; then
         echo "Migrating old extensions to /etc/weewx/bin/user"
         cp -rp /usr/share/weewx/user/* /etc/weewx/bin/user
-        ts = `date +"%Y%m%d%H%M%S"`
+        ts=`/usr/bin/date +"%Y%m%d%H%M%S"`
         echo "Saving old extensions to /usr/share/weewx/user-$ts"
         mv /usr/share/weewx/user /usr/share/weewx/user-$ts
     fi
