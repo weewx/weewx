@@ -100,7 +100,7 @@ done
 	cp $(SRC)/pkg/etc/rsyslog.d/weewx.conf $(DST)/etc/rsyslog.d
 
 # put the udev rules in place
-	cp $(SRC)/pkg/etc/udev/rules.d/weewx.rules $(DST)/lib/udev/rules.d
+	cp $(SRC)/pkg/etc/udev/rules.d/weewx.rules $(DST)/lib/udev/rules.d/60-weewx.rules
 
 # additional debian control files that dpkg-buildpackage seems to ignore
 	mkdir -p $(DST)/DEBIAN

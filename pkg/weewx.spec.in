@@ -158,7 +158,7 @@ cp pkg/etc/logrotate.d/weewx %{buildroot}/etc/logrotate.d
 cp pkg/etc/rsyslog.d/weewx.conf %{buildroot}/etc/rsyslog.d
 
 # udev rules for known devices
-cp pkg/etc/udev/rules.d/weewx.rules %{buildroot}/lib/udev/rules.d
+cp pkg/etc/udev/rules.d/weewx.rules %{buildroot}/lib/udev/rules.d/60-weewx.rules
 
 
 %pre
@@ -237,7 +237,7 @@ rm -rf %{buildroot}
 %{_bindir}/weectl
 /lib/systemd/system/weewx.service
 /lib/systemd/system/weewx@.service
-/lib/udev/rules.d/weewx.rules
+/lib/udev/rules.d/60-weewx.rules
 %{dst_code_dir}/
 %doc %{dst_doc_dir}/
 %config(noreplace) %{_sysconfdir}/default/weewx
