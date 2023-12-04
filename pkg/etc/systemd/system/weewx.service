@@ -1,4 +1,4 @@
-# unit file for WeeWX
+# Unit file for WeeWX
 
 [Unit]
 Description=WeeWX weather system

@@ -1,9 +1,26 @@
-# unit file for WeeWX named instance
+# Unit file for WeeWX named instance
 #
-# Inherit the standard weewx service settings, then make them unique for a
-# specific instance of the WeeWX daemon.
+# Each instance XXX must have its own config, database, and HTML_ROOT:
+#
+#  item       name                           where to specify
+#  --------   -----------------------------  --------------------------------
+#  config     /etc/weewx/weewx-XXX.conf      configuration directory
+#  database   /var/lib/weewx/weewx-XXX.sdb   specified in weewx-XXX.conf
+#  HTML_ROOT  /var/www/html/weewx-XXX        specified in weewx-XXX.conf
 
-.include /lib/systemd/system/weewx.service
+[Unit]
+Description=WeeWX %i
+Documentation=https://weewx.com/docs
+Requires=time-sync.target
+After=time-sync.target
 
 [Service]
 ExecStart=weewxd --log-label weewxd-%i /etc/weewx/weewx-%i.conf
+StandardOutput=null
+RuntimeDirectory=weewx
+RuntimeDirectoryMode=775
+User=weewx
+Group=weewx
+
+[Install]
+WantedBy=multi-user.target
