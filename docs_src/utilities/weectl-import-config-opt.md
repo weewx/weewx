@@ -373,9 +373,8 @@ source data field `monthrain` may have no use if the source data field
 !!! Note
     Importing of text data into text fields in the WeeWX archive is only 
     supported for WeeWX archive fields that have been configured as text 
-    fields. Refer to the Wiki page [Storing text in the database]
-    (https://github.com/weewx/weewx/wiki/Storing-text-in-the-database) for 
-    details.
+    fields. Refer to the Wiki page 
+    [Storing text in the database](https://github.com/weewx/weewx/wiki/Storing-text-in-the-database) for details.
 
 If the source data includes a field that contains a WeeWX unit system code 
 (i.e. the equivalent of the WeeWX `usUnits` field such as may be obtained 
@@ -700,14 +699,25 @@ settings.
 
 ### `[[FieldMap]]`{#cumulus_fieldmap}
 
-The `[[FieldMap]]` stanza defines the mapping from the source data fields 
-to WeeWX archive fields. The map consists of one sub-stanza per WeeWX archive 
-field being populated using the following format:
+The `[[FieldMap]]` stanza allows `weectl import` to take Cumulus data fields,
+perform the appropriate unit conversions and store the resulting values in 
+appropriate WeeWX archive fields. By default, imported Cumulus data is mapped 
+to the corresponding WeeWX archive fields using a default field map. The 
+default field map will likely suit most users; however, depending on the 
+station capabilities and the in-use WeeWX database schema, a custom field map 
+may be required if Cumulus monthly logs contain data from additional sensors
+that cannot be stored in the WeeWX archive using the default field map. A 
+custom field map also makes it possible to limit the Cumulus monthly log data 
+fields that are imported into WeeWX or to import Cumulus data into different 
+WeeWX fields.
+
+The `[[FieldMap]]` stanza consists of one entry per WeeWX archive field being 
+populated using the following format:
 
 ```
     [[[weewx_archive_field_name]]]
         source_field = cumulus_field_name
-        unit = weewx_unit_name | text
+        unit = weewx_unit_name
         cumulative = True | False
 ```
 
@@ -715,7 +725,8 @@ Where
 
 * `weewx_archive_field_name` is a field in the in-use WeeWX archive table 
   schema
-* `cumulus_field_name` is the name of a field in the Cumulus source data
+* `cumulus_field_name` is the name of a Cumulus source field as detailed in the 
+  _Available Cumulus import field names_ table below. 
 * `weewx_unit_name` is a WeeWX unit name; e.g., `degree_C`
 
 Each WeeWX archive field stanza supports the following options:
@@ -723,37 +734,174 @@ Each WeeWX archive field stanza supports the following options:
 * `source_field`. The name of the Cumulus field to be mapped to the WeeWX 
   archive field. Mandatory.
 * `unit`. The WeeWX unit name of the units used by `source_field`. Mandatory.
-* `cumulative`. Whether the source Cumulus field is a cumulative value or 
-  not (e.g., daily rainfall). Optional boolean value. Default is `False`.
+* `cumulative`. Whether the source field is a cumulative value or not (e.g.
+  , daily rainfall). Optional boolean value. Default is `False`.
 
-This mapping allows `weectl import` to take a source data field, perform the 
-appropriate unit conversion and store the resulting value in the appropriate 
-WeeWX archive field. A mapping is not required for every WeeWX archive field 
-(e.g., the source may not provide inside temperature so no `inTemp` field 
-mapping is required) and neither does every Cumulus field need to be 
-included in a mapping (e.g., the source data field `monthrain` may have no 
-use if the source data field `dayrain` provides the data for the WeeWX 
-archive `rain` field).
+!!! Note
+    The `unit` option setting for each field map entry will depend on the 
+    Cumulus settings used to generate the Cumulusy monthly log files. Depending 
+    on the Cumulus field type, the supported WeeWX units names for that field 
+    may only be a subset of the corresponding WeeWX unit names; e.g., WeeWX 
+    supports temperatures in Celsius, Fahrenheit and Kelvin, but Cumulus logs 
+    may only include temperatures in Celsius or Fahrenheit. Refer to 
+    [_Units_](../reference/units.md) for details of available WeeWX unit names. 
+'', '', '',
+                   '', '', '',
+                   '', '', '', '',
+                   'rain_counter', '', '',
+                   '', '', '',
+                   '', '', 'cur_et', '',
+                   '', '', '',
+                   '', 'day_rain_rg11', ''
+<table id="cumulus-avail-import-field-names-table" class="indent">
+    <caption>Available Cumulus import field names</caption>
+    <tbody>
+    <tr class="first_row">
+        <td>Field name</td>
+        <td>Description</td>
+    </tr>
+    <tr>
+        <td class="first_col code">datetime</td>
+        <td>date and time</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_slp</td>
+        <td>barometric pressure</td>
+    </tr>
+    <tr>
+        <td class="first_col code">annual_et</td>
+        <td>year evapotranspiration</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_dewpoint</td>
+        <td>dew point</td>
+    </tr>
+    <tr>
+        <td class="first_col code">avg_wind_bearing</td>
+        <td>wind direction</td>
+    </tr>
+    <tr>
+        <td class="first_col code">gust_wind_speed</td>
+        <td>wind gust speed</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_heatindex</td>
+        <td>heat index</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_out_hum</td>
+        <td>outside humidity</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_in_hum</td>
+        <td>inside humidity</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_windchill</td>
+        <td>windchill</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_app_temp</td>
+        <td>apparent temperature</td>
+    </tr>
+    <tr>
+        <td class="first_col code">latest_wind_gust</td>
+        <td>latest wind gust</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_wind_bearing</td>
+        <td>current wind direction</td>
+    </tr>
+    <tr>
+        <td class="first_col code">day_sunshine_hours</td>
+        <td>day sunshine hours</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_tmax_solar</td>
+        <td>current theoretical maximum solar radiation</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_solar</td>
+        <td>solar radiation</td>
+    </tr>
+    <tr>
+        <td class="first_col code">day_rain</td>
+        <td>day rainfall</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_rain_rate</td>
+        <td>rain rate</td>
+    </tr>
+    <tr>
+        <td class="first_col code">soiltemp</td>
+        <td>soil temperature</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_out_temp</td>
+        <td>outside temperature</td>
+    </tr>
+    <tr>
+        <td class="first_col code">curr_in_temp</td>
+        <td>inside temperature</td>
+    </tr>
+    <tr>
+        <td class="first_col code">midnight_rain</td>
+        <td>day rainfall</td>
+    </tr>
+    <tr>
+        <td class="first_col code">temp2</td>
+        <td>extra temperature 2</td>
+    </tr>
+    <tr>
+        <td class="first_col code">temp3</td>
+        <td>extra temperature 3</td>
+    </tr>
+    <tr>
+        <td class="first_col code">temp4</td>
+        <td>extra temperature 4</td>
+    </tr>
+    <tr>
+        <td class="first_col code">temp5</td>
+        <td>extra temperature 5</td>
+    </tr>
+    <tr>
+        <td class="first_col code">temp6</td>
+        <td>extra temperature 6</td>
+    </tr>
+    <tr>
+        <td class="first_col code">temp7</td>
+        <td>extra temperature 7</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_uv</td>
+        <td>UV index</td>
+    </tr>
+    <tr>
+        <td class="first_col code">avg_wind_speed</td>
+        <td>average wind speed</td>
+    </tr>
+    </tbody>
+</table>
 
+!!! Note
+    The above field names are internally generated by `weectl import` and do 
+    not represent any field names used within Cumulus. They have only been 
+    provided for use in the field map.
 
-For example, source CSV data with the following structure:
+A mapping is not required for every WeeWX archive field (e.g., the Cumulus 
+monthly logs do not provide altimeter data so no `altimeter` field mapping is 
+required) and neither does every Cumulus source field need to be included in a 
+mapping (e.g., the source data field `soilmoist` may have no use if the station 
+has no soil moisture sensor).
 
-```
-date_and_time,temp,humid,wind,dir,dayrain,rad,river,decsription
-23 May 2018 13:00,17.4,56,3.0,45,10.0,956,340,'cloudy'
-23 May 2018 13:05,17.6,56,1.0,22.5,10.4,746,341,'showers developing'
-```
-
-where `temp` is temperature in Celsius, `humid` is humidity in percent, 
-`wind` is wind speed in km/h, `dir` is wind direction in degrees, 
-`rainfall` is rain in mm, `rad` is radiation in watts per square meter, 
-`river` is river height in mm and `description` is a text field might use a 
-field map as follows:
+For example, the following field map might be used to import outside 
+temperature to WeeWX field `outTemp`, outside humidity to WeeWX field 
+`outHumidity` and extra temperature 1 to WeeWX field `poolTemp`: 
 
 ```
 [[FieldMap]]
     [[[dateTime]]]
-        source_field = date_and_time
+        source_field = datetime
         unit = unix_epoch
     [[[outTemp]]]
         source_field = temp
@@ -761,71 +909,26 @@ field map as follows:
     [[[outHumidity]]]
         source_field = humid
         unit = percent
-    [[[windSpeed]]]
-        source = wind
-        unit = km_per_hour
-    [[[windDir]]]
-        source_field = dir
-        unit = degree_compass
-    [[[rain]]]
-        source_field = dayrain
-        unit = mm
-        cumulative = True
-    [[[radiation]]]
-        source_field = rad
-        unit = watt_per_meter_squared
-    [[[outlook]]]
-        source_field = description
-        unit = text
-```
-
-If the same source CSV data included a field `unit_info` that contains 
-WeeWX unit system data as follows:
-
-```
-date_and_time,temp,humid,wind,dir,dayrain,rad,river,unit_info
-23 May 2018 13:00,17.4,56,3.0,45,0.0,956,340,1
-23 May 2018 13:05,17.6,56,1.0,22.5,0.4,746,341,16
-```
-
-then a field map such as the following might be used:
-
-```
-[[FieldMap]]
-    [[[dateTime]]]
-        source_field = date_and_time
-        unit = unix_epoch
-    [[[usUnits]]]
-        source_field = unit_info
-    [[[outTemp]]]
-        source_field = temp
-    [[[outHumidity]]]
-        source_field = humid
-    [[[windSpeed]]]
-        source = wind
-    [[[windDir]]]
-        source_field = dir
-    [[[rain]]]
-        source_field = dayrain
-        cumulative = True
-    [[[radiation]]]
-        source_field = rad
+    [[[poolTemp]]]
+        source = temp1
+        unit = degree_C
 ```
 
 !!! Note
     Any WeeWX archive fields that are derived (e.g., `dewpoint`) and for 
     which there is no field mapping may be calculated during import by use of 
-    the [`calc_missing`](#csv_calc_missing) option in the `[CSV]` section of 
-    the import configuration file.
+    the [`calc_missing`](#cumulus_calc_missing) option in the `[Cumulus]` 
+    section of the import configuration file.
 
 !!! Note
     The `dateTime` field map entry is a special case. Whereas other field 
-    map entries may use any supported WeeWX unit name, or no unit name if the 
-    `usUnits` field is populated, the `dateTime` field map entry must include 
-    the WeeWX unit name `unix_epoch`. This is because `weectl import` uses the 
-    [raw_datetime_format](#csv_raw_datetime_format) config option to convert 
-    the supplied date-time field data to a Unix epoch timestamp before the 
-    field map is applied.
+    map entries may use any WeeWX unit name for a unit supported by the 
+    import source, the `dateTime` field map entry must use the WeeWX unit 
+    name `unix_epoch`.
+
+
+The example Cumulus import configuration file located in the `util/import` 
+directory contains an example field map.
 
 
 ## [WD]
