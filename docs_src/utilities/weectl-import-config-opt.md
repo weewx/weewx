@@ -5,15 +5,13 @@ with the import type. The import configuration file is specified using the
 mandatory `--import-config` option. How you construct the import 
 configuration file is up to you; however, the recommended method is to copy 
 one of the example import configuration files located in the `util/import` 
-directory as applicable, modify the configuration options in the newly 
-copied file to suit the import to be performed and then use this file as the 
-import configuration file.
+directory, modify the configuration options in the newly copied file to suit 
+the import to be performed and then use this file as the import configuration 
+file.
 
 Following is the definitive guide to the options available in the import 
-configuration file. Default values are provided for a number of options, 
-meaning that if they are not listed in the import configuration file at all 
-`weectl import` will pick sensible values. When the documentation below gives a 
-default value this is the value that will be used if the option is omitted.
+configuration file. Where a default value is shown this is the value that will 
+be used if the option is omitted from the import configuration file.
 
 ### `source`{#import_config_source}
 
@@ -51,9 +49,10 @@ Optional, the default is `utf-8-sig`.
 
 ### `delimiter`{#csv_delimiter}
 
-The character used to separate fields. 
+The character used to separate fields. This parameter must be included in 
+quotation marks.
 
-Optional, the default is `,` (comma).
+Optional, the default is `','` (comma).
 
 ### `decimal`{#csv_decimal}
 
@@ -78,13 +77,13 @@ one of three methods:
 
 * The interval can be set to the same value as the `archive_interval` 
   setting under `[StdArchive]` in `weewx.conf`. This setting is useful if 
-  the data was recorded at fixed intervals but there are some missing 
+  the data was recorded at fixed intervals, but there are some missing 
   records and the fixed interval is the same as the `archive_interval` 
   setting under `[StdArchive]` in `weewx.conf`. Select this method by 
   setting `interval = conf`.
 
 * The interval can be set to a fixed number of minutes. This setting is 
-  useful if the source data was recorded at fixed intervals but there are 
+  useful if the source data was recorded at fixed intervals, but there are 
   some missing records and the fixed interval is different to the 
   `archive_interval` setting under `[StdArchive]` in `weewx.conf`. Select 
   this method by setting `interval = x` where `x` is an integer number of 
@@ -100,22 +99,23 @@ Optional, the default is `derive`.
 
 Determines whether simple quality control checks are applied to imported 
 data. Setting `qc = True` will result in `weectl import` applying the WeeWX 
-`StdQC` minimum and maximum checks to any imported observations. 
-`weectl import` quality control checks use the same configuration settings, 
-and operate in the same manner, as the [_StdQC_](../reference/weewx-options/stdqc.md) service. For example, for minimum/maximum quality checks, if an observation 
-falls outside of the quality control range for that observation, the observation 
-will be set to `None`. In such cases you will be alerted through a short 
-message similar to:
+`StdQC` minimum and maximum checks to any imported observations. Setting `qc 
+= False` will result in `weectl import` not applying quality control checks 
+to imported data. `weectl import` quality control checks use the same 
+configuration settings, and operate in the same manner, as the 
+[_StdQC_](../reference/weewx-options/stdqc.md) service. For example, for 
+minimum/maximum quality checks, if an observation falls outside of the 
+quality control range for that observation, the observation will be set to 
+`None`. In such cases you will be alerted through a log entry similar to:
 
 ```
-2016-01-12 10:00:00 AEST (1452556800) record value 'outTemp' 194.34 
-outside limits (0.0, 120.0)
+2023-11-04 16:59:01 wee_import[3795]: WARNING weewx.qc: 2023-10-05 18:30:00 
+AEST (1696494600) Archive value 'outTemp' 194.34 outside limits (0.0, 120.0)
 ```
 
-As derived observations are calculated after the quality control check is 
-applied, derived observations are not subject to quality control checks. 
-Setting `qc = False` will result in `weectl import` not applying quality 
-control checks to imported data.
+!!! Note
+    As derived observations are calculated after the quality control check is 
+    applied, derived observations are not subject to quality control checks. 
 
 Optional, the default is `True`.
 
@@ -136,8 +136,8 @@ Optional, the default is `True`.
 Determines whether invalid data in a source field is ignored or the import 
 aborted. If invalid data is found in a source field and 
 `ignore_invalid_data` is `True` the corresponding WeeWX destination field is
-set to `None` and the import continues. If invalid data is found in a source 
-field and `ignore_invalid_data` is `False` the import is aborted.
+set to `None` and the import continues. The import is aborted if 
+`ignore_invalid_data` is `False` and invalid data is found in a source field.
 
 Optional, the default is `True`.
 
@@ -332,15 +332,18 @@ The default is `0, 360`.
 
 ### `[[FieldMap]]`{#csv_fieldmap}
 
-The `[[FieldMap]]` stanza defines the mapping from the source data fields 
-to WeeWX archive fields. The map consists of one sub-stanza per WeeWX archive 
-field being populated using the following format:
+The `[[FieldMap]]` stanza defines the mapping from the import source data 
+fields to WeeWX archive fields. This allows `weectl import` to take a source 
+data field, perform the appropriate unit conversion and store the resulting 
+value in the appropriate WeeWX archive field. The map consists of one 
+sub-stanza per WeeWX archive field being populated using the following format:
 
 ```
     [[[weewx_archive_field_name]]]
         source_field = csv_field_name
-        unit = weewx_unit_name | text
+        unit = weewx_unit_name
         cumulative = True | False
+        is_text = True | False
 ```
 
 Where
@@ -352,23 +355,18 @@ Where
 
 Each WeeWX archive field stanza supports the following options:
 
-* `source_field`. The name of the CSV field to be mapped to the WeeWX 
-  archive field. Mandatory.
-* `unit`. The WeeWX unit name of the units used by `source_field`. Text 
-  fields may be imported by setting the unit option to `text`. Mandatory.
-* `cumulative`. Whether the source CSV field is a cumulative value or 
-  not (e.g., daily rainfall). Optional boolean value. Default is `False`.
+* `source_field`. The name of the CSV field to be mapped to the WeeWX archive 
+  field. Mandatory.
+* `unit`. The WeeWX unit name of the units used by `source_field`. Mandatory 
+  for non-text source fields. Ignored for source text fields.
+* `cumulative`. Whether the WeeWX archive field is to be derived from a 
+  cumulative source field (e.g., daily rainfall) or not. Optional boolean 
+  value. Default is `False`.
+* `is_text`. Whether the source field is to be imported as text or not. 
+  Optional boolean. Default is `False`.
 
-This mapping allows `weectl import` to take a source data field, perform the 
-appropriate unit conversion and store the resulting value in the 
-appropriate WeeWX archive field. Source data text fields may be mapped to 
-a WeeWX text archive field by using the second form of the field map entry 
-where the literal `text` is used in place of a WeeWX unit name. A mapping 
-is not required for every WeeWX archive field (e.g., the source may not 
-provide inside temperature so no `inTemp` field mapping is required) and 
-neither does every CSV field need to be included in a mapping (e.g., the 
-source data field `monthrain` may have no use if the source data field 
-`dayrain` provides the data for the WeeWX archive `rain` field).
+A mapping is not required for every WeeWX archive field and neither does 
+every CSV field need to be included in a mapping.
 
 !!! Note
     Importing of text data into text fields in the WeeWX archive is only 
@@ -377,26 +375,24 @@ source data field `monthrain` may have no use if the source data field
     [Storing text in the database](https://github.com/weewx/weewx/wiki/Storing-text-in-the-database) for details.
 
 If the source data includes a field that contains a WeeWX unit system code 
-(i.e. the equivalent of the WeeWX `usUnits` field such as may be obtained 
-from WeeWX or wview data) then this field can be mapped to the WeeWX 
-`usUnits` field and used to set the units used for all fields being 
-imported. In such cases, except for the `[[[dateTime]]]` field map entry, 
-the `weewx_unit_name` portion of the imported fields in the field map is 
-not used and may be omitted.
+(i.e. the equivalent of the WeeWX `usUnits` field such as may be obtained from 
+WeeWX or wview data) then this field may be mapped to the WeeWX `usUnits` 
+field and used to set the units used for all fields being imported. In such 
+cases, except for the `[[[dateTime]]]` field map entry, the `weewx_unit_name` 
+portion of the imported fields in the field map is not used and may be omitted.
 
 For example, source CSV data with the following structure:
 
 ```
 date_and_time,temp,humid,wind,dir,dayrain,rad,river,decsription
 23 May 2018 13:00,17.4,56,3.0,45,10.0,956,340,'cloudy'
-23 May 2018 13:05,17.6,56,1.0,22.5,10.4,746,341,'showers developing'
+23 May 2018 13:05,17.6,56,1.0,22.5,10.4,746,341,
 ```
 
-where `temp` is temperature in Celsius, `humid` is humidity in percent, 
-`wind` is wind speed in km/h, `dir` is wind direction in degrees, 
-`rainfall` is rain in mm, `rad` is radiation in watts per square meter, 
-`river` is river height in mm and `description` is a text field might use a 
-field map as follows:
+where `temp` is temperature in Celsius, `humid` is humidity in percent, `wind` 
+is wind speed in km/h, `dir` is wind direction in degrees, `rainfall` is rain 
+in mm, `rad` is radiation in watts per square meter, `river` is river height in 
+mm and `description` is a text field might use a field map as follows:
 
 ```
 [[FieldMap]]
@@ -424,16 +420,16 @@ field map as follows:
         unit = watt_per_meter_squared
     [[[outlook]]]
         source_field = description
-        unit = text
+        is_text = True
 ```
 
-If the same source CSV data included a field `unit_info` that contains 
-WeeWX unit system data as follows:
+If the same source CSV data included a field `unit_info` that contains WeeWX 
+unit system data as follows:
 
 ```
-date_and_time,temp,humid,wind,dir,dayrain,rad,river,unit_info
-23 May 2018 13:00,17.4,56,3.0,45,0.0,956,340,1
-23 May 2018 13:05,17.6,56,1.0,22.5,0.4,746,341,16
+date_and_time,temp,humid,wind,dir,dayrain,rad,river,decsription,unit_info
+23 May 2018 13:00,17.4,56,3.0,45,0.0,956,340,'cloudy',1
+23 May 2018 13:05,17.6,56,1.0,22.5,0.4,746,341,'showers developing',16
 ```
 
 then a field map such as the following might be used:
@@ -458,23 +454,25 @@ then a field map such as the following might be used:
         cumulative = True
     [[[radiation]]]
         source_field = rad
+    [[[outlook]]]
+        source_field = description
+        is_text = True
 ```
 
 !!! Note
-    Any WeeWX archive fields that are derived (e.g., `dewpoint`) and for 
-    which there is no field mapping may be calculated during import by use of 
+    Any WeeWX archive fields that are derived (e.g., `dewpoint`), and for 
+    which there is no field mapping, may be calculated during import by use of 
     the [`calc_missing`](#csv_calc_missing) option in the `[CSV]` section of 
     the import configuration file.
 
 !!! Note
-    The `dateTime` field map entry is a special case. Whereas other field 
-    map entries may use any supported WeeWX unit name, or no unit name if the 
+    The `dateTime` field map entry is a special case. Whereas other field map 
+    entries may use any supported WeeWX unit name, or no unit name if the 
     `usUnits` field is populated, the `dateTime` field map entry must include 
     the WeeWX unit name `unix_epoch`. This is because `weectl import` uses the 
     [raw_datetime_format](#csv_raw_datetime_format) config option to convert 
     the supplied date-time field data to a Unix epoch timestamp before the 
     field map is applied.
-
 
 ## [WU]
 
