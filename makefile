@@ -503,4 +503,4 @@ critic:
 	perlcritic -1 --verbose 8 pkg/mkchangelog.pl
 
 code-summary:
-	cloc --force-lang="HTML",tmpl --force-lang="INI",conf --force-lang="INI",inc src docs_src examples skins util
+	cloc --force-lang="HTML",tmpl --force-lang="INI",conf --force-lang="INI",inc src docs_src
