@@ -561,9 +561,9 @@ class Source(object):
                 # our existing field map to find it
                 for w, c in dict(_ext_map).items():
                     if c['source_field'] == config['source_field']:
-                        # found it, so pop the map entry from our base line map
+                        # found it, so pop the map entry from our baseline map
                         _map.pop(w)
-                # add ur field map extension entry to our base line map
+                # add ur field map extension entry to our baseline map
                 _map[field] = config
         # return the finished field map
         return _map
