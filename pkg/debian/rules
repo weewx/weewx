@@ -33,6 +33,7 @@ install:
 	dh_testroot
 	dh_prep
 	dh_installdirs
+	dh_installchangelogs
 
 # create the directory structure
 	mkdir -p $(DST_BINDIR)
@@ -49,9 +50,11 @@ install:
 	mkdir -p $(DST)/var/www/html/weewx
 	mkdir -p $(DST)/usr/share/doc/weewx
 
-# debian says we must have a copyright file
+# copyright, license, and upstream changelog
 	cp docs_src/copyright.md $(DST)/usr/share/doc/weewx/copyright
 	cp LICENSE.txt $(DST)/usr/share/doc/weewx/license
+	cp docs_src/changes.md $(DST)/usr/share/doc/weewx/changelog
+	dh_compress usr/share/doc/weewx/changelog
 
 # copy the weewx code
 	cp -r $(SRC)/src/* $(DST_BINDIR)
@@ -105,7 +108,6 @@ done
 	cp $(SRC)/debian/templates $(DST)/DEBIAN
 
 binary-indep: install
-	dh_installchangelogs
 	dh_fixperms
 	dh_installdeb
 	dh_gencontrol
