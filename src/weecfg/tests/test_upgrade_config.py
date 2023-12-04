@@ -129,7 +129,7 @@ class ConfigTest(unittest.TestCase):
     def test_upgrade_v43(self):
         """Test an upgrade of the stock v4.1 weewx.conf to V4.2"""
 
-        # Start with the Version 4.1 weewx.conf file:
+        # Start with the Version 4.2 weewx.conf file:
         config_dict = configobj.ConfigObj('weewx42.conf', encoding='utf-8')
 
         # Upgrade the V4.2 configuration dictionary to V4.3:
