@@ -19,6 +19,7 @@ set -e
 case "$1" in
 remove)
         # remove the startup configuration
+        systemctl disable weewx@
         systemctl disable weewx
         ;;
 

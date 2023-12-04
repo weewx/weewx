@@ -13,6 +13,7 @@ Description=WeeWX %i
 Documentation=https://weewx.com/docs
 Requires=time-sync.target
 After=time-sync.target
+PartOf=weewx.service
 
 [Service]
 ExecStart=weewxd --log-label weewxd-%i /etc/weewx/weewx-%i.conf

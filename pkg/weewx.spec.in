@@ -185,6 +185,7 @@ if [ "$1" = "1" ]; then
   # create a sane configuration file with simulator as the station type
   /usr/bin/weectl station reconfigure --config=%{cfg-file} --driver=weewx.drivers.simulator --no-prompt --no-backup
   systemctl enable weewx
+  systemctl enable weewx@
   systemctl start weewx
 elif [ "$1" = "2" ]; then
   # this is an upgrade
@@ -223,6 +224,7 @@ if [ "$1" = "0" ]; then
   # this is an uninstall, so stop and remove everything
   systemctl stop weewx
   systemctl disable weewx
+  systemctl disable weewx@
 fi
 # otherwise this is an upgrade (1), so do nothing
 
