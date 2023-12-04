@@ -5,18 +5,19 @@
 # if you do not want to sign the packages, set SIGN to 0
 SIGN=1
 
-# WWW server
+# the WeeWX WWW server
 WEEWX_COM:=weewx.com
-
-BLDDIR=build
-DSTDIR=dist
-
-# location of the html documentation
+# location of the html documentation on the WWW server
 WEEWX_HTMLDIR=/var/www/html
 # location of weewx downloads
 WEEWX_DOWNLOADS=$(WEEWX_HTMLDIR)/downloads
 # location for staging weewx package uploads
 WEEWX_STAGING=$(WEEWX_HTMLDIR)/downloads/development_versions
+
+# Directory for artifacts created during the build process
+BLDDIR=build
+# Directory for completed files that will be tested and/or distributed
+DSTDIR=dist
 # Location of doc sources
 DOC_SRC=docs_src
 # Location of built docs
@@ -25,7 +26,7 @@ DOC_BUILT=$(BLDDIR)/docs
 SKINLOC=src/weewx_data/skins
 
 CWD=$(shell pwd)
-# extract version to be used in package controls and labels
+# the current version is extracted from the pyproject.toml file
 VERSION:=$(shell sed -ne 's/^version = "\(.*\)"/\1/p;' pyproject.toml)
 # just the major.minor part of the version
 MMVERSION:=$(shell echo "$(VERSION)" | sed -e 's%.[0-9a-z]*$$%%')
@@ -45,9 +46,9 @@ help: info
 	@echo "          info  display values of variables we care about"
 	@echo "       version  get version from pyproject.toml and insert elsewhere"
 	@echo ""
-	@echo " debian-changelog prepend stub changelog entry for debian"
-	@echo " redhat-changelog prepend stub changelog entry for redhat"
-	@echo "   suse-changelog prepend stub changelog entry for suse"
+	@echo " debian-changelog  prepend stub changelog entry for debian"
+	@echo " redhat-changelog  prepend stub changelog entry for redhat"
+	@echo "   suse-changelog  prepend stub changelog entry for suse"
 	@echo ""
 	@echo "  pypi-package  create wheel and source tarball for pypi"
 	@echo "debian-package  create the debian package(s)"
