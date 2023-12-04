@@ -16,6 +16,7 @@ trust weewx.com, and know where to find the WeeWX releases.
 1. Tell your system to trust weewx.com.
 
     ```{.shell .copy}
+    sudo apt install -y wget gnupg
     wget -qO - https://weewx.com/keys.html | \
         sudo gpg --dearmor --output /etc/apt/trusted.gpg.d/weewx.gpg
     ```
@@ -27,16 +28,12 @@ trust weewx.com, and know where to find the WeeWX releases.
         sudo tee /etc/apt/sources.list.d/weewx.list
     ```
 
-If you encounter errors, please consult the
-[FAQ](https://github.com/weewx/weewx/wiki/faq-apt-key-problems).
-
 
 ## Install
 
 Use `apt` to install WeeWX. The installer will prompt for a location,
 latitude/longitude, altitude, station type, and parameters specific to your
-station hardware.  When you are done, WeeWX will be running in the background
-as a daemon.
+station hardware.  When you are done, WeeWX will be running in the background.
 
 ```{.shell .copy}
 sudo apt update

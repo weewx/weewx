@@ -30,7 +30,7 @@ trust weewx.com, and know where to find the WeeWX releases.
 ## Install
 
 Install WeeWX using `zypper`. When you are done, WeeWX will be running the
-`Simulator` in the background as a daemon.
+`Simulator` in the background.
 
 ```
 sudo zypper install weewx

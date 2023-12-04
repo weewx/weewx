@@ -30,7 +30,7 @@ trust weewx.com, and know where to find the WeeWX releases.
 ## Install
 
 Install WeeWX using `yum` or `dnf`. When you are done, WeeWX will be running
-the `Simulator` in the background as a daemon.
+the `Simulator` in the background.
 
 ```{.shell .copy}
 sudo yum install weewx

@@ -70,22 +70,31 @@ the user doing the install. However, old installations can continue to use
 
 ### New location for `user` directory
 
-This affects users who are using a package installer (such as from Debian or RPM
-packages). Users who used a `setup.py` install are not affected.
+This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
+that use the DEB or RPM packages). Installations that use a `setup.py` install
+are not affected.
 
-The package installers for previous versions of WeeWX would install any Python
-code used by extensions alongside other code, usually in
-`/usr/share/weewx/user`.
+Previous versions of WeeWX would install code used by extensions alongside
+other WeeWX code, usually in `/usr/share/weewx/user`.
 
-However, Version 5 strives to keep user data separate from code. The `user`
-directory is now located with other user data in `/etc/weewx/`, specifically in
-`/etc/weewx/bin/user`. You will have to either reinstall any extensions, or
-manually copy over the `user` directory. For example,
+With version 5, the `user` directory is kept with other station data, separate
+from the WeeWX code.  For DEB and RPM installations, the `user` directory is
+now `/etc/weewx/bin/user`.  If you upgrade a DEB or RPM installation, any
+extensions that were installed in `/usr/share/weewx/user` will be copied to
+`/etc/weewx/bin/user`, and the old `user` directory will be moved aside.
 
-``` {.shell .copy}
-sudo mkdir /etc/weewx/bin
-cp -r /usr/share/weewx/user/ /etc/weewx/bin/
-```
+### The value of `WEEWX_ROOT`
+
+Previous versions of WeeWX that were installed using `apt`, `yum`, or `zypper`
+(installs that use the DEB or RPM packages) used `/` as the value for
+`WEEWX_ROOT`.
+
+In version 5, a value of `/` will be treated as `/etc/weewx`.
+
+The actual value in the configuration file will *not* be modified by the
+upgrade process, but if you explicitly upgrade the configuration file using
+`weectl station upgrade`, then `WEEWX_ROOT=/` will be changed to
+`WEEWX_ROOT=/etc/weewx`.
 
 ### New utilities
 
