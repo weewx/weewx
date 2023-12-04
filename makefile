@@ -380,7 +380,17 @@ release:
 ###############################################################################
 ## repository management targets
 
-# this is only used when creating a new apt repository from scratch
+# update the repository html index files, without touching the contents of the
+# repositories.  this is rarely necessary, since the index files are included
+# in the pull/push cycle of repository maintenance.  it is needed when the
+# operating systems make changes that are not backward compatible, for example
+# when debian deprecated the use of apt-key.
+upload-repo-index:
+	scp pkg/index-apt.html $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/public/index.html
+	scp pkg/index-yum.html $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/index.html
+	scp pkg/index-suse.html $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/index.html
+
+# 'apt-repo' is only used when creating a new apt repository from scratch
 # the .html and .list files are not part of an official apt repository.  they
 # are included to make the repository self-documenting.
 apt-repo:
@@ -420,6 +430,9 @@ push-apt-repo:
 release-apt-repo:
 	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz /var/www/html/aptly-test/ /var/www/html/aptly"
 
+# 'yum-repo' is only used when creating a new yum repository from scratch
+# the index.html is not part of an official rpm repository.  it is included
+# to make the repository self-documenting.
 YUM_REPO=~/.yum/weewx
 yum-repo:
 	mkdir -p $(YUM_REPO)/{el7,el8,el9}/RPMS
@@ -445,6 +458,9 @@ push-yum-repo:
 release-yum-repo:
 	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz /var/www/html/yum-test/ /var/www/html/yum"
 
+# 'suse-repo' is only used when creating a new suse repository from scratch
+# the index.html is not part of an official rpm repository.  it is included
+# to make the repository self-documenting.
 SUSE_REPO=~/.suse/weewx
 suse-repo:
 	mkdir -p $(SUSE_REPO)/{suse12,suse15}/RPMS

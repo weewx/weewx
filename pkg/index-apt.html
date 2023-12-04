@@ -53,10 +53,10 @@ wget -qO - https://weewx.com/keys.html | sudo gpg --dearmor --output /etc/apt/tr
 
 <h2>Tell apt where to find the WeeWX repository</h2>
 
-For WeeWX5 and Python3 (debian 10 and later):
+For Debian10 and later (WeeWX5 and Python3):
 <pre class='tty'>echo "deb [arch=all] https://weewx.com/apt/python3 buster main" | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
 
-For WeeWX4 and Python2 (debian 9 and earlier):
+For Debian9 and earlier (WeeWX4 and Python2):
 <pre class='tty'>echo "deb [arch=all] https://weewx.com/apt/python2 squeeze main" | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
 
 <h2>Install and/or Upgrade WeeWX</h2>
