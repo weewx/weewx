@@ -102,7 +102,7 @@ class BaseWrapper(object):
                 else:
                     log.debug("Bad wake-up response from Vantage console: %s", _resp)
             except weewx.WeeWxIOError as e:
-                log.debug("Wake up try %d failed. Exception: %s", e)
+                log.debug("Wake up try %d failed. Exception: %s", count, e)
 
             log.debug("Retry #%d unable to wake up console... sleeping", count)
             print("Unable to wake up console... sleeping")
