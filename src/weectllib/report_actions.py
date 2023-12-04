@@ -28,7 +28,7 @@ def list_reports(config_path):
     print(f"Using configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
 
     # Customize the logging with user settings.
-    weeutil.logger.setup('wee_report', config_dict)
+    weeutil.logger.setup('weectl-report', config_dict)
 
     print(
         f"\n{bcolors.BOLD}{'Report' : >20}  {'Skin':<12} {'Enabled':^8} {'Units':^8} {'Language':^8}{bcolors.ENDC}")

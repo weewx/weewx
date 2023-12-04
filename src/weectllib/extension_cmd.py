@@ -124,7 +124,7 @@ def _get_extension_engine(config_path, dry_run=False, verbosity=1):
     weewx.debug = to_int(config_dict.get('debug', 0))
 
     # Customize the logging with user settings.
-    weeutil.logger.setup('wee_extension', config_dict)
+    weeutil.logger.setup('weectl-extension', config_dict)
 
     ext = weecfg.extension.ExtensionEngine(config_path=config_path,
                                            config_dict=config_dict,

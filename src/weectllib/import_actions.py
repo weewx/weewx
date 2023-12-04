@@ -54,7 +54,7 @@ def obs_import(config, import_config, **kwargs):
     weewx.debug = weeutil.weeutil.to_int(config_dict.get('debug', 0))
 
     # Set up any customized logging:
-    weeutil.logger.setup('wee_import', config_dict)
+    weeutil.logger.setup('weectl-import', config_dict)
 
     # to do anything more we need an import config file, check if one was
     # provided
