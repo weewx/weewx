@@ -332,11 +332,11 @@ The default is `0, 360`.
 
 ### `[[FieldMap]]`{#csv_fieldmap}
 
-The `[[FieldMap]]` stanza defines the mapping from the import source data 
-fields to WeeWX archive fields. This allows `weectl import` to take a source 
-data field, perform the appropriate unit conversion and store the resulting 
-value in the appropriate WeeWX archive field. The map consists of one 
-sub-stanza per WeeWX archive field being populated using the following format:
+The `[[FieldMap]]` stanza defines the mapping from the CSV source data fields
+to WeeWX archive fields. This allows `weectl import` to take a source data 
+field, perform the appropriate unit conversion and store the resulting value in 
+the appropriate WeeWX archive field. The map consists of one sub-stanza per 
+WeeWX archive field being populated using the following format:
 
 ```
     [[[weewx_archive_field_name]]]
@@ -474,10 +474,11 @@ then a field map such as the following might be used:
     the supplied date-time field data to a Unix epoch timestamp before the 
     field map is applied.
 
+
 ## [WU]
 
-The `[WU]` section contains the options relating to the import of 
-observational data from a Weather Underground PWS history.
+The `[WU]` section contains the options relating to the import of observational 
+data from a Weather Underground PWS history.
 
 ### `station_id`{#wu_station_id}
 
@@ -493,21 +494,21 @@ The Weather Underground API key to be used to obtain the PWS history data.
 Mandatory, there is no default.
 
 !!! Note
-    The API key is a seemingly random string of 32 characters used to 
-    access the new (2019) Weather Underground API. PWS contributors can 
-    obtain an API key by logging onto the Weather Underground internet 
-    site and accessing 'Member Settings'. 16 character API keys used with the 
-    previous Weather Underground API are not supported.
+    The API key is a seemingly random string of 32 characters used to access 
+    the new (2019) Weather Underground API. PWS contributors can obtain an API 
+    key by logging onto the Weather Underground internet site and accessing 
+    'Member Settings'. 16 character API keys used with the previous Weather 
+    Underground API are not supported.
 
 ### `interval`{#wu_interval}
 
 Determines how the time interval (WeeWX database field `interval`) between 
-successive observations is determined. This option is identical in 
-operation to the CSV [interval](#csv_interval) option, but applies to 
-Weather Underground imports only. As a Weather Underground PWS history 
-sometimes has missing records, the use of `interval = derive` may give 
-incorrect or inconsistent interval values. Better results may be obtained 
-by using `interval = conf` if the current WeeWX installation has the same 
+successive observations is determined. This option is identical in operation 
+to the CSV [interval](#csv_interval) option, but applies to Weather 
+Underground imports only. As a Weather Underground PWS history sometimes has 
+missing records, the use of `interval = derive` may give incorrect or 
+inconsistent interval values. Better results may be obtained by using 
+`interval = conf` if the current WeeWX installation has the same 
 `archive_interval` as the Weather Underground data, or by using `interval 
 = x` where `x` is the time interval in minutes used to upload the Weather 
 Underground data. The most appropriate setting will depend on the 
@@ -519,20 +520,21 @@ Optional, the default is `derive`.
 ### `qc`{#wu_qc}
 
 Determines whether simple quality control checks are applied to imported 
-data. This option is identical in operation to the CSV [qc](#csv_qc) 
-option but applies to Weather Underground imports only. As Weather 
-Underground imports at times contain nonsense values, particularly for 
-fields for which no data was uploaded to Weather Underground by the PWS, 
-the use of quality control checks on imported data can prevent these 
-nonsense values from being imported and contaminating the WeeWX database.
+data. This option is identical in operation to the CSV [qc](#csv_qc) option 
+but applies to Weather Underground imports only. As Weather Underground 
+imports at times contain nonsense values, particularly for fields for which 
+no data was uploaded to Weather Underground by the PWS, the use of quality 
+control checks on imported data can prevent these nonsense values from being 
+imported and contaminating the WeeWX database.
 
 Optional, the default is `True`.
 
 ### `calc_missing`{#wu_calc_missing}
 
-Determines whether any missing derived observations will be calculated 
-from the imported data. This option is identical in operation to the CSV 
-[calc_missing](#csv_calc_missing)" option but applies to Weather Underground imports only.
+Determines whether any missing derived observations will be calculated from 
+the imported data. This option is identical in operation to the CSV 
+[calc_missing](#csv_calc_missing) option but applies to Weather Underground 
+imports only.
 
 Optional, the default is `True`.
 
@@ -540,8 +542,8 @@ Optional, the default is `True`.
 
 Determines whether invalid data in a source field is ignored or the import 
 aborted. This option is identical in operation to the CSV 
-[ignore_invalid_data](#csv_ignore_invalid_data) option but applies to 
-Weather Underground imports only.
+[ignore_invalid_data](#csv_ignore_invalid_data) option but applies to Weather 
+Underground imports only.
 
 Optional, the default is `True`.
 
@@ -556,10 +558,137 @@ Optional, the default is `250` which should suit most users.
 ### `wind_direction`{#wu_wind_direction}
 
 Determines the range of acceptable wind direction values in degrees. This 
-option is identical in operation to the CSV [wind_direction](#csv_wind_direction)
-option but applies to Weather Underground imports only.
+option is identical in operation to the CSV 
+[wind_direction](#csv_wind_direction) option but applies to Weather 
+Underground imports only.
 
 Optional, the default is `0, 360`.
+
+### `[[FieldMap]]`{#wu_fieldmap}
+
+The `[[FieldMap]]` stanza defines the mapping from the Weather Underground 
+source data fields to WeeWX archive fields. This allows `weectl import` to 
+take a source data field, perform the appropriate unit conversion and store 
+the resulting value in the appropriate WeeWX archive field. Weather 
+Undergroundimports use a simplified map that consists of one sub-stanza per 
+WeeWX archive field being populated using the following format:
+
+```
+    [[[weewx_archive_field_name]]]
+        source_field = wu_field_name
+```
+
+Where
+
+* `weewx_archive_field_name` is a field in the in-use WeeWX archive table 
+  schema
+* `wu_field_name` is the name of a Weather Underground source field as 
+  detailed in the _Available Weather Underground import field names_ table 
+  below. 
+
+Each WeeWX archive field stanza supports the following option:
+
+* `source_field`. The name of the Cumulus field to be mapped to the WeeWX 
+  archive field. Mandatory.
+
+A mapping is not required for every WeeWX archive field and neither does 
+every Weather Underground field need to be included in a mapping.
+
+<table id="wu-avail-import-field-names-table" class="indent">
+    <caption>Available Weather Underground import field names</caption>
+    <tbody>
+    <tr class="first_row">
+        <td>Field name</td>
+        <td>Description</td>
+    </tr>
+    <tr>
+        <td class="first_col code">epoch</td>
+        <td>Date and time</td>
+    </tr>
+    <tr>
+        <td class="first_col code">dewptAvg</td>
+        <td>Current dewpoint</td>
+    </tr>
+    <tr>
+        <td class="first_col code">heatindexAvg</td>
+        <td>Current heat index</td>
+    </tr>
+    <tr>
+        <td class="first_col code">humidityAvg</td>
+        <td>Current outside Humidity</td>
+    </tr>
+    <tr>
+        <td class="first_col code">precipRate</td>
+        <td>Current rain rate</td>
+    </tr>
+    <tr>
+        <td class="first_col code">precipTotal</td>
+        <td>Rainfall since midnight</td>
+    </tr>
+    <tr>
+        <td class="first_col code">pressureAvg</td>
+        <td>Current barometric pressure</td>
+    </tr>
+    <tr>
+        <td class="first_col code">solarRadiationHigh</td>
+        <td>Current solar radiation</td>
+    </tr>
+    <tr>
+        <td class="first_col code">tempAvg</td>
+        <td>Outside temperature</td>Current o
+    </tr>
+    <tr>
+        <td class="first_col code">uvHigh</td>
+        <td>Current UV index</td>
+    </tr>
+    <tr>
+        <td class="first_col code">windchillAvg</td>
+        <td>Current windchill</td>
+    </tr>
+    <tr>
+        <td class="first_col code">winddirAvg</td>
+        <td>Current wind direction</td>
+    </tr>
+    <tr>
+        <td class="first_col code">windgustHigh</td>
+        <td>Current wind gust</td>
+    </tr>
+    <tr>
+        <td class="first_col code">windspeedAvg</td>
+        <td>Current average wind speed</td>
+    </tr>
+    </tbody>
+</table>
+
+!!! Note
+    The above field names are internally generated by `weectl import` and do 
+    not represent any field names used within Weather Underground. They have 
+    only been provided for use in the field map.
+
+For example, the following field map might be used to import outside 
+temperature to WeeWX field `outTemp`, outside humidity to WeeWX field 
+`outHumidity` and rainfall to WeeWX field `rain`: 
+
+```
+[[FieldMap]]
+    [[[dateTime]]]
+        source_field = epoch
+    [[[outTemp]]]
+        source_field = tempAvg
+    [[[outHumidity]]]
+        source_field = humidityAvg
+    [[[rain]]]
+        source = precipTotal
+```
+
+!!! Note
+    Any WeeWX archive fields that are derived (e.g., `dewpoint`) and for 
+    which there is no field mapping may be calculated during import by use 
+    of the [`calc_missing`](#wu_calc_missing) option in the `[WU]` section 
+    of the import configuration file.
+
+The example Weather Underground import configuration file located in the 
+`util/import` directory contains an example field map.
 
 
 ## [Cumulus]
@@ -569,16 +698,16 @@ observational data from Cumulus monthly log files.
 
 ### `directory`{#cumulus_directory}
 
-The full path to the directory containing the Cumulus monthly log files to 
-be imported. Do not include a trailing `/`. 
+The full path to the directory containing the Cumulus monthly log files to be 
+imported. Do not include a trailing `/`. 
 
 Mandatory, there is no default.
 
 ### `source_encoding`{#cumulus_encoding}
 
-The Cumulus monthly log file encoding. This option is identical in 
-operation to the CSV [source_encoding](#csv_encoding) option but applies 
-to Cumulus imports only.
+The Cumulus monthly log file encoding. This option is identical in operation 
+to the CSV [source_encoding](#csv_encoding) option but applies to Cumulus 
+imports only.
 
 Optional, the default is `utf-8-sig`.
 
@@ -591,9 +720,9 @@ log file imports only. As Cumulus monthly log files can, at times, have
 missing entries, the use of `interval = derive` may give incorrect or 
 inconsistent interval values. Better results may be obtained by using 
 `interval = conf` if the `archive_interval` for the current WeeWX 
-installation is the same as the Cumulus 'data log interval' setting used 
-to generate the Cumulus monthly log files, or by using `interval = x` where
-`x` is the time interval in minutes used as the Cumulus 'data log interval' 
+installation is the same as the Cumulus 'data log interval' setting used to 
+generate the Cumulus monthly log files, or by using `interval = x` where `x` 
+is the time interval in minutes used as the Cumulus 'data log interval' 
 setting. The most appropriate setting will depend on the completeness and 
 (time) accuracy of the Cumulus data being imported.
 
@@ -622,48 +751,48 @@ file. A solidus (/) is frequently used, but it may be another character
 depending on the settings on the machine that produced the Cumulus monthly 
 log files. This parameter must be included in quotation marks.
 
-Optional, the default is `/`.
+Optional, the default is `'/'`.
 
 ### `delimiter`{#cumulus_delimiter}
 
 The character used as the field delimiter in the Cumulus monthly log file. 
-A comma is frequently used, but it may be another character depending on 
-the settings on the machine that produced the Cumulus monthly log files. 
-This parameter must be included in quotation marks.
+A comma is frequently used, but it may be another character depending on the 
+settings on the machine that produced the Cumulus monthly log files. This 
+parameter must be included in quotation marks.
 
-Optional, the default is `,`.
+Optional, the default is `','`.
 
 ### `decimal`{#cumulus_decimal}
 
-The character used as the decimal point in the Cumulus monthly log files. 
-A period is frequently used, but it may be another character depending 
-on the settings on the machine that produced the Cumulus monthly log files.
-This parameter must be included in quotation marks.
+The character used as the decimal point in the Cumulus monthly log files. A 
+period is frequently used, but it may be another character depending on the 
+settings on the machine that produced the Cumulus monthly log files. This 
+parameter must be included in quotation marks.
 
-Optional, the default is `.`.
+Optional, the default is `'.'`.
 
 ### `ignore_invalid_data`{#cumulus_ignore_invalid_data}
 
 Determines whether invalid data in a source field is ignored or the import 
 aborted. This option is identical in operation to the CSV 
-[ignore_invalid_data](#csv_ignore_invalid_data)option but applies to 
-Cumulus monthly log file imports only.
+[ignore_invalid_data](#csv_ignore_invalid_data) option but applies to Cumulus 
+monthly log file imports only.
 
 Optional, the default is `True`.
 
 ### `tranche`{#cumulus_tranche}
 
-The number of records written to the WeeWX database in each transaction. 
-This option is identical in operation to the CSV [tranche](#csv_tranche) 
-option but applies to Cumulus monthly log file imports only.
+The number of records written to the WeeWX database in each transaction. This 
+option is identical in operation to the CSV [tranche](#csv_tranche) option 
+but applies to Cumulus monthly log file imports only.
 
 Optional, the default is `250` which should suit most users.
 
 ### `UV_sensor`{#cumulus_UV}
 
 Enables `weectl import` to distinguish between the case where a UV sensor is 
-present and the UV index is 0 and the case where no UV sensor is present and 
-UV index is 0. This option is identical in operation to the CSV 
+present and the UV index is 0 and where no UV sensor is present and the UV 
+index is 0. This option is identical in operation to the CSV 
 [UV_sensor](#csv_UV) option but applies to Cumulus monthly log file imports 
 only.
 
@@ -672,85 +801,62 @@ Optional, the default is `True`.
 ### `solar_sensor`{#cumulus_solar}
 
 Enables `weectl import` to distinguish between the case where a solar 
-radiation sensor is present and the solar radiation is 0 and the case 
-where no solar radiation sensor is present and solar radiation is 0. This 
-option is identical in operation to the CSV [solar_sensor](#csv_solar) 
-option but applies to Cumulus monthly log file imports only.
+radiation sensor is present and solar radiation is 0 and where no solar 
+radiation sensor is present and solar radiation is 0. This option is 
+identical in operation to the CSV [solar_sensor](#csv_solar) option but 
+applies to Cumulus monthly log file imports only.
 
 Optional, the default is `True`.
 
-### `[[Units]]`{#cumulus_units}
-
-The `[[Units]]` stanza defines the units used in the Cumulus monthly log 
-files. Units settings are required for `temperature`, `pressure`, `rain` 
-and `speed`. The format for each setting is:
-
-```
-obs_type = weewx_unit_name
-```
-
-Where `obs_type` is one of `temperature`, `pressure`, `rain` or `speed` 
-and `weewx_unit_name` is the WeeWX unit name of the units used by that 
-particular `obs_type`. As Cumulus supports a different suite of possible 
-units only a subset of the available WeeWX unit names can be used for some 
-settings.
-
 ### `[[FieldMap]]`{#cumulus_fieldmap}
 
-The `[[FieldMap]]` stanza allows `weectl import` to take Cumulus data fields,
-perform the appropriate unit conversions and store the resulting values in 
-appropriate WeeWX archive fields. By default, imported Cumulus data is mapped 
-to the corresponding WeeWX archive fields using a default field map. The 
-default field map will likely suit most users; however, depending on the 
-station capabilities and the in-use WeeWX database schema, a custom field map 
-may be required if Cumulus monthly logs contain data from additional sensors
-that cannot be stored in the WeeWX archive using the default field map. A 
-custom field map also makes it possible to limit the Cumulus monthly log data 
-fields that are imported into WeeWX or to import Cumulus data into different 
-WeeWX fields.
-
-The `[[FieldMap]]` stanza consists of one entry per WeeWX archive field being 
-populated using the following format:
+The `[[FieldMap]]` stanza defines the mapping from the Cumulus source data 
+fields to WeeWX archive fields. This allows `weectl import` to take a source 
+data field, perform the appropriate unit conversion and store the resulting 
+value in the appropriate WeeWX archive field. The map consists of one 
+sub-stanza per WeeWX archive field being populated using the following 
+format:
 
 ```
     [[[weewx_archive_field_name]]]
         source_field = cumulus_field_name
         unit = weewx_unit_name
         cumulative = True | False
+        is_text = True | False
 ```
 
 Where
 
 * `weewx_archive_field_name` is a field in the in-use WeeWX archive table 
   schema
-* `cumulus_field_name` is the name of a Cumulus source field as detailed in the 
-  _Available Cumulus import field names_ table below. 
+* `cumulus_field_name` is the name of a Cumulus source field as detailed in 
+  the _Available Cumulus import field names_ table below. 
 * `weewx_unit_name` is a WeeWX unit name; e.g., `degree_C`
+* `is_text`. Whether the source field is to be imported as text or not. 
+  Optional boolean. Default is `False`.
 
 Each WeeWX archive field stanza supports the following options:
 
 * `source_field`. The name of the Cumulus field to be mapped to the WeeWX 
   archive field. Mandatory.
 * `unit`. The WeeWX unit name of the units used by `source_field`. Mandatory.
-* `cumulative`. Whether the source field is a cumulative value or not (e.g.
-  , daily rainfall). Optional boolean value. Default is `False`.
+* `cumulative`. Whether the WeeWX archive field is to be derived from a 
+  cumulative source field (e.g., daily rainfall) or not. Optional boolean 
+  value. Default is `False`.
+
+A mapping is not required for every WeeWX archive field and neither does 
+every Cumulus field need to be included in a mapping.
 
 !!! Note
     The `unit` option setting for each field map entry will depend on the 
-    Cumulus settings used to generate the Cumulusy monthly log files. Depending 
-    on the Cumulus field type, the supported WeeWX units names for that field 
-    may only be a subset of the corresponding WeeWX unit names; e.g., WeeWX 
-    supports temperatures in Celsius, Fahrenheit and Kelvin, but Cumulus logs 
-    may only include temperatures in Celsius or Fahrenheit. Refer to 
-    [_Units_](../reference/units.md) for details of available WeeWX unit names. 
-'', '', '',
-                   '', '', '',
-                   '', '', '', '',
-                   'rain_counter', '', '',
-                   '', '', '',
-                   '', '', 'cur_et', '',
-                   '', '', '',
-                   '', 'day_rain_rg11', ''
+    Cumulus settings used to generate the Cumulus monthly log files. 
+    Depending on the Cumulus field type, the supported WeeWX units names 
+    for that field may only be a subset of the corresponding WeeWX unit 
+    names; e.g., WeeWX supports temperatures in Celsius, Fahrenheit and 
+    Kelvin, but Cumulus logs may only include temperatures in Celsius or 
+    Fahrenheit. Refer to [_Units_](../reference/units.md) for details of 
+    available WeeWX unit names. 
+
 <table id="cumulus-avail-import-field-names-table" class="indent">
     <caption>Available Cumulus import field names</caption>
     <tbody>
@@ -760,123 +866,107 @@ Each WeeWX archive field stanza supports the following options:
     </tr>
     <tr>
         <td class="first_col code">datetime</td>
-        <td>date and time</td>
-    </tr>
-    <tr>
-        <td class="first_col code">cur_slp</td>
-        <td>barometric pressure</td>
+        <td>Date and time</td>
     </tr>
     <tr>
         <td class="first_col code">annual_et</td>
-        <td>year evapotranspiration</td>
-    </tr>
-    <tr>
-        <td class="first_col code">cur_dewpoint</td>
-        <td>dew point</td>
-    </tr>
-    <tr>
-        <td class="first_col code">avg_wind_bearing</td>
-        <td>wind direction</td>
-    </tr>
-    <tr>
-        <td class="first_col code">gust_wind_speed</td>
-        <td>wind gust speed</td>
-    </tr>
-    <tr>
-        <td class="first_col code">cur_heatindex</td>
-        <td>heat index</td>
-    </tr>
-    <tr>
-        <td class="first_col code">cur_out_hum</td>
-        <td>outside humidity</td>
-    </tr>
-    <tr>
-        <td class="first_col code">cur_in_hum</td>
-        <td>inside humidity</td>
-    </tr>
-    <tr>
-        <td class="first_col code">cur_windchill</td>
-        <td>windchill</td>
-    </tr>
-    <tr>
-        <td class="first_col code">cur_app_temp</td>
-        <td>apparent temperature</td>
-    </tr>
-    <tr>
-        <td class="first_col code">latest_wind_gust</td>
-        <td>latest wind gust</td>
-    </tr>
-    <tr>
-        <td class="first_col code">cur_wind_bearing</td>
-        <td>current wind direction</td>
-    </tr>
-    <tr>
-        <td class="first_col code">day_sunshine_hours</td>
-        <td>day sunshine hours</td>
-    </tr>
-    <tr>
-        <td class="first_col code">cur_tmax_solar</td>
-        <td>current theoretical maximum solar radiation</td>
-    </tr>
-    <tr>
-        <td class="first_col code">cur_solar</td>
-        <td>solar radiation</td>
-    </tr>
-    <tr>
-        <td class="first_col code">day_rain</td>
-        <td>day rainfall</td>
-    </tr>
-    <tr>
-        <td class="first_col code">cur_rain_rate</td>
-        <td>rain rate</td>
-    </tr>
-    <tr>
-        <td class="first_col code">soiltemp</td>
-        <td>soil temperature</td>
-    </tr>
-    <tr>
-        <td class="first_col code">cur_out_temp</td>
-        <td>outside temperature</td>
-    </tr>
-    <tr>
-        <td class="first_col code">curr_in_temp</td>
-        <td>inside temperature</td>
-    </tr>
-    <tr>
-        <td class="first_col code">midnight_rain</td>
-        <td>day rainfall</td>
-    </tr>
-    <tr>
-        <td class="first_col code">temp2</td>
-        <td>extra temperature 2</td>
-    </tr>
-    <tr>
-        <td class="first_col code">temp3</td>
-        <td>extra temperature 3</td>
-    </tr>
-    <tr>
-        <td class="first_col code">temp4</td>
-        <td>extra temperature 4</td>
-    </tr>
-    <tr>
-        <td class="first_col code">temp5</td>
-        <td>extra temperature 5</td>
-    </tr>
-    <tr>
-        <td class="first_col code">temp6</td>
-        <td>extra temperature 6</td>
-    </tr>
-    <tr>
-        <td class="first_col code">temp7</td>
-        <td>extra temperature 7</td>
-    </tr>
-    <tr>
-        <td class="first_col code">cur_uv</td>
-        <td>UV index</td>
+        <td>Annual evapotranspiration</td>
     </tr>
     <tr>
         <td class="first_col code">avg_wind_speed</td>
-        <td>average wind speed</td>
+        <td>Average wind speed</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_app_temp</td>
+        <td>Current apparent temperature</td>
+    </tr>
+    <tr>
+        <td class="first_col code">avg_wind_bearing</td>
+        <td>Current wind direction</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_dewpoint</td>
+        <td>Current dew point</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_et</td>
+        <td>Evapotranspiration</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_heatindex</td>
+        <td>Current heat index</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_in_hum</td>
+        <td>Current inside humidity</td>
+    </tr>
+    <tr>
+        <td class="first_col code">curr_in_temp</td>
+        <td>Current inside temperature</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_out_hum</td>
+        <td>Current outside humidity</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_out_temp</td>
+        <td>Current outside temperature</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_rain_rate</td>
+        <td>Current rain rate</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_slp</td>
+        <td>Current barometric pressure</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_solar</td>
+        <td>Current solar radiation</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_tmax_solar</td>
+        <td>Current theoretical maximum solar radiation</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_uv</td>
+        <td>Current UV index</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_wind_bearing</td>
+        <td>Current wind direction</td>
+    </tr>
+    <tr>
+        <td class="first_col code">cur_windchill</td>
+        <td>Current windchill</td>
+    </tr>
+    <tr>
+        <td class="first_col code">day_rain</td>
+        <td>Total rainfall since the daily rollover</td>
+    </tr>
+    <tr>
+        <td class="first_col code">day_rain_rg11</td>
+        <td>Today's RG-11 rainfall</td>
+    </tr>
+    <tr>
+        <td class="first_col code">day_sunshine_hours</td>
+        <td>Today's sunshine hours</td>
+    </tr>
+    <tr>
+        <td class="first_col code">gust_wind_speed</td>
+        <td>Wind gust speed</td>
+    </tr>
+    <tr>
+        <td class="first_col code">latest_wind_gust</td>
+        <td>Latest measured wind speed</td>
+    </tr>
+    <tr>
+        <td class="first_col code">midnight_rain</td>
+        <td>Total rainfall since midnight</td>
+    </tr>
+    <tr>
+        <td class="first_col code">rain_counter</td>
+        <td>Total rainfall counter</td>
     </tr>
     </tbody>
 </table>
@@ -885,12 +975,6 @@ Each WeeWX archive field stanza supports the following options:
     The above field names are internally generated by `weectl import` and do 
     not represent any field names used within Cumulus. They have only been 
     provided for use in the field map.
-
-A mapping is not required for every WeeWX archive field (e.g., the Cumulus 
-monthly logs do not provide altimeter data so no `altimeter` field mapping is 
-required) and neither does every Cumulus source field need to be included in a 
-mapping (e.g., the source data field `soilmoist` may have no use if the station 
-has no soil moisture sensor).
 
 For example, the following field map might be used to import outside 
 temperature to WeeWX field `outTemp`, outside humidity to WeeWX field 
@@ -919,11 +1003,10 @@ temperature to WeeWX field `outTemp`, outside humidity to WeeWX field
     section of the import configuration file.
 
 !!! Note
-    The `dateTime` field map entry is a special case. Whereas other field 
-    map entries may use any WeeWX unit name for a unit supported by the 
-    import source, the `dateTime` field map entry must use the WeeWX unit 
-    name `unix_epoch`.
-
+    The `dateTime` field map entry is a special case. Whereas other field map 
+    entries may use any WeeWX unit name for a unit supported by the import 
+    source, the `dateTime` field map entry must use the WeeWX unit name 
+    `unix_epoch`.
 
 The example Cumulus import configuration file located in the `util/import` 
 directory contains an example field map.
@@ -943,17 +1026,17 @@ Mandatory, there is no default.
 
 ### `logs_to_process`{#wd_logs_to_process}
 
-The Weather Display monthly log files to be processed. Weather Display 
-uses multiple files to record each month of data. Which monthly log files 
-are produced depends on the Weather Display configuration and the 
-capabilities of the weather station. `weectl import` supports the following 
-Weather Display monthly log files:
+The Weather Display monthly log files to be processed. Weather Display uses 
+multiple files to record each month of data. Which monthly log files are 
+produced depends on the Weather Display configuration and the capabilities of 
+the weather station. `weectl import` supports the following Weather Display
+monthly log files:
 
-* MMYYYYlg.txt
-* MMYYYYlgcsv.csv (csv format version of MMYYYYlg.txt)
-* MMYYYYvantagelog.txt
-* MMYYYYvantagelogcsv.csv (csv format version of MMYYYYvantagelog.txt)
-* MMYYYYvantageextrasensorslog.csv
+* `MMYYYYlg.txt`
+* `MMYYYYlgcsv.csv` (csv format version of `MMYYYYlg.txt`)
+* `MMYYYYvantagelog.txt`
+* `MMYYYYvantagelogcsv.csv` (csv format version of `MMYYYYvantagelog.txt`)
+* `MMYYYYvantageextrasensorslog.csv`
 
 where MM is a one or two-digit month and YYYY is a four digit year
 
@@ -970,16 +1053,17 @@ csv, | vantageextrasensorslog.csv]
     MMYYYY will cause the import to fail.
 
 !!! Note
-    The MMYYYYlgcsv.csv and MMYYYYvantagelogcsv.csv log files are CSV 
-    versions of MMYYYYlg.txt and MMYYYYvantagelog.txt respectively. Either 
-    the .txt or .csv version of these files should be used but not both.
+    The `MMYYYYlgcsv.csv` and `MMYYYYvantagelogcsv.csv` log files are CSV 
+    versions of `MMYYYYlg.txt` and `MMYYYYvantagelog.txt` respectively. 
+    Either the `.txt` or `.csv` version of these files should be used but 
+    not both.
 
-The monthly log files selected for processing should be chosen carefully 
-as the selected log files will determine the Weather Display data fields 
+The monthly log files selected for processing should be chosen carefully as 
+the selected log files will determine the Weather Display data fields 
 available for import. `weectl import` is able to import the following data 
 from the indicated monthly log files:
 
-* MMYYYYlg.txt/MMYYlgcsv.csv:
+* `MMYYYYlg.txt`/`MMYYlgcsv.csv`:
     * `average wind speed`
     * `barometer`
     * `date and time`
@@ -991,14 +1075,14 @@ from the indicated monthly log files:
     * `wind direction`
     * `wind gust speed`
 
-* MMYYYYvantagelog.txt/MMYYYYvantagelogcsv.csv:
+* `MMYYYYvantagelog.txt`/`MMYYYYvantagelogcsv.csv`:
     * `date and time`
     * `soil moisture`
     * `soil temperature`
     * `solar radiation`
     * `UV index`
 
-* MMYYYYvantageextrasensorslog.csv:
+* `MMYYYYvantageextrasensorslog.csv`:
     * `date and time`
     * `extra humidity 1`
     * `extra humidity 2`
@@ -1031,10 +1115,10 @@ Optional, the default is `utf-8-sig`.
 ### `interval`{#wd_interval}
 
 Determines how the time interval (WeeWX database field `interval`) between 
-successive observations is determined. This option is identical in 
-operation to the CSV [interval](#csv_interval) option but applies to Weather 
-Display monthly log file imports only. As Weather Display log files nominally 
-have entries at one minute intervals the recommended approach is to set 
+successive observations is determined. This option is identical in operation 
+to the CSV [interval](#csv_interval) option but applies to Weather Display 
+monthly log file imports only. As Weather Display log files nominally have 
+entries at one minute intervals the recommended approach is to set 
 `interval = 1`. As Weather Display monthly log files can, at times, have 
 missing entries, the use of `interval = derive` may give incorrect or 
 inconsistent interval values. If then `archive_interval` for the current 
@@ -1046,8 +1130,8 @@ Optional, the default is `1`.
 ### `qc`{#wd_qc}
 
 Determines whether simple quality control checks are applied to imported 
-data. This option is identical in operation to the CSV [qc](#csv_qc) 
-option but applies to Weather Display imports only.
+data. This option is identical in operation to the CSV [qc](#csv_qc) option 
+but applies to Weather Display imports only.
 
 Optional, the default is `True`.
 
@@ -1076,7 +1160,7 @@ monthly log files (.csv files). A comma is normally used but another
 character may be used if necessary. This parameter must be included in 
 quotation marks.
 
-Optional, the default is `,`.
+Optional, the default is `','`.
 
 ### `decimal`{#wd_decimal}
 
@@ -1084,14 +1168,14 @@ The character used as the decimal point in the Weather Display monthly log
 files. A period is frequently used but another character may be used if 
 necessary. This parameter must be included in quotation marks.
 
-Optional, the default is `.`.
+Optional, the default is `'.'`.
 
 ### `ignore_missing_log`{#wd_ignore_missing_log}
 
-Determines whether missing log files are to be ignored or the import 
-aborted. Weather Display log files are complete in themselves and a missing 
-log file will have no effect other than there will be no imported data for 
-the period covered by the missing log file.
+Determines whether missing log files are to be ignored or the import aborted. 
+Weather Display log files are complete in themselves and a missing log file 
+will have no effect other than there will be no imported data for the period 
+covered by the missing log file.
 
 Optional, the default is `True`.
 
@@ -1115,8 +1199,8 @@ Optional, the default is `250` which should suit most users.
 ### `UV_sensor`{#wd_UV}
 
 Enables `weectl import` to distinguish between the case where a UV sensor is 
-present and the UV index is 0 and the case where no UV sensor is present and 
-UV index is 0. This option is identical in operation to the CSV 
+present and the UV index is 0 and where no UV sensor is present and the UV 
+index is 0. This option is identical in operation to the CSV 
 [UV_sensor](#csv_UV) option but applies to Weather Display monthly log file 
 imports only.
 
@@ -1125,10 +1209,10 @@ Optional, the default is `True`.
 ### `solar_sensor`{#wd_solar}
 
 Enables `weectl import` to distinguish between the case where a solar 
-radiation sensor is present and the solar radiation is 0 and the case 
-where no solar radiation sensor is present and solar radiation is 0. This 
-option is identical in operation to the CSV [solar_sensor](#csv_solar) 
-option but applies to Weather Display monthly log file imports only.
+radiation sensor is present and solar radiation is 0 and where no solar 
+radiation sensor is present and solar radiation is 0. This option is identical 
+in operation to the CSV [solar_sensor](#csv_solar) option but applies to 
+Weather Display monthly log file imports only.
 
 Optional, the default is `True`.
 
@@ -1138,9 +1222,9 @@ Determines whether extreme temperature and humidity values are ignored.
 Weather Display log files record the value 255 for temperature and humidity 
 fields if no corresponding sensor is present. Setting 
 `ignore_extreme_temp_hum = True` will cause temperature and humidity 
-values of 255 to be ignored. Setting `ignore_extreme_temp_hum = False` 
-will cause temperature and humidity values of 255 to be treated as valid 
-data to be imported.
+values of 255 to be ignored. Setting `ignore_extreme_temp_hum = False` will 
+cause temperature and humidity values of 255 to be treated as valid data to 
+be imported.
 
 Optional, the default is `True`.
 
@@ -1152,34 +1236,26 @@ Optional, the default is `True`.
 
 ### `[[FieldMap]]`{#wd_fieldmap}
 
-The `[[FieldMap]]` stanza allows `weectl import` to take Weather Display data 
-fields, perform the appropriate unit conversions and store the resulting 
-values in appropriate WeeWX archive fields. By default, imported Weather 
-Display data is mapped to the corresponding WeeWX archive fields using a 
-default field map. The default field map will likely suit most users; 
-however, depending on the station capabilities and the in-use WeeWX 
-database schema, a custom field map may be required if Weather Display 
-monthly logs contain data from additional sensors that cannot be stored in 
-the WeeWX archive using the default field map. A custom field map also 
-makes it possible to limit the Weather Display monthly log data fields 
-that are imported into WeeWX or to import Weather Display data into 
-different WeeWX fields.
-
-The `[[FieldMap]]` stanza consists of one entry per WeeWX archive field 
-being populated using the following format:
+The `[[FieldMap]]` stanza defines the mapping from the Weather Display 
+source data fields to WeeWX archive fields. This allows `weectl import` to 
+take a source data field, perform the appropriate unit conversion and store 
+the resulting value in the appropriate WeeWX archive field. The map consists 
+of one sub-stanza per WeeWX archive field being populated using the following 
+format:
 
 ```
     [[[weewx_archive_field_name]]]
         source_field = wd_field_name
         unit = weewx_unit_name
         cumulative = True | False
+        is_text = True | False
 ```
 
 Where
 
 * `weewx_archive_field_name` is a field in the in-use WeeWX archive table 
   schema
-* `wd_field_name` is the name of a Weather Display source field as detailed
+* `wd_field_name` is the name of a Weather Display source field as detailed 
   in the _Available Weather Display import field names_ table below. 
 * `weewx_unit_name` is a WeeWX unit name; e.g., `degree_C`
 
@@ -1188,19 +1264,24 @@ Each WeeWX archive field stanza supports the following options:
 * `source_field`. The name of the Weather Display field to be mapped to the 
   WeeWX archive field. Mandatory.
 * `unit`. The WeeWX unit name of the units used by `source_field`. Mandatory.
-* `cumulative`. Whether the source field is a cumulative value or not (e.g.
-  , daily rainfall). Optional boolean value. Default is `False`.
+* `cumulative`. Whether the WeeWX archive field is to be derived from a 
+  cumulative source field (e.g., daily rainfall) or not. Optional boolean 
+  value. Default is `False`.
+* `is_text`. Whether the source field is to be imported as text or not. 
+  Optional boolean. Default is `False`.
+
+A mapping is not required for every WeeWX archive field and neither does 
+every Weather Display field need to be included in a mapping.
 
 !!! Note
     The `unit` option setting for each field map entry will depend on the 
-    Weather Display settings used to generate the Weather Display monthly 
-    log files. Depending on the Weather Display field type, the supported 
-    WeeWX units names for that field may only be a subset of the 
-    corresponding WeeWX unit names; e.g., WeeWX supports temperatures in 
-    Celsius, Fahrenheit and Kelvin, but Weather Display logs may only 
-    include temperatures in Celsius or Fahrenheit. Refer to 
-    [_Units_](../reference/units.md) for details of available WeeWX unit 
-    names.
+    Weather Display settings used to generate the Weather Display log files. 
+    Depending on the Weather Display field type, the supported WeeWX units 
+    names for that field may only be a subset of the corresponding WeeWX unit 
+    names; e.g., WeeWX supports temperatures in Celsius, Fahrenheit and 
+    Kelvin, but Weather Display log files may only include temperatures in 
+    Celsius or Fahrenheit. Refer to [_Units_](../reference/units.md) for 
+    details of available WeeWX unit names. 
 
 <table id="wd-avail-import-field-names-table" class="indent">
     <caption>Available Weather Display import field names</caption>
@@ -1211,111 +1292,111 @@ Each WeeWX archive field stanza supports the following options:
     </tr>
     <tr>
         <td class="first_col code">datetime</td>
-        <td>date and time</td>
+        <td>Date and time</td>
     </tr>
     <tr>
         <td class="first_col code">barometer</td>
-        <td>barometric pressure</td>
+        <td>Barometric pressure</td>
     </tr>
     <tr>
         <td class="first_col code">dailyet</td>
-        <td>daily evapotranspiration</td>
+        <td>Daily evapotranspiration</td>
     </tr>
     <tr>
         <td class="first_col code">dewpoint</td>
-        <td>dew point</td>
+        <td>Dew point</td>
     </tr>
     <tr>
         <td class="first_col code">direction</td>
-        <td>wind direction</td>
+        <td>Wind direction</td>
     </tr>
     <tr>
         <td class="first_col code">gustspeed</td>
-        <td>wind gust speed</td>
+        <td>Wind gust speed</td>
     </tr>
     <tr>
         <td class="first_col code">heatindex</td>
-        <td>heat index</td>
+        <td>Heat index</td>
     </tr>
     <tr>
         <td class="first_col code">humidity</td>
-        <td>outside humidity</td>
+        <td>Outside humidity</td>
     </tr>
     <tr>
         <td class="first_col code">hum1</td>
-        <td>extra humidity 1</td>
+        <td>Extra humidity 1</td>
     </tr>
     <tr>
         <td class="first_col code">hum2</td>
-        <td>extra humidity 2</td>
+        <td>Extra humidity 2</td>
     </tr>
     <tr>
         <td class="first_col code">hum3</td>
-        <td>extra humidity 3</td>
+        <td>Extra humidity 3</td>
     </tr>
     <tr>
         <td class="first_col code">hum4</td>
-        <td>extra humidity 4</td>
+        <td>Extra humidity 4</td>
     </tr>
     <tr>
         <td class="first_col code">hum5</td>
-        <td>extra humidity 5</td>
+        <td>Extra humidity 5</td>
     </tr>
     <tr>
         <td class="first_col code">hum6</td>
-        <td>extra humidity 6</td>
+        <td>Extra humidity 6</td>
     </tr>
     <tr>
         <td class="first_col code">hum7</td>
-        <td>extra humidity 7</td>
+        <td>Extra humidity 7</td>
     </tr>
     <tr>
         <td class="first_col code">radiation</td>
-        <td>solar radiation</td>
+        <td>Solar radiation</td>
     </tr>
     <tr>
         <td class="first_col code">rainlastmin</td>
-        <td>rainfall in the last 1 minute</td>
+        <td>Rainfall in the last 1 minute</td>
     </tr>
     <tr>
         <td class="first_col code">soilmoist</td>
-        <td>soil moisture</td>
+        <td>Soil moisture</td>
     </tr>
     <tr>
         <td class="first_col code">soiltemp</td>
-        <td>soil temperature</td>
+        <td>Soil temperature</td>
     </tr>
     <tr>
         <td class="first_col code">temperature</td>
-        <td>outside temperature</td>
+        <td>Outside temperature</td>
     </tr>
     <tr>
         <td class="first_col code">temp1</td>
-        <td>extra temperature 1</td>
+        <td>Extra temperature 1</td>
     </tr>
     <tr>
         <td class="first_col code">temp2</td>
-        <td>extra temperature 2</td>
+        <td>Extra temperature 2</td>
     </tr>
     <tr>
         <td class="first_col code">temp3</td>
-        <td>extra temperature 3</td>
+        <td>Extra temperature 3</td>
     </tr>
     <tr>
         <td class="first_col code">temp4</td>
-        <td>extra temperature 4</td>
+        <td>Extra temperature 4</td>
     </tr>
     <tr>
         <td class="first_col code">temp5</td>
-        <td>extra temperature 5</td>
+        <td>Extra temperature 5</td>
     </tr>
     <tr>
         <td class="first_col code">temp6</td>
-        <td>extra temperature 6</td>
+        <td>Extra temperature 6</td>
     </tr>
     <tr>
         <td class="first_col code">temp7</td>
-        <td>extra temperature 7</td>
+        <td>Extra temperature 7</td>
     </tr>
     <tr>
         <td class="first_col code">uv</td>
@@ -1323,21 +1404,15 @@ Each WeeWX archive field stanza supports the following options:
     </tr>
     <tr>
         <td class="first_col code">windspeed</td>
-        <td>average wind speed</td>
+        <td>Average wind speed</td>
     </tr>
     </tbody>
 </table>
 
 !!! Note
-    The above field names are internally generated by `weectl import` and 
-    do not represent any field names used within Weather Display. They have 
-    only been provided for use in the field map.
-
-A mapping is not required for every WeeWX archive field (e.g., the Weather 
-Display monthly logs do not provide altimeter data so no `altimeter` field 
-mapping is required) and neither does every Weather Display source field 
-need to be included in a mapping (e.g., the source data field `soilmoist` 
-may have no use if the station has no soil moisture sensor).
+    The above field names are internally generated by `weectl import` and do 
+    not represent any field names used within Weather Display. They have only
+    been provided for use in the field map.
 
 For example, the following field map might be used to import outside 
 temperature to WeeWX field `outTemp`, outside humidity to WeeWX field 
@@ -1349,10 +1424,10 @@ temperature to WeeWX field `outTemp`, outside humidity to WeeWX field
         source_field = datetime
         unit = unix_epoch
     [[[outTemp]]]
-        source_field = temp
+        source_field = temperature
         unit = degree_C
     [[[outHumidity]]]
-        source_field = humid
+        source_field = humidity
         unit = percent
     [[[poolTemp]]]
         source = temp1
@@ -1371,7 +1446,6 @@ temperature to WeeWX field `outTemp`, outside humidity to WeeWX field
     import source, the `dateTime` field map entry must use the WeeWX unit 
     name `unix_epoch`.
 
-
 The example Weather Display import configuration file located in the 
 `util/import` directory contains an example field map.
 
@@ -1383,8 +1457,9 @@ observational data from WeatherCat monthly .cat files.
 
 ### `directory`{#wcat_directory}
 
-The full path to the directory containing the year directories that contain the 
-WeatherCat monthly .cat files to be imported. Do not include a trailing `/`.
+The full path to the directory containing the year directories that contain 
+the WeatherCat monthly .cat files to be imported. Do not include a trailing 
+`/`.
 
 Mandatory, there is no default.
 
@@ -1401,29 +1476,29 @@ Optional, the default is `utf-8-sig`.
 Determines how the time interval (WeeWX database field `interval`) between 
 successive observations is determined. This option is identical in operation 
 to the CSV [interval](#csv_interval) option but applies to WeatherCat imports 
-only. As WeatherCat monthly .cat files can, at times, have missing entries, the 
-use of `interval = derive` may give incorrect or inconsistent interval values. 
-Better results may be obtained by using `interval = conf` if the 
+only. As WeatherCat monthly .cat files can, at times, have missing entries,
+the use of `interval = derive` may give incorrect or inconsistent interval 
+values. Better results may be obtained by using `interval = conf` if the 
 `archive_interval` for the current WeeWX installation is the same as the 
-WeatherCat .cat file log interval, or by using `interval = x` where `x` is the  
-time interval in minutes used in the WeatherCat monthly .cat file(s). The most  
-appropriate setting will depend on the completeness and (time) accuracy of the  
-WeatherCat data being imported.
+WeatherCat .cat file log interval, or by using `interval = x` where `x` is 
+the time interval in minutes used in the WeatherCat monthly .cat file(s). The 
+most appropriate setting will depend on the completeness and (time) accuracy 
+of the WeatherCat data being imported.
 
 Optional, the default is `derive`.
 
 ### `qc`{#wcat_qc}
 
-Determines whether simple quality control checks are applied to imported data. 
-This option is identical in operation to the CSV [qc](#csv_qc) option but 
-applies to WeatherCat imports only.
+Determines whether simple quality control checks are applied to imported 
+data. This option is identical in operation to the CSV [qc](#csv_qc) option 
+but applies to WeatherCat imports only.
 
 Optional, the default is `True`.
 
 ### `calc_missing`{#wcat_calc_missing}
 
-Determines whether any missing derived observations will be calculated from the 
-imported data. This option is identical in operation to the CSV 
+Determines whether any missing derived observations will be calculated from 
+the imported data. This option is identical in operation to the CSV 
 [calc_missing](#csv_calc_missing) option but applies to WeatherCat imports only.
 
 Optional, the default is `True`.
@@ -1433,12 +1508,12 @@ Optional, the default is `True`.
 The character used as the decimal point in the WeatherCat monthly .cat files. 
 This parameter must be included in quotation marks.
 
-Optional, the default is `.`.
+Optional, the default is `'.'`.
 
 ### `tranche`{#wcat_tranche}
 
-The number of records written to the WeeWX database in each transaction. 
-This option is identical in operation to the CSV [tranche](#csv_tranche) option 
+The number of records written to the WeeWX database in each transaction. This 
+option is identical in operation to the CSV [tranche](#csv_tranche) option 
 but applies to WeatherCat imports only.
 
 Optional, the default is `250` which should suit most users.
@@ -1446,8 +1521,8 @@ Optional, the default is `250` which should suit most users.
 ### `UV_sensor`{#wcat_UV}
 
 Enables `weectl import` to distinguish between the case where a UV sensor is 
-present and the UV index is 0 and the case where no UV sensor is present and UV 
-index is 0. This option is identical in operation to the CSV  
+present and the UV index is 0 and where no UV sensor is present and the UV 
+index is 0. This option is identical in operation to the CSV 
 [UV_sensor](#csv_UV) option but applies to WeatherCat imports only.
 
 Optional, the default is `True`.
@@ -1455,61 +1530,34 @@ Optional, the default is `True`.
 ### `solar_sensor`{#wcat_solar}
 
 Enables `weectl import` to distinguish between the case where a solar 
-radiation sensor is present and the solar radiation is 0 and the case where no 
-solar radiation sensor is present and solar radiation is 0. This option is 
-identical in operation to the CSV [solar_sensor](#csv_solar) option but applies 
-to WeatherCat imports only.
+radiation sensor is present and solar radiation is 0 and where no solar 
+radiation sensor is present and solar radiation is 0. This option is 
+identical in operation to the CSV [solar_sensor](#csv_solar) option but 
+applies to WeatherCat imports only.
 
 Optional, the default is `True`.
 
-### `[[Units]]`{#wcat_units}
-
-The `[[Units]]` stanza defines the units used in the WeatherCat monthly .
-cat files. Unit settings are required for `temperature`, `pressure`, 
-`rain` and `speed`. The format for each setting is:
-
-```
-obs_type = weewx_unit_name
-```
-
-Where `obs_type` is one of `temperature`, `pressure`, `rain` or `speed` and 
-`weewx_unit_name` is the WeeWX unit name of the units used by that particular 
-`obs_type` (refer to the [_Units_](../reference/units.md) for details of 
-available WeeWX unit names). As WeatherCat supports a different suite of 
-possible units only a subset of the available WeeWX unit names can be used for  
-some settings.
-
-There is no default.
-
 ### `[[FieldMap]]`{#wcat_fieldmap}
 
-The `[[FieldMap]]` stanza defines the mapping that allows `weectl import` to 
-read WeatherCat data, perform appropriate unit conversions and store the 
-resulting values in appropriate WeeWX archive fields. A default field map is 
-used by `weectl import` to map WeatherCat data to the corresponding WeeWX 
-archive fields. The default field map will likely suit most users; however, 
-depending on the station capabilities and the in-use WeeWX database schema, a  
-custom field map may be required if WeatherCat .cat files contain data from 
-additional sensors that cannot be stored in the WeeWX archive using the default 
-field map. A custom field map also makes it possible to limit the WeatherCat 
-data fields that are imported into WeeWX or to import WeatherCat data into 
-different WeeWX fields.
-
-The `[[FieldMap]]` stanza consists of one entry per WeeWX archive field being 
-populated using the following format:
+The `[[FieldMap]]` stanza defines the mapping from the WeatherCat source data 
+fields to WeeWX archive fields. This allows `weectl import` to take a source 
+data field, perform the appropriate unit conversion and store the resulting 
+value in the appropriate WeeWX archive field. The map consists of one 
+sub-stanza per WeeWX archive field being populated using the following format:
 
 ```
     [[[weewx_archive_field_name]]]
         source_field = wc_field_name
         unit = weewx_unit_name
         cumulative = True | False
+        is_text = True | False
 ```
 
 Where
 
 * `weewx_archive_field_name` is a field in the in-use WeeWX archive table 
   schema
-* `wc_field_name` is the name of a WeatherCat source field as detailed in the
+* `wc_field_name` is the nameof a WeatherCat source field as detailed in the 
   _Available WeatherCat import field names_ table below. 
 * `weewx_unit_name` is a WeeWX unit name; e.g., `degree_C`
 
@@ -1518,18 +1566,24 @@ Each WeeWX archive field stanza supports the following options:
 * `source_field`. The name of the WeatherCat field to be mapped to the WeeWX 
   archive field. Mandatory.
 * `unit`. The WeeWX unit name of the units used by `source_field`. Mandatory.
-* `cumulative`. Whether the source field is a cumulative value or not (e.g., 
-  daily rainfall). Optional boolean value. Default is `False`.
+* `cumulative`. Whether the WeeWX archive field is to be derived from a 
+  cumulative source field (e.g., daily rainfall) or not. Optional boolean 
+  value. Default is `False`.
+* `is_text`. Whether the source field is to be imported as text or not. 
+  Optional boolean. Default is `False`.
 
 !!! Note
     The `unit` option setting for each field map entry will depend on the 
     WeatherCat settings used to generate the WeatherCat .cat files. 
-    Depending on the WeatherCat field type, the supported WeeWX units names for 
-    that field may only be a subset of the corresponding WeeWX unit names;
+    Depending on the WeatherCat field type, the supported WeeWX unit names  
+    for that field may only be a subset of the corresponding WeeWX unit names;
     e.g., WeeWX supports temperatures in Celsius, Fahrenheit and Kelvin, but 
     WeatherCat .cat files may only include temperatures in Celsius or 
     Fahrenheit. Refer to [_Units_](../reference/units.md) for details of 
     available WeeWX unit names.
+
+A mapping is not required for every WeeWX archive field and neither does 
+every WeatherCat field need to be included in a mapping.
 
 <table id="wc-avail-import-field-names-table" class="indent">
     <caption>Available WeatherCat import field names</caption>
@@ -1544,100 +1598,103 @@ Each WeeWX archive field stanza supports the following options:
     </tr>
     <tr>
         <td class="first_col code">Pr</td>
-        <td>barometric pressure</td>
+        <td>Barometric pressure</td>
     </tr>
     <tr>
         <td class="first_col code">D</td>
-        <td>dew point</td>
+        <td>Dew point</td>
     </tr>
     <tr>
         <td class="first_col code">Hi</td>
-        <td>inside humidity</td>
+        <td>Inside humidity</td>
     </tr>
     <tr>
         <td class="first_col code">Ti</td>
-        <td>inside temperature</td>
+        <td>Inside temperature</td>
     </tr>
     <tr>
         <td class="first_col code">H1</td>
-        <td>extra humidity 1</td>
+        <td>Extra humidity 1</td>
     </tr>
     <tr>
         <td class="first_col code">H2</td>
-        <td>extra humidity 2</td>
+        <td>Extra humidity 2</td>
     </tr>
     <tr>
         <td class="first_col code">T1</td>
-        <td>extra temperature 1</td>
+        <td>Extra temperature 1</td>
     </tr>
     <tr>
         <td class="first_col code">T2</td>
-        <td>extra temperature 2</td>
+        <td>Extra temperature 2</td>
     </tr>
     <tr>
         <td class="first_col code">T3</td>
-        <td>extra temperature 3</td>
+        <td>Extra temperature 3</td>
     </tr>
     <tr>
         <td class="first_col code">Lt1</td>
-        <td>leaf temperature 1</td>
+        <td>Leaf temperature 1</td>
     </tr>
     <tr>
         <td class="first_col code">Lt2</td>
-        <td>leaf temperature 2</td>
+        <td>Leaf temperature 2</td>
     </tr>
     <tr>
         <td class="first_col code">Lw1</td>
-        <td>leaf wetness 1</td>
+        <td>Leaf wetness 1</td>
     </tr>
     <tr>
         <td class="first_col code">Lw2</td>
-        <td>leaf wetness 2</td>
+        <td>Leaf wetness 2</td>
     </tr>
     <tr>
         <td class="first_col code">H</td>
-        <td>outside humidity</td>
+        <td>Outside humidity</td>
     </tr>
     <tr>
         <td class="first_col code">T</td>
-        <td>outside temperature</td>
+        <td>Outside temperature</td>
     </tr>
     <tr>
         <td class="first_col code">P</td>
-        <td>precipitation</td>
+        <td>Precipitation</td>
     </tr>
     <tr>
         <td class="first_col code">Sm1</td>
-        <td>soil moisture 1</td>
+        <td>Soil moisture 1</td>
     </tr>
+    <tr>
         <td class="first_col code">Sm2</td>
-        <td>soil moisture 2</td>
+        <td>Soil moisture 2</td>
     </tr>
+    <tr>
         <td class="first_col code">Sm3</td>
-        <td>soil moisture 3</td>
+        <td>Soil moisture 3</td>
     </tr>
+    <tr>
         <td class="first_col code">Sm4</td>
-        <td>soil moisture 4</td>
+        <td>Soil moisture 4</td>
     </tr>
     <tr>
         <td class="first_col code">St1</td>
-        <td>soil temperature 1</td>
+        <td>Soil temperature 1</td>
     </tr>
     <tr>
         <td class="first_col code">St2</td>
-        <td>soil temperature 2</td>
+        <td>Soil temperature 2</td>
     </tr>
     <tr>
         <td class="first_col code">St3</td>
-        <td>soil temperature 3</td>
+        <td>Soil temperature 3</td>
     </tr>
     <tr>
         <td class="first_col code">St4</td>
-        <td>soil temperature 4</td>
+        <td>Soil temperature 4</td>
     </tr>
     <tr>
         <td class="first_col code">S</td>
-        <td>solar radiation</td>
+        <td>Solar radiation</td>
     </tr>
     <tr>
         <td class="first_col code">U</td>
@@ -1645,19 +1702,19 @@ Each WeeWX archive field stanza supports the following options:
     </tr>
     <tr>
         <td class="first_col code">Wc</td>
-        <td>windchill</td>
+        <td>Windchill</td>
     </tr>
     <tr>
         <td class="first_col code">Wd</td>
-        <td>wind direction</td>
+        <td>Wind direction</td>
     </tr>
     <tr>
         <td class="first_col code">Wg</td>
-        <td>wind gust speed</td>
+        <td>Wind gust speed</td>
     </tr>
     <tr>
         <td class="first_col code">W</td>
-        <td>wind speed</td>
+        <td>Wind speed</td>
     </tr>
     </tbody>
 </table>
@@ -1666,12 +1723,6 @@ Each WeeWX archive field stanza supports the following options:
     The above field names are internally generated by `weectl import` and do 
     not represent any field names used within WeatherCat. They have only been
     provided for use in the field map.
-
-A mapping is not required for every WeeWX archive field (e.g., the WeatherCat 
-.cat files do not provide altimeter data so no `altimeter` field mapping is 
-required) and neither does every WeatherCat source field need to be included in 
-a mapping (e.g., the source data field `soilmoist` may have no use if the 
-station has no soil moisture sensor).
 
 For example, the following field map might be used to import outside 
 temperature to WeeWX field `outTemp`, outside humidity to WeeWX field 
@@ -1694,17 +1745,16 @@ temperature to WeeWX field `outTemp`, outside humidity to WeeWX field
 ```
 
 !!! Note
-    Any WeeWX archive fields that are derived (e.g., `dewpoint`) and for which 
-    there is no field mapping may be calculated during import by use of the 
-    [`calc_missing`](#wc_calc_missing) option in the `[WeatherCat]` section of 
-    the import configuration file.
+    Any WeeWX archive fields that are derived (e.g., `dewpoint`) and for 
+    which there is no field mapping may be calculated during import by use of 
+    the [`calc_missing`](#wc_calc_missing) option in the `[WeatherCat]` 
+    section of the import configuration file.
 
 !!! Note
     The `dateTime` field map entry is a special case. Whereas other field map 
     entries may use any WeeWX unit name for a unit supported by the import 
     source, the `dateTime` field map entry must use the WeeWX unit name 
     `unix_epoch`.
-
 
 The example WeatherCat import configuration file located in the `util/import`
 directory contains an example field map.

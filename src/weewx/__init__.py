@@ -238,4 +238,12 @@ def initialize(config_dict, log_label):
     # Add the 'user' package to PYTHONPATH
     add_user_path(config_dict)
     # Now we can import user.extensions
-    importlib.import_module('user.extensions')
+    try:
+        importlib.import_module('user.extensions')
+    except ModuleNotFoundError as e:
+        import logging
+        msg = "Cannot find 'user' directory: %s" % e
+        print(msg, file=sys.stderr)
+        print("Proceeding", file=sys.stderr)
+        log = logging.getLogger(__name__)
+        log.error(msg)

@@ -88,7 +88,7 @@ To import observations from one or more WeatherCat monthly .cat files:
     $ cp /home/weewx/util/import/weathercat-example.conf /var/tmp/wcat.conf
     ```
 
-1. Confirm that the [`source`](../wee_import-config#import_config_source) option is set to `WeatherCat`:
+1. Confirm that the [`source`](weectl-import-config-opt.md#import_config_source) option is set to `WeatherCat`:
 
     ```
     source = WeatherCat
@@ -97,33 +97,33 @@ To import observations from one or more WeatherCat monthly .cat files:
 1. Confirm the following options in the `[WeatherCat]` section are 
    correctly set:
 
-    * [directory](../wee_import-config#wcat_directory). The full path to 
+    * [directory](weectl-import-config-opt.md#wcat_directory). The full path to 
       the directory containing the directories containing the WeatherCat 
       monthly .cat files to be used as the source of the imported data.
 
-    * [interval](../wee_import-config#wcat_interval). Determines how the 
+    * [interval](weectl-import-config-opt.md#wcat_interval). Determines how the 
       WeeWX interval field is derived.
 
-    * [qc](../wee_import-config#wcat_qc). Determines whether quality 
+    * [qc](weectl-import-config-opt.md#wcat_qc). Determines whether quality 
       control checks are performed on the imported data.
 
-    * [calc_missing](../wee_import-config#wcat_calc_missing). Determines 
+    * [calc_missing](weectl-import-config-opt.md#wcat_calc_missing). Determines 
       whether missing derived observations will be calculated from the 
       imported data.
 
-    * [decimal](../wee_import-config#wcat_decimal). The decimal point 
+    * [decimal](weectl-import-config-opt.md#wcat_decimal). The decimal point 
       character used in the WeatherCat monthly log files.
 
-    * [tranche](../wee_import-config#wcat_tranche). The number of records 
+    * [tranche](weectl-import-config-opt.md#wcat_tranche). The number of records 
       written to the WeeWX database in each transaction.
 
-    * [UV_sensor](../wee_import-config#wcat_UV). Whether a UV sensor was 
+    * [UV_sensor](weectl-import-config-opt.md#wcat_UV). Whether a UV sensor was 
       installed when the source data was produced.
 
-    * [solar_sensor](../wee_import-config#wcat_solar). Whether a solar 
+    * [solar_sensor](weectl-import-config-opt.md#wcat_solar). Whether a solar 
       radiation sensor was installed when the source data was produced.
 
-    * [[[Units]]](../wee_import-config#wcat_units). Defines the units used 
+    * [[[Units]]](weectl-import-config-opt.md#wcat_units). Defines the units used 
       in the WeatherCat monthly .cat files.
 
 1. When first importing data it is prudent to do a dry run import before 
