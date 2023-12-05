@@ -82,7 +82,7 @@ date, the default action if the `--date` option (and the `--from` and `--to`
 options) is omitted may vary depending on the source. The operation of the 
 `--date` option is summarised in the following table:
 
-<table class="no_indent">
+<table>
   <caption>Option <span class="code">--date</span></caption>
   <tbody>
     <tr class="first_row">
@@ -137,7 +137,7 @@ T literal is mandatory if specifying a date-time.
 The operation of the `--from` and `--to` options is summarised in the 
 following table:
 
-<table class="no_indent">
+<table>
   <caption>Options <span class="code">--from</span> and <span 
 class="code">--to</span></caption>
   <tbody>

@@ -230,7 +230,7 @@ separated numbers of the format lower, upper where lower and upper are
 inclusive. The operation of the `wind_direction` option is best 
 illustrated through the following table:
 
-<table id='wind_direction' class="indent" style="width:80%;text-align: center">
+<table id='wind_direction' style="width:80%;text-align: center">
   <caption>Option wind_direction</caption>
   <tbody>
     <tr class="first_row">
@@ -594,7 +594,7 @@ Each WeeWX archive field stanza supports the following option:
 A mapping is not required for every WeeWX archive field and neither does 
 every Weather Underground field need to be included in a mapping.
 
-<table id="wu-avail-import-field-names-table" class="indent">
+<table id="wu-avail-import-field-names-table">
     <caption>Available Weather Underground import field names</caption>
     <tbody>
     <tr class="first_row">
@@ -857,7 +857,7 @@ every Cumulus field need to be included in a mapping.
     Fahrenheit. Refer to [_Units_](../reference/units.md) for details of 
     available WeeWX unit names. 
 
-<table id="cumulus-avail-import-field-names-table" class="indent">
+<table id="cumulus-avail-import-field-names-table">
     <caption>Available Cumulus import field names</caption>
     <tbody>
     <tr class="first_row">
@@ -1283,7 +1283,7 @@ every Weather Display field need to be included in a mapping.
     Celsius or Fahrenheit. Refer to [_Units_](../reference/units.md) for 
     details of available WeeWX unit names. 
 
-<table id="wd-avail-import-field-names-table" class="indent">
+<table id="wd-avail-import-field-names-table">
     <caption>Available Weather Display import field names</caption>
     <tbody>
     <tr class="first_row">
@@ -1585,7 +1585,7 @@ Each WeeWX archive field stanza supports the following options:
 A mapping is not required for every WeeWX archive field and neither does 
 every WeatherCat field need to be included in a mapping.
 
-<table id="wc-avail-import-field-names-table" class="indent">
+<table id="wc-avail-import-field-names-table">
     <caption>Available WeatherCat import field names</caption>
     <tbody>
     <tr class="first_row">

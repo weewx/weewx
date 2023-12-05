@@ -7,7 +7,7 @@ station type provides a different set of observations, at different sampling
 rates. These are enumerated in a *Station data* table in the page for each
 station.
 
-<table class="no_indent">
+<table>
   <tr>
     <td><a href="../acurite">AcuRite</a></td>
     <td><a href="../te923">TE923</a></td>
@@ -45,7 +45,7 @@ at all, they are "known to work" using the indicated driver, but are not
 routinely tested. For stations marked <em>Experimental</em>, we are still
 working on the driver. There can be problems.
 
-<table class="no_indent">
+<table>
   <caption>Weather hardware supported by WeeWX</caption>
   <tr class="first_row">
     <td>Vendor</td>

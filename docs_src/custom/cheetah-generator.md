@@ -404,7 +404,7 @@ value will appear. See the section _[Formatting options](#formatting-options)_.
 
 There are several _aggregation periods_ that can be used:
 
-<table id="aggregation-periods-table" class="indent">
+<table id="aggregation-periods-table">
     <caption>Aggregation periods</caption>
     <tbody>
     <tr class="first_row">
@@ -477,7 +477,7 @@ There are several _aggregation periods_ that can be used:
 The "_`ago`_" parameters can be useful for statistics farther in the past.
 Here are some examples:
 
-<table class="indent">
+<table>
     <tbody>
     <tr class="first_row">
         <td>Aggregation period</td>
@@ -580,7 +580,7 @@ final observation value. They can be used whenever a tag results in a
 [`ValueHelper`](../reference/valuehelper.md), which is almost all the time.
 This table summarizes the options:
 
-<table class="indent">
+<table>
     <caption>Formatting options</caption>
     <tbody>
     <tr class="first_row">
@@ -638,7 +638,7 @@ It has the formal structure:
 
 Here is the meaning of each of the optional arguments:
 
-<table class="indent">
+<table>
     <caption>Optional arguments for <span class="code">format()</span></caption>
     <tbody>
     <tr class="first_row">
@@ -719,7 +719,7 @@ The option `long_form()` has the formal structure
 
 Here is the meaning of each of the optional arguments:
 
-<table class="indent">
+<table>
     <caption>Optional arguments for <span class="code">long_form()</span></caption>
     <tbody>
     <tr class="first_row">
@@ -768,7 +768,7 @@ Putting this together, the example above could be written
 This section gives a number of example tags, and their expected output. The
 following values are assumed:
 
-<table class="indent" style="width:50%">
+<table>
     <caption>Values used in the formatting examples</caption>
     <tr class="first_row">
         <td>Observation</td>
@@ -1122,7 +1122,7 @@ value will appear. See the section _[Formatting options](#formatting-options)_.
 
 There are several delta settings that can be used:
 
-<table class="indent">
+<table>
     <tbody>
     <tr class="first_row">
         <td>Delta Setting</td>
@@ -1211,7 +1211,7 @@ The labels used for the various observation types are available using tag
 
 It is possible to iterate over the following:
 
-<table class="indent">
+<table>
     <tbody>
     <tr class="first_row">
         <td>Tag suffix</td>
@@ -1699,7 +1699,7 @@ or
 
 Here is a table of the information that falls into this category:
 
-<table class="indent">
+<table>
     <caption>Calendar events</caption>
     <tbody class="code">
     <tr>
@@ -1813,7 +1813,7 @@ _`heavenly_body`_ tag. All the planets and many stars are in the list.
 The possible values for the _`attribute`_ tag are listed in the following
 table, along with the corresponding name used in the PyEphem documentation.
 
-<table class="indent" style="width: 80%">
+<table style="width: 80%">
     <caption>Attributes that can be used with heavenly bodies</caption>
     <tbody>
     <tr class="first_row">
@@ -2013,7 +2013,7 @@ different ways: as a set of scalars, and as a *vector* of speed and
 direction. Here are the four wind-related scalars stored in the main
 archive database:
 
-<table class="indent">
+<table>
     <tbody>
     <tr class="first_row">
         <td>Archive type</td>
@@ -2058,7 +2058,7 @@ synthesized for aggregations other than multiples of a day.
   
 Any of these can be used in your tags. Here are some examples:
 
-<table class="indent">
+<table>
     <tbody>
     <tr class="first_row">
         <td>Tag</td>

@@ -21,7 +21,7 @@ When reading 'live' data, WeeWX can read as fast as possible, or at a
 user-defined period. This is controlled by the option `polling_mode` in the
 WeeWX configuration file.
 
-<table class='indent'>
+<table>
 <caption>Polling modes for Fine Offset stations</caption>
 <tr class="first_row">
 <td style="width:15%">Mode</td>

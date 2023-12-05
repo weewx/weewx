@@ -7,7 +7,7 @@ every 60 seconds.
 In fact, because of the message structure and the data logging
 design, these are the actual update frequencies:
 
-<table class='indent'>
+<table>
 <caption>AcuRite transmission periods</caption>
 <tbody>
 <tr class='first_row'><td>sensor</td><td>period</td></tr>

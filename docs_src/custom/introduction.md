@@ -176,7 +176,7 @@ need to restart `weewxd`. The change will be adopted at the next reporting
 cycle, typically at the end of an archive interval.
 
 
-## The utility `weectl report run`
+## Running reports on demand
 
 If you make changes, how do you know what the results will look like? You
 could just run `weewxd` and wait until the next reporting cycle kicks off but,
@@ -196,7 +196,7 @@ responsible for loading _services_, then arranging for them to be called when
 key events occur, such as the arrival of LOOP or archive data. The default
 install of WeeWX includes the following services:
 
-<table id='default_services' class="indent">
+<table id='default_services'>
     <caption>The standard WeeWX services</caption>
     <tbody>
     <tr class="first_row">
@@ -280,7 +280,7 @@ in section `[StdReport]`.
 
 The default distribution of WeeWX includes six reports:
 
-<table class="indent">
+<table>
     <tbody>
     <tr class="first_row">
         <td>Report</td>
@@ -375,7 +375,7 @@ do the actual work, such as creating HTML files or plot images. Generators can
 also copy files around or FTP/rsync them to remote locations. The default
 install of WeeWX includes the following generators:
 
-<table class="indent">
+<table>
     <tbody>
     <tr class="first_row">
         <td>Generator</td>
@@ -446,7 +446,7 @@ _archive table_, a big flat table, holding one record for each archive
 interval, keyed by `dateTime`, the time at the end of the archive interval.
 It looks something like this:
 
-<table class="indent fixed_width">
+<table>
     <caption>
         Structure of the <span class="code">archive</span> database table
     </caption>
@@ -499,7 +499,7 @@ It looks something like this:
 
 The first three columns are _required._ Here's what they mean:
 
-<table class="indent">
+<table>
     <tr class="first_row">
         <td>Name</td>
         <td>Meaning</td>

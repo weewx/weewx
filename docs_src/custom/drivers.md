@@ -61,7 +61,7 @@ will do this when an archive record is due. A "loop packet" is a
 dictionary. At the very minimum it must contain keys for the observation
 time and for the units used within the packet.
 
-<table class="indent">
+<table>
     <caption>Required keys</caption>
     <tbody>
     <tr>
@@ -110,7 +110,7 @@ Be careful when reporting pressure. There are three observations related
 to pressure. Some stations report only the station pressure, others
 calculate and report sea level pressures.
 
-<table class="indent">
+<table>
     <caption>Pressure types</caption>
     <tbody>
     <tr>

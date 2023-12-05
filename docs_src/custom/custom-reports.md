@@ -12,7 +12,7 @@ which data should be in each plot, the colors of plot elements, _etc_.
 
 Options are read from three different types of _configuration files:_
 
-<table class="indent">
+<table>
     <caption>Configuration files</caption>
     <thead>
     <tr class="first_row">
@@ -124,7 +124,7 @@ for `group_pressure` will be set to `mbar`, etc.
 The result is the following option hierarchy, listed in order of increasing
 precedence.
 
-<table class="indent">
+<table>
     <caption>Option hierarchy, lowest to highest</caption>
     <thead>
     <tr class="first_row">
