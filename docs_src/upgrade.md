@@ -821,11 +821,11 @@ Add the text in <span class="added">green</span>:
   </li>
 </ul>
 
-<p class="note">
-  If you are upgrading, and you wish to try the new skin <em>Seasons</em>, then activate it, but <em>be sure
-    to deactivate Standard</em>. Otherwise, both will get generated, and they will compete with each other for
-  placement in your HTML directory.
-</p>
+!!! Note
+    If you are upgrading, and you wish to try the new skin <em>Seasons</em>,
+    then activate it, but <em>be sure to deactivate Standard</em>. Otherwise,
+    both will get generated, and they will compete with each other for
+    placement in your HTML directory.
 
 ### Skin defaults
 <p>
@@ -857,10 +857,9 @@ Add the text in <span class="added">green</span>:
   however, one exception:
 </p>
 
-<p class="note">
-  If your installation does not use overrides, and you changed to metric units in your <span class="code">skin.conf</span>
-  file, you will be affected.
-</p>
+!!! Note
+    If your installation does not use overrides, and you changed to metric
+    units in your `skin.conf` file, you will be affected.
 
 <p>
   Your reports will start appearing in U.S. Customary units. The reason is that
@@ -903,13 +902,11 @@ Add the text in <span class="added">green</span>:
   need to do.
 </p>
 
-<p class="note">
-  Your archive may have interval values of different sizes if...<br/> <br/> ... you have imported data using
-  <span class="code">wee_import</span>.<br/> <br/> ... your hardware has a data logger, your configuration
-  uses <span class="code">record_generation=software</span>, and the <span
-								       class="code">archive_interval</span> is different from that in the hardware.<br/> <br/> ... your archive
-  contains data from more than one type of hardware.
-</p>
+!!! Note
+    Your archive may have interval values of different sizes if<br/>
+    * you have imported data using `wee_import`<br/>
+    * your hardware has a data logger, your configuration uses `record_generation=software`, and the `archive_interval` is different from that in the hardware<br/>
+    * your archive contains data from more than one type of hardware</br>
 
 <p>The <a href="../utilities/weectl-database/#update"><span class="code">weectl
 database update</span></a> utility can fix this problem by recalculating the
