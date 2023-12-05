@@ -707,8 +707,19 @@ a.toc-link:hover {
     font-size: inherit;  /* match the body; the default of 0.64 is too small */
 }
 
+/* make the admonitions (note/warning) less dominant */
+.md-typeset .admonition-title, md-typeset summary {
+    padding-bottom: 0;
+    padding-top: 0;
+}
+
+.md-typeset .admonition-title::before, md-typeset summary:before {
+    top: 0.2em;
+}
+
 .md-typeset .admonition, .md-typeset details {
-    font-size: inherit;  /* match the body; the default of 0.64 is too small */
+    font-size: 0.7rem;  /* match the body; the default of 0.64 is too small */
+    margin: 0.4em .8em;  /* make the box a bit smaller than the doc width */
 }
 
 .md-typeset code {
