@@ -8,7 +8,7 @@ later.  For older systems, install Python 3.7 then
 [install WeeWX using pip](pip.md).
 
 
-## Configure zypper
+## Configure `zypper`
 
 The first time you install WeeWX, you must configure `zypper` so that it will
 trust weewx.com, and know where to find the WeeWX releases.
@@ -32,20 +32,30 @@ trust weewx.com, and know where to find the WeeWX releases.
 Install WeeWX using `zypper`. When you are done, WeeWX will be running the
 `Simulator` in the background.
 
-```
+```{.shell .copy}
 sudo zypper install weewx
 ```
 
 
 ## Verify
 
-After 5 minutes, copy the following and paste into a web browser:
+After 5 minutes, copy the following and paste into a web browser. You should
+see simulated data.
 
-    /var/www/html/weewx/index.html
+```{.copy}
+/var/www/html/weewx/index.html
+```
 
-You should see simulated data.
-
-Check the system log `/var/log/messages` for problems.
+If things are not working as you think they should, check the status:
+```{.shell .copy}
+sudo systemctl status weewx
+```
+and check the [log file](../usersguide/running.md#monitoring-weewx):
+```{.shell .copy}
+tail -50 /var/log/weewx/weewxd.log
+```
+See the [*Troubleshooting*](../usersguide/troubleshooting/what-to-do.md)
+section of the [*User's guide*](../users/guide/introduction.md) for more help.
 
 
 ## Configure
@@ -72,14 +82,14 @@ and the [application](../reference/weewx-options/introduction.md) and
 [skin](../reference/skin-options/introduction.md) references for all
 the options. Use any text editor, such as `nano`:
 
-```shell
+```{.shell .copy}
 sudo nano /etc/weewx/weewx.conf
 ```
 
 To install new skins, drivers, or other extensions, use the `weectl` utility
 and the URL to the extension.
 
-```shell
+```{.copy}
 sudo weectl extension install https://github.com/path/to/extension.zip
 ```
 

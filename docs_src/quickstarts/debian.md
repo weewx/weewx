@@ -44,13 +44,23 @@ sudo apt install weewx
 ## Verify
 
 After about 5 minutes (the exact length of time depends on your archive
-interval), copy the following and paste into a web browser:
+interval), copy the following and paste into a web browser.  You should see
+your station information and data.
 
-    /var/www/html/weewx/index.html
+```{.copy}
+/var/www/html/weewx/index.html
+```
 
-You should see your station information and data.
-
-Check the system log `/var/log/syslog` for problems.
+If things are not working as you think they should, check the status:
+```{.shell .copy}
+sudo systemctl status weewx
+```
+and check the [log file](../usersguide/running.md#monitoring-weewx):
+```{.shell .copy}
+tail -50 /var/log/weewx/weewxd.log
+```
+See the [*Troubleshooting*](../usersguide/troubleshooting/what-to-do.md)
+section of the [*User's guide*](../users/guide/introduction.md) for more help.
 
 
 ## Configure
@@ -78,14 +88,14 @@ and the [application](../reference/weewx-options/introduction.md) and
 [skin](../reference/skin-options/introduction.md) references for all
 the options. Use any text editor, such as `nano`:
 
-```shell
+```{.shell .copy}
 sudo nano /etc/weewx/weewx.conf
 ```
 
 To install new skins, drivers, or other extensions, use the `weectl` utility
 and the URL to the extension.
 
-```shell
+```{.shell}
 sudo weectl extension install https://github.com/path/to/extension.zip
 ```
 
