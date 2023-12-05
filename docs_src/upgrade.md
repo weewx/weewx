@@ -51,6 +51,26 @@ to move on. WeeWX V5.x requires Python 3.7 or greater. These days, all but the
 most ancient of operating systems offer Python 3, although you may have to
 install it.
 
+### New utilities
+
+The old utilities have been collected and put under one master utility,
+`weectl`. This make it easy to use `weectl --help` to see which one you want.
+
+| Old utility     | New utility        |
+|-----------------|--------------------|
+| `wee_database`  | `weectl database`  |
+| `wee_debug`     | `weectl debug`     |
+| `wee_device`    | `weectl device`    |
+| `wee_extension` | `weectl extension` |
+| `wee_import`    | `weectl import`    |
+| `wee_reports`   | `weectl report`    |
+| `wee_config`    | `weectl station`   |
+
+### Utility `wunderfixer` has been removed.
+
+The Weather Underground no longer allows past-dated posts, so the utility is
+no longer useful.
+
 ### setup.py installs no longer possible
 
 The package `distutils`, and the imperative approach on which the WeeWX
@@ -96,27 +116,40 @@ upgrade process, but if you explicitly upgrade the configuration file using
 `weectl station upgrade`, then `WEEWX_ROOT=/` will be changed to
 `WEEWX_ROOT=/etc/weewx`.
 
-### New utilities
+### Use of systemd units for services
 
-Most of the old utilities have been collected and put under one master utility,
-`weectl`. This make it easy to use `weectl --help` to see which one you
-want.
+WeeWX now ships with systemd unit files for the platforms that use systemd.
+If you install WeeWX using `apt`, `yum`, or `zypper`, then two files will
+be installed, the standard service unit `weewx.service` and the template
+service unit `weewx@.service`.  For a pip install, these are available in
+the `util` directory in the `weewx-data` directory, and must be installed
+separately.  The template unit makes it very easy to run multiple instances
+of `weewxd`, for example if you have more than one weather station or multiple
+sets of sensors.
 
-| Old utility     | New utility        |
-|-----------------|--------------------|
-| `wee_database`  | `weectl database`  |
-| `wee_debug`     | `weectl debug`     |
-| `wee_device`    | `weectl device`    |
-| `wee_extension` | `weectl extension` |
-| `wee_import`    | `weectl import`    |
-| `wee_reports`   | `weectl report`    |
-| `wee_config`    | `weectl station`   |
+### WeeWX runs as the `weewx` user
 
+If you install WeeWX using `apt`, `yum`, or `zypper`, then `weewxd` will run
+as the `weewx` user.  The configuration files, skins, databases, and reports
+are owned by the `weewx` group.  This makes it easier to manage a WeeWX
+installation. Put yourself into the `weewx` group, then you will not have to
+`sudo` to make changes to skins or configurations.  You *will* have to `sudo`
+to start/stop `weewxd`.
 
-### Utility `wunderfixer` has been removed.
+### WeeWX logs go to `/var/log/weewx`
 
-The Weather Underground no longer allows past-dated posts, so the utility is
-no longer useful.
+If you install WeeWX using `apt`, `yum`, or `zypper`, then the log messages
+from `weewxd` and `weectl` go to separate files in `/var/log/weewx`.  They
+are still using the `syslog` as the logging mechanism, but the installation
+adds `syslog` configuration to split WeeWX messages into separate files.
+
+### udev rules installed for core hardware
+
+If you install WeeWX using `apt`, `yum`, or `zypper`, then the udev rules file
+for hardware that is supported in WeeWX core is installed with WeeWX.  This
+makes any hardware that uses USB or serial accessible to anyone in the `weewx`
+group.  So if you put yourself in the `weewx` group, you will not have to
+`sudo` to communicate with a supported USB or serial device.
 
 ### `SQLITE_ROOT` is now relative to `WEEWX_ROOT`
 
@@ -127,8 +160,8 @@ Because this is _less restrictive_, it is not expected to affect any users.
 ### Class `weewx.units.UnknownType` has been renamed
 
 Its name was too similar to `weewx.UnknownType`, so it has been renamed to
-`weewx.units.UnknownObsType`. It is very unlikely any users would be affected by
-this.
+`weewx.units.UnknownObsType`. It is very unlikely any users would be affected
+by this.
 
 
 ## Upgrading to V4.10

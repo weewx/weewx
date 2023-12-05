@@ -134,6 +134,11 @@ units are now specified in the `[[FieldMap]]` stanza.
 Fixed problem when plotting wind vectors from a database that does not include
 daily summaries.
 
+Fixed a long-standing bug in the log message format that made 'python' or
+'journal' appear as the process name instead of 'weewx'.
+
+The process name for weewxd is now 'weewxd'.  In V4 it was 'weewx'.
+
 
 ### 4.10.2 02/22/2023
 

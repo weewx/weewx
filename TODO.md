@@ -19,8 +19,8 @@ For example, `weectl extension uninstall` just uninstalls without confirmation.
 - ensure that maintainer's version of weewx.conf is created but no used; ensure
     that existing weewx.conf is not overwritten
     /etc/weewx/weewx.conf - untouched config
-    /etc/weewx/weewx.conf.OLD-LATEST - maintainer; 'weewctl upgrade'
-    /etc/weewx/weewx.conf.LATEST - distribution
+    /etc/weewx/weewx.conf-OLD-LATEST - maintainer; 'weewctl upgrade'
+    /etc/weewx/weewx.conf-LATEST - distribution
 
 - add steps to purging.  these are for deb/rpm installs
     sudo userdel weewx
@@ -46,6 +46,18 @@ For example, `weectl extension uninstall` just uninstalls without confirmation.
       sudo systemctl start weewx@XXX
       sudo systemctl start weewx@YYY
 
+    recipe:
+    emacs /etc/weewx/weewx-xxx.conf
+       location
+       HTML_ROOT
+       database_name
+    sudo systemctl enable weewx@xxx
+    sudo systemctl start weewx@xxx
+
+    when you do 'sudo systemctl stop weewx' that will also stop all template
+    instances.  doing a 'start' will *not* start all template instances - you
+    must start each manually, and enable each to start at system boot.
+
 - ensure logging goes to the right place.  most important part is to use colon
     after the process name in the log string.  otherwise the process name is
     either 'python', or, on systems where systemd has hijacked the logging with
@@ -57,13 +69,19 @@ For example, `weectl extension uninstall` just uninstalls without confirmation.
     the drivers have 'wee_' prepended to their name so that their logs are
     easily matched by syslog rules.  each of the weectl subcommands uses
     wee_XXX so that their logs can go to separate files (default behavior
-    for a deb/rpm install).  all of the unit tests start with 'weetest' for
+    for a deb/rpm install).  all of the unit tests start with 'weetest_' for
     the same reason.
 
     for a pip install, everything will go to system log, but at least this way
     you can easily grep to find what you need.  and if you prefer to use the
     systemd-journald, it still works with that, without breaking standard
     syslog behavior on every other platform.
+
+- syslog is desirable since it handles concurrent write by multiple processes.
+    the weewx standalone logging will fail in this case.  syslog is also useful
+    because it can feed into log aggregators such as ELK, either directly or
+    via a remote logging server.  journalctl has some extra decorations if
+    you need some functionality and you do not know how to use grep/awk/sed.
 
 - no need for loop-on-init arg to weewxd?
    KEEP IT
