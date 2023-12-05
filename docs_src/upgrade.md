@@ -763,7 +763,7 @@ Add the text in <span class="added">green</span>:
   Python 2.5 or 2.6, then you should either upgrade your copy of Python, or stay with your old version of
   WeeWX.
 </p>
-### <span class="code">[StdWXCalculate]</span>
+### [StdWXCalculate]
 <p>
   In earlier versions of WeeWX, many derived types were calculated by default by the service <span
 											       class="code">StdWXCalculate</span>. By contrast, in WeeWX V4, no derived types are calculated by default

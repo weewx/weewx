@@ -61,7 +61,7 @@ documentation.
 !!! Note
     In the locations above, relative paths are *relative to _`WEEWX_ROOT`_*.
     Absolute paths begin with a forward slash (`/`).  The tilde character
-    `~` represents the `HOME` directory of the user.
+    (`~`) represents the `HOME` directory of the user.
 
 
 ## Log files
