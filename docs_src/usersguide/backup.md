@@ -17,7 +17,7 @@ The location of these items depends on how you installed WeeWX.
     |---------------|----------------------------|
     | Configuration | `/etc/weewx/weewx.conf`    |
     | Skins         | `/etc/weewx/skins`         |
-    | Custom code   | `/usr/share/weewx/user`    |
+    | Custom code   | `/etc/weewx/bin/user`      |
     | Database      | `/var/lib/weewx/weewx.sdb` |
 
 === "Redhat"
@@ -26,7 +26,7 @@ The location of these items depends on how you installed WeeWX.
     |---------------|----------------------------|
     | Configuration | `/etc/weewx/weewx.conf`    |
     | Skins         | `/etc/weewx/skins`         |
-    | Custom code   | `/usr/share/weewx/user`    |
+    | Custom code   | `/etc/weewx/bin/user`      |
     | Database      | `/var/lib/weewx/weewx.sdb` |
 
 === "openSUSE"
@@ -35,7 +35,7 @@ The location of these items depends on how you installed WeeWX.
     |---------------|----------------------------|
     | Configuration | `/etc/weewx/weewx.conf`    |
     | Skins         | `/etc/weewx/skins`         |
-    | Custom code   | `/usr/share/weewx/user`    |
+    | Custom code   | `/etc/weewx/bin/user`      |
     | Database      | `/var/lib/weewx/weewx.sdb` |
 
 === "pip"
