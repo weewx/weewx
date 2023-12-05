@@ -8,9 +8,9 @@
 
 ## Assigning a unit group
 
-In the examples above, we created a new observation type,
-`electricity`, and added it to the database schema. Now we would
-like to recognize that it is a member of the unit group
+In the section [Customizing the database](database.md), we created a new
+observation type, `electricity`, and added it to the database schema. Now we
+would like to recognize that it is a member of the unit group
 `group_energy` (which already exists), so it can enjoy the labels
 and formats already provided for this group. This is done by extending
 the dictionary `weewx.units.obs_group_dict`.
