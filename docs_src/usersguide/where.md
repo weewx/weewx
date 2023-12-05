@@ -67,17 +67,18 @@ documentation.
 ## Log files
 
 In the default configuration, WeeWX logs to the system logger `syslog`. On most
-systems, this puts the WeeWX messages into a file, along with other messages
-from the system.
+systems, this puts the WeeWX messages into the system log file, along with
+other messages from the system.
 
 If WeeWX was installed from DEB or RPM package, then the WeeWX log messages
-still use the `syslog`, but they are saved to files separate from the system's
-log messages.
+still use the `syslog`, but they are saved to files in the directory
+`/var/log/weewx` instead of intermingled with the system messages in the
+system log.
 
 See the wiki article [WeeWX logging](https://github.com/weewx/weewx/wiki/WeeWX-v4-and-logging)
 for more information on how to control logging in WeeWX.
 
-This is where to find the system log.
+This is where to find the system log:
 
 === "Debian"
 
@@ -106,10 +107,6 @@ This is where to find the system log.
 
     !!! note
         On macOS, the log file is likely to contain only severe log messages.
-
-=== "DEB/RPM installation"
-
-    `/var/log/weewx/weewxd.log`
 
 
 ## Location of executables in a pip install
