@@ -90,7 +90,7 @@ To import observations from one or more Weather Display monthly log files:
     $ cp /home/weewx/util/import/wd-example.conf /var/tmp/wd.conf
     ```
 
-1. Confirm that the [`source`](../wee_import-config#import_config_source) option is set to WD:
+1. Confirm that the [`source`](weectl-import-config-opt.md#import_config_source) option is set to WD:
 
     ```
     source = WD
@@ -98,60 +98,59 @@ To import observations from one or more Weather Display monthly log files:
 
 1. Confirm that the following options in the `[WD]` section are correctly set:
 
-    * [directory](../wee_import-config#wd_directory). The full path to the 
+    * [directory](weectl-import-config-opt.md#wd_directory). The full path to the 
       directory containing the Weather Display monthly log files to be 
       used as the source of the imported data.
 
-    * [logs_to_process](../wee_import-config#wd_logs_to_process). 
+    * [logs_to_process](weectl-import-config-opt.md#wd_logs_to_process). 
       Specifies the Weather Display monthly log files to be used to import 
       data.
 
-    * [interval](../wee_import-config#wd_interval). Determines how the 
+    * [interval](weectl-import-config-opt.md#wd_interval). Determines how the 
       WeeWX interval field is derived.
 
-    * [qc](../wee_import-config#wd_qc). Determines whether quality control 
+    * [qc](weectl-import-config-opt.md#wd_qc). Determines whether quality control 
       checks are performed on the imported data.
 
-    * [calc_missing](../wee_import-config#wd_calc_missing). Determines 
+    * [calc_missing](weectl-import-config-opt.md#wd_calc_missing). Determines 
       whether missing derived observations will be calculated from the 
       imported data.
 
-    * [txt_delimiter](../wee_import-config#wd_txt_delimiter). The field 
+    * [txt_delimiter](weectl-import-config-opt.md#wd_txt_delimiter). The field 
       delimiter used in the Weather Display space delimited (*.txt) 
       monthly log files.
 
-    * [csv_delimiter](../wee_import-config#wd_csv_delimiter). The field 
+    * [csv_delimiter](weectl-import-config-opt.md#wd_csv_delimiter). The field 
       delimiter used in the Weather Display monthly comma separated values 
       (*.csv) monthly log files.
 
-    * [decimal](../wee_import-config#wd_decimal). The decimal point 
+    * [decimal](weectl-import-config-opt.md#wd_decimal). The decimal point 
       character used in the Weather Display monthly log files.
 
-    * [ignore_missing_log](../wee_import-config#wd_ignore_missing_log). 
+    * [ignore_missing_log](weectl-import-config-opt.md#wd_ignore_missing_log). 
       Determines whether missing log files are to be ignored or the import 
       aborted.
 
-    * [ignore_invalid_data](../wee_import-config#wd_ignore_invalid_data). 
+    * [ignore_invalid_data](weectl-import-config-opt.md#wd_ignore_invalid_data). 
       Determines whether invalid data in a source field is ignored or the 
       import aborted.
 
-    * [tranche](../wee_import-config#wd_tranche). The number of records 
+    * [tranche](weectl-import-config-opt.md#wd_tranche). The number of records 
       written to the WeeWX database in each transaction.
 
-    * [UV_sensor](../wee_import-config#wd_UV). Whether a UV sensor was 
+    * [UV_sensor](weectl-import-config-opt.md#wd_UV). Whether a UV sensor was 
       installed when the source data was produced.
 
-    * [solar_sensor](../wee_import-config#wd_solar). Whether a solar 
+    * [solar_sensor](weectl-import-config-opt.md#wd_solar). Whether a solar 
       radiation sensor was installed when the source data was produced.
 
-    * [ignore_extreme_temp_hum](..
-      /wee_import-config#wd_ignore_extreme_temp_hum). Determines whether 
+    * [ignore_extreme_temp_hum](weectl-import-config-opt.md#wd_ignore_extreme_temp_hum). Determines whether 
       temperature and humidity values of 255 will be ignored.
 
-    * [[[Units]]](../wee_import-config#wd_units). Defines the units used 
+    * [[[Units]]](weectl-import-config-opt.md#wd_units). Defines the units used 
       in the Weather Display monthly log files.
 
-    * [[[FieldMap]]](../wee_import-config#wd_fieldmap). Defines the 
+    * [[[FieldMap]]](weectl-import-config-opt.md#wd_fieldmap). Defines the 
       mapping between imported data fields and WeeWX archive fields.
 
 1. When first importing data it is prudent to do a dry run import before 
