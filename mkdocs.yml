@@ -44,6 +44,9 @@ theme:
 extra_css:
   - css/weewx_ui.css
 
+extra:
+  generator: false
+
 docs_dir: 'docs_src'
 site_dir: 'build/docs'
 
