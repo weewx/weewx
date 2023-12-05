@@ -137,6 +137,9 @@ To import observations from a Weather Underground PWS history:
     * [wind_direction](weectl-import-config-opt.md#wu_wind_direction). 
       Determines how imported wind direction fields are interpreted.
 
+    * [[[FieldMap]]](weectl-import-config-opt.md#wu_fieldmap). Defines the 
+      mapping between imported data fields and WeeWX archive fields. 
+ 
 7. When first importing data it is prudent to do a dry run import before any 
    data is actually imported. A dry run import will perform all steps of the 
    import without actually writing imported data to the WeeWX database. In 
