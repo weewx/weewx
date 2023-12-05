@@ -137,7 +137,7 @@ cat src/weewx_data/weewx.conf | sed \
  > %{buildroot}%{dst_cfg_dir}/weewx.conf
 
 # make a copy of the generic configuration file
-cp %{buildroot}%{dst_cfg_dir}/weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf.%{weewx_version}
+cp %{buildroot}%{dst_cfg_dir}/weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf-%{weewx_version}
 
 # create the init configuration
 cp pkg/etc/systemd/system/weewx.service %{buildroot}/lib/systemd/system
@@ -201,9 +201,9 @@ elif [ "$1" = "2" ]; then
       OLDVER="xxx"
     fi
     MNT=${OLDVER}-%{weewx_version}
-    echo Creating maintainer version of configuration as %{cfg_file}.$MNT
-    mv %{cfg_file}.prev %{cfg_file}.$MNT
-    /usr/bin/weectl station upgrade --config=%{cfg_file}.$MNT --dist-config=%{cfg-file}.%{weewx_version} --what=config --no-prompt --no-backup
+    echo Creating maintainer version of configuration as %{cfg_file}-$MNT
+    mv %{cfg_file}.prev %{cfg_file}-$MNT
+    /usr/bin/weectl station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg-file}-%{weewx_version} --what=config --no-prompt --no-backup
     # FIXME: do we copy this onto the original?
   fi
   # if this is an upgrade from V4, copy any extensions to the V5 location
