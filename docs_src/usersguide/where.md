@@ -17,7 +17,7 @@ documentation.
     | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`             |
     | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`               |
     | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`          |
-    | Documentation           | _`DOC_ROOT`_     | `/usr/share/doc/weewx/`         |
+    | Documentation           |                  | https://weewx.com/docs          |
 
 === "RedHat"
 
@@ -30,7 +30,7 @@ documentation.
     | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`             |
     | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`               |
     | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`          |
-    | Documentation           |                  |  https://weewx.com/docs/5.0     |
+    | Documentation           |                  | https://weewx.com/docs          |
 
 === "openSUSE"
 
@@ -43,7 +43,7 @@ documentation.
     | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`         |
     | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`           |
     | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`      |
-    | Documentation           |                  |  https://weewx.com/docs/5.0 |
+    | Documentation           |                  | https://weewx.com/docs      |
 
 === "pip"
 
@@ -56,7 +56,7 @@ documentation.
     | Executables             | _`BIN_ROOT`_     | varies                      |
     | SQLite databases        | _`SQLITE_ROOT`_  | `archive/`                  |
     | Web pages and images    | _`HTML_ROOT`_    | `public_html/`              |
-    | Documentation           |                  |  https://weewx.com/docs/5.0 |
+    | Documentation           |                  | https://weewx.com/docs      |
 
 !!! Note
     In the locations above, relative paths are *relative to _`WEEWX_ROOT`_*.
@@ -106,6 +106,10 @@ This is where to find the system log.
 
     !!! note
         On macOS, the log file is likely to contain only severe log messages.
+
+=== "DEB/RPM installation"
+
+    `/var/log/weewx/weewxd.log`
 
 
 ## Location of executables in a pip install

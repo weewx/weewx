@@ -112,25 +112,6 @@ For example, to see only the messages from `weewxd`:
 journalctl -u weewx
 ```
 
-
-
-
-In its default configuration, WeeWX logs many events to the system log.  When
-troubleshooting, be sure to check the logs! The location of the log depends on
-the operating system and how WeeWX was installed.
-
-On many systems, the system log is either `/var/log/syslog` or
-`/var/log/messages`.  View the log like this (hit `ctrl-c` to stop):
-```{.shell .copy}
-sudo tail -f /var/log/syslog
-```
-
-If you installed WeeWX from a DEB or RPM package, the WeeWX logs are separated
-from the system log.  You can check the log like this (hit `ctrl-c` to stop):
-```{.shell .copy}
-tail -f /var/log/weewx/weewxd.log
-```
-
 ### Reports
 
 When it is running properly, WeeWX will generate reports, typically every five
