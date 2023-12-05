@@ -177,23 +177,25 @@ h4 {
 
 table {
     border-collapse: collapse;
-    border: 1px solid #cccccc;
-    width: 98%;
-    margin: 1%;
 }
 
 table .tty {
     margin: 0;
+    border: none;
 }
 
 tr {
     vertical-align: top;
-    font-size: 100%;
+}
+
+th {
+    border: .05rem solid #cccccc;
+    padding: 4px 20px 4px 10px;
 }
 
 td {
-    border: 1px solid #cccccc;
-    padding: 2px 2px 2px 8px;
+    border: .05rem solid #cccccc;
+    padding: 4px 20px 4px 10px;
 }
 
 table .first_row {
@@ -234,16 +236,6 @@ p .symcode {
     background-color: #ecf3f3;
     padding-left: 1px;
     padding-right: 1px;
-}
-
-.indent {
-    margin-left: 30px;
-    width: 95%;
-}
-
-.no_indent {
-    margin-left: 0px;
-    width: 98%;
 }
 
 .station_data {
@@ -693,9 +685,35 @@ a.toc-link:hover {
     border-top: 5px solid #aacccc;
 }
 
-/* For mkdocs markdown: */
+/* override settings in material */
+
+.md-typeset table:not([class]) tbody tr:hover {
+    background-color: inherit; /* do not change backgrounds on mouseovers */
+}
+
+.md-typeset table:not([class]) th {
+    padding: 0.2em 1em;
+}
+
+.md-typeset table:not([class]) td {
+    padding: 0.2em 1em;
+}
+
+.md-typeset table:not([class]) {
+    font-size: inherit;  /* match the body; the default of 0.64 is too small */
+}
+
+.md-typeset .tabbed-labels > label {
+    font-size: inherit;  /* match the body; the default of 0.64 is too small */
+}
+
+.md-typeset .admonition, .md-typeset details {
+    font-size: inherit;  /* match the body; the default of 0.64 is too small */
+}
+
 .md-typeset code {
-    font-weight:bold;
+    font-weight: bold;
+    font-size: .9em;
 }
 
 .md-source__facts li {
