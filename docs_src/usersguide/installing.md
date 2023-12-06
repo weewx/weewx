@@ -65,7 +65,7 @@ This is an outline of the process to install, configure, and run WeeWX:
 There are several different ways to install WeeWX.
 
 <table>
-  <tr><td>Installer</td><td>Systems</td><td>Best for...</td></tr>
+  <tr><th>Installer</th><th>Systems</th><th>Best for...</th></tr>
   <tr>
     <td><a href="../quickstarts/debian.md">Debian</a></td>
     <td>including Ubuntu, Mint, Raspberry Pi OS, Devuan</td>

@@ -175,8 +175,8 @@ treated as a special case, which limited their flexibility. With <a
 href="https://github.com/weewx/weewx/pull/807">PR #807</a>, a delta time is
 treated like any other scalar, which gives you access to all the regular
 formatting tools. However, a side effect is that if you want to format the time
-in the "long form", that is, so the results look like <span class="code">4
-hours, 15 minutes</span>, rather than <span class="code">15300 seconds</span>,
+in the "long form", that is, so the results look like <code>4
+hours, 15 minutes</code>, rather than <code>15300 seconds</code>,
 then you will have to say so explicitly.
 
 If you use the <em>Seasons</em> skin, you will have to make these four changes.
@@ -620,8 +620,8 @@ vh = ValueHelper(vt,
     <td>
       <pre class='tty'>[StdWXCalculate]
     <span class="removed">ignore_zero_wind = False</span>
-	[[Calculations]]
-            ...</pre>
+    [[Calculations]]
+        ...</pre>
     </td>
     <td>
       <pre class='tty'>[StdWXCalculate]

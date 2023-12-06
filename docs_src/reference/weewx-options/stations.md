@@ -4,7 +4,7 @@ This section covers options relating to your weather station setup.
 
 ## General Settings
 
-This applies to all station types
+These options apply to every type of station.
 
 #### ==location==
 

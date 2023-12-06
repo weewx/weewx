@@ -32,10 +32,10 @@ hardware.
 Below is a brief overview of the WeeWX system architecture, which is covered
 in much more detail in the rest of this document.
 
-| The WeeWX pipeline                            |
-|-----------------------------------------------|
-| ![The WeeWX pipeline](../images/pipeline.png) |
-| A typical WeeWX pipeline. The actual pipeline depends on what extensions are in use. Data, in the form of LOOP packets and archive records, flows from top to bottom. |
+<figure markdown>
+  ![The WeeWX pipeline](../images/pipeline.png)
+  <figcaption>A typical WeeWX pipeline. The actual pipeline depends on what extensions are in use. Data, in the form of LOOP packets and archive records, flows from top to bottom.</figcaption>
+</figure>
 
 * A WeeWX process normally handles the monitoring of one station — _e.g._ a
 weather station. The process is configured using options in a configuration

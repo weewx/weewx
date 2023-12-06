@@ -3,10 +3,10 @@
 This section describes the various options available to the image
 generator.
 
-| ![Part names in a WeeWX image](../../images/image_parts.png) |
-|--------------------------------------------------------------|
-| Part names in a WeeWX image                                  |
-
+<figure markdown>
+  ![Part names in a WeeWX image](../../images/image_parts.png)
+  <figcaption>Parts of a WeeWX plot image</figcaption>
+</figure>
 
 ## General options
 
@@ -17,9 +17,10 @@ These are options that affect the overall image.
 Setting to 2 or more might give a sharper image, with fewer jagged
 edges. Experimentation is in order. Default is `1`.
 
-| ![Effect of anti_alias option](../../images/antialias.gif)          |
-|---------------------------------------------------------------------|
-| A GIF showing the same image<br/>with `anti_alias=1`, `2`, and `4`. |
+<figure markdown>
+  ![Effect of anti_alias option](../../images/antialias.gif)
+  <figcaption>A GIF showing the same image<br/>with `anti_alias=1`, `2`, and `4`.</figcaption>
+</figure>
 
 #### chart_background_color
 
@@ -30,9 +31,10 @@ The background color of the chart itself. Optional. Default is
 
 The color of the chart grid lines. Optional. Default is `#a0a0a0`
 
-| ![Example of day/night bands](../../images/weektempdew.png) |
-|-------------------------------------------------------------|
-| Example of day/night bands in a one week image              |
+<figure markdown>
+  ![Example of day/night bands](../../images/weektempdew.png)
+  <figcaption>Example of day/night bands in a one week image</figcaption>
+</figure>
 
 #### daynight_day_color
 
@@ -211,9 +213,10 @@ y-axis minimum, maximum, and minimum increment automatically.)
 
 ## Compass rose options
 
-| ![Example of a progressive vector plot](../../images/daywindvec.png) |
-|----------------------------------------------------------------------|
-| Example of a vector plot with a compass rose<br/>in the lower-left   |
+<figure markdown>
+  ![Example of a progressive vector plot](../../images/daywindvec.png)
+  <figcaption>Example of a vector plot with a compass rose<br/>in the lower-left</figcaption>
+</figure>
 
 #### rose_label
 
