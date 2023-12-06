@@ -11,9 +11,9 @@ documentation.
     | Component               | Symbolic name    | Nominal value                   |
     |-------------------------|------------------|---------------------------------|
     | WeeWX root directory    | _`WEEWX_ROOT`_   | `/etc/weewx`                    |
-    | Skins and templates     | _`SKIN_ROOT`_    | `/etc/weewx/skins/`             |
-    | User directory          | _`USER_ROOT`_    | `/etc/weewx/bin/user/`          |
-    | Examples                | _`EXAMPLE_ROOT`_ | `/etc/weewx/examples/`          |
+    | Skins and templates     | _`SKIN_ROOT`_    | `skins/`                        |
+    | User directory          | _`USER_ROOT`_    | `bin/user/`                     |
+    | Examples                | _`EXAMPLE_ROOT`_ | `examples/`                     |
     | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`             |
     | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`               |
     | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`          |
@@ -24,9 +24,9 @@ documentation.
     | Component               | Symbolic name    | Nominal value                   |
     |-------------------------|------------------|---------------------------------|
     | WeeWX root directory    | _`WEEWX_ROOT`_   | `/etc/weewx`                    |
-    | Skins and templates     | _`SKIN_ROOT`_    | `/etc/weewx/skins/`             |
-    | User directory          | _`USER_ROOT`_    | `/etc/weewx/bin/user/`          |
-    | Examples                | _`EXAMPLE_ROOT`_ | `/etc/weewx/examples/`          |
+    | Skins and templates     | _`SKIN_ROOT`_    | `skins/`                        |
+    | User directory          | _`USER_ROOT`_    | `bin/user/`                     |
+    | Examples                | _`EXAMPLE_ROOT`_ | `examples/`                     |
     | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`             |
     | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`               |
     | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`          |
@@ -37,9 +37,9 @@ documentation.
     | Component               | Symbolic name    | Nominal value               |
     |-------------------------|------------------|-----------------------------|
     | WeeWX root directory    | _`WEEWX_ROOT`_   | `/etc/weewx`                |
-    | Skins and templates     | _`SKIN_ROOT`_    | `/etc/weewx/skins/`         |
-    | User directory          | _`USER_ROOT`_    | `/etc/weewx/bin/user/`      |
-    | Examples                | _`EXAMPLE_ROOT`_ | `/etc/weewx/examples/`      |
+    | Skins and templates     | _`SKIN_ROOT`_    | `skins/`                    |
+    | User directory          | _`USER_ROOT`_    | `bin/user/`                 |
+    | Examples                | _`EXAMPLE_ROOT`_ | `examples/`                 |
     | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`         |
     | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`           |
     | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`      |
@@ -53,7 +53,7 @@ documentation.
     | Skins and templates     | _`SKIN_ROOT`_    | `skins/`                    |
     | User directory          | _`USER_ROOT`_    | `bin/user/`                 |
     | Examples                | _`EXAMPLE_ROOT`_ | `examples/`                 |
-    | Executables             | _`BIN_ROOT`_     | varies                      |
+    | Executables             | _`BIN_ROOT`_     | varies (see below)          |
     | SQLite databases        | _`SQLITE_ROOT`_  | `archive/`                  |
     | Web pages and images    | _`HTML_ROOT`_    | `public_html/`              |
     | Documentation           |                  | https://weewx.com/docs      |
