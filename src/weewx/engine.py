@@ -9,12 +9,11 @@
 # Python imports
 import gc
 import logging
+import math
 import socket
 import sys
 import threading
 import time
-
-import configobj
 
 # weewx imports:
 import weeutil.config
@@ -385,52 +384,77 @@ class StdCalibrate(StdService):
     """Adjust data using calibration expressions.
     
     This service must be run before StdArchive, so the correction is applied
-    before the data is archived."""
+    before the data is archived.
+
+    To use:
+    [StdWXCalibrate]
+      [[Corrections]]
+        obstype = expression[, loop][, archive]
+
+    where "expression" is a valid Python expression involving any observation types in the same
+    record, or functions in the "math" module. If only "loop" is present, then only do the
+    correction in LOOP packets. If only "archive" is present, then only do the corrections in the
+    archive records. If neither is present, always do the correction in LOOP packets, and do it in
+    archive records if software record generation is being done.
+    """
 
     def __init__(self, engine, config_dict):
         # Initialize my base class:
         super().__init__(engine, config_dict)
 
-        # Get the list of calibration corrections to apply. If a section
-        # is missing, a KeyError exception will get thrown:
-        try:
-            correction_dict = config_dict['StdCalibrate']['Corrections']
-            self.corrections = configobj.ConfigObj()
+        if 'StdCalibrate' not in config_dict or 'Corrections' not in config_dict['StdCalibrate']:
+            log.info("No calibration information in config file. Ignored.")
+            return
 
+        # Get the set of calibration corrections to apply.
+        correction_dict = config_dict['StdCalibrate']['Corrections']
+        self.corrections = {}
+        self.which = {}
+        for obs_type in correction_dict.scalars:
+            if obs_type == 'foo': continue
+            # Ensure that the value is always a list
+            option = weeutil.weeutil.option_as_list(correction_dict[obs_type])
             # For each correction, compile it, then save in a dictionary of
             # corrections to be applied:
-            for obs_type in correction_dict.scalars:
-                self.corrections[obs_type] = compile(correction_dict[obs_type],
-                                                     'StdCalibrate', 'eval')
+            self.corrections[obs_type] = compile(option[0], 'StdCalibrate', 'eval')
+            # Now save which types of packets/records it should apply to. This will be either
+            # an empty list, or a list of one or two elements, which can be the strings 'loop',
+            # or 'archive', or both.
+            self.which[obs_type] = [v.lower() for v in option[1:]]
+            # Check the directives:
+            for val in self.which[obs_type]:
+                if val not in ('loop', 'archive'):
+                    raise ValueError(f"Invalid directive for StdCalibrate: {val}")
 
-            self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-            self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        except KeyError:
-            log.info("No calibration information in config file. Ignored.")
+        self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
     def new_loop_packet(self, event):
         """Apply a calibration correction to a LOOP packet"""
         for obs_type in self.corrections:
             if obs_type == 'foo': continue
-            try:
-                event.packet[obs_type] = eval(self.corrections[obs_type], None, event.packet)
-            except (TypeError, NameError):
-                pass
-            except ValueError as e:
-                log.error("StdCalibration loop error %s", e)
+            # If no directives were specified (self.which is empty), then always do the correction.
+            # If a directive has been specified, do the correction if 'loop' is in the directive.
+            if len(self.which[obs_type]) == 0 or 'loop' in self.which[obs_type]:
+                try:
+                    event.packet[obs_type] = eval(self.corrections[obs_type], {'math': math},
+                                                  event.packet)
+                except (TypeError, NameError, ValueError) as e:
+                    log.error("StdCalibration loop error %s", e)
 
     def new_archive_record(self, event):
         """Apply a calibration correction to an archive packet"""
-        # If the record was software generated, then any corrections have
-        # already been applied in the LOOP packet.
-        if event.origin != 'software':
-            for obs_type in self.corrections:
-                if obs_type == 'foo': continue
+        for obs_type in self.corrections:
+            if obs_type == 'foo': continue
+            # If a record was softwrae-generated, then the correction has presumably been
+            # already applied in the LOOP packet. So, unless told otherwise, do not do the
+            # correction again.
+            if ((len(self.which[obs_type]) == 0 and event.origin != 'software')
+                    or 'archive' in self.which[obs_type]):
                 try:
-                    event.record[obs_type] = eval(self.corrections[obs_type], None, event.record)
-                except (TypeError, NameError):
-                    pass
-                except ValueError as e:
+                    event.record[obs_type] = eval(self.corrections[obs_type], {'math': math},
+                                                  event.record)
+                except (TypeError, NameError, ValueError) as e:
                     log.error("StdCalibration archive error %s", e)
 
 

@@ -24,6 +24,9 @@ distribution, but can always be accessed online at https://weewx.com/docs.
 
 Package installs now use `systemd` instead of the old System V `/etc/init.d`.
 
+Allow `StdCalibrate` to operate only on LOOP packets, or only on archive
+records. Addresses [issue #895](https://github.com/weewx/weewx/issues/895).
+
 Removed all references to the deprecated package `distutils`, which is due to
 be removed in Python v3.12.
 

@@ -342,7 +342,7 @@ WeeWX archive field being populated using the following format:
     [[[weewx_archive_field_name]]]
         source_field = csv_field_name
         unit = weewx_unit_name
-        cumulative = True | False
+        is_cumulative = True | False
         is_text = True | False
 ```
 
@@ -359,7 +359,7 @@ Each WeeWX archive field stanza supports the following options:
   field. Mandatory.
 * `unit`. The WeeWX unit name of the units used by `source_field`. Mandatory 
   for non-text source fields. Ignored for source text fields.
-* `cumulative`. Whether the WeeWX archive field is to be derived from a 
+* `is_cumulative`. Whether the WeeWX archive field is to be derived from a 
   cumulative source field (e.g., daily rainfall) or not. Optional boolean 
   value. Default is `False`.
 * `is_text`. Whether the source field is to be imported as text or not. 
@@ -414,7 +414,7 @@ mm and `description` is a text field might use a field map as follows:
     [[[rain]]]
         source_field = dayrain
         unit = mm
-        cumulative = True
+        is_cumulative = True
     [[[radiation]]]
         source_field = rad
         unit = watt_per_meter_squared
@@ -451,7 +451,7 @@ then a field map such as the following might be used:
         source_field = dir
     [[[rain]]]
         source_field = dayrain
-        cumulative = True
+        is_cumulative = True
     [[[radiation]]]
         source_field = rad
     [[[outlook]]]
@@ -821,7 +821,7 @@ format:
     [[[weewx_archive_field_name]]]
         source_field = cumulus_field_name
         unit = weewx_unit_name
-        cumulative = True | False
+        is_cumulative = True | False
         is_text = True | False
 ```
 
@@ -840,7 +840,7 @@ Each WeeWX archive field stanza supports the following options:
 * `source_field`. The name of the Cumulus field to be mapped to the WeeWX 
   archive field. Mandatory.
 * `unit`. The WeeWX unit name of the units used by `source_field`. Mandatory.
-* `cumulative`. Whether the WeeWX archive field is to be derived from a 
+* `is_cumulative`. Whether the WeeWX archive field is to be derived from a 
   cumulative source field (e.g., daily rainfall) or not. Optional boolean 
   value. Default is `False`.
 
@@ -1247,7 +1247,7 @@ format:
     [[[weewx_archive_field_name]]]
         source_field = wd_field_name
         unit = weewx_unit_name
-        cumulative = True | False
+        is_cumulative = True | False
         is_text = True | False
 ```
 
@@ -1264,7 +1264,7 @@ Each WeeWX archive field stanza supports the following options:
 * `source_field`. The name of the Weather Display field to be mapped to the 
   WeeWX archive field. Mandatory.
 * `unit`. The WeeWX unit name of the units used by `source_field`. Mandatory.
-* `cumulative`. Whether the WeeWX archive field is to be derived from a 
+* `is_cumulative`. Whether the WeeWX archive field is to be derived from a 
   cumulative source field (e.g., daily rainfall) or not. Optional boolean 
   value. Default is `False`.
 * `is_text`. Whether the source field is to be imported as text or not. 
@@ -1549,7 +1549,7 @@ sub-stanza per WeeWX archive field being populated using the following format:
     [[[weewx_archive_field_name]]]
         source_field = wc_field_name
         unit = weewx_unit_name
-        cumulative = True | False
+        is_cumulative = True | False
         is_text = True | False
 ```
 
@@ -1566,7 +1566,7 @@ Each WeeWX archive field stanza supports the following options:
 * `source_field`. The name of the WeatherCat field to be mapped to the WeeWX 
   archive field. Mandatory.
 * `unit`. The WeeWX unit name of the units used by `source_field`. Mandatory.
-* `cumulative`. Whether the WeeWX archive field is to be derived from a 
+* `is_cumulative`. Whether the WeeWX archive field is to be derived from a 
   cumulative source field (e.g., daily rainfall) or not. Optional boolean 
   value. Default is `False`.
 * `is_text`. Whether the source field is to be imported as text or not. 

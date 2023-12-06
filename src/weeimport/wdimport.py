@@ -170,7 +170,7 @@ class WDSource(weeimport.Source):
             'unit': 'uv_index'},
         'ET': {
             'source_field': 'dailyet',
-            'cumulative': True},
+            'is_cumulative': True},
         'soilMoist1': {
             'source_field': 'soilmoist',
             'unit': 'centibar'},
