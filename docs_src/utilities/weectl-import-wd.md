@@ -79,9 +79,9 @@ To import observations from one or more Weather Display monthly log files:
 
 1. Make a backup of the WeeWX database in case the import should go awry.
 
-1. Create an import configuration file, the recomended approach is to make a 
+1. Create an import configuration file, the recommended approach is to make a 
    copy of the example Weather Display import configuration file located 
-   in the `util/import`directory. In this case we will make a copy of the 
+   in the `util/import` directory. In this case we will make a copy of the 
    example Weather Display import configuration file and save it as `wd.conf` 
    in the `/var/tmp` directory:
 
