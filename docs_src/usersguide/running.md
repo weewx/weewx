@@ -27,11 +27,11 @@ weewxd
     explicitly on the command line. For example:
 
     ```
-    weewxd /some/path/to/weewx.conf
+    weewxd --config=/some/path/to/weewx.conf
     ```
 
-If your station has a data logger, the program will start by downloading any
-data stored in your weather station into the archive database. For some
+If your weather station has a data logger, the program will start by
+downloading any data stored in the logger into the archive database. For some
 stations, such as the Davis Vantage with a couple of thousand records, this
 could take a minute or two.
 
