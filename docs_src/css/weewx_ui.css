@@ -189,6 +189,7 @@ tr {
 }
 
 th {
+    background-color: #ddefef;
     border: .05rem solid #cccccc;
     padding: 4px 20px 4px 10px;
 }
@@ -687,6 +688,10 @@ a.toc-link:hover {
 
 /* override settings in material */
 
+.md-typeset table:not([class]) {
+    border: none; /* no border on table, since we do it on cells */
+}
+
 .md-typeset table:not([class]) tbody tr:hover {
     background-color: inherit; /* do not change backgrounds on mouseovers */
 }
@@ -737,4 +742,17 @@ a.toc-link:hover {
 
 .md-typeset h1 {
     color: teal; /* ensure that h1 looks ok in dark mode */
+}
+
+.md-typeset pre > code {
+    scrollbar-width: auto; /* make scrollbars wide enough to use */
+}
+
+.md-typeset pre > code:hover {
+    scrollbar-color: teal #0000; /* replace the default blue color */
+    scrollbar-width: auto; /* make scrollbars wide enough to use */
+}
+
+.md-typeset__table {
+    display: inherit; /* eliminate extra padding */
 }

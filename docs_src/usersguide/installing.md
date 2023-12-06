@@ -70,10 +70,10 @@ There are several different ways to install WeeWX.
     <td><a href="../quickstarts/debian.md">Debian</a></td>
     <td>including Ubuntu, Mint, Raspberry Pi OS, Devuan</td>
     <td rowspan=3>
-      The Debian, Redhat, and SUSE package installers use <em>apt</em>, 
-      <em>yum</em>, and <em>zypper</em>, respectively. This is the fastest 
-      and easiest way to get up and running. You will need root access to 
-      install and run.
+      This is the fastest and easiest way to get up and running. The Debian,
+      Redhat, and SUSE package installers use <em>apt</em>, <em>yum</em>, and
+      <em>zypper</em>, respectively. You will need root access to install and
+      run.
     </td>
   </tr>
   <tr>
@@ -88,12 +88,13 @@ There are several different ways to install WeeWX.
     <td><a href="../quickstarts/pip.md">pip</a></td>
     <td>any operating system</td>
     <td>
-The pip installer will work on any operating system. Use this approach for macOS
-or one of the BSDs, or if you are using an older operating system. When used in
-a "virtual environment" (recommended), this approach is least likely to disturb
-other applications on your computer. This is also a good approach if you plan to
-do a lot of customization, or if you are developing a driver, skin, or other
-extension. Root access is not needed to install, but may be needed to run.
+The pip installer will work on any operating system. Use this approach for
+macOS or one of the BSDs, or if you are using an older operating system. When
+used in a Python "virtual environment" (recommended), this approach is least
+likely to disturb other applications on your computer. This is also a good
+approach if you plan to do a lot of customization, or if you are developing a
+driver, skin, or other extension. Root access is not needed to install, but
+may be needed to run.
     </td>
   </tr>
   <tr>
@@ -102,8 +103,8 @@ extension. Root access is not needed to install, but may be needed to run.
     <td>
 If you want to install WeeWX on a system with very little storage, or if you
 want to experiment with code that is under development, then you may want to
-run directly from the WeeWX sources.  Root access is not needed to install, but 
-may be needed to run.
+run directly from the WeeWX sources.  Root access is not needed to install,
+but may be needed to run.
     </td>
   </tr>
 </table>
@@ -128,8 +129,9 @@ Finally, reconfigure WeeWX to use the driver:
 weectl station reconfigure
 ```
 
-See the documentation for [`weectl
-extension`](../utilities/weectl-extension.md) for details.
+See the documentation for
+[`weectl extension`](../utilities/weectl-extension.md) and
+[`weectl station`](../utilities/weectl-station.md) for details.
 
 ## Installing a skin, uploader or other extension
 
@@ -153,7 +155,7 @@ required to upload data to an MQTT broker.  If so, modify the WeeWX
 configuration file using a text editor such as `nano`, and see the
 extension documentation for details.
 
-In most cases, you will then have to restart `weewxd`.
+In most cases, you will then have to restart WeeWX.
 
 See the documentation for [`weectl
 extension`](../utilities/weectl-extension.md) for details.

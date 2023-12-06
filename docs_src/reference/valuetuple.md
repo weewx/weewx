@@ -11,10 +11,10 @@ other units.
 The following attributes, and their index, are present:
 
 <table>
-    <tr class="first_row">
-        <td>Index</td>
-        <td>Attribute</td>
-        <td>Meaning</td>
+    <tr>
+        <th>Index</th>
+        <th>Attribute</th>
+        <th>Meaning</th>
     </tr>
     <tr>
         <td>0</td>

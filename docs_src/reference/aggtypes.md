@@ -3,9 +3,9 @@
 <table>
     <caption>Aggregation types</caption>
     <tbody>
-    <tr class="first_row">
-        <td>Aggregation type</td>
-        <td>Meaning</td>
+    <tr>
+        <th>Aggregation type</th>
+        <th>Meaning</th>
     </tr>
     <tr>
         <td class="first_col code">avg</td>
