@@ -24,7 +24,7 @@ this:
 ```ini
 [StdCalibrate]
   [[Corrections]]
-    obs_type = expression[, loop][, record]
+    obs_type = expression[, loop][, archive]
 ```
 
 Where:
@@ -36,7 +36,7 @@ module](https://docs.python.org/3/library/math.html). More below.
 _`loop`_ is a directive that tells `StdCalibrate` to always apply the 
 correction to LOOP packets.
 
-_`record`_ is a directive that tells `StdCalibrate` to always apply the
+_`archive`_ is a directive that tells `StdCalibrate` to always apply the
 correction to archive records.
 
 Details below.
@@ -76,8 +76,8 @@ Here are examples:
 
     humidity = humidity - 3                      # 1
     outTemp = outTemp + 0.4, loop                # 2
-    barometer = barometer + .3, record           # 3
-    windSpeed = windSpeed * 1.05, loop, record   # 4
+    barometer = barometer + .3, archive          # 3
+    windSpeed = windSpeed * 1.05, loop, archive  # 4
 
 1. Apply the correction to all LOOP packets. Apply the correction to archive
    records only if they came from hardware. This is usually what you want.

@@ -432,7 +432,6 @@ class StdCalibrate(StdService):
     def new_loop_packet(self, event):
         """Apply a calibration correction to a LOOP packet"""
         for obs_type in self.corrections:
-            if obs_type == 'foo': continue
             # If no directives were specified (self.which is empty), then always do the correction.
             # If a directive has been specified, do the correction if 'loop' is in the directive.
             if len(self.which[obs_type]) == 0 or 'loop' in self.which[obs_type]:
@@ -445,7 +444,6 @@ class StdCalibrate(StdService):
     def new_archive_record(self, event):
         """Apply a calibration correction to an archive packet"""
         for obs_type in self.corrections:
-            if obs_type == 'foo': continue
             # If a record was softwrae-generated, then the correction has presumably been
             # already applied in the LOOP packet. So, unless told otherwise, do not do the
             # correction again.
