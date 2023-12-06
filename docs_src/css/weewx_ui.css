@@ -686,6 +686,11 @@ a.toc-link:hover {
     border-top: 5px solid #aacccc;
 }
 
+/* change indicators in the upgrade guide */
+.removed { background: #ffdddd; }
+.changed { background: #ffe0b0; }
+.added { background: #ccffcc; }
+
 /* override settings in material */
 
 .md-typeset table:not([class]) {
