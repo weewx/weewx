@@ -16,7 +16,9 @@ import unittest
 
 import configobj
 
-import gen_fake_data
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
+
 import weeutil.config
 import weeutil.logger
 import weeutil.weeutil
@@ -26,6 +28,9 @@ import weewx.reportengine
 import weewx.station
 import weewx.units
 import weewx.wxxtypes
+
+sys.path.insert(0, os.path.join(DIR, '.'))
+import gen_fake_data
 
 weewx.debug = 1
 

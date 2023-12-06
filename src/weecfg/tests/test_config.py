@@ -4,6 +4,7 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Test the configuration utilities."""
+
 import contextlib
 import io
 import os.path
@@ -12,6 +13,9 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import configobj
 

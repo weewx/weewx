@@ -9,7 +9,12 @@ For this test to work, MySQL user 'weewx' must have full access to database 'tes
     mysql> grant select, update, create, delete, drop, insert on test.* to weewx@localhost;
 """
 
+import os
+import sys
 import unittest
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import weedb
 import weedb.sqlite
@@ -31,7 +36,7 @@ schema = [(0, 'dateTime', 'INTEGER', False, None, True),
           (7, 'descript', 'STR',     True,  None, False)]
 
 
-class Common(unittest.TestCase):
+class Common(object):
 
     def setUp(self):
         self.tearDown()
@@ -199,7 +204,7 @@ class Common(unittest.TestCase):
         self.assertIsNone(_row)
 
 
-class TestSqlite(Common):
+class TestSqlite(Common, unittest.TestCase):
 
     def __init__(self, *args, **kwargs):
         self.db_dict = sqlite_db_dict
@@ -219,7 +224,7 @@ class TestSqlite(Common):
         _connect.close()
 
 
-class TestMySQL(Common):
+class TestMySQL(Common, unittest.TestCase):
 
     def setUp(self):
         try:

@@ -4,6 +4,7 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Test the xtypes example vaporpressure"""
+
 import logging
 import os
 import sys
@@ -11,6 +12,9 @@ import time
 import unittest
 
 import configobj
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../../..'))
 
 import weewx
 

@@ -131,9 +131,17 @@ done
 ###############################################################################
 ## testing targets
 
+test:
+	$(COVER) pytest --html=$(BLDDIR)/test-report.html --self-contained-html
+
+test-coverage:
+	make test COVER='coverage run -m'
+	coverage html --directory $(BLDDIR)/coverage-report
+	@echo "coverage report is at $(BLDDIR)/coverage-report"
+
 # if no suite is specified, find all test suites in the source tree
 SUITE?=`find src -name "test_*.py"`
-test: src/weewx_data/
+test-old: src/weewx_data/
 	@rm -f $(BLDDIR)/test-results
 	@mkdir -p $(BLDDIR)
 	@echo "Python interpreter in use:" >> $(BLDDIR)/test-results 2>&1;

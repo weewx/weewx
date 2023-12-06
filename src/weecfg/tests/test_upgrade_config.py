@@ -4,11 +4,16 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Test the utilities that upgrade the configuration file."""
+
 import io
 import os.path
+import sys
 import unittest
 
 import configobj
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import weecfg.update_config
 

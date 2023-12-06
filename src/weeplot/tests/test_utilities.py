@@ -6,7 +6,12 @@
 """Test functions in weeplot.utilities"""
 
 import os
+import os.path
+import sys
 import unittest
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
 
 from weeplot.utilities import *
 from weeplot.utilities import _rel_approx_equal

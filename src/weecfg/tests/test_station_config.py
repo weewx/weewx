@@ -4,12 +4,16 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Test the configuration utilities."""
+
 import contextlib
 import os
 import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import configobj
 
@@ -39,13 +43,13 @@ def suppress_stdout(func):
     return wrapper
 
 
-class CommonConfigTest(unittest.TestCase):
+class CommonConfigTest(object):
 
     def setUp(self):
         self.config_dict = weeutil.config.deep_copy(CONFIG_DICT)
 
 
-class LocationConfigTest(CommonConfigTest):
+class LocationConfigTest(CommonConfigTest, unittest.TestCase):
 
     def test_default_config_location(self):
         weecfg.station_config.config_location(self.config_dict, no_prompt=True)
@@ -68,7 +72,7 @@ class LocationConfigTest(CommonConfigTest):
             self.assertEqual(self.config_dict['Station']['location'], "bar")
 
 
-class AltitudeConfigTest(CommonConfigTest):
+class AltitudeConfigTest(CommonConfigTest, unittest.TestCase):
 
     def test_default_config_altitude(self):
         weecfg.station_config.config_altitude(self.config_dict, no_prompt=True)
@@ -120,7 +124,7 @@ class AltitudeConfigTest(CommonConfigTest):
             self.assertEqual(self.config_dict['Station']['altitude'], ["110", "meter"])
 
 
-class LatLonConfigTest(CommonConfigTest):
+class LatLonConfigTest(CommonConfigTest, unittest.TestCase):
 
     def test_default_config_latlon(self):
         # Use the default as supplied by CONFIG_DICT
@@ -152,7 +156,7 @@ class LatLonConfigTest(CommonConfigTest):
             self.assertEqual(float(self.config_dict['Station']['longitude']), -41.0)
 
 
-class RegistryConfigTest(CommonConfigTest):
+class RegistryConfigTest(CommonConfigTest, unittest.TestCase):
 
     def test_default_register(self):
         weecfg.station_config.config_registry(self.config_dict, no_prompt=True)
@@ -198,7 +202,7 @@ class RegistryConfigTest(CommonConfigTest):
         self.assertEqual(self.config_dict['Station']['station_url'], STATION_URL)
 
 
-class UnitsConfigTest(CommonConfigTest):
+class UnitsConfigTest(CommonConfigTest, unittest.TestCase):
 
     def test_default_units(self):
         weecfg.station_config.config_units(self.config_dict, no_prompt=True)
@@ -225,7 +229,7 @@ class UnitsConfigTest(CommonConfigTest):
         self.assertEqual(self.config_dict['StdReport']['Defaults']['unit_system'], 'metricwx')
 
 
-class DriverConfigTest(CommonConfigTest):
+class DriverConfigTest(CommonConfigTest, unittest.TestCase):
 
     def test_default_config_driver(self):
         weecfg.station_config.config_driver(self.config_dict, no_prompt=True)
@@ -270,7 +274,7 @@ class DriverConfigTest(CommonConfigTest):
             self.assertEqual(self.config_dict['Vantage']['port'], '/dev/ttyS1')
 
 
-class TestConfigRoots(CommonConfigTest):
+class TestConfigRoots(CommonConfigTest, unittest.TestCase):
 
     def test_args_config_roots(self):
         weecfg.station_config.config_roots(self.config_dict, skin_root='foo',

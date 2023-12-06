@@ -17,13 +17,18 @@ import unittest
 
 import configobj
 
-import gen_fake_data
-import tst_schema
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
+
 import weeutil.logger
 import weeutil.weeutil
 import weewx.manager
 import weewx.tags
 from weewx.units import ValueHelper
+
+sys.path.insert(0, os.path.join(DIR, '.'))
+import gen_fake_data
+import tst_schema
 
 weewx.debug = 1
 

@@ -1,7 +1,11 @@
 """Test the weedb exception hierarchy"""
+
 import os.path
 import sys
 import unittest
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import weedb
 

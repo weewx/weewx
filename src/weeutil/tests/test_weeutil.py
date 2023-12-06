@@ -5,7 +5,12 @@
 #
 """Test routines for weeutil.weeutil."""
 
+import os
+import sys
 import unittest
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
 
 from weeutil.weeutil import *  # @UnusedWildImport
 from weewx.tags import TimespanBinder

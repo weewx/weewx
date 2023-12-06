@@ -15,17 +15,24 @@ This file also tests reweighting the weighted sums.
 
 It also tests the V4.3 and v4.4 patches.
 """
+
 import datetime
 import logging
 import os
+import sys
 import time
 import unittest
 
-import gen_fake_data
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
+
 import schemas.wview_small
 import weedb
 import weeutil.logger
 import weewx.manager
+
+sys.path.insert(0, os.path.join(DIR, '.'))
+import gen_fake_data
 
 log = logging.getLogger(__name__)
 

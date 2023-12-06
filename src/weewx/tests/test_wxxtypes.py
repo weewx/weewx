@@ -5,6 +5,8 @@
 #
 """Test weather-related XTypes extensions."""
 
+import os
+import sys
 import logging
 import math
 import unittest
@@ -16,10 +18,15 @@ except ImportError:
     # Python 2 --- must have mock installed
     import mock
 
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
+
 import weewx.wxxtypes
 import weeutil.logger
 from weewx.units import ValueTuple
 import schemas.wview_extended
+
+sys.path.insert(0, os.path.join(DIR, '.'))
 import gen_fake_data
 
 weewx.debug = 1

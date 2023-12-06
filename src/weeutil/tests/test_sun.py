@@ -3,9 +3,14 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
+
 import os
+import sys
 import time
 import unittest
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
 
 from weeutil import Sun
 

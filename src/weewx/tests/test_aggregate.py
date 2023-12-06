@@ -12,16 +12,21 @@ import sys
 import time
 import unittest
 
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
+
 import configobj
 
 import weedb
-import gen_fake_data
 import weeutil.logger
 import weewx
 import weewx.manager
 import weewx.xtypes
 from weeutil.weeutil import TimeSpan
 from weewx.units import ValueTuple
+
+sys.path.insert(0, os.path.join(DIR, '.'))
+import gen_fake_data
 
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()

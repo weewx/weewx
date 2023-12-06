@@ -4,14 +4,22 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Test module weewx.accum"""
+
+import os
+import sys
 import math
 import time
 import unittest
 
-import gen_fake_data
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
+
 import weewx.accum
-from gen_fake_data import genFakeRecords
 from weeutil.weeutil import TimeSpan
+
+sys.path.insert(0, os.path.join(DIR, '.'))
+import gen_fake_data
+from gen_fake_data import genFakeRecords
 
 # 30 minutes worth of data:
 start_ts = int(time.mktime((2009, 1, 1, 0, 0, 0, 0, 0, -1)))

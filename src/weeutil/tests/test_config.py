@@ -5,9 +5,15 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Test module weeutil.config"""
+
+import os
+import sys
 import logging
 import unittest
 from io import BytesIO, StringIO
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import configobj
 

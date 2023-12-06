@@ -5,8 +5,13 @@
 #
 """Test routines for weeutil.timediff."""
 
+import os
+import sys
 import time
 import unittest
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import weewx
 from weeutil.timediff import *

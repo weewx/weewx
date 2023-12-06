@@ -6,8 +6,13 @@
 #
 """Test functions in cheetahgenerator"""
 
+import os
+import sys
 import logging
 import unittest
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import weeutil.logger
 import weeutil.weeutil

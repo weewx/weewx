@@ -6,8 +6,13 @@
 #
 """Test module weewx.units"""
 
+import os
+import sys
 import unittest
 import operator
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import weewx.units
 from weewx.units import ValueTuple

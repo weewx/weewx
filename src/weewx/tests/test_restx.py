@@ -7,11 +7,15 @@
 
 import http.client
 import os
+import sys
 import queue
 import time
 import unittest
 import urllib.parse
 from unittest import mock
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import weewx
 import weewx.restx

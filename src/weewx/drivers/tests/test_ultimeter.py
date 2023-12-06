@@ -4,9 +4,15 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Test the ultimeter driver using mock"""
+
+import os
+import sys
 import struct
 import unittest
 from unittest.mock import patch
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../../..'))
 
 import weewx.drivers.ultimeter
 

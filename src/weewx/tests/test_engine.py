@@ -13,6 +13,9 @@ import unittest
 
 import configobj
 
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
+
 import weedb
 import weeutil.config
 import weeutil.weeutil

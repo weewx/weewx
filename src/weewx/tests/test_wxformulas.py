@@ -6,6 +6,7 @@
 """Test module weewx.wxformulas"""
 
 import os
+import sys
 import time
 import unittest
 
@@ -15,6 +16,9 @@ try:
 except ImportError:
     # Python 2 --- must have mock installed
     import mock
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import weewx
 import weewx.wxformulas

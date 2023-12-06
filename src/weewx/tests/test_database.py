@@ -5,12 +5,18 @@
 #    See the file LICENSE.txt for your full rights.
 #
 """Test archive and stats database modules"""
+
+import os
+import sys
 import unittest
 import time
 
 from io import StringIO
 
 import configobj
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
 
 import weewx.manager
 import weedb

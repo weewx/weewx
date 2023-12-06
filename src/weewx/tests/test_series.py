@@ -14,12 +14,17 @@ import unittest
 
 import configobj
 
-import gen_fake_data
+DIR = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, os.path.join(DIR, '../..'))
+
 import weewx
 import weewx.units
 import weewx.wxformulas
 import weewx.xtypes
 from weeutil.weeutil import TimeSpan
+
+sys.path.insert(0, os.path.join(DIR, '.'))
+import gen_fake_data
 
 weewx.debug = 1
 
