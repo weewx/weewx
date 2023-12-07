@@ -4,10 +4,10 @@ WeeWX offers three different *unit systems*:
 
 <table>
     <caption>The standard unit systems used within WeeWX</caption>
-    <tr class="first_row">
-        <td>Name</td>
-        <td>Encoded value</td>
-        <td>Note</td>
+    <tr>
+        <th>Name</th>
+        <th>Encoded value</th>
+        <th>Description</th>
     </tr>
     <tr>
         <td class="first_col code">US</td>
@@ -37,13 +37,13 @@ unit system.
 <table>
     <caption>Unit groups, members and options</caption>
     <tbody class="code">
-    <tr class="first_row">
-        <td>Group</td>
-        <td>Members</td>
-        <td>Unit options</td>
-        <td><span class="code">US</span></td>
-        <td><span class="code">METRICWX</span></td>
-        <td><span class="code">METRIC</span></td>
+    <tr>
+        <th>Group</th>
+        <th>Members</th>
+        <th>Unit options</th>
+        <th><span class="code">US</span></th>
+        <th><span class="code">METRICWX</span></th>
+        <th><span class="code">METRIC</span></th>
     </tr>
     <tr>
         <td class="first_col">group_altitude</td>

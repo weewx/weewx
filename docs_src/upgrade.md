@@ -175,8 +175,8 @@ treated as a special case, which limited their flexibility. With <a
 href="https://github.com/weewx/weewx/pull/807">PR #807</a>, a delta time is
 treated like any other scalar, which gives you access to all the regular
 formatting tools. However, a side effect is that if you want to format the time
-in the "long form", that is, so the results look like <span class="code">4
-hours, 15 minutes</span>, rather than <span class="code">15300 seconds</span>,
+in the "long form", that is, so the results look like <code>4
+hours, 15 minutes</code>, rather than <code>15300 seconds</code>,
 then you will have to say so explicitly.
 
 If you use the <em>Seasons</em> skin, you will have to make these four changes.
@@ -195,28 +195,24 @@ Add the text in <span class="added">green</span>:
     </tr>
     <tr>
       <td>
-        <pre class="tty">
-	  &lt;tr&gt;
-	  &lt;td class="label"&gt;$gettext("Server uptime")&lt;/td&gt;
-	  &lt;td class="data"&gt;$station.os_uptime&lt;/td&gt;
-	  &lt;/tr&gt;
-	  &lt;tr&gt;
-	  &lt;td class="label"&gt;$gettext("WeeWX uptime")&lt;/td&gt;
-	  &lt;td class="data"&gt;$station.uptime&lt;/td&gt;
-	  &lt;/tr&gt;
-        </pre>
+        <pre class="tty">&lt;tr&gt;
+  &lt;td class="label"&gt;$gettext("Server uptime")&lt;/td&gt;
+  &lt;td class="data"&gt;$station.os_uptime&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+  &lt;td class="label"&gt;$gettext("WeeWX uptime")&lt;/td&gt;
+  &lt;td class="data"&gt;$station.uptime&lt;/td&gt;
+&lt;/tr&gt;</pre>
       </td>
       <td>
-        <pre class="tty">
-	  &lt;tr&gt;
-	  &lt;td class="label"&gt;$gettext("Server uptime")&lt;/td&gt;
-	  &lt;td class="data"&gt;$station.os_uptime<span class="added">.long_form</span>&lt;/td&gt;
-	  &lt;/tr&gt;
-	  &lt;tr&gt;
-	  &lt;td class="label"&gt;$gettext("WeeWX uptime")&lt;/td&gt;
-	  &lt;td class="data"&gt;$station.uptime<span class="added">.long_form</span>&lt;/td&gt;
-	  &lt;/tr&gt;
-        </pre>
+        <pre class="tty">&lt;tr&gt;
+  &lt;td class="label"&gt;$gettext("Server uptime")&lt;/td&gt;
+  &lt;td class="data"&gt;$station.os_uptime<span class="added">.long_form</span>&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+  &lt;td class="label"&gt;$gettext("WeeWX uptime")&lt;/td&gt;
+  &lt;td class="data"&gt;$station.uptime<span class="added">.long_form</span>&lt;/td&gt;
+&lt;/tr&gt;</pre>
       </td>
     </tr>
     <tr>
@@ -226,20 +222,16 @@ Add the text in <span class="added">green</span>:
     </tr>
     <tr>
       <td>
-        <pre class="tty">
-	  &lt;tr&gt;
-	  &lt;td class="label"&gt;$gettext("Total daylight")&lt;/td&gt;
-	  &lt;td class="data"&gt;$almanac.sun.visible&lt;br/&gt;$sun_visible_change $change_str&lt;/td&gt;
-	  &lt;/tr&gt;
-        </pre>
+        <pre class="tty">&lt;tr&gt;
+  &lt;td class="label"&gt;$gettext("Total daylight")&lt;/td&gt;
+  &lt;td class="data"&gt;$almanac.sun.visible&lt;br/&gt;$sun_visible_change $change_str&lt;/td&gt;
+&lt;/tr&gt;</pre>
       </td>
       <td>
-        <pre class="tty">
-	  &lt;tr&gt;
-	  &lt;td class="label"&gt;$gettext("Total daylight")&lt;/td&gt;
-	  &lt;td class="data"&gt;$almanac.sun.visible<span class="added">.long_form</span>&lt;br/&gt;$sun_visible_change<span class="added">.long_form</span> $change_str&lt;/td&gt;
-	  &lt;/tr&gt;
-        </pre>
+        <pre class="tty">&lt;tr&gt;
+  &lt;td class="label"&gt;$gettext("Total daylight")&lt;/td&gt;
+  &lt;td class="data"&gt;$almanac.sun.visible<span class="added">.long_form</span>&lt;br/&gt;$sun_visible_change<span class="added">.long_form</span> $change_str&lt;/td&gt;
+&lt;/tr&gt;</pre>
       </td>
     </tr>
   </table>
@@ -263,16 +255,12 @@ Add the text in <span class="added">green</span>:
     </tr>
     <tr>
       <td>
-        <pre class="tty">
-          &lt;p&gt;$gettext("WeeWX uptime"):  $station.uptime&lt;br/&gt;
-          $gettext("Server uptime"): $station.os_uptime&lt;br/&gt;
-        </pre>
+        <pre class="tty">&lt;p&gt;$gettext("WeeWX uptime"):  $station.uptime&lt;br/&gt;
+$gettext("Server uptime"): $station.os_uptime&lt;br/&gt;</pre>
       </td>
       <td>
-        <pre class="tty">
-          &lt;p&gt;$gettext("WeeWX uptime"):  $station.uptime<span class="added">.long_form</span>&lt;br/&gt;
-          $gettext("Server uptime"): $station.os_uptime<span class="added">.long_form</span>&lt;br/&gt;
-        </pre>
+        <pre class="tty">&lt;p&gt;$gettext("WeeWX uptime"):  $station.uptime<span class="added">.long_form</span>&lt;br/&gt;
+$gettext("Server uptime"): $station.os_uptime<span class="added">.long_form</span>&lt;br/&gt;</pre>
       </td>
     </tr>
   </table>
@@ -291,35 +279,35 @@ Add the text in <span class="added">green</span>:
     <td>Results</td>
   </tr>
   <tr>
-    <td class="tty">
-      $almanac.sun.visible
+    <td>
+      <pre class="tty">$almanac.sun.visible</pre>
     </td>
-    <td class="tty">
-      45000 seconds
-    </td>
-  </tr>
-  <tr>
-    <td class="tty">
-      $almanac.sun.visible.hour
-    </td>
-    <td class="tty">
-      12.5 hours
+    <td>
+      <pre class="tty">45000 seconds</pre>
     </td>
   </tr>
   <tr>
-    <td class="tty">
-      $almanac.sun.visible.hour.format("%.2f")
+    <td>
+      <pre class="tty">$almanac.sun.visible.hour</pre>
     </td>
-    <td class="tty">
-      12.50 hours
+    <td>
+      <pre class="tty">12.5 hours</pre>
     </td>
   </tr>
   <tr>
-    <td class="tty">
-      $almanac.sun.visible.long_form
+    <td>
+      <pre class="tty">$almanac.sun.visible.hour.format("%.2f")</pre>
     </td>
-    <td class="tty">
-      12 hours, 30 minutes, 0 seconds
+    <td>
+      <pre class="tty">12.50 hours</pre>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <pre class="tty">$almanac.sun.visible.long_form</pre>
+    </td>
+    <td>
+      <pre class="tty">12 hours, 30 minutes, 0 seconds</pre>
     </td>
   </tr>
 </table>
@@ -350,36 +338,30 @@ Add the text in <span class="added">green</span>:
     </tr>
     <tr>
       <td>
-        <pre class='tty'>
-	  [[TimeFormats]]
-          ...
-          current     = %x %X
-          ephem_day   = %X
-          ephem_year  = %x %X
-          <span class="removed">brief_delta = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
-          <span class="removed">short_delta = "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
-          <span
-            class="removed">long_delta  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
-          <span
-            class="removed">delta_time  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
-        </pre>
+        <pre class='tty'>  [[TimeFormats]]
+    ...
+    current     = %x %X
+    ephem_day   = %X
+    ephem_year  = %x %X
+    <span class="removed">brief_delta = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+    <span class="removed">short_delta = "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+    <span class="removed">long_delta  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+    <span class="removed">delta_time  = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span></pre>
       </td>
       <td>
-        <pre class='tty'>
-	  [[TimeFormats]]
-          ...
-          current     = %x %X
-          ephem_day   = %X
-          ephem_year  = %x %X
+        <pre class='tty'>  [[TimeFormats]]
+    ...
+    current     = %x %X
+    ephem_day   = %X
+    ephem_year  = %x %X
 
-          <span class="added">[[DeltaTimeFormats]]</span>
-          <span class="added">current = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
-          <span class="added">hour    = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
-          <span class="added">day     = "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
-          <span class="added">week    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
-          <span class="added">month   = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
-          <span class="added">year    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
-        </pre>
+    <span class="added">[[DeltaTimeFormats]]</span>
+    <span class="added">current = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+    <span class="added">hour    = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+    <span class="added">day     = "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"</span>
+    <span class="added">week    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+    <span class="added">month   = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span>
+    <span class="added">year    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"</span></pre>
       </td>
     </tr>
   </table>
@@ -397,23 +379,21 @@ Add the text in <span class="added">green</span>:
   </tr>
   <tr>
     <td>
-      <pre class='tty'>
-	# Create an elapsed time of 1655 seconds
-	vt = ValueTuple(1655, 'second', 'group_deltatime')
-	vh = ValueHelper(vt,
-        formatter=self.generator.formatter,
-        converter=self.generator.converter,
-        <span class="changed">context='short_delta'</span>)
+      <pre class='tty'># Create an elapsed time of 1655 seconds
+vt = ValueTuple(1655, 'second', 'group_deltatime')
+vh = ValueHelper(vt,
+                 formatter=self.generator.formatter,
+                 converter=self.generator.converter,
+                 <span class="changed">context='short_delta'</span>)
       </pre>
     </td>
     <td>
-      <pre class='tty'>
-	# Create an elapsed time of 1655 seconds
-	vt = ValueTuple(1655, 'second', 'group_deltatime')
-	vh = ValueHelper(vt,
-        formatter=self.generator.formatter,
-        converter=self.generator.converter,
-        <span class="changed">context='day'</span>)
+      <pre class='tty'># Create an elapsed time of 1655 seconds
+vt = ValueTuple(1655, 'second', 'group_deltatime')
+vh = ValueHelper(vt,
+                 formatter=self.generator.formatter,
+                 converter=self.generator.converter,
+                 <span class="changed">context='day'</span>)
       </pre>
     </td>
   </tr>
@@ -467,8 +447,7 @@ Add the text in <span class="added">green</span>:
   </tr>
   <tr>
     <td>
-      <pre class='tty'>
-	def __init__(self, altitude_vt, latitude_f, longitude_f,
+      <pre class='tty'>def __init__(self, altitude_vt, latitude_f, longitude_f,
         <span class="removed">et_period=3600,</span>
         atc=0.8,
         nfac=2,
@@ -479,8 +458,7 @@ Add the text in <span class="added">green</span>:
       </pre>
     </td>
     <td>
-      <pre class='tty'>
-	def __init__(self, altitude_vt, latitude_f, longitude_f,
+      <pre class='tty'>def __init__(self, altitude_vt, latitude_f, longitude_f,
         atc=0.8,
         nfac=2,
         force_null=True,
@@ -505,74 +483,50 @@ Add the text in <span class="added">green</span>:
   </tr>
   <tr>
     <td>
-      <pre class='tty'>
-	def archiveHoursAgoSpan(time_ts, hours_ago=0<span class="removed">, grace=1</span>)
-      </pre>
+      <pre class='tty'>def archiveHoursAgoSpan(time_ts, hours_ago=0<span class="removed">, grace=1</span>)</pre>
     </td>
     <td>
-      <pre class='tty'>
-	def archiveHoursAgoSpan(time_ts, hours_ago=0)
-      </pre>
+      <pre class='tty'>def archiveHoursAgoSpan(time_ts, hours_ago=0)</pre>
     </td>
   </tr>
   <tr>
     <td>
-      <pre class='tty'>
-	def archiveDaySpan(time_ts, <span class="removed">grace=1,</span> days_ago=0)
-      </pre>
+      <pre class='tty'>def archiveDaySpan(time_ts, <span class="removed">grace=1,</span> days_ago=0)</pre>
     </td>
     <td>
-      <pre class='tty'>
-	def archiveDaySpan(time_ts, days_ago=0)
-      </pre>
+      <pre class='tty'>def archiveDaySpan(time_ts, days_ago=0)</pre>
     </td>
   </tr>
   <tr>
     <td>
-      <pre class='tty'>
-	def archiveWeekSpan(time_ts, startOfWeek=6, <span class="removed">grace=1,</span> weeks_ago=0)
-      </pre>
+      <pre class='tty'>def archiveWeekSpan(time_ts, startOfWeek=6, <span class="removed">grace=1,</span> weeks_ago=0)</pre>
     </td>
     <td>
-      <pre class='tty'>
-	def archiveWeekSpan(time_ts, startOfWeek=6, weeks_ago=0)
-      </pre>
+      <pre class='tty'>def archiveWeekSpan(time_ts, startOfWeek=6, weeks_ago=0)</pre>
     </td>
   </tr>
   <tr>
     <td>
-      <pre class='tty'>
-	def archiveMonthSpan(time_ts, <span class="removed">grace=1,</span> months_ago=0)
-      </pre>
+      <pre class='tty'>def archiveMonthSpan(time_ts, <span class="removed">grace=1,</span> months_ago=0)</pre>
     </td>
     <td>
-      <pre class='tty'>
-	def archiveMonthSpan(time_ts, months_ago=0)
-      </pre>
+      <pre class='tty'>def archiveMonthSpan(time_ts, months_ago=0)</pre>
     </td>
   </tr>
   <tr>
     <td>
-      <pre class='tty'>
-	def archiveYearSpan(time_ts, <span class="removed">grace=1,</span> years_ago=0)
-      </pre>
+      <pre class='tty'>def archiveYearSpan(time_ts, <span class="removed">grace=1,</span> years_ago=0)</pre>
     </td>
     <td>
-      <pre class='tty'>
-	def archiveYearSpan(time_ts, years_ago=0)
-      </pre>
+      <pre class='tty'>def archiveYearSpan(time_ts, years_ago=0)</pre>
     </td>
   </tr>
   <tr>
     <td>
-      <pre class='tty'>
-	def archiveRainYearSpan(time_ts, sory_mon<span class="removed">, grace=1</span>)
-      </pre>
+      <pre class='tty'>def archiveRainYearSpan(time_ts, sory_mon<span class="removed">, grace=1</span>)</pre>
     </td>
     <td>
-      <pre class='tty'>
-	def archiveRainYearSpan(time_ts, sory_mon)
-      </pre>
+      <pre class='tty'>def archiveRainYearSpan(time_ts, sory_mon)</pre>
     </td>
   </tr>
 </table>
@@ -664,22 +618,18 @@ Add the text in <span class="added">green</span>:
   </tr>
   <tr>
     <td>
-      <pre class='tty'>
-	[StdWXCalculate]
-	<span class="removed">ignore_zero_wind = False</span>
-	[[Calculations]]
-        ...
-      </pre>
+      <pre class='tty'>[StdWXCalculate]
+    <span class="removed">ignore_zero_wind = False</span>
+    [[Calculations]]
+        ...</pre>
     </td>
     <td>
-      <pre class='tty'>
-	[StdWXCalculate]
-	[[Calculations]]
+      <pre class='tty'>[StdWXCalculate]
+    [[Calculations]]
         ...
-	[[WXXTypes]]
-        [[[windDir]]]
-        <span class="added">force_null = False</span>
-      </pre>
+    [[WXXTypes]]
+    [[[windDir]]]
+        <span class="added">force_null = False</span></pre>
     </td>
   </tr>
 </table>
@@ -698,20 +648,16 @@ Add the text in <span class="added">green</span>:
   </tr>
   <tr>
     <td>
-      <pre class='tty'>
-	[StdReport]
+      <pre class='tty'>[StdReport]
 	...
 	<span class="changed">log_failure = False</span>
-	...
-      </pre>
+	...</pre>
     </td>
     <td>
-      <pre class='tty'>
-	[StdReport]
+      <pre class='tty'>[StdReport]
 	...
 	<span class="changed">log_failure = True</span>
-	...
-      </pre>
+	...</pre>
     </td>
   </tr>
 </table>
@@ -736,17 +682,15 @@ Add the text in <span class="added">green</span>:
   <tr>
     <td>
       <pre class='tty'>&lt;p&gt;
-	The current wind speed is $current.windSpeed,
-	which is <span class="changed">$current.beaufort</span> on the beaufort scale.
-	&lt;/p&gt;
-      </pre>
+The current wind speed is $current.windSpeed,
+which is <span class="changed">$current.beaufort</span> on the beaufort scale.
+&lt;/p&gt;</pre>
     </td>
     <td>
       <pre class='tty'>&lt;p&gt;
-	The current wind speed is $current.windSpeed,
-	which is <span class="changed">$current.windSpeed.beaufort</span> on the beaufort scale.
-	&lt;/p&gt;
-      </pre>
+The current wind speed is $current.windSpeed,
+which is <span class="changed">$current.windSpeed.beaufort</span> on the beaufort scale.
+&lt;/p&gt;</pre>
     </td>
   </tr>
 </table>
@@ -792,11 +736,10 @@ Add the text in <span class="added">green</span>:
   In this case, you should add the type to <span class="code">[StdWXCalculate]</span>. For example, if for
   some reason you deleted <span class="code">dewpoint</span>, then you would need to add the following
 </p>
-<pre class="tty" style="width:50%">
-  [StdWXCalculate]
+<pre class="tty" style="width:50%">[StdWXCalculate]
   [[Calculations]]
-  ...
-  <span class="highlight">dewpoint = prefer_hardware</span>
+    ...
+    <span class="added">dewpoint = prefer_hardware</span>
 </pre>
 
 ## Upgrading to V3.9
@@ -903,10 +846,12 @@ Add the text in <span class="added">green</span>:
 </p>
 
 !!! Note
-    Your archive may have interval values of different sizes if<br/>
-    * you have imported data using `wee_import`<br/>
-    * your hardware has a data logger, your configuration uses `record_generation=software`, and the `archive_interval` is different from that in the hardware<br/>
-    * your archive contains data from more than one type of hardware</br>
+    Your archive may have interval values of different sizes if
+    <ul>
+    <li> you have imported data using `wee_import`</li>
+    <li> your hardware has a data logger, your configuration uses `record_generation=software`, and the `archive_interval` is different from that in the hardware</li>
+    <li> your archive contains data from more than one type of hardware</li>
+    </ul>
 
 <p>The <a href="../utilities/weectl-database/#update"><span class="code">weectl
 database update</span></a> utility can fix this problem by recalculating the
@@ -969,13 +914,13 @@ In Version 3.7, this has been changed so the maximum <span class="code">windSpee
   <tr>
     <td>
       <pre class='tty'><span class="changed">examples.alarm.MyAlarm
-	  examples.lowBattery.MyAlarm
-	  examples.xsearch.MyXSearch</span></pre>
+examples.lowBattery.MyAlarm
+examples.xsearch.MyXSearch</span></pre>
     </td>
     <td>
       <pre class='tty'><span class="changed">user.alarm.MyAlarm
-	  user.lowBattery.BatteryAlarm
-	  user.stats.MyStats</span></pre>
+user.lowBattery.BatteryAlarm
+user.stats.MyStats</span></pre>
     </td>
   </tr>
 </table>
@@ -1082,8 +1027,7 @@ In Version 3.7, this has been changed so the maximum <span class="code">windSpee
           windFault = wind_fault
           uvFault = uv_fault
           rainFault = rain_fault
-          clockUnsynchronized = clock_unsynchronized
-      </span></pre>
+          clockUnsynchronized = clock_unsynchronized</span></pre>
     </td>
   </tr>
 </table>
@@ -1159,9 +1103,7 @@ In Version 3.7, this has been changed so the maximum <span class="code">windSpee
           extraTemp4 = t_5
           extraHumid4 = h_5
           extraBatteryStatus4 = bat_5
-          extraLinkStatus4 = link_5
-
-      </span></pre>
+          extraLinkStatus4 = link_5</span></pre>
     </td>
   </tr>
 </table>
@@ -1268,22 +1210,22 @@ In Version 3.7, this has been changed so the maximum <span class="code">windSpee
   <tr>
     <td>
       <pre class='tty'>[DataBindings]
-	[[wx_binding]]
+    [[wx_binding]]
         database = archive_sqlite
         manager = weewx.wxmanager.WXDaySummaryManager
         table_name = archive
         schema = schemas.wview.schema
-	[Databases]
-	[[archive_sqlite]]
-	<span class='changed'>        root = %(WEEWX_ROOT)s
-          database = archive/weewx.sdb
-          driver = weedb.sqlite</span>
-	[[archive_mysql]]
-	<span class='changed'>        host = localhost
-          user = weewx
-          password = weewx
-          database = weewx
-          driver = weedb.mysql</span>
+[Databases]
+    [[archive_sqlite]]
+<span class='changed'>        root = %(WEEWX_ROOT)s
+        database = archive/weewx.sdb
+        driver = weedb.sqlite</span>
+    [[archive_mysql]]
+<span class='changed'>        host = localhost
+        user = weewx
+        password = weewx
+        database = weewx
+        driver = weedb.mysql</span>
 
 
 
@@ -1297,27 +1239,27 @@ In Version 3.7, this has been changed so the maximum <span class="code">windSpee
     </td>
     <td>
       <pre class='tty'>[DataBindings]
-	[[wx_binding]]
+    [[wx_binding]]
         database = archive_sqlite
         manager = weewx.wxmanager.WXDaySummaryManager
         table_name = archive
         schema = schemas.wview.schema
-	[Databases]
-	[[archive_sqlite]]
-	<span class='changed'>        database_name = weewx.sdb
-          database_type = SQLite</span>
+[Databases]
+    [[archive_sqlite]]
+<span class='changed'>        database_name = weewx.sdb
+        database_type = SQLite</span>
 
-	[[archive_mysql]]
-	<span class='changed'>        database_name = weewx
-          database_type = MySQL</span>
+    [[archive_mysql]]
+<span class='changed'>        database_name = weewx
+        database_type = MySQL</span>
 
 
 
 	<span class='added'>[DatabaseTypes]
-	  [[SQLite]]
+    [[SQLite]]
           driver = weedb.sqlite
           SQLITE_ROOT = %(WEEWX_ROOT)s/archive
-	  [[MySQL]]
+    [[MySQL]]
           driver = weedb.mysql
           host = localhost
           user = weewx
@@ -1376,31 +1318,31 @@ In Version 3.7, this has been changed so the maximum <span class="code">windSpee
     <td></td>
     <td>
       <pre class='tty'>[StdReport]
-	<span class='added'>    data_binding = wx_binding</span></pre>
+<span class='added'>    data_binding = wx_binding</span></pre>
     </td>
   </tr>
   <tr>
     <td>
       <pre class='tty'>[StdArchive]
-	<span class='removed'>    archive_database = archive_sqlite
-	  stats_database = stats_sqlite
-	  archive_schema = user.schemas.defaultArchiveSchema
-	  stats_schema = user.schemas.defaultStatsSchema</span></pre>
+<span class='removed'>    archive_database = archive_sqlite
+    stats_database = stats_sqlite
+    archive_schema = user.schemas.defaultArchiveSchema
+    stats_schema = user.schemas.defaultStatsSchema</span></pre>
     </td>
     <td>
       <pre class='tty'>[StdArchive]
-	<span class='added'>    data_binding = wx_binding</span></pre>
+<span class='added'>    data_binding = wx_binding</span></pre>
     </td>
   </tr>
   <tr>
     <td></td>
     <td>
       <pre class='tty'><span class='added'>[DataBindings]
-	  [[wx_binding]]
-          database = archive_sqlite
-          manager = weewx.wxmanager.WXDaySummaryManager
-          table_name = archive
-          schema = schemas.wview.schema</span></pre>
+    [[wx_binding]]
+        database = archive_sqlite
+        manager = weewx.wxmanager.WXDaySummaryManager
+        table_name = archive
+        schema = schemas.wview.schema</span></pre>
     </td>
   </tr>
   <tr>
@@ -1410,26 +1352,26 @@ In Version 3.7, this has been changed so the maximum <span class="code">windSpee
         root = %(WEEWX_ROOT)s
         <span class='changed'>database</span> = archive/weewx.sdb
         driver = weedb.sqlite
-	<span class='removed'>    [[stats_sqlite]]
-          root = %(WEEWX_ROOT)s
-          database = archive/stats.sdb
-          driver = weedb.sqlite</span>
-	[[archive_mysql]]
+<span class='removed'>    [[stats_sqlite]]
+        root = %(WEEWX_ROOT)s
+        database = archive/stats.sdb
+        driver = weedb.sqlite</span>
+    [[archive_mysql]]
         host = localhost
         user = weewx
         password = weewx
         <span class='changed'>database</span> = weewx
         driver = weedb.mysql
-	<span class='removed'>    [[stats_mysql]]
-          host = localhost
-          user = weewx
-          password = weewx
-          database = stats
-          driver = weedb.mysql</span></pre>
+<span class='removed'>    [[stats_mysql]]
+        host = localhost
+        user = weewx
+        password = weewx
+        database = stats
+        driver = weedb.mysql</span></pre>
     </td>
     <td>
       <pre class='tty'>[Databases]
-	[[archive_sqlite]]
+    [[archive_sqlite]]
         root = %(WEEWX_ROOT)s
         <span class='changed'>database_name</span> = archive/weewx.sdb
         driver = weedb.sqlite
@@ -1437,7 +1379,7 @@ In Version 3.7, this has been changed so the maximum <span class="code">windSpee
 	
 	
 	
-	[[archive_mysql]]
+    [[archive_mysql]]
         host = localhost
         user = weewx
         password = weewx
@@ -1455,49 +1397,49 @@ In Version 3.7, this has been changed so the maximum <span class="code">windSpee
   <tr>
     <td>
       <pre class='tty'>[<span class='changed'>Engines</span>]
-	[[<span class='changed'>WxEngine</span>]]
+    [[<span class='changed'>WxEngine</span>]]
         prep_services = \
-	weewx.<span class='changed'>wxengine</span>.StdTimeSynch
+          weewx.<span class='changed'>wxengine</span>.StdTimeSynch
         process_services = \
-	weewx.<span class='changed'>wxengine</span>.StdConvert, \
-	weewx.<span class='changed'>wxengine</span>.StdCalibrate, \
-	weewx.<span class='changed'>wxengine</span>.StdQC
+          weewx.<span class='changed'>wxengine</span>.StdConvert, \
+          weewx.<span class='changed'>wxengine</span>.StdCalibrate, \
+          weewx.<span class='changed'>wxengine</span>.StdQC
 	
         archive_services = \
-	weewx.<span class='changed'>wxengine</span>.StdArchive
+          weewx.<span class='changed'>wxengine</span>.StdArchive
         restful_services = \
-	weewx.restx.StdStationRegistry, \
-	weewx.restx.StdWunderground, \
-	weewx.restx.StdPWSweather, \
-	weewx.restx.StdCWOP, \
-	weewx.restx.StdWOW, \
-	weewx.restx.StdAWEKAS
+          weewx.restx.StdStationRegistry, \
+          weewx.restx.StdWunderground, \
+          weewx.restx.StdPWSweather, \
+          weewx.restx.StdCWOP, \
+          weewx.restx.StdWOW, \
+          weewx.restx.StdAWEKAS
         report_services = \
-	weewx.<span class='changed'>wxengine</span>.StdPrint, \
-	weewx.<span class='changed'>wxengine</span>.StdReport</pre>
+          weewx.<span class='changed'>wxengine</span>.StdPrint, \
+          weewx.<span class='changed'>wxengine</span>.StdReport</pre>
     </td>
     <td>
       <pre class='tty'>[<span class='changed'>Engine</span>]
-	[[<span class='changed'>Services</span>]]
+    [[<span class='changed'>Services</span>]]
         prep_services = \
-	weewx.<span class='changed'>engine</span>.StdTimeSynch
+          weewx.<span class='changed'>engine</span>.StdTimeSynch
         process_services = \
-	weewx.<span class='changed'>engine</span>.StdConvert, \
-	weewx.<span class='changed'>engine</span>.StdCalibrate, \
-	weewx.<span class='changed'>engine</span>.StdQC<span class='added'>, \
-	  weewx.wxservices.StdWXCalculate</span>
+          weewx.<span class='changed'>engine</span>.StdConvert, \
+          weewx.<span class='changed'>engine</span>.StdCalibrate, \
+          weewx.<span class='changed'>engine</span>.StdQC<span class='added'>, \
+          weewx.wxservices.StdWXCalculate</span>
         archive_services = \
-	weewx.<span class='changed'>engine</span>.StdArchive
+          weewx.<span class='changed'>engine</span>.StdArchive
         restful_services = \
-	weewx.restx.StdStationRegistry, \
-	weewx.restx.StdWunderground, \
-	weewx.restx.StdPWSweather, \
-	weewx.restx.StdCWOP, \
-	weewx.restx.StdWOW, \
-	weewx.restx.StdAWEKAS
+          weewx.restx.StdStationRegistry, \
+          weewx.restx.StdWunderground, \
+          weewx.restx.StdPWSweather, \
+          weewx.restx.StdCWOP, \
+          weewx.restx.StdWOW, \
+          weewx.restx.StdAWEKAS
         report_services = \
-	weewx.<span class='changed'>engine</span>.StdPrint, \
-	weewx.<span class='changed'>engine</span>.StdReport</pre>
+          weewx.<span class='changed'>engine</span>.StdPrint, \
+          weewx.<span class='changed'>engine</span>.StdReport</pre>
     </td>
   </tr>
 </table>
@@ -1522,7 +1464,7 @@ In Version 3.7, this has been changed so the maximum <span class="code">windSpee
 	[[day_images]]
         ...
         [[[daycpu]]]
-        <span class='changed'>archive_database = cmon_sqlite</span>
+            <span class='changed'>archive_database = cmon_sqlite</span>
         [[[cpu_user]]]
         [[[cpu_idle]]]
         [[[cpu_system]]]</pre>
@@ -1533,7 +1475,7 @@ In Version 3.7, this has been changed so the maximum <span class="code">windSpee
 	[[day_images]]
         ...
         [[[daycpu]]]
-        <span class='changed'>data_binding = cmon_binding</span>
+            <span class='changed'>data_binding = cmon_binding</span>
         [[[cpu_user]]]
         [[[cpu_idle]]]
         [[[cpu_system]]]</pre>
@@ -1801,14 +1743,14 @@ In Version 3.7, this has been changed so the maximum <span class="code">windSpee
   </tr>
   <tr>
     <td><pre class="tty">db = config_dict['StdArchive']['archive_database']
-	self.database_dict = config_dict['Databases'][db]
-	with weewx.archive.Archive.open(self.database_dict) as archive:
-	val = archive.getSql("SELECT AVG(windSpeed) FROM archive"
+self.database_dict = config_dict['Databases'][db]
+with weewx.archive.Archive.open(self.database_dict) as archive:
+    val = archive.getSql("SELECT AVG(windSpeed) FROM archive"
         " WHERE dateTime&gt;? AND dateTime&lt;=?",
         (start_ts, end_ts))</pre>
     </td>
     <td><pre class="tty">with self.engine.db_binder.get_manager('wx_binding') as mgr:
-	val = mgr.getSql("SELECT AVG(windSpeed) FROM %s"
+    val = mgr.getSql("SELECT AVG(windSpeed) FROM %s"
         " WHERE dateTime&gt;? AND dateTime&lt;=?" %
         mgr.table_name, (start_ts, end_ts))</pre>
     </td>
@@ -1868,17 +1810,17 @@ In Version 3.7, this has been changed so the maximum <span class="code">windSpee
   <tr>
     <td>
       <pre class='tty'>setup.py --extension --install extensions/basic
-	setup.py --extension --install basic.tar.gz
-	setup.py --extension --uninstall basic
-	setup.py --extension --list
-	setup.py --extension --install basic.tar.gz --dryrun</pre>
+setup.py --extension --install basic.tar.gz
+setup.py --extension --uninstall basic
+setup.py --extension --list
+setup.py --extension --install basic.tar.gz --dryrun</pre>
     </td>
     <td>
       <pre class='tty'>setup.py install --extension extensions/basic
-	setup.py install --extension basic.tar.gz
-	setup.py uninstall --extension basic
-	setup.py list-extensions
-	setup.py install --extension basic.tar.gz --dry-run</pre>
+setup.py install --extension basic.tar.gz
+setup.py uninstall --extension basic
+setup.py list-extensions
+setup.py install --extension basic.tar.gz --dry-run</pre>
     </td>
   </tr>
 </table>
@@ -2036,15 +1978,15 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
 
     <pre class='tty'>[[[MobileSmartphone]]]
       template = smartphone/index.html.tmpl
-      [[[MobileTempOutside]]]
+[[[MobileTempOutside]]]
       template = smartphone/temp_outside.html.tmpl
-      [[[MobileRain]]]
+[[[MobileRain]]]
       template = smartphone/rain.html.tmpl
-      [[[MobileBarometer]]]
+[[[MobileBarometer]]]
       template = smartphone/barometer.html.tmpl
-      [[[MobileWind]]]
+[[[MobileWind]]]
       template = smartphone/wind.html.tmpl
-      [[[MobileRadar]]]
+[[[MobileRadar]]]
       template = smartphone/radar.html.tmpl</pre>
 
     <p>Then modify section <span class="code">[CopyGenerator]</span> to add the <span class="highlight">highlighted</span> files:
@@ -2086,11 +2028,11 @@ Server uptime: 2 days, 10 hours, 22 minutes</pre>
     <p>Add a new <span class="code">[[[Mobile]]]</span> section:</p>
 
     <pre class="tty">[FileGenerator]
-      ...
-      [[ToDate]]
+  ...
+  [[ToDate]]
       ...
       [[[Mobile]]]
-      template = mobile.html.tmpl</pre>
+          template = mobile.html.tmpl</pre>
 
     <p>Then add <span class="code">mobile.css</span> and <span class="code"> favicon.ico</span> to the list of files to be copied on report generation:
     </p>

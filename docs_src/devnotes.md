@@ -450,7 +450,7 @@ holds a statistical summary for the day. For example, for outside
 temperature observation type `outTemp`, this table would be
 named `archive_day_outTemp`. This is what it would look like:
 
-<table class="fixed_width">
+<table>
   <caption>Structure of the <span class="code">archive_day_outTemp</span> daily summary</caption>
   <tr class="code first_row">
     <td>dateTime</td>
