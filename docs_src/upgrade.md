@@ -163,6 +163,17 @@ Its name was too similar to `weewx.UnknownType`, so it has been renamed to
 `weewx.units.UnknownObsType`. It is very unlikely any users would be affected
 by this.
 
+### `import` utility changes
+
+The use of a field map by the `import` utility has been revised and is now 
+more consistent across import sources. The result is the `import` utility now 
+requires a field map definition stanza for all import sources with the field 
+map defining the mapping from import source field to WeeWX archive field in 
+addition to defining source field units and identifying cumulative and text 
+fields. The expanded field map has resulted in the `rain` and `[[Units]]` 
+import configuration file options being  deprecated. Refer to the `import` 
+utility documentation and comments in the example import configuration files 
+for further details.
 
 ## Upgrading to V4.10
 
