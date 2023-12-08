@@ -175,12 +175,18 @@ class StdReportEngine(threading.Thread):
                                   "running report anyway", report)
                         log.debug("       ****  %s", timing.validation_error)
 
-            # Save the current working directory
+            # Save the current so we can change back to it later
             cwd = os.getcwd()
-            # Change directory to the skin subdirectory:
-            os.chdir(os.path.join(self.config_dict['WEEWX_ROOT'],
+            # Change directory to the skin directory so that paths resolve
+            newdir = os.path.join(self.config_dict['WEEWX_ROOT'],
                                   skin_dict['SKIN_ROOT'],
-                                  skin_dict['skin']))
+                                  skin_dict['skin'])
+            newtpl = (self.config_dict['WEEWX_ROOT'],
+                      skin_dict['SKIN_ROOT'],
+                      skin_dict['skin'])
+            log.debug("leave working-dir %s" % cwd)
+            log.debug("enter directory %s %s" % (newdir, newtpl))
+            os.chdir(newdir)
 
             if 'Generators' in skin_dict and 'generator_list' in skin_dict['Generators']:
                 for generator in weeutil.weeutil.option_as_list(skin_dict['Generators']['generator_list']):
@@ -223,6 +229,8 @@ class StdReportEngine(threading.Thread):
                 log.debug("No generators specified for report '%s'", report)
 
             # Restore the current working directory
+            log.debug("leave directory %s %s" % (newdir, newtpl))
+            log.debug("enter working-dir %s" % cwd)
             os.chdir(cwd)
 
 
