@@ -77,9 +77,10 @@ def station_create(config_path, *args,
     config_config(config_path, dist_config_dict, weewx_root=weewx_root, dry_run=dry_run,
                   *args, **kwargs)
     copy_skins(dist_config_dict, dry_run=dry_run)
-    copy_util(config_path, dist_config_dict, dry_run=dry_run)
     copy_examples(dist_config_dict, examples_root=examples_root, dry_run=dry_run)
     copy_user(dist_config_dict, user_root=user_root, dry_run=dry_run)
+    copy_util(config_path, dist_config_dict, dry_run=dry_run)
+    copy_scripts(dist_config_dict, dry_run=dry_run)
 
     print(f"Saving configuration file {config_path}")
     if dry_run:
@@ -87,6 +88,7 @@ def station_create(config_path, *args,
     else:
         # Save the results. No backup.
         weecfg.save(dist_config_dict, config_path)
+    return dist_config_dict
 
 
 def station_reconfigure(config_path, no_backup=False, dry_run=False, *args, **kwargs):
@@ -619,9 +621,8 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
 
     # Create a callable using the shutil.ignore_patterns factory function.
     _ignore_function = shutil.ignore_patterns('*.pyc', '__pycache__', 'apache', 'default', 'i18n',
-                                              'init.d', 'logrotate.d', 'logwatch', 'newsyslog.d',
-                                              'rsyslog.d', 'scripts', 'solaris',
-                                              'tmpfiles.d')
+                                              'init.d', 'logwatch', 'newsyslog.d',
+                                              'solaris', 'tmpfiles.d')
 
     util_dir = os.path.join(weewx_root, 'util')
     if os.path.isdir(util_dir):
@@ -643,6 +644,42 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
                             ignore=_ignore_function,
                             copy_function=_patch_file)
     return util_dir
+
+
+def copy_scripts(config_dict, scripts_root=None, dry_run=False, force=False):
+    """Copy scripts to SCRIPTS_DIR directory.
+
+    Args:
+        config_dict (dict): A configuration dictionary.
+        scripts_root (str): Path to where the examples will be put, relative to WEEWX_ROOT.
+        dry_run (bool): True to not actually do anything. Just show what would happen.
+        force (bool): True to overwrite existing scripts. Otherwise, do nothing if they exist.
+
+    Returns:
+        str|None: Path to the freshly written scripts, or None if they already exist and `force`
+            was False.
+    """
+
+    # If the user didn't specify a value, use a default
+    if not scripts_root:
+        scripts_root = 'scripts'
+
+    # scripts_root is relative to WEEWX_PATH. Join them to get the absolute path.
+    scripts_dir = os.path.join(config_dict['WEEWX_ROOT'], scripts_root)
+
+    if os.path.isdir(scripts_dir):
+        if not force:
+            print(f"Directory {scripts_dir} already exists.")
+            return None
+        else:
+            print(f"Removing scripts directory {scripts_dir}")
+            if not dry_run:
+                shutil.rmtree(scripts_dir, ignore_errors=True)
+    with weeutil.weeutil.get_resource_path('weewx_data', 'scripts') as scripts_resources:
+        print(f"Copying scripts into {scripts_dir}")
+        if not dry_run:
+            shutil.copytree(scripts_resources, scripts_dir)
+    return scripts_dir
 
 
 def station_upgrade(config_path, dist_config_path=None, examples_root=None,
@@ -687,6 +724,9 @@ def station_upgrade(config_path, dist_config_path=None, examples_root=None,
         if backup_path:
             print(f"Saved old configuration file as {backup_path}")
 
+    if 'skins' in what:
+        upgrade_skins(config_dict, skin_root=skin_root, no_prompt=no_prompt, dry_run=dry_run)
+
     if 'examples' in what:
         examples_dir = copy_examples(config_dict, examples_root=examples_root,
                                      dry_run=dry_run, force=True)
@@ -699,8 +739,9 @@ def station_upgrade(config_path, dist_config_path=None, examples_root=None,
         else:
             print("Could not upgrade the utilities directory.")
 
-    if 'skins' in what:
-        upgrade_skins(config_dict, skin_root=skin_root, no_prompt=no_prompt, dry_run=dry_run)
+    if 'scripts' in what:
+        scripts_dir = copy_scripts(config_dict, dry_run=dry_run, force=True)
+        print(f"Finished upgrading scripts at {scripts_dir}")
 
     if dry_run:
         print("This was a dry run. Nothing was actually done.")
