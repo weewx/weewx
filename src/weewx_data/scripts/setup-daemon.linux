@@ -27,10 +27,12 @@ cp $UTIL_ROOT/systemd/weewx@.service /etc/systemd/system
 cp $UTIL_ROOT/udev/rules.d/weewx.rules /etc/udev/rules.d/60-weewx.rules
 echo "Creating log directory $WEEWX_LOGDIR..."
 mkdir -p $WEEWX_LOGDIR
-echo "Reloading systemd..."
-systemctl daemon-reload
+echo "Setting permissions..."
+chown syslog:syslog $WEEWX_LOGDIR
 echo "Restarting syslog..."
 systemctl restart syslog
+echo "Reloading systemd..."
+systemctl daemon-reload
 echo "Enabling weewx..."
 systemctl enable weewx
 echo "You can now start weewx with the following command: '\033[1msudo systemctl start weewx\033[0m'"
