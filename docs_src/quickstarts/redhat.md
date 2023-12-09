@@ -55,7 +55,7 @@ and check the [log file](../usersguide/running.md#monitoring-weewx):
 tail -50 /var/log/weewx/weewxd.log
 ```
 See the [*Troubleshooting*](../usersguide/troubleshooting/what-to-do.md)
-section of the [*User's guide*](../users/guide/introduction.md) for more help.
+section of the [*User's guide*](../usersguide/introduction.md) for more help.
 
 
 ## Configure
