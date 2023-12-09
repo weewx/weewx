@@ -1,27 +1,35 @@
 #!/bin/sh
 #
-# Copy scripts into place that are necessary to run a Systemd daemon with logging.
+# Copy configurations that integrate WeeWX into the system.  These include
+# logging to a separate directory/file, udev rules for known devices, and the
+# service unit files to facilitate starting/stopping WeeWX using systemd.
 #
-# Must be run as a privileged user (use 'sudo').
+# This script must be run as a privileged user.
 #
 set -e
+WEEWX_LOGDIR=/var/log/weewx
 UTIL_ROOT=$HOME/weewx-data/util
-if [ ! -d $UTIL_ROOT ]
-then
+if [ ! -d $UTIL_ROOT ]; then
   echo "Cannot find utility files at location '$UTIL_ROOT'"
   exit 1
 fi
-echo "This script sets up files necessary to run weewx as a daemon..."
-echo "Copying files from $UTIL_ROOT"
+if [ "$(id -u)" != "0" ]; then
+  echo "This script requires admin privileges.  Use 'sudo' or run as root."
+  exit 1
+fi
+echo "This script sets up files necessary to run WeeWX at system startup..."
+echo "Copying files from $UTIL_ROOT..."
 cp $UTIL_ROOT/logrotate.d/weewx /etc/logrotate.d
 cp $UTIL_ROOT/rsyslog.d/weewx.conf /etc/rsyslog.d
 cp $UTIL_ROOT/systemd/weewx.service /etc/systemd/system
 cp $UTIL_ROOT/systemd/weewx@.service /etc/systemd/system
 cp $UTIL_ROOT/udev/rules.d/weewx.rules /etc/udev/rules.d/60-weewx.rules
+echo "Creating log directory $WEEWX_LOGDIR..."
+mkdir $WEEWX_LOGDIR
 echo "Reloading systemd..."
 systemctl daemon-reload
-echo "TODO: have syslog reload its configuration files. For now, you will have to do it manually"
+echo "Restarting syslog..."
+systemctl restart syslog
 echo "Enabling weewx..."
 systemctl enable weewx
-echo "Done."
 echo "You can now start weewx with the following command: '\033[1msudo systemctl start weewx\033[0m'"
