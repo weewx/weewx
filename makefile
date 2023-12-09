@@ -207,7 +207,7 @@ upload-src:
 ###############################################################################
 ## pypi targets
 
-pypi-packages $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL): pyproject.toml
+pypi-package $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL): pyproject.toml
 	poetry build
 
 # Upload wheel and src package to pypi.org
