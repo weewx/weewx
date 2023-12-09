@@ -4,6 +4,7 @@
 #    See the file LICENSE.txt for your rights.
 #
 """Entry point for the "station" subcommand."""
+import os.path
 import sys
 
 import weecfg.station_config
@@ -66,7 +67,7 @@ CREATE_DESCRIPTION = """Create a new station data area, including a configuratio
                      + WEEWX_ROOT_DESCRIPTION
 
 UPGRADE_DESCRIPTION = """Upgrade an existing station data area, including any combination of the 
-examples, utility files, configuration file, and skins. """ + WEEWX_ROOT_DESCRIPTION
+examples, utility files, scripts, configuration file, and skins. """ + WEEWX_ROOT_DESCRIPTION
 
 
 def add_subparser(subparsers):
@@ -153,15 +154,14 @@ def add_subparser(subparsers):
                                         help='Where to put the skins, relative to '
                                              'WEEWX_ROOT. Default is "skins".')
     station_upgrade_parser.add_argument('--what',
-                                        choices=['examples', 'util', 'config', 'skins'],
+                                        choices=['examples', 'util', 'config', 'skins', 'scripts'],
                                         default=['examples', 'util'],
                                         nargs='+',
                                         metavar='ITEM',
                                         help="What to upgrade. Choose from 'examples', 'util', "
-                                             "'skins', 'config', or some combination, separated "
-                                             "by spaces. Default is to upgrade the examples, "\
-                                             "and "
-                                             "utility files.")
+                                             "'skins', 'scripts', 'config', or some combination, "
+                                             "separated by spaces. Default is to upgrade the "
+                                             "examples, and utility files.")
     station_upgrade_parser.add_argument('--no-backup', action='store_true',
                                         help='Do not backup the old configuration file.')
     station_upgrade_parser.add_argument('--no-prompt', action='store_true',
@@ -191,25 +191,28 @@ def add_subparser(subparsers):
 def create_station(namespace):
     """Map 'namespace' to a call to station_create()"""
     try:
-        weecfg.station_config.station_create(config_path=namespace.config,
-                                             dist_config_path=namespace.dist_config,
-                                             driver=namespace.driver,
-                                             location=namespace.location,
-                                             altitude=namespace.altitude,
-                                             latitude=namespace.latitude,
-                                             longitude=namespace.longitude,
-                                             register=namespace.register,
-                                             station_url=namespace.station_url,
-                                             unit_system=namespace.unit_system,
-                                             weewx_root=namespace.weewx_root,
-                                             skin_root=namespace.skin_root,
-                                             sqlite_root=namespace.sqlite_root,
-                                             html_root=namespace.html_root,
-                                             examples_root=namespace.examples_root,
-                                             no_prompt=namespace.no_prompt,
-                                             dry_run=namespace.dry_run)
+        config_dict = weecfg.station_config.station_create(config_path=namespace.config,
+                                                           dist_config_path=namespace.dist_config,
+                                                           driver=namespace.driver,
+                                                           location=namespace.location,
+                                                           altitude=namespace.altitude,
+                                                           latitude=namespace.latitude,
+                                                           longitude=namespace.longitude,
+                                                           register=namespace.register,
+                                                           station_url=namespace.station_url,
+                                                           unit_system=namespace.unit_system,
+                                                           weewx_root=namespace.weewx_root,
+                                                           skin_root=namespace.skin_root,
+                                                           sqlite_root=namespace.sqlite_root,
+                                                           html_root=namespace.html_root,
+                                                           examples_root=namespace.examples_root,
+                                                           no_prompt=namespace.no_prompt,
+                                                           dry_run=namespace.dry_run)
     except weewx.ViolatedPrecondition as e:
         sys.exit(e)
+    script_dir = os.path.join(config_dict["WEEWX_ROOT"], "scripts")
+    print(f"You can now set up a daemon by running an appropriate script "
+          f"in the directory {script_dir}")
 
 
 def reconfigure_station(namespace):
