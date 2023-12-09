@@ -145,7 +145,10 @@ cp pkg/etc/systemd/system/weewx@.service %{buildroot}/lib/systemd/system
 
 # create the entry points
 for f in %{entry_points}; do \
-  cp bin/$f %{buildroot}%{_bindir}/$f; \
+  cat bin/$f | sed \
+   -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
+   -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=%{python}%' \
+   > %{buildroot}%{_bindir}/$f; \
 done
 
 # configure defaults

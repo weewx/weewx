@@ -87,7 +87,10 @@ install:
 
 # create the entry points
 	for f in $(ENTRIES); do \
-  cp $(SRC)/bin/$$f $(DST)/usr/bin; \
+cat $(SRC)/bin/$$f | sed \
+  -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
+  -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
+  > $(DST)/usr/bin; \
 done
 
 # the defaults file indicates which python and weewx to use
