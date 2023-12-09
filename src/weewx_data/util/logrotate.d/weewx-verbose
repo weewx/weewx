@@ -1,0 +1,45 @@
+/var/log/weewxd.log /var/log/weewx.log {
+  weekly
+  missingok
+  rotate 52
+  compress
+#  delaycompress # do not compress the most recently rotated file
+  copytruncate   # copy the file, then truncate
+  notifempty
+
+# on some systems the permissions do not propagate, so force them
+#  create 644 root adm    # default user/group on Debian
+#  create 644 syslog adm  # default user/group on Ubuntu
+#  create 644 root root   # default user/group on Redhat
+
+## The default logrotate behavior is to use "create" instead of "copytruncate".
+## However, if you do not use "copytruncate", then on some systems rsyslog
+## must be reloaded, or weewx must be restarted, otherwise the weewx log
+## messages will go to the previous log file, not the newly rotated one.
+##
+## The following example shows how to use the 'sharedscripts' and 'postrotate'
+## options to restart rsyslog.
+##
+## The command to restart rsyslog depends on the operating system - some
+## examples are given below.  In the postrotate section, uncomment only one
+## of the commands.  If you choose this approach, be sure to test!
+##
+# sharedscripts  # Run the command only _once_, not pr file.
+# postrotate     # Run the script after rotation is done.
+### On systems with SystemD
+#   systemctl kill -s HUP rsyslog.service
+### On systems that have "pgrep / pkill"
+#   pkill -HUP rsyslog
+### If SysV init scripts are available
+#   /etc/init.d/rsyslog stop
+#   /etc/init.d/rsyslog start
+### SysV where reload is available
+#   /etc/init.d/rsyslog reload > /dev/null
+### Ubuntu systems with upstart
+#   service rsyslog restart > /dev/null
+### Some (older?) RedHat/Fedora systems have the "reload" command
+#   reload rsyslog > /dev/null 2>&1
+### Debian systems might have this command available
+#   invoke-rc.d rsyslog reload > /dev/null
+# endscript
+}
