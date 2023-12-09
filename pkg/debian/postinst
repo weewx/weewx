@@ -266,7 +266,7 @@ migrate_extensions() {
     if [ -d /usr/share/weewx/user ]; then
         echo "Migrating old extensions to /etc/weewx/bin/user"
         cp -rp /usr/share/weewx/user/* /etc/weewx/bin/user
-        ts=`/usr/bin/date +"%Y%m%d%H%M%S"`
+        ts=`date +"%Y%m%d%H%M%S"`
         echo "Saving old extensions to /usr/share/weewx/user-$ts"
         mv /usr/share/weewx/user /usr/share/weewx/user-$ts
     fi
