@@ -2,24 +2,26 @@
 #
 # Copy scripts into place that are necessary to run a Systemd daemon with logging.
 #
-# Optional first argument should be the location of WEEWX_ROOT. Defaults to $HOME/weewx-data
+# Must be run as a privileged user (use 'sudo').
 #
-WEEWX_ROOT=${1:-$HOME/weewx-data}
-UTILS=$WEEWX_ROOT/util
-if [ ! -d $UTILS ]
+set -e
+UTIL_ROOT=$HOME/weewx-data/util
+if [ ! -d $UTIL_ROOT ]
 then
-  echo "Cannot find WEEWX_ROOT at location '$WEEWX_ROOT'"
+  echo "Cannot find utility files at location '$UTIL_ROOT'"
   exit 1
 fi
-echo "Copying files needed to set up a daemon from $UTILS..."
-sudo cp $UTILS/logrotate.d/weewx /etc/logrotate.d
-sudo cp $UTILS/rsyslog.d/weewx.conf /etc/rsyslog.d
-sudo cp $UTILS/systemd/weewx.service /etc/systemd/system
-sudo cp $UTILS/udev/rules.d/weewx.rules /etc/udev/rules.d/60-weewx.rules
+echo "This script sets up files necessary to run weewx as a daemon..."
+echo "Copying files from $UTIL_ROOT"
+cp $UTIL_ROOT/logrotate.d/weewx /etc/logrotate.d
+cp $UTIL_ROOT/rsyslog.d/weewx.conf /etc/rsyslog.d
+cp $UTIL_ROOT/systemd/weewx.service /etc/systemd/system
+cp $UTIL_ROOT/systemd/weewx@.service /etc/systemd/system
+cp $UTIL_ROOT/udev/rules.d/weewx.rules /etc/udev/rules.d/60-weewx.rules
 echo "Reloading systemd..."
-sudo systemctl daemon-reload
+systemctl daemon-reload
+echo "TODO: have syslog reload its configuration files. For now, you will have to do it manually"
 echo "Enabling weewx..."
-sudo systemctl enable weewx
+systemctl enable weewx
 echo "Done."
-echo "Start weewx with the following command:"
-echo "\033[1msudo systemctl start weewx\033[0m"
+echo "You can now start weewx with the following command: '\033[1msudo systemctl start weewx\033[0m'"

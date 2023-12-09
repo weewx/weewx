@@ -11,6 +11,7 @@ import importlib
 import importlib.resources
 import logging
 import os
+import stat
 import os.path
 import re
 import shutil
@@ -80,7 +81,6 @@ def station_create(config_path, *args,
     copy_examples(dist_config_dict, examples_root=examples_root, dry_run=dry_run)
     copy_user(dist_config_dict, user_root=user_root, dry_run=dry_run)
     copy_util(config_path, dist_config_dict, dry_run=dry_run)
-    copy_scripts(dist_config_dict, dry_run=dry_run)
 
     print(f"Saving configuration file {config_path}")
     if dry_run:
@@ -602,6 +602,8 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
         r"<string>/Users/Shared/weewx/weewx.conf</string>": rf"<string>{config_path}<//string>",
         # For Apache
         r"/home/weewx/public_html": rf"{os.path.join(weewx_root, 'public_html')}",
+        # For scripts
+        r"^UTIL_ROOT=.*": rf"UTIL_ROOT={os.path.join(weewx_root, 'util')}",
     }
     # Convert to a list of two-way tuples.
     re_list = [(re.compile(key), re_dict[key]) for key in re_dict]
@@ -643,43 +645,34 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
             shutil.copytree(util_resources, util_dir,
                             ignore=_ignore_function,
                             copy_function=_patch_file)
-    return util_dir
 
-
-def copy_scripts(config_dict, scripts_root=None, dry_run=False, force=False):
-    """Copy scripts to SCRIPTS_DIR directory.
-
-    Args:
-        config_dict (dict): A configuration dictionary.
-        scripts_root (str): Path to where the examples will be put, relative to WEEWX_ROOT.
-        dry_run (bool): True to not actually do anything. Just show what would happen.
-        force (bool): True to overwrite existing scripts. Otherwise, do nothing if they exist.
-
-    Returns:
-        str|None: Path to the freshly written scripts, or None if they already exist and `force`
-            was False.
-    """
-
-    # If the user didn't specify a value, use a default
-    if not scripts_root:
-        scripts_root = 'scripts'
-
-    # scripts_root is relative to WEEWX_PATH. Join them to get the absolute path.
-    scripts_dir = os.path.join(config_dict['WEEWX_ROOT'], scripts_root)
-
+    scripts_dir = os.path.join(weewx_root, 'scripts')
     if os.path.isdir(scripts_dir):
         if not force:
-            print(f"Directory {scripts_dir} already exists.")
+            print(f"Scripts directory {scripts_dir} already exists. Nothing done.")
             return None
         else:
             print(f"Removing scripts directory {scripts_dir}")
             if not dry_run:
                 shutil.rmtree(scripts_dir, ignore_errors=True)
+
     with weeutil.weeutil.get_resource_path('weewx_data', 'scripts') as scripts_resources:
-        print(f"Copying scripts into {scripts_dir}")
+        print(f"Copying script files into {scripts_dir}")
         if not dry_run:
-            shutil.copytree(scripts_resources, scripts_dir)
-    return scripts_dir
+            # Copy the tree rooted in 'scripts_resources' to 'dstdir', while ignoring files given
+            # by _ignore_function. While copying, use the function _patch_file() to massage
+            # the files.
+            shutil.copytree(scripts_resources, scripts_dir,
+                            ignore=_ignore_function,
+                            copy_function=_patch_file)
+    # Make everything in the scripts file executable.
+    for f in os.listdir(scripts_dir):
+        abs_path = os.path.join(scripts_dir, f)
+        status = os.stat(abs_path)
+        # Because it has been tailored to a particular user, it should only be executable by
+        # that user. So, use S_IXUSR (instead of S_IXOTH):
+        os.chmod(abs_path, status.st_mode | stat.S_IXUSR)
+    return util_dir
 
 
 def station_upgrade(config_path, dist_config_path=None, examples_root=None,
@@ -738,10 +731,6 @@ def station_upgrade(config_path, dist_config_path=None, examples_root=None,
             print(f"Finished upgrading utilities directory at {util_dir}")
         else:
             print("Could not upgrade the utilities directory.")
-
-    if 'scripts' in what:
-        scripts_dir = copy_scripts(config_dict, dry_run=dry_run, force=True)
-        print(f"Finished upgrading scripts at {scripts_dir}")
 
     if dry_run:
         print("This was a dry run. Nothing was actually done.")

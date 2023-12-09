@@ -67,7 +67,7 @@ CREATE_DESCRIPTION = """Create a new station data area, including a configuratio
                      + WEEWX_ROOT_DESCRIPTION
 
 UPGRADE_DESCRIPTION = """Upgrade an existing station data area, including any combination of the 
-examples, utility files, scripts, configuration file, and skins. """ + WEEWX_ROOT_DESCRIPTION
+examples, utility files, configuration file, and skins. """ + WEEWX_ROOT_DESCRIPTION
 
 
 def add_subparser(subparsers):
@@ -154,12 +154,12 @@ def add_subparser(subparsers):
                                         help='Where to put the skins, relative to '
                                              'WEEWX_ROOT. Default is "skins".')
     station_upgrade_parser.add_argument('--what',
-                                        choices=['examples', 'util', 'config', 'skins', 'scripts'],
+                                        choices=['examples', 'util', 'config', 'skins'],
                                         default=['examples', 'util'],
                                         nargs='+',
                                         metavar='ITEM',
                                         help="What to upgrade. Choose from 'examples', 'util', "
-                                             "'skins', 'scripts', 'config', or some combination, "
+                                             "'skins', 'config', or some combination, "
                                              "separated by spaces. Default is to upgrade the "
                                              "examples, and utility files.")
     station_upgrade_parser.add_argument('--no-backup', action='store_true',
@@ -211,8 +211,9 @@ def create_station(namespace):
     except weewx.ViolatedPrecondition as e:
         sys.exit(e)
     script_dir = os.path.join(config_dict["WEEWX_ROOT"], "scripts")
-    print(f"You can now set up a daemon by running an appropriate script "
+    print("\nYou can now set up a daemon by running an appropriate script "
           f"in the directory {script_dir}")
+    print(f"For example: 'sudo {os.path.join(script_dir, 'setup-daemon.linux')}'")
 
 
 def reconfigure_station(namespace):
