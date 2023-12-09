@@ -4,9 +4,9 @@
 #
 #  item            name                           where to specify
 #  --------        -----------------------------  ----------------------------
-#  config          /etc/weewx/weewx-XXX.conf      configuration directory
-#  database_name   /var/lib/weewx/weewx-XXX.sdb   specified in weewx-XXX.conf
-#  HTML_ROOT       /var/www/html/weewx-XXX        specified in weewx-XXX.conf
+#  config          ~/weewx-data/XXX.conf          configuration directory
+#  database_name   ~/weewx-data/archive/XXX.sdb   specified in XXX.conf
+#  HTML_ROOT       ~/weewx-data/public_html/XXX   specified in XXX.conf
 #
 # For information about running WeeWX under systemd, see:
 #   https://github.com/weewx/weewx/wiki/systemd
@@ -19,7 +19,7 @@ After=time-sync.target
 PartOf=weewx.service
 
 [Service]
-ExecStart=weewxd --log-label weewxd-%i /etc/weewx/weewx-%i.conf
+ExecStart=weewxd --log-label weewxd-%i $HOME/weewx-data/%i.conf
 StandardOutput=null
 #User=weewx
 #Group=weewx
