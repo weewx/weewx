@@ -160,7 +160,7 @@ weectl station create
 
 The tool `weectl` will ask you a series of questions, then create a directory
 `weewx-data` in your home directory with a new configuration file. It will
-also install skins, documentation, utilitiy files, and examples in the same
+also install skins, documentation, utility files, and examples in the same
 directory. The database and reports will also go into that directory, but
 only after you run `weewxd`, as shown in the following step.
 
@@ -185,23 +185,23 @@ weewxd
 
 ### Run as a daemon
 
-To make WeeWX start when the system is booted, run `weewxd` as a daemon.
-The steps to configure `weewxd` to run as a daemon depend on your operating
-system, and require root privileges.
+To make WeeWX start when the system is booted, you will want to run `weewxd`
+as a daemon. Follow the directions below for your system. You will need root
+privileges.
 
 === "systemd"
 
     ```{ .shell .copy }
-    # Systems that use systemd, e.g., Debian, Redhat, SUSE
-    sudo cp ~/weewx-data/util/systemd/weewx.service /etc/systemd/system
-    sudo systemctl daemon-reload
-    sudo systemctl enable weewx
+    # For systems that use systemd, e.g., Debian, Redhat, SUSE, run the
+    # provided script:
+    sudo ~/weewx-data/scripts/setup-daemon.linux
+    # Now start the daemon:
     sudo systemctl start weewx
     ```
 
     !!! Note
         The resulting daemon will be run using your username. If you prefer to
-        use run as `root`, you will have to modify the file
+        use run as `root`, you will have to modify the unit file
         `/etc/systemd/system/weewx.service`.
     
 === "sysV"
