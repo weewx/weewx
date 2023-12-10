@@ -6,5 +6,4 @@
   delaycompress  # do not compress the most recently rotated file
   copytruncate   # copy the file, then truncate
   notifempty
-  create 644     # let everyone read the weewx logs
 }
