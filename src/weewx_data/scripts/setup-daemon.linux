@@ -47,7 +47,8 @@ if [ -d /etc/rsyslog.d ]; then
     LOGDIR_USER=`stat -c "%U" /var/log/syslog`
     LOGDIR_GROUP=`stat -c "%G" /var/log/syslog`
     echo "Setting log directory permissions to $LOGDIR_USER:$LOGDIR_GROUP..."
-    chown $LOGDIR_USER:$LOGDIR_GROUP $WEEWX_LOGDIR
+    chown $LOGDIR_USER $WEEWX_LOGDIR
+    chgrp $LOGDIR_GROUP $WEEWX_LOGDIR
     echo "Restarting syslog..."
     systemctl restart syslog
 fi
