@@ -214,7 +214,7 @@ def create_station(namespace):
     print("\nYou can now set up a daemon by running an appropriate script "
           f"in the directory {script_dir}")
     if os.path.isdir('/etc/systemd'):
-        print(f"For example: 'sudo {os.path.join(script_dir, 'setup-daemon.linux')}'")
+        print(f"For example: 'sudo {os.path.join(script_dir, 'setup-daemon.systemd')}'")
     elif os.path.isdir('/Library/LaunchDaemons'):
         print(f"For example: 'sudo {os.path.join(script_dir, 'setup-daemon.mac')}'")
 
