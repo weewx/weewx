@@ -97,7 +97,7 @@ To import observations from a CSV file:
    `/var/tmp` directory:
 
     ```
-    $ cp /home/weewx/util/import/csv-example.conf /var/tmp/csv.conf
+    cp /home/weewx/util/import/csv-example.conf /var/tmp/csv.conf
     ```
    
 4. Confirm that the [`source`](weectl-import-config-opt.md#import_config_source) 
@@ -172,8 +172,8 @@ name of the file containing the CSV formatted data to be imported.
     The output should be something like:
 
     ```
-    Using WeeWX configuration file /home/weewx/weewx.conf
-    Starting wee_import...
+    Using WeeWX configuration file /home/weewx/www-data/weewx.conf
+    Starting weectl import...
     A CSV import from source file '/var/tmp/data.csv' has been requested.
     Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
     Destination table 'archive' unit system is '0x01' (US).
@@ -203,8 +203,8 @@ name of the file containing the CSV formatted data to be imported.
     the end of the preamble there will be a prompt:
 
     ```
-    Using WeeWX configuration file /home/weewx/weewx.conf
-    Starting wee_import...
+    Using WeeWX configuration file /home/weewx/www-data/weewx.conf
+    Starting weectl import...
     A CSV import from source file '/var/tmp/data.csv' has been requested.
     Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
     Destination table 'archive' unit system is '0x01' (US).
@@ -262,7 +262,7 @@ name of the file containing the CSV formatted data to be imported.
    such cases something similar to the following will be found in the log:
 
     ```
-    Aug 22 14:38:28 stretch12  wee_import[1226] ERROR weewx.manager: Unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
+    2023-11-04 15:33:01 weectl-import[3795]: ERROR weewx.manager: Unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
     ```
     
     In such cases you should take note of the timestamp of the record(s) 

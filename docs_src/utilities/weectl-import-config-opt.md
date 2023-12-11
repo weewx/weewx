@@ -109,7 +109,7 @@ quality control range for that observation, the observation will be set to
 `None`. In such cases you will be alerted through a log entry similar to:
 
 ```
-2023-11-04 16:59:01 wee_import[3795]: WARNING weewx.qc: 2023-10-05 18:30:00 
+2023-11-04 16:59:01 weectl-import[3795]: WARNING weewx.qc: 2023-10-05 18:30:00 
 AEST (1696494600) Archive value 'outTemp' 194.34 outside limits (0.0, 120.0)
 ```
 
