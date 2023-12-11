@@ -45,8 +45,14 @@ fi
 if [ -d /etc/rsyslog.d ]; then
     echo "Creating log directory $WEEWX_LOGDIR..."
     mkdir -p $WEEWX_LOGDIR
-    LOGDIR_USER=`stat -c "%U" /var/log/syslog`
-    LOGDIR_GROUP=`stat -c "%G" /var/log/syslog`
+    # Ownership of syslog files varies between operating systems, so match
+    # what is used for other files on the system.
+    LOGDIR_USER=root
+    LOGDIR_GROUP=root
+    if [ -f /var/log/syslog ]; then
+        LOGDIR_USER=`stat -c "%U" /var/log/syslog`
+        LOGDIR_GROUP=`stat -c "%G" /var/log/syslog`
+    fi
     echo "Setting log directory permissions to $LOGDIR_USER:$LOGDIR_GROUP..."
     chown $LOGDIR_USER $WEEWX_LOGDIR
     chgrp $LOGDIR_GROUP $WEEWX_LOGDIR
