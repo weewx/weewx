@@ -597,9 +597,9 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
         # for macOS:
         r"<string>/usr/bin/python3</string>": rf"<string>{sys.executable}<//string>",
         # For macOS:
-        r"<string>/Users/Shared/weewx/bin/weewxd</string>": rf"<string>{weewxd_path}<//string>",
+        r"<string>/Users/Shared/weewx/src/weewxd.py</string>": rf"<string>{weewxd_path}</string>",
         # For macOS:
-        r"<string>/Users/Shared/weewx/weewx.conf</string>": rf"<string>{config_path}<//string>",
+        r"<string>/Users/Shared/weewx/weewx.conf</string>": rf"<string>{config_path}</string>",
         # For Apache
         r"/home/weewx/public_html": rf"{os.path.join(weewx_root, 'public_html')}",
         # For scripts

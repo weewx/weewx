@@ -1,10 +1,11 @@
 #!/bin/sh
 #
-# Copy configurations that integrate WeeWX into the system.  These include
-# logging to a separate directory/file, udev rules for known devices, and the
-# service unit files to facilitate starting/stopping WeeWX using systemd.
+# Copy configuration files that integrate WeeWX into a Linux system based on
+# systemd.  These include logging to a separate directory/file, udev rules
+# for known devices, and the service unit files to facilitate
+# starting/stopping WeeWX.
 #
-# This script must be run as a privileged user.
+# This script must be run using sudo, or as root.
 #
 set -e
 

@@ -213,7 +213,10 @@ def create_station(namespace):
     script_dir = os.path.join(config_dict["WEEWX_ROOT"], "scripts")
     print("\nYou can now set up a daemon by running an appropriate script "
           f"in the directory {script_dir}")
-    print(f"For example: 'sudo {os.path.join(script_dir, 'setup-daemon.linux')}'")
+    if os.path.isdir('/etc/systemd'):
+        print(f"For example: 'sudo {os.path.join(script_dir, 'setup-daemon.linux')}'")
+    elif os.path.isdir('/Library/LaunchDaemons'):
+        print(f"For example: 'sudo {os.path.join(script_dir, 'setup-daemon.mac')}'")
 
 
 def reconfigure_station(namespace):
