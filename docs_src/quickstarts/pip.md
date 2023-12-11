@@ -194,7 +194,7 @@ privileges.
     ```{ .shell .copy }
     # For systems that use systemd, e.g., Debian, Redhat, SUSE, run the
     # provided script:
-    sudo ~/weewx-data/scripts/setup-daemon.linux
+    sudo ~/weewx-data/scripts/setup-daemon.systemd
     # Now start the daemon:
     sudo systemctl start weewx
     ```

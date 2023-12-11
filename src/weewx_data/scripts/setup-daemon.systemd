@@ -50,8 +50,8 @@ if [ -d /etc/rsyslog.d ]; then
     LOGDIR_USER=root
     LOGDIR_GROUP=root
     if [ -f /var/log/syslog ]; then
-        LOGDIR_USER=`stat -c "%U" /var/log/syslog`
-        LOGDIR_GROUP=`stat -c "%G" /var/log/syslog`
+        LOGDIR_USER=$(stat -c "%U" /var/log/syslog)
+        LOGDIR_GROUP=$(stat -c "%G" /var/log/syslog)
     fi
     echo "Setting log directory permissions to $LOGDIR_USER:$LOGDIR_GROUP..."
     chown $LOGDIR_USER $WEEWX_LOGDIR
@@ -65,5 +65,7 @@ systemctl daemon-reload
 echo "Enabling weewx..."
 systemctl enable weewx
 
-echo "You can now start weewx with the following command:"
+echo "To make sure permission rules are applied correctly, consider unplugging your device,"
+echo "then plugging it back in again. "
+echo "After you've done that, you can start weewx with the following command:"
 echo "  '\033[1msudo systemctl start weewx\033[0m'"
