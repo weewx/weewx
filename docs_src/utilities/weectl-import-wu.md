@@ -93,54 +93,56 @@ To import observations from a Weather Underground PWS history:
     cp /home/weewx/util/import/wu-example.conf /var/tmp/wu.conf
     ```
 
-5. Confirm that the [`source`](weectl-import-config-opt.md#import_config_source) 
-   option is set to `WU`:
+5. Open `wu.conf` and:
 
-    ```
-    source = WU
-    ```
+    * confirm the [`source`](weectl-import-config-opt.md#import_config_source)
+      option is set to `WU`:
 
-6. Confirm that the following options in the `[WU]` section are correctly 
-   set:
+        ```
+        source = WU
+        ```
 
-    * [station_id](weectl-import-config-opt.md#wu_station_id). The 11 or 12 
-      character weather station ID of the Weather Underground PWS that 
-      will be the source of the imported data.
+    * confirm the following options in the `[WU]` section are correctly set:
 
-    * [api_key](weectl-import-config-opt.md#wu_api_key). The 32 character API 
-      key to be used to access the Weather Underground API.
+        * [station_id](weectl-import-config-opt.md#wu_station_id). The 11 or 
+          12 character weather station ID of the Weather Underground PWS that 
+          will be the source of the imported data.
 
-    * [interval](weectl-import-config-opt.md#wu_interval). Determines how the 
-      WeeWX interval field is derived.
+        * [api_key](weectl-import-config-opt.md#wu_api_key). The 32 character 
+          API key to be used to access the Weather Underground API.
 
-    * [qc](weectl-import-config-opt.md#wu_qc). Determines whether quality 
-      control checks are performed on the imported data.
+        * [interval](weectl-import-config-opt.md#wu_interval). Determines how 
+          the WeeWX interval field is derived.
 
-        !!! Note
-            As Weather Underground imports at times contain nonsense 
-            values, particularly for fields for which no data were 
-            uploaded to Weather Underground by the PWS, the use of quality 
-            control checks on imported data can prevent these nonsense 
-            values from being imported and contaminating the WeeWX database.
+        * [qc](weectl-import-config-opt.md#wu_qc). Determines whether quality 
+          control checks are performed on the imported data.
 
-    * [calc_missing](weectl-import-config-opt.md#wu_calc_missing). Determines 
-      whether missing derived observations will be calculated from the 
-      imported data.
+            !!! Note
+                As Weather Underground imports at times contain nonsense 
+                values, particularly for fields for which no data were 
+                uploaded to Weather Underground by the PWS, the use of 
+                quality control checks on imported data can prevent these 
+                nonsense values from being imported and contaminating the 
+                WeeWX database.
 
-    * [ignore_invalid_data](weectl-import-config-opt.md#wu_ignore_invalid_data). 
-      Determines whether invalid data in a source field is ignored or the 
-      import aborted
+        * [calc_missing](weectl-import-config-opt.md#wu_calc_missing). 
+          Determines whether missing derived observations will be calculated 
+          from the imported data.
 
-    * [tranche](weectl-import-config-opt.md#wu_tranche). The number of 
-      records written to the WeeWX database in each transaction.
+        * [ignore_invalid_data](weectl-import-config-opt.md#wu_ignore_invalid_data). 
+          Determines whether invalid data in a source field is ignored or the 
+          import aborted
 
-    * [wind_direction](weectl-import-config-opt.md#wu_wind_direction). 
-      Determines how imported wind direction fields are interpreted.
+        * [tranche](weectl-import-config-opt.md#wu_tranche). The number of 
+          records written to the WeeWX database in each transaction.
 
-    * [[[FieldMap]]](weectl-import-config-opt.md#wu_fieldmap). Defines the 
-      mapping between imported data fields and WeeWX archive fields. 
+        * [wind_direction](weectl-import-config-opt.md#wu_wind_direction). 
+          Determines how imported wind direction fields are interpreted.
+
+        * [[[FieldMap]]](weectl-import-config-opt.md#wu_fieldmap). Defines 
+          the mapping between imported data fields and WeeWX archive fields. 
  
-7. When first importing data it is prudent to do a dry run import before any 
+6. When first importing data it is prudent to do a dry run import before any 
    data is actually imported. A dry run import will perform all steps of the 
    import without actually writing imported data to the WeeWX database. In 
    addition, consideration should be given to any additional options to be 
@@ -186,8 +188,8 @@ To import observations from a Weather Underground PWS history:
     The output should be similar to:
     
     ```
-    Using WeeWX configuration file /home/weewx/weewx.conf
-    Starting wee_import...
+    Using WeeWX configuration file /home/weewx/www-data/weewx.conf
+    Starting weectl import...
     Observation history for Weather Underground station 'ISTATION123' will be imported.
     Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
     Destination table 'archive' unit system is '0x01' (US).
@@ -215,7 +217,7 @@ To import observations from a Weather Underground PWS history:
         this effect will be displayed against the period concerned and an 
         entry included in the log.
 
-8. Once the dry run results are satisfactory the source data can be imported 
+7. Once the dry run results are satisfactory the source data can be imported 
    using the following command:
 
     ```
@@ -226,8 +228,8 @@ To import observations from a Weather Underground PWS history:
    end of the preamble there will be a prompt:
     
     ```
-    Using WeeWX configuration file /home/weewx/weewx.conf
-    Starting wee_import...
+    Using WeeWX configuration file /home/weewx/www-data/weewx.conf
+    Starting weectl import...
     Observation history for Weather Underground station 'ISTATION123' will be imported.
     Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
     Destination table 'archive' unit system is '0x01' (US).
@@ -246,7 +248,7 @@ To import observations from a Weather Underground PWS history:
         may take some time. Such imports may be best handled as a series of 
         imports of smaller time spans.
 
-9. If the import parameters are acceptable enter `y` to proceed with the 
+8. If the import parameters are acceptable enter `y` to proceed with the 
    import or `n` to abort the import. If the import is confirmed, the 
    source data will be imported, processed and saved in the WeeWX database.
    Information on the progress of the import will be displayed similar to 
@@ -312,7 +314,7 @@ To import observations from a Weather Underground PWS history:
         cases confirm what data has been imported by referring to the 
         WeeWX log.
 
-10. Whilst `weectl import` will advise of the number of records processed and 
+9. Whilst `weectl import` will advise of the number of records processed and 
    the number of unique records found, `weectl import` does know how many, if 
    any, of the imported records were successfully saved to the database. You 
    should look carefully through the WeeWX log file covering the `weectl 
@@ -322,7 +324,7 @@ To import observations from a Weather Underground PWS history:
    in such cases something similar to the following will be found in the log:
 
     ```
-    Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
+    2023-11-04 15:33:01 weectl-import[3795]: ERROR weewx.manager: Unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
     ```
     
     In such cases you should take note of the timestamp of the record(s) 

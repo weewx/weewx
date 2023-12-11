@@ -85,57 +85,60 @@ To import observations from one or more Cumulus monthly log files:
     cp /home/weewx/util/import/cumulus-example.conf /var/tmp/cumulus.conf
     ```
 
-4. Confirm the [`source`](weectl-import-config-opt.md#import_config_source) 
-   option is set to Cumulus:
+4. Open `cumulus.conf` and:
 
-    ``` 
-    source = Cumulus
-    ```
+    * confirm the [`source`](weectl-import-config-opt.md#import_config_source) 
+      option is set to Cumulus:
 
-5. Confirm that the following options in the `[Cumulus]` section are 
-   correctly set:
+        ``` 
+        source = Cumulus
+        ```
 
-     * [directory](weectl-import-config-opt.md#cumulus_directory). The full 
-       path to the directory containing the Cumulus monthly log files to be 
-       used as the source of the imported data.
+    * confirm the following options in the `[Cumulus]` section are correctly 
+      set:
 
-     * [interval](weectl-import-config-opt.md#cumulus_interval). Determines 
-       how the WeeWX interval field is derived.
+        * [directory](weectl-import-config-opt.md#cumulus_directory). The 
+          full path to the directory containing the Cumulus monthly log files 
+          to be used as the source of the imported data.
 
-     * [qc](weectl-import-config-opt.md#cumulus_qc). Determines whether 
-       quality control checks are performed on the imported data.
+        * [interval](weectl-import-config-opt.md#cumulus_interval). 
+          Determines how the WeeWX interval field is derived.
 
-     * [calc_missing](weectl-import-config-opt.md#cumulus_calc_missing). 
-       Determines whether missing derived observations will be calculated 
-       from the imported data.
+        * [qc](weectl-import-config-opt.md#cumulus_qc). Determines whether 
+          quality control checks are performed on the imported data.
 
-     * [separator](weectl-import-config-opt.md#cumulus_separator). The date 
-       field separator used in the Cumulus monthly log files.
+        * [calc_missing](weectl-import-config-opt.md#cumulus_calc_missing). 
+          Determines whether missing derived observations will be calculated 
+          from the imported data.
 
-     * [delimiter](weectl-import-config-opt.md#cumulus_delimiter). The field 
-       delimiter used in the Cumulus monthly log files.
+        * [separator](weectl-import-config-opt.md#cumulus_separator). The 
+          date field separator used in the Cumulus monthly log files.
 
-     * [decimal](weectl-import-config-opt.md#cumulus_decimal). The decimal 
-       point character used in the Cumulus monthly log files.
+        * [delimiter](weectl-import-config-opt.md#cumulus_delimiter). The 
+          field delimiter used in the Cumulus monthly log files.
 
-     * [ignore_invalid_data](weectl-import-config-opt.md#cumulus_ignore_invalid_data). 
-       Determines whether invalid data in a source field is ignored or the 
-       import aborted.
+        * [decimal](weectl-import-config-opt.md#cumulus_decimal). The decimal 
+          point character used in the Cumulus monthly log files.
 
-     * [tranche](weectl-import-config-opt.md#cumulus_tranche). The number of 
-       records written to the WeeWX database in each transaction.
+        * [ignore_invalid_data](weectl-import-config-opt.md#cumulus_ignore_invalid_data). 
+          Determines whether invalid data in a source field is ignored or the 
+          import aborted.
 
-     * [UV_sensor](weectl-import-config-opt.md#cumulus_UV). Whether a UV 
-       sensor was installed when the source data was produced.
+        * [tranche](weectl-import-config-opt.md#cumulus_tranche). The number 
+          of records written to the WeeWX database in each transaction.
 
-     * [solar_sensor](weectl-import-config-opt.md#cumulus_solar). Whether a 
-       solar radiation sensor was installed when the source data was produced.
+        * [UV_sensor](weectl-import-config-opt.md#cumulus_UV). Whether a UV 
+          sensor was installed when the source data was produced.
 
-    * [[[FieldMap]]](weectl-import-config-opt.md#cumulus_fieldmap). Defines 
-      the mapping between imported data fields and WeeWX archive fields. 
-      Also defines the units of measure for each imported field.
+        * [solar_sensor](weectl-import-config-opt.md#cumulus_solar). Whether 
+          a solar radiation sensor was installed when the source data was 
+          produced.
 
-6. When first importing data it is prudent to do a dry run import before any 
+        * [[[FieldMap]]](weectl-import-config-opt.md#cumulus_fieldmap). 
+          Defines the mapping between imported data fields and WeeWX archive 
+          fields. Also defines the units of measure for each imported field.
+
+5. When first importing data it is prudent to do a dry run import before any 
    data is actually imported. A dry run import will perform all steps of the 
    import without actually writing imported data to the WeeWX database. In 
    addition, consideration should be given to any additional options to be 
@@ -155,8 +158,8 @@ To import observations from one or more Cumulus monthly log files:
     The output should be similar to:
   
     ```
-    Using WeeWX configuration file /home/weewx/weewx.conf
-    Starting wee_import...
+    Using WeeWX configuration file /home/weewx/www-data/weewx.conf
+    Starting weectl import...
     Cumulus monthly log files in the '/var/tmp/cumulus' directory will be imported
     Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
     Destination table 'archive' unit system is '0x01' (US).
@@ -196,7 +199,7 @@ To import observations from one or more Cumulus monthly log files:
         short explanatory note to this effect will be displayed against the 
         period concerned and an entry included in the log.
 
-7. Once the dry run results are satisfactory the data can be imported 
+6. Once the dry run results are satisfactory the data can be imported 
    using the following command:
 
     ```
@@ -207,8 +210,8 @@ To import observations from one or more Cumulus monthly log files:
    end of the preamble there will be a prompt:
   
     ```
-    Using WeeWX configuration file /home/weewx/weewx.conf
-    Starting wee_import...
+    Using WeeWX configuration file /home/weewx/www-data/weewx.conf
+    Starting weectl import...
     Cumulus monthly log files in the '/var/tmp/cumulus' directory will be imported
     Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
     Destination table 'archive' unit system is '0x01' (US).
@@ -227,8 +230,8 @@ To import observations from one or more Cumulus monthly log files:
    option is ignored. In such cases the preamble may look similar to:
   
     ```
-    Using WeeWX configuration file /home/weewx/weewx.conf
-    Starting wee_import...
+    Using WeeWX configuration file /home/weewx/www-data/weewx.conf
+    Starting weectl import...
     Cumulus monthly log files in the '/var/tmp/cumulus' directory will be imported
     Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
     Destination table 'archive' unit system is '0x01' (US).
@@ -244,7 +247,7 @@ To import observations from one or more Cumulus monthly log files:
     Are you sure you want to proceed (y/n)?
     ```
 
-8. If the import parameters are acceptable enter `y` to proceed with the 
+7. If the import parameters are acceptable enter `y` to proceed with the 
    import or `n` to abort the import. If the import is confirmed, the source 
    data will be imported, processed and saved in the WeeWX database.
    Information on the progress of the import will be displayed similar to the 
@@ -302,7 +305,7 @@ To import observations from one or more Cumulus monthly log files:
     imported. Confirm successful import in the WeeWX log file.
     ```
 
-9. Whilst `weectl import` will advise of the number of records processed and 
+8. Whilst `weectl import` will advise of the number of records processed and 
    the number of unique records found, `weectl import` does know how many, if 
    any, of the imported records were successfully saved to the database. You 
    should look carefully through the WeeWX log file covering the `weectl 
@@ -312,7 +315,7 @@ To import observations from one or more Cumulus monthly log files:
    such cases something similar to the following will be found in the log:
 
     ```
-    Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
+    2023-11-04 15:33:01 weectl-import[3795]: ERROR weewx.manager: Unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
     ```
   
     In such cases take note of the timestamp of the record(s) concerned 
