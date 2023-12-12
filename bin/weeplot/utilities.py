@@ -189,10 +189,11 @@ def scale(data_min, data_max, prescale=(None, None, None), nsteps=10):
     return minscale, maxscale, interval
 
 
-def scaletime(tmin_ts, tmax_ts):
+def scaletime(tmin_ts, tmax_ts, offset=0):
     """Picks a time scaling suitable for a time plot.
     
     tmin_ts, tmax_ts: The time stamps in epoch time around which the times will be picked.
+    offset: Move the timeaxis by the given value to the right.
     
     Returns a scaling 3-tuple. First element is the start time, second the stop
     time, third the increment. All are in seconds (epoch time in the case of the 
@@ -246,14 +247,26 @@ def scaletime(tmin_ts, tmax_ts):
     >>> xmin, xmax, xinc = scaletime(time_ts - 15*3600, time_ts)
     >>> print(to_string(xmin), to_string(xmax), xinc)
     2013-05-16 17:00:00 PDT (1368748800) 2013-05-17 08:00:00 PDT (1368802800) 7200
-    """
+
+    Example 9: 27 hours / 10 h offset
+    >>> time_ts = time.mktime(time.strptime("2023-12-12 13:20", "%Y-%m-%d %H:%M"))
+    >>> xmin, xmax, xinc = scaletime(time_ts - 27*3600, time_ts, 36000)
+    >>> print(to_string(xmin), to_string(xmax), xinc)
+    2023-12-11 12:00:00 PDT (1702321200) 2023-12-13 00:00:00 PDT (1702450800) 10800
+
+    Example 10: 27 hours / no offset
+    >>> time_ts = time.mktime(time.strptime("2023-12-12 13:20", "%Y-%m-%d %H:%M"))
+    >>> xmin, xmax, xinc = scaletime(time_ts - 27*3600, time_ts)
+    >>> print(to_string(xmin), to_string(xmax), xinc)
+    2023-12-11 12:00:00 PDT (1702321200) 2023-12-12 15:00:00 PDT (1702418400) 10800
+"""
     if tmax_ts <= tmin_ts:
         raise weeplot.ViolatedPrecondition("scaletime called with tmax <= tmin")
 
     tdelta = tmax_ts - tmin_ts
 
     tmin_dt = datetime.datetime.fromtimestamp(tmin_ts)
-    tmax_dt = datetime.datetime.fromtimestamp(tmax_ts)
+    tmax_dt = datetime.datetime.fromtimestamp(tmax_ts + offset)
 
     if tdelta <= 16 * 3600:
         if tdelta <= 3 * 3600:
@@ -271,7 +284,7 @@ def scaletime(tmin_ts, tmax_ts):
         # up to the next one hour boundary:
         if tmax_dt > stop_dt:
             stop_dt += datetime.timedelta(hours=1)
-        n_hours = int((tdelta + 3599) / 3600)
+        n_hours = int((tdelta + offset + 3599) / 3600)
         start_dt = stop_dt - datetime.timedelta(hours=n_hours)
 
     elif tdelta <= 27 * 3600:
@@ -286,8 +299,9 @@ def scaletime(tmin_ts, tmax_ts):
         # to round up to the next 3 hour boundary:
         if tmax_dt > stop_dt:
             stop_dt += datetime.timedelta(hours=3)
-        # The stop time is one day earlier
-        start_dt = stop_dt - datetime.timedelta(days=1)
+        # The start time is one day earlier (respecting offset in 3h steps)
+        h = (offset/3600) // 3
+        start_dt = stop_dt - datetime.timedelta(hours=3*h, days=1)
 
         if tdelta == 27 * 3600:
             # A "slightly more than a day plot" is wanted. Start 3 hours earlier:
