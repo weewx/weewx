@@ -1,8 +1,8 @@
 # Installation using pip
 
-This is a guide to installing WeeWX using [`pip`](https://pip.pypa.io). It can be
-used on almost any operating system (including macOS) that offers Python v3.7 or
-greater. Python 2, or earlier versions of Python 3, will not work.
+This is a guide to installing WeeWX using [`pip`](https://pip.pypa.io). It can
+be used on almost any operating system (including macOS) that offers Python
+v3.7 or greater. Python 2, or earlier versions of Python 3, will not work.
 
 Although you do not need root privileges to install and configure WeeWX using
 `pip`, you will need them to set up a daemon, and you may need them to change
@@ -167,8 +167,8 @@ only after you run `weewxd`, as shown in the following step.
 
 ## Run `weewxd`
 
-The program `weewxd` does the data collection, archiving, uploading, and report
-generation.  You can run it directly, or as a daemon.
+The program `weewxd` does the data collection, archiving, uploading, and
+report generation.  You can run it directly, or as a daemon.
 
 
 ### Run directly
@@ -297,22 +297,24 @@ probably want to switch to using real hardware. This is how to reconfigure.
 
 ## Customize
 
-To enable uploads or to customize reports, modify the configuration file.
-See the [*Customization Guide*](../custom/introduction.md) for instructions,
-and the [application](../reference/weewx-options/introduction.md) and
-[skin](../reference/skin-options/introduction.md) references for all
-the options. Use any text editor, such as `nano`:
+To enable uploads, or to enable other reports, modify the configuration file
+`~/weewx-data/weewx.conf` using any text editor such as `nano`:
 
-```shell
+```{.shell .copy}
 nano ~/weewx-data/weewx.conf
 ```
 
-To install new skins, drivers, or other extensions, use the `weectl` utility
-and the URL to the extension.
+See the [*User's Guide*](../usersguide/introduction.md) and the reference
+[*The configuration file
+weewx.conf*](../reference/weewx-options/introduction.md) for
+instructions.
 
-```shell
-weectl extension install https://github.com/path/to/extension.zip
-```
+For more advanced customization, see the  [*Customization
+Guide*](../custom/introduction.md), as well as the [reference for skin
+options](../reference/skin-options/introduction.md).
+ 
+To install new skins, drivers, or other extensions, use the utility [`weectl
+extension`](../utilities/weectl-extension.md).
 
 WeeWX must be restarted for the changes to take effect.
 
@@ -348,7 +350,7 @@ source ~/weewx-venv/bin/activate
 python3 -m pip install weewx --upgrade
 ```
 
-Optional: You may want to upgrade your documentation and examples.
+Optional: You may want to upgrade examples and utility files:
 ```
 weectl station upgrade --what examples util
 ```
@@ -403,7 +405,8 @@ To delete the applications and code, remove the WeeWX virtual environment:
 rm -r ~/weewx-venv
 ```
 
-Finally, if desired, to delete the database, skins, and other utilities, remove the data directory:
+Finally, if desired, to delete the database, skins, and other utilities,
+remove the data directory:
 
 ```{ .shell .copy }
 rm -r ~/weewx-data

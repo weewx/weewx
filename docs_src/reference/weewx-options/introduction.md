@@ -1,4 +1,4 @@
-# Application options
+# The configuration file weewx.conf
 
 Application options are specified in a configuration file, nominally called
 `weewx.conf`. This is a big text file, which holds the configuration

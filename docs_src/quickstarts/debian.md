@@ -82,24 +82,26 @@ sudo systemctl start weewx
 
 ## Customize
 
-To enable uploads or to customize reports, modify the configuration file.
-See the [*Customization Guide*](../custom/introduction.md) for instructions,
-and the [application](../reference/weewx-options/introduction.md) and
-[skin](../reference/skin-options/introduction.md) references for all
-the options. Use any text editor, such as `nano`:
+To enable uploads, or to enable other reports, modify the configuration file
+`/etc/weewx/weewx.conf` using any text editor such as `nano`:
 
 ```{.shell .copy}
 sudo nano /etc/weewx/weewx.conf
 ```
 
-To install new skins, drivers, or other extensions, use the `weectl` utility
-and the URL to the extension.
+See the [*User's Guide*](../usersguide/introduction.md) and the reference
+[*The configuration file
+weewx.conf*](../reference/weewx-options/introduction.md) for
+instructions.
 
-```{.shell}
-sudo weectl extension install https://github.com/path/to/extension.zip
-```
+For more advanced customization, see the  [*Customization
+Guide*](../custom/introduction.md), as well as the [reference for skin
+options](../reference/skin-options/introduction.md).
+ 
+To install new skins, drivers, or other extensions, use the utility [`weectl
+extension`](../utilities/weectl-extension.md).
 
-WeeWX must be restarted for the changes to take effect.
+WeeWX must be restarted for any changes to take effect.
 ```{.shell .copy}
 sudo systemctl restart weewx
 ```
