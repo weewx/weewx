@@ -193,9 +193,10 @@ privileges.
 
     ```{ .shell .copy }
     # For systems that use systemd, e.g., Debian, Redhat, SUSE, run the
-    # provided script:
-    sudo ~/weewx-data/scripts/setup-daemon.systemd
-    # Now start the daemon:
+    # provided script. This will install the systemd service file, configure
+    # logging, and set permissions for USB/serial communication.
+    sudo sh ~/weewx-data/scripts/setup-daemon.systemd
+    # Use systemd to start WeeWX
     sudo systemctl start weewx
     ```
 

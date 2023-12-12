@@ -65,7 +65,9 @@ systemctl daemon-reload
 echo "Enabling weewx..."
 systemctl enable weewx
 
-echo "To make sure permission rules are applied correctly, consider unplugging your device,"
-echo "then plugging it back in again. "
-echo "After you've done that, you can start weewx with the following command:"
+echo "If you are using a device that is connected to the computer by USB or"
+echo "serial port, unplug the device then plug it back in again to ensure that"
+echo "permissions are applied correctly."
+echo ""
+echo "You can start weewx with the following command:"
 echo "  '\033[1msudo systemctl start weewx\033[0m'"

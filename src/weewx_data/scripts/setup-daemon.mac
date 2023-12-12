@@ -5,7 +5,9 @@
 # This script must be run as a privileged user.
 #
 set -e
+
 UTIL_ROOT=$HOME/weewx-data/util
+
 if [ ! -d $UTIL_ROOT ]; then
   echo "Cannot find utility files at location '$UTIL_ROOT'"
   exit 1
@@ -14,8 +16,11 @@ if [ "$(id -u)" != "0" ]; then
   echo "This script requires admin privileges.  Use 'sudo' or run as root."
   exit 1
 fi
+
 echo "This script sets up the files necessary to run WeeWX at system startup."
 echo "On some systems, it can be slow to run. Please be patient."
 echo "Copying files from $UTIL_ROOT..."
 cp $UTIL_ROOT/launchd/com.weewx.weewxd.plist /Library/LaunchDaemons
-echo "You can now start weewx with the following command: '\033[1msudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist\033[0m'"
+
+echo "You can now start weewx with the following command:"
+echo "  '\033[1msudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist\033[0m'"
