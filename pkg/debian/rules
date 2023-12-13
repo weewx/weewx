@@ -90,7 +90,7 @@ install:
 cat $(SRC)/bin/$$f | sed \
   -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
   -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
-  > $(DST)/usr/bin; \
+  > $(DST)/usr/bin/$$f; \
 done
 
 # the defaults file indicates which python and weewx to use
