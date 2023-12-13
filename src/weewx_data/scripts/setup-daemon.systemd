@@ -24,13 +24,13 @@ fi
 echo "This script sets up the files necessary to run WeeWX at system startup."
 echo "On some systems, it can be slow to run. Please be patient."
 echo "Copying files from $UTIL_ROOT..."
-if [ -d /etc/logrotate.d ]; then
-    echo "  logrotate"
-    cp $UTIL_ROOT/logrotate.d/weewx /etc/logrotate.d
-fi
 if [ -d /etc/rsyslog.d ]; then
     echo "  syslog"
     cp $UTIL_ROOT/rsyslog.d/weewx.conf /etc/rsyslog.d
+    if [ -d /etc/logrotate.d ]; then
+	echo "  logrotate"
+	cp $UTIL_ROOT/logrotate.d/weewx /etc/logrotate.d
+    fi
 fi
 if [ -d /etc/udev/rules.d ]; then
     echo "  udev rules"
