@@ -236,8 +236,8 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root)
-%{_bindir}/weewxd
-%{_bindir}/weectl
+%attr(0755,root,root) %{_bindir}/weewxd
+%attr(0755,root,root) %{_bindir}/weectl
 /lib/systemd/system/weewx.service
 /lib/systemd/system/weewx@.service
 /lib/udev/rules.d/60-weewx.rules
