@@ -1,6 +1,16 @@
 WeeWX change history
 --------------------
 
+4.10.3 MM/DD/YYYY
+
+Method ImageDraw.textsize() and constants ImageFont.LAYOUT_BASIC, and
+Image.ANTIALIAS were deprecated in Pillow 9.2 (1-Jul-2022), then removed in
+Pillow 10.0 (1-Jul-2023). Replaces them with alternatives. Fixes issue
+#884.
+
+Fixed problem when plotting wind vectors using database without daily summaries.
+
+
 4.10.2 02/22/2023
 
 Removed errant "f-string" in imagegenerator.py.

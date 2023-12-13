@@ -227,7 +227,9 @@ class GeneralPlot(object):
             self._renderRose(image, draw)
 
         if self.anti_alias != 1:
-            image.thumbnail((self.image_width / self.anti_alias, self.image_height / self.anti_alias), Image.ANTIALIAS)
+            image.thumbnail((self.image_width / self.anti_alias,
+                             self.image_height / self.anti_alias),
+                            Image.LANCZOS)
 
         return image
 
@@ -316,9 +318,9 @@ class GeneralPlot(object):
                        width=self.anti_alias)
             if drawlabelcount % self.x_label_spacing == 0 :
                 xlabel = self._genXLabel(x)
-                axis_label_size = sdraw.draw.textsize(xlabel, font=axis_label_font)
+                axis_label_width = sdraw.draw.textlength(xlabel, font=axis_label_font)
                 xpos = sdraw.xtranslate(x)
-                sdraw.draw.text((xpos - axis_label_size[0]/2, self.image_height - self.bmargin + 2),
+                sdraw.draw.text((xpos - axis_label_width/2, self.image_height - self.bmargin + 2),
                                 xlabel, fill=self.axis_label_font_color, font=axis_label_font)
             drawlabelcount += 1
 
@@ -338,14 +340,21 @@ class GeneralPlot(object):
             # Draw a label on every other line:
             if i % self.y_label_spacing == 0 :
                 ylabel = self._genYLabel(y)
-                axis_label_size = sdraw.draw.textsize(ylabel, font=axis_label_font)
+                left, top, right, bottom = axis_label_font.getbbox(ylabel)
+                axis_label_width, axis_label_height = right - left, bottom - top
                 ypos = sdraw.ytranslate(y)
+                # We want to treat Truetype and bitmapped fonts the same. By default, Truetype
+                # measures the top of the bounding box at the top of the ascender, while it's
+                # the top of the text for bitmapped. Specify an anchor of "lt" (left, top) for
+                # both.
                 if self.y_label_side == 'left' or self.y_label_side == 'both':
-                    sdraw.draw.text( (self.lmargin - axis_label_size[0] - 2, ypos - axis_label_size[1]/2),
-                                ylabel, fill=self.axis_label_font_color, font=axis_label_font)
+                    sdraw.draw.text((self.lmargin - axis_label_width - 2, ypos - axis_label_height/2),
+                                    ylabel, fill=self.axis_label_font_color, font=axis_label_font,
+                                    anchor="lt")
                 if self.y_label_side == 'right' or self.y_label_side == 'both':
-                    sdraw.draw.text( (self.image_width - self.rmargin + 4, ypos - axis_label_size[1]/2),
-                                ylabel, fill=self.axis_label_font_color, font=axis_label_font)
+                    sdraw.draw.text((self.image_width - self.rmargin + 4, ypos - axis_label_height/2),
+                                    ylabel, fill=self.axis_label_font_color, font=axis_label_font,
+                                    anchor="lt")
 
     def _renderPlotLines(self, sdraw):
         """Draw the collection of lines, using a different color for each one. Because there is
@@ -401,13 +410,15 @@ class GeneralPlot(object):
         """Draw anything at the bottom (just some text right now). """
         bottom_label_font = weeplot.utilities.get_font_handle(self.bottom_label_font_path,
                                                               self.bottom_label_font_size)
-        bottom_label_size = draw.textsize(self.bottom_label, font=bottom_label_font)
-        
-        draw.text(((self.image_width - bottom_label_size[0])/2, 
-                   self.image_height - bottom_label_size[1] - self.bottom_label_offset),
+        left, top, right, bottom = bottom_label_font.getbbox(self.bottom_label)
+        bottom_label_width, bottom_label_height = right - left, bottom - top
+
+        draw.text(((self.image_width - bottom_label_width)/2,
+                   self.image_height - bottom_label_height - self.bottom_label_offset),
                   self.bottom_label, 
                   fill=self.bottom_label_font_color,
-                  font=bottom_label_font)
+                  font=bottom_label_font,
+                  anchor="lt")
         
     def _renderTopBand(self, draw):
         """Draw the top band and any text in it. """
@@ -439,9 +450,9 @@ class GeneralPlot(object):
         # because each label may be in a different color. For now, append them together to get
         # the total width
         top_label = u' '.join([line.label for line in self.line_list])
-        top_label_size = draw.textsize(top_label, font=top_label_font)
+        top_label_width= draw.textlength(top_label, font=top_label_font)
         
-        x = (self.image_width - top_label_size[0])/2
+        x = (self.image_width - top_label_width)/2
         y = 0
         
         ncolors = len(self.chart_line_colors)
@@ -450,8 +461,8 @@ class GeneralPlot(object):
             # Draw a label
             draw.text( (x,y), this_line.label, fill = color, font = top_label_font)
             # Now advance the width of the label we just drew, plus a space:
-            label_size = draw.textsize(this_line.label + u' ', font= top_label_font)
-            x += label_size[0]
+            label_width = draw.textlength(this_line.label + u' ', font= top_label_font)
+            x += label_width
 
     def _renderRose(self, image, draw):
         """Draw a compass rose."""
@@ -492,14 +503,16 @@ class GeneralPlot(object):
         # Calculate the position of the "N" label:
         rose_label_font = weeplot.utilities.get_font_handle(self.rose_label_font_path,
                                                             self.rose_label_font_size)
-        rose_label_size = draw.textsize(self.rose_label, font=rose_label_font)
-        
+        left, top, right, bottom = rose_label_font.getbbox(self.rose_label)
+        rose_label_width, rose_label_height = right - left, bottom - top
+
         # Draw the label in the middle of the (possibly) rotated arrow
-        rose_draw.text((rose_center_x - rose_label_size[0]/2 - 1,
-                        rose_center_y - rose_label_size[1]/2 - 1),
+        rose_draw.text((rose_center_x - rose_label_width/2 - 1,
+                        rose_center_y - rose_label_height/2 - 1),
                        self.rose_label,
-                       fill = add_alpha(self.rose_label_font_color),
-                       font = rose_label_font)
+                       fill=add_alpha(self.rose_label_font_color),
+                       font=rose_label_font,
+                       anchor="lt")
 
         # Paste the image of the arrow on to the main plot. The alpha
         # channel of the image will be used as the mask.
@@ -640,14 +653,8 @@ class UniDraw(ImageDraw.ImageDraw):
             return ImageDraw.ImageDraw.text(self, position, string, **options)
         except UnicodeEncodeError:
             return ImageDraw.ImageDraw.text(self, position, string.encode('utf-8'), **options)
-        
-    def textsize(self, string, **options):
-        try:
-            return ImageDraw.ImageDraw.textsize(self, string, **options)
-        except UnicodeEncodeError:
-            return ImageDraw.ImageDraw.textsize(self, string.encode('utf-8'), **options)
-            
-            
+
+
 def blend_hls(c, bg, alpha):
     """Fade from c to bg using alpha channel where 1 is solid and 0 is
     transparent.  This fades across the hue, saturation, and lightness."""
