@@ -647,31 +647,24 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
                             copy_function=_patch_file)
 
     scripts_dir = os.path.join(weewx_root, 'scripts')
-    if os.path.isdir(scripts_dir):
-        if not force:
-            print(f"Scripts directory {scripts_dir} already exists. Nothing done.")
-            return None
-        else:
-            print(f"Removing scripts directory {scripts_dir}")
-            if not dry_run:
-                shutil.rmtree(scripts_dir, ignore_errors=True)
 
+    # The 'scripts' subdirectory is a little different. We don't delete it first, because it's a
+    # comman name and a user might have put things there. Instead, just copy our files into it.
+    # First, make sure the subdirectory exists:
+    os.makedirs(scripts_dir, exist_ok=True)
+    # Then do the copying.
     with weeutil.weeutil.get_resource_path('weewx_data', 'scripts') as scripts_resources:
         print(f"Copying script files into {scripts_dir}")
         if not dry_run:
-            # Copy the tree rooted in 'scripts_resources' to 'dstdir', while ignoring files given
-            # by _ignore_function. While copying, use the function _patch_file() to massage
-            # the files.
-            shutil.copytree(scripts_resources, scripts_dir,
-                            ignore=_ignore_function,
-                            copy_function=_patch_file)
-    # Make everything in the scripts file executable.
-    for f in os.listdir(scripts_dir):
-        abs_path = os.path.join(scripts_dir, f)
-        status = os.stat(abs_path)
-        # Because it has been tailored to a particular user, it should only be executable by
-        # that user. So, use S_IXUSR (instead of S_IXOTH):
-        os.chmod(abs_path, status.st_mode | stat.S_IXUSR)
+            for file in os.listdir(scripts_resources):
+                abs_src = os.path.join(scripts_resources, file)
+                abs_dst = os.path.join(scripts_dir, file)
+                shutil.copy2(abs_src, abs_dst)
+                status = os.stat(abs_dst)
+                # Because these files have been tailored to a particular user, they hould only
+                # be executable by that user. So, use S_IXUSR (instead of S_IXOTH):
+                os.chmod(abs_dst, status.st_mode | stat.S_IXUSR)
+
     return util_dir
 
 
