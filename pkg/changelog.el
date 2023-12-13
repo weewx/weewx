@@ -1,3 +1,5 @@
+* Tue Dec 12 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b17-1
+- new upstream release
 * Tue Nov 28 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b16-1
 - new upstream release
 * Sat Oct 29 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b15-1
