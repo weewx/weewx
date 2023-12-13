@@ -394,15 +394,15 @@ def config_driver(config_dict, driver=None, no_prompt=False):
 def config_registry(config_dict, register=None, station_url=None, no_prompt=False):
     """Configure whether to include the station in the weewx.com registry."""
 
-    if 'Station' not in config_dict:
+    try:
+        config_dict['Station']
+        config_dict['StdRESTful']['StationRegistry']
+    except KeyError:
+        print('No [[StationRegistry]] section found.')
         return
 
-    try:
-        default_register = to_bool(
-            config_dict['StdRESTful']['StationRegistry']['register_this_station'])
-    except KeyError:
-        default_register = False
-
+    default_register = to_bool(
+        config_dict['StdRESTful']['StationRegistry'].get('register_this_station', False))
     default_station_url = config_dict['Station'].get('station_url')
 
     if register is not None:
