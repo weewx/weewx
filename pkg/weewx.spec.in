@@ -239,7 +239,6 @@ if [ "$1" = "0" ]; then
   if [ "$pid1" = "systemd" ]; then
     systemctl stop weewx
     systemctl disable weewx
-    systemctl disable weewx@
   fi
 fi
 # otherwise this is an upgrade (1), so do nothing
