@@ -272,34 +272,41 @@ migrate_extensions() {
     fi
 }
 
+
+pid1=none
+if [ -d /run/systemd/system ]; then
+    pid1=systemd
+fi
+
 case "$1" in
 configure)
-        if [ "$2" != "" ]; then
-            # this is an upgrade so create a maintainers version by merging
-            merge_weewxconf
-            # migrate any extensions from V4 location to V5
-            migrate_extensions
-        else
-            # virgin install so insert debconf values into the config file
-            install_weewxconf
-        fi
+    if [ "$2" != "" ]; then
+        # this is an upgrade so create a maintainers version by merging
+        merge_weewxconf
+        # migrate any extensions from V4 location to V5
+        migrate_extensions
+    else
+        # virgin install so insert debconf values into the config file
+        install_weewxconf
+    fi
 
-        # create weewx user and set permissions
-        create_user
-        set_permissions
+    # create weewx user and set permissions
+    create_user
+    set_permissions
 
-        # precompile the bytecode
-        python3 -m compileall /usr/share/weewx > /dev/null
+    # precompile the bytecode
+    python3 -m compileall /usr/share/weewx > /dev/null
 
-        # configure for system startup
-        systemctl enable weewx
+    # configure for system startup and start weewx
+    if [ "$pid1" = "systemd" ]; then
+	systemctl enable weewx
 	systemctl enable weewx@
-        # start the weewx daemon
-        systemctl start weewx
-        ;;
+	systemctl start weewx
+    fi
+    ;;
 
 abort-remove)
-        ;;
+    ;;
 esac
 
 # let debconf know that we are finished
