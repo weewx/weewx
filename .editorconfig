@@ -21,7 +21,8 @@ root = true
     max_line_length = off
 
 [*.md]
-    max_line_length = 78
+    # Please keep this at 80. Even an IBM punch card can do that.
+    max_line_length = 80
 
 [makefile]
     indent_style = tab
