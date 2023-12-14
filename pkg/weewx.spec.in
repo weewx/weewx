@@ -177,9 +177,17 @@ fi
 /usr/bin/getent passwd %{weewx_user} || /usr/sbin/useradd -r -g %{weewx_group} -M -s /sbin/nologin %{weewx_user}
 
 %post
+# see which init system (if any) is running
+pid1=none
+if [ -d /run/systemd/system ]; then
+  pid1=systemd
+fi
 # restart syslog so that it picks up the weewx logging directives
-# FIXME: what if rsyslog not installed?
-systemctl restart rsyslog
+if [ -f /run/rsyslogd.pid ]; then
+  if [ "$pid1" = "systemd" ]; then
+    systemctl restart rsyslog
+  fi
+fi
 # pre-compile the python code
 echo Precompile using %{python} in %{dst_code_dir}
 %{python} -m compileall %{dst_code_dir} > /dev/null
@@ -187,9 +195,11 @@ if [ "$1" = "1" ]; then
   # this is a new installation
   # create a sane configuration file with simulator as the station type
   /usr/bin/weectl station reconfigure --config=%{cfg-file} --driver=weewx.drivers.simulator --no-prompt --no-backup
-  systemctl enable weewx
-  systemctl enable weewx@
-  systemctl start weewx
+  if [ "$pid1" = "systemd" ]; then
+    systemctl enable weewx
+    systemctl enable weewx@
+    systemctl start weewx
+  fi
 elif [ "$1" = "2" ]; then
   # this is an upgrade
   # upgrade the previous config to create the maintainer's version, but do not
@@ -217,17 +227,21 @@ elif [ "$1" = "2" ]; then
     echo "Moving old extensions to /usr/share/weewx/user-$ts"
     mv /usr/share/weewx/user /usr/share/weewx/user-$ts
   fi
-  # do a full restart not just a HUP
-  systemctl stop weewx
-  systemctl start weewx
+  # do a full restart of weewx
+  if [ "$pid1" = "systemd" ]; then
+    systemctl stop weewx
+    systemctl start weewx
+  fi
 fi
 
 %preun
 if [ "$1" = "0" ]; then
   # this is an uninstall, so stop and remove everything
-  systemctl stop weewx
-  systemctl disable weewx
-  systemctl disable weewx@
+  if [ "$pid1" = "systemd" ]; then
+    systemctl stop weewx
+    systemctl disable weewx
+    systemctl disable weewx@
+  fi
 fi
 # otherwise this is an upgrade (1), so do nothing
 
