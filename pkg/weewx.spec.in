@@ -240,6 +240,11 @@ if [ "$1" = "0" ]; then
     systemctl stop weewx
     systemctl disable weewx
   fi
+  # remove any bytecompiled code
+  find /usr/share/weewx -name '*.pyc' -delete
+  find /usr/share/weewx -name __pycache__ -delete
+  find /etc/weewx/bin -name '*.pyc' -delete
+  find /etc/weewx/bin -name __pycache__ -delete
 fi
 # otherwise this is an upgrade (1), so do nothing
 
