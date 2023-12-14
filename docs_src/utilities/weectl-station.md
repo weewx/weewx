@@ -93,19 +93,19 @@ use
 ## Upgrade an existing station
 
     weectl station upgrade
-        [--docs-root=DIRECTORY]
         [--examples-root=DIRECTORY]
         [--skin-root=DIRECTORY]
-        [--what (config|docs|examples|util|skins)]
+        [--what ITEM [ITEM ...]
         [--no-backup]
         [--no-prompt]
         [--config=FILENAME]
-        [--dist-config=FILENAME]
+        [--dist-config=FILENAME]]
         [--dry-run]
 
+
 When you upgrade WeeWX, only the code is upgraded; upgrades to WeeWX
-do not modify the station data, specifically configuration file, database,
-or skins.
+do not modify the station data, including the configuration file, database, 
+skins or utility files.
 
 Use the `upgrade` action to upgrade one or more of these items.
 
@@ -118,20 +118,18 @@ documentation, examples, and utility files. By default, the configuration file
 and skins are not upgraded. This is to avoid overwriting any changes you might
 have made.
 
-If you wish to upgrade the skins, you must specify `--what skins`. This will
-put the current version of the skins into `WEEWX_ROOT`, leaving timestamped
-copies of your old skins.
+However, you can use the `--what` option to explicitly choose what to upgrade.
 
-```
+For example, if you wish to upgrade the skins, you must specify `--what skins`.
+This will save timestamped copies of your old skins, then copy in the new
+versions.
+
+``` {.shell .copy}
 weectl station upgrade --what skins
 ```
 
-If you wish to upgrade the configuration file, specify `--what config`.  This
-is rarely necessary, since WeeWX is usually backward compatible.
+See the details below for [option `--what`](#what-option).
 
-```
-weectl station upgrade --what config
-```
 
 ## Options
 
@@ -230,7 +228,7 @@ Where the WeeWX examples can be found, *relative to `WEEWX_ROOT`*.
 If the directory starts with a slash (`/`), it is an absolute path.
 Default is `examples`.
 
-### --what
+### --what {#what-option}
 
 By default, the `upgrade` action will upgrade the documentation, examples,
 and utility files. However, you can specify exactly what gets upgraded by
@@ -239,7 +237,6 @@ using the `--what` option.
 The `--what` option understands the following:
 
 * config - the configuration file
-* docs - the documentation
 * examples - the example extensions
 * util - the system utility files
 * skins - the report templates
