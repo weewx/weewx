@@ -300,7 +300,6 @@ configure)
     # configure for system startup and start weewx
     if [ "$pid1" = "systemd" ]; then
 	systemctl enable weewx
-	systemctl enable weewx@
 	systemctl start weewx
     fi
     ;;

@@ -24,7 +24,6 @@ remove|upgrade)
     # stop the weewx daemon and remove the startup configuration
     if [ "$pid1" = "systemd" ]; then
 	systemctl stop weewx
-        systemctl disable weewx@
         systemctl disable weewx
     fi
 
