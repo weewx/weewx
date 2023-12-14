@@ -11,7 +11,9 @@ install Python 3.7 then [install WeeWX using pip](pip.md).
 ## Configure `yum`
 
 The first time you install WeeWX, you must configure `yum` so that it will
-trust weewx.com, and know where to find the WeeWX releases.
+trust weewx.com, and know where to find the WeeWX releases.  You must also
+configure `yum` to use the `epel` repository, since some of the Python modules
+used by WeeWX are in that repository.
 
 1. Tell your system to trust weewx.com:
 
@@ -26,6 +28,12 @@ trust weewx.com, and know where to find the WeeWX releases.
         sudo tee /etc/yum.repos.d/weewx.repo
     ```
 
+3. Configure `yum` to use the `epel-release` repository.
+
+    ```{.shell .copy}
+    sudo dnf config-manager --set-enabled crb
+    sudo dnf -y install epel-release
+    ```
 
 ## Install
 
