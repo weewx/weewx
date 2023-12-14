@@ -408,12 +408,15 @@ class StdCalibrate(StdService):
 
         # Get the set of calibration corrections to apply.
         correction_dict = config_dict['StdCalibrate']['Corrections']
+        self.expressions = {}
         self.corrections = {}
         self.which = {}
         for obs_type in correction_dict.scalars:
             if obs_type == 'foo': continue
             # Ensure that the value is always a list
             option = weeutil.weeutil.option_as_list(correction_dict[obs_type])
+            # Save the uncompiled expression
+            self.expressions[obs_type] = option[0]
             # For each correction, compile it, then save in a dictionary of
             # corrections to be applied:
             self.corrections[obs_type] = compile(option[0], 'StdCalibrate', 'eval')
@@ -438,8 +441,16 @@ class StdCalibrate(StdService):
                 try:
                     event.packet[obs_type] = eval(self.corrections[obs_type], {'math': math},
                                                   event.packet)
-                except (TypeError, NameError, ValueError) as e:
-                    log.error("StdCalibration loop error %s", e)
+                except TypeError as e:
+                    # ignore errors involving 'None' values. Everthing else gets reraised:
+                    if 'NoneType' in str(e):
+                        if weewx.debug > 1:
+                            log.debug("NoneType in loop expression '%s'"
+                                      % self.expressions[obs_type])
+                    else:
+                        raise
+                except:
+                    raise
 
     def new_archive_record(self, event):
         """Apply a calibration correction to an archive packet"""
@@ -452,8 +463,16 @@ class StdCalibrate(StdService):
                 try:
                     event.record[obs_type] = eval(self.corrections[obs_type], {'math': math},
                                                   event.record)
-                except (TypeError, NameError, ValueError) as e:
-                    log.error("StdCalibration archive error %s", e)
+                except TypeError as e:
+                    # ignore errors involving 'None' values. Everthing else gets reraised:
+                    if 'NoneType' in str(e):
+                        if weewx.debug > 1:
+                            log.debug("NoneType in archive expression '%s'"
+                                      % self.expressions[obs_type])
+                    else:
+                        raise
+                except:
+                    raise
 
 
 # ==============================================================================
