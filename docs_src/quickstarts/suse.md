@@ -52,7 +52,7 @@ sudo systemctl status weewx
 ```
 and check the [log file](../usersguide/running.md#monitoring-weewx):
 ```{.shell .copy}
-tail -50 /var/log/weewx/weewxd.log
+tail -50 /var/log/weewx/weewx.log
 ```
 See the [*Troubleshooting*](../usersguide/troubleshooting/what-to-do.md)
 section of the [*User's guide*](../usersguide/introduction.md) for more help.
