@@ -60,6 +60,8 @@ will cover a nominal 30 days, and all items included in it will use an
 aggregate type of averaging over 3 hours. Finally, by setting option
 `show_daynight` to `false`, we are requesting that
 day-night, shaded bands not be shown.
+The option `time_offset` allows to shift the right border of the x-axis, thus
+making room for e.g. forecast data from the "future".
 
 ## Image files
 

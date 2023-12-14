@@ -148,9 +148,10 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
         plot = weeplot.genplot.TimePlot(plot_options)
 
         time_length = weeutil.weeutil.nominal_spans(plot_options.get('time_length', 86400))
+        time_offset = weeutil.weeutil.nominal_spans(plot_options.get('time_offset', 0))
         # Calculate a suitable min, max time for the requested time.
         minstamp, maxstamp, timeinc = weeplot.utilities.scaletime(plotgen_ts - time_length,
-                                                                  plotgen_ts)
+                                                                  plotgen_ts, time_offset)
         x_domain = weeutil.weeutil.TimeSpan(minstamp, maxstamp)
 
         # Override the x interval if the user has given an explicit interval:
