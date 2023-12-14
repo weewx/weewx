@@ -1,3 +1,6 @@
+* Tue Dec 13 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b17-4
+- remove bytecompiled code before removing package
+- do not enable template unit
 * Tue Dec 13 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b17-3
 - fix typo in config file macro name
 * Tue Dec 13 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b17-2
