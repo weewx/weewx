@@ -1,3 +1,6 @@
+weewx (5.0.0b17-4) unstable; urgency=low
+  * fix permissions on /var/log/weewx, especially for ubuntu
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Tue, 15 Dec 2023 21:00:00 -0500
 weewx (5.0.0b17-3) unstable; urgency=low
   * do not enable unit template
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Tue, 13 Dec 2023 21:00:00 -0500
