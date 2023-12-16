@@ -251,13 +251,19 @@ set_permissions() {
     if getent passwd | grep -q "^$WEEWX_USER:"; then
         chmod 2775 /etc/weewx
         chmod 2775 /var/lib/weewx
-        chmod 0755 /var/log/weewx
         chmod 2775 /var/www/html/weewx
         chown -R $WEEWX_USER:$WEEWX_GROUP /etc/weewx
         chown -R $WEEWX_USER:$WEEWX_GROUP /var/lib/weewx
-        chown -R $WEEWX_USER:$WEEWX_GROUP /var/log/weewx
         chown -R $WEEWX_USER:$WEEWX_GROUP /var/www/html/weewx
     fi
+    LOGDIR_USER=root
+    LOGDIR_GROUP=root
+    if [ -f /var/log/syslog ]; then
+        LOGDIR_USER=$(stat -c "%U" /var/log/syslog)
+        LOGDIR_GROUP=$(stat -c "%G" /var/log/syslog)
+    fi
+    chmod 0755 /var/log/weewx
+    chown -R $LOGDIR_USER:$LOGDIR_GROUP /var/log/weewx
 }
 
 # if there are any existing extensions in the V4 location, copy them to the
