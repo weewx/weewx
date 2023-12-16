@@ -659,7 +659,7 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
             for file in os.listdir(scripts_resources):
                 abs_src = os.path.join(scripts_resources, file)
                 abs_dst = os.path.join(scripts_dir, file)
-                shutil.copy2(abs_src, abs_dst)
+                _patch_file(abs_src, abs_dst)
                 status = os.stat(abs_dst)
                 # Because these files have been tailored to a particular user, they hould only
                 # be executable by that user. So, use S_IXUSR (instead of S_IXOTH):
