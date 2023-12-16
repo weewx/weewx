@@ -84,7 +84,7 @@ accumulated, so it could be a few minutes before you see a report or a change
 to a report. The location of the reports depends on the operating system and
 how WeeWX was installed.
 
-See `HTML_ROOT` in the [*Where to find things*](../where.md) section.
+See `HTML_ROOT` in the [*Where to find things*](../where) section.
 
 Depending on the configuration, if WeeWX cannot get data from the sensors,
 then it will probably not generate any reports.  So if you do not see reports,
@@ -92,15 +92,16 @@ check the log!
 
 ### Log messages
 
-In the default configuration, WeeWX logs to the system logger, called `syslog`.
-On traditional systems, this puts the WeeWX messages into a file, along with
-other messages from the system. The location of the system log file depends on
-the operating system, but it is typically `/var/log/syslog` or
+In the default configuration, WeeWX logs to the system logging facility.
+
+On traditional systems, the system logging facility puts the WeeWX messages
+into a file, along with other messages from the system. The location of the
+system log file varies, but it is typically `/var/log/syslog` or
 `/var/log/messages`.  On some systems, you will find messages from WeeWX in a
-separate file in the directory `/var/log/weewx`
+separate file `/var/log/weewx/weewx.log`
 
 You can view the messages using standard tools such as `tail`, `head`, `more`,
-`less`, `grep`, etc.
+`less`, and `grep`.
 
 For example, to see only the messages from `weewxd`:
 ```{.shell .copy}
@@ -115,9 +116,9 @@ To see messages as they come into the log in real time (hit `ctrl-c` to stop):
 tail -f /var/log/syslog
 ```
 
-Some systems with `systemd` use *only* `systemd-journald` for system logs.
-On these systems, you will have to use the `journalctl` tool to view messages
-from WeeWX.
+Some systems with `systemd` use *only* `systemd-journald` as the system logging
+facility.  On these systems, you will have to use the `journalctl` tool to
+view messages from WeeWX.
 
 For example, to see only the messages from `weewxd`:
 ```{.shell .copy}
@@ -131,3 +132,6 @@ To see messages as they come into the log in real time:
 ```{.shell .copy}
 journalctl --unit weewx --follow
 ```
+
+See the wiki article [*How to view the log*](https://github.com/weewx/weewx/wiki/view-logs) for more information, and examples about how to view and configure
+system logs.

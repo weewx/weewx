@@ -66,24 +66,22 @@ documentation.
 
 ## Log files
 
-In the default configuration, WeeWX logs to the system logger, called `syslog`.
+In the default configuration, WeeWX logs to the system logging facility.
 Where it goes from there depends on the operating system, and how logging is
 configured for that system.
 
-On traditional systems, the system puts the WeeWX messages into a system log
-file, along with messages from the system and other applications. The location
-of the system log file varies, but it is typically either
-`/var/log/syslog` or `/var/log/messages`.  On some systems, messages from WeeWX
-will be in a separate file `/var/log/weewx/weewx.log`.  These log files can be
-viewed using traditional tools such as `head`, `tail`, `more`, or `less`.
+On traditional systems, the WeeWX messages go into a system log file, along
+with messages from the system and other applications. The location of the
+system log file varies, but it is typically either `/var/log/syslog` or
+`/var/log/messages`.  On some systems, messages from WeeWX will be in a
+separate file `/var/log/weewx/weewx.log`.  These log files can be viewed using
+traditional tools such as `head`, `tail`, `more`, or `less`.
 
 On some systems that use `systemd`, there are no log files.  On these systems,
 you must use the tool `journalctl` to view messages from WeeWX.
 
-See the wiki article [WeeWX logging](https://github.com/weewx/weewx/wiki/WeeWX-v4-and-logging)
-for more information on how to control logging in WeeWX.
-
-See the wiki article [How to view the log](https://github.com/weewx/weewx/wiki/view-logs) for information and examples about how to view and configure system logs.
+See the wiki article [*How to view the log*](https://github.com/weewx/weewx/wiki/view-logs) for more information, and examples about how to view and configure
+system logs.
 
 
 ## Location of executables in a pip install
