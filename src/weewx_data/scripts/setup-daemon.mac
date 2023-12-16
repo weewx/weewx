@@ -17,10 +17,31 @@ if [ "$(id -u)" != "0" ]; then
   exit 1
 fi
 
-echo "This script sets up the files necessary to run WeeWX at system startup."
-echo "On some systems, it can be slow to run. Please be patient."
-echo "Copying files from $UTIL_ROOT..."
-cp $UTIL_ROOT/launchd/com.weewx.weewxd.plist /Library/LaunchDaemons
+do_install() {
+    echo "This script sets up the files necessary to run WeeWX at system startup."
+    echo "On some systems, it can be slow to run. Please be patient."
+    echo "Copying files from $UTIL_ROOT..."
+    echo "  plist"
+    cp $UTIL_ROOT/launchd/com.weewx.weewxd.plist /Library/LaunchDaemons
 
-echo "You can now start weewx with the following command:"
-echo "  '\033[1msudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist\033[0m'"
+    echo "You can now start weewx with the following command:"
+    echo "  '\033[1msudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist\033[0m'"
+}
+
+do_uninstall() {
+    echo "Stopping weewx..."
+    launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist
+    echo "Removing files..."
+    echo "  plist"
+    if [ -f /Library/LaunchDaemons/com.weewx.weewxd.plist ]; then
+        rm /Library/LaunchDaemons/com.weewx.weewxd.plist
+    fi
+}
+
+
+ACTION=$1
+if [ "$ACTION" = "" -o "$ACTION" = "install" ]; then
+    do_install
+elif [ "$ACTION" = "uninstall" ]; then
+    do_uninstall
+fi
