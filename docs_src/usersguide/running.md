@@ -76,15 +76,28 @@ On systems that use `sysV` init scripts, check it like this:
 /etc/init.d/weewx status
 ```
 
+### Reports
+
+When it is running properly, WeeWX will generate reports, typically every five
+minutes.  The reports are not (re)generated until data have been received and
+accumulated, so it could be a few minutes before you see a report or a change
+to a report. The location of the reports depends on the operating system and
+how WeeWX was installed.
+
+See `HTML_ROOT` in the [*Where to find things*](../where.md) section.
+
+Depending on the configuration, if WeeWX cannot get data from the sensors,
+then it will probably not generate any reports.  So if you do not see reports,
+check the log!
+
 ### Log messages
 
-In the default configuration, WeeWX logs to the system logger `syslog`. On most
-systems, this puts the WeeWX messages into a file, along with other messages
-from the system. The location of the system log file depends on the operating
-system, but it is typically `/var/log/syslog` or `/var/log/messages`.
-
-If you installed WeeWX from DEB or RPM package, the WeeWX log messages are
-saved to separate files in `/var/log/weewx`
+In the default configuration, WeeWX logs to the system logger, called `syslog`.
+On traditional systems, this puts the WeeWX messages into a file, along with
+other messages from the system. The location of the system log file depends on
+the operating system, but it is typically `/var/log/syslog` or
+`/var/log/messages`.  On some systems, you will find messages from WeeWX in a
+separate file in the directory `/var/log/weewx`
 
 You can view the messages using standard tools such as `tail`, `head`, `more`,
 `less`, `grep`, etc.
@@ -102,24 +115,19 @@ To see messages as they come into the log in real time (hit `ctrl-c` to stop):
 tail -f /var/log/syslog
 ```
 
-If your system uses `systemd`, and WeeWX is configured to run in the background
-using systemd, then the WeeWX messages might be available to the
-`systemd-journald` tools.  If so, then you can use `journalctl` to view the 
-WeeWX log messages.
+Some systems with `systemd` use *only* `systemd-journald` for system logs.
+On these systems, you will have to use the `journalctl` tool to view messages
+from WeeWX.
 
 For example, to see only the messages from `weewxd`:
 ```{.shell .copy}
 journalctl -u weewx
 ```
-
-### Reports
-
-When it is running properly, WeeWX will generate reports, typically every five
-minutes.  The reports are not (re)generated until data have been received and
-accumulated, so it could be a few minutes before you see a report or a change
-to a report. The location of the reports depends on the operating system and
-how WeeWX was installed.
-
-Depending on the configuration, if WeeWX cannot get data from the sensors,
-then it will probably not generate any reports.  So if you do not see reports,
-check the log!
+To see only the latest 40 messages from `weewxd`:
+```{.shell .copy}
+journalctl --unit weewx --lines 40
+```
+To see messages as they come into the log in real time:
+```{.shell .copy}
+journalctl --unit weewx --follow
+```
