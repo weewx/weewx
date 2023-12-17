@@ -330,10 +330,7 @@ rpm-package-rh9:
 suse-changelog:
 	make rpm-changelog RPMOS=suse
 
-suse-package: rpm-package-suse12 rpm-package-suse15
-
-rpm-package-suse12:
-	make rpm-package RPMOS=suse OSREL=12
+suse-package: rpm-package-suse15
 
 rpm-package-suse15:
 	make rpm-package RPMOS=suse OSREL=15
