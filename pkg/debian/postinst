@@ -257,7 +257,7 @@ set_permissions() {
         chown -R $WEEWX_USER:$WEEWX_GROUP /var/www/html/weewx
     fi
     LOGDIR_USER=root
-    LOGDIR_GROUP=root
+    LOGDIR_GROUP=adm
     if [ -f /var/log/syslog ]; then
         LOGDIR_USER=$(stat -c "%U" /var/log/syslog)
         LOGDIR_GROUP=$(stat -c "%G" /var/log/syslog)
