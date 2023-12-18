@@ -9,23 +9,16 @@
 
 - mw verify upgrade behavior on skin files in /etc/weewx/skins.  do the non-
     modified skin files get upgraded from apt/yum?
-- mw see if backport of importlib.resources exists for suse 15 and rocky8 for python 3.6
-- mw adjust/verify the weewx.conf maintainer version behavior
-
-## Resolved (push these to docs and/or design doc)
-
-- ensure that maintainer's version of weewx.conf is created but no used; ensure
-    that existing weewx.conf is not overwritten
+- mw see if backport of importlib.resources exists for suse 15 and rocky8 for
+    python 3.6
+- mw ensure that maintainer's version of weewx.conf is created but no used
+  ensure that existing weewx.conf is not overwritten
     /etc/weewx/weewx.conf - untouched config
     /etc/weewx/weewx.conf-OLD-LATEST - maintainer; 'weewctl upgrade'
     /etc/weewx/weewx.conf-LATEST - distribution
+  update the docs (each quickstart) to make this process explicit
 
-- add steps to purging.  these are for deb/rpm installs
-    sudo userdel weewx
-    sudo rm -rf /etc/weewx
-    sudo rm -rf /var/lib/weewx
-    sudo rm -rf /var/log/weewx
-    sudo rm -rf /var/www/html/weewx
+## Resolved (push these to docs and/or design doc)
 
 - verify the weewx-multi scenario using systemd
     configs should be XXX.conf, so log label is weewxd-XXX

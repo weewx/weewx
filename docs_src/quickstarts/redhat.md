@@ -143,7 +143,7 @@ sudo yum remove weewx
 When you use `yum` to uninstall WeeWX, it does not touch WeeWX data, logs,
 or any changes you might have made to the WeeWX configuration.  It also leaves
 the `weewx` user, since data and configuration files were owned by that user.
-To remove the remaining WeeWX bits:
+To remove every trace of WeeWX:
 
 ```{.shell .copy}
 sudo yum remove weewx
