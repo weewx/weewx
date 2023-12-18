@@ -8,7 +8,6 @@
 import getpass
 import grp
 import importlib
-import importlib.resources
 import logging
 import os
 import stat
@@ -17,6 +16,12 @@ import re
 import shutil
 import sys
 import urllib.parse
+
+# importlib.resources is 3.7 or later, importlib_resources is the backport
+try:
+    import importlib.resources as importlib_resources
+except:
+    import importlib_resources
 
 import configobj
 
@@ -698,7 +703,7 @@ def station_upgrade(config_path, dist_config_path=None, examples_root=None,
         dist_config_dict = configobj.ConfigObj(dist_config_path, encoding='utf-8', file_error=True)
     else:
         # Retrieve the new configuration file from package resources:
-        with importlib.resources.open_text('weewx_data', 'weewx.conf', encoding='utf-8') as fd:
+        with importlib_resources.open_text('weewx_data', 'weewx.conf', encoding='utf-8') as fd:
             dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
 
     if 'config' in what:

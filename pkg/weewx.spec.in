@@ -12,7 +12,7 @@
 %if 0%{?suse_version} && "%{os_target}" == "15"
 %define relos .suse15
 %define platform suse
-%define deps python3, python3-configobj, python3-Cheetah3, python3-Pillow, python3-pyserial, python3-usb
+%define deps python3, python3-importlib_resources, python3-configobj, python3-Cheetah3, python3-Pillow, python3-pyserial, python3-usb
 %define python python3
 %define html_root /var/www/html/weewx
 %endif
@@ -25,18 +25,18 @@
 %undefine __brp_mangle_shebangs
 %if "%{os_target}" == "8"
 %define relos .el8
-# rh8 ships with python 3.6, and that is what python3 refers to.  we can
-# specify python38 or python39, but unfortunately none of the python modules
-# that we need are packaged for python38 or python39 (at least as of nov2023).
-# so rh8 must be unsupported for python3; you can only use python2+weewx4, or
-# you must do a pip install.
-%define deps epel-release, python38, python38-setuptools, python38-configobj, python38-cheetah, python38-pillow, python38-pyserial, python38-pyusb
-%define python python3.8
+# rh8 ships with python 3.6, which has pre-built modules required by weewx.
+# weewx also requires the importlib.resource module from python 3.7, which is
+# backported to python 3.6.  python 3.8, python 3.9, and python 3.11 are also
+# available on rh8, but none of the modules required by weewx are available for
+# those python (as of nov2023).
+%define deps epel-release, python3, python3-importlib_resources, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
+%define python python3
 %endif
 %if "%{os_target}" == "9"
 %define relos .el9
-# rh9 ships with python 3.9, which is sufficient.
-%define deps python3, python3-setuptools, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
+# rh9 ships with python 3.9, which has pre-built modules required by weewx.
+%define deps python3, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
 %define python python3
 %endif
 %endif
