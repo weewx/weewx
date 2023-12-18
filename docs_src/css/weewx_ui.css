@@ -275,7 +275,7 @@ p .symcode {
     margin: 0.4em .8em;  /* make the box a bit smaller than the doc width */
 }
 
-.md-typeset code {
+.md-typeset code, .md-typeset .linenos {
     font-weight: bold;
     font-size: .9em;
 }
