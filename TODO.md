@@ -12,7 +12,6 @@
 - mw the driver files have a shebang, but since they are never invoked directly
     (always 'python xxx.py' and never just 'xxx.py') then why have shebang?
     and if they do have shebang, they should be executable
-- mw verify the udev rules parent vs leaf
 - mw see if backport of importlib.resources exists for suse 15 and rocky8 for python 3.6
 - mw adjust/verify the weewx.conf maintainer version behavior
 
