@@ -322,7 +322,10 @@ endif
 redhat-changelog:
 	make rpm-changelog RPMOS=el
 
-redhat-package: rpm-package-rh9
+redhat-package: rpm-package-rh8 rpm-package-rh9
+
+rpm-package-rh8:
+	make rpm-package RPMOS=el OSREL=8
 
 rpm-package-rh9:
 	make rpm-package RPMOS=el OSREL=9
