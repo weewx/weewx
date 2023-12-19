@@ -258,14 +258,6 @@ set_permissions() {
         chmod 0755 /var/log/weewx
 	chown -R $WEEWX_USER:$WEEWX_GROUP /var/log/weewx
     fi
-#    LOGDIR_USER=root
-#    LOGDIR_GROUP=adm
-#    if [ -f /var/log/syslog ]; then
-#        LOGDIR_USER=$(stat -c "%U" /var/log/syslog)
-#        LOGDIR_GROUP=$(stat -c "%G" /var/log/syslog)
-#    fi
-#    chmod 0755 /var/log/weewx
-#    chown -R $LOGDIR_USER:$LOGDIR_GROUP /var/log/weewx
 }
 
 # if there are any existing extensions in the V4 location, copy them to the

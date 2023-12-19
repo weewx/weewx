@@ -41,8 +41,6 @@ install:
 	mkdir -p $(DST_USERDIR)
 	mkdir -p $(DST)/usr/bin
 	mkdir -p $(DST)/etc/default
-	mkdir -p $(DST)/etc/logrotate.d
-	mkdir -p $(DST)/etc/rsyslog.d
 	mkdir -p $(DST)/lib/systemd/system
 	mkdir -p $(DST)/lib/udev/rules.d
 	mkdir -p $(DST)/var/lib/weewx
@@ -68,6 +66,8 @@ install:
 	cp -r $(SRC)/src/weewx_data/skins $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/import $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/logwatch $(DST_CFGDIR)
+	cp -r $(SRC)/pkg/etc/logrotate.d $(DST_CFGDIR)
+	cp -r $(SRC)/pkg/etc/rsyslog.d $(DST_CFGDIR)
 
 # create the default configuration
 	cat $(SRC)/src/weewx_data/weewx.conf | sed \
@@ -98,10 +98,6 @@ done
 	cat $(SRC)/pkg/etc/default/weewx | sed \
  -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
  > $(DST)/etc/default/weewx
-
-# log handling
-	cp $(SRC)/pkg/etc/logrotate.d/weewx $(DST)/etc/logrotate.d
-	cp $(SRC)/pkg/etc/rsyslog.d/weewx.conf $(DST)/etc/rsyslog.d
 
 # put the udev rules in place
 	cp $(SRC)/pkg/etc/udev/rules.d/weewx.rules $(DST)/lib/udev/rules.d/60-weewx.rules
