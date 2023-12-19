@@ -81,7 +81,7 @@ def run_reports(config_path,
     else:
         print("Generating as of last timestamp in the database.")
 
-    weewx.initialize(config_dict, 'wee_report')
+    weewx.initialize(config_dict, 'weectl-report')
 
     # We want to generate all reports irrespective of any report_timing settings that may exist.
     # The easiest way to do this is walk the config dict, resetting any report_timing settings
