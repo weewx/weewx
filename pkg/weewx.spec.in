@@ -216,6 +216,12 @@ elif [ "$1" = "2" ]; then
 fi
 
 %preun
+# see which init system (if any) is running
+pid1=none
+if [ -d /run/systemd/system ]; then
+  pid1=systemd
+fi
+
 if [ "$1" = "0" ]; then
   # this is an uninstall, so stop and remove everything
   if [ "$pid1" = "systemd" ]; then
