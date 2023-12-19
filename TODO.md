@@ -5,6 +5,11 @@
 - tk eliminate daemonize.py
 - tk before logger is initialized, output to stdout/stderr as appropriate
 
+## weectl
+
+- tk Need `--log-root` option for `weectl`.
+
+
 ## Package installers
 
 - mw verify upgrade behavior on skin files in /etc/weewx/skins.  do the non-
@@ -37,6 +42,7 @@
   - where-to-find-things in users guide
   - running-weewx section of users guide
 
+- tk update docs to reflect that Python 3.6 is now supported.
 
 
 # Before final release
