@@ -25,14 +25,14 @@ do_install() {
     echo "This script sets up the files necessary to run WeeWX at system startup."
     echo "On some systems, it can be slow to run. Please be patient."
     echo "Copying files from $UTIL_ROOT..."
-    if [ -d /etc/rsyslog.d ]; then
-        echo "  syslog"
-        cp $UTIL_ROOT/rsyslog.d/weewx.conf /etc/rsyslog.d
-        if [ -d /etc/logrotate.d ]; then
-	    echo "  logrotate"
-	    cp $UTIL_ROOT/logrotate.d/weewx /etc/logrotate.d
-        fi
-    fi
+#    if [ -d /etc/rsyslog.d ]; then
+#        echo "  syslog"
+#        cp $UTIL_ROOT/rsyslog.d/weewx.conf /etc/rsyslog.d
+#        if [ -d /etc/logrotate.d ]; then
+#	    echo "  logrotate"
+#	    cp $UTIL_ROOT/logrotate.d/weewx /etc/logrotate.d
+#        fi
+#    fi
     if [ -d /etc/udev/rules.d ]; then
         echo "  udev rules"
         cp $UTIL_ROOT/udev/rules.d/weewx.rules /etc/udev/rules.d/60-weewx.rules
@@ -43,23 +43,23 @@ do_install() {
         cp $UTIL_ROOT/systemd/weewx@.service /etc/systemd/system
     fi
 
-    if [ -d /etc/rsyslog.d ]; then
-        echo "Creating log directory $WEEWX_LOGDIR..."
-        mkdir -p $WEEWX_LOGDIR
+#    if [ -d /etc/rsyslog.d ]; then
+#        echo "Creating log directory $WEEWX_LOGDIR..."
+#        mkdir -p $WEEWX_LOGDIR
         # Ownership of syslog files varies between operating systems, so match
         # what is used for other files on the system.
-        LOGDIR_USER=root
-        LOGDIR_GROUP=root
-        if [ -f /var/log/syslog ]; then
-            LOGDIR_USER=$(stat -c "%U" /var/log/syslog)
-            LOGDIR_GROUP=$(stat -c "%G" /var/log/syslog)
-        fi
-        echo "Setting log directory permissions to $LOGDIR_USER:$LOGDIR_GROUP..."
-        chown $LOGDIR_USER $WEEWX_LOGDIR
-        chgrp $LOGDIR_GROUP $WEEWX_LOGDIR
-        echo "Restarting syslog..."
-        systemctl restart syslog
-    fi
+#        LOGDIR_USER=weewx
+#        LOGDIR_GROUP=root
+#        if [ -f /var/log/syslog ]; then
+#            LOGDIR_USER=$(stat -c "%U" /var/log/syslog)
+#            LOGDIR_GROUP=$(stat -c "%G" /var/log/syslog)
+#        fi
+#        echo "Setting log directory permissions to $LOGDIR_USER:$LOGDIR_GROUP..."
+#        chown $LOGDIR_USER $WEEWX_LOGDIR
+#        chgrp $LOGDIR_GROUP $WEEWX_LOGDIR
+#        echo "Restarting syslog..."
+#        systemctl restart syslog
+#    fi
 
     echo "Reloading systemd..."
     systemctl daemon-reload
@@ -94,14 +94,14 @@ do_uninstall() {
         echo "  udev rules"
         rm /etc/udev/rules.d/60-weewx.rules
     fi
-    if [ -f /etc/rsyslog.d/weewx.conf ]; then
-        echo "  syslog"
-        rm /etc/rsyslog.d/weewx.conf
-    fi
-    if [ -f /etc/logrotate.d/weewx ]; then
-	echo "  logrotate"
-	rm /etc/logrotate.d/weewx
-    fi
+#    if [ -f /etc/rsyslog.d/weewx.conf ]; then
+#        echo "  syslog"
+#        rm /etc/rsyslog.d/weewx.conf
+#    fi
+#    if [ -f /etc/logrotate.d/weewx ]; then
+#	echo "  logrotate"
+#	rm /etc/logrotate.d/weewx
+#    fi
 }
 
 ACTION=$1

@@ -116,6 +116,7 @@ cat src/weewx_data/weewx.conf | sed \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
  -e 's:HTML_ROOT = public_html:HTML_ROOT = %{html_root}:' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
+ -e 's%LOG_ROOT = .*%LOG_ROOT = /var/log/weewx%' \
  > %{buildroot}%{dst_cfg_dir}/weewx.conf
 
 # make a copy of the generic configuration file

@@ -51,6 +51,14 @@ LOGGING_STR = """[Logging]
             # Alternate choice is 'ext://sys.stderr'
             stream = ext://sys.stdout
 
+        # Log to file with rotation
+        [[[timed_rotate]]]
+            level = DEBUG
+            formatter = standard
+            class = logging.handlers.TimedRotatingFileHandler
+            when = midnight
+            backupCount = 7
+
     # How to format log messages
     [[formatters]]
         [[[simple]]]
@@ -141,6 +149,21 @@ def setup(process_name, config_dict=None):
 
     # Extract just the part used by Python's logging facility
     log_dict = log_config.dict().get('Logging', {})
+
+    # Get (and remove) the LOG_ROOT, which we use to set filenames if they
+    # were not already specified.  Python logging does not use it.
+    log_root = log_dict.pop('LOG_ROOT', 'log')
+    logdir = log_root
+    if weewx_root:
+        logdir = os.path.join(weewx_root, log_root)
+
+    # If no filename was specified, then use the process name, and place the
+    # file in the log directory.
+    # FIXME: should be for any file-based handler not just timed_rotate
+    filename = log_dict.get('handlers', {}).get('timed_rotate', {}).get('filename')
+    if filename is None:
+        filename = os.path.join(logdir, '%s.log' % (process_name))
+        log_dict['handlers']['timed_rotate']['filename'] = filename
 
     # Finally! The dictionary is ready. Set the defaults.
     logging.config.dictConfig(log_dict)
