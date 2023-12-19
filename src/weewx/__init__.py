@@ -194,6 +194,9 @@ def add_user_path(config_dict):
     """add the path to the parent of the user directory to PYTHONPATH."""
     root_dict = extract_roots(config_dict)
     lib_dir = os.path.abspath(os.path.join(root_dict['USER_DIR'], '..'))
+    import logging
+    log = logging.getLogger(__name__)
+    log.info("Adding 'user' directory '%s'" % lib_dir)
     sys.path.append(lib_dir)
 
 
@@ -242,8 +245,5 @@ def initialize(config_dict, log_label):
         importlib.import_module('user.extensions')
     except ModuleNotFoundError as e:
         import logging
-        msg = "Cannot find 'user' directory: %s" % e
-        print(msg, file=sys.stderr)
-        print("Proceeding", file=sys.stderr)
         log = logging.getLogger(__name__)
-        log.error(msg)
+        log.error("Cannot load user extensions: %s" % e)
