@@ -14,8 +14,6 @@
 
 - mw verify upgrade behavior on skin files in /etc/weewx/skins.  do the non-
     modified skin files get upgraded from apt/yum?
-- mw see if backport of importlib.resources exists for suse 15 and rocky8 for
-    python 3.6
 - mw ensure that maintainer's version of weewx.conf is created but no used
   ensure that existing weewx.conf is not overwritten
     /etc/weewx/weewx.conf - untouched config
