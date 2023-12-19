@@ -1,3 +1,6 @@
+weewx (5.0.0b18-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Mon, 18 Dec 2023 22:12:38 -0500
 weewx (5.0.0b17-4) unstable; urgency=low
   * fix permissions on /var/log/weewx, especially for ubuntu
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Tue, 15 Dec 2023 21:00:00 -0500

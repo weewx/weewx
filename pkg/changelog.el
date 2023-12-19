@@ -1,3 +1,5 @@
+* Mon Dec 18 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b18-1
+- new upstream release
 * Tue Dec 13 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b17-4
 - remove bytecompiled code before removing package
 - do not enable template unit
