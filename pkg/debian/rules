@@ -75,7 +75,7 @@ install:
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = skins%' \
  -e 's%HTML_ROOT = public_html%HTML_ROOT = /var/www/html/weewx%' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
- -e 's%WEEWX_ROOT = .*%WEEWX_ROOT = /var/log/weewx%' \
+ -e 's%LOG_ROOT = .*%LOG_ROOT = /var/log/weewx%' \
  > $(DST_CFGDIR)/weewx.conf
 
 # make a virgin copy of the configuration file
