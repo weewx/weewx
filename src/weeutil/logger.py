@@ -13,6 +13,7 @@ from io import StringIO
 import configobj
 
 import weewx
+from weeutil.weeutil import to_list
 
 # The logging defaults. Note that two kinds of placeholders are used:
 #
@@ -156,6 +157,10 @@ def setup(process_name, config_dict=None):
     logdir = log_root
     if weewx_root:
         logdir = os.path.join(weewx_root, log_root)
+
+    # Ensure that the list of handlers is a list, even if only one element.
+    handlers = log_dict.get('root', {}).get('handlers', [])
+    log_dict['root']['handlers'] = to_list(handlers)
 
     # If no filename was specified, then use the process name, and place the
     # file in the log directory.
