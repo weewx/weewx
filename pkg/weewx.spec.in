@@ -183,8 +183,9 @@ elif [ "$1" = "2" ]; then
   # upgrade the previous config to create the maintainer's version, but do not
   # touch the user's configuration.
   #   weewx.conf - user's conf (old)
-  #   weewx.conf.latest - new conf for this weewx version
-  #   weewx.conf.old-latest - user's conf upgraded to this weewx version
+  #   weewx.conf-new - new conf for this weewx version
+  #   weewx.conf-old-new - user's conf upgraded to this weewx version
+  #   weewx.conf.rpmnew - new conf for this weewx version
   if [ -f %{cfg_file}.prev ]; then
     OLDVER=`grep version %{cfg_file}.prev | sed -e 's/\s*version\s*=\s*//'`
     if [ "$OLDVER" = "" ]; then
@@ -197,7 +198,6 @@ elif [ "$1" = "2" ]; then
     if [ -f %{cfg_file}-%{weewx_version} ]; then
       echo Creating maintainer version of configuration as %{cfg_file}-$MNT
       /usr/bin/weectl station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg_file}-%{weewx_version} --what=config --no-prompt --no-backup
-      # FIXME: do we copy this onto the original?
     fi
   fi
   # if this is an upgrade from V4, copy any extensions to the V5 location
