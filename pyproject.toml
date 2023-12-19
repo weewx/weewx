@@ -20,6 +20,7 @@ classifiers = [
     'Operating System :: Unix',
     'Operating System :: MacOS',
     'Programming Language :: Python',
+    'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
@@ -52,7 +53,7 @@ exclude = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.6"
 configobj = "^5.0"
 # This is the renamed "Cheetah" package:
 CT3 = "^3.1"
@@ -61,6 +62,7 @@ ephem = "^4.1"
 PyMySQL = "^1.0"
 pyserial = "^3.4"
 pyusb = "^1.0.2"
+importlib-resources = {version = ">=3.3", python = "3.6"}
 
 [tool.poetry.scripts]
 weectl = 'weectl:main'
