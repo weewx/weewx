@@ -185,17 +185,20 @@ elif [ "$1" = "2" ]; then
   #   weewx.conf - user's conf (old)
   #   weewx.conf.latest - new conf for this weewx version
   #   weewx.conf.old-latest - user's conf upgraded to this weewx version
-  if [ -f %{cfg_file}.%{weewx_version} -a -f %{cfg_file}.prev ]; then
+  if [ -f %{cfg_file}.prev ]; then
     OLDVER=`grep version %{cfg_file}.prev | sed -e 's/\s*version\s*=\s*//'`
     if [ "$OLDVER" = "" ]; then
       # someone might have messed with the version string
       OLDVER="xxx"
     fi
     MNT=${OLDVER}-%{weewx_version}
-    echo Creating maintainer version of configuration as %{cfg_file}-$MNT
+    echo Moving previous configuration copy to %{cfg_file}-$MNT
     mv %{cfg_file}.prev %{cfg_file}-$MNT
-    /usr/bin/weectl station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg_file}-%{weewx_version} --what=config --no-prompt --no-backup
-    # FIXME: do we copy this onto the original?
+    if [ -f %{cfg_file}-%{weewx_version} ]; then
+      echo Creating maintainer version of configuration as %{cfg_file}-$MNT
+      /usr/bin/weectl station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg_file}-%{weewx_version} --what=config --no-prompt --no-backup
+      # FIXME: do we copy this onto the original?
+    fi
   fi
   # if this is an upgrade from V4, copy any extensions to the V5 location
   if [ -d /usr/share/weewx/user ]; then
