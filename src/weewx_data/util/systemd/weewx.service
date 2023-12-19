@@ -6,13 +6,13 @@
 [Unit]
 Description=WeeWX weather system
 Documentation=https://weewx.com/docs
-
 Requires=time-sync.target
 After=time-sync.target
 
 [Service]
 ExecStart=weewxd weewx.conf
 StandardOutput=null
+StandardError=syslog+console
 #User=weewx
 #Group=weewx
 

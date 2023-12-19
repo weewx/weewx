@@ -18,6 +18,7 @@ PartOf=weewx.service
 [Service]
 ExecStart=weewxd --log-label weewxd-%i /etc/weewx/%i.conf
 StandardOutput=null
+StandardError=syslog+console
 RuntimeDirectory=weewx
 RuntimeDirectoryMode=775
 User=weewx
