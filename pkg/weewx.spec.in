@@ -180,12 +180,12 @@ if [ "$1" = "1" ]; then
   fi
 elif [ "$1" = "2" ]; then
   # this is an upgrade
-  # upgrade the previous config to create the maintainer's version, but do not
-  # touch the user's configuration.
-  #   weewx.conf - user's conf (old)
-  #   weewx.conf-new - new conf for this weewx version
-  #   weewx.conf-old-new - user's conf upgraded to this weewx version
-  #   weewx.conf.rpmnew - new conf for this weewx version
+  # upgrade a copy of the previous config to create the upgraded version, but
+  # do not touch the user's configuration.
+  #   weewx.conf          - user's conf (old)
+  #   weewx.conf-new      - new conf for this weewx version
+  #   weewx.conf-old-new  - user's conf upgraded to this weewx version
+  #   weewx.conf.rpmnew   - new conf from this rpm (created by rpm rules)
   if [ -f %{cfg_file}.prev ]; then
     OLDVER=`grep version %{cfg_file}.prev | sed -e 's/\s*version\s*=\s*//'`
     if [ "$OLDVER" = "" ]; then

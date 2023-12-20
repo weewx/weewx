@@ -186,9 +186,27 @@ install_weewxconf() {
 }
 
 # use weewx setup utilities to merge new features into existing weewx.conf.
-# user will be prompted about whether to accept maintainers version (the
-# merged config that we create here), or the previous config.  either way,
-# the previous and new are saved.
+# user will be prompted about whether to accept the new version or the previous
+# configuration.
+#
+# if they choose existing, then they end up with:
+#   weewx.conf           - previous config
+#   weewx.conf.x.y.z     - new config
+#
+# if they choose new, then they end up with:
+#   weewx.conf.dpkg-old  - previous config
+#   weewx.conf           - new config
+#
+# new install:
+#   weewx.conf           - new config filled with values from debconf
+#   weewx.conf.dist      - new config (created by dpkg rules)
+#
+# upgrade:
+#   weewx.conf           - previous config
+#   weewx.conf-new       - new config
+#   weewx.conf-old-new   - old config upgraded to this version
+#   weewx.conf.dist      - new config (created by dpkg rules)
+#
 merge_weewxconf() {
     if [ ! -f $cfgfile ]; then
         return
@@ -197,7 +215,7 @@ merge_weewxconf() {
     NEWVER=$($cfgapp --version | cut -d' ' -f2)
     OLDVER=$(get_conf_version $cfgfile)
     if dpkg --compare-versions $OLDVER lt $NEWVER; then
-        # this is an old config, so merge it into a new config
+        # this is an old config, so create a maintainer's version by upgrading
         if [ -f $cfgfile.dist ]; then
             DSTVER=$(get_conf_version $cfgfile.dist)
             if dpkg --compare-versions $DSTVER eq $NEWVER; then
@@ -205,11 +223,10 @@ merge_weewxconf() {
                 echo "Copying previous config file to $cfgfile-$MNT"
                 cp -p $cfgfile $cfgfile-$MNT
                 echo "Saving distribution config file as $cfgfile-$NEWVER"
-                mv $cfgfile.dist $cfgfile-$NEWVER
-		echo "Creating maintainer version of config as $cfgfile-$MNT"
+                cp -p $cfgfile.dist $cfgfile-$NEWVER
+                echo "Creating maintainer config as $cfgfile-$MNT"
                 # Upgrade the configuration file only.
                 $cfgapp station upgrade --config=$cfgfile-$MNT --dist-config=$cfgfile-$NEWVER --what=config --no-prompt --no-backup
-		# FIXME: do we copy this onto original?
             else
                 echo "Distribution config has wrong version: dst=$DSTVER new=$NEWVER"
             fi
