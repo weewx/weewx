@@ -342,7 +342,12 @@ rpm-package-suse15:
 check-rpm:
 	rpmlint -f pkg/rpmlint.$(RPMOS) $(DSTDIR)/$(RPMPKG)
 
-check-redhat:
+check-redhat: check-rh8 check-rh9
+
+check-rh8:
+	make check-rpm RPMOS=el OSREL=8
+
+check-rh9:
 	make check-rpm RPMOS=el OSREL=9
 
 check-suse:
