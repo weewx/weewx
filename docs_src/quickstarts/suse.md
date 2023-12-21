@@ -110,21 +110,22 @@ sudo usermod -aG weewx $USER
 
 ## Upgrade
 
-The upgrade process will only upgrade the WeeWX software; it does not modify
-the database, configuration file, extensions, or skins.
-
 Upgrade to the latest version like this:
 ```{.shell .copy}
 sudo zypper update weewx
 ```
 
-Unmodified files will be upgraded. If modifications have been made to any
-files, you will see a message about any differences between the modified
-files and the new files. Any new changes from the upgrade will be noted as
-files with a `.rpmnew` extension and the modified files will be left untouched.
+The upgrade process will only upgrade the WeeWX software; it does not modify
+the configuration file, database, or any extensions you may have installed.
 
-For example, if `/etc/weewx/weewx.conf` was modified, `zypper` will present a
-message something like this:
+If modifications have been made to the configuration file or the skins that
+come with WeeWX, you will see a message about any differences between the
+modified files and the new files. Any new changes from the upgrade will be
+noted as files with a `.rpmnew` extension, and the modified files will be left
+untouched.
+
+For example, if `/etc/weewx/weewx.conf` was modified, you will see a message
+something like this:
 
 ```
 warning: /etc/weewx/weewx.conf created as /etc/weewx/weewx.conf.rpmnew

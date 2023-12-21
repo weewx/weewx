@@ -7,11 +7,6 @@
 - tk Rationalize startup procedure, making it consistent.
 
 
-## Package installers
-
-- mw verify upgrade behavior on skin files in /etc/weewx/skins.  do the non-
-    modified skin files get upgraded from apt/yum?
-
 ## Testing
 
 - mw convert to pytest

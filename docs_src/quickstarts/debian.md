@@ -116,9 +116,6 @@ sudo usermod -aG weewx $USER
 
 ## Upgrade
 
-The upgrade process will only upgrade the WeeWX software; it does not modify
-the database, configuration file, extensions, or skins.
-
 Upgrade to the latest version like this:
 
 ```{.shell .copy}
@@ -126,10 +123,13 @@ sudo apt update
 sudo apt install weewx
 ```
 
-Unmodified files will be upgraded. If modifications have been made to any
-files, you will be prompted whether you want to keep the existing, modified
-files, or accept the new files. Either way, a copy of the option you did not
-choose will be saved.
+The upgrade process will only upgrade the WeeWX software; it does not modify
+the configuration file, database, or any extensions you may have installed.
+
+If modifications have been made to the configuration file or the skins that
+come with WeeWX, you will be prompted whether you want to keep the existing,
+modified files, or accept the new files. Either way, a copy of the option you
+did not choose will be saved.
 
 For example, if `/etc/weewx/weewx.conf` was modified, you will see a message
 something like this:
@@ -157,7 +157,11 @@ new version number. It can then be compared with your old version which
 will be in `/etc/weewx/weewx.conf`.
 
 !!! Note
-    In most cases you should choose `N` (the default).
+    In most cases you should choose `N` (the default).  Since WeeWX releases
+    are almost always backward-compatible with configuration files and skins,
+    choosing to keep the currently-installed version will ensure that your
+    system works as it did before the upgrade.  After the upgrade, you can
+    compare the new files to your existing, operational files at your leisure.
 
 
 ## Uninstall
