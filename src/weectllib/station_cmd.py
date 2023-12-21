@@ -8,6 +8,7 @@ import os.path
 import sys
 
 import weecfg.station_config
+import weectllib
 import weewx
 from weeutil.weeutil import bcolors
 
@@ -135,7 +136,8 @@ def add_subparser(subparsers):
                                             action='store_true',
                                             help='Print what would happen, but do not actually '
                                                  'do it.')
-    station_reconfigure_parser.set_defaults(func=reconfigure_station)
+    station_reconfigure_parser.set_defaults(func=weectllib.dispatch)
+    station_reconfigure_parser.set_defaults(action_func=reconfigure_station)
 
     # ---------- Action 'upgrade' ----------
     station_upgrade_parser = \
@@ -180,7 +182,8 @@ def add_subparser(subparsers):
                                         action='store_true',
                                         help='Print what would happen, but do not actually '
                                              'do it.')
-    station_upgrade_parser.set_defaults(func=upgrade_station)
+    station_upgrade_parser.set_defaults(func=weectllib.dispatch)
+    station_upgrade_parser.set_defaults(action_func=upgrade_station)
 
 
 # ==============================================================================
@@ -221,10 +224,10 @@ def create_station(namespace):
         print(f"For example: {bcolors.BOLD}'sudo {path}'{bcolors.ENDC}")
 
 
-def reconfigure_station(namespace):
+def reconfigure_station(config_dict, namespace):
     """Map namespace to a call to station_reconfigure()"""
     try:
-        weecfg.station_config.station_reconfigure(config_path=namespace.config,
+        weecfg.station_config.station_reconfigure(config_dict=config_dict,
                                                   driver=namespace.driver,
                                                   location=namespace.location,
                                                   altitude=namespace.altitude,
@@ -244,8 +247,8 @@ def reconfigure_station(namespace):
         sys.exit(e)
 
 
-def upgrade_station(namespace):
-    weecfg.station_config.station_upgrade(config_path=namespace.config,
+def upgrade_station(config_dict, namespace):
+    weecfg.station_config.station_upgrade(config_dict=config_dict,
                                           dist_config_path=namespace.dist_config,
                                           examples_root=namespace.examples_root,
                                           skin_root=namespace.skin_root,

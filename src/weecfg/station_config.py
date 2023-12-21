@@ -31,7 +31,7 @@ import weeutil.weeutil
 import weewx
 from weeutil.weeutil import to_float, to_bool, bcolors
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('weectl-station')
 
 
 def station_create(config_path, *args,
@@ -96,24 +96,17 @@ def station_create(config_path, *args,
     return dist_config_dict
 
 
-def station_reconfigure(config_path, no_backup=False, dry_run=False, *args, **kwargs):
+def station_reconfigure(config_dict, no_backup=False, dry_run=False, *args, **kwargs):
     """Reconfigure an existing station"""
 
-    if dry_run:
-        print("This is a dry run. Nothing will actually be done.")
+    config_config(config_dict['config_path'], config_dict, dry_run=dry_run, *args, **kwargs)
 
-    config_path, config_dict = weecfg.read_config(config_path)
-
-    print(f"Reconfiguring configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
-
-    config_config(config_path, config_dict, dry_run=dry_run, *args, **kwargs)
-
-    print(f"Saving configuration file {config_path}")
+    print(f"Saving configuration file {config_dict['config_path']}")
     if dry_run:
         print("This was a dry run. Nothing was actually done.")
     else:
         # Save the results, possibly with a backup.
-        backup_path = weecfg.save(config_dict, config_path, not no_backup)
+        backup_path = weecfg.save(config_dict, config_dict['config_path'], not no_backup)
         if backup_path:
             print(f"Saved old configuration file as {backup_path}")
 
@@ -673,18 +666,14 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
     return util_dir
 
 
-def station_upgrade(config_path, dist_config_path=None, examples_root=None,
+def station_upgrade(config_dict, dist_config_path=None, examples_root=None,
                     skin_root=None, what=None, no_prompt=False, no_backup=False, dry_run=False):
     """Upgrade the user data for the configuration file found at config_path"""
 
     if what is None:
         what = ('config', 'examples', 'util')
 
-    if dry_run:
-        print("This is a dry run. Nothing will actually be done.")
-
-    # Retrieve the old configuration file as a ConfigObj:
-    config_path, config_dict = weecfg.read_config(config_path)
+    config_path = config_dict['config_path']
 
     abbrev = {'config': 'configuration file',
               'util': 'utility files'}
