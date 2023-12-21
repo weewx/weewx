@@ -456,6 +456,9 @@ pull-yum-repo:
 	rsync -Oarvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ ~/.yum
 
 update-yum-repo:
+	mkdir -p $(YUM_REPO)/el8/RPMS
+	cp -p $(DSTDIR)/weewx-$(RPMVER).el8.$(RPMARCH).rpm $(YUM_REPO)/el8/RPMS
+	createrepo $(YUM_REPO)/el8
 	mkdir -p $(YUM_REPO)/el9/RPMS
 	cp -p $(DSTDIR)/weewx-$(RPMVER).el9.$(RPMARCH).rpm $(YUM_REPO)/el9/RPMS
 	createrepo $(YUM_REPO)/el9
