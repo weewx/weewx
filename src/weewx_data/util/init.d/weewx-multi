@@ -76,7 +76,7 @@ fi
 #   2 if daemon could not be started
 do_start() {
     INSTANCE=$1
-    LOGNAME=$(get_loglabel $INSTANCE)
+    LOGNAME=$(get_procname $INSTANCE)
     PIDFILE=$WEEWX_RUNDIR/$(get_procname $INSTANCE).pid
     CFGFILE=$WEEWX_CFGDIR/$INSTANCE.conf
     DAEMON_ARGS="--daemon --log-label=$LOGNAME --pidfile=$PIDFILE $CFGFILE"
