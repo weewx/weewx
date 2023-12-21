@@ -4,10 +4,7 @@
 
 - tk eliminate daemonize.py
 - tk before logger is initialized, output to stdout/stderr as appropriate
-
-## weectl
-
-- tk Need `--log-root` option for `weectl`.
+- tk Rationalize startup procedure, making it consistent.
 
 
 ## Package installers
