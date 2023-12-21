@@ -84,7 +84,7 @@ accumulated, so it could be a few minutes before you see a report or a change
 to a report. The location of the reports depends on the operating system and
 how WeeWX was installed.
 
-See `HTML_ROOT` in the [*Where to find things*](../where) section.
+See `HTML_ROOT` in the [*Where to find things*](where.md) section.
 
 Depending on the configuration, if WeeWX cannot get data from the sensors,
 then it will probably not generate any reports.  So if you do not see reports,
