@@ -9,28 +9,21 @@ import logging
 import sys
 import time
 
-import weecfg
 import weectllib
 import weedb
 import weewx
 import weewx.manager
-from weeutil.weeutil import bcolors, y_or_n, timestamp_to_string
+import weewx.units
+from weeutil.weeutil import y_or_n, timestamp_to_string
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('weectl-database')
 
 
-def create_database(config_path,
+def create_database(config_dict,
                     db_binding='wx_binding',
                     dry_run=False,
                     no_confirm=False):
     """Create a new database."""
-    if dry_run:
-        print("This is a dry run. Nothing will actually be done.")
-
-    config_path, config_dict = weecfg.read_config(config_path)
-    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
-
-    weewx.initialize(config_dict, 'weectl-database')
 
     # Try a simple open. If it succeeds, that means the database
     # exists and is initialized. Otherwise, an exception will be raised.
@@ -50,43 +43,37 @@ def create_database(config_path,
                 print(f"Created database '{dbmanager.database_name}'.")
 
 
-def drop_daily(config_path,
+def drop_daily(config_dict,
                db_binding='wx_binding',
                dry_run=False,
                no_confirm=False):
     """Drop the daily summary from a WeeWX database."""
 
-    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
-    weewx.initialize(config_dict, 'weectl-database')
-
-    print(f"Proceeding will delete all your daily summaries from database '{database_name}'")
-    ans = y_or_n("Are you sure you want to proceed (y/n)? ", noprompt=no_confirm)
-    if ans == 'y':
-        t1 = time.time()
-        print(f"Dropping daily summary tables from '{database_name}' ... ")
-        try:
-            with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
-                try:
-                    if not dry_run:
-                        dbmanager.drop_daily()
-                except weedb.OperationalError as e:
-                    print("Error '%s'" % e, file=sys.stderr)
-                    print(f"Drop daily summary tables failed for database '{database_name}'")
-                else:
-                    tdiff = time.time() - t1
-                    print("Daily summary tables dropped from "
-                          f"database '{database_name}' in {tdiff:.2f} seconds")
-        except weedb.OperationalError:
-            # No daily summaries. Nothing to be done.
-            print(f"No daily summaries found in database '{database_name}'. Nothing done.")
-    else:
-        print("Nothing done.")
-
-    if dry_run:
-        print("This was a dry run. Nothing was actually done.")
+    try:
+        with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
+            print("Proceeding will delete all your daily summaries from "
+                  f"database '{dbmanager.database_name}'")
+            ans = y_or_n("Are you sure you want to proceed (y/n)? ", noprompt=no_confirm)
+            if ans == 'n':
+                print("Nothing done")
+                return
+            t1 = time.time()
+            try:
+                if not dry_run:
+                    dbmanager.drop_daily()
+            except weedb.OperationalError as e:
+                print("Error '%s'" % e, file=sys.stderr)
+                print(f"Drop daily summary tables failed for database '{dbmanager.database_name}'")
+            else:
+                tdiff = time.time() - t1
+                print("Daily summary tables dropped from "
+                      f"database '{dbmanager.database_name}' in {tdiff:.2f} seconds")
+    except weedb.OperationalError:
+        # No daily summaries. Nothing to be done.
+        print(f"No daily summaries found. Nothing done.")
 
 
-def rebuild_daily(config_path,
+def rebuild_daily(config_dict,
                   date=None,
                   from_date=None,
                   to_date=None,
@@ -95,8 +82,8 @@ def rebuild_daily(config_path,
                   no_confirm=False):
     """Rebuild the daily summaries."""
 
-    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
-    weewx.initialize(config_dict, 'weectl-database')
+    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, db_binding)
+    database_name = manager_dict['database_dict']['database_name']
 
     # Get any dates the user might have specified.
     from_d, to_d = weectllib.parse_dates(date, from_date, to_date)
@@ -127,7 +114,6 @@ def rebuild_daily(config_path,
     log.info("Rebuilding daily summaries in database '%s' ..." % database_name)
     print("Rebuilding daily summaries in database '%s' ..." % database_name)
     if dry_run:
-        print("This was a dry run. Nothing was actually done.")
         return
 
     # Open up the database. This will create the tables necessary for the daily
@@ -158,7 +144,7 @@ def rebuild_daily(config_path,
         print(f"Daily summaries up to date in '{database_name}'.")
 
 
-def add_column(config_path,
+def add_column(config_dict,
                column_name=None,
                column_type=None,
                db_binding='wx_binding',
@@ -168,8 +154,8 @@ def add_column(config_path,
     column_name: The name of the new column.
     column_type: The type ("REAL"|"INTEGER") of the new column.
     """
-    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
-    weewx.initialize(config_dict, 'weectl-database')
+    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, db_binding)
+    database_name = manager_dict['database_dict']['database_name']
 
     column_type = column_type or 'REAL'
     ans = y_or_n(
@@ -183,18 +169,15 @@ def add_column(config_path,
     else:
         print("Nothing done.")
 
-    if dry_run:
-        print("This was a dry run. Nothing was actually done.")
 
-
-def rename_column(config_path,
+def rename_column(config_dict,
                   from_name=None,
                   to_name=None,
                   db_binding='wx_binding',
                   dry_run=False,
                   no_confirm=False):
-    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
-    weewx.initialize(config_dict, 'weectl-database')
+    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, db_binding)
+    database_name = manager_dict['database_dict']['database_name']
 
     ans = y_or_n(f"Rename column '{from_name}' to '{to_name}' "
                  f"in database {database_name}? (y/n) ", noprompt=no_confirm)
@@ -206,19 +189,13 @@ def rename_column(config_path,
     else:
         print("Nothing done.")
 
-    if dry_run:
-        print("This was a dry run. Nothing was actually done.")
 
-
-def drop_columns(config_path,
+def drop_columns(config_dict,
                  column_names=None,
                  db_binding='wx_binding',
                  dry_run=False,
                  no_confirm=False):
     """Drop a set of columns from the database"""
-    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
-    weewx.initialize(config_dict, 'weectl-database')
-
     ans = y_or_n(f"Drop column(s) '{', '.join(column_names)}' from the database? (y/n) ",
                  noprompt=no_confirm)
     if ans == 'y':
@@ -238,11 +215,8 @@ def drop_columns(config_path,
     else:
         print("Nothing done.")
 
-    if dry_run:
-        print("This was a dry run. Nothing was actually done.")
 
-
-def reconfigure_database(config_path,
+def reconfigure_database(config_dict,
                          db_binding='wx_binding',
                          dry_run=False,
                          no_confirm=False):
@@ -250,11 +224,7 @@ def reconfigure_database(config_path,
     the current configuration options. The reconfigure action will create a new database with the
      same name as the old, except with the suffix _new attached to the end."""
 
-    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
-    weewx.initialize(config_dict, 'weectl-database')
-
-    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
-                                                              db_binding)
+    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, db_binding)
     # Make a copy for the new database (we will be modifying it)
     new_database_dict = dict(manager_dict['database_dict'])
 
@@ -318,11 +288,8 @@ def reconfigure_database(config_path,
     else:
         print("Nothing done.")
 
-    if dry_run:
-        print("This was a dry run. Nothing was actually done.")
 
-
-def transfer_database(config_path,
+def transfer_database(config_dict,
                       dest_binding=None,
                       db_binding='wx_binding',
                       dry_run=False,
@@ -334,21 +301,11 @@ def transfer_database(config_path,
         print("Destination binding not specified. Nothing Done. Aborting.", file=sys.stderr)
         return
 
-    if dry_run:
-        print("This is a dry run. Nothing will actually be done.")
-
-    config_path, config_dict = weecfg.read_config(config_path)
-    weewx.initialize(config_dict, 'weectl-database')
-
-    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
-
     # get manager dict for our source binding
-    src_manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
-                                                                  db_binding)
+    src_manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, db_binding)
     # get manager dict for our dest binding
     try:
-        dest_manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
-                                                                       dest_binding)
+        dest_manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, dest_binding)
     except weewx.UnknownBinding:
         # if we can't find the binding display a message then return
         print(f"Unknown destination binding '{dest_binding}'. "
@@ -442,11 +399,8 @@ def transfer_database(config_path,
             print("Nothing done. Aborting.", file=sys.stderr)
             raise
 
-    if dry_run:
-        print("This was a dry run. Nothing was actually done.")
 
-
-def calc_missing(config_path,
+def calc_missing(config_dict,
                  date=None,
                  from_date=None,
                  to_date=None,
@@ -456,9 +410,6 @@ def calc_missing(config_path,
                  no_confirm=False):
     """Calculate any missing derived observations and save to database."""
     import weecfg.database
-
-    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
-    weewx.initialize(config_dict, 'weectl-database')
 
     log.info("Preparing to calculate missing derived observations...")
 
@@ -484,11 +435,7 @@ def calc_missing(config_path,
     # first or last good timestamp instead
     start_ts = time.mktime(start_dt.timetuple()) if start_dt is not None else first_ts - 1
     stop_ts = time.mktime(stop_dt.timetuple()) if stop_dt is not None else last_ts
-    # notify if this is a dry run
-    if dry_run:
-        msg = "This is a dry run, missing derived observations will be calculated but not saved"
-        log.info(msg)
-        print(msg)
+
     _head = "Missing derived observations will be calculated "
     # advise the user/log what we will do
     if start_dt is None and stop_dt is None:
@@ -548,12 +495,8 @@ def calc_missing(config_path,
         print(msg)
 
 
-def check(config_path, db_binding='wx_binding'):
+def check(config_dict, db_binding='wx_binding'):
     """Check the database for any issues."""
-
-    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding,
-                                                                dry_run=False)
-    weewx.initialize(config_dict, 'weectl-database')
 
     print("Checking daily summary tables version...")
     with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbm:
@@ -572,7 +515,7 @@ def check(config_path, db_binding='wx_binding'):
         print("Recommend running --update to recalculate interval weightings.")
 
 
-def update_database(config_path,
+def update_database(config_dict,
                     db_binding='wx_binding',
                     dry_run=False,
                     no_confirm=False):
@@ -584,9 +527,6 @@ def update_database(config_path,
     -   recalculates windSpeed daily summary max and maxtime fields from
         archive
     """
-
-    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
-    weewx.initialize(config_dict, 'weectl-database')
 
     ans = y_or_n("The update process does not affect archive data, "
                  "but does alter the database.\nContinue (y/n)? ", noprompt=no_confirm)
@@ -667,7 +607,7 @@ def _fix_wind(config_dict, db_binding, dry_run):
         print(msg)
 
 
-def reweight_daily(config_path,
+def reweight_daily(config_dict,
                    date=None,
                    from_date=None,
                    to_date=None,
@@ -676,8 +616,8 @@ def reweight_daily(config_path,
                    no_confirm=False):
     """Recalculate the weighted sums in the daily summaries."""
 
-    config_path, config_dict, database_name = weectllib.prepare(config_path, db_binding, dry_run)
-    weewx.initialize(config_dict, 'weectl-database')
+    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, db_binding)
+    database_name = manager_dict['database_dict']['database_name']
 
     # Determine the period over which we are rebuilding from any command line date parameters
     from_d, to_d = weectllib.parse_dates(date,
@@ -721,5 +661,3 @@ def reweight_daily(config_path,
     log.info(msg)
     print()
     print(msg)
-    if dry_run:
-        print("This was a dry run. Nothing was actually done.")
