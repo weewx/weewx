@@ -94,6 +94,17 @@ check the log!
 
 In the default configuration, WeeWX logs to the system logging facility.
 
+The following sections show how to view WeeWX log messages on systems that use
+`syslog` (and `syslog`-compatible) and `systemd-journald` logging facilities.
+The use of `sudo` is usually necessary, since the system logs on most modern
+systems are readable only to administrative users.
+
+See the wiki article
+[*How to view the log*](https://github.com/weewx/weewx/wiki/view-logs)
+for more information and examples.
+
+#### The `syslog` logging facility
+
 On traditional systems, the system logging facility puts the WeeWX messages
 into a file, along with other messages from the system. The location of the
 system log file varies, but it is typically `/var/log/syslog` or
@@ -104,16 +115,18 @@ You can view the messages using standard tools such as `tail`, `head`, `more`,
 
 For example, to see only the messages from `weewxd`:
 ```{.shell .copy}
-grep weewxd /var/log/syslog
+sudo grep weewxd /var/log/syslog
 ```
 To see only the latest 40 messages from `weewxd`:
 ```{.shell .copy}
-grep weewxd /var/log/syslog | tail -40
+sudo grep weewxd /var/log/syslog | tail -40
 ```
 To see messages as they come into the log in real time (hit `ctrl-c` to stop):
 ```{.shell .copy}
-tail -f /var/log/syslog
+sudo tail -f /var/log/syslog
 ```
+
+#### The `systemd-journald` logging facility
 
 Some systems with `systemd` use *only* `systemd-journald` as the system logging
 facility.  On these systems, you will have to use the `journalctl` tool to
@@ -121,16 +134,13 @@ view messages from WeeWX.
 
 For example, to see only the messages from `weewxd`:
 ```{.shell .copy}
-journalctl -u weewx
+sudo journalctl -u weewx
 ```
 To see only the latest 40 messages from `weewxd`:
 ```{.shell .copy}
-journalctl --unit weewx --lines 40
+sudo journalctl -u weewx --lines 40
 ```
 To see messages as they come into the log in real time:
 ```{.shell .copy}
-journalctl --unit weewx --follow
+sudo journalctl -u weewx --follow
 ```
-
-See the wiki article [*How to view the log*](https://github.com/weewx/weewx/wiki/view-logs) for more information, and examples about how to view and configure
-system logs.
