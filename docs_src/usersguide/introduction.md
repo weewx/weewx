@@ -7,7 +7,7 @@ WeeWX.
 
 ### Python
 
-Python 3.7 or later is required. Python 2 will not work.
+Python 3.6 or later is required. Python 2 will not work.
 
 
 ### Station hardware

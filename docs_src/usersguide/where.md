@@ -8,55 +8,55 @@ documentation.
 
 === "Debian"
 
-    | Component               | Symbolic name    | Nominal value                   |
-    |-------------------------|------------------|---------------------------------|
-    | WeeWX root directory    | _`WEEWX_ROOT`_   | `/etc/weewx`                    |
-    | Skins and templates     | _`SKIN_ROOT`_    | `skins/`                        |
-    | User directory          | _`USER_ROOT`_    | `bin/user/`                     |
-    | Examples                | _`EXAMPLE_ROOT`_ | `examples/`                     |
-    | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`             |
-    | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`               |
-    | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`          |
-    | Documentation           |                  | https://weewx.com/docs          |
+    | Component               | Symbolic name    | Nominal value             |
+    |-------------------------|------------------|---------------------------|
+    | WeeWX root directory    | _`WEEWX_ROOT`_   | `/etc/weewx/`             |
+    | Skins and templates     | _`SKIN_ROOT`_    | `skins/`                  |
+    | User directory          | _`USER_ROOT`_    | `bin/user/`               |
+    | Examples                | _`EXAMPLE_ROOT`_ | `examples/`               |
+    | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`       |
+    | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`         |
+    | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`    |
+    | Documentation           |                  | https://weewx.com/docs    |
 
 === "RedHat"
 
-    | Component               | Symbolic name    | Nominal value                   |
-    |-------------------------|------------------|---------------------------------|
-    | WeeWX root directory    | _`WEEWX_ROOT`_   | `/etc/weewx`                    |
-    | Skins and templates     | _`SKIN_ROOT`_    | `skins/`                        |
-    | User directory          | _`USER_ROOT`_    | `bin/user/`                     |
-    | Examples                | _`EXAMPLE_ROOT`_ | `examples/`                     |
-    | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`             |
-    | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`               |
-    | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`          |
-    | Documentation           |                  | https://weewx.com/docs          |
+    | Component               | Symbolic name    | Nominal value             |
+    |-------------------------|------------------|---------------------------|
+    | WeeWX root directory    | _`WEEWX_ROOT`_   | `/etc/weewx/`             |
+    | Skins and templates     | _`SKIN_ROOT`_    | `skins/`                  |
+    | User directory          | _`USER_ROOT`_    | `bin/user/`               |
+    | Examples                | _`EXAMPLE_ROOT`_ | `examples/`               |
+    | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`       |
+    | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`         |
+    | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`    |
+    | Documentation           |                  | https://weewx.com/docs    |
 
 === "openSUSE"
 
-    | Component               | Symbolic name    | Nominal value               |
-    |-------------------------|------------------|-----------------------------|
-    | WeeWX root directory    | _`WEEWX_ROOT`_   | `/etc/weewx`                |
-    | Skins and templates     | _`SKIN_ROOT`_    | `skins/`                    |
-    | User directory          | _`USER_ROOT`_    | `bin/user/`                 |
-    | Examples                | _`EXAMPLE_ROOT`_ | `examples/`                 |
-    | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`         |
-    | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`           |
-    | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`      |
-    | Documentation           |                  | https://weewx.com/docs      |
+    | Component               | Symbolic name    | Nominal value             |
+    |-------------------------|------------------|-------------------------- |
+    | WeeWX root directory    | _`WEEWX_ROOT`_   | `/etc/weewx/`             |
+    | Skins and templates     | _`SKIN_ROOT`_    | `skins/`                  |
+    | User directory          | _`USER_ROOT`_    | `bin/user/`               |
+    | Examples                | _`EXAMPLE_ROOT`_ | `examples/`               |
+    | Executables             | _`BIN_ROOT`_     | `/usr/share/weewx/`       |
+    | SQLite databases        | _`SQLITE_ROOT`_  | `/var/lib/weewx/`         |
+    | Web pages and images    | _`HTML_ROOT`_    | `/var/www/html/weewx/`    |
+    | Documentation           |                  | https://weewx.com/docs    |
 
 === "pip"
 
-    | Component               | Symbolic name    | Nominal value               |
-    |-------------------------|------------------|-----------------------------|
-    | WeeWX root directory    | _`WEEWX_ROOT`_   | `~/weewx-data`              |
-    | Skins and templates     | _`SKIN_ROOT`_    | `skins/`                    |
-    | User directory          | _`USER_ROOT`_    | `bin/user/`                 |
-    | Examples                | _`EXAMPLE_ROOT`_ | `examples/`                 |
-    | Executables             | _`BIN_ROOT`_     | varies (see below)          |
-    | SQLite databases        | _`SQLITE_ROOT`_  | `archive/`                  |
-    | Web pages and images    | _`HTML_ROOT`_    | `public_html/`              |
-    | Documentation           |                  | https://weewx.com/docs      |
+    | Component               | Symbolic name    | Nominal value             |
+    |-------------------------|------------------|---------------------------|
+    | WeeWX root directory    | _`WEEWX_ROOT`_   | `~/weewx-data/`           |
+    | Skins and templates     | _`SKIN_ROOT`_    | `skins/`                  |
+    | User directory          | _`USER_ROOT`_    | `bin/user/`               |
+    | Examples                | _`EXAMPLE_ROOT`_ | `examples/`               |
+    | Executables             | _`BIN_ROOT`_     | varies (see below)        |
+    | SQLite databases        | _`SQLITE_ROOT`_  | `archive/`                |
+    | Web pages and images    | _`HTML_ROOT`_    | `public_html/`            |
+    | Documentation           |                  | https://weewx.com/docs    |
 
 !!! Note
     In the locations above, relative paths are *relative to _`WEEWX_ROOT`_*.
@@ -79,8 +79,9 @@ such as `head`, `tail`, `more`, or `less`.
 On some systems that use `systemd`, there are no log files.  On these systems,
 you must use the tool `journalctl` to view messages from WeeWX.
 
-See the wiki article [*How to view the log*](https://github.com/weewx/weewx/wiki/view-logs) for more information, and examples about how to view and configure
-system logs.
+See the wiki article [*How to view the log*](https://github.com/weewx/weewx/wiki/view-logs) for more information and examples about how to view system logs.
+
+See the wiki articles [*How to configure logging*](https://github.com/weewx/weewx/wiki/logging) for information and examples about how to configure WeeWX logging.
 
 
 ## Location of executables in a pip install

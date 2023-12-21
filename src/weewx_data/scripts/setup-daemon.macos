@@ -8,10 +8,6 @@ set -e
 
 UTIL_ROOT=$HOME/weewx-data/util
 
-if [ ! -d $UTIL_ROOT ]; then
-  echo "Cannot find utility files at location '$UTIL_ROOT'"
-  exit 1
-fi
 if [ "$(id -u)" != "0" ]; then
   echo "This script requires admin privileges.  Use 'sudo' or run as root."
   exit 1
@@ -20,6 +16,12 @@ fi
 do_install() {
     echo "This script sets up the files necessary to run WeeWX at system startup."
     echo "On some systems, it can be slow to run. Please be patient."
+
+    if [ ! -d $UTIL_ROOT ]; then
+        echo "Cannot find utility files at location '$UTIL_ROOT'"
+        exit 1
+    fi
+
     echo "Copying files from $UTIL_ROOT..."
     echo "  plist"
     cp $UTIL_ROOT/launchd/com.weewx.weewxd.plist /Library/LaunchDaemons

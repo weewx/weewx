@@ -1,8 +1,8 @@
 #!/bin/sh
 #
 # Copy configuration files that integrate WeeWX into a Linux system that uses
-# systemd.  These include udev rules for known devices, and the service unit
-# files to facilitate starting/stopping WeeWX.
+# sysV init.  These udev rules for known devices, and the init script to
+# facilitate starting/stopping WeeWX.
 #
 # This script must be run using sudo, or as root.
 #
@@ -29,38 +29,32 @@ do_install() {
         echo "  udev rules"
         cp $UTIL_ROOT/udev/rules.d/weewx.rules /etc/udev/rules.d/60-weewx.rules
     fi
-    if [ -d /etc/systemd/system ]; then
-        echo "  systemd unit"
-        cp $UTIL_ROOT/systemd/weewx.service /etc/systemd/system
-        cp $UTIL_ROOT/systemd/weewx@.service /etc/systemd/system
+    if [ -d /etc/init.d ]; then
+        echo "  init script"
+        cp $UTIL_ROOT/init.d/weewx-multi /etc/init.d/weewx
+        chmod 755 /etc/init.d/weewx
     fi
 
-    echo "Reloading systemd..."
-    systemctl daemon-reload
     echo "Enabling weewx..."
-    systemctl enable weewx
+    update-rc.d weewx defaults
 
     echo "If you are using a device that is connected to the computer by USB or"
     echo "serial port, unplug the device then plug it back in again to ensure that"
     echo "permissions are applied correctly."
     echo ""
     echo "You can start weewx with the following command:"
-    echo "  '\033[1msudo systemctl start weewx\033[0m'"
+    echo "  '\033[1msudo /etc/init.d/weewx start\033[0m'"
 }
 
 do_uninstall() {
     echo "Stopping weewx..."
-    systemctl stop weewx
+    /etc/init.d/weewx stop
     echo "Disabling weewx..."
-    systemctl disable weewx
+    update-rc.d weewx remove
     echo "Removing files..."
-    if [ -f /etc/systemd/system/weewx.service ]; then
-        echo "  systemd unit"
-        rm /etc/systemd/system/weewx.service
-    fi
-    if [ -f /etc/systemd/system/weewx@.service ]; then
-        echo "  systemd unit template"
-        rm /etc/systemd/system/weewx@.service
+    if [ -f /etc/init.d/weewx ]; then
+        echo "  init script"
+        rm /etc/init.d/weewx
     fi
     if [ -f /etc/udev/rules.d/60-weewx.rules ]; then
         echo "  udev rules"

@@ -15,7 +15,7 @@ them to set up a daemon and, perhaps, to change device permissions.
 
 Before starting, you must install the pre-requisite Python and Python modules.
 
-1. Ensure that Python 3.7 or later is installed.
+1. Ensure that Python 3.6 or later is installed.
 
 2. Ensure that `pip` and `venv` are installed.
 

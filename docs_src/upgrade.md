@@ -47,7 +47,7 @@ sudo weectl station upgrade --config=/etc/weewx/other.conf
 ### Python 2.7 no longer supported
 
 It has now been over 3 years since the end-of-life for Python 2.7. It's time
-to move on. WeeWX V5.x requires Python 3.7 or greater. These days, all but the
+to move on. WeeWX V5.x requires Python 3.6 or greater. These days, all but the
 most ancient of operating systems offer Python 3, although you may have to
 install it.
 
@@ -135,13 +135,6 @@ are owned by the `weewx` group.  This makes it easier to manage a WeeWX
 installation. Put yourself into the `weewx` group, then you will not have to
 `sudo` to make changes to skins or configurations.  You *will* have to `sudo`
 to start/stop `weewxd`.
-
-### WeeWX logs go to `/var/log/weewx`
-
-If you install WeeWX using `apt`, `yum`, or `zypper`, then the log messages
-from `weewxd` and `weectl` go to separate files in `/var/log/weewx`.  They
-are still using the `syslog` as the logging mechanism, but the installation
-adds `syslog` configuration to split WeeWX messages into separate files.
 
 ### udev rules installed for core hardware
 
