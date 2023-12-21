@@ -2,7 +2,6 @@
 
 ## startup
 
-- tk eliminate daemonize.py
 - tk before logger is initialized, output to stdout/stderr as appropriate
 - tk Rationalize startup procedure, making it consistent.
 
