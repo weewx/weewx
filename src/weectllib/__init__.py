@@ -10,7 +10,7 @@ import datetime
 import weecfg
 import weeutil.logger
 import weewx
-from weeutil.weeutil import bcolors
+from weeutil.weeutil import bcolors, to_int
 
 
 def parse_dates(date=None, from_date=None, to_date=None, as_datetime=False):
@@ -78,18 +78,21 @@ def dispatch(namespace):
     """All weectl commands come here. This function reads the configuration file, sets up logging,
     then dispatches to the actual action.
     """
-    # Get the configuration dictionary...
+    # Get the configuration dictionary:
     config_path, config_dict = weecfg.read_config(namespace.config)
     print(f"Using configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
 
-    # ...customize the logging with user settings...
+    # Customize the logging with user settings:
     weeutil.logger.setup('weectl', config_dict)
 
-    # ...note a dry-run, if applicable...
+    # Set weewx.debug as necessary:
+    weewx.debug = to_int(config_dict.get('debug', 0))
+
+    # Note a dry-run, if applicable:
     if hasattr(namespace, 'dry_run') and namespace.dry_run:
         print("This is a dry run. Nothing will actually be done.")
 
-    # ... then call the specified action
+    # Call the specified action:
     namespace.action_func(config_dict, namespace)
 
     if hasattr(namespace, 'dry_run') and namespace.dry_run:
