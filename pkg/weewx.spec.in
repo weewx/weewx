@@ -106,7 +106,7 @@ cp -r src/weewx_data/examples %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/skins %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/import %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/logwatch %{buildroot}%{dst_cfg_dir}
-cp -r src/weewx_data/util/rsyslog.d %{buildroot}%{dst_cfg_dir)
+cp -r src/weewx_data/util/rsyslog.d %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/logrotate.d %{buildroot}%{dst_cfg_dir}
 
 # create the weewx configuration
