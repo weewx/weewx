@@ -4,10 +4,7 @@
 
 - tk eliminate daemonize.py
 - tk before logger is initialized, output to stdout/stderr as appropriate
-
-## weectl
-
-- tk Need `--log-root` option for `weectl`.
+- tk Rationalize startup procedure, making it consistent.
 
 
 ## Package installers
@@ -35,7 +32,7 @@
 
 ## Docs
 
-- tk update docs to reflect use of standalone logging
+- tk double-check docs to reflect going back to syslog logging
   - each quickstart page
   - where-to-find-things in users guide
   - running-weewx section of users guide
