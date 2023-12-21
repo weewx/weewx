@@ -200,7 +200,7 @@ privileges.
 === "sysV"
 
     ```{ .shell .copy }
-    # Systems that use SysV init, e.g., Slackware, Devuan, Puppy, DD-WRT,
+    # For systems that use SysV init, e.g., Slackware, Devuan, Puppy, DD-WRT,
     # run the provided script. This will install the sysV init script, and set
     # permissions for USB/serial communication.
     sudo sh ~/weewx-data/scripts/setup-daemon.sysv
@@ -234,7 +234,8 @@ see your station information and data.
     have to substitute an explicit path to your home directory,
     for example, `file:///home/jackhandy` instead of `~`.
 
-If you have problems, check the system log for entries from `weewxd`.
+If you have problems, check the [system log](../usersguide/running.md#monitoring-weewx)
+for entries from `weewxd`.
 
 
 ## Configure
@@ -379,7 +380,7 @@ If you installed a daemon configuration, remove it.
 === "sysV"
 
     ```{ .shell .copy }
-    sudo /etc/rc.d/init.d/weewx stop
+    sudo /etc/init.d/weewx stop
     sudo sh ~/weewx-data/scripts/setup-daemon.sysv uninstall
     ```
 
