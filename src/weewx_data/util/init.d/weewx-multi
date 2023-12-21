@@ -8,12 +8,12 @@
 # this init script expects the following configuration:
 #   /etc/weewx/a.conf
 #   /etc/weewx/b.conf
-#   /var/run/weewx-a.pid
-#   /var/run/weewx-b.pid
+#   /var/run/weewx/weewxd-a.pid
+#   /var/run/weewx/weewxd-b.pid
 #
 # with the appropriate rsyslog and logrotate configurations:
-#   /var/log/weewx/a.log
-#   /var/log/weewx/b.log
+#   /var/log/weewx/weewxd-a.log
+#   /var/log/weewx/weewxd-b.log
 #
 # to configure the script, override variables in /etc/default/weewx-multi
 # for example:
@@ -21,6 +21,8 @@
 #   WEEWX_INSTANCES="vantage acurite"
 #   WEEWX_BINDIR=/opt/weewx/bin
 #   WEEWX_CFGDIR=/etc/weewx
+#   WEEWX_RUNDIR=/var/run/weewx
+#   WEEWX_USER=weewx
 
 ### BEGIN INIT INFO
 # Provides:          weewx-multi
@@ -34,17 +36,17 @@
 
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
-WEEWX_INSTANCES="no_instances_specified"
+WEEWX_INSTANCES="weewx"
+WEEWX_BINDIR=/opt/weewx/bin
+WEEWX_CFGDIR=/etc/weewx
+WEEWX_RUNDIR=/var/run/weewx
 WEEWX_USER=root
-WEEWX_BINDIR=/home/weewx/bin
-WEEWX_CFGDIR=/home/weewx
-WEEWX_RUNDIR=/var/run
 
 # Try to keep systemd from screwing everything up
 export SYSTEMCTL_SKIP_REDIRECT=1
 
 # Read configuration variable file if it is present
-[ -r /etc/default/weewx-multi ] && . /etc/default/weewx-multi
+[ -r /etc/default/weewx ] && . /etc/default/weewx
 
 DESC=weewx
 DAEMON=$WEEWX_BINDIR/weewxd
@@ -74,10 +76,10 @@ fi
 #   2 if daemon could not be started
 do_start() {
     INSTANCE=$1
-    NAME=weewx-$INSTANCE
-    PIDFILE=$WEEWX_RUNDIR/$NAME.pid
+    LOGNAME=$(get_loglabel $INSTANCE)
+    PIDFILE=$WEEWX_RUNDIR/$(get_procname $INSTANCE).pid
     CFGFILE=$WEEWX_CFGDIR/$INSTANCE.conf
-    DAEMON_ARGS="--daemon --log-label $NAME --pidfile=$PIDFILE $CFGFILE"
+    DAEMON_ARGS="--daemon --log-label=$LOGNAME --pidfile=$PIDFILE $CFGFILE"
 
     if [ ! -f "$CFGFILE" ]; then
         echo "The instance $INSTANCE does not have a config at $CFGFILE"
@@ -99,8 +101,7 @@ do_start() {
 #   other if a failure occurred
 do_stop() {
     INSTANCE=$1
-    NAME=weewx-$INSTANCE
-    PIDFILE=$WEEWX_RUNDIR/$NAME.pid
+    PIDFILE=$WEEWX_RUNDIR/$(get_procname $INSTANCE).pid
 
     # bail out if the app is not running
     NPROC=$(count_procs $INSTANCE)
@@ -117,7 +118,7 @@ do_stop() {
     c=0
     while [ $c -lt 24 -a "$RC" = "2" ]; do
         c=`expr $c + 1`
-        # process may not really have completed, so check it
+        # it may take awhile for the process to complete, so check it
         NPROC=$(count_procs $INSTANCE)
         if [ $NPROC = 0 ]; then
             RC=0
@@ -136,8 +137,7 @@ do_stop() {
 # send a SIGHUP to the daemon
 do_reload() {
     INSTANCE=$1
-    NAME=weewx-$INSTANCE
-    PIDFILE=$WEEWX_RUNDIR/$NAME.pid
+    PIDFILE=$WEEWX_RUNDIR/$(get_procname $INSTANCE).pid
 
     start-stop-daemon --stop --signal 1 --quiet --user $WEEWX_USER --pidfile $PIDFILE
     return 0
@@ -145,7 +145,6 @@ do_reload() {
 
 do_status() {
     INSTANCE=$1
-    NAME=weewx-$INSTANCE
     NPROC=$(count_procs $INSTANCE)
     echo -n "$INSTANCE is "
     if [ $NPROC = 0 ]; then
@@ -156,9 +155,18 @@ do_status() {
 
 count_procs() {
     INSTANCE=$1
-    NAME=weewx-$INSTANCE
-    NPROC=`ps ax | grep $DAEMON | grep $NAME.pid | wc -l`
+    PIDFILE=$(get_procname $INSTANCE).pid
+    NPROC=`ps ax | grep $DAEMON | grep $PIDFILE | wc -l`
     echo $NPROC
+}
+
+get_procname() {
+    INSTANCE=$1
+    LABEL=weewxd
+    if [ "$INSTANCE" ne "weewx" ]; then
+        LABEL=weewxd-$INSTANCE
+    fi
+    echo -n $LABEL
 }
 
 CMD=$1
