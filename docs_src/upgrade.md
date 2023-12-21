@@ -47,7 +47,7 @@ sudo weectl station upgrade --config=/etc/weewx/other.conf
 ### Python 2.7 no longer supported
 
 It has now been over 3 years since the end-of-life for Python 2.7. It's time
-to move on. WeeWX V5.x requires Python 3.7 or greater. These days, all but the
+to move on. WeeWX V5.x requires Python 3.6 or greater. These days, all but the
 most ancient of operating systems offer Python 3, although you may have to
 install it.
 

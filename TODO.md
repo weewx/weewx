@@ -24,18 +24,6 @@
 - mw The `fousb` driver needs to be ported to Python 12.  post weewx 5.0 release
 
 
-## Docs
-
-- tk update docs to reflect that Python 3.6 is now supported.
-
-
-# Before final release
-
-## `pyproject.toml`
-
-Change parameter `description`.
-
-
 ## Wiki
 
 Update the wiki entries for going from MySQL to SQLite and for SQLite to MySQL,

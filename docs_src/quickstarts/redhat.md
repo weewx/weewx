@@ -3,9 +3,9 @@
 This is a guide to installing WeeWX from an RPM package on systems based on
 Redhat, including Fedora, CentOS, or Rocky.
 
-WeeWX V5 requires Python 3.7 or greater, which is only available as a Redhat
-package, with required modules, on Redhat 9 or later.  For older systems,
-install Python 3.7 then [install WeeWX using pip](pip.md).
+WeeWX V5 requires Python 3.6 or greater, which is only available as a Redhat
+package, with required modules, on Redhat 8 or later.  For older systems,
+install Python 3 then [install WeeWX using pip](pip.md).
 
 
 ## Configure `yum`
@@ -106,6 +106,13 @@ extension`](../utilities/weectl-extension.md).
 WeeWX must be restarted for the changes to take effect.
 ```{.shell .copy}
 sudo systemctl restart weewx
+```
+
+Consider putting yourself into the `weewx` group.  When you are in the `weewx`
+group, you can do many things without having to `sudo`, including modifying
+the WeeWX configuration and installing extensions.
+```{.shell .copy}
+sudo usermod -aG weewx $USER
 ```
 
 
