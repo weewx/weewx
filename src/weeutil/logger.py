@@ -28,8 +28,8 @@ LOGGING_STR = """[Logging]
       level = {log_level}
       handlers = syslog,
 
-    # Additional loggers would go in the following section. This is useful for tailoring logging
-    # for individual modules.
+    # Additional loggers would go in the following section. This is useful for 
+    # tailoring logging for individual modules.
     [[loggers]]
 
     # Definitions of possible logging destinations
@@ -111,7 +111,7 @@ def setup(process_name, config_dict=None):
 
     # Get (and remove) the LOG_ROOT, which we use to set the directory where any rotating files
     # will be located. Python logging does not use it.
-    log_root = log_config['Logging'].pop('LOG_ROOT', 'log')
+    log_root = log_config['Logging'].pop('LOG_ROOT', '')
     if weewx_root:
         log_root = os.path.join(weewx_root, log_root)
 
