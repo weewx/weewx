@@ -136,13 +136,6 @@ installation. Put yourself into the `weewx` group, then you will not have to
 `sudo` to make changes to skins or configurations.  You *will* have to `sudo`
 to start/stop `weewxd`.
 
-### WeeWX logs go to `/var/log/weewx`
-
-If you install WeeWX using `apt`, `yum`, or `zypper`, then the log messages
-from `weewxd` and `weectl` go to separate files in `/var/log/weewx`.  They
-are still using the `syslog` as the logging mechanism, but the installation
-adds `syslog` configuration to split WeeWX messages into separate files.
-
 ### udev rules installed for core hardware
 
 If you install WeeWX using `apt`, `yum`, or `zypper`, then the udev rules file
