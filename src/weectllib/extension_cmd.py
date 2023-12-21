@@ -6,10 +6,11 @@
 """Install and remove extensions."""
 import weecfg
 import weecfg.extension
+import weectllib
 import weeutil.logger
 import weewx
-from weeutil.weeutil import bcolors, to_int
 from weeutil.printer import Printer
+from weeutil.weeutil import bcolors, to_int
 
 extension_list_usage = f"""{bcolors.BOLD}weectl extension list
             [--config=FILENAME]{bcolors.ENDC}
@@ -49,7 +50,8 @@ def add_subparser(subparsers):
                                             f'Default is "{weecfg.default_config_path}".')
     list_extension_parser.add_argument('--verbosity', type=int, default=1, metavar='N',
                                        help="How much information to display (0|1|2|3).")
-    list_extension_parser.set_defaults(func=list_extensions)
+    list_extension_parser.set_defaults(func=weectllib.dispatch)
+    list_extension_parser.set_defaults(action_func=list_extensions)
 
     # ---------- Action 'install' ----------
     install_extension_parser = \
@@ -76,7 +78,8 @@ def add_subparser(subparsers):
                                                'do it.')
     install_extension_parser.add_argument('--verbosity', type=int, default=1, metavar='N',
                                           help="How much information to display (0|1|2|3).")
-    install_extension_parser.set_defaults(func=install_extension)
+    install_extension_parser.set_defaults(func=weectllib.dispatch)
+    install_extension_parser.set_defaults(action_func=install_extension)
 
     # ---------- Action uninstall' ----------
     uninstall_extension_parser = \
@@ -99,34 +102,27 @@ def add_subparser(subparsers):
                                             help="How much information to display (0|1|2|3).")
     uninstall_extension_parser.add_argument('-y', '--yes', action='store_true',
                                             help="Don't ask for confirmation. Just do it.")
-    uninstall_extension_parser.set_defaults(func=uninstall_extension)
+    uninstall_extension_parser.set_defaults(func=weectllib.dispatch)
+    uninstall_extension_parser.set_defaults(action_func=uninstall_extension)
 
 
-def list_extensions(namespace):
-    ext = _get_extension_engine(namespace.config)
+def list_extensions(config_dict, _):
+    ext = _get_extension_engine(config_dict)
     ext.enumerate_extensions()
 
 
-def install_extension(namespace):
-    ext = _get_extension_engine(namespace.config, namespace.dry_run, namespace.verbosity)
+def install_extension(config_dict, namespace):
+    ext = _get_extension_engine(config_dict, namespace.dry_run, namespace.verbosity)
     ext.install_extension(namespace.source)
 
 
-def uninstall_extension(namespace):
-    ext = _get_extension_engine(namespace.config, namespace.dry_run, namespace.verbosity)
+def uninstall_extension(config_dict, namespace):
+    ext = _get_extension_engine(config_dict, namespace.dry_run, namespace.verbosity)
     ext.uninstall_extension(namespace.name, no_confirm=namespace.yes)
 
 
-def _get_extension_engine(config_path, dry_run=False, verbosity=1):
-    config_path, config_dict = weecfg.read_config(config_path)
-
-    # Set weewx.debug as necessary:
-    weewx.debug = to_int(config_dict.get('debug', 0))
-
-    # Customize the logging with user settings.
-    weeutil.logger.setup('weectl-extension', config_dict)
-
-    ext = weecfg.extension.ExtensionEngine(config_path=config_path,
+def _get_extension_engine(config_dict, dry_run=False, verbosity=1):
+    ext = weecfg.extension.ExtensionEngine(config_path=config_dict['config_path'],
                                            config_dict=config_dict,
                                            dry_run=dry_run,
                                            printer=Printer(verbosity=verbosity))
