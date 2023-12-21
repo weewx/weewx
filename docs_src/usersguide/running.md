@@ -97,8 +97,7 @@ In the default configuration, WeeWX logs to the system logging facility.
 On traditional systems, the system logging facility puts the WeeWX messages
 into a file, along with other messages from the system. The location of the
 system log file varies, but it is typically `/var/log/syslog` or
-`/var/log/messages`.  On some systems, you will find messages from WeeWX in a
-separate file `/var/log/weewx/weewx.log`
+`/var/log/messages`.
 
 You can view the messages using standard tools such as `tail`, `head`, `more`,
 `less`, and `grep`.

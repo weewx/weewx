@@ -66,8 +66,8 @@ install:
 	cp -r $(SRC)/src/weewx_data/skins $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/import $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/logwatch $(DST_CFGDIR)
-	cp -r $(SRC)/pkg/etc/logrotate.d $(DST_CFGDIR)
-	cp -r $(SRC)/pkg/etc/rsyslog.d $(DST_CFGDIR)
+	cp -r $(SRC)/src/weewx_data/util/rsyslog.d $(DST_CFGDIR)
+	cp -r $(SRC)/src/weewx_data/util/logrotate.d $(DST_CFGDIR)
 
 # create the default configuration
 	cat $(SRC)/src/weewx_data/weewx.conf | sed \

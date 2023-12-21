@@ -263,7 +263,7 @@ create_user() {
     usermod -d $WEEWX_HOME -g $WEEWX_GROUP $WEEWX_USER > /dev/null 2>&1
 }
 
-# set the permissions on the data and logs so they are owned by weewx user
+# set the permissions on the data so they are owned by weewx user
 set_permissions() {
     if getent passwd | grep -q "^$WEEWX_USER:"; then
         chmod 2775 /etc/weewx
@@ -272,8 +272,6 @@ set_permissions() {
         chown -R $WEEWX_USER:$WEEWX_GROUP /etc/weewx
         chown -R $WEEWX_USER:$WEEWX_GROUP /var/lib/weewx
         chown -R $WEEWX_USER:$WEEWX_GROUP /var/www/html/weewx
-        chmod 0755 /var/log/weewx
-	chown -R $WEEWX_USER:$WEEWX_GROUP /var/log/weewx
     fi
 }
 

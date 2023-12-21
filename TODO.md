@@ -14,12 +14,6 @@
 
 - mw verify upgrade behavior on skin files in /etc/weewx/skins.  do the non-
     modified skin files get upgraded from apt/yum?
-- mw ensure that maintainer's version of weewx.conf is created but no used
-  ensure that existing weewx.conf is not overwritten
-    /etc/weewx/weewx.conf - untouched config
-    /etc/weewx/weewx.conf-OLD-LATEST - maintainer; 'weewctl upgrade'
-    /etc/weewx/weewx.conf-LATEST - distribution
-  update the docs (each quickstart) to make this process explicit
 
 ## Testing
 
@@ -34,11 +28,6 @@
 
 
 ## Docs
-
-- tk update docs to reflect use of standalone logging
-  - each quickstart page
-  - where-to-find-things in users guide
-  - running-weewx section of users guide
 
 - tk update docs to reflect that Python 3.6 is now supported.
 

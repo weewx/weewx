@@ -88,7 +88,6 @@ mkdir -p %{buildroot}/etc/default
 mkdir -p %{buildroot}/lib/systemd/system
 mkdir -p %{buildroot}/lib/udev/rules.d
 mkdir -p %{buildroot}/var/lib/weewx
-mkdir -p %{buildroot}/var/log/weewx
 mkdir -p %{buildroot}/var/www/html/weewx
 
 # rpm wants copyright and license even if no docs
@@ -107,8 +106,8 @@ cp -r src/weewx_data/examples %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/skins %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/import %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/logwatch %{buildroot}%{dst_cfg_dir}
-cp -r pkg/etc/logrotate.d %{buildroot}%{dst_cfg_dir}
-cp -r pkg/etc/rsyslog.d %{buildroot}%{dst_cfg_dir}
+cp -r src/weewx_data/util/rsyslog.d %{buildroot}%{dst_cfg_dir)
+cp -r src/weewx_data/util/logrotate.d %{buildroot}%{dst_cfg_dir}
 
 # create the weewx configuration
 cat src/weewx_data/weewx.conf | sed \
@@ -116,7 +115,6 @@ cat src/weewx_data/weewx.conf | sed \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
  -e 's:HTML_ROOT = public_html:HTML_ROOT = %{html_root}:' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
- -e 's%LOG_ROOT = .*%LOG_ROOT = /var/log/weewx%' \
  > %{buildroot}%{dst_cfg_dir}/weewx.conf
 
 # make a copy of the generic configuration file
@@ -141,6 +139,8 @@ cat pkg/etc/default/weewx | sed \
 
 # udev rules for known devices
 cp pkg/etc/udev/rules.d/weewx.rules %{buildroot}/lib/udev/rules.d/60-weewx.rules
+
+# log handling
 
 
 %pre
@@ -251,7 +251,6 @@ rm -rf %{buildroot}
 %config(noreplace) %{_sysconfdir}/default/weewx
 %defattr(664,%{weewx_user},%{weewx_group},2775)
 %config(noreplace) %{dst_cfg_dir}/
-%dir %attr(0755,%{weewx_user},%{weewx_group}) /var/log/weewx
 %dir %attr(2775,%{weewx_user},%{weewx_group}) /var/lib/weewx
 %dir %attr(2775,%{weewx_user},%{weewx_group}) /var/www/html/weewx
 

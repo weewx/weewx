@@ -73,9 +73,8 @@ configured for that system.
 On traditional systems, the WeeWX messages go into a system log file, along
 with messages from the system and other applications. The location of the
 system log file varies, but it is typically either `/var/log/syslog` or
-`/var/log/messages`.  On some systems, messages from WeeWX will be in a
-separate file `/var/log/weewx/weewx.log`.  These log files can be viewed using
-traditional tools such as `head`, `tail`, `more`, or `less`.
+`/var/log/messages`.  These log files can be viewed using traditional tools
+such as `head`, `tail`, `more`, or `less`.
 
 On some systems that use `systemd`, there are no log files.  On these systems,
 you must use the tool `journalctl` to view messages from WeeWX.
