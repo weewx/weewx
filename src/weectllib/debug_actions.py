@@ -34,16 +34,13 @@ OBFUSCATE_MAP = {
 }
 
 
-def debug(config_path, output=None):
+def debug(config_dict, output=None):
     """Generate information about the user's WeeWX environment
 
     Args:
-        config_path (str): Path to the configuration file
+        config_dict (dict): Configuration dictionary.
         output (str|None): Path to where the output will be put. Default is stdout.
     """
-    config_path, config_dict = weecfg.read_config(config_path)
-
-    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
 
     if output:
         # If a file path has been specified, then open it up and use the resultant "file-like
@@ -60,11 +57,11 @@ def debug(config_path, output=None):
         # WeeWX info
         generate_weewx_info(fd)
         # info about extensions
-        generate_extension_info(config_path, config_dict, fd)
+        generate_extension_info(config_dict['config_path'], config_dict, fd)
         # info about the archive database
         generate_archive_info(config_dict, fd)
         # generate our obfuscated weewx.conf
-        generate_debug_conf(config_path, config_dict, fd)
+        generate_debug_conf(config_dict['config_path'], config_dict, fd)
 
 
 def generate_sys_info(fd):
