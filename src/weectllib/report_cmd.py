@@ -8,6 +8,8 @@ import sys
 import time
 
 import weecfg
+import weectl
+import weectllib
 import weectllib.report_actions
 from weeutil.weeutil import bcolors
 
@@ -43,7 +45,8 @@ def add_subparser(subparsers):
                                     metavar='FILENAME',
                                     help=f'Path to configuration file. '
                                          f'Default is "{weecfg.default_config_path}".')
-    list_report_parser.set_defaults(func=list_reports)
+    list_report_parser.set_defaults(func=weectllib.dispatch)
+    list_report_parser.set_defaults(action_func=list_reports)
 
     # ---------- Action 'run' ----------
     run_report_parser = action_parser.add_parser('run',
@@ -69,14 +72,15 @@ def add_subparser(subparsers):
                                    help="Reports to be run, separated by spaces. "
                                         "Names are case sensitive. "
                                         "If not given, all enabled reports will be run.")
-    run_report_parser.set_defaults(func=run_reports)
+    run_report_parser.set_defaults(func=weectllib.dispatch)
+    run_report_parser.set_defaults(action_func=run_reports)
 
 
-def list_reports(namespace):
-    weectllib.report_actions.list_reports(namespace.config)
+def list_reports(config_dict, _):
+    weectllib.report_actions.list_reports(config_dict)
 
 
-def run_reports(namespace):
+def run_reports(config_dict, namespace):
     # Presence of --date requires --time and v.v.
     if namespace.date and not namespace.time or namespace.time and not namespace.date:
         sys.exit("Must specify both --date and --time.")
@@ -85,7 +89,7 @@ def run_reports(namespace):
         sys.exit("The time of the report must be specified either as unix epoch time, "
                  "or with an explicit date and time, but not both.")
 
-    weectllib.report_actions.run_reports(namespace.config,
+    weectllib.report_actions.run_reports(config_dict,
                                          epoch=namespace.epoch,
                                          report_date=namespace.date, report_time=namespace.time,
                                          reports=namespace.reports)

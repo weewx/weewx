@@ -8,8 +8,9 @@
 import datetime
 
 import weecfg
+import weeutil.logger
 import weewx
-from weeutil.weeutil import bcolors
+from weeutil.weeutil import bcolors, to_int
 
 
 def parse_dates(date=None, from_date=None, to_date=None, as_datetime=False):
@@ -73,18 +74,26 @@ def parse_dates(date=None, from_date=None, to_date=None, as_datetime=False):
     return from_val, to_val
 
 
-def prepare(config_path, db_binding, dry_run):
-    """Common preamble, used by most of the action functions."""
+def dispatch(namespace):
+    """All weectl commands come here. This function reads the configuration file, sets up logging,
+    then dispatches to the actual action.
+    """
+    # Get the configuration dictionary:
+    config_path, config_dict = weecfg.read_config(namespace.config)
+    print(f"Using configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
 
-    if dry_run:
+    # Customize the logging with user settings:
+    weeutil.logger.setup('weectl', config_dict)
+
+    # Set weewx.debug as necessary:
+    weewx.debug = to_int(config_dict.get('debug', 0))
+
+    # Note a dry-run, if applicable:
+    if hasattr(namespace, 'dry_run') and namespace.dry_run:
         print("This is a dry run. Nothing will actually be done.")
 
-    config_path, config_dict = weecfg.read_config(config_path)
+    # Call the specified action:
+    namespace.action_func(config_dict, namespace)
 
-    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
-
-    manager_dict = weewx.manager.get_manager_dict_from_config(config_dict,
-                                                              db_binding)
-    database_name = manager_dict['database_dict']['database_name']
-
-    return config_path, config_dict, database_name
+    if hasattr(namespace, 'dry_run') and namespace.dry_run:
+        print("This was a dry run. Nothing was actually done.")
