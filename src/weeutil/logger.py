@@ -13,7 +13,6 @@ from io import StringIO
 import configobj
 
 import weewx
-from weeutil.weeutil import to_list
 
 # The logging defaults. Note that two kinds of placeholders are used:
 #
@@ -51,14 +50,6 @@ LOGGING_STR = """[Logging]
             class = logging.StreamHandler
             # Alternate choice is 'ext://sys.stderr'
             stream = ext://sys.stdout
-
-        # Log to file with rotation
-        [[[timed_rotate]]]
-            level = DEBUG
-            formatter = standard
-            class = logging.handlers.TimedRotatingFileHandler
-            when = midnight
-            backupCount = 7
 
     # How to format log messages
     [[formatters]]
@@ -118,6 +109,12 @@ def setup(process_name, config_dict=None):
     else:
         weewx_root = None
 
+    # Get (and remove) the LOG_ROOT, which we use to set the directory where any rotating files
+    # will be located. Python logging does not use it.
+    log_root = log_config['Logging'].pop('LOG_ROOT', 'log')
+    if weewx_root:
+        log_root = os.path.join(weewx_root, log_root)
+
     # Adjust the logging level in accordance to whether the 'debug' flag is on
     log_level = 'DEBUG' if weewx.debug else 'INFO'
 
@@ -136,9 +133,9 @@ def setup(process_name, config_dict=None):
                                                address=address,
                                                facility=facility,
                                                process_name=process_name)
-            if key == 'filename' and weewx_root:
-                # Allow relative file paths, in which case they are relative to WEEWX_ROOT:
-                section[key] = os.path.join(weewx_root, section[key])
+            if key == 'filename' and log_root:
+                # Allow relative file paths, in which case they are relative to LOG_ROOT:
+                section[key] = os.path.join(log_root, section[key])
                 # Create any intervening directories:
                 os.makedirs(os.path.dirname(section[key]), exist_ok=True)
 
@@ -150,25 +147,6 @@ def setup(process_name, config_dict=None):
 
     # Extract just the part used by Python's logging facility
     log_dict = log_config.dict().get('Logging', {})
-
-    # Get (and remove) the LOG_ROOT, which we use to set filenames if they
-    # were not already specified.  Python logging does not use it.
-    log_root = log_dict.pop('LOG_ROOT', 'log')
-    logdir = log_root
-    if weewx_root:
-        logdir = os.path.join(weewx_root, log_root)
-
-    # Ensure that the list of handlers is a list, even if only one element.
-    handlers = log_dict.get('root', {}).get('handlers', [])
-    log_dict['root']['handlers'] = to_list(handlers)
-
-    # If no filename was specified, then use the process name, and place the
-    # file in the log directory.
-    # FIXME: should be for any file-based handler not just timed_rotate
-    filename = log_dict.get('handlers', {}).get('timed_rotate', {}).get('filename')
-    if filename is None:
-        filename = os.path.join(logdir, '%s.log' % (process_name))
-        log_dict['handlers']['timed_rotate']['filename'] = filename
 
     # Finally! The dictionary is ready. Set the defaults.
     logging.config.dictConfig(log_dict)
