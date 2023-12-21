@@ -185,10 +185,10 @@ privileges.
 
     ```{ .shell .copy }
     # For systems that use systemd, e.g., Debian, Redhat, SUSE, run the
-    # provided script. This will install the systemd service file, configure
-    # logging, and set permissions for USB/serial communication.
+    # provided script. This will install the systemd service file, and set
+    # permissions for USB/serial communication.
     sudo sh ~/weewx-data/scripts/setup-daemon.systemd
-    # Use systemd to start WeeWX
+    # Start WeeWX
     sudo systemctl start weewx
     ```
 
@@ -200,11 +200,12 @@ privileges.
 === "sysV"
 
     ```{ .shell .copy }
-    # Systems that use SysV init, e.g., Slackware, Devuan, Puppy, DD-WRT
-    sudo cp ~/weewx-data/util/init.d/weewx.debian /etc/init.d/weewx
-    sudo chmod +x /etc/init.d/weewx
-    sudo update-rc.d weewx defaults 98
-    sudo /etc/init.d/weewx start     
+    # Systems that use SysV init, e.g., Slackware, Devuan, Puppy, DD-WRT,
+    # run the provided script. This will install the sysV init script, and set
+    # permissions for USB/serial communication.
+    sudo sh ~/weewx-data/scripts/setup-daemon.sysv
+    # Start WeeWX
+    sudo /etc/init.d/weewx start
     ```
 
     !!! Note
@@ -372,16 +373,14 @@ If you installed a daemon configuration, remove it.
 
     ```{ .shell .copy }
     sudo systemctl stop weewx
-    sudo systemctl disable weewx
-    sudo rm /etc/systemd/system/weewx.service
+    sudo sh ~/weewx-data/scripts/setup-daemon.systemd uninstall
     ```
 
 === "sysV"
 
     ```{ .shell .copy }
     sudo /etc/rc.d/init.d/weewx stop
-    sudo update-rc.d weewx remove
-    sudo rm /etc/init.d/weewx
+    sudo sh ~/weewx-data/scripts/setup-daemon.sysv uninstall
     ```
 
 === "macOS"
