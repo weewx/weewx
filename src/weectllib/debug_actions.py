@@ -14,6 +14,7 @@ import weecfg
 import weecfg.extension
 import weedb
 import weeutil.config
+import weeutil.printer
 import weewx
 import weewx.manager
 import weewx.units
@@ -114,7 +115,7 @@ def generate_extension_info(config_path, config_dict, fd):
     print("\nCurrently installed extensions", file=fd)
     ext = weecfg.extension.ExtensionEngine(config_path=config_path,
                                            config_dict=config_dict,
-                                           printer=weecfg.extension.Logger(fd=fd))
+                                           printer=weeutil.printer.Printer(fd=fd))
     ext.enumerate_extensions()
 
 
