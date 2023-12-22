@@ -35,6 +35,10 @@ your system. If you plan to use MySQL or MariaDB, be sure to see the
 When you are finished, the WeeWX executables and dependencies will have been
 installed inside the virtual environment.
 
+If you have any problems, see the guide
+[_Troubleshooting pip installs_](https://github.com/weewx/weewx/wiki/pip-troubleshooting)
+for help.
+
 === "Debian"
     
     ```{ .shell .copy }
@@ -136,10 +140,6 @@ installed inside the virtual environment.
     python3 -m pip install cryptography
     ```
 
-If you have any problems, see the guide
-[_Troubleshooting pip installs_](https://github.com/weewx/weewx/wiki/pip-troubleshooting)
-for help.
-
 ## Provision a new station
 
 While the instructions above install WeeWX, they do not set up the
@@ -237,8 +237,10 @@ see your station information and data.
     have to substitute an explicit path to your home directory,
     for example, `file:///home/jackhandy` instead of `~`.
 
-If you have problems, check the [system log](../usersguide/running.md#monitoring-weewx)
-for entries from `weewxd`.
+If you have problems, check the
+[system log](../usersguide/running.md#monitoring-weewx).
+See the [*Troubleshooting*](../usersguide/troubleshooting/what-to-do.md)
+section of the [*User's guide*](../usersguide/introduction.md) for more help.
 
 
 ## Configure

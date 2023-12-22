@@ -123,7 +123,10 @@ your station information and data.
     have to substitute an explicit path to your home directory,
     for example, `file:///home/jackhandy` instead of `~`.
 
-If you have problems, check the system log for entries from `weewxd`.
+If you have problems, check the
+[system log](../usersguide/running.md#monitoring-weewx).
+See the [*Troubleshooting*](../usersguide/troubleshooting/what-to-do.md)
+section of the [*User's guide*](../usersguide/introduction.md) for more help.
 
 
 ## Customize
