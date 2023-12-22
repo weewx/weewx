@@ -12,7 +12,7 @@ After=time-sync.target
 [Service]
 ExecStart=weewxd weewx.conf
 StandardOutput=null
-StandardError=syslog+console
+StandardError=journal+console
 #User=weewx
 #Group=weewx
 

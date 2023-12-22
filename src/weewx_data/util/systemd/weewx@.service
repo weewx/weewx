@@ -21,7 +21,7 @@ PartOf=weewx.service
 [Service]
 ExecStart=weewxd --log-label weewxd-%i $HOME/weewx-data/%i.conf
 StandardOutput=null
-StandardError=syslog+console
+StandardError=journal+console
 #User=weewx
 #Group=weewx
 

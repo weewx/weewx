@@ -9,7 +9,7 @@ After=time-sync.target
 [Service]
 ExecStart=weewxd /etc/weewx/weewx.conf
 StandardOutput=null
-StandardError=syslog+console
+StandardError=journal+console
 RuntimeDirectory=weewx
 RuntimeDirectoryMode=775
 User=weewx
