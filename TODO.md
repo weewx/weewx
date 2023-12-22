@@ -5,6 +5,14 @@
 - tk before logger is initialized, output to stdout/stderr as appropriate
 - tk Rationalize startup procedure, making it consistent.
 
+- mw make weewx-multi work on any sysv os (remove lsb dependencies)
+
+## deb/rpm installs
+
+- mw verify upgrade behavior for v4 running as root.root - ensure that v5
+   runs as root.root (check the user in systemd unit)
+- mw verify upgrade behavior from v4 to v5 related to sysv-to-systemd change
+
 
 ## Testing
 
