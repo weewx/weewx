@@ -196,7 +196,7 @@ def add_user_path(config_dict):
     lib_dir = os.path.abspath(os.path.join(root_dict['USER_DIR'], '..'))
     import logging
     log = logging.getLogger(__name__)
-    log.info("Adding 'user' directory '%s'" % lib_dir)
+    log.info("Adding to PYTHONPATH the 'user' directory '%s'" % lib_dir)
     sys.path.append(lib_dir)
 
 
