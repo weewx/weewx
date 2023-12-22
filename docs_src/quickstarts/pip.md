@@ -303,17 +303,15 @@ To enable uploads, or to enable other reports, modify the configuration file
 nano ~/weewx-data/weewx.conf
 ```
 
-See the [*User's Guide*](../usersguide/introduction.md) and the reference
-[*The configuration file
-weewx.conf*](../reference/weewx-options/introduction.md) for
-instructions.
-
-For more advanced customization, see the  [*Customization
-Guide*](../custom/introduction.md), as well as the [reference for skin
-options](../reference/skin-options/introduction.md).
+The reference
+[*Application options*](../reference/weewx-options/introduction.md)
+contains an extensive list of the configuration options, with explanations for
+what they do. For more advanced customization, see the [*Customization
+Guide*](../custom/introduction.md), as well as the reference [*Skin
+options*](../reference/skin-options/introduction.md).
  
-To install new skins, drivers, or other extensions, use the utility [`weectl
-extension`](../utilities/weectl-extension.md).
+To install new skins, drivers, or other extensions, use the [extension
+utility](../utilities/weectl-extension.md).
 
 WeeWX must be restarted for the changes to take effect.
 
