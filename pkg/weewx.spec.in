@@ -193,10 +193,10 @@ elif [ "$1" = "2" ]; then
       OLDVER="xxx"
     fi
     MNT=${OLDVER}-%{weewx_version}
-    echo Moving previous configuration copy to %{cfg_file}-$MNT
-    mv %{cfg_file}.prev %{cfg_file}-$MNT
+    echo Copying previous config file to %{cfg_file}-$MNT
+    cp -p %{cfg_file}.prev %{cfg_file}-$MNT
     if [ -f %{cfg_file}-%{weewx_version} ]; then
-      echo Creating maintainer version of configuration as %{cfg_file}-$MNT
+      echo Creating maintainer config file as %{cfg_file}-$MNT
       /usr/bin/weectl station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg_file}-%{weewx_version} --what=config --no-prompt --no-backup
     fi
   fi
