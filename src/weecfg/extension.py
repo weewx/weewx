@@ -75,7 +75,7 @@ class ExtensionEngine(object):
             exts = sorted(os.listdir(ext_dir))
             if exts:
                 self.printer.out("%-18s%-10s%s" % ("Extension Name", "Version", "Description"),
-                                level=0)
+                                 level=0)
                 for f in exts:
                     info = self.get_extension_info(f)
                     msg = "%(name)-18s%(version)-10s%(description)s" % info
@@ -92,15 +92,19 @@ class ExtensionEngine(object):
         _, installer = weecfg.get_extension_installer(ext_cache_dir)
         return installer
 
-    def install_extension(self, extension_path):
+    def install_extension(self, extension_path, no_confirm=False):
         """Install an extension.
 
         Args:
             extension_path(str): Either a file path, a directory path, or an URL.
+            no_confirm(bool): If False, ask for a confirmation before installing. Otherwise,
+                just do it.
         """
-        self.printer.out(f"Request to install '{extension_path}'.")
-        if self.dry_run:
-            self.printer.out("This is a dry run. Nothing will actually be done.")
+        ans = weeutil.weeutil.y_or_n(f"Install extension '{extension_path}'? ",
+                                     noprompt=no_confirm)
+        if ans == 'n':
+            self.printer.out("Nothing done.")
+            return
 
         # Figure out what extension_path is
         if extension_path.startswith('http'):
@@ -128,8 +132,6 @@ class ExtensionEngine(object):
             raise InstallError(f"Unrecognized type for {extension_path}")
 
         self.printer.out(f"Finished installing extension {extension_name} from {extension_path}.")
-        if self.dry_run:
-            self.printer.out("This was a dry run. Nothing was actually done.")
 
     def _install_from_file(self, filepath, filetype):
         """Install an extension from a file.
@@ -159,7 +161,7 @@ class ExtensionEngine(object):
     def install_from_dir(self, extension_dir):
         """Install the extension whose components are in extension_dir"""
         self.printer.out(f"Request to install extension found in directory {extension_dir}.",
-                        level=2)
+                         level=2)
 
         # The "installer" is actually a dictionary containing what is to be installed and where.
         # The "installer_path" is the path to the file containing that dictionary.
@@ -244,10 +246,10 @@ class ExtensionEngine(object):
 
             if self.dry_run:
                 self.printer.out(f"Fake copying from '{source_path}' to '{destination_path}'",
-                                level=3)
+                                 level=3)
             else:
                 self.printer.out(f"Copying from '{source_path}' to '{destination_path}'",
-                                level=3)
+                                 level=3)
                 try:
                     os.makedirs(os.path.dirname(destination_path))
                 except OSError:
@@ -374,10 +376,7 @@ class ExtensionEngine(object):
                 just do it.
         """
 
-        if self.dry_run:
-            self.printer.out("This is a dry run. Nothing will actually be done.")
-
-        ans = weeutil.weeutil.y_or_n(f"Uninstall extension '{extension_name}'? ",
+        ans = weeutil.weeutil.y_or_n(f"Uninstall extension '{extension_name}'? (y/n) ",
                                      noprompt=no_confirm)
         if ans == 'n':
             self.printer.out("Nothing done.")
@@ -389,7 +388,7 @@ class ExtensionEngine(object):
             # Retrieve it
             _, installer = weecfg.get_extension_installer(extension_installer_dir)
         except weecfg.ExtensionError:
-            sys.exit(f"Unable to find extension '{extension_name}'." )
+            sys.exit(f"Unable to find extension '{extension_name}'.")
 
         # Remove any files that were added:
         if 'files' in installer:
@@ -419,9 +418,6 @@ class ExtensionEngine(object):
             weecfg.save_with_backup(self.config_dict, self.config_path)
 
         self.printer.out(f"Finished removing extension '{extension_name}'")
-
-        if self.dry_run:
-            self.printer.out("This was a dry run. Nothing was actually done.")
 
     def uninstall_files(self, file_list):
         """Delete files that were installed for this extension
