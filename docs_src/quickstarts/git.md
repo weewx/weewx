@@ -104,10 +104,11 @@ source ~/weewx-venv/bin/activate
 python3 ~/weewx/src/weewxd.py
 ```
 
-To run `weewxd` as a daemon, install a systemd service unit or SysV init script
-that is appropriate for your operating system. Be sure to use the full path to
-the Python interpreter and `weewxd.py` - the paths in the virtual environment.
-Examples are included in the directory `~/weewx-data/util`.
+To run `weewxd` as a daemon, install an init configuration that is appropriate
+to your operating system, e.g., systemd service unit, SysV init script, or
+launchd control file. Be sure to use the full path to the Python interpreter
+and `weewxd.py` - the paths in the virtual environment. Examples are included
+in the directory `~/weewx-data/util`.
 
 
 ## Verify
