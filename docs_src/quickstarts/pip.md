@@ -136,6 +136,9 @@ installed inside the virtual environment.
     python3 -m pip install cryptography
     ```
 
+If you have any problems, see the guide
+[_Troubleshooting pip installs_](https://github.com/weewx/weewx/wiki/pip-troubleshooting)
+for help.
 
 ## Provision a new station
 
