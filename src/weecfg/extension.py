@@ -15,6 +15,7 @@ import configobj
 
 import weecfg
 import weeutil.config
+import weeutil.startup
 import weeutil.weeutil
 import weewx
 from weeutil.printer import Printer
@@ -64,7 +65,7 @@ class ExtensionEngine(object):
         self.printer = printer or Printer()
         self.dry_run = dry_run
 
-        self.root_dict = weewx.extract_roots(self.config_dict)
+        self.root_dict = weeutil.startup.extract_roots(self.config_dict)
         self.printer.out("root dictionary: %s" % self.root_dict, 4)
 
     def enumerate_extensions(self):

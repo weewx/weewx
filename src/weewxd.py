@@ -20,6 +20,7 @@ import configobj
 import weecfg
 import weedb
 import weeutil.logger
+import weeutil.startup
 import weewx.engine
 from weeutil.weeutil import to_bool, to_float
 from weewx import daemon
@@ -82,8 +83,7 @@ def main():
         config_path, config_dict = weecfg.read_config(namespace.config_arg,
                                                       [namespace.config_option])
     except (IOError, configobj.ConfigObjError) as e:
-        msg = "Error parsing config file: %s" % e
-        print(msg, file=sys.stderr)
+        print(f"Error parsing config file: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc(file=sys.stderr)
         sys.exit(weewx.CONFIG_ERROR)
@@ -92,10 +92,9 @@ def main():
     # configured logging and debug, as well as perform other housekeeping
     # chores
     try:
-        weewx.initialize(config_dict, namespace.log_label)
-    except (ValueError, AttributeError) as e:
-        msg = "Failure during initialization: %s" % e
-        print(msg, file=sys.stderr)
+        user_dir = weeutil.startup.initialize(config_dict, namespace.log_label)
+    except Exception as e:
+        print(f"Failure during initialization: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc(file=sys.stderr)
         sys.exit(weewx.CONFIG_ERROR)
@@ -107,10 +106,11 @@ def main():
     log.info("Using Python %s", sys.version)
     log.info("Located at %s", sys.executable)
     log.info("Platform %s", platform.platform())
-    log.info("Locale is '%s'", locale.setlocale(locale.LC_ALL))
+    log.info("Locale: '%s'", locale.setlocale(locale.LC_ALL))
     log.info("Entry path: %s", __file__)
-    log.info("Using configuration file %s", config_path)
-    log.info("Debug is %s", weewx.debug)
+    log.info("Configuration file: %s", config_path)
+    log.info("User directory: %s", user_dir)
+    log.info("Debug: %s", weewx.debug)
 
     # If no command line --loop-on-init was specified, look in the config file.
     if namespace.loop_on_init is None:

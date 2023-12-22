@@ -8,6 +8,7 @@
 import datetime
 
 import weecfg
+import weeutil.startup
 import weewx
 from weeutil.weeutil import bcolors
 
@@ -81,7 +82,7 @@ def dispatch(namespace):
     config_path, config_dict = weecfg.read_config(namespace.config)
     print(f"Using configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
 
-    weewx.initialize(config_dict, 'weectl')
+    weeutil.startup.initialize(config_dict, 'weectl')
 
     # Note a dry-run, if applicable:
     if hasattr(namespace, 'dry_run') and namespace.dry_run:
