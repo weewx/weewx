@@ -39,14 +39,7 @@ def obs_import(config_dict, import_config, **kwargs):
               % (REQUIRED_WEEWX, weewx.__version__))
         exit(1)
 
-    # Add the path to the user directory to PYTHONPATH.
-    weewx.add_user_path(config_dict)
-    # Now we can import user extensions, we need user.extensions for any user
-    # xtypes that may be used in (for example) StdWXCalculate()
-    importlib.import_module('user.extensions')
-
-    # to do anything more we need an import config file, check if one was
-    # provided
+    # to do anything we need an import config file, check if one was provided
     if import_config:
         # we have something so try to start
 

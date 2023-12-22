@@ -123,7 +123,6 @@ def config_config(config_path, config_dict,
                   dry_run=False):
     """Modify a configuration file."""
     print(f"Processing configuration file {config_path}")
-    weewx.add_user_path(config_dict)
     config_location(config_dict, location=location, no_prompt=no_prompt)
     config_altitude(config_dict, altitude=altitude, no_prompt=no_prompt)
     config_latlon(config_dict, latitude=latitude, longitude=longitude, no_prompt=no_prompt)

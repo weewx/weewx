@@ -8,9 +8,8 @@
 import datetime
 
 import weecfg
-import weeutil.logger
 import weewx
-from weeutil.weeutil import bcolors, to_int
+from weeutil.weeutil import bcolors
 
 
 def parse_dates(date=None, from_date=None, to_date=None, as_datetime=False):
@@ -82,11 +81,7 @@ def dispatch(namespace):
     config_path, config_dict = weecfg.read_config(namespace.config)
     print(f"Using configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
 
-    # Customize the logging with user settings:
-    weeutil.logger.setup('weectl', config_dict)
-
-    # Set weewx.debug as necessary:
-    weewx.debug = to_int(config_dict.get('debug', 0))
+    weewx.initialize(config_dict, 'weectl')
 
     # Note a dry-run, if applicable:
     if hasattr(namespace, 'dry_run') and namespace.dry_run:
