@@ -221,10 +221,10 @@ def create_station(namespace):
         script_name = 'setup-daemon.sysv'
     elif os.path.isdir('/Library/LaunchDaemons'):
         script_name = 'setup-daemon.macos'
-    if suggested_script:
+    if script_name:
         print("\nYou can set up a daemon by running a script in the directory")
         print(f"  {script_dir}")
-        path = os.path.join(script_dir, suggested_script)
+        path = os.path.join(script_dir, script_name)
         print(f"For example:")
         print(f"  {bcolors.BOLD}'sudo {path}'{bcolors.ENDC}")
 
