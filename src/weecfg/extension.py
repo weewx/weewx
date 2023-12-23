@@ -201,7 +201,8 @@ class ExtensionEngine(object):
         save_config |= installer.configure(self)
 
         # Look for options that have to be injected into the configuration file
-        save_config |= self._inject_config(installer['config'], extension_name)
+        if 'config' in installer:
+            save_config |= self._inject_config(installer['config'], extension_name)
 
         # Save the extension's install.py file in the extension's installer
         # directory for later use enumerating and uninstalling
