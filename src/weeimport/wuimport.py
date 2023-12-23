@@ -44,9 +44,15 @@ class WUSource(weeimport.Source):
     https://docs.google.com/document/d/1w8jbqfAk0tfZS5P7hYnar1JiitM0gQZB-clxDfG3aD0/edit
     """
 
-    # Dict containing default mapping of WU fields to WeeWX archive fields. The
-    # user may modify this mapping by including a [[FieldMap]] and/or a
-    # [[FieldMapExtensions]] stanza in the import config file.
+    # Dict containing default mapping of WU fields to WeeWX archive fields.
+    # This mapping may be replaced or modified by including a [[FieldMap]]
+    # and/or [[FieldMapExtensions]] stanza in the import config file. Note that
+    # Any unit settings in the [[FieldMap]] and/or [[FieldMapExtensions]]
+    # stanza in the WU import config file are ignored as the WU API returns
+    # data using a specified set of units. These units are set by weectl import
+    # and cannot be set by the user (nor do they need to be set by the user).
+    # Any necessary unit conversions are performed by weectl import before data
+    # is saved to database.
     default_map = {
         'dateTime': {
             'source_field': 'epoch', 
@@ -149,12 +155,58 @@ class WUSource(weeimport.Source):
         self.raw_datetime_format = '%Y-%m-%d %H:%M:%S'
 
         # construct our import field-to-WeeWX archive field map
-        _map = dict(WUSource.default_map)
+        _default_map = dict(WUSource.default_map)
         # create the final field map based on the default field map and any
         # field map options provided by the user
-        self.map = self.parse_map(_map,
-                                  self.wu_config_dict.get('FieldMap', {}),
-                                  self.wu_config_dict.get('FieldMapExtensions', {}))
+        _map = self.parse_map(_default_map,
+                              self.wu_config_dict.get('FieldMap', {}),
+                              self.wu_config_dict.get('FieldMapExtensions', {}))
+        # The field map we have now may either include no source field unit
+        # settings (the import config file instructions ask that a simplified
+        # field map (ie containing source_field only) be specified) or the user
+        # may have specified their own possibly inappropriate source field unit
+        # settings. The WU data obtained by weectl import is provided using
+        # what WU calls 'imperial (english)' units. Accordingly, we need to
+        # either add or update the unit setting for each source field to ensure
+        # the correct units are specified. To do this we iterate over each
+        # field map entry and set/update the unit setting to the unit setting
+        # for the corresponding source field in the default field map.
+
+        # first make a copy of the field map as we will likely be changing it
+        _map_copy = dict(_map)
+        # iterate over the current field map entries
+        for w_field, s_config in _map_copy.items():
+            # obtain the source field for the current entry
+            source_field = s_config['source_field']
+            # find source_field in the default field map and obtain the
+            # corresponding unit setting
+            # first set _unit to None so we know if we found an entry
+            _unit = None
+            # now iterate over the entries in the default field map looking for
+            # the source field we are currently using
+            for _field, _config in WUSource.default_map.items():
+                # do we have a match
+                if _config['source_field'] == source_field:
+                    # we have a match, obtain the unit setting and exit the
+                    # loop
+                    _unit = _config['unit']
+                    break
+            # we have finished iterating over the default field map, did we
+            # find a match
+            if _unit is not None:
+                # we found a match so update our current map
+                _map[w_field]['unit'] = _unit
+            else:
+                # We did not find a match so we don't know what unit this
+                # source field uses, most likely a [[FieldMap]] error but it
+                # could be something else. Either way we cannot continue, raise
+                # a suitable exception.
+                msg = f"Invalid field map. Could not find 'unit' "\
+                      f"for source field '{source_field}'"
+                raise weeimport.WeeImportMapError(msg)
+        # save the updated map
+        self.map = _map
+
         # For a WU import we might have to import multiple days but we can only
         # get one day at a time from WU. So our start and end properties
         # (counters) are datetime objects and our increment is a timedelta.
