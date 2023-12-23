@@ -10,17 +10,23 @@
 
 # suse 15: python3
 %if 0%{?suse_version} && "%{os_target}" == "15"
+%define app_group Productivity/Scientific/Other
 %define relos .suse15
 %define platform suse
 %define deps python3, python3-importlib_resources, python3-configobj, python3-Cheetah3, python3-Pillow, python3-pyserial, python3-usb
 %define python python3
 %define html_root /var/www/html/weewx
+%define systemd_dir /usr/lib/systemd/system
+%define udev_dir /usr/lib/udev/rules.d
 %endif
 
 # rh: python3 on redhat, fedora, centos, rocky
 %if "%{_vendor}" == "redhat"
+%define app_group Applications/Science
 %define platform redhat
 %define html_root /var/www/html/weewx
+%define systemd_dir /lib/systemd/system
+%define udev_dir /lib/udev/rules.d
 # disable shebang mangling. see https://github.com/atom/atom/issues/21937
 %undefine __brp_mangle_shebangs
 %if "%{os_target}" == "8"
@@ -57,7 +63,7 @@ Summary: weather software
 Name: weewx
 Version: %{weewx_version}
 Release: %{release}
-Group: Applications/Science
+Group: %{app_group}
 Source: %{name}-%{version}.tar.gz
 URL: https://www.weewx.com
 License: GPLv3
@@ -85,8 +91,8 @@ mkdir -p %{buildroot}%{dst_cfg_dir}
 mkdir -p %{buildroot}%{dst_user_dir}
 mkdir -p %{buildroot}%{dst_doc_dir}
 mkdir -p %{buildroot}/etc/default
-mkdir -p %{buildroot}/lib/systemd/system
-mkdir -p %{buildroot}/lib/udev/rules.d
+mkdir -p %{buildroot}%{systemd_dir}
+mkdir -p %{buildroot}%{udev_dir}
 mkdir -p %{buildroot}/var/lib/weewx
 mkdir -p %{buildroot}/var/www/html/weewx
 
@@ -121,8 +127,8 @@ cat src/weewx_data/weewx.conf | sed \
 cp %{buildroot}%{dst_cfg_dir}/weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf-%{weewx_version}
 
 # create the init configuration
-cp pkg/etc/systemd/system/weewx.service %{buildroot}/lib/systemd/system
-cp pkg/etc/systemd/system/weewx@.service %{buildroot}/lib/systemd/system
+cp pkg/etc/systemd/system/weewx.service %{buildroot}%{systemd_dir}
+cp pkg/etc/systemd/system/weewx@.service %{buildroot}%{systemd_dir}
 
 # create the entry points
 for f in %{entry_points}; do \
@@ -138,7 +144,7 @@ cat pkg/etc/default/weewx | sed \
  > %{buildroot}/etc/default/weewx
 
 # udev rules for known devices
-cp pkg/etc/udev/rules.d/weewx.rules %{buildroot}/lib/udev/rules.d/60-weewx.rules
+cp pkg/etc/udev/rules.d/weewx.rules %{buildroot}%{udev_dir}/60-weewx.rules
 
 # log handling
 
@@ -243,9 +249,9 @@ rm -rf %{buildroot}
 %defattr(-,root,root)
 %attr(0755,root,root) %{_bindir}/weewxd
 %attr(0755,root,root) %{_bindir}/weectl
-/lib/systemd/system/weewx.service
-/lib/systemd/system/weewx@.service
-/lib/udev/rules.d/60-weewx.rules
+%{systemd_dir}/weewx.service
+%{systemd_dir}/weewx@.service
+%{udev_dir}/60-weewx.rules
 %{dst_code_dir}/
 %doc %{dst_doc_dir}/
 %config(noreplace) %{_sysconfdir}/default/weewx
