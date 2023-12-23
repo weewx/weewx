@@ -143,7 +143,7 @@ def config_location(config_dict, location=None, no_prompt=False):
         final_location = location
     elif not no_prompt:
         print("\nGive a description of your station. This will be used for the title "
-              "of any reports.")
+              "of reports.")
         ans = input(f"Description [{default_location}]: ").strip()
         final_location = ans if ans else default_location
     else:
@@ -292,7 +292,7 @@ def config_units(config_dict, unit_system=None, no_prompt=False):
         print("Later, you can modify your choice, or choose a combination of units.")
         # Get what unit system the user wants
         options = ['us', 'metricwx', 'metric']
-        final_unit_system = weecfg.prompt_with_options(f"Your choice",
+        final_unit_system = weecfg.prompt_with_options(f"unit system",
                                                        default_unit_system, options)
     else:
         final_unit_system = default_unit_system

@@ -214,14 +214,19 @@ def create_station(namespace):
     except weewx.ViolatedPrecondition as e:
         sys.exit(e)
     script_dir = os.path.join(config_dict["WEEWX_ROOT"], "scripts")
-    print("\nYou can now set up a daemon by running an appropriate script")
-    print(f"in the directory {script_dir}")
+    script_name = None
     if os.path.isdir('/etc/systemd'):
-        path = os.path.join(script_dir, 'setup-daemon.systemd')
-        print(f"For example: {bcolors.BOLD}'sudo {path}'{bcolors.ENDC}")
+        script_name = 'setup-daemon.systemd'
+    elif os.path.isdir('/etc/init.d'):
+        script_name = 'setup-daemon.sysv'
     elif os.path.isdir('/Library/LaunchDaemons'):
-        path = os.path.join(script_dir, 'setup-daemon.mac')
-        print(f"For example: {bcolors.BOLD}'sudo {path}'{bcolors.ENDC}")
+        script_name = 'setup-daemon.macos'
+    if suggested_script:
+        print("\nYou can set up a daemon by running a script in the directory")
+        print(f"  {script_dir}")
+        path = os.path.join(script_dir, suggested_script)
+        print(f"For example:")
+        print(f"  {bcolors.BOLD}'sudo {path}'{bcolors.ENDC}")
 
 
 def reconfigure_station(config_dict, namespace):
