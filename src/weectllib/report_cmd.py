@@ -8,7 +8,6 @@ import sys
 import time
 
 import weecfg
-import weectl
 import weectllib
 import weectllib.report_actions
 from weeutil.weeutil import bcolors
