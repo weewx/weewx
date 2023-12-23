@@ -1,19 +1,26 @@
 #!/bin/sh
-# Start script for FreeBSD, contributed by user Fabian Abplanalp
-# Put this script in /usr/local/etc/rc.d then adjust WEEWX_BIN and
-# WEEWX_CFG values in /etc/defaults/weewx
+#
+# Generic SysV startup script.  Put this file in the system's init script
+# directory, then create appropriate symlinks for your system runlevels.
+# To modify the behavior of this script, adjust the values in the file
+# /etc/defaults/weewx or /etc/default/weewx, as appropriate.
 
-WEEWX_BIN="/opt/weewx/bin/weewxd"
-WEEWX_CFG="/opt/weewx/weewx.conf"
-WEEWX_PID="/var/run/weewx.pid"
+WEEWX_PYTHON=python3
+WEEWX_BINDIR=/usr/share/weewx
+WEEWX_CFGDIR=/etc/weewx
+WEEWX_RUNDIR=/var/run
+WEEWX_CFG=weewx.conf
 
 # Read configuration variable file if it is present
 [ -r /etc/defaults/weewx ] && . /etc/defaults/weewx
 
+WEEWXD=$WEEWX_BINDIR/weewxd.py
+WEEWX_PID=$WEEWX_RUNDIR/weewx.pid"
+
 case "$1" in
   "start")
     echo "Starting weewx..."
-    ${WEEWX_BIN} ${WEEWX_CFG} --daemon &
+    ${WEEWX_PYTHON} ${WEEWXD} ${WEEWX_CFGDIR}/${WEEWX_CFG} &
     echo $! > ${WEEWX_PID}
     echo "done"
   ;;

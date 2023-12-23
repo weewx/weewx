@@ -1,28 +1,21 @@
 #! /bin/sh
-# Copyright 2016-2022 Matthew Wall, all rights reserved
+# Copyright 2016-2023 Matthew Wall, all rights reserved
 # init script to run multiple instances of weewx
 #
 # each weewx instance is identified by name.  that name is used to identify the
-# configuration and pid files.
+# configuration and pid files.  if no list of instances is specified, then run
+# a single instance of weewxd using the configuration file weewx.conf.
 #
-# this init script expects the following configuration:
-#   /etc/weewx/a.conf
-#   /etc/weewx/b.conf
-#   /var/run/weewx/weewxd-a.pid
-#   /var/run/weewx/weewxd-b.pid
-#
-# with the appropriate rsyslog and logrotate configurations:
-#   /var/log/weewx/weewxd-a.log
-#   /var/log/weewx/weewxd-b.log
-#
-# to configure the script, override variables in /etc/default/weewx-multi
+# to configure the script, override variables in /etc/default/weewx
 # for example:
 #
 #   WEEWX_INSTANCES="vantage acurite"
-#   WEEWX_BINDIR=/opt/weewx/bin
+#   WEEWX_PYTHON=python3
+#   WEEWX_BINDIR=/opt/weewx
 #   WEEWX_CFGDIR=/etc/weewx
 #   WEEWX_RUNDIR=/var/run/weewx
 #   WEEWX_USER=weewx
+#   WEEWX_GROUP=weewx
 
 ### BEGIN INIT INFO
 # Provides:          weewx-multi
@@ -34,28 +27,32 @@
 # Description:       Manages multiple instances of weewx
 ### END INIT INFO
 
+# Try to keep systemd from screwing everything up
+export SYSTEMCTL_SKIP_REDIRECT=1
+
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC=weewx
 
 WEEWX_INSTANCES="weewx"
-WEEWX_BINDIR=/opt/weewx/bin
+WEEWX_PYTHON=python3
+WEEWX_BINDIR=/opt/weewx
 WEEWX_CFGDIR=/etc/weewx
 WEEWX_RUNDIR=/var/run/weewx
 WEEWX_USER=root
-
-# Try to keep systemd from screwing everything up
-export SYSTEMCTL_SKIP_REDIRECT=1
+WEEWX_GROUP=root
 
 # Read configuration variable file if it is present
 [ -r /etc/default/weewx ] && . /etc/default/weewx
 
-DESC=weewx
-DAEMON=$WEEWX_BINDIR/weewxd
+WEEWXD=$WEEWX_BINDIR/weewxd.py
 
 # Exit if the package is not installed
-if [ ! -x "$DAEMON" ]; then
-    echo "The $DESC daemon is not installed at $DAEMON"
+if [ ! -x "$WEEWXD" ]; then
+    echo "The $DESC daemon is not installed at $WEEWXD"
     exit 0
 fi
+
+DAEMON=$WEEWX_PYTHON $WEEWXD
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
@@ -68,6 +65,7 @@ fi
 if [ ! -d $WEEWX_RUNDIR ]; then
     mkdir -p $WEEWX_RUNDIR
     chown $WEEWX_USER $WEEWX_RUNDIR
+    chgrp $WEEWX_GROUP $WEEWX_RUNDIR
 fi
 
 # start the daemon
