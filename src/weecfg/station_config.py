@@ -611,10 +611,10 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
 
     # Convert the patterns to a list of two-way tuples
     for k in re_patterns:
-        re_patterns[k] = [(re.compile(key), re_patterns[k][key]) for key in re_patterns[k]],
+        re_patterns[k] = [(re.compile(key), re_patterns[k][key]) for key in re_patterns[k]]
 
     def _patch_file(srcpath, dstpath):
-        srcdir = os.path.dirname(srcpath)
+        srcdir = os.path.basename(os.path.dirname(srcpath))
         if srcdir in re_patterns:
             # Copy an individual file from srcpath to dstpath, while making
             # substitutions using the list of regular expressions re_list
