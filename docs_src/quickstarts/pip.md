@@ -238,7 +238,7 @@ see your station information and data.
     for example, `file:///home/jackhandy` instead of `~`.
 
 If you have problems, check the
-[system log](../usersguide/running.md#monitoring-weewx).
+[system log](../usersguide/monitoring.md#log-messages).
 See the [*Troubleshooting*](../usersguide/troubleshooting/what-to-do.md)
 section of the [*User's guide*](../usersguide/introduction.md) for more help.
 
