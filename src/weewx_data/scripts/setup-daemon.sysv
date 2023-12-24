@@ -52,8 +52,10 @@ do_install() {
 	echo "    permissions are applied correctly."
     fi
 
-    echo "  defaults"
-    copy_file $UTIL_ROOT/default/weewx /etc/default/weewx
+    if [ -d /etc/default ]; then
+        echo "  defaults"
+        copy_file $UTIL_ROOT/default/weewx /etc/default/weewx
+    fi
 
     echo "  init script"
     copy_file $UTIL_ROOT/init.d/weewx-multi /etc/init.d/weewx
