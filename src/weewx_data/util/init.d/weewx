@@ -2,8 +2,9 @@
 #
 # Generic SysV startup script.  Put this file in the system's init script
 # directory, then create appropriate symlinks for your system runlevels.
-# To modify the behavior of this script, adjust the values in the file
-# /etc/defaults/weewx or /etc/default/weewx, as appropriate.
+# To modify the behavior of this script, adjust the values in the file:
+#   bsd:   /etc/defaults/weewx
+#   linux: /etc/default/weewx
 
 WEEWX_PYTHON=python3
 WEEWX_BINDIR=/usr/share/weewx
@@ -13,6 +14,7 @@ WEEWX_CFG=weewx.conf
 
 # Read configuration variable file if it is present
 [ -r /etc/defaults/weewx ] && . /etc/defaults/weewx
+[ -r /etc/default/weewx ] && . /etc/default/weewx
 
 WEEWXD=$WEEWX_BINDIR/weewxd.py
 WEEWX_PID=$WEEWX_RUNDIR/weewx.pid"
