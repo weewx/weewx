@@ -32,4 +32,5 @@ Available subcommands:
     extension           List, install, or uninstall extensions.
     import              Import observation data.
     report              List and run WeeWX reports.
-    station             Create, modify, or upgrade a station data area.```
+    station             Create, modify, or upgrade a station data area.
+```
