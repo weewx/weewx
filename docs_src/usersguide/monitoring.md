@@ -36,12 +36,11 @@ check the log!
 In the default configuration, WeeWX logs to the system logging facility.
 
 The following sections show how to view WeeWX log messages on systems that use
-`syslog` (and `syslog`-compatible) and `systemd-journald` logging facilities.
-See the wiki article [*How to view the
-log*](https://github.com/weewx/weewx/wiki/view-logs) for more details. 
+`syslog` and `systemd-journald` logging facilities. See the wiki article
+[*How to view the log*](https://github.com/weewx/weewx/wiki/view-logs) for more
+details.
 
-
-See the wiki articles [*How to configure
+See the wiki article [*How to configure
 logging*](https://github.com/weewx/weewx/wiki/logging) for information and
 examples about how to configure WeeWX logging.
 
@@ -97,9 +96,9 @@ sudo journalctl -u weewx -f
 Unfortunately, with the introduction of macOS Monterey (12.x), the logging
 handler
 [`SysLogHandler`](https://docs.python.org/3/library/logging.handlers.html#sysloghandler),
-which is used by WeeWX, does not work[^1]. Indeed, the only handlers in the Python
-[`logging`](https://docs.python.org/3/library/logging.html) facility that work
-with macOS 12.x or later are standalone handlers that log to files.
+which is used by WeeWX, does not work[^1]. Indeed, the only handlers in the
+Python [`logging`](https://docs.python.org/3/library/logging.html) facility
+that work with macOS 12.x or later are standalone handlers that log to files.
 
 [^1]: See Python issue [#91070](https://github.com/python/cpython/issues/91070).
 
@@ -109,9 +108,8 @@ Fortunately, there is a simple workaround. Put this at the bottom of your
 ```
 [Logging]
 
-    # Root logger
     [[root]]
-      handlers = timed_rotate,
+        handlers = timed_rotate,
 
     [[handlers]]
         # Log to a set of rotating files
