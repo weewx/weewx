@@ -52,95 +52,10 @@ the installer finishes with WeeWX running in the background.
 For a pip install, you will have to do this yourself. See the section [_Run as
 a daemon_](../quickstarts/pip.md#run-as-a-daemon) in the pip quick start guide.
 
-When `weewxd` runs in the background, you will not see sensor data or any
-other indication that it is running.  To see what is happening, use your
-system's `init` tools, look at the logs, and look at the reports.
+When `weewxd` runs in the background, you will not see sensor data or any other
+indication that it is running.  However, there are several approaches you can
+take to see what's happening:
 
-
-## Monitoring WeeWX
-
-Whether you run `weewxd` directly or in the background, `weewxd` emits
-messages about its status and generates reports.  The status messages will
-help you diagnose problems.
-
-### Status
-
-If WeeWX is running in the background, you can use the system's `init` tools
-to check the status.  For example, on systems that use `systemd`, check it
-like this:
-```{.shell .copy}
-systemctl status weewx
-```
-On systems that use `sysV` init scripts, check it like this:
-```{.shell .copy}
-/etc/init.d/weewx status
-```
-
-### Reports
-
-When it is running properly, WeeWX will generate reports, typically every five
-minutes.  The reports are not (re)generated until data have been received and
-accumulated, so it could be a few minutes before you see a report or a change
-to a report. The location of the reports depends on the operating system and
-how WeeWX was installed.
-
-See `HTML_ROOT` in the [*Where to find things*](where.md) section.
-
-Depending on the configuration, if WeeWX cannot get data from the sensors,
-then it will probably not generate any reports.  So if you do not see reports,
-check the log!
-
-### Log messages
-
-In the default configuration, WeeWX logs to the system logging facility.
-
-The following sections show how to view WeeWX log messages on systems that use
-`syslog` (and `syslog`-compatible) and `systemd-journald` logging facilities.
-The use of `sudo` is usually necessary, since the system logs on most modern
-systems are readable only to administrative users.
-
-See the wiki article
-[*How to view the log*](https://github.com/weewx/weewx/wiki/view-logs)
-for more information and examples.
-
-#### The `syslog` logging facility
-
-On traditional systems, the system logging facility puts the WeeWX messages
-into a file, along with other messages from the system. The location of the
-system log file varies, but it is typically `/var/log/syslog` or
-`/var/log/messages`.
-
-You can view the messages using standard tools such as `tail`, `head`, `more`,
-`less`, and `grep`.
-
-For example, to see only the messages from `weewxd`:
-```{.shell .copy}
-sudo grep weewxd /var/log/syslog
-```
-To see only the latest 40 messages from `weewxd`:
-```{.shell .copy}
-sudo grep weewxd /var/log/syslog | tail -40
-```
-To see messages as they come into the log in real time (hit `ctrl-c` to stop):
-```{.shell .copy}
-sudo tail -f /var/log/syslog
-```
-
-#### The `systemd-journald` logging facility
-
-Some systems with `systemd` use *only* `systemd-journald` as the system logging
-facility.  On these systems, you will have to use the `journalctl` tool to
-view messages from WeeWX.
-
-For example, to see only the messages from `weewxd`:
-```{.shell .copy}
-sudo journalctl -u weewx
-```
-To see only the latest 40 messages from `weewxd`:
-```{.shell .copy}
-sudo journalctl -u weewx --lines 40
-```
-To see messages as they come into the log in real time:
-```{.shell .copy}
-sudo journalctl -u weewx --follow
-```
+- Use your system's [status tools](monitoring.md#status) to monitor its state;
+- Look at any generated [reports](monitoring.md#reports); and
+- Look at the [logs](monitoring.md#log-messages).
