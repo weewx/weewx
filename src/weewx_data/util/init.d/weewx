@@ -17,7 +17,7 @@ WEEWX_CFG=weewx.conf
 [ -r /etc/default/weewx ] && . /etc/default/weewx
 
 WEEWXD=$WEEWX_BINDIR/weewxd.py
-WEEWX_PID=$WEEWX_RUNDIR/weewx.pid"
+WEEWX_PID=$WEEWX_RUNDIR/weewx.pid
 
 case "$1" in
   "start")
