@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Copyright 2015-2023 Matthew Wall
 # See the file LICENSE.txt for your rights.
 #

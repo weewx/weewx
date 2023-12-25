@@ -1,13 +1,24 @@
+#!/bin/sh
 #
 # PROVIDE: weewx
 # REQUIRE: DAEMON
+# KEYWORD: shutdown
 #
-# Add the following line to /etc/rc.conf.local or /etc/rc.conf
-# to enable weewx:
+# install this file as /usr/local/etc/rc.d/weewx
 #
-# weewx_enable (bool): Set to NO by default
-#                      Set it to YES to enable weewx
+# to enable it, put this in /etc/rc.conf.local
+# weewx_enable=YES
 #
+# to disable it, use weewx_enable=NO
+
+WEEWX_PYTHON=/usr/local/bin/python3
+WEEWX_BINDIR=/usr/local/weewx/src
+WEEWX_CFGDIR=/usr/local/etc/weewx
+WEEWX_RUNDIR=/var/run
+WEEWX_CFG=weewx.conf
+
+# Read configuration variable file if it is present
+[ -r /etc/defaults/weewx ] && . /etc/defaults/weewx
 
 . /etc/rc.subr
 
@@ -17,15 +28,26 @@ rcvar=weewx_enable
 load_rc_config $name
 
 start_cmd=weewx_start
-weewx_daemon=/usr/local/etc/weewx/bin/weewxd
+stop_cmd=weewx_stop
+
+weewx_daemon="${WEEWX_PYTHON} ${WEEWX_BINDIR}/weewxd.py"
 command=${weewx_daemon}
-procname=${weewx_procname:-/usr/local/bin/python3}
-weewx_pid=/var/run/weewx.pid
-weewx_config=/usr/local/etc/weewx/weewx.conf
+procname=${weewx_procname:-${WEEWX_PYTHON}}
+weewx_pid=${WEEWX_RUNDIR}/weewx.pid
+weewx_config=${WEEWX_CFGDIR}/${WEEWX_CFG}
 
 weewx_start() {
-   echo "Starting ${name}."
-   ${weewx_daemon} --daemon --pidfile=${weewx_pid} ${weewx_config} &
+    echo "Starting ${name}."
+    ${weewx_daemon} --daemon --pidfile=${weewx_pid} ${weewx_config}
+}
+
+weewx_stop() {
+    if [ -f ${weewx_pid} ]; then
+        echo "Stopping ${name}."
+        kill `cat ${weewx_pid}`
+    else
+        echo "${name} is not running"
+    fi
 }
 
 run_rc_command "$1"

@@ -4,9 +4,9 @@
 #
 #  item            name                           where to specify
 #  --------        -----------------------------  ----------------------------
-#  config          /etc/weewx/weewx-XXX.conf      configuration directory
-#  database_name   /var/lib/weewx/weewx-XXX.sdb   specified in weewx-XXX.conf
-#  HTML_ROOT       /var/www/html/weewx-XXX        specified in weewx-XXX.conf
+#  config          /etc/weewx/XXX.conf            configuration directory
+#  database_name   /var/lib/weewx/XXX.sdb         specified in XXX.conf
+#  HTML_ROOT       /var/www/html/XXX              specified in XXX.conf
 
 [Unit]
 Description=WeeWX %i
@@ -16,8 +16,9 @@ After=time-sync.target
 PartOf=weewx.service
 
 [Service]
-ExecStart=weewxd --log-label weewxd-%i /etc/weewx/weewx-%i.conf
+ExecStart=weewxd --log-label weewxd-%i /etc/weewx/%i.conf
 StandardOutput=null
+StandardError=journal+console
 RuntimeDirectory=weewx
 RuntimeDirectoryMode=775
 User=weewx

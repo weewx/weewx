@@ -13,13 +13,19 @@
 import calendar
 import cmath
 import datetime
-import importlib.resources
+import importlib
 import math
 import os
 import re
 import shutil
 import time
 from collections import ChainMap
+
+# importlib.resources is 3.7 or later, importlib_resources is the backport
+try:
+    import importlib.resources as importlib_resources
+except:
+    import importlib_resources
 
 # For backwards compatibility:
 from weeutil.config import accumulateLeaves, search_up
@@ -1854,10 +1860,10 @@ def get_resource_path(package, resource):
 
     if sys.version_info.major == 3 and sys.version_info.minor < 9:
         # For earlier Python versions, use the deprecated function path()
-        return importlib.resources.path(package, resource)
+        return importlib_resources.path(package, resource)
     else:
         # For later versions...
-        return importlib.resources.as_file(importlib.resources.files(package).joinpath(resource))
+        return importlib_resources.as_file(importlib_resources.files(package).joinpath(resource))
 
 
 def get_resource_fd(package, resource):
@@ -1866,10 +1872,10 @@ def get_resource_fd(package, resource):
 
     if sys.version_info.major == 3 and sys.version_info.minor < 9:
         # For earlier Python versions, use the deprecated function open_text
-        return importlib.resources.open_text(package, resource)
+        return importlib_resources.open_text(package, resource)
     else:
         # For later versions...
-        return importlib.resources.files(package).joinpath(resource).open('r')
+        return importlib_resources.files(package).joinpath(resource).open('r')
 
 
 if __name__ == '__main__':

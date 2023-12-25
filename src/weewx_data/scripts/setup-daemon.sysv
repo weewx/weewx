@@ -1,0 +1,90 @@
+#!/bin/sh
+#
+# Install files that integrate WeeWX into a Linux system that uses sysV init.
+# This script must be run using sudo, or as root.
+#
+set -e
+
+UTIL_ROOT=$HOME/weewx-data/util
+
+if [ "$(id -u)" != "0" ]; then
+  echo "This script requires admin privileges.  Use 'sudo' or run as root."
+  exit 1
+fi
+
+if [ ! -d /etc/init.d ]; then
+    echo "Apparently this system does not use SysV init"
+    exit 1
+fi
+
+ts=`date +"%Y%m%d%H%M%S"`
+
+copy_file() {
+    src=$1
+    dst=$2
+    if [ -f "$dst" ]; then
+	mv ${dst} ${dst}.${ts}
+    fi
+    cp $src $dst
+}
+
+remove_file() {
+    dst=$1
+    if [ -f "$dst" ]; then
+	rm $dst
+    fi
+}
+
+do_install() {
+    echo "Set up the files necessary to run WeeWX at system startup."
+
+    if [ ! -d $UTIL_ROOT ]; then
+        echo "Cannot find utility files at location '$UTIL_ROOT'"
+        exit 1
+    fi
+
+    echo "Copying files from $UTIL_ROOT..."
+    if [ -d /etc/udev/rules.d ]; then
+        echo "  udev rules"
+        copy_file $UTIL_ROOT/udev/rules.d/weewx.rules /etc/udev/rules.d/60-weewx.rules
+	echo "    If you are using a device that is connected to the computer by USB or"
+	echo "    serial port, unplug the device then plug it back in again to ensure that"
+	echo "    permissions are applied correctly."
+    fi
+
+    if [ -d /etc/default ]; then
+        echo "  defaults"
+        copy_file $UTIL_ROOT/default/weewx /etc/default/weewx
+    fi
+
+    echo "  init script"
+    copy_file $UTIL_ROOT/init.d/weewx-multi /etc/init.d/weewx
+    chmod 755 /etc/init.d/weewx
+
+    echo "Enabling weewx..."
+    update-rc.d weewx defaults
+
+    echo "You can start weewx with the following command:"
+    echo "  '\033[1msudo /etc/init.d/weewx start\033[0m'"
+}
+
+do_uninstall() {
+    echo "Stopping weewx..."
+    /etc/init.d/weewx stop
+    echo "Disabling weewx..."
+    update-rc.d weewx remove
+    echo "Removing files..."
+    echo "  init script"
+    remove_file /etc/init.d/weewx
+    echo "  defaults"
+    remove_file /etc/default/weewx
+    echo "  udev rules"
+    remove_file /etc/udev/rules.d/60-weewx.rules
+}
+
+ACTION=$1
+if [ "$ACTION" = "" -o "$ACTION" = "install" ]; then
+    do_install
+elif [ "$ACTION" = "uninstall" ]; then
+    do_uninstall
+fi

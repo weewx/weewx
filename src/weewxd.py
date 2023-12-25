@@ -4,6 +4,7 @@
 #    See the file LICENSE.txt for your rights.
 #
 """Entry point to the weewx weather system."""
+
 import argparse
 import locale
 import logging
@@ -19,6 +20,7 @@ import configobj
 import weecfg
 import weedb
 import weeutil.logger
+import weeutil.startup
 import weewx.engine
 from weeutil.weeutil import to_bool, to_float
 from weewx import daemon
@@ -70,44 +72,46 @@ def main():
         print(weewx.__version__)
         sys.exit(0)
 
-    # Set up a rudimentary logger until we can read the configuration file.
-    startup_logger = logging.getLogger("weewx-startup")
-    # It will only log to the syslog
-    startup_logger.addHandler(logging.handlers.SysLogHandler(address=weeutil.logger.address,
-                                                             facility=weeutil.logger.facility))
-
-    # User can specify the config file as either a positional argument, or as an option
-    # argument, but not both.
+    # User can specify the config file as either a positional argument, or as
+    # an option argument, but not both.
     if namespace.config_option and namespace.config_arg:
-        startup_logger.critical(epilog)
-        sys.exit(epilog)
+        print(epilog, file=sys.stderr)
+        sys.exit(weewx.CMD_ERROR)
 
     # Read the configuration file
     try:
         config_path, config_dict = weecfg.read_config(namespace.config_arg,
                                                       [namespace.config_option])
     except (IOError, configobj.ConfigObjError) as e:
-        msg = "Error parsing config file: %s" % e
-        print(msg, file=sys.stderr)
-        startup_logger.critical(msg)
-        weeutil.logger.log_traceback(startup_logger.critical, "    ****  ")
-        sys.exit(weewx.CMD_ERROR)
+        print(f"Error parsing config file: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        sys.exit(weewx.CONFIG_ERROR)
 
-    # Now that we have the configuration dictionary, we can set up the user-configured logging and
-    # debug, as well as perform other housekeeping chores:
-    weewx.initialize(config_dict, namespace.log_label)
+    # Now that we have the configuration dictionary, we can set up the user-
+    # configured logging and debug, as well as perform other housekeeping
+    # chores
+    try:
+        weewx_root, user_dir = weeutil.startup.initialize(config_dict, namespace.log_label)
+    except Exception as e:
+        print(f"Failure during initialization: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        sys.exit(weewx.CONFIG_ERROR)
 
-    # Get a new logger. This one will have the custom configuration:
+    # Get a logger. This one will have the requested configuration.
     log = logging.getLogger(__name__)
     # Log key bits of information.
     log.info("Initializing weewx version %s", weewx.__version__)
     log.info("Using Python %s", sys.version)
     log.info("Located at %s", sys.executable)
     log.info("Platform %s", platform.platform())
-    log.info("Locale is '%s'", locale.setlocale(locale.LC_ALL))
+    log.info("Locale: '%s'", locale.setlocale(locale.LC_ALL))
     log.info("Entry path: %s", __file__)
-    log.info("Using configuration file %s", config_path)
-    log.info("Debug is %s", weewx.debug)
+    log.info("Configuration file: %s", config_path)
+    log.info("WEEWX_ROOT: %s", weewx_root)
+    log.info("User directory: %s", user_dir)
+    log.info("Debug: %s", weewx.debug)
 
     # If no command line --loop-on-init was specified, look in the config file.
     if namespace.loop_on_init is None:

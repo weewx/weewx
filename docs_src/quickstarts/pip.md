@@ -1,8 +1,8 @@
 # Installation using pip
 
-This is a guide to installing WeeWX using [`pip`](https://pip.pypa.io). It can be
-used on almost any operating system (including macOS) that offers Python v3.7 or
-greater. Python 2, or earlier versions of Python 3, will not work.
+This is a guide to installing WeeWX using [`pip`](https://pip.pypa.io). It can
+be used on almost any operating system (including macOS) that offers Python
+v3.6 or greater. Python 2, or earlier versions of Python 3, will not work.
 
 Although you do not need root privileges to install and configure WeeWX using
 `pip`, you will need them to set up a daemon, and you may need them to change
@@ -35,11 +35,14 @@ your system. If you plan to use MySQL or MariaDB, be sure to see the
 When you are finished, the WeeWX executables and dependencies will have been
 installed inside the virtual environment.
 
+If you have any problems, see the guide
+[_Troubleshooting pip installs_](https://github.com/weewx/weewx/wiki/pip-troubleshooting)
+for help.
+
 === "Debian"
     
     ```{ .shell .copy }
     sudo apt update
-    # If necessary, install pip and venv
     sudo apt install python3-pip -y
     sudo apt install python3-venv -y
     # Create the virtual environment
@@ -55,19 +58,15 @@ installed inside the virtual environment.
 
     ```{ .shell .copy }
     sudo yum update
-    # Check your version of Python. You must have 3.7 or later
-    python3 -V
-    # If it is less than Python 3.7, install a later version of Python.
-    # For example, this would install Python 3.11. Afterwards, you must
-    # remember to invoke Python using "python3.11", NOT "python3"
-    sudo yum install python3.11 -y
-    sudo yum install python3.11-pip -y
+    sudo yum install python3-importlib-resources
+    sudo yum install python3-pip -y
+    sudo yum install python3-venv -y
     # Create the virtual environment
-    python3.11 -m venv ~/weewx-venv
+    python3 -m venv ~/weewx-venv
     # Activate the WeeWX virtual environment
     source ~/weewx-venv/bin/activate
     # Install WeeWX into the virtual environment
-    python3.11 -m pip install weewx
+    python3 -m pip install weewx
     ```
     _Tested with Rocky 8.7._
 
@@ -89,18 +88,15 @@ installed inside the virtual environment.
 
     ```{ .shell .copy }
     sudo zypper refresh
-    # Check your version of Python. You must have 3.7 or later
-    python3 -V
-    # If it is less than Python 3.7, install a later version of Python.
-    # For example, this would install Python 3.11. Afterwards, you must
-    # remember to invoke Python using "python3.11", NOT "python3"
-    sudo zypper install -y python311
+    sudo zypper install python3-importlib_resources
+    sudo zypper install python3-pip -y
+    sudo zypper install python3-venv -y
     # Create the virtual environment
-    python3.11 -m venv ~/weewx-venv
+    python3 -m venv ~/weewx-venv
     # Activate the WeeWX virtual environment
     source ~/weewx-venv/bin/activate
     # Install WeeWX into the virtual environment
-    python3.11 -m pip install weewx
+    python3 -m pip install weewx
     ```
     _Tested with openSUSE Leap 15.5._
 
@@ -144,7 +140,6 @@ installed inside the virtual environment.
     python3 -m pip install cryptography
     ```
 
-
 ## Provision a new station
 
 While the instructions above install WeeWX, they do not set up the
@@ -160,15 +155,15 @@ weectl station create
 
 The tool `weectl` will ask you a series of questions, then create a directory
 `weewx-data` in your home directory with a new configuration file. It will
-also install skins, documentation, utilitiy files, and examples in the same
+also install skins, documentation, utility files, and examples in the same
 directory. The database and reports will also go into that directory, but
 only after you run `weewxd`, as shown in the following step.
 
 
 ## Run `weewxd`
 
-The program `weewxd` does the data collection, archiving, uploading, and report
-generation.  You can run it directly, or as a daemon.
+The program `weewxd` does the data collection, archiving, uploading, and
+report generation.  You can run it directly, or as a daemon.
 
 
 ### Run directly
@@ -185,33 +180,35 @@ weewxd
 
 ### Run as a daemon
 
-To make WeeWX start when the system is booted, run `weewxd` as a daemon.
-The steps to configure `weewxd` to run as a daemon depend on your operating
-system, and require root privileges.
+To make WeeWX start when the system is booted, you will want to run `weewxd`
+as a daemon. Follow the directions below for your system. You will need root
+privileges.
 
 === "systemd"
 
     ```{ .shell .copy }
-    # Systems that use systemd, e.g., Debian, Redhat, SUSE
-    sudo cp ~/weewx-data/util/systemd/weewx.service /etc/systemd/system
-    sudo systemctl daemon-reload
-    sudo systemctl enable weewx
+    # For systems that use systemd, e.g., Debian, Redhat, SUSE, run the
+    # provided script. This will install the systemd service file, and set
+    # permissions for USB/serial communication.
+    sudo sh ~/weewx-data/scripts/setup-daemon.systemd
+    # Start WeeWX
     sudo systemctl start weewx
     ```
 
     !!! Note
         The resulting daemon will be run using your username. If you prefer to
-        use run as `root`, you will have to modify the file
+        use run as `root`, you will have to modify the unit file
         `/etc/systemd/system/weewx.service`.
     
 === "sysV"
 
     ```{ .shell .copy }
-    # Systems that use SysV init, e.g., Slackware, Devuan, Puppy, DD-WRT
-    sudo cp ~/weewx-data/util/init.d/weewx.debian /etc/init.d/weewx
-    sudo chmod +x /etc/init.d/weewx
-    sudo update-rc.d weewx defaults 98
-    sudo /etc/init.d/weewx start     
+    # For systems that use SysV init, e.g., Slackware, Devuan, Puppy, DD-WRT,
+    # run the provided script. This will install the sysV init script, and set
+    # permissions for USB/serial communication.
+    sudo sh ~/weewx-data/scripts/setup-daemon.sysv
+    # Start WeeWX
+    sudo /etc/init.d/weewx start
     ```
 
     !!! Note
@@ -240,7 +237,10 @@ see your station information and data.
     have to substitute an explicit path to your home directory,
     for example, `file:///home/jackhandy` instead of `~`.
 
-If you have problems, check the system log for entries from `weewxd`.
+If you have problems, check the
+[system log](../usersguide/monitoring.md#log-messages).
+See the [*Troubleshooting*](../usersguide/troubleshooting/what-to-do.md)
+section of the [*User's guide*](../usersguide/introduction.md) for more help.
 
 
 ## Configure
@@ -296,22 +296,22 @@ probably want to switch to using real hardware. This is how to reconfigure.
 
 ## Customize
 
-To enable uploads or to customize reports, modify the configuration file.
-See the [*Customization Guide*](../custom/introduction.md) for instructions,
-and the [application](../reference/weewx-options/introduction.md) and
-[skin](../reference/skin-options/introduction.md) references for all
-the options. Use any text editor, such as `nano`:
+To enable uploads, or to enable other reports, modify the configuration file
+`~/weewx-data/weewx.conf` using any text editor such as `nano`:
 
-```shell
+```{.shell .copy}
 nano ~/weewx-data/weewx.conf
 ```
 
-To install new skins, drivers, or other extensions, use the `weectl` utility
-and the URL to the extension.
-
-```shell
-weectl extension install https://github.com/path/to/extension.zip
-```
+The reference
+[*Application options*](../reference/weewx-options/introduction.md)
+contains an extensive list of the configuration options, with explanations for
+what they do. For more advanced customization, see the [*Customization
+Guide*](../custom/introduction.md), as well as the reference [*Skin
+options*](../reference/skin-options/introduction.md).
+ 
+To install new skins, drivers, or other extensions, use the [extension
+utility](../utilities/weectl-extension.md).
 
 WeeWX must be restarted for the changes to take effect.
 
@@ -347,7 +347,7 @@ source ~/weewx-venv/bin/activate
 python3 -m pip install weewx --upgrade
 ```
 
-Optional: You may want to upgrade your documentation and examples.
+Optional: You may want to upgrade examples and utility files:
 ```
 weectl station upgrade --what examples util
 ```
@@ -377,16 +377,14 @@ If you installed a daemon configuration, remove it.
 
     ```{ .shell .copy }
     sudo systemctl stop weewx
-    sudo systemctl disable weewx
-    sudo rm /etc/systemd/system/weewx.service
+    sudo sh ~/weewx-data/scripts/setup-daemon.systemd uninstall
     ```
 
 === "sysV"
 
     ```{ .shell .copy }
-    sudo /etc/rc.d/init.d/weewx stop
-    sudo update-rc.d weewx remove
-    sudo rm /etc/init.d/weewx
+    sudo /etc/init.d/weewx stop
+    sudo sh ~/weewx-data/scripts/setup-daemon.sysv uninstall
     ```
 
 === "macOS"
@@ -402,7 +400,8 @@ To delete the applications and code, remove the WeeWX virtual environment:
 rm -r ~/weewx-venv
 ```
 
-Finally, if desired, to delete the database, skins, and other utilities, remove the data directory:
+Finally, if desired, to delete the database, skins, and other utilities,
+remove the data directory:
 
 ```{ .shell .copy }
 rm -r ~/weewx-data

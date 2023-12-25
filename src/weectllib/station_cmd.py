@@ -8,6 +8,7 @@ import os.path
 import sys
 
 import weecfg.station_config
+import weectllib
 import weewx
 from weeutil.weeutil import bcolors
 
@@ -67,7 +68,7 @@ CREATE_DESCRIPTION = """Create a new station data area, including a configuratio
                      + WEEWX_ROOT_DESCRIPTION
 
 UPGRADE_DESCRIPTION = """Upgrade an existing station data area, including any combination of the 
-examples, utility files, scripts, configuration file, and skins. """ + WEEWX_ROOT_DESCRIPTION
+examples, utility files, configuration file, and skins. """ + WEEWX_ROOT_DESCRIPTION
 
 
 def add_subparser(subparsers):
@@ -135,7 +136,8 @@ def add_subparser(subparsers):
                                             action='store_true',
                                             help='Print what would happen, but do not actually '
                                                  'do it.')
-    station_reconfigure_parser.set_defaults(func=reconfigure_station)
+    station_reconfigure_parser.set_defaults(func=weectllib.dispatch)
+    station_reconfigure_parser.set_defaults(action_func=reconfigure_station)
 
     # ---------- Action 'upgrade' ----------
     station_upgrade_parser = \
@@ -154,12 +156,12 @@ def add_subparser(subparsers):
                                         help='Where to put the skins, relative to '
                                              'WEEWX_ROOT. Default is "skins".')
     station_upgrade_parser.add_argument('--what',
-                                        choices=['examples', 'util', 'config', 'skins', 'scripts'],
+                                        choices=['examples', 'util', 'config', 'skins'],
                                         default=['examples', 'util'],
                                         nargs='+',
                                         metavar='ITEM',
                                         help="What to upgrade. Choose from 'examples', 'util', "
-                                             "'skins', 'scripts', 'config', or some combination, "
+                                             "'skins', 'config', or some combination, "
                                              "separated by spaces. Default is to upgrade the "
                                              "examples, and utility files.")
     station_upgrade_parser.add_argument('--no-backup', action='store_true',
@@ -180,7 +182,8 @@ def add_subparser(subparsers):
                                         action='store_true',
                                         help='Print what would happen, but do not actually '
                                              'do it.')
-    station_upgrade_parser.set_defaults(func=upgrade_station)
+    station_upgrade_parser.set_defaults(func=weectllib.dispatch)
+    station_upgrade_parser.set_defaults(action_func=upgrade_station)
 
 
 # ==============================================================================
@@ -211,14 +214,25 @@ def create_station(namespace):
     except weewx.ViolatedPrecondition as e:
         sys.exit(e)
     script_dir = os.path.join(config_dict["WEEWX_ROOT"], "scripts")
-    print(f"You can now set up a daemon by running an appropriate script "
-          f"in the directory {script_dir}")
+    script_name = None
+    if os.path.isdir('/etc/systemd'):
+        script_name = 'setup-daemon.systemd'
+    elif os.path.isdir('/etc/init.d'):
+        script_name = 'setup-daemon.sysv'
+    elif os.path.isdir('/Library/LaunchDaemons'):
+        script_name = 'setup-daemon.macos'
+    if script_name:
+        print("\nYou can set up a daemon by running a script in the directory")
+        print(f"  {script_dir}")
+        path = os.path.join(script_dir, script_name)
+        print(f"For example:")
+        print(f"  {bcolors.BOLD}'sudo {path}'{bcolors.ENDC}")
 
 
-def reconfigure_station(namespace):
+def reconfigure_station(config_dict, namespace):
     """Map namespace to a call to station_reconfigure()"""
     try:
-        weecfg.station_config.station_reconfigure(config_path=namespace.config,
+        weecfg.station_config.station_reconfigure(config_dict=config_dict,
                                                   driver=namespace.driver,
                                                   location=namespace.location,
                                                   altitude=namespace.altitude,
@@ -238,8 +252,8 @@ def reconfigure_station(namespace):
         sys.exit(e)
 
 
-def upgrade_station(namespace):
-    weecfg.station_config.station_upgrade(config_path=namespace.config,
+def upgrade_station(config_dict, namespace):
+    weecfg.station_config.station_upgrade(config_dict=config_dict,
                                           dist_config_path=namespace.dist_config,
                                           examples_root=namespace.examples_root,
                                           skin_root=namespace.skin_root,

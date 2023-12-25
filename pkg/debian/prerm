@@ -14,21 +14,25 @@
 # abort if any command returns error
 set -e
 
+pid1=none
+if [ -d /run/systemd/system ]; then
+    pid1=systemd
+fi
+
 case "$1" in
 remove|upgrade)
-        # stop the weewx daemon
-        systemctl stop weewx
-
-        # remove the startup configuration
-        systemctl disable weewx@
+    # stop the weewx daemon and remove the startup configuration
+    if [ "$pid1" = "systemd" ]; then
+	systemctl stop weewx
         systemctl disable weewx
+    fi
 
-        # remove any bytecompiled code
-        find /usr/share/weewx -name '*.pyc' -delete
-	find /usr/share/weewx -name __pycache__ -delete
-	find /etc/weewx/bin -name '*.pyc' -delete
-	find /etc/weewx/bin -name __pycache__ -delete
-        ;;
+    # remove any bytecompiled code
+    find /usr/share/weewx -name '*.pyc' -delete
+    find /usr/share/weewx -name __pycache__ -delete
+    find /etc/weewx/bin -name '*.pyc' -delete
+    find /etc/weewx/bin -name __pycache__ -delete
+    ;;
 esac
 
 exit 0

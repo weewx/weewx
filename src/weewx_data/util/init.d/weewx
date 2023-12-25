@@ -1,0 +1,52 @@
+#!/bin/sh
+#
+# Generic SysV startup script.  Put this file in the system's init script
+# directory, then create appropriate symlinks for your system runlevels.
+# To modify the behavior of this script, adjust the values in the file:
+#   bsd:   /etc/defaults/weewx
+#   linux: /etc/default/weewx
+
+WEEWX_PYTHON=python3
+WEEWX_BINDIR=/usr/share/weewx
+WEEWX_CFGDIR=/etc/weewx
+WEEWX_RUNDIR=/var/run
+WEEWX_CFG=weewx.conf
+
+# Read configuration variable file if it is present
+[ -r /etc/defaults/weewx ] && . /etc/defaults/weewx
+[ -r /etc/default/weewx ] && . /etc/default/weewx
+
+WEEWXD=$WEEWX_BINDIR/weewxd.py
+WEEWX_PID=$WEEWX_RUNDIR/weewx.pid
+
+case "$1" in
+  "start")
+    echo "Starting weewx..."
+    ${WEEWX_PYTHON} ${WEEWXD} ${WEEWX_CFGDIR}/${WEEWX_CFG} &
+    echo $! > ${WEEWX_PID}
+    echo "done"
+  ;;
+
+  "stop")
+    echo "Stopping weewx..."
+    if [ -f ${WEEWX_PID} ] ; then
+      kill `cat ${WEEWX_PID}`
+      rm ${WEEWX_PID}
+      echo "done"
+    else
+      echo "not running?"
+    fi
+  ;;
+
+  "restart")
+    echo "Restarting weewx..."
+    $0 stop
+    sleep 2
+    $0 start
+  ;;
+
+  *)
+    echo "$0 [start|stop|restart]"
+  ;;
+
+esac

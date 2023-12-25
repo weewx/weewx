@@ -25,11 +25,11 @@ log = logging.getLogger(__name__)
 # minimum WeeWX version required for this version of wee_import
 REQUIRED_WEEWX = "5.0.0b15"
 
-def obs_import(config, import_config, **kwargs):
+def obs_import(config_dict, import_config, **kwargs):
     """Generate information about the user's WeeWX environment
 
     Args:
-        config_path (str): Path to the configuration file
+        config_dict (dict): The configuration dictionary
         output (str|None): Path to where the output will be put. Default is stdout.
     """
 
@@ -39,25 +39,7 @@ def obs_import(config, import_config, **kwargs):
               % (REQUIRED_WEEWX, weewx.__version__))
         exit(1)
 
-    # get config_dict to use
-    config_path, config_dict = weecfg.read_config(config)
-    print("Using WeeWX configuration file %s" % config_path)
-
-    # Now that we have the configuration dictionary, we can add the path to the user
-    # directory to PYTHONPATH.
-    weewx.add_user_path(config_dict)
-    # Now we can import user extensions, we need user.extensions for any user
-    # xtypes that may be used in (for example) StdWXCalculate()
-    importlib.import_module('user.extensions')
-
-    # Set weewx.debug as necessary:
-    weewx.debug = weeutil.weeutil.to_int(config_dict.get('debug', 0))
-
-    # Set up any customized logging:
-    weeutil.logger.setup('weectl-import', config_dict)
-
-    # to do anything more we need an import config file, check if one was
-    # provided
+    # to do anything we need an import config file, check if one was provided
     if import_config:
         # we have something so try to start
 
@@ -69,7 +51,7 @@ def obs_import(config, import_config, **kwargs):
         # object from our factory and try to import. Be prepared to catch any
         # errors though.
         try:
-            source_obj = weeimport.weeimport.Source.source_factory(config_path,
+            source_obj = weeimport.weeimport.Source.source_factory(config_dict['config_path'],
                                                                    config_dict,
                                                                    import_config,
                                                                    **kwargs)
@@ -77,38 +59,38 @@ def obs_import(config, import_config, **kwargs):
         except weeimport.weeimport.WeeImportOptionError as e:
             print(f"{bcolors.BOLD}**** Command line option error.{bcolors.ENDC}")
             log.info("**** Command line option error.")
-            print(f"{bcolors.BOLD}**** %s{bcolors.ENDC}" % e)
-            log.info(f"**** {e}")
+            print(f"{bcolors.BOLD}**** {e}{bcolors.ENDC}")
+            log.info(f"**** %s" % e)
             print("**** Nothing done, exiting.")
             log.info("**** Nothing done.")
             exit(1)
         except weeimport.weeimport.WeeImportIOError as e:
             print(f"{bcolors.BOLD}**** Unable to load source data.{bcolors.ENDC}")
             log.info("**** Unable to load source data.")
-            print(f"{bcolors.BOLD}**** %s{bcolors.ENDC}" % e)
-            log.info(f"**** {e}")
+            print(f"{bcolors.BOLD}**** {e}{bcolors.ENDC}")
+            log.info(f"**** %s" % e)
             print("**** Nothing done, exiting.")
             log.info("**** Nothing done.")
             exit(1)
         except weeimport.weeimport.WeeImportFieldError as e:
             print(f"{bcolors.BOLD}**** Unable to map source data.{bcolors.ENDC}")
             log.info("**** Unable to map source data.")
-            print(f"{bcolors.BOLD}**** %s{bcolors.ENDC}" % e)
-            log.info(f"**** {e}")
+            print(f"{bcolors.BOLD}**** {e}{bcolors.ENDC}")
+            log.info(f"**** %s" % e)
             print("**** Nothing done, exiting.")
             log.info("**** Nothing done.")
             exit(1)
         except weeimport.weeimport.WeeImportMapError as e:
             print(f"{bcolors.BOLD}**** Unable to parse source-to-WeeWX field map.{bcolors.ENDC}")
             log.info("**** Unable to parse source-to-WeeWX field map.")
-            print(f"{bcolors.BOLD}**** %s{bcolors.ENDC}" % e)
-            log.info(f"**** {e}")
+            print(f"{bcolors.BOLD}**** {e}{bcolors.ENDC}")
+            log.info(f"**** %s" % e)
             print("**** Nothing done, exiting.")
             log.info("**** Nothing done.")
             exit(1)
         except (weewx.ViolatedPrecondition, weewx.UnsupportedFeature) as e:
-            print(f"{bcolors.BOLD}**** %s{bcolors.ENDC}" % e)
-            log.info(f"**** {e}")
+            print(f"{bcolors.BOLD}**** {e}{bcolors.ENDC}")
+            log.info(f"**** %s" % e)
             print("**** Nothing done, exiting.")
             log.info("**** Nothing done.")
             exit(1)
@@ -116,16 +98,16 @@ def obs_import(config, import_config, **kwargs):
             print(e)
             exit(0)
         except (ValueError, weewx.UnitError) as e:
-            print(f"{bcolors.BOLD}**** %s{bcolors.ENDC}" % e)
-            log.info(f"**** {e}")
+            print(f"{bcolors.BOLD}**** {e}{bcolors.ENDC}")
+            log.info(f"**** %s" % e)
             print("**** Nothing done, exiting.")
             log.info("**** Nothing done.")
             exit(1)
         except IOError as e:
             print(f"{bcolors.BOLD}**** Unable to load config file.{bcolors.ENDC}")
             log.info("**** Unable to load config file.")
-            print(f"{bcolors.BOLD}**** {e}{bcolors.ENDC}" % e)
-            log.info(f"**** {e}")
+            print(f"{bcolors.BOLD}**** {e}{bcolors.ENDC}")
+            log.info(f"**** " % e)
             print("**** Nothing done, exiting.")
             log.info("**** Nothing done.")
             exit(1)

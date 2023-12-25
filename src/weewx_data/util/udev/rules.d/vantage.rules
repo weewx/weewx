@@ -1,4 +1,4 @@
-# udev rules for davis vantage connected via usb (ea60 or ea61)
+`# udev rules for davis vantage connected via usb (ea60 or ea61)
 ACTION=="add", SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="vantage"
 ACTION=="add", SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea61", SYMLINK+="vantage"
 

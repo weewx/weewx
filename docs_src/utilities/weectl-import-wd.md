@@ -77,9 +77,9 @@ To import observations from one or more Weather Display monthly log files:
    are five months of logs files covering the period September 2018 to 
    January 2019 inclusive located in the `/var/tmp/wd` directory.
 
-1. Make a backup of the WeeWX database in case the import should go awry.
+2. Make a backup of the WeeWX database in case the import should go awry.
 
-1. Create an import configuration file, the recommended approach is to make a 
+3. Create an import configuration file, the recommended approach is to make a 
    copy of the example Weather Display import configuration file located 
    in the `util/import` directory. In this case we will make a copy of the 
    example Weather Display import configuration file and save it as `wd.conf` 
@@ -89,66 +89,70 @@ To import observations from one or more Weather Display monthly log files:
     cp /home/weewx/weewx-data/util/import/wd-example.conf /var/tmp/wd.conf
     ```
 
-1. Confirm the [`source`](weectl-import-config-opt.md#import_config_source) 
-   option is set to WD:
+4. Open `wd.conf` and:
 
-    ```
-    source = WD
-    ```
+    * confirm the [`source`](weectl-import-config-opt.md#import_config_source) 
+      option is set to WD:
 
-1. Confirm that the following options in the `[WD]` section are correctly 
-   set: 
+        ```
+        source = WD
+        ```
 
-    * [directory](weectl-import-config-opt.md#wd_directory). The full path to 
-      the directory containing the Weather Display monthly log files to be 
-      used as the source of the imported data.
+    * confirm the following options in the `[WD]` section are correctly set: 
 
-    * [logs_to_process](weectl-import-config-opt.md#wd_logs_to_process). 
-      Specifies the Weather Display monthly log files to be used to import 
-      data.
+        * [directory](weectl-import-config-opt.md#wd_directory). The full 
+          path to the directory containing the Weather Display monthly log 
+          files to be used as the source of the imported data.
 
-    * [interval](weectl-import-config-opt.md#wd_interval). How the WeeWX 
-      `interval` field is derived.
+        * [logs_to_process](weectl-import-config-opt.md#wd_logs_to_process). 
+          Specifies the Weather Display monthly log files to be used to 
+          import data.
 
-    * [qc](weectl-import-config-opt.md#wd_qc). Whether quality control checks 
-      are performed on the imported data.
+        * [interval](weectl-import-config-opt.md#wd_interval). How the WeeWX 
+         `interval` field is derived.
 
-    * [calc_missing](weectl-import-config-opt.md#wd_calc_missing). Whether 
-      missing derived observations will be calculated from the imported data.
+        * [qc](weectl-import-config-opt.md#wd_qc). Whether quality control 
+          checks are performed on the imported data.
 
-    * [txt_delimiter](weectl-import-config-opt.md#wd_txt_delimiter). The 
-      field delimiter used in the Weather Display space delimited (*.txt) 
-      monthly log files.
+        * [calc_missing](weectl-import-config-opt.md#wd_calc_missing). 
+          Whether missing derived observations will be calculated from the 
+          imported data.
 
-    * [csv_delimiter](weectl-import-config-opt.md#wd_csv_delimiter). The 
-      field delimiter used in the Weather Display monthly comma separated 
-      values (*.csv) monthly log files.
+        * [txt_delimiter](weectl-import-config-opt.md#wd_txt_delimiter). The 
+          field delimiter used in the Weather Display space delimited (*.txt) 
+          monthly log files.
 
-    * [decimal](weectl-import-config-opt.md#wd_decimal). The decimal point 
-      character used in the Weather Display monthly log files.
+        * [csv_delimiter](weectl-import-config-opt.md#wd_csv_delimiter). The 
+          field delimiter used in the Weather Display monthly comma separated 
+          values (*.csv) monthly log files.
 
-    * [ignore_missing_log](weectl-import-config-opt.md#wd_ignore_missing_log). 
-      Whether missing log files are to be ignored or the import aborted.
+        * [decimal](weectl-import-config-opt.md#wd_decimal). The decimal 
+          point character used in the Weather Display monthly log files.
 
-    * [ignore_invalid_data](weectl-import-config-opt.md#wd_ignore_invalid_data). 
-      Whether invalid data in a source field is ignored or the import aborted.
+        * [ignore_missing_log](weectl-import-config-opt.md#wd_ignore_missing_log). 
+          Whether missing log files are to be ignored or the import aborted.
 
-    * [tranche](weectl-import-config-opt.md#wd_tranche). The number of 
-      records written to the WeeWX database in each transaction.
+        * [ignore_invalid_data](weectl-import-config-opt.md#wd_ignore_invalid_data). 
+          Whether invalid data in a source field is ignored or the import 
+          aborted.
 
-    * [UV_sensor](weectl-import-config-opt.md#wd_UV). Whether a UV sensor was 
-      installed when the source data was produced.
+        * [tranche](weectl-import-config-opt.md#wd_tranche). The number of 
+          records written to the WeeWX database in each transaction.
 
-    * [solar_sensor](weectl-import-config-opt.md#wd_solar). Whether a solar 
-      radiation sensor was installed when the source data was produced.
+        * [UV_sensor](weectl-import-config-opt.md#wd_UV). Whether a UV sensor 
+          was installed when the source data was produced.
 
-    * [ignore_extreme_temp_hum](weectl-import-config-opt.md#wd_ignore_extreme_temp_hum). 
-      Whether temperature and humidity values of 255 will be ignored.
+        * [solar_sensor](weectl-import-config-opt.md#wd_solar). Whether a 
+          solar radiation sensor was installed when the source data was 
+          produced.
 
-    * [[[FieldMap]]](weectl-import-config-opt.md#wd_fieldmap). Defines the 
-      mapping between imported data fields and WeeWX archive fields.
+        * [ignore_extreme_temp_hum](weectl-import-config-opt.md#wd_ignore_extreme_temp_hum). 
+          Whether temperature and humidity values of 255 will be ignored.
 
-1. When first importing data it is prudent to do a dry run import before any 
+        * [[[FieldMap]]](weectl-import-config-opt.md#wd_fieldmap). Defines 
+          the mapping between imported data fields and WeeWX archive fields.
+
+5. When first importing data it is prudent to do a dry run import before any 
    data is actually imported. A dry run import will perform all steps of the 
    import without actually writing imported data to the WeeWX database. In 
    addition, consideration should be given to any additional options to be 
@@ -174,8 +178,8 @@ To import observations from one or more Weather Display monthly log files:
     The output should be similar to:
 
     ```
-    Using WeeWX configuration file /home/weewx/weewx.conf
-    Starting wee_import...
+    Using WeeWX configuration file /home/weewx/www-data/weewx.conf
+    Starting weectl import...
     Weather Display monthly log files in the '/var/tmp/WD' directory will be imported
     Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
     Destination table 'archive' unit system is '0x01' (US).
@@ -208,7 +212,7 @@ To import observations from one or more Weather Display monthly log files:
         short explanatory note to this effect will be displayed against the 
         period concerned and an entry included in the log.
 
-1. If the `--suppress-warnings` option was used it may be prudent to do a 
+6. If the `--suppress-warnings` option was used it may be prudent to do a 
    second dry run this time without the `--suppress-warnings` option. This 
    will allow any warnings generated by the dry run import to be observed:
 
@@ -224,8 +228,8 @@ To import observations from one or more Weather Display monthly log files:
     The output should be similar to:
 
     ```
-    Using WeeWX configuration file /home/weewx/weewx.conf
-    Starting wee_import...
+    Using WeeWX configuration file /home/weewx/www-data/weewx.conf
+    Starting weectl import...
     Weather Display monthly log files in the '/var/tmp/WD' directory will be imported
     Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
     Destination table 'archive' unit system is '0x01' (US).
@@ -310,7 +314,7 @@ To import observations from one or more Weather Display monthly log files:
       otherwise the incorrect data should be removed from the affected log 
       files before import.
 
-1. Once the dry run results are satisfactory the data can be imported using 
+7. Once the dry run results are satisfactory the data can be imported using 
    the following command:
 
     ```
@@ -325,8 +329,8 @@ To import observations from one or more Weather Display monthly log files:
     of the preamble there will be a prompt:
 
     ```
-    Using WeeWX configuration file /home/weewx/weewx.conf
-    Starting wee_import...
+    Using WeeWX configuration file /home/weewx/www-data/weewx.conf
+    Starting weectl import...
     Weather Display monthly log files in the '/var/tmp/WD' directory will be imported
     Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
     Destination table 'archive' unit system is '0x01' (US).
@@ -346,8 +350,8 @@ To import observations from one or more Weather Display monthly log files:
     to:
     
     ```
-    Using WeeWX configuration file /home/weewx/weewx.conf
-    Starting wee_import...
+    Using WeeWX configuration file /home/weewx/www-data/weewx.conf
+    Starting weectl import...
     Weather Display monthly log files in the '/var/tmp/WD' directory will be imported
     Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
     Destination table 'archive' unit system is '0x01' (US).
@@ -363,7 +367,7 @@ To import observations from one or more Weather Display monthly log files:
     Are you sure you want to proceed (y/n)?
     ```
 
-1. If the import parameters are acceptable enter `y` to proceed with the 
+8. If the import parameters are acceptable enter `y` to proceed with the 
    import or `n` to abort the import. If the import is confirmed, the source 
    data will be imported, processed and saved in the WeeWX database.
    Information on the progress of the import will be displayed similar to the 
@@ -423,7 +427,7 @@ To import observations from one or more Weather Display monthly log files:
     imported. Confirm successful import in the WeeWX log file.
     ```
 
-1. Whilst the `import` utility will advise of the number of unique records 
+9. Whilst the `import` utility will advise of the number of unique records 
    imported, it does not know how many, if any, of the imported records were 
    successfully saved to the database. You should look carefully through the 
    WeeWX log file covering the import session and take note of any records 
@@ -433,7 +437,7 @@ To import observations from one or more Weather Display monthly log files:
    following will be found in the log:
 
     ```
-    Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
+    2023-11-04 15:33:01 weectl-import[3795]: ERROR weewx.manager: Unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
     ```
 
     In such cases take note of the timestamp of the record(s) concerned and 

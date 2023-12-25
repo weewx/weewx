@@ -28,8 +28,8 @@ LOGGING_STR = """[Logging]
       level = {log_level}
       handlers = syslog,
 
-    # Additional loggers would go in the following section. This is useful for tailoring logging
-    # for individual modules.
+    # Additional loggers would go in the following section. This is useful for 
+    # tailoring logging for individual modules.
     [[loggers]]
 
     # Definitions of possible logging destinations
@@ -109,6 +109,12 @@ def setup(process_name, config_dict=None):
     else:
         weewx_root = None
 
+    # Get (and remove) the LOG_ROOT, which we use to set the directory where any rotating files
+    # will be located. Python logging does not use it.
+    log_root = log_config['Logging'].pop('LOG_ROOT', '')
+    if weewx_root:
+        log_root = os.path.join(weewx_root, log_root)
+
     # Adjust the logging level in accordance to whether the 'debug' flag is on
     log_level = 'DEBUG' if weewx.debug else 'INFO'
 
@@ -127,9 +133,9 @@ def setup(process_name, config_dict=None):
                                                address=address,
                                                facility=facility,
                                                process_name=process_name)
-            if key == 'filename' and weewx_root:
-                # Allow relative file paths, in which case they are relative to WEEWX_ROOT:
-                section[key] = os.path.join(weewx_root, section[key])
+            if key == 'filename' and log_root:
+                # Allow relative file paths, in which case they are relative to LOG_ROOT:
+                section[key] = os.path.join(log_root, section[key])
                 # Create any intervening directories:
                 os.makedirs(os.path.dirname(section[key]), exist_ok=True)
 

@@ -1,0 +1,87 @@
+#!/bin/sh
+#
+# Install files that integrate WeeWX into a Linux system that uses systemd.
+# This script must be run using sudo, or as root.
+#
+set -e
+
+UTIL_ROOT=$HOME/weewx-data/util
+
+if [ "$(id -u)" != "0" ]; then
+  echo "This script requires admin privileges.  Use 'sudo' or run as root."
+  exit 1
+fi
+
+if [ ! -d /etc/systemd/system ]; then
+    echo "Apparently this system does not use systemd"
+    exit 1
+fi
+
+ts=`date +"%Y%m%d%H%M%S"`
+
+copy_file() {
+    src=$1
+    dst=$2
+    if [ -f "$dst" ]; then
+	mv ${dst} ${dst}.${ts}
+    fi
+    cp $src $dst
+}
+
+remove_file() {
+    dst=$1
+    if [ -f "$dst" ]; then
+	rm $dst
+    fi
+}
+
+do_install() {
+    echo "Set up the files necessary to run WeeWX at system startup."
+    echo "On some systems, this may take awhile. Please be patient."
+
+    if [ ! -d $UTIL_ROOT ]; then
+        echo "Cannot find utility files at location '$UTIL_ROOT'"
+        exit 1
+    fi
+
+    echo "Copying files from $UTIL_ROOT..."
+    if [ -d /etc/udev/rules.d ]; then
+        echo "  udev rules"
+	copy_file $UTIL_ROOT/udev/rules.d/weewx.rules /etc/udev/rules.d/60-weewx.rules
+	echo "    If you are using a device that is connected to the computer by USB or"
+	echo "    serial port, unplug the device then plug it back in again to ensure that"
+	echo "    permissions are applied correctly."
+    fi
+
+    echo "  systemd unit"
+    copy_file $UTIL_ROOT/systemd/weewx.service /etc/systemd/system/weewx.service
+    copy_file $UTIL_ROOT/systemd/weewx@.service /etc/systemd/system/weewx@.service
+
+    echo "Reloading systemd..."
+    systemctl daemon-reload
+    echo "Enabling weewx..."
+    systemctl enable weewx
+    echo "You can start weewx with the following command:"
+    echo "  '\033[1msudo systemctl start weewx\033[0m'"
+}
+
+do_uninstall() {
+    echo "Stopping weewx..."
+    systemctl stop weewx
+    echo "Disabling weewx..."
+    systemctl disable weewx
+    echo "Removing files..."
+    echo "  systemd unit"
+    remove_file /etc/systemd/system/weewx.service
+    echo "  systemd unit template"
+    remove_file /etc/systemd/system/weewx@.service
+    echo "  udev rules"
+    remove_file /etc/udev/rules.d/60-weewx.rules
+}
+
+ACTION=$1
+if [ "$ACTION" = "" -o "$ACTION" = "install" ]; then
+    do_install
+elif [ "$ACTION" = "uninstall" ]; then
+    do_uninstall
+fi

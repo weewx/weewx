@@ -74,11 +74,12 @@ def add_subparser(subparsers):
                                action='store_true',
                                dest='suppress_warnings',
                                help=f'Suppress warnings to stdout. Warnings are still logged.')
-    import_parser.set_defaults(func=import_func)
+    import_parser.set_defaults(func=weectllib.dispatch)
+    import_parser.set_defaults(action_func=import_func)
 
 
-def import_func(namespace):
-    weectllib.import_actions.obs_import(namespace.config,
+def import_func(config_dict, namespace):
+    weectllib.import_actions.obs_import(config_dict,
                                         namespace.import_config,
                                         dry_run=namespace.dry_run,
                                         date=namespace.date,

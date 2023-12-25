@@ -84,6 +84,8 @@ To build suse package install the following (use 'zypper install'):
   git
   rsync
   rpm-build
+  rpmlint
+  createrepo_c
 
 To build pypi package install the following (see the pypi section):
   poetry

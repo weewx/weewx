@@ -20,7 +20,7 @@ import weeutil.logger
 import weewx
 from weeutil.weeutil import to_int
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('weectl-device')
 
 
 def device():
@@ -39,7 +39,7 @@ def device():
     weewx.debug = to_int(config_dict.get('debug', 0))
 
     # Customize the logging with user settings.
-    weeutil.logger.setup('weectl-device', config_dict)
+    weeutil.logger.setup('weectl', config_dict)
 
     try:
         # Find the device driver

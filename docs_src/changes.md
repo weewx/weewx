@@ -3,8 +3,10 @@ WeeWX change history
 
 ### 5.0.0 MM/DD/YYYY
 
-Python 2.7 is no longer supported. You must have Python 3.7 (introduced
-May 2018) or greater.
+Python 2.7 is no longer supported. You must have Python 3.6 (introduced
+December 2016) or greater.  WeeWX 5 uses the importlib.resources module,
+which was introduced in Python 3.7. So those using Python 3.6 must install
+the backport, either using the system's package manager, or pip.
 
 WeeWX can now be installed using [pip](https://pip.pypa.io).
 

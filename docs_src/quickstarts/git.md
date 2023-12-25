@@ -15,7 +15,7 @@ them to set up a daemon and, perhaps, to change device permissions.
 
 Before starting, you must install the pre-requisite Python and Python modules.
 
-1. Ensure that Python 3.7 or later is installed.
+1. Ensure that Python 3.6 or later is installed.
 
 2. Ensure that `pip` and `venv` are installed.
 
@@ -83,10 +83,10 @@ python3 ~/weewx/src/weectl.py station create
 ```
 
 The tool `weectl` will ask you a series of questions, then create a directory
-`weewx-data` in your home directory with a new configuration file. It will
-also install skins, documentation, utilitiy files, and examples in the same
-directory. The database and reports will also go into that directory, but
-only after you run `weewxd`, as shown in the following step.
+`weewx-data` in your home directory with a new configuration file. It will also
+install skins, utilitiy files, and examples in the same directory. The database
+and reports will also go into that directory, but only after you run `weewxd`,
+as shown in the following step.
 
 
 ## Run `weewxd`
@@ -104,10 +104,11 @@ source ~/weewx-venv/bin/activate
 python3 ~/weewx/src/weewxd.py
 ```
 
-To run `weewxd` as a daemon, install a systemd or init file that is
-appropriate for your operating system. Be sure to use the full path in the
-virtual environment to the Python interpreter and `weewxd.py`. Examples are
-included in the directory `~/weewx-data/util`.
+To run `weewxd` as a daemon, install an init configuration that is appropriate
+to your operating system, e.g., systemd service unit, SysV init script, or
+launchd control file. Be sure to use the full path to the Python interpreter
+and `weewxd.py` - the paths in the virtual environment. Examples are included
+in the directory `~/weewx-data/util`.
 
 
 ## Verify
@@ -123,27 +124,30 @@ your station information and data.
     have to substitute an explicit path to your home directory,
     for example, `file:///home/jackhandy` instead of `~`.
 
-If you have problems, check the system log for entries from `weewxd`.
+If you have problems, check the [system
+log](../usersguide/monitoring.md#log-messages). See the
+[*Troubleshooting*](../usersguide/troubleshooting/what-to-do.md) section of the
+[*User's guide*](../usersguide/introduction.md) for more help.
 
 
 ## Customize
 
-To enable uploads or to customize reports, modify the configuration file.
-See the [*Customization Guide*](../custom/introduction.md) for instructions,
-and the [application](../reference/weewx-options/introduction.md) and
-[skin](../reference/skin-options/introduction.md) references for all the 
-options. Use any text editor, such as `nano`:
+To enable uploads, or to enable other reports, modify the configuration file
+`~/weewx-data/weewx.conf` using any text editor such as `nano`:
 
 ```{.shell .copy}
 nano ~/weewx-data/weewx.conf
 ```
 
-To install new skins, drivers, or other extensions, use the `weectl` utility
-and the URL to the extension.
-
-```{.shell .copy}
-weectl extension install https://github.com/path/to/extension.zip
-```
+The reference
+[*Application options*](../reference/weewx-options/introduction.md)
+contains an extensive list of the configuration options, with explanations for
+what they do. For more advanced customization, see the [*Customization
+Guide*](../custom/introduction.md), as well as the reference [*Skin
+options*](../reference/skin-options/introduction.md).
+ 
+To install new skins, drivers, or other extensions, use the [extension
+utility](../utilities/weectl-extension.md).
 
 The executable `weewxd` must be restarted for the changes to take effect.
 

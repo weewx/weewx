@@ -58,9 +58,9 @@ To import observations from one or more WeatherCat monthly .cat files:
    files covering the period October 2016 to June 2017 inclusive located in 
    the `/var/tmp/wcat/2016` and `/var/tmp/wcat/2017` directories respectively.
 
-1. Make a backup of the WeeWX database in case the import should go awry.
+2. Make a backup of the WeeWX database in case the import should go awry.
 
-1. Create an import configuration file, the recommended approach is to make a 
+3. Create an import configuration file, the recommended approach is to make a 
    copy of the example WeatherCat import configuration file located in the 
    `util/import` directory. In this case we will make a copy of the example 
    WeatherCat import configuration file and save it as `wcat.conf` in the 
@@ -70,45 +70,50 @@ To import observations from one or more WeatherCat monthly .cat files:
     cp /home/weewx/www-data/util/import/weathercat-example.conf /var/tmp/wcat.conf
     ```
 
-1. Confirm the [`source`](weectl-import-config-opt.md#import_config_source) 
-   option is set to `WeatherCat`:
+4. Open `wcat.conf` and:
 
-    ```
-    source = WeatherCat
-    ```
+    * confirm the [`source`](weectl-import-config-opt.md#import_config_source) 
+      option is set to `WeatherCat`:
 
-1. Confirm the following options in the `[WeatherCat]` section are correctly 
-   set:
+        ```
+        source = WeatherCat
+        ```
 
-    * [directory](weectl-import-config-opt.md#wcat_directory). The full path 
-      to the directory containing the directories containing the WeatherCat 
-      monthly .cat files to be used as the source of the imported data.
+    * confirm the following options in the `[WeatherCat]` section are 
+      correctly set:
 
-    * [interval](weectl-import-config-opt.md#wcat_interval). How the WeeWX 
-      `interval` field is derived.
+        * [directory](weectl-import-config-opt.md#wcat_directory). The full
+          path to the directory containing the directories containing the 
+          WeatherCat monthly .cat files to be used as the source of the 
+          imported data.
+    
+        * [interval](weectl-import-config-opt.md#wcat_interval). How the 
+          WeeWX `interval` field is derived.
+    
+        * [qc](weectl-import-config-opt.md#wcat_qc). Whether quality control 
+          checks are performed on the imported data.
+    
+        * [calc_missing](weectl-import-config-opt.md#wcat_calc_missing). 
+          Whether missing derived observations will be calculated from the 
+          imported data.
+    
+        * [decimal](weectl-import-config-opt.md#wcat_decimal). The decimal 
+          point character used in the WeatherCat monthly .cat files.
+    
+        * [tranche](weectl-import-config-opt.md#wcat_tranche). The number of 
+          records written to the WeeWX database in each transaction.
+    
+        * [UV_sensor](weectl-import-config-opt.md#wcat_UV). Whether a UV 
+          sensor was installed when the source data was produced.
+    
+        * [solar_sensor](weectl-import-config-opt.md#wcat_solar). Whether a 
+          solar radiation sensor was installed when the source data was 
+          produced.
+    
+        * [[[FieldMap]]](weectl-import-config-opt.md#wcat_fieldmap). Defines 
+          the mapping between imported data fields and WeeWX archive fields.
 
-    * [qc](weectl-import-config-opt.md#wcat_qc). Whether quality control 
-      checks are performed on the imported data.
-
-    * [calc_missing](weectl-import-config-opt.md#wcat_calc_missing). Whether 
-      missing derived observations will be calculated from the imported data.
-
-    * [decimal](weectl-import-config-opt.md#wcat_decimal). The decimal point 
-      character used in the WeatherCat monthly .cat files.
-
-    * [tranche](weectl-import-config-opt.md#wcat_tranche). The number of 
-      records written to the WeeWX database in each transaction.
-
-    * [UV_sensor](weectl-import-config-opt.md#wcat_UV). Whether a UV sensor 
-      was installed when the source data was produced.
-
-    * [solar_sensor](weectl-import-config-opt.md#wcat_solar). Whether a solar 
-      radiation sensor was installed when the source data was produced.
-
-    * [[[FieldMap]]](weectl-import-config-opt.md#wcat_fieldmap). Defines the 
-      mapping between imported data fields and WeeWX archive fields.
-
-1. When first importing data it is prudent to do a dry run import before any 
+5. When first importing data it is prudent to do a dry run import before any 
    data is actually imported. A dry run import will perform all steps of the 
    import without actually writing imported data to the WeeWX database. In 
    addition, consideration should be given to any additional options to be 
@@ -140,8 +145,8 @@ To import observations from one or more WeatherCat monthly .cat files:
     The output should be similar to:
     
     ```
-    Using WeeWX configuration file /home/weewx/weewx.conf
-    Starting wee_import...
+    Using WeeWX configuration file /home/weewx/www-data/weewx.conf
+    Starting weectl import...
     WeatherCat monthly .cat files in the '/var/tmp/wcat' directory will be imported
     Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
     Destination table 'archive' unit system is '0x01' (US).
@@ -179,7 +184,7 @@ To import observations from one or more WeatherCat monthly .cat files:
         short explanatory note to this effect will be displayed against the 
         period concerned and an entry included in the log.
 
-1. If the `--suppress-warnings` option was used it may be prudent to do a 
+6. If the `--suppress-warnings` option was used it may be prudent to do a 
    second dry run this time without the `--suppress-warnings` option. This 
    will allow any warnings generated by the dry run import to be observed:
 
@@ -195,8 +200,8 @@ To import observations from one or more WeatherCat monthly .cat files:
     The output should be similar to:
 
     ```
-    Using WeeWX configuration file /home/weewx/weewx.conf
-    Starting wee_import...
+    Using WeeWX configuration file /home/weewx/www-data/weewx.conf
+    Starting weectl import...
     WeatherCat monthly .cat files in the '/var/tmp/wcat' directory will be imported
     Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
     Destination table 'archive' unit system is '0x01' (US).
@@ -377,7 +382,7 @@ To import observations from one or more WeatherCat monthly .cat files:
     expects to be in the import source data the issue should be investigated 
     further before the import is completed.
 
-1. Once the dry run results are satisfactory the data can be imported using 
+7. Once the dry run results are satisfactory the data can be imported using 
    the following command:
 
     ```
@@ -388,8 +393,8 @@ To import observations from one or more WeatherCat monthly .cat files:
     of the preamble there will be a prompt:
     
     ```
-    Using WeeWX configuration file /home/weewx/weewx.conf
-    Starting wee_import...
+    Using WeeWX configuration file /home/weewx/www-data/weewx.conf
+    Starting weectl import...
     WeatherCat monthly .cat files in the  '/var/tmp/wcat' directory will be imported
     Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
     Destination table 'archive' unit system is '0x01' (US).
@@ -408,8 +413,8 @@ To import observations from one or more WeatherCat monthly .cat files:
     is ignored. In such cases the preamble may look similar to:
     
     ```
-    Using WeeWX configuration file /home/weewx/weewx.conf
-    Starting wee_import...
+    Using WeeWX configuration file /home/weewx/www-data/weewx.conf
+    Starting weectl import...
     WeatherCat monthly .cat files in the '/var/tmp/wcat' directory will be imported
     Using database binding 'wx_binding', which is bound to database 'weewx.sdb'
     Destination table 'archive' unit system is '0x01' (US).
@@ -425,7 +430,7 @@ To import observations from one or more WeatherCat monthly .cat files:
     Are you sure you want to proceed (y/n)?
     ```
 
-1. If the import parameters are acceptable enter `y` to proceed with the 
+8. If the import parameters are acceptable enter `y` to proceed with the 
    import or `n` to abort the import. If the import is confirmed, the source 
    data will be imported, processed and saved in the WeeWX database.
    Information on the progress of the import will be displayed similar to the 
@@ -484,7 +489,7 @@ To import observations from one or more WeatherCat monthly .cat files:
     imported. Confirm successful import in the WeeWX log file.
     ```
 
-1. Whilst the `import` utility will advise of the number of unique records 
+9. Whilst the `import` utility will advise of the number of unique records 
    imported, it does not know how many, if any, of the imported records were 
    successfully saved to the database. You should look carefully through the 
    WeeWX log file covering the import session and take note of any records 
@@ -494,7 +499,7 @@ To import observations from one or more WeatherCat monthly .cat files:
    following will be found in the log:
 
     ```
-    Aug 22 14:38:28 stretch12 weewx[863]: manager: unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
+    2023-11-04 15:33:01 weectl-import[3795]: ERROR weewx.manager: Unable to add record 2018-09-04 04:20:00 AEST (1535998800) to database 'weewx.sdb': UNIQUE constraint failed: archive.dateTime
     ```
     
     In such cases take note of the timestamp of the record(s) concerned and 

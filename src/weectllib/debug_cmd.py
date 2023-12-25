@@ -46,9 +46,9 @@ def add_subparser(subparsers):
                               metavar="FILENAME",
                               help="Redirect output to FILENAME. Default is "
                                    "standard output.")
-    debug_parser.set_defaults(func=debug)
+    debug_parser.set_defaults(func=weectllib.dispatch)
+    debug_parser.set_defaults(action_func=debug)
 
 
-def debug(namespace):
-    weectllib.debug_actions.debug(namespace.config,
-                                  output=namespace.output)
+def debug(config_dict, namespace):
+    weectllib.debug_actions.debug(config_dict, output=namespace.output)

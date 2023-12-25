@@ -186,9 +186,27 @@ install_weewxconf() {
 }
 
 # use weewx setup utilities to merge new features into existing weewx.conf.
-# user will be prompted about whether to accept maintainers version (the
-# merged config that we create here), or the previous config.  either way,
-# the previous and new are saved.
+# user will be prompted about whether to accept the new version or the previous
+# configuration.
+#
+# if they choose existing, then they end up with:
+#   weewx.conf           - previous config
+#   weewx.conf.x.y.z     - new config
+#
+# if they choose new, then they end up with:
+#   weewx.conf.dpkg-old  - previous config
+#   weewx.conf           - new config
+#
+# new install:
+#   weewx.conf           - new config filled with values from debconf
+#   weewx.conf.dist      - new config (created by dpkg rules)
+#
+# upgrade:
+#   weewx.conf           - previous config
+#   weewx.conf-new       - new config
+#   weewx.conf-old-new   - old config upgraded to this version
+#   weewx.conf.dist      - new config (created by dpkg rules)
+#
 merge_weewxconf() {
     if [ ! -f $cfgfile ]; then
         return
@@ -197,19 +215,17 @@ merge_weewxconf() {
     NEWVER=$($cfgapp --version | cut -d' ' -f2)
     OLDVER=$(get_conf_version $cfgfile)
     if dpkg --compare-versions $OLDVER lt $NEWVER; then
-        # this is an old config, so merge it into a new config
+        # this is an old config, so create a maintainer's version by upgrading
         if [ -f $cfgfile.dist ]; then
             DSTVER=$(get_conf_version $cfgfile.dist)
+            echo "Saving distribution config file as $cfgfile-$NEWVER"
+            cp -p $cfgfile.dist $cfgfile-$NEWVER
             if dpkg --compare-versions $DSTVER eq $NEWVER; then
 		MNT=$OLDVER-$NEWVER
-                echo "Copying previous config file to $cfgfile-$MNT"
+                echo "Creating maintainer config file as $cfgfile-$MNT"
                 cp -p $cfgfile $cfgfile-$MNT
-                echo "Saving distribution config file as $cfgfile-$NEWVER"
-                mv $cfgfile.dist $cfgfile-$NEWVER
-		echo "Creating maintainer version of config as $cfgfile-$MNT"
                 # Upgrade the configuration file only.
                 $cfgapp station upgrade --config=$cfgfile-$MNT --dist-config=$cfgfile-$NEWVER --what=config --no-prompt --no-backup
-		# FIXME: do we copy this onto original?
             else
                 echo "Distribution config has wrong version: dst=$DSTVER new=$NEWVER"
             fi
@@ -246,16 +262,14 @@ create_user() {
     usermod -d $WEEWX_HOME -g $WEEWX_GROUP $WEEWX_USER > /dev/null 2>&1
 }
 
-# set the permissions on the data and logs so they are owned by weewx user
+# set the permissions on the data so they are owned by weewx user
 set_permissions() {
     if getent passwd | grep -q "^$WEEWX_USER:"; then
         chmod 2775 /etc/weewx
         chmod 2775 /var/lib/weewx
-        chmod 0755 /var/log/weewx
         chmod 2775 /var/www/html/weewx
         chown -R $WEEWX_USER:$WEEWX_GROUP /etc/weewx
         chown -R $WEEWX_USER:$WEEWX_GROUP /var/lib/weewx
-        chown -R $WEEWX_USER:$WEEWX_GROUP /var/log/weewx
         chown -R $WEEWX_USER:$WEEWX_GROUP /var/www/html/weewx
     fi
 }
@@ -266,40 +280,46 @@ migrate_extensions() {
     if [ -d /usr/share/weewx/user ]; then
         echo "Migrating old extensions to /etc/weewx/bin/user"
         cp -rp /usr/share/weewx/user/* /etc/weewx/bin/user
-        ts=`/usr/bin/date +"%Y%m%d%H%M%S"`
+        ts=`date +"%Y%m%d%H%M%S"`
         echo "Saving old extensions to /usr/share/weewx/user-$ts"
         mv /usr/share/weewx/user /usr/share/weewx/user-$ts
     fi
 }
 
+
+pid1=none
+if [ -d /run/systemd/system ]; then
+    pid1=systemd
+fi
+
 case "$1" in
 configure)
-        if [ "$2" != "" ]; then
-            # this is an upgrade so create a maintainers version by merging
-            merge_weewxconf
-            # migrate any extensions from V4 location to V5
-            migrate_extensions
-        else
-            # virgin install so insert debconf values into the config file
-            install_weewxconf
-        fi
+    if [ "$2" != "" ]; then
+        # this is an upgrade so create a maintainers version by merging
+        merge_weewxconf
+        # migrate any extensions from V4 location to V5
+        migrate_extensions
+    else
+        # virgin install so insert debconf values into the config file
+        install_weewxconf
+    fi
 
-        # create weewx user and set permissions
-        create_user
-        set_permissions
+    # create weewx user and set permissions
+    create_user
+    set_permissions
 
-        # precompile the bytecode
-        python3 -m compileall /usr/share/weewx > /dev/null
+    # precompile the bytecode
+    python3 -m compileall /usr/share/weewx > /dev/null
 
-        # configure for system startup
-        systemctl enable weewx
-	systemctl enable weewx@
-        # start the weewx daemon
-        systemctl start weewx
-        ;;
+    # configure for system startup and start weewx
+    if [ "$pid1" = "systemd" ]; then
+	systemctl enable weewx
+	systemctl start weewx
+    fi
+    ;;
 
 abort-remove)
-        ;;
+    ;;
 esac
 
 # let debconf know that we are finished

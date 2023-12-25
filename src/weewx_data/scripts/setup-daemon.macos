@@ -1,0 +1,68 @@
+#!/bin/sh
+#
+# Install files that integrate WeeWX into a macOS system.
+# This script must be run as a privileged user.
+#
+set -e
+
+UTIL_ROOT=$HOME/weewx-data/util
+
+if [ "$(id -u)" != "0" ]; then
+  echo "This script requires admin privileges.  Use 'sudo' or run as root."
+  exit 1
+fi
+
+if [ ! -d /Library/LaunchDaemons ]; then
+    echo "Apparently this system does not use launchd"
+    exit 1
+fi
+
+ts=`date +"%Y%m%d%H%M%S"`
+
+copy_file() {
+    src=$1
+    dst=$2
+    if [ -f "$dst" ]; then
+	mv ${dst} ${dst}.${ts}
+    fi
+    cp $src $dst
+}
+
+remove_file() {
+    dst=$1
+    if [ -f "$dst" ]; then
+	rm $dst
+    fi
+}
+
+do_install() {
+    echo "Set up the files necessary to run WeeWX at system startup."
+
+    if [ ! -d $UTIL_ROOT ]; then
+        echo "Cannot find utility files at location '$UTIL_ROOT'"
+        exit 1
+    fi
+
+    echo "Copying files from $UTIL_ROOT..."
+    echo "  plist"
+    copy_file $UTIL_ROOT/launchd/com.weewx.weewxd.plist /Library/LaunchDaemons
+
+    echo "You can now start weewx with the following command:"
+    echo "  '\033[1msudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist\033[0m'"
+}
+
+do_uninstall() {
+    echo "Stopping weewx..."
+    launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist
+    echo "Removing files..."
+    echo "  plist"
+    remove_file /Library/LaunchDaemons/com.weewx.weewxd.plist
+}
+
+
+ACTION=$1
+if [ "$ACTION" = "" -o "$ACTION" = "install" ]; then
+    do_install
+elif [ "$ACTION" = "uninstall" ]; then
+    do_uninstall
+fi

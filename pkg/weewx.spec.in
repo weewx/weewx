@@ -8,53 +8,41 @@
 %global relnum RPMREVISION
 %define weewx_version WEEWX_VERSION
 
-# suse 12: python2
-%if 0%{?suse_version} && "%{os_target}" == "12"
-%define relos .suse12
-%define platform suse
-%define deps python , python-configobj , python-cheetah , python-imaging , python-pyserial, python-usb
-%define python python
-%define html_root /srv/www/htdocs/weewx
-%endif
-
 # suse 15: python3
 %if 0%{?suse_version} && "%{os_target}" == "15"
+%define app_group Productivity/Scientific/Other
 %define relos .suse15
 %define platform suse
-%define deps python3, python3-setuptools, python3-configobj, python3-Cheetah3, python3-Pillow, python3-pyserial, python3-usb
+%define deps python3, python3-importlib_resources, python3-configobj, python3-Cheetah3, python3-Pillow, python3-pyserial, python3-usb
 %define python python3
 %define html_root /var/www/html/weewx
-%endif
-
-# suse linux enterprise server
-%if 0%{?sles_version}
-%define relos .sles
-%define platform suse
-%define deps python , python-configobj , python-cheetah , python-imaging , python-pyserial, python-usb
-%define python python
-%define html_root /srv/www/htdocs/weewx
+%define systemd_dir /usr/lib/systemd/system
+%define udev_dir /usr/lib/udev/rules.d
 %endif
 
 # rh: python3 on redhat, fedora, centos, rocky
 %if "%{_vendor}" == "redhat"
+%define app_group Applications/Science
 %define platform redhat
 %define html_root /var/www/html/weewx
+%define systemd_dir /lib/systemd/system
+%define udev_dir /lib/udev/rules.d
 # disable shebang mangling. see https://github.com/atom/atom/issues/21937
 %undefine __brp_mangle_shebangs
 %if "%{os_target}" == "8"
 %define relos .el8
-# rh8 ships with python 3.6, and that is what python3 refers to.  we can
-# specify python38 or python39, but unfortunately none of the python modules
-# that we need are packaged for python38 or python39 (at least as of nov2023).
-# so rh8 must be unsupported for python3; you can only use python2+weewx4, or
-# you must do a pip install.
-%define deps epel-release, python38, python38-setuptools, python38-configobj, python38-cheetah, python38-pillow, python38-pyserial, python38-pyusb
-%define python python3.8
+# rh8 ships with python 3.6, which has pre-built modules required by weewx.
+# weewx also requires the importlib.resource module from python 3.7, which is
+# backported to python 3.6.  python 3.8, python 3.9, and python 3.11 are also
+# available on rh8, but none of the modules required by weewx are available for
+# those python (as of nov2023).
+%define deps epel-release, python3, python3-importlib-resources, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
+%define python python3
 %endif
 %if "%{os_target}" == "9"
 %define relos .el9
-# rh9 ships with python 3.9, which is sufficient.
-%define deps python3, python3-setuptools, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
+# rh9 ships with python 3.9, which has pre-built modules required by weewx.
+%define deps python3, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
 %define python python3
 %endif
 %endif
@@ -75,7 +63,7 @@ Summary: weather software
 Name: weewx
 Version: %{weewx_version}
 Release: %{release}
-Group: Applications/Science
+Group: %{app_group}
 Source: %{name}-%{version}.tar.gz
 URL: https://www.weewx.com
 License: GPLv3
@@ -103,12 +91,9 @@ mkdir -p %{buildroot}%{dst_cfg_dir}
 mkdir -p %{buildroot}%{dst_user_dir}
 mkdir -p %{buildroot}%{dst_doc_dir}
 mkdir -p %{buildroot}/etc/default
-mkdir -p %{buildroot}/etc/logrotate.d
-mkdir -p %{buildroot}/etc/rsyslog.d
-mkdir -p %{buildroot}/lib/systemd/system
-mkdir -p %{buildroot}/lib/udev/rules.d
+mkdir -p %{buildroot}%{systemd_dir}
+mkdir -p %{buildroot}%{udev_dir}
 mkdir -p %{buildroot}/var/lib/weewx
-mkdir -p %{buildroot}/var/log/weewx
 mkdir -p %{buildroot}/var/www/html/weewx
 
 # rpm wants copyright and license even if no docs
@@ -127,6 +112,8 @@ cp -r src/weewx_data/examples %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/skins %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/import %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/logwatch %{buildroot}%{dst_cfg_dir}
+cp -r src/weewx_data/util/rsyslog.d %{buildroot}%{dst_cfg_dir}
+cp -r src/weewx_data/util/logrotate.d %{buildroot}%{dst_cfg_dir}
 
 # create the weewx configuration
 cat src/weewx_data/weewx.conf | sed \
@@ -140,12 +127,15 @@ cat src/weewx_data/weewx.conf | sed \
 cp %{buildroot}%{dst_cfg_dir}/weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf-%{weewx_version}
 
 # create the init configuration
-cp pkg/etc/systemd/system/weewx.service %{buildroot}/lib/systemd/system
-cp pkg/etc/systemd/system/weewx@.service %{buildroot}/lib/systemd/system
+cp pkg/etc/systemd/system/weewx.service %{buildroot}%{systemd_dir}
+cp pkg/etc/systemd/system/weewx@.service %{buildroot}%{systemd_dir}
 
 # create the entry points
 for f in %{entry_points}; do \
-  cp bin/$f %{buildroot}%{_bindir}/$f; \
+  cat bin/$f | sed \
+   -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
+   -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=%{python}%' \
+   > %{buildroot}%{_bindir}/$f; \
 done
 
 # configure defaults
@@ -153,12 +143,10 @@ cat pkg/etc/default/weewx | sed \
  -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=%{python}%' \
  > %{buildroot}/etc/default/weewx
 
-# log handling
-cp pkg/etc/logrotate.d/weewx %{buildroot}/etc/logrotate.d
-cp pkg/etc/rsyslog.d/weewx.conf %{buildroot}/etc/rsyslog.d
-
 # udev rules for known devices
-cp pkg/etc/udev/rules.d/weewx.rules %{buildroot}/lib/udev/rules.d/60-weewx.rules
+cp pkg/etc/udev/rules.d/weewx.rules %{buildroot}%{udev_dir}/60-weewx.rules
+
+# log handling
 
 
 %pre
@@ -174,37 +162,49 @@ fi
 /usr/bin/getent passwd %{weewx_user} || /usr/sbin/useradd -r -g %{weewx_group} -M -s /sbin/nologin %{weewx_user}
 
 %post
+# see which init system (if any) is running
+pid1=none
+if [ -d /run/systemd/system ]; then
+  pid1=systemd
+fi
 # restart syslog so that it picks up the weewx logging directives
-# FIXME: what if rsyslog not installed?
-systemctl restart rsyslog
+if [ -f /run/rsyslogd.pid ]; then
+  if [ "$pid1" = "systemd" ]; then
+    systemctl restart rsyslog
+  fi
+fi
 # pre-compile the python code
 echo Precompile using %{python} in %{dst_code_dir}
 %{python} -m compileall %{dst_code_dir} > /dev/null
 if [ "$1" = "1" ]; then
   # this is a new installation
   # create a sane configuration file with simulator as the station type
-  /usr/bin/weectl station reconfigure --config=%{cfg-file} --driver=weewx.drivers.simulator --no-prompt --no-backup
-  systemctl enable weewx
-  systemctl enable weewx@
-  systemctl start weewx
+  /usr/bin/weectl station reconfigure --config=%{cfg_file} --driver=weewx.drivers.simulator --no-prompt --no-backup
+  if [ "$pid1" = "systemd" ]; then
+    systemctl enable weewx
+    systemctl start weewx
+  fi
 elif [ "$1" = "2" ]; then
   # this is an upgrade
-  # upgrade the previous config to create the maintainer's version, but do not
-  # touch the user's configuration.
-  #   weewx.conf - user's conf (old)
-  #   weewx.conf.latest - new conf for this weewx version
-  #   weewx.conf.old-latest - user's conf upgraded to this weewx version
-  if [ -f %{cfg_file}.%{weewx_version} -a -f %{cfg_file}.prev ]; then
+  # upgrade a copy of the previous config to create the upgraded version, but
+  # do not touch the user's configuration.
+  #   weewx.conf          - user's conf (old)
+  #   weewx.conf-new      - new conf for this weewx version
+  #   weewx.conf-old-new  - user's conf upgraded to this weewx version
+  #   weewx.conf.rpmnew   - new conf from this rpm (created by rpm rules)
+  if [ -f %{cfg_file}.prev ]; then
     OLDVER=`grep version %{cfg_file}.prev | sed -e 's/\s*version\s*=\s*//'`
     if [ "$OLDVER" = "" ]; then
       # someone might have messed with the version string
       OLDVER="xxx"
     fi
     MNT=${OLDVER}-%{weewx_version}
-    echo Creating maintainer version of configuration as %{cfg_file}-$MNT
-    mv %{cfg_file}.prev %{cfg_file}-$MNT
-    /usr/bin/weectl station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg-file}-%{weewx_version} --what=config --no-prompt --no-backup
-    # FIXME: do we copy this onto the original?
+    echo Copying previous config file to %{cfg_file}-$MNT
+    cp -p %{cfg_file}.prev %{cfg_file}-$MNT
+    if [ -f %{cfg_file}-%{weewx_version} ]; then
+      echo Creating maintainer config file as %{cfg_file}-$MNT
+      /usr/bin/weectl station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg_file}-%{weewx_version} --what=config --no-prompt --no-backup
+    fi
   fi
   # if this is an upgrade from V4, copy any extensions to the V5 location
   if [ -d /usr/share/weewx/user ]; then
@@ -214,17 +214,31 @@ elif [ "$1" = "2" ]; then
     echo "Moving old extensions to /usr/share/weewx/user-$ts"
     mv /usr/share/weewx/user /usr/share/weewx/user-$ts
   fi
-  # do a full restart not just a HUP
-  systemctl stop weewx
-  systemctl start weewx
+  # do a full restart of weewx
+  if [ "$pid1" = "systemd" ]; then
+    systemctl stop weewx
+    systemctl start weewx
+  fi
 fi
 
 %preun
+# see which init system (if any) is running
+pid1=none
+if [ -d /run/systemd/system ]; then
+  pid1=systemd
+fi
+
 if [ "$1" = "0" ]; then
   # this is an uninstall, so stop and remove everything
-  systemctl stop weewx
-  systemctl disable weewx
-  systemctl disable weewx@
+  if [ "$pid1" = "systemd" ]; then
+    systemctl stop weewx
+    systemctl disable weewx
+  fi
+  # remove any bytecompiled code
+  find /usr/share/weewx -name '*.pyc' -delete
+  find /usr/share/weewx -name __pycache__ -delete
+  find /etc/weewx/bin -name '*.pyc' -delete
+  find /etc/weewx/bin -name __pycache__ -delete
 fi
 # otherwise this is an upgrade (1), so do nothing
 
@@ -233,19 +247,16 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root)
-%{_bindir}/weewxd
-%{_bindir}/weectl
-/lib/systemd/system/weewx.service
-/lib/systemd/system/weewx@.service
-/lib/udev/rules.d/60-weewx.rules
+%attr(0755,root,root) %{_bindir}/weewxd
+%attr(0755,root,root) %{_bindir}/weectl
+%{systemd_dir}/weewx.service
+%{systemd_dir}/weewx@.service
+%{udev_dir}/60-weewx.rules
 %{dst_code_dir}/
 %doc %{dst_doc_dir}/
 %config(noreplace) %{_sysconfdir}/default/weewx
-%config(noreplace) %{_sysconfdir}/logrotate.d/weewx
-%config(noreplace) %{_sysconfdir}/rsyslog.d/weewx.conf
 %defattr(664,%{weewx_user},%{weewx_group},2775)
 %config(noreplace) %{dst_cfg_dir}/
-%dir %attr(0755,%{weewx_user},%{weewx_group}) /var/log/weewx
 %dir %attr(2775,%{weewx_user},%{weewx_group}) /var/lib/weewx
 %dir %attr(2775,%{weewx_user},%{weewx_group}) /var/www/html/weewx
 

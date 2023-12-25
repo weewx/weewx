@@ -215,7 +215,7 @@ upload-src:
 ###############################################################################
 ## pypi targets
 
-pypi-packages $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL): pyproject.toml
+pypi-package $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL): pyproject.toml
 	poetry build
 
 # Upload wheel and src package to pypi.org
@@ -330,7 +330,10 @@ endif
 redhat-changelog:
 	make rpm-changelog RPMOS=el
 
-redhat-package: rpm-package-rh9
+redhat-package: rpm-package-rh8 rpm-package-rh9
+
+rpm-package-rh8:
+	make rpm-package RPMOS=el OSREL=8
 
 rpm-package-rh9:
 	make rpm-package RPMOS=el OSREL=9
@@ -338,10 +341,7 @@ rpm-package-rh9:
 suse-changelog:
 	make rpm-changelog RPMOS=suse
 
-suse-package: rpm-package-suse12 rpm-package-suse15
-
-rpm-package-suse12:
-	make rpm-package RPMOS=suse OSREL=12
+suse-package: rpm-package-suse15
 
 rpm-package-suse15:
 	make rpm-package RPMOS=suse OSREL=15
@@ -350,7 +350,12 @@ rpm-package-suse15:
 check-rpm:
 	rpmlint -f pkg/rpmlint.$(RPMOS) $(DSTDIR)/$(RPMPKG)
 
-check-redhat:
+check-redhat: check-rh8 check-rh9
+
+check-rh8:
+	make check-rpm RPMOS=el OSREL=8
+
+check-rh9:
 	make check-rpm RPMOS=el OSREL=9
 
 check-suse:
@@ -359,26 +364,30 @@ check-suse:
 upload-rpm:
 	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
-upload-redhat:
+upload-redhat: upload-rh8 upload-rh9
+
+upload-rh8:
+	make upload-rpm RPMOS=el OSREL=8
+
+upload-rh9:
 	make upload-rpm RPMOS=el OSREL=9
 
 upload-suse:
-	make upload-rpm RPMOS=suse OSREL=12
 	make upload-rpm RPMOS=suse OSREL=15
 
 # shortcut to upload all packages from a single machine
 DEB3_PKG=python3-weewx_$(DEBVER)_$(DEBARCH).deb
+RHEL8_PKG=weewx-$(RPMVER).el8.$(RPMARCH).rpm
 RHEL9_PKG=weewx-$(RPMVER).el9.$(RPMARCH).rpm
-SUSE12_PKG=weewx-$(RPMVER).suse12.$(RPMARCH).rpm
 SUSE15_PKG=weewx-$(RPMVER).suse15.$(RPMARCH).rpm
 upload-pkgs:
-	scp $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(DEB3_PKG) $(DSTDIR)/$(RHEL9_PKG) $(DSTDIR)/$(SUSE12_PKG) $(DSTDIR)/$(SUSE15_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+	scp $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(DEB3_PKG) $(DSTDIR)/$(RHEL8_PKG) $(DSTDIR)/$(RHEL9_PKG) $(DSTDIR)/$(SUSE15_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # move files from the upload directory to the release directory and set up the
 # symlinks to them from the download root directory
 DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
 RELDIR=$(WEEWX_DOWNLOADS)/released_versions
-ARTIFACTS=$(DEB3_PKG) $(RHEL9_PKG) $(SUSE12_PKG) $(SUSE15_PKG) $(SRCPKG)
+ARTIFACTS=$(DEB3_PKG) $(RHEL8_PKG) $(RHEL9_PKG) $(SUSE15_PKG) $(SRCPKG)
 release:
 	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
 	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
@@ -455,6 +464,10 @@ pull-yum-repo:
 	rsync -Oarvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ ~/.yum
 
 update-yum-repo:
+	mkdir -p $(YUM_REPO)/el8/RPMS
+	cp -p $(DSTDIR)/weewx-$(RPMVER).el8.$(RPMARCH).rpm $(YUM_REPO)/el8/RPMS
+	createrepo $(YUM_REPO)/el8
+	mkdir -p $(YUM_REPO)/el9/RPMS
 	cp -p $(DSTDIR)/weewx-$(RPMVER).el9.$(RPMARCH).rpm $(YUM_REPO)/el9/RPMS
 	createrepo $(YUM_REPO)/el9
 
@@ -482,8 +495,6 @@ pull-suse-repo:
 	rsync -Oarvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/ ~/.suse
 
 update-suse-repo:
-	cp -p $(DSTDIR)/weewx-$(RPMVER).suse12.$(RPMARCH).rpm $(SUSE_REPO)/suse12/RPMS
-	createrepo $(SUSE_REPO)/suse12
 	cp -p $(DSTDIR)/weewx-$(RPMVER).suse15.$(RPMARCH).rpm $(SUSE_REPO)/suse15/RPMS
 	createrepo $(SUSE_REPO)/suse15
 

@@ -17,7 +17,7 @@
     <key>ProgramArguments</key>
     <array>
         <string>/usr/bin/python3</string>
-        <string>/Users/Shared/weewx/bin/weewxd</string>
+        <string>/Users/Shared/weewx/src/weewxd.py</string>
         <string>/Users/Shared/weewx/weewx.conf</string>
     </array>
     <key>StandardErrorPath</key>

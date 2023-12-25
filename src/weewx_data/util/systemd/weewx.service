@@ -1,20 +1,17 @@
 # systemd service configuration file for WeeWX
-#
-# For information about running WeeWX under systemd, see:
-#   https://github.com/weewx/weewx/wiki/systemd
 
 [Unit]
 Description=WeeWX weather system
 Documentation=https://weewx.com/docs
-
 Requires=time-sync.target
 After=time-sync.target
 
 [Service]
-ExecStart=weewxd weewx.conf
+ExecStart=WEEWX_PYTHON WEEWXD WEEWX_CFGDIR/weewx.conf
 StandardOutput=null
-#User=weewx
-#Group=weewx
+StandardError=journal+console
+User=WEEWX_USER
+Group=WEEWX_GROUP
 
 [Install]
 WantedBy=multi-user.target

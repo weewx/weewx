@@ -8,14 +8,20 @@
 import getpass
 import grp
 import importlib
-import importlib.resources
 import logging
 import os
+import stat
 import os.path
 import re
 import shutil
 import sys
 import urllib.parse
+
+# importlib.resources is 3.7 or later, importlib_resources is the backport
+try:
+    import importlib.resources as importlib_resources
+except:
+    import importlib_resources
 
 import configobj
 
@@ -25,7 +31,7 @@ import weeutil.weeutil
 import weewx
 from weeutil.weeutil import to_float, to_bool, bcolors
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('weectl-station')
 
 
 def station_create(config_path, *args,
@@ -80,7 +86,6 @@ def station_create(config_path, *args,
     copy_examples(dist_config_dict, examples_root=examples_root, dry_run=dry_run)
     copy_user(dist_config_dict, user_root=user_root, dry_run=dry_run)
     copy_util(config_path, dist_config_dict, dry_run=dry_run)
-    copy_scripts(dist_config_dict, dry_run=dry_run)
 
     print(f"Saving configuration file {config_path}")
     if dry_run:
@@ -91,24 +96,17 @@ def station_create(config_path, *args,
     return dist_config_dict
 
 
-def station_reconfigure(config_path, no_backup=False, dry_run=False, *args, **kwargs):
+def station_reconfigure(config_dict, no_backup=False, dry_run=False, *args, **kwargs):
     """Reconfigure an existing station"""
 
-    if dry_run:
-        print("This is a dry run. Nothing will actually be done.")
+    config_config(config_dict['config_path'], config_dict, dry_run=dry_run, *args, **kwargs)
 
-    config_path, config_dict = weecfg.read_config(config_path)
-
-    print(f"Reconfiguring configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
-
-    config_config(config_path, config_dict, dry_run=dry_run, *args, **kwargs)
-
-    print(f"Saving configuration file {config_path}")
+    print(f"Saving configuration file {config_dict['config_path']}")
     if dry_run:
         print("This was a dry run. Nothing was actually done.")
     else:
         # Save the results, possibly with a backup.
-        backup_path = weecfg.save(config_dict, config_path, not no_backup)
+        backup_path = weecfg.save(config_dict, config_dict['config_path'], not no_backup)
         if backup_path:
             print(f"Saved old configuration file as {backup_path}")
 
@@ -125,7 +123,6 @@ def config_config(config_path, config_dict,
                   dry_run=False):
     """Modify a configuration file."""
     print(f"Processing configuration file {config_path}")
-    weewx.add_user_path(config_dict)
     config_location(config_dict, location=location, no_prompt=no_prompt)
     config_altitude(config_dict, altitude=altitude, no_prompt=no_prompt)
     config_latlon(config_dict, latitude=latitude, longitude=longitude, no_prompt=no_prompt)
@@ -146,7 +143,7 @@ def config_location(config_dict, location=None, no_prompt=False):
         final_location = location
     elif not no_prompt:
         print("\nGive a description of your station. This will be used for the title "
-              "of any reports.")
+              "of reports.")
         ans = input(f"Description [{default_location}]: ").strip()
         final_location = ans if ans else default_location
     else:
@@ -295,7 +292,7 @@ def config_units(config_dict, unit_system=None, no_prompt=False):
         print("Later, you can modify your choice, or choose a combination of units.")
         # Get what unit system the user wants
         options = ['us', 'metricwx', 'metric']
-        final_unit_system = weecfg.prompt_with_options(f"Your choice",
+        final_unit_system = weecfg.prompt_with_options(f"unit system",
                                                        default_unit_system, options)
     else:
         final_unit_system = default_unit_system
@@ -394,15 +391,15 @@ def config_driver(config_dict, driver=None, no_prompt=False):
 def config_registry(config_dict, register=None, station_url=None, no_prompt=False):
     """Configure whether to include the station in the weewx.com registry."""
 
-    if 'Station' not in config_dict:
+    try:
+        config_dict['Station']
+        config_dict['StdRESTful']['StationRegistry']
+    except KeyError:
+        print('No [[StationRegistry]] section found.')
         return
 
-    try:
-        default_register = to_bool(
-            config_dict['StdRESTful']['StationRegistry']['register_this_station'])
-    except KeyError:
-        default_register = False
-
+    default_register = to_bool(
+        config_dict['StdRESTful']['StationRegistry'].get('register_this_station', False))
     default_station_url = config_dict['Station'].get('station_url')
 
     if register is not None:
@@ -572,57 +569,73 @@ def copy_user(config_dict, user_root=None, dry_run=False):
 def copy_util(config_path, config_dict, dry_run=False, force=False):
     import weewxd
     weewxd_path = weewxd.__file__
+    cfg_dir = os.path.dirname(config_path)
     username = getpass.getuser()
     groupname = grp.getgrgid(os.getgid()).gr_name
     weewx_root = config_dict['WEEWX_ROOT']
-    # This is the set of substitutions to be performed. The key is a regular expression. If a
-    # match is found, the value will be substituted for the matched expression.
-    re_dict = {
-        # For systemd
-        r"^#User=.*": rf"User={username}",
-        # For systemd
-        r"^#Group=.*": rf"Group={groupname}",
-        # For systemd
-        r"^ExecStart=.*": rf"ExecStart={sys.executable} {weewxd_path} {config_path}",
-        # For init.d, redhat, bsd, suse
-        r"^WEEWX_BIN=.*": rf"WEEWX_BIN={sys.executable} {weewxd_path}",
-        # For init.d, redhat, bsd, suse
-        r"^WEEWX_CFG=.*": rf"WEEWX_CFG={config_path}",
-        # For init.d
-        r"^WEEWX_USER=.*": rf"WEEWX_USER={groupname}",
-        # For multi
-        r"^WEEWX_BINDIR=.*": rf"WEEWX_BINDIR={os.path.dirname(weewxd_path)}",
-        # For multi
-        r"^WEEWX_CFGDIR=.*": rf"WEEWX_CFGDIR={os.path.dirname(config_path)}",
-        # for macOS:
-        r"<string>/usr/bin/python3</string>": rf"<string>{sys.executable}<//string>",
-        # For macOS:
-        r"<string>/Users/Shared/weewx/bin/weewxd</string>": rf"<string>{weewxd_path}<//string>",
-        # For macOS:
-        r"<string>/Users/Shared/weewx/weewx.conf</string>": rf"<string>{config_path}<//string>",
-        # For Apache
-        r"/home/weewx/public_html": rf"{os.path.join(weewx_root, 'public_html')}",
+    html_dir = os.path.join(weewx_root, 'public_html') # FIXME: get from conf
+    util_dir = os.path.join(weewx_root, 'util')
+    bin_dir = os.path.dirname(weewxd_path)
+
+    # This is the set of substitutions to be performed, with a different set
+    # for each type of files. The key is a regular expression. If a match is
+    # found, the value will be substituted for the matched expression.  Beware
+    # that the labels for user, group, config directory, and other parameters
+    # are consistent throughout the utility files.  Be sure to test the
+    # patterns by using them to grep all of the files in the util directory to
+    # see what actually matches.
+
+    re_patterns = {
+        'scripts': { # daemon install scripts
+                r"^UTIL_ROOT=.*": rf"UTIL_ROOT={util_dir}",
+        },
+        'systemd': { # systemd unit files
+            r"User=WEEWX_USER": rf"User={username}",
+            r"Group=WEEWX_GROUP": rf"Group={groupname}",
+            r"ExecStart=WEEWX_PYTHON WEEWXD": rf"ExecStart={sys.executable} {weewxd_path}",
+            r" WEEWX_CFGDIR/": rf" {cfg_dir}/",
+        },
+        'launchd': { # macos launchd files
+            r"<string>/usr/bin/python3</string>": rf"<string>{sys.executable}<//string>",
+            r"<string>/Users/Shared/weewx/src/weewxd.py</string>": rf"<string>{weewxd_path}</string>",
+            r"<string>/Users/Shared/weewx/weewx.conf</string>": rf"<string>{config_path}</string>",
+        },
+        'default': { # defaults file used by SysV init scripts
+            r"^WEEWX_PYTHON=.*": rf"WEEWX_PYTHON={sys.executable}",
+            r"^WEEWX_BINDIR=.*": rf"WEEWX_BINDIR={bin_dir}",
+            r"^WEEWX_CFGDIR=.*": rf"WEEWX_CFGDIR={cfg_dir}",
+            r"^WEEWX_USER=.*": rf"WEEWX_USER={username}",
+            r"^WEEWX_GROUP=.*": rf"WEEWX_GROUP={groupname}",
+        },
     }
-    # Convert to a list of two-way tuples.
-    re_list = [(re.compile(key), re_dict[key]) for key in re_dict]
+
+    # Convert the patterns to a list of two-way tuples
+    for k in re_patterns:
+        re_patterns[k] = [(re.compile(key), re_patterns[k][key]) for key in re_patterns[k]]
 
     def _patch_file(srcpath, dstpath):
-        """Copy an individual file from srcpath to dstpath, while making substitutions
-         using the list of regular expressions re_list"""
-        with open(srcpath, 'r') as rd, open(dstpath, 'w') as wd:
-            for line in rd:
-                # Lines starting with "#&" are comment lines. Ignore them.
-                if line.startswith("#&"):
-                    continue
-                # Go through all the regular expressions, substituting the value for the key
-                for key, value in re_list:
-                    line = key.sub(value, line)
-                wd.write(line)
+        srcdir = os.path.basename(os.path.dirname(srcpath))
+        if srcdir in re_patterns:
+            # Copy an individual file from srcpath to dstpath, while making
+            # substitutions using the list of regular expressions re_list
+            re_list = re_patterns[srcdir]
+            with open(srcpath, 'r') as rd, open(dstpath, 'w') as wd:
+                for line in rd:
+                    # Lines starting with "#&" are comment lines. Ignore them.
+                    if line.startswith("#&"):
+                        continue
+                    # Go through all the regular expressions, substituting the
+                    # value for the key
+                    for key, value in re_list:
+                        line = key.sub(value, line)
+                    wd.write(line)
+        else:
+            # Just copy the file
+            shutil.copyfile(srcpath, dstpath)
 
     # Create a callable using the shutil.ignore_patterns factory function.
-    _ignore_function = shutil.ignore_patterns('*.pyc', '__pycache__', 'apache', 'default', 'i18n',
-                                              'init.d', 'logwatch', 'newsyslog.d',
-                                              'solaris', 'tmpfiles.d')
+    # The files/directories that match items in this list will *not* be copied.
+    _ignore_function = shutil.ignore_patterns('*.pyc', '__pycache__')
 
     util_dir = os.path.join(weewx_root, 'util')
     if os.path.isdir(util_dir):
@@ -637,63 +650,44 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
     with weeutil.weeutil.get_resource_path('weewx_data', 'util') as util_resources:
         print(f"Copying utility files into {util_dir}")
         if not dry_run:
-            # Copy the tree rooted in 'util_resources' to 'dstdir', while ignoring files given
-            # by _ignore_function. While copying, use the function _patch_file() to massage
-            # the files.
+            # Copy the tree rooted in 'util_resources' to 'dstdir', while
+            # ignoring files given by _ignore_function. While copying, use the
+            # function _patch_file() to massage the files.
             shutil.copytree(util_resources, util_dir,
-                            ignore=_ignore_function,
-                            copy_function=_patch_file)
+                            ignore=_ignore_function, copy_function=_patch_file)
+
+    scripts_dir = os.path.join(weewx_root, 'scripts')
+
+    # The 'scripts' subdirectory is a little different. We do not delete it
+    # first, because it's a comman name and a user might have put things there.
+    # Instead, just copy our files into it. First, make sure the subdirectory
+    # exists:
+    os.makedirs(scripts_dir, exist_ok=True)
+    # Then do the copying.
+    with weeutil.weeutil.get_resource_path('weewx_data', 'scripts') as scripts_resources:
+        print(f"Copying script files into {scripts_dir}")
+        if not dry_run:
+            for file in os.listdir(scripts_resources):
+                abs_src = os.path.join(scripts_resources, file)
+                abs_dst = os.path.join(scripts_dir, file)
+                _patch_file(abs_src, abs_dst)
+                status = os.stat(abs_dst)
+                # Because these files have been tailored to a particular user,
+                # they hould only be executable by that user. So, use S_IXUSR
+                # (instead of S_IXOTH):
+                os.chmod(abs_dst, status.st_mode | stat.S_IXUSR)
+
     return util_dir
 
 
-def copy_scripts(config_dict, scripts_root=None, dry_run=False, force=False):
-    """Copy scripts to SCRIPTS_DIR directory.
-
-    Args:
-        config_dict (dict): A configuration dictionary.
-        scripts_root (str): Path to where the examples will be put, relative to WEEWX_ROOT.
-        dry_run (bool): True to not actually do anything. Just show what would happen.
-        force (bool): True to overwrite existing scripts. Otherwise, do nothing if they exist.
-
-    Returns:
-        str|None: Path to the freshly written scripts, or None if they already exist and `force`
-            was False.
-    """
-
-    # If the user didn't specify a value, use a default
-    if not scripts_root:
-        scripts_root = 'scripts'
-
-    # scripts_root is relative to WEEWX_PATH. Join them to get the absolute path.
-    scripts_dir = os.path.join(config_dict['WEEWX_ROOT'], scripts_root)
-
-    if os.path.isdir(scripts_dir):
-        if not force:
-            print(f"Directory {scripts_dir} already exists.")
-            return None
-        else:
-            print(f"Removing scripts directory {scripts_dir}")
-            if not dry_run:
-                shutil.rmtree(scripts_dir, ignore_errors=True)
-    with weeutil.weeutil.get_resource_path('weewx_data', 'scripts') as scripts_resources:
-        print(f"Copying scripts into {scripts_dir}")
-        if not dry_run:
-            shutil.copytree(scripts_resources, scripts_dir)
-    return scripts_dir
-
-
-def station_upgrade(config_path, dist_config_path=None, examples_root=None,
+def station_upgrade(config_dict, dist_config_path=None, examples_root=None,
                     skin_root=None, what=None, no_prompt=False, no_backup=False, dry_run=False):
     """Upgrade the user data for the configuration file found at config_path"""
 
     if what is None:
         what = ('config', 'examples', 'util')
 
-    if dry_run:
-        print("This is a dry run. Nothing will actually be done.")
-
-    # Retrieve the old configuration file as a ConfigObj:
-    config_path, config_dict = weecfg.read_config(config_path)
+    config_path = config_dict['config_path']
 
     abbrev = {'config': 'configuration file',
               'util': 'utility files'}
@@ -712,7 +706,7 @@ def station_upgrade(config_path, dist_config_path=None, examples_root=None,
         dist_config_dict = configobj.ConfigObj(dist_config_path, encoding='utf-8', file_error=True)
     else:
         # Retrieve the new configuration file from package resources:
-        with importlib.resources.open_text('weewx_data', 'weewx.conf', encoding='utf-8') as fd:
+        with importlib_resources.open_text('weewx_data', 'weewx.conf', encoding='utf-8') as fd:
             dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
 
     if 'config' in what:
@@ -738,10 +732,6 @@ def station_upgrade(config_path, dist_config_path=None, examples_root=None,
             print(f"Finished upgrading utilities directory at {util_dir}")
         else:
             print("Could not upgrade the utilities directory.")
-
-    if 'scripts' in what:
-        scripts_dir = copy_scripts(config_dict, dry_run=dry_run, force=True)
-        print(f"Finished upgrading scripts at {scripts_dir}")
 
     if dry_run:
         print("This was a dry run. Nothing was actually done.")

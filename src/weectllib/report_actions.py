@@ -10,8 +10,6 @@ import socket
 import sys
 import time
 
-import weecfg
-import weeutil.logger
 import weewx
 import weewx.engine
 import weewx.manager
@@ -19,19 +17,16 @@ import weewx.reportengine
 import weewx.station
 from weeutil.weeutil import bcolors, timestamp_to_string, to_bool
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('weectl-report')
 
 
-def list_reports(config_path):
-    # Read the configuration file
-    config_path, config_dict = weecfg.read_config(config_path)
-    print(f"Using configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
+def list_reports(config_dict):
 
-    # Customize the logging with user settings.
-    weeutil.logger.setup('weectl-report', config_dict)
-
+    # Print a header
     print(
         f"\n{bcolors.BOLD}{'Report' : >20}  {'Skin':<12} {'Enabled':^8} {'Units':^8} {'Language':^8}{bcolors.ENDC}")
+
+    # Then go through all the reports:
     for report in config_dict['StdReport'].sections:
         if report == 'Defaults':
             continue
@@ -52,14 +47,10 @@ def list_reports(config_path):
               f"{unit_system:^8} {lang:^8}")
 
 
-def run_reports(config_path,
+def run_reports(config_dict,
                 epoch=None,
                 report_date=None, report_time=None,
                 reports=None):
-    # Read the configuration file
-    config_path, config_dict = weecfg.read_config(config_path)
-    print(f"The configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC} will be used.")
-
     if reports:
         print(f"The following reports will be run: {', '.join(reports)}")
     else:
@@ -80,8 +71,6 @@ def run_reports(config_path,
         print(f"Generating for requested time {timestamp_to_string(gen_ts)}")
     else:
         print("Generating as of last timestamp in the database.")
-
-    weewx.initialize(config_dict, 'wee_report')
 
     # We want to generate all reports irrespective of any report_timing settings that may exist.
     # The easiest way to do this is walk the config dict, resetting any report_timing settings

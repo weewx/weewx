@@ -3,9 +3,9 @@
 This is a guide to installing WeeWX from a DEB package on systems based on
 Debian, including Ubuntu, Mint, and Raspberry Pi OS.
 
-WeeWX V5 requires Python 3.7 or greater, which is only available as a Debian
+WeeWX V5 requires Python 3.6 or greater, which is only available as a Debian
 package, with required modules, on Debian 10 or later.  For older systems,
-install Python 3.7 then [install WeeWX using pip](pip.md).
+install Python 3 then [install WeeWX using pip](pip.md).
 
 
 ## Configure `apt`
@@ -55,12 +55,12 @@ If things are not working as you think they should, check the status:
 ```{.shell .copy}
 sudo systemctl status weewx
 ```
-and check the [log file](../usersguide/running.md#monitoring-weewx):
+and check the [system log](../usersguide/monitoring.md#log-messages):
 ```{.shell .copy}
-tail -50 /var/log/weewx/weewxd.log
+sudo journalctl -u weewx
 ```
 See the [*Troubleshooting*](../usersguide/troubleshooting/what-to-do.md)
-section of the [*User's guide*](../users/guide/introduction.md) for more help.
+section of the [*User's guide*](../usersguide/introduction.md) for more help.
 
 
 ## Configure
@@ -82,33 +82,38 @@ sudo systemctl start weewx
 
 ## Customize
 
-To enable uploads or to customize reports, modify the configuration file.
-See the [*Customization Guide*](../custom/introduction.md) for instructions,
-and the [application](../reference/weewx-options/introduction.md) and
-[skin](../reference/skin-options/introduction.md) references for all
-the options. Use any text editor, such as `nano`:
+To enable uploads, or to enable other reports, modify the configuration file
+`/etc/weewx/weewx.conf` using any text editor such as `nano`:
 
 ```{.shell .copy}
 sudo nano /etc/weewx/weewx.conf
 ```
 
-To install new skins, drivers, or other extensions, use the `weectl` utility
-and the URL to the extension.
-
-```{.shell}
-sudo weectl extension install https://github.com/path/to/extension.zip
-```
+The reference
+[*Application options*](../reference/weewx-options/introduction.md)
+contains an extensive list of the configuration options, with explanations for
+what they do. For more advanced customization, see the [*Customization
+Guide*](../custom/introduction.md), as well as the reference [*Skin
+options*](../reference/skin-options/introduction.md).
+ 
+To install new skins, drivers, or other extensions, use the [extension
+utility](../utilities/weectl-extension.md).
 
 WeeWX must be restarted for the changes to take effect.
 ```{.shell .copy}
 sudo systemctl restart weewx
 ```
 
+If you plan to do a lot of customization, consider putting yourself into the
+`weewx` group.  When you are in the `weewx` group, you can do many things
+without having to `sudo`, including modifying the WeeWX configuration and
+installing extensions.
+```{.shell .copy}
+sudo usermod -aG weewx $USER
+```
+
 
 ## Upgrade
-
-The upgrade process will only upgrade the WeeWX software; it does not modify
-the database, configuration file, extensions, or skins.
 
 Upgrade to the latest version like this:
 
@@ -117,10 +122,13 @@ sudo apt update
 sudo apt install weewx
 ```
 
-Unmodified files will be upgraded. If modifications have been made to any
-files, you will be prompted whether you want to keep the existing, modified
-files, or accept the new files. Either way, a copy of the option you did not
-choose will be saved.
+The upgrade process will only upgrade the WeeWX software; it does not modify
+the configuration file, database, or any extensions you may have installed.
+
+If modifications have been made to the configuration file or the skins that
+come with WeeWX, you will be prompted whether you want to keep the existing,
+modified files, or accept the new files. Either way, a copy of the option you
+did not choose will be saved.
 
 For example, if `/etc/weewx/weewx.conf` was modified, you will see a message
 something like this:
@@ -148,7 +156,11 @@ new version number. It can then be compared with your old version which
 will be in `/etc/weewx/weewx.conf`.
 
 !!! Note
-    In most cases you should choose `N` (the default).
+    In most cases you should choose `N` (the default).  Since WeeWX releases
+    are almost always backward-compatible with configuration files and skins,
+    choosing to keep the currently-installed version will ensure that your
+    system works as it did before the upgrade.  After the upgrade, you can
+    compare the new files to your existing, operational files at your leisure.
 
 
 ## Uninstall
@@ -168,10 +180,10 @@ sudo apt purge weewx
 When you use `apt` to uninstall WeeWX, it does not touch WeeWX data, logs,
 or any changes you might have made to the WeeWX configuration.  It also leaves
 the `weewx` user, since data and configuration files were owned by that user.
-To remove the remaining WeeWX bits:
+To remove every trace of WeeWX:
 
 ```{.shell .copy}
-sudo apt remove weewx
+sudo apt purge weewx
 sudo rm -r /var/www/html/weewx
 sudo rm -r /var/lib/weewx
 sudo rm -r /var/log/weewx
