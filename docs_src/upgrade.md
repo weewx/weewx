@@ -105,44 +105,59 @@ extensions that were installed in `/usr/share/weewx/user` will be copied to
 
 ### The value of `WEEWX_ROOT`
 
-Previous versions of WeeWX that were installed using `apt`, `yum`, or `zypper`
-(installs that use the DEB or RPM packages) used `/` as the value for
-`WEEWX_ROOT`.
+This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
+that use the DEB or RPM packages). Installations that use a `setup.py` install
+are not affected.
 
-In version 5, a value of `/` will be treated as `/etc/weewx`.
+Previous versions of WeeWX set `WEEWX_ROOT=/` (the root directory) in the
+configuration file `/etc/weewx/weewx.conf`. In version 5, while the value will
+not be modified by the normal upgrade process, a value of `/` will be treated as
+`/etc/weewx` at runtime. This means that effectively `WEEWX_ROOT` equals
+`/etc/weewx`.
 
-The actual value in the configuration file will *not* be modified by the
-upgrade process, but if you explicitly upgrade the configuration file using
-`weectl station upgrade`, then `WEEWX_ROOT=/` will be changed to
-`WEEWX_ROOT=/etc/weewx`.
+If you wish, you can explicitly upgrade the configuration file by using the
+utility [`weectl station
+upgrade`](../utilities/weectl-station#upgrade-an-existing-station), in which case
+`WEEWX_ROOT=/` will be changed to `WEEWX_ROOT=/etc/weewx`.
+
+    sudo weectl station upgrade --what config
 
 ### Use of systemd units for services
 
-WeeWX now ships with systemd unit files for the platforms that use systemd.
-If you install WeeWX using `apt`, `yum`, or `zypper`, then two files will
-be installed, the standard service unit `weewx.service` and the template
-service unit `weewx@.service`.  For a pip install, these are available in
-the `util` directory in the `weewx-data` directory, and must be installed
-separately.  The template unit makes it very easy to run multiple instances
-of `weewxd`, for example if you have more than one weather station or multiple
-sets of sensors.
+This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
+that use the DEB or RPM packages). Installations that use a `setup.py` install
+are not affected.
+
+For these package installers, two systemd unit files will be installed: the
+standard service unit `weewx.service`, and the template service unit
+`weewx@.service`.   The template unit makes it very easy to run multiple
+instances of `weewxd` (for example, if you have more than one weather station or
+multiple sets of sensors).
 
 ### WeeWX runs as the `weewx` user
 
-If you install WeeWX using `apt`, `yum`, or `zypper`, then `weewxd` will run
-as the `weewx` user.  The configuration files, skins, databases, and reports
-are owned by the `weewx` group.  This makes it easier to manage a WeeWX
-installation. Put yourself into the `weewx` group, then you will not have to
-`sudo` to make changes to skins or configurations.  You *will* have to `sudo`
-to start/stop `weewxd`.
+This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
+that use the DEB or RPM packages). Installations that use a `setup.py` install
+are not affected.
+
+For these package installers, `weewxd` will run as the user `weewx`.  The
+configuration files, skins, databases, and reports are owned by the `weewx`
+group.  This makes it easier to manage a WeeWX installation. Put yourself into
+the `weewx` group, then you will not have to `sudo` to make changes to skins or
+configurations.  You *will* have to `sudo` to start/stop `weewxd`.
 
 ### udev rules installed for core hardware
 
-If you install WeeWX using `apt`, `yum`, or `zypper`, then the udev rules file
-for hardware that is supported in WeeWX core is installed with WeeWX.  This
-makes any hardware that uses USB or serial accessible to anyone in the `weewx`
-group.  So if you put yourself in the `weewx` group, you will not have to
-`sudo` to communicate with a supported USB or serial device.
+Version 5 includes `udev` rules for hardware that is supported by WeeWX. This
+makes any hardware that uses USB or serial ports accessible to anyone in the
+`weewx` group.  So if you put yourself in the `weewx` group, you will not have
+to `sudo` to communicate with a supported USB or serial device.
+
+If you install WeeWX using `apt`, `yum`, or `zypper`, these rules are applied as
+part of the upgrade process.
+
+If you use a pip install, the rules are applied by the same script that installs
+the files necessary to run as a daemon.
 
 ### `SQLITE_ROOT` is now relative to `WEEWX_ROOT`
 
