@@ -92,7 +92,7 @@ def main():
     # configured logging and debug, as well as perform other housekeeping
     # chores
     try:
-        user_dir = weeutil.startup.initialize(config_dict, namespace.log_label)
+        weewx_root, user_dir = weeutil.startup.initialize(config_dict, namespace.log_label)
     except Exception as e:
         print(f"Failure during initialization: {e}", file=sys.stderr)
         import traceback
@@ -109,6 +109,7 @@ def main():
     log.info("Locale: '%s'", locale.setlocale(locale.LC_ALL))
     log.info("Entry path: %s", __file__)
     log.info("Configuration file: %s", config_path)
+    log.info("WEEWX_ROOT: %s", weewx_root)
     log.info("User directory: %s", user_dir)
     log.info("Debug: %s", weewx.debug)
 
