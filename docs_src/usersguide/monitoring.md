@@ -105,7 +105,7 @@ that work with macOS 12.x or later are standalone handlers that log to files.
 Fortunately, there is a simple workaround. Put this at the bottom of your
 `weewx.conf` configuration file:
 
-```
+```{.ini .copy}
 [Logging]
 
     [[root]]
@@ -117,7 +117,7 @@ Fortunately, there is a simple workaround. Put this at the bottom of your
             level = DEBUG
             formatter = verbose
             class = logging.handlers.TimedRotatingFileHandler
-            # File to log to:
+            # File to log to, relative to WEEWX_ROOT:
             filename = log/{process_name}.log
             # When to rotate:
             when = midnight
