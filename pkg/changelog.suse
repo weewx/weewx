@@ -1,3 +1,5 @@
+* Tue Dec 26 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc1-2
+- include ephem as a dependency
 * Thu Dec 21 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc1-1
 - new upstream release
 * Mon Dec 18 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b18-1
