@@ -27,26 +27,12 @@ WEEWXD=${WEEWX_BINDIR}/weewxd.py
 name="weewx"
 rcvar=weewx_enable
 
-start_cmd=weewx_start
-stop_cmd=weewx_stop
-
-procname=${WEEWXD}
 weewx_pid=${WEEWX_RUNDIR}/weewx.pid
 weewx_config=${WEEWX_CFGDIR}/${WEEWX_CFG}
 
-weewx_start() {
-    echo "Starting ${name}."
-    ${WEEWX_PYTHON} ${WEEWXD} --daemon --pidfile=${weewx_pid} ${weewx_config}
-}
-
-weewx_stop() {
-    if [ -f ${weewx_pid} ]; then
-        echo "Stopping ${name}."
-        kill `cat ${weewx_pid}`
-    else
-        echo "${name} is not running"
-    fi
-}
+command=${WEEWXD}
+command_interpreter=${WEEWX_PYTHON}
+weewx_flags="--daemon --pidfile=${weewx_pid} ${weewx_config}"
 
 load_rc_config $name
 run_rc_command "$1"
