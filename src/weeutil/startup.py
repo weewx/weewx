@@ -9,9 +9,10 @@ import logging
 import os.path
 import sys
 
-import weeutil.logger
 import weewx
 from weeutil.weeutil import to_int
+
+log = logging.getLogger(__name__)
 
 
 def extract_roots(config_dict):
@@ -42,12 +43,11 @@ def extract_roots(config_dict):
     return root_dict
 
 
-def initialize(config_dict, log_label):
+def initialize(config_dict):
     """Set debug, set up the logger, and add the user path
 
     Args:
         config_dict(dict): The configuration dictionary
-        log_label(str): A label to be used in the log for this process
 
     Returns:
         tuple[str,str]: A tuple containing (WEEWX_ROOT, USER_ROOT)
@@ -55,9 +55,6 @@ def initialize(config_dict, log_label):
 
     # Set weewx.debug as necessary:
     weewx.debug = to_int(config_dict.get('debug', 0))
-
-    # Customize the logging with user settings.
-    weeutil.logger.setup(log_label, config_dict)
 
     root_dict = extract_roots(config_dict)
 
@@ -69,7 +66,6 @@ def initialize(config_dict, log_label):
     try:
         importlib.import_module('user.extensions')
     except ModuleNotFoundError as e:
-        log = logging.getLogger(__name__)
         log.error("Cannot load user extensions: %s", e)
 
     return config_dict['WEEWX_ROOT'], user_dir
