@@ -55,7 +55,7 @@ If things are not working as you think they should, check the status:
 ```{.shell .copy}
 sudo systemctl status weewx
 ```
-and check the [system log](../usersguide/running.md#monitoring-weewx):
+and check the [system log](../usersguide/monitoring.md#log-messages):
 ```{.shell .copy}
 sudo journalctl -u weewx
 ```

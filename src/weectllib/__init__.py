@@ -6,8 +6,13 @@
 """The 'weectllib' package."""
 
 import datetime
+import logging
+import sys
+
+import configobj
 
 import weecfg
+import weeutil.logger
 import weeutil.startup
 import weewx
 from weeutil.weeutil import bcolors
@@ -78,18 +83,43 @@ def dispatch(namespace):
     """All weectl commands come here. This function reads the configuration file, sets up logging,
     then dispatches to the actual action.
     """
-    # Get the configuration dictionary:
-    config_path, config_dict = weecfg.read_config(namespace.config)
+    # Read the configuration file
+    try:
+        config_path, config_dict = weecfg.read_config(namespace.config)
+    except (IOError, configobj.ConfigObjError) as e:
+        print(f"Error parsing config file: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        sys.exit(weewx.CONFIG_ERROR)
+
     print(f"Using configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
 
-    weeutil.startup.initialize(config_dict, 'weectl')
+    try:
+        # Customize the logging with user settings.
+        weeutil.logger.setup('weectl', config_dict)
+    except Exception as e:
+        print(f"Unable to set up logger: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        sys.exit(weewx.CONFIG_ERROR)
+
+    # Get a logger. This one will have the requested configuration.
+    log = logging.getLogger(__name__)
+    # Announce the startup
+    log.info("Initializing weectl version %s", weewx.__version__)
+    log.info("Command line: %s", ' '.join(sys.argv))
+
+    # Set up debug, add USER_ROOT to PYTHONPATH, read user.extensions:
+    weeutil.startup.initialize(config_dict)
 
     # Note a dry-run, if applicable:
     if hasattr(namespace, 'dry_run') and namespace.dry_run:
         print("This is a dry run. Nothing will actually be done.")
+        log.info("This is a dry run. Nothing will actually be done.")
 
     # Call the specified action:
     namespace.action_func(config_dict, namespace)
 
     if hasattr(namespace, 'dry_run') and namespace.dry_run:
         print("This was a dry run. Nothing was actually done.")
+        log.info("This was a dry run. Nothing was actually done.")

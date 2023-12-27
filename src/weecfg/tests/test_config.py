@@ -380,7 +380,7 @@ class ExtensionInstallTest(unittest.TestCase):
         self.assertEqual(self.engine.root_dict['SKIN_DIR'], '/var/tmp/wee_test/skins')
 
         # Now install the extension...
-        self.engine.install_extension('./pmon.tgz')
+        self.engine.install_extension('./pmon.tgz', no_confirm=True)
 
         # ... and assert that it got installed correctly
         self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['USER_DIR'],
@@ -419,7 +419,7 @@ class ExtensionInstallTest(unittest.TestCase):
 
     def test_uninstall(self):
         # First install...
-        self.engine.install_extension('./pmon.tgz')
+        self.engine.install_extension('./pmon.tgz', no_confirm=True)
         # ... then uninstall it:
         self.engine.uninstall_extension('pmon', no_confirm=True)
 

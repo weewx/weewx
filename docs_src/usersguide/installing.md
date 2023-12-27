@@ -52,8 +52,7 @@ This is an outline of the process to install, configure, and run WeeWX:
   [daemon](running.md#running-as-a-daemon).
 
 * Customize the installation. Typically, this is done by changing settings in
-  the WeeWX [application configuration
-  file](../reference/weewx-options/introduction.md) (typically, `weewx.conf`).
+  the WeeWX [configuration file `weewx.conf`](../reference/weewx-options/introduction.md).
   For example, you might want to [register your
   station](../reference/weewx-options/stdrestful.md#stationregistry), so it
   shows up on a world-wide map of WeeWX installations. To make changes to reports,
@@ -98,7 +97,7 @@ may be needed to run.
     </td>
   </tr>
   <tr>
-    <td><a href="../quickstarts/git.md">git</a></td>
+    <td><a href="../../quickstarts/git/">git</a></td>
     <td>any operating system</td>
     <td>
 If you want to install WeeWX on a system with very little storage, or if you

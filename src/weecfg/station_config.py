@@ -143,7 +143,7 @@ def config_location(config_dict, location=None, no_prompt=False):
         final_location = location
     elif not no_prompt:
         print("\nGive a description of your station. This will be used for the title "
-              "of any reports.")
+              "of reports.")
         ans = input(f"Description [{default_location}]: ").strip()
         final_location = ans if ans else default_location
     else:
@@ -292,7 +292,7 @@ def config_units(config_dict, unit_system=None, no_prompt=False):
         print("Later, you can modify your choice, or choose a combination of units.")
         # Get what unit system the user wants
         options = ['us', 'metricwx', 'metric']
-        final_unit_system = weecfg.prompt_with_options(f"Your choice",
+        final_unit_system = weecfg.prompt_with_options(f"unit system",
                                                        default_unit_system, options)
     else:
         final_unit_system = default_unit_system
@@ -569,59 +569,73 @@ def copy_user(config_dict, user_root=None, dry_run=False):
 def copy_util(config_path, config_dict, dry_run=False, force=False):
     import weewxd
     weewxd_path = weewxd.__file__
+    cfg_dir = os.path.dirname(config_path)
     username = getpass.getuser()
     groupname = grp.getgrgid(os.getgid()).gr_name
     weewx_root = config_dict['WEEWX_ROOT']
-    # This is the set of substitutions to be performed. The key is a regular expression. If a
-    # match is found, the value will be substituted for the matched expression.
-    re_dict = {
-        # For systemd
-        r"^#User=.*": rf"User={username}",
-        # For systemd
-        r"^#Group=.*": rf"Group={groupname}",
-        # For systemd
-        r"^ExecStart=.*": rf"ExecStart={sys.executable} {weewxd_path} {config_path}",
-        # For init.d, redhat, bsd, suse
-        r"^WEEWX_BIN=.*": rf"WEEWX_BIN={sys.executable} {weewxd_path}",
-        # For init.d, redhat, bsd, suse
-        r"^WEEWX_CFG=.*": rf"WEEWX_CFG={config_path}",
-        # For init.d
-        r"^WEEWX_USER=.*": rf"WEEWX_USER={groupname}",
-        # For multi
-        r"^WEEWX_BINDIR=.*": rf"WEEWX_BINDIR={os.path.dirname(weewxd_path)}",
-        # For multi
-        r"^WEEWX_CFGDIR=.*": rf"WEEWX_CFGDIR={os.path.dirname(config_path)}",
-        # for macOS:
-        r"<string>/usr/bin/python3</string>": rf"<string>{sys.executable}<//string>",
-        # For macOS:
-        r"<string>/Users/Shared/weewx/src/weewxd.py</string>": rf"<string>{weewxd_path}</string>",
-        # For macOS:
-        r"<string>/Users/Shared/weewx/weewx.conf</string>": rf"<string>{config_path}</string>",
-        # For Apache
-        r"/home/weewx/public_html": rf"{os.path.join(weewx_root, 'public_html')}",
-        # For scripts
-        r"^UTIL_ROOT=.*": rf"UTIL_ROOT={os.path.join(weewx_root, 'util')}",
+    html_dir = os.path.join(weewx_root, 'public_html') # FIXME: get from conf
+    util_dir = os.path.join(weewx_root, 'util')
+    bin_dir = os.path.dirname(weewxd_path)
+
+    # This is the set of substitutions to be performed, with a different set
+    # for each type of files. The key is a regular expression. If a match is
+    # found, the value will be substituted for the matched expression.  Beware
+    # that the labels for user, group, config directory, and other parameters
+    # are consistent throughout the utility files.  Be sure to test the
+    # patterns by using them to grep all of the files in the util directory to
+    # see what actually matches.
+
+    re_patterns = {
+        'scripts': { # daemon install scripts
+                r"^UTIL_ROOT=.*": rf"UTIL_ROOT={util_dir}",
+        },
+        'systemd': { # systemd unit files
+            r"User=WEEWX_USER": rf"User={username}",
+            r"Group=WEEWX_GROUP": rf"Group={groupname}",
+            r"ExecStart=WEEWX_PYTHON WEEWXD": rf"ExecStart={sys.executable} {weewxd_path}",
+            r" WEEWX_CFGDIR/": rf" {cfg_dir}/",
+        },
+        'launchd': { # macos launchd files
+            r"<string>/usr/bin/python3</string>": rf"<string>{sys.executable}<//string>",
+            r"<string>/Users/Shared/weewx/src/weewxd.py</string>": rf"<string>{weewxd_path}</string>",
+            r"<string>/Users/Shared/weewx/weewx.conf</string>": rf"<string>{config_path}</string>",
+        },
+        'default': { # defaults file used by SysV init scripts
+            r"^WEEWX_PYTHON=.*": rf"WEEWX_PYTHON={sys.executable}",
+            r"^WEEWX_BINDIR=.*": rf"WEEWX_BINDIR={bin_dir}",
+            r"^WEEWX_CFGDIR=.*": rf"WEEWX_CFGDIR={cfg_dir}",
+            r"^WEEWX_USER=.*": rf"WEEWX_USER={username}",
+            r"^WEEWX_GROUP=.*": rf"WEEWX_GROUP={groupname}",
+        },
     }
-    # Convert to a list of two-way tuples.
-    re_list = [(re.compile(key), re_dict[key]) for key in re_dict]
+
+    # Convert the patterns to a list of two-way tuples
+    for k in re_patterns:
+        re_patterns[k] = [(re.compile(key), re_patterns[k][key]) for key in re_patterns[k]]
 
     def _patch_file(srcpath, dstpath):
-        """Copy an individual file from srcpath to dstpath, while making substitutions
-         using the list of regular expressions re_list"""
-        with open(srcpath, 'r') as rd, open(dstpath, 'w') as wd:
-            for line in rd:
-                # Lines starting with "#&" are comment lines. Ignore them.
-                if line.startswith("#&"):
-                    continue
-                # Go through all the regular expressions, substituting the value for the key
-                for key, value in re_list:
-                    line = key.sub(value, line)
-                wd.write(line)
+        srcdir = os.path.basename(os.path.dirname(srcpath))
+        if srcdir in re_patterns:
+            # Copy an individual file from srcpath to dstpath, while making
+            # substitutions using the list of regular expressions re_list
+            re_list = re_patterns[srcdir]
+            with open(srcpath, 'r') as rd, open(dstpath, 'w') as wd:
+                for line in rd:
+                    # Lines starting with "#&" are comment lines. Ignore them.
+                    if line.startswith("#&"):
+                        continue
+                    # Go through all the regular expressions, substituting the
+                    # value for the key
+                    for key, value in re_list:
+                        line = key.sub(value, line)
+                    wd.write(line)
+        else:
+            # Just copy the file
+            shutil.copyfile(srcpath, dstpath)
 
     # Create a callable using the shutil.ignore_patterns factory function.
-    _ignore_function = shutil.ignore_patterns('*.pyc', '__pycache__', 'apache', 'default', 'i18n',
-                                              'init.d', 'logwatch', 'newsyslog.d',
-                                              'solaris', 'tmpfiles.d')
+    # The files/directories that match items in this list will *not* be copied.
+    _ignore_function = shutil.ignore_patterns('*.pyc', '__pycache__')
 
     util_dir = os.path.join(weewx_root, 'util')
     if os.path.isdir(util_dir):
@@ -636,18 +650,18 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
     with weeutil.weeutil.get_resource_path('weewx_data', 'util') as util_resources:
         print(f"Copying utility files into {util_dir}")
         if not dry_run:
-            # Copy the tree rooted in 'util_resources' to 'dstdir', while ignoring files given
-            # by _ignore_function. While copying, use the function _patch_file() to massage
-            # the files.
+            # Copy the tree rooted in 'util_resources' to 'dstdir', while
+            # ignoring files given by _ignore_function. While copying, use the
+            # function _patch_file() to massage the files.
             shutil.copytree(util_resources, util_dir,
-                            ignore=_ignore_function,
-                            copy_function=_patch_file)
+                            ignore=_ignore_function, copy_function=_patch_file)
 
     scripts_dir = os.path.join(weewx_root, 'scripts')
 
-    # The 'scripts' subdirectory is a little different. We don't delete it first, because it's a
-    # comman name and a user might have put things there. Instead, just copy our files into it.
-    # First, make sure the subdirectory exists:
+    # The 'scripts' subdirectory is a little different. We do not delete it
+    # first, because it's a comman name and a user might have put things there.
+    # Instead, just copy our files into it. First, make sure the subdirectory
+    # exists:
     os.makedirs(scripts_dir, exist_ok=True)
     # Then do the copying.
     with weeutil.weeutil.get_resource_path('weewx_data', 'scripts') as scripts_resources:
@@ -658,8 +672,9 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
                 abs_dst = os.path.join(scripts_dir, file)
                 _patch_file(abs_src, abs_dst)
                 status = os.stat(abs_dst)
-                # Because these files have been tailored to a particular user, they hould only
-                # be executable by that user. So, use S_IXUSR (instead of S_IXOTH):
+                # Because these files have been tailored to a particular user,
+                # they hould only be executable by that user. So, use S_IXUSR
+                # (instead of S_IXOTH):
                 os.chmod(abs_dst, status.st_mode | stat.S_IXUSR)
 
     return util_dir

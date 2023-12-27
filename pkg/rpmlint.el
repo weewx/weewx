@@ -7,6 +7,7 @@ addFilter("non-standard-dir-perm /etc/weewx.* 2775")
 addFilter("non-standard-dir-perm /var/lib/weewx 2775")
 addFilter("non-standard-dir-perm /var/www/html/weewx 2775")
 addFilter("dangerous-command-in-%pre cp")
+addFilter("dangerous-command-in-%post cp")
 addFilter("dangerous-command-in-%post mv")
 # these are helper scripts that use /usr/bin/env
 addFilter("wrong-script-interpreter .*/setup_mysql.sh")

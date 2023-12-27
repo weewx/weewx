@@ -14,7 +14,7 @@ if you are using a driver or skin that is not part of the WeeWX core.
 
 If you still have problems, here are a few things to try on your system:
 
-1. Look at the [log file](../running.md#monitoring-weewx). We
+1. Look at the [log file](../usersguide/monitoring.md#log-messages). We
 are always happy to take questions, but the first thing someone will ask is,
 "What did you find in the log file?"
 

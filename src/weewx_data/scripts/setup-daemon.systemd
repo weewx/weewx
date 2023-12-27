@@ -1,9 +1,6 @@
 #!/bin/sh
 #
-# Copy configuration files that integrate WeeWX into a Linux system that uses
-# systemd.  These include udev rules for known devices, and the service unit
-# files to facilitate starting/stopping WeeWX.
-#
+# Install files that integrate WeeWX into a Linux system that uses systemd.
 # This script must be run using sudo, or as root.
 #
 set -e
@@ -15,9 +12,32 @@ if [ "$(id -u)" != "0" ]; then
   exit 1
 fi
 
+if [ ! -d /etc/systemd/system ]; then
+    echo "Apparently this system does not use systemd"
+    exit 1
+fi
+
+ts=`date +"%Y%m%d%H%M%S"`
+
+copy_file() {
+    src=$1
+    dst=$2
+    if [ -f "$dst" ]; then
+	mv ${dst} ${dst}.${ts}
+    fi
+    cp $src $dst
+}
+
+remove_file() {
+    dst=$1
+    if [ -f "$dst" ]; then
+	rm $dst
+    fi
+}
+
 do_install() {
-    echo "This script sets up the files necessary to run WeeWX at system startup."
-    echo "On some systems, it can be slow to run. Please be patient."
+    echo "Set up the files necessary to run WeeWX at system startup."
+    echo "On some systems, this may take awhile. Please be patient."
 
     if [ ! -d $UTIL_ROOT ]; then
         echo "Cannot find utility files at location '$UTIL_ROOT'"
@@ -27,23 +47,20 @@ do_install() {
     echo "Copying files from $UTIL_ROOT..."
     if [ -d /etc/udev/rules.d ]; then
         echo "  udev rules"
-        cp $UTIL_ROOT/udev/rules.d/weewx.rules /etc/udev/rules.d/60-weewx.rules
+	copy_file $UTIL_ROOT/udev/rules.d/weewx.rules /etc/udev/rules.d/60-weewx.rules
+	echo "    If you are using a device that is connected to the computer by USB or"
+	echo "    serial port, unplug the device then plug it back in again to ensure that"
+	echo "    permissions are applied correctly."
     fi
-    if [ -d /etc/systemd/system ]; then
-        echo "  systemd unit"
-        cp $UTIL_ROOT/systemd/weewx.service /etc/systemd/system
-        cp $UTIL_ROOT/systemd/weewx@.service /etc/systemd/system
-    fi
+
+    echo "  systemd unit"
+    copy_file $UTIL_ROOT/systemd/weewx.service /etc/systemd/system/weewx.service
+    copy_file $UTIL_ROOT/systemd/weewx@.service /etc/systemd/system/weewx@.service
 
     echo "Reloading systemd..."
     systemctl daemon-reload
     echo "Enabling weewx..."
     systemctl enable weewx
-
-    echo "If you are using a device that is connected to the computer by USB or"
-    echo "serial port, unplug the device then plug it back in again to ensure that"
-    echo "permissions are applied correctly."
-    echo ""
     echo "You can start weewx with the following command:"
     echo "  '\033[1msudo systemctl start weewx\033[0m'"
 }
@@ -54,18 +71,12 @@ do_uninstall() {
     echo "Disabling weewx..."
     systemctl disable weewx
     echo "Removing files..."
-    if [ -f /etc/systemd/system/weewx.service ]; then
-        echo "  systemd unit"
-        rm /etc/systemd/system/weewx.service
-    fi
-    if [ -f /etc/systemd/system/weewx@.service ]; then
-        echo "  systemd unit template"
-        rm /etc/systemd/system/weewx@.service
-    fi
-    if [ -f /etc/udev/rules.d/60-weewx.rules ]; then
-        echo "  udev rules"
-        rm /etc/udev/rules.d/60-weewx.rules
-    fi
+    echo "  systemd unit"
+    remove_file /etc/systemd/system/weewx.service
+    echo "  systemd unit template"
+    remove_file /etc/systemd/system/weewx@.service
+    echo "  udev rules"
+    remove_file /etc/udev/rules.d/60-weewx.rules
 }
 
 ACTION=$1

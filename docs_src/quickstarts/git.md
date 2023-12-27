@@ -83,10 +83,10 @@ python3 ~/weewx/src/weectl.py station create
 ```
 
 The tool `weectl` will ask you a series of questions, then create a directory
-`weewx-data` in your home directory with a new configuration file. It will
-also install skins, documentation, utilitiy files, and examples in the same
-directory. The database and reports will also go into that directory, but
-only after you run `weewxd`, as shown in the following step.
+`weewx-data` in your home directory with a new configuration file. It will also
+install skins, utilitiy files, and examples in the same directory. The database
+and reports will also go into that directory, but only after you run `weewxd`,
+as shown in the following step.
 
 
 ## Run `weewxd`
@@ -124,10 +124,10 @@ your station information and data.
     have to substitute an explicit path to your home directory,
     for example, `file:///home/jackhandy` instead of `~`.
 
-If you have problems, check the
-[system log](../usersguide/running.md#monitoring-weewx).
-See the [*Troubleshooting*](../usersguide/troubleshooting/what-to-do.md)
-section of the [*User's guide*](../usersguide/introduction.md) for more help.
+If you have problems, check the [system
+log](../usersguide/monitoring.md#log-messages). See the
+[*Troubleshooting*](../usersguide/troubleshooting/what-to-do.md) section of the
+[*User's guide*](../usersguide/introduction.md) for more help.
 
 
 ## Customize

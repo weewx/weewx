@@ -9,17 +9,10 @@ import logging
 import os.path
 import sys
 
-import weeutil.logger
 import weewx
 from weeutil.weeutil import to_int
 
-
-def add_user_path(config_dict):
-    """add the path to the parent of the user directory to PYTHONPATH."""
-    root_dict = extract_roots(config_dict)
-    lib_dir = os.path.abspath(os.path.join(root_dict['USER_DIR'], '..'))
-    sys.path.append(lib_dir)
-    return lib_dir
+log = logging.getLogger(__name__)
 
 
 def extract_roots(config_dict):
@@ -50,23 +43,29 @@ def extract_roots(config_dict):
     return root_dict
 
 
-def initialize(config_dict, log_label):
-    """Set debug, set up the logger, and add the user path"""
+def initialize(config_dict):
+    """Set debug, set up the logger, and add the user path
+
+    Args:
+        config_dict(dict): The configuration dictionary
+
+    Returns:
+        tuple[str,str]: A tuple containing (WEEWX_ROOT, USER_ROOT)
+    """
 
     # Set weewx.debug as necessary:
     weewx.debug = to_int(config_dict.get('debug', 0))
 
-    # Customize the logging with user settings.
-    weeutil.logger.setup(log_label, config_dict)
+    root_dict = extract_roots(config_dict)
 
     # Add the 'user' package to PYTHONPATH
-    user_dir = add_user_path(config_dict)
+    user_dir = os.path.abspath(os.path.join(root_dict['USER_DIR'], '..'))
+    sys.path.append(user_dir)
 
     # Now we can import user.extensions
     try:
         importlib.import_module('user.extensions')
     except ModuleNotFoundError as e:
-        log = logging.getLogger(__name__)
         log.error("Cannot load user extensions: %s", e)
 
-    return user_dir
+    return config_dict['WEEWX_ROOT'], user_dir

@@ -7,21 +7,19 @@
 import weecfg
 import weecfg.extension
 import weectllib
-import weeutil.logger
-import weewx
 from weeutil.printer import Printer
-from weeutil.weeutil import bcolors, to_int
+from weeutil.weeutil import bcolors
 
 extension_list_usage = f"""{bcolors.BOLD}weectl extension list
             [--config=FILENAME]{bcolors.ENDC}
 """
 extension_install_usage = f"""  {bcolors.BOLD}weectl extension install (FILE|DIR|URL)
             [--config=FILENAME]
-            [--dry-run] [--verbosity=N]{bcolors.ENDC}
+            [--dry-run] [--yes] [--verbosity=N]{bcolors.ENDC}
 """
 extension_uninstall_usage = f"""  {bcolors.BOLD}weectl extension uninstall NAME
             [--config=FILENAME]
-            [--dry-run] [--verbosity=N] [-y]{bcolors.ENDC}
+            [--dry-run] [--yes] [--verbosity=N]{bcolors.ENDC}
 """
 extension_usage = '\n     '.join((extension_list_usage,
                                   extension_install_usage,
@@ -76,6 +74,8 @@ def add_subparser(subparsers):
                                           action='store_true',
                                           help='Print what would happen, but do not actually '
                                                'do it.')
+    install_extension_parser.add_argument('-y', '--yes', action='store_true',
+                                          help="Don't ask for confirmation. Just do it.")
     install_extension_parser.add_argument('--verbosity', type=int, default=1, metavar='N',
                                           help="How much information to display (0|1|2|3).")
     install_extension_parser.set_defaults(func=weectllib.dispatch)
@@ -98,10 +98,10 @@ def add_subparser(subparsers):
                                             action='store_true',
                                             help='Print what would happen, but do not actually '
                                                  'do it.')
-    uninstall_extension_parser.add_argument('--verbosity', type=int, default=1, metavar='N',
-                                            help="How much information to display (0|1|2|3).")
     uninstall_extension_parser.add_argument('-y', '--yes', action='store_true',
                                             help="Don't ask for confirmation. Just do it.")
+    uninstall_extension_parser.add_argument('--verbosity', type=int, default=1, metavar='N',
+                                            help="How much information to display (0|1|2|3).")
     uninstall_extension_parser.set_defaults(func=weectllib.dispatch)
     uninstall_extension_parser.set_defaults(action_func=uninstall_extension)
 
@@ -113,7 +113,7 @@ def list_extensions(config_dict, _):
 
 def install_extension(config_dict, namespace):
     ext = _get_extension_engine(config_dict, namespace.dry_run, namespace.verbosity)
-    ext.install_extension(namespace.source)
+    ext.install_extension(namespace.source, no_confirm=namespace.yes)
 
 
 def uninstall_extension(config_dict, namespace):

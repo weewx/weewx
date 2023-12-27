@@ -65,6 +65,7 @@ nav:
     - "Installing WeeWX": usersguide/installing.md
     - "Where to find things" : usersguide/where.md
     - "Running WeeWX": usersguide/running.md
+    - "Monitoring WeeWX": usersguide/monitoring.md
     - "Web server integration": usersguide/webserver.md
     - "Backup & restore": usersguide/backup.md
     - "MySQL/MariaDB": usersguide/mysql-mariadb.md

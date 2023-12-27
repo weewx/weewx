@@ -1,43 +1,38 @@
 #!/bin/sh
-# Start script for FreeBSD, contributed by user Fabian Abplanalp
-# Put this script in /usr/local/etc/rc.d then adjust WEEWX_BIN and
-# WEEWX_CFG values in /etc/defaults/weewx
+#
+# PROVIDE: weewx
+# REQUIRE: DAEMON
+# KEYWORD: shutdown
+#
+# install this file as /usr/local/etc/rc.d/weewx
+#
+# to enable it, put this in /etc/rc.conf.local
+# weewx_enable=YES
+#
+# to disable it, use weewx_enable=NO
 
-WEEWX_BIN="/opt/weewx/bin/weewxd"
-WEEWX_CFG="/opt/weewx/weewx.conf"
-WEEWX_PID="/var/run/weewx.pid"
+WEEWX_PYTHON=/usr/local/bin/python3
+WEEWX_BINDIR=/usr/local/weewx/src
+WEEWX_CFGDIR=/usr/local/etc/weewx
+WEEWX_RUNDIR=/var/run
+WEEWX_CFG=weewx.conf
 
 # Read configuration variable file if it is present
 [ -r /etc/defaults/weewx ] && . /etc/defaults/weewx
 
-case "$1" in
-  "start")
-    echo "Starting weewx..."
-    ${WEEWX_BIN} ${WEEWX_CFG} --daemon &
-    echo $! > ${WEEWX_PID}
-    echo "done"
-  ;;
+WEEWXD=${WEEWX_BINDIR}/weewxd.py
 
-  "stop")
-    echo "Stopping weewx..."
-    if [ -f ${WEEWX_PID} ] ; then
-      kill `cat ${WEEWX_PID}`
-      rm ${WEEWX_PID}
-      echo "done"
-    else
-      echo "not running?"
-    fi
-  ;;
+. /etc/rc.subr
 
-  "restart")
-    echo "Restarting weewx..."
-    $0 stop
-    sleep 2
-    $0 start
-  ;;
+name="weewx"
+rcvar=weewx_enable
 
-  *)
-    echo "$0 [start|stop|restart]"
-  ;;
+weewx_pid=${WEEWX_RUNDIR}/weewx.pid
+weewx_config=${WEEWX_CFGDIR}/${WEEWX_CFG}
 
-esac
+command=${WEEWXD}
+command_interpreter=${WEEWX_PYTHON}
+weewx_flags="--daemon --pidfile=${weewx_pid} ${weewx_config}"
+
+load_rc_config $name
+run_rc_command "$1"
