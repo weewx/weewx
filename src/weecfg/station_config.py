@@ -605,7 +605,7 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
             r" WEEWX_CFGDIR/": rf" {cfg_dir}/",
         },
         'launchd': { # macos launchd files
-            r"<string>/usr/bin/python3</string>": rf"<string>{sys.executable}<//string>",
+            r"<string>/usr/bin/python3</string>": rf"<string>{sys.executable}</string>",
             r"<string>/Users/Shared/weewx/src/weewxd.py</string>": rf"<string>{weewxd_path}</string>",
             r"<string>/Users/Shared/weewx/weewx.conf</string>": rf"<string>{config_path}</string>",
         },
