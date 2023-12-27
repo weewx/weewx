@@ -42,7 +42,7 @@ theme:
         name: Switch to light mode
 
 extra_css:
-  - css/weewx_ui.css
+  - css/weewx_docs.css
 
 extra:
   generator: false
