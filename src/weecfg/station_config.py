@@ -73,15 +73,15 @@ def station_create(config_path, *args,
     else:
         weewx_root = os.path.abspath(os.path.dirname(config_path))
 
-    # Make sure there is not already a configuration file at the designated
-    # location.
+    # Make sure there is not a configuration file at the designated location.
     if os.path.exists(config_path):
         raise weewx.ViolatedPrecondition(f"Config file {config_path} already exists")
 
     print(f"Creating configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
 
-    # Unless we've been given a path to the new configuration file, retrieve
-    # it from package resources.
+    # If a distribution configuration was specified, use the contents from that
+    # for the new configuration. Otherwise, extract the contents from the
+    # config in the python package resources.
     if dist_config_path:
         dist_config_dict = configobj.ConfigObj(dist_config_path, encoding='utf-8', file_error=True)
     else:
@@ -89,8 +89,8 @@ def station_create(config_path, *args,
         with weeutil.weeutil.get_resource_fd('weewx_data', 'weewx.conf') as fd:
             dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
 
-    config_config(config_path, dist_config_dict, weewx_root=weewx_root, dry_run=dry_run,
-                  *args, **kwargs)
+    config_config(config_path, dist_config_dict, weewx_root=weewx_root,
+                  dry_run=dry_run, *args, **kwargs)
     copy_skins(dist_config_dict, dry_run=dry_run)
     copy_examples(dist_config_dict, examples_root=examples_root, dry_run=dry_run)
     copy_user(dist_config_dict, user_root=user_root, dry_run=dry_run)
@@ -542,7 +542,7 @@ def copy_examples(config_dict, examples_root=None, dry_run=False, force=False):
 
     if os.path.isdir(examples_dir):
         if not force:
-            print(f"Directory {examples_dir} already exists.")
+            print(f"Example directory exists at {examples_dir}")
             return None
         else:
             print(f"Removing example directory {examples_dir}")
@@ -649,7 +649,7 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
     util_dir = os.path.join(weewx_root, 'util')
     if os.path.isdir(util_dir):
         if not force:
-            print(f"Utility directory {util_dir} already exists. Nothing done.")
+            print(f"Utility directory exists at {util_dir}")
             return None
         else:
             print(f"Removing utility directory {util_dir}")
