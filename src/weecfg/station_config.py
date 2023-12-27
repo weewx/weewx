@@ -43,36 +43,45 @@ def station_create(config_path, *args,
                    **kwargs):
     """Create a brand-new station by creating a new configuration file.
 
-    If a value  of weewx_root is not given, then it will be chosen as the directory the
-    resultant configuration file is in.
+    If a value  of weewx_root is not given, then it will be chosen as the
+    directory the resultant configuration file is in.
 
-    This function first checks whether the configuration file already exists. If it does, then
-    an exception is raised.
+    This function first checks whether the configuration file already exists.
+    If it does, then an exception is raised.
 
     It then:
-      1. If no_prompt is false, it creates the configuration file by prompting the user. If true,
-         it uses defaults.
-      2. Copies the examples and utility files out of package resources and into WEEWX_ROOT.
+      1. If no_prompt is false, it creates the configuration file by prompting
+         the user. If true, it uses defaults.
+      2. Copies the examples and utility files out of package resources and
+         into WEEWX_ROOT.
     """
 
     if dry_run:
         print("This is a dry run. Nothing will actually be done.")
 
+    # If no configuration file was specified, use the default (which is only
+    # 'correct' for pip/git installs).
     if not config_path:
         config_path = weecfg.default_config_path
 
-    # If a value of WEEWX_ROOT was not given on the command line, then pick the directory the
-    # configuration file sits in as the default
-    weewx_root = weewx_root or os.path.abspath(os.path.dirname(config_path))
+    # If a value of WEEWX_ROOT was specified, use that, overriding whatever
+    # might have been specified for the configuration file.  Otherwise, use the
+    # directory in which the configuration file resides.
+    if weewx_root:
+        _, filename = os.path.split(config_path)
+        config_path = os.path.join(weewx_root, filename)
+    else:
+        weewx_root = os.path.abspath(os.path.dirname(config_path))
 
-    # Make sure there is not already a configuration file at the designated location.
+    # Make sure there is not already a configuration file at the designated
+    # location.
     if os.path.exists(config_path):
         raise weewx.ViolatedPrecondition(f"Config file {config_path} already exists")
 
     print(f"Creating configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
 
-    # Unless we've been given a path to the new configuration file, retrieve it from
-    # package resources.
+    # Unless we've been given a path to the new configuration file, retrieve
+    # it from package resources.
     if dist_config_path:
         dist_config_dict = configobj.ConfigObj(dist_config_path, encoding='utf-8', file_error=True)
     else:

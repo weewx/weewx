@@ -297,7 +297,7 @@ def _add_common_args(parser):
                              'Default is "us".')
     parser.add_argument('--weewx-root',
                         metavar='DIRECTORY',
-                        help="Location of WEEWX_ROOT. Rarely used.")
+                        help="Location of WEEWX_ROOT.")
     parser.add_argument('--skin-root',
                         metavar='DIRECTORY',
                         help='Where to put the skins, relatve to WEEWX_ROOT. Default is "skins".')
