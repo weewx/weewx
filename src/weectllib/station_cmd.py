@@ -226,7 +226,7 @@ def create_station(namespace):
         print(f"  {script_dir}")
         path = os.path.join(script_dir, script_name)
         print(f"For example:")
-        print(f"  {bcolors.BOLD}'sudo {path}'{bcolors.ENDC}")
+        print(f"  {bcolors.BOLD}sudo {path}{bcolors.ENDC}")
 
 
 def reconfigure_station(config_dict, namespace):
