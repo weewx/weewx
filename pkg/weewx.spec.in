@@ -15,14 +15,12 @@
 %define platform suse
 %define deps python3, python3-importlib_resources, python3-configobj, python3-Cheetah3, python3-Pillow, python3-pyserial, python3-usb, python3-ephem
 %define python python3
-%define html_root /var/www/html/weewx
 %endif
 
 # rh: python3 on redhat, fedora, centos, rocky
 %if "%{_vendor}" == "redhat"
 %define app_group Applications/Science
 %define platform redhat
-%define html_root /var/www/html/weewx
 # disable shebang mangling. see https://github.com/atom/atom/issues/21937
 %undefine __brp_mangle_shebangs
 %if "%{os_target}" == "8"
@@ -52,6 +50,7 @@
 %global cfg_file     %{dst_cfg_dir}/weewx.conf
 %define systemd_dir  /usr/lib/systemd/system
 %define udev_dir     /usr/lib/udev/rules.d
+%define html_root    /var/www/html/weewx
 
 %define entry_points weewxd weectl
 %define weewx_user weewx
@@ -89,10 +88,6 @@ mkdir -p %{buildroot}%{dst_cfg_dir}
 mkdir -p %{buildroot}%{dst_user_dir}
 mkdir -p %{buildroot}%{dst_doc_dir}
 mkdir -p %{buildroot}/etc/default
-mkdir -p %{buildroot}%{systemd_dir}
-mkdir -p %{buildroot}%{udev_dir}
-mkdir -p %{buildroot}/var/lib/weewx
-mkdir -p %{buildroot}/var/www/html/weewx
 
 # rpm wants copyright and license even if no docs
 cp docs_src/copyright.md %{buildroot}%{dst_doc_dir}/copyright
@@ -107,11 +102,15 @@ cp src/weewx_data/bin/user/extensions.py %{buildroot}%{dst_user_dir}
 
 # copy the ancillary files to the correct location
 cp -r src/weewx_data/examples %{buildroot}%{dst_cfg_dir}
-cp -r src/weewx_data/skins %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/import %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/logwatch %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/rsyslog.d %{buildroot}%{dst_cfg_dir}
 cp -r src/weewx_data/util/logrotate.d %{buildroot}%{dst_cfg_dir}
+mkdir %{buildroot}%{dst_cfg_dir}/systemd
+cp pkg/etc/systemd/system/weewx.service %{buildroot}%{dst_cfg_dir}/systemd
+cp pkg/etc/systemd/system/weewx@.service %{buildroot}%{dst_cfg_dir}/systemd
+mkdir %{buildroot}%{dst_cfg_dir}/udev
+cp pkg/etc/udev/rules.d/weewx.rules %{buildroot}%{dst_cfg_dir}/udev
 
 # create the weewx configuration
 cat src/weewx_data/weewx.conf | sed \
@@ -123,10 +122,6 @@ cat src/weewx_data/weewx.conf | sed \
 
 # make a copy of the generic configuration file
 cp %{buildroot}%{dst_cfg_dir}/weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf-%{weewx_version}
-
-# create the init configuration
-cp pkg/etc/systemd/system/weewx.service %{buildroot}%{systemd_dir}
-cp pkg/etc/systemd/system/weewx@.service %{buildroot}%{systemd_dir}
 
 # create the entry points
 for f in %{entry_points}; do \
@@ -141,48 +136,87 @@ cat pkg/etc/default/weewx | sed \
  -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=%{python}%' \
  > %{buildroot}/etc/default/weewx
 
-# udev rules for known devices
-cp pkg/etc/udev/rules.d/weewx.rules %{buildroot}%{udev_dir}/60-weewx.rules
-
-# log handling
-
 
 %pre
-if [ "$1" = "2" ]; then
+if [ $1 -gt 1 ]; then
   # this is an upgrade
   if [ -f %{cfg_file} ]; then
     echo Saving previous config as %{cfg_file}.prev
     cp -p %{cfg_file} %{cfg_file}.prev
   fi
 fi
-# create the weewx user and group
-/usr/bin/getent group %{weewx_group} || /usr/sbin/groupadd -r %{weewx_group}
-/usr/bin/getent passwd %{weewx_user} || /usr/sbin/useradd -r -g %{weewx_group} -M -s /sbin/nologin %{weewx_user}
+
 
 %post
+precompile() {
+    echo Precompile using %{python} in %{dst_code_dir}
+    %{python} -m compileall %{dst_code_dir} > /dev/null
+}
+
+# if there is already a database directory, then use ownership of that to
+# determine what user/group we should use for permissions and running.
+# otherwise, we create a weewx user and group and use that.
+WEEWX_USER=weewx
+WEEWX_GROUP=weewx
+if [ -f /var/lib/weewx ]; then
+    WEEWX_USER=$(stat -c "%%U" /var/lib/weewx)
+    WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)
+fi
+if [ "$WEEWX_USER" = "weewx" ]; then
+    /usr/bin/getent group $WEEWX_GROUP || /usr/sbin/groupadd -r $WEEWX_GROUP
+    /usr/bin/getent passwd $WEEWX_USER || /usr/sbin/useradd -r -g $WEEWX_GROUP -M -s /sbin/nologin $WEEWX_USER
+fi
+
 # see which init system (if any) is running
 pid1=none
 if [ -d /run/systemd/system ]; then
   pid1=systemd
 fi
-# restart syslog so that it picks up the weewx logging directives
-if [ -f /run/rsyslogd.pid ]; then
-  if [ "$pid1" = "systemd" ]; then
-    systemctl restart rsyslog
-  fi
+# install the init files
+if [ -d %{systemd_dir} ]; then
+    cat %{dst_cfg_dir}/systemd/weewx.service | sed \
+ -e 's/User=.*/User=${WEEWX_USER}/'
+ -e 's/Group=.*/Group=${WEEWX_GROUP}/'
+ > %{systemd_dir}/weewx.service
+    cat %{dst_cfg_dir}/systemd/weewx@.service | sed \
+ -e 's/User=.*/User=${WEEWX_USER}/'
+ -e 's/Group=.*/Group=${WEEWX_GROUP}/'
+ > %{systemd_dir}/weewx@.service
 fi
-# pre-compile the python code
-echo Precompile using %{python} in %{dst_code_dir}
-%{python} -m compileall %{dst_code_dir} > /dev/null
+
+# install the udev rules
+if [ -d %{udev_dir} -a "$WEEWX_USER" = "weewx" ]; then
+    cp %{dst_cfg_dir}/udev/weewx.rules %{udev_dir}/60-weewx.rules
+fi
+
+# copy the skins if there are not already skins in place
+if [ ! -d %{dst_cfg_dir}/skins ]; then
+    cp -rp %{dst_code_dir}/weewx_data/skins %{dst_cfg_dir}
+fi
+
+# create database directory
+mkdir -p /var/lib/weewx
+chown -R $WEEWX_USER /var/lib/weewx
+chgrp -R $WEEWX_GROUP /var/lib/weewx
+# create the reports directory
+mkdir -p /var/www/html/weewx
+chown -R $WEEWX_USER /var/www/html/weewx
+chgrp -R $WEEWX_GROUP /var/www/html/weewx
+# ensure correct ownership in config directory
+chown -R $WEEWX_USER %{dst_cfg_dir}
+chgrp -R $WEEWX_GROUP %{dst_cfg_dir}
+
 if [ "$1" = "1" ]; then
   # this is a new installation
   # create a sane configuration file with simulator as the station type
   /usr/bin/weectl station reconfigure --config=%{cfg_file} --driver=weewx.drivers.simulator --no-prompt --no-backup
+  # pre-compile the python code
+  precompile
   if [ "$pid1" = "systemd" ]; then
     systemctl enable weewx
     systemctl start weewx
   fi
-elif [ "$1" = "2" ]; then
+elif [ $1 -gt 1 ]; then
   # this is an upgrade
   # upgrade a copy of the previous config to create the upgraded version, but
   # do not touch the user's configuration.
@@ -208,10 +242,14 @@ elif [ "$1" = "2" ]; then
   if [ -d /usr/share/weewx/user ]; then
     echo "Copying old extensions to /etc/weewx/bin/user"
     cp -rp /usr/share/weewx/user/* /etc/weewx/bin/user
+    chown -R $WEEWX_USER /etc/weewx/bin/user
+    chgrp -R $WEEWX_GROUP /etc/weewx/bin/user
     ts=`/usr/bin/date +"%%Y%%m%%d%%H%%M%%S"`
     echo "Moving old extensions to /usr/share/weewx/user-$ts"
     mv /usr/share/weewx/user /usr/share/weewx/user-$ts
   fi
+  # pre-compile the python code
+  precompile
   # do a full restart of weewx
   if [ "$pid1" = "systemd" ]; then
     systemctl stop weewx
@@ -231,6 +269,15 @@ if [ "$1" = "0" ]; then
   if [ "$pid1" = "systemd" ]; then
     systemctl stop weewx
     systemctl disable weewx
+    for f in weewx.service weewx@.service; do
+	if [ -f %{systemd_dir}/$f ]; then
+	    rm -f %{systemd_dir}/$f
+	fi
+    done
+  fi
+  # remove udev rules
+  if [ -f %{udev_dir}/60-weewx.rules ]; then
+      rm -f %{udev_dir}/60-weewx.rules
   fi
   # remove any bytecompiled code
   find /usr/share/weewx -name '*.pyc' -delete
@@ -247,15 +294,9 @@ rm -rf %{buildroot}
 %defattr(-,root,root)
 %attr(0755,root,root) %{_bindir}/weewxd
 %attr(0755,root,root) %{_bindir}/weectl
-%{systemd_dir}/weewx.service
-%{systemd_dir}/weewx@.service
-%{udev_dir}/60-weewx.rules
 %{dst_code_dir}/
 %doc %{dst_doc_dir}/
 %config(noreplace) %{_sysconfdir}/default/weewx
-%defattr(664,%{weewx_user},%{weewx_group},2775)
 %config(noreplace) %{dst_cfg_dir}/
-%dir %attr(2775,%{weewx_user},%{weewx_group}) /var/lib/weewx
-%dir %attr(2775,%{weewx_user},%{weewx_group}) /var/www/html/weewx
 
 %changelog
