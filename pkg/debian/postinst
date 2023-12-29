@@ -245,9 +245,9 @@ get_conf_version() {
 
 # create the user that the daemon will run as, but only if not already exist
 create_user() {
-    if [ -f /var/lib/weewx ]; then
-        WEEWX_USER=$(stat -c "%%U" /var/lib/weewx)
-        WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)
+    if [ -d /var/lib/weewx ]; then
+        WEEWX_USER=$(stat -c "%U" /var/lib/weewx)
+        WEEWX_GROUP=$(stat -c "%G" /var/lib/weewx)
     else
         mkdir -p /var/lib/weewx
     fi

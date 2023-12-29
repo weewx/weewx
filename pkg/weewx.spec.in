@@ -151,7 +151,7 @@ precompile() {
 # otherwise, we create a weewx user and group and use that.
 WEEWX_USER=weewx
 WEEWX_GROUP=weewx
-if [ -f /var/lib/weewx ]; then
+if [ -d /var/lib/weewx ]; then
     WEEWX_USER=$(stat -c "%%U" /var/lib/weewx)
     WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)
 fi
