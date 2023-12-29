@@ -178,8 +178,10 @@ if [ -d %{systemd_dir} ]; then
 fi
 
 # install the udev rules
-if [ -d %{udev_dir} -a "$WEEWX_USER" = "weewx" ]; then
-    cp %{dst_cfg_dir}/udev/weewx.rules %{udev_dir}/60-weewx.rules
+if [ -d %{udev_dir} ]; then
+    cat %{dst_cfg_dir}/udev/weewx.rules | sed \
+ -e "s/GROUP=\"weewx\"/GROUP=\"{$WEEWX_GROUP}\"/" \
+ > %{udev_dir}/60-weewx.rules
 fi
 
 # copy the skins if there are not already skins in place
