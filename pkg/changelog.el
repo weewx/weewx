@@ -1,3 +1,7 @@
+* Thu Dec 28 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc1-3
+- do skins in post
+- do systemd units in post
+- do udev rules in post
 * Tue Dec 26 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc1-2
 - include ephem as a dependency
 * Thu Dec 21 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc1-1

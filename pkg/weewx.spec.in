@@ -53,8 +53,6 @@
 %define html_root    /var/www/html/weewx
 
 %define entry_points weewxd weectl
-%define weewx_user weewx
-%define weewx_group weewx
 
 Summary: weather software
 Name: weewx
@@ -175,12 +173,12 @@ fi
 # install the init files
 if [ -d %{systemd_dir} ]; then
     cat %{dst_cfg_dir}/systemd/weewx.service | sed \
- -e 's/User=.*/User=${WEEWX_USER}/'
- -e 's/Group=.*/Group=${WEEWX_GROUP}/'
+ -e "s/User=.*/User=${WEEWX_USER}/" \
+ -e "s/Group=.*/Group=${WEEWX_GROUP}/" \
  > %{systemd_dir}/weewx.service
     cat %{dst_cfg_dir}/systemd/weewx@.service | sed \
- -e 's/User=.*/User=${WEEWX_USER}/'
- -e 's/Group=.*/Group=${WEEWX_GROUP}/'
+ -e "s/User=.*/User=${WEEWX_USER}/" \
+ -e "s/Group=.*/Group=${WEEWX_GROUP}/" \
  > %{systemd_dir}/weewx@.service
 fi
 

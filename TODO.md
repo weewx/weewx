@@ -7,6 +7,10 @@
 
 - mw make weewx-multi work on any sysv os (remove lsb dependencies)
 
+- log reports that user dir is /etc/weewx/bin but the user dir is actuall
+    /etc/weewx/bin/user not /etc/weewx/bin
+
+
 ## deb/rpm installs
 
 - mw verify upgrade behavior for v4 running as root.root - ensure that v5
