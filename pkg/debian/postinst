@@ -321,6 +321,7 @@ set_permissions() {
 migrate_extensions() {
     if [ -d /usr/share/weewx/user ]; then
         echo "Migrating old extensions to /etc/weewx/bin/user"
+        mkdir -p /etc/weewx/bin/user
         cp -rp /usr/share/weewx/user/* /etc/weewx/bin/user
         ts=`date +"%Y%m%d%H%M%S"`
         echo "Saving old extensions to /usr/share/weewx/user-$ts"
