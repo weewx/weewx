@@ -15,10 +15,12 @@
 
 - mw verify upgrade behavior for v4 running as root.root - ensure that v5
    runs as root.root (check the user in systemd unit)
-- mw verify upgrade behavior from v4 to v5 related to sysv-to-systemd change
 
 - ensure that 'systemctl disable weewx' will also disable any template units
     that might have been created by system administrator
+
+- on debian, an upgrade from 4.10.2 to 5.0.0rc1 leaves /etc/init.d/weewx in
+    place (in addition to the systemd unit).  the rc script should be removed.
 
 
 ## Testing
