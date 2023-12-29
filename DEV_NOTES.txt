@@ -15,10 +15,10 @@ checklist for doing a release:
 4. Build the documentation (may emit bogus warnings about dead links)
      1. make build-docs
 5. Create the packages
-     1. make pypi-packages
+     1. make pypi-package
      2. make debian-package
-     3. make redhat-packages
-     4. make suse-packages
+     3. make redhat-package
+     4. make suse-package
 6. Sanity check on production machine
      1. unpack the tarball, install, run
 7. Commit and tag:
@@ -61,9 +61,12 @@ The debian repo management requires aptly.
 The redhat repo management requires createrepo.
 The suse repo management requires createrepo.
 
-Install mkdocs without touching your system python:
+To build the docs:
   pip3 install --user mkdocs
   pip3 install --user mkdocs-material
+
+To build pypi package install the following (see the pypi section):
+  pip3 install --user poetry
 
 To build debian package install the following (use 'apt-get install'):
   git
@@ -87,9 +90,6 @@ To build suse package install the following (use 'zypper install'):
   rpmlint
   createrepo_c
 
-To build pypi package install the following (see the pypi section):
-  poetry
-
 
 howto -------------------------------------------------------------------------
 
@@ -99,7 +99,7 @@ how to update the version number:
   git commit -a -m "bump to version x.y.z"
 
 how to build wheel and source tarball:
-  make pypi-packages
+  make pypi-package
 
 how to build debian package:
   make deb-changelog
@@ -121,7 +121,7 @@ how to build redhat package:
 
 to build redhat packages with custom rpm revision:
   make redhat-changelog RPMREVISION=2
-  make redhat-packages RPMREVISION=2
+  make redhat-package RPMREVISION=2
   make pull-yum-repo
   make update-yum-repo RPMREVISION=2
   make push-yum-repo
@@ -147,7 +147,7 @@ to export the text version of a public key:
   gpg --export -a "YOUR_NAME_HERE" > username.gpg.key
 
 Install using pip
-  make pypi-packages
+  make pypi-package
   pip install dist/weewx-x.y.z-py3-none-any.whl
   weectl station create
 
@@ -190,10 +190,6 @@ howto: build and publish wheels to pypi.org -----------------------------------
 
 Prerequisites:
     - Python 3.7 or greater, with pip installed
-    - Install mkdocs:
-        python3 -m pip install mkdocs
-    - Install the theme "material" for mkdocs:
-        python3 -m pip install mkdocs-material
     - Install poetry:
         curl -sSL https://install.python-poetry.org | python3 -
     - Get an API token from pypi.org
@@ -202,10 +198,8 @@ Prerequisites:
         poetry config pypi-token.pypi pypi-substitute-your-pypi-key
 
 Steps:
-    - Build the docs (may emit bogus warnings about dead links):
-        make build-docs
     - Build the wheel
-        make pypi-packages
+        make pypi-package
     - Publish to pypi.org
         make upload-pypi
 
@@ -382,7 +376,7 @@ what to test when creating debian and redhat packages:
 Using pip:
 
 - new install to user space
-  make pypi-packages
+  make pypi-package
   pip install dist/weewx-x.y.z-py3-none-any.whl --user
   weectl station create
 
@@ -391,7 +385,7 @@ Using pip:
   weectl station upgrade
 
 - new install using pip to /opt/weewx
-  make pypi-packages
+  make pypi-package
   sudo pip install dist/weewx-x.y.z-py3-none-any.whl
   sudo weectl station create /opt/weewx/weewx.conf
 
