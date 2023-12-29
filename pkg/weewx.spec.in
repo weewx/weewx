@@ -80,11 +80,10 @@ PWSweather.com, or CWOP.
 
 %install
 rm -rf %{buildroot}
-mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{dst_code_dir}
 mkdir -p %{buildroot}%{dst_cfg_dir}
-mkdir -p %{buildroot}%{dst_user_dir}
 mkdir -p %{buildroot}%{dst_doc_dir}
+mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}/etc/default
 
 # rpm wants copyright and license even if no docs
@@ -93,10 +92,6 @@ cp LICENSE.txt %{buildroot}%{dst_doc_dir}/license
 
 # copy the weewx code
 cp -r src/* %{buildroot}%{dst_code_dir}
-
-# create the user extensions directory
-cp src/weewx_data/bin/user/__init__.py %{buildroot}%{dst_user_dir}
-cp src/weewx_data/bin/user/extensions.py %{buildroot}%{dst_user_dir}
 
 # copy the ancillary files to the correct location
 cp -r src/weewx_data/examples %{buildroot}%{dst_cfg_dir}
@@ -192,17 +187,25 @@ if [ ! -d %{dst_cfg_dir}/skins ]; then
     cp -rp %{dst_code_dir}/weewx_data/skins %{dst_cfg_dir}
 fi
 
+# create the user extensions directory if one does not already exist
+if [ ! -d %{dst_user_dir} ]; then
+    mkdir -p %{dst_user_dir}
+    cp %{dst_code_dir}/weewx_data/bin/user/__init__.py %{dst_user_dir}
+    cp %{dst_code_dir}/weewx_data/bin/user/extensions.py %{dst_user_dir}
+fi
+
 # create database directory
 mkdir -p /var/lib/weewx
-chown -R $WEEWX_USER /var/lib/weewx
-chgrp -R $WEEWX_GROUP /var/lib/weewx
 # create the reports directory
 mkdir -p /var/www/html/weewx
-chown -R $WEEWX_USER /var/www/html/weewx
-chgrp -R $WEEWX_GROUP /var/www/html/weewx
-# ensure correct ownership in config directory
+
+# ensure correct ownership
 chown -R $WEEWX_USER %{dst_cfg_dir}
 chgrp -R $WEEWX_GROUP %{dst_cfg_dir}
+chown -R $WEEWX_USER /var/lib/weewx
+chgrp -R $WEEWX_GROUP /var/lib/weewx
+chown -R $WEEWX_USER /var/www/html/weewx
+chgrp -R $WEEWX_GROUP /var/www/html/weewx
 
 if [ "$1" = "1" ]; then
   # this is a new installation
@@ -255,7 +258,12 @@ elif [ $1 -gt 1 ]; then
   fi
 fi
 
+
 %preun
+# 0 remove last version
+# 1 first install
+# 2 upgrade
+
 # see which init system (if any) is running
 pid1=none
 if [ -d /run/systemd/system ]; then
@@ -283,7 +291,8 @@ if [ "$1" = "0" ]; then
   find /etc/weewx/bin -name '*.pyc' -delete
   find /etc/weewx/bin -name __pycache__ -delete
 fi
-# otherwise this is an upgrade (1), so do nothing
+# otherwise this is a first install or upgrade, so do nothing
+
 
 %clean
 rm -rf %{buildroot}

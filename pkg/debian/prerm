@@ -25,8 +25,16 @@ remove|upgrade)
     if [ "$pid1" = "systemd" ]; then
 	systemctl stop weewx
         systemctl disable weewx
+        for f in weewx.service weewx@.service; do
+	    if [ -f /usr/lib/systemd/system/$f ]; then
+	        rm -f /usr/lib/systemd/system/$f
+	    fi
+        done
     fi
-
+    # remove udev rules
+    if [ -f /usr/lib/udev/rules.d/60-weewx.rules ]; then
+        rm -f /usr/lib/udev/rules.d/60-weewx.rules
+    fi
     # remove any bytecompiled code
     find /usr/share/weewx -name '*.pyc' -delete
     find /usr/share/weewx -name __pycache__ -delete

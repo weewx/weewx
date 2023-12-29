@@ -17,6 +17,9 @@
    runs as root.root (check the user in systemd unit)
 - mw verify upgrade behavior from v4 to v5 related to sysv-to-systemd change
 
+- ensure that 'systemctl disable weewx' will also disable any template units
+    that might have been created by system administrator
+
 
 ## Testing
 

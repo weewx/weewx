@@ -20,7 +20,6 @@ set -e
 cfgfile=/etc/weewx/weewx.conf
 cfgapp=/usr/bin/weectl
 
-# FIXME: get these from /etc/default/weewx?
 WEEWX_USER=weewx
 WEEWX_GROUP=weewx
 WEEWX_HOME=/var/lib/weewx
@@ -246,6 +245,12 @@ get_conf_version() {
 
 # create the user that the daemon will run as, but only if not already exist
 create_user() {
+    if [ -f /var/lib/weewx ]; then
+        WEEWX_USER=$(stat -c "%%U" /var/lib/weewx)
+        WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)
+    else
+        mkdir -p /var/lib/weewx
+    fi
     if ! getent group | grep -q "^$WEEWX_GROUP:"; then
         echo -n "Adding group $WEEWX_GROUP..."
         addgroup --quiet --system $WEEWX_GROUP || true
@@ -254,24 +259,61 @@ create_user() {
     if ! getent passwd | grep -q "^$WEEWX_USER:"; then
         echo -n "Adding system user $WEEWX_USER..."
         adduser --quiet --system --ingroup $WEEWX_GROUP \
-                --no-create-home --home /nonexistant \
+                --no-create-home --home /var/lib/weewx \
                 --disabled-password weewx || true
         echo "done"
     fi
-    test -d $WEEWX_HOME || mkdir $WEEWX_HOME
-    usermod -d $WEEWX_HOME -g $WEEWX_GROUP $WEEWX_USER > /dev/null 2>&1
+    usermod -d /var/lib/weewx -g $WEEWX_GROUP $WEEWX_USER > /dev/null 2>&1
+}
+
+setup_init() {
+    if [ -d /usr/lib/systemd/system ]; then
+        cat /etc/weewx/systemd/weewx.service | sed \
+ -e "s/User=.*/User=${WEEWX_USER}/" \
+ -e "s/Group=.*/Group=${WEEWX_GROUP}/" \
+ > /usr/lib/systemd/system/weewx.service
+        cat /etc/weewx/systemd/weewx@.service | sed \
+ -e "s/User=.*/User=${WEEWX_USER}/" \
+ -e "s/Group=.*/Group=${WEEWX_GROUP}/" \
+ > /usr/lib/systemd/system/weewx@.service
+    fi
+}
+
+# put the udev rules in place
+setup_udev() {
+    if [ -d /usr/lib/udev/rules.d -a "$WEEWX_USER" = "weewx" ]; then
+        cp /etc/weewx/udev/weewx.rules /usr/lib/udev/rules.d/60-weewx.rules
+    fi
+}
+
+# create the skins if skins do not already exist
+setup_skins() {
+    if [ ! -d /etc/weewx/skins ]; then
+        cp -rp /usr/share/weewx/weewx_data/skins /etc/weewx
+    fi
+}
+
+# create the user extensions directory if one does not already exist
+setup_user_dir() {
+    if [ ! -d /etc/weewx/bin/user ]; then
+        mkdir -p /etc/weewx/bin/user
+        cp /usr/share/weewx/weewx_data/bin/user/__init__.py /etc/weewx/bin/user
+        cp /usr/share/weewx/weewx_data/bin/user/extensions.py /etc/weewx/bin/user
+    fi
+}
+
+# create the database and reporting directories
+setup_data_dirs() {
+    mkdir -p /var/lib/weewx
+    mkdir -p /var/www/html/weewx
 }
 
 # set the permissions on the data so they are owned by weewx user
 set_permissions() {
-    if getent passwd | grep -q "^$WEEWX_USER:"; then
-        chmod 2775 /etc/weewx
-        chmod 2775 /var/lib/weewx
-        chmod 2775 /var/www/html/weewx
-        chown -R $WEEWX_USER:$WEEWX_GROUP /etc/weewx
-        chown -R $WEEWX_USER:$WEEWX_GROUP /var/lib/weewx
-        chown -R $WEEWX_USER:$WEEWX_GROUP /var/www/html/weewx
-    fi
+    for d in /etc/weewx /var/lib/weewx /var/www/html/weewx; do
+        chmod 2775 $d
+        chown -R $WEEWX_USER:$WEEWX_GROUP $d
+    done
 }
 
 # if there are any existing extensions in the V4 location, copy them to the
@@ -304,12 +346,17 @@ configure)
         install_weewxconf
     fi
 
-    # create weewx user and set permissions
     create_user
-    set_permissions
+    setup_init
+    setup_udev
+    setup_skins
+    setup_user_dir
+    setup_data_dirs
 
     # precompile the bytecode
     python3 -m compileall /usr/share/weewx > /dev/null
+
+    set_permissions
 
     # configure for system startup and start weewx
     if [ "$pid1" = "systemd" ]; then

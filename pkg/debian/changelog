@@ -1,3 +1,8 @@
+weewx (5.0.0rc1-3) unstable; urgency=low
+  * do skins in post
+  * do systemd units in post
+  * do udev rules in post
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 28 Dec 2023 21:08:30 -0500
 weewx (5.0.0rc1-2) unstable; urgency=low
   * include ephem as a dependency
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Tue, 26 Dec 2023 17:05:12 -0500

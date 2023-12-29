@@ -10,7 +10,7 @@ weewx: duplicate-font-file *
 weewx: python-script-but-no-python-dep usr/share/weewx/weewx_data/util/i18n/i18n-report #!python
 weewx: binary-without-manpage usr/bin/weectl
 weewx: binary-without-manpage usr/bin/weewxd
-weewx: dir-or-file-in-var-www var/www/html/
-weewx: dir-or-file-in-var-www var/www/html/weewx/
 weewx: maintainer-script-should-not-use-recursive-chown-or-chmod *
-weewx: maintainer-script-calls-systemctl *
+weewx: maintainer-script-calls-systemctl postinst:*
+weewx: maintainer-script-calls-systemctl prerm:*
+
