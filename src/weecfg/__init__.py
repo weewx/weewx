@@ -6,7 +6,6 @@
 #
 """Utilities used by the setup and configure programs"""
 
-import errno
 import importlib
 import os.path
 import pkgutil
@@ -18,8 +17,8 @@ import configobj
 
 import weeutil.config
 import weeutil.weeutil
-from weeutil.weeutil import bcolors
 from weeutil.printer import Printer
+from weeutil.weeutil import bcolors
 
 major_comment_block = ["",
                        "#######################################"
@@ -707,17 +706,6 @@ def extract_zip(filename, target_dir, printer=None):
 
     del zipfile
     return member_names
-
-
-def mkdir_p(path):
-    """equivalent to 'mkdir -p'"""
-    try:
-        os.makedirs(path)
-    except OSError as e:
-        if e.errno == errno.EEXIST and os.path.isdir(path):
-            pass
-        else:
-            raise
 
 
 def get_extension_installer(extension_installer_dir):
