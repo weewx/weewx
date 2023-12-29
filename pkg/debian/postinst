@@ -23,6 +23,8 @@ cfgapp=/usr/bin/weectl
 WEEWX_USER=weewx
 WEEWX_GROUP=weewx
 WEEWX_HOME=/var/lib/weewx
+WEEWX_HTML=/var/www/html/weewx
+WEEWX_USERDIR=/etc/weewx/bin/user
 
 # insert the driver and stanza into the configuration file
 insert_driver() {
@@ -243,14 +245,15 @@ get_conf_version() {
     echo $(grep '^version.*=' $1 | sed -e 's/\s*version\s*=\s*//' | sed -e 's/-.*//')
 }
 
+get_user() {
+    if [ -d $WEEWX_HOME ]; then
+        WEEWX_USER=$(stat -c "%U" $WEEWX_HOME)
+        WEEWX_GROUP=$(stat -c "%G" $WEEWX_HOME)
+    fi
+}
+
 # create the user that the daemon will run as, but only if not already exist
 create_user() {
-    if [ -d /var/lib/weewx ]; then
-        WEEWX_USER=$(stat -c "%U" /var/lib/weewx)
-        WEEWX_GROUP=$(stat -c "%G" /var/lib/weewx)
-    else
-        mkdir -p /var/lib/weewx
-    fi
     if ! getent group | grep -q "^$WEEWX_GROUP:"; then
         echo -n "Adding group $WEEWX_GROUP..."
         addgroup --quiet --system $WEEWX_GROUP || true
@@ -259,11 +262,10 @@ create_user() {
     if ! getent passwd | grep -q "^$WEEWX_USER:"; then
         echo -n "Adding system user $WEEWX_USER..."
         adduser --quiet --system --ingroup $WEEWX_GROUP \
-                --no-create-home --home /var/lib/weewx \
+                --no-create-home --home $WEEWX_HOME \
                 --disabled-password weewx || true
         echo "done"
     fi
-    usermod -d /var/lib/weewx -g $WEEWX_GROUP $WEEWX_USER > /dev/null 2>&1
 }
 
 setup_init() {
@@ -295,22 +297,22 @@ setup_skins() {
 
 # create the user extensions directory if one does not already exist
 setup_user_dir() {
-    if [ ! -d /etc/weewx/bin/user ]; then
-        mkdir -p /etc/weewx/bin/user
-        cp /usr/share/weewx/weewx_data/bin/user/__init__.py /etc/weewx/bin/user
-        cp /usr/share/weewx/weewx_data/bin/user/extensions.py /etc/weewx/bin/user
+    if [ ! -d $WEEWX_USERDIR ]; then
+        mkdir -p $WEEWX_USERDIR
+        cp /usr/share/weewx/weewx_data/bin/user/__init__.py $WEEWX_USERDIR
+        cp /usr/share/weewx/weewx_data/bin/user/extensions.py $WEEWX_USERDIR
     fi
 }
 
 # create the database and reporting directories
 setup_data_dirs() {
-    mkdir -p /var/lib/weewx
-    mkdir -p /var/www/html/weewx
+    mkdir -p $WEEWX_HOME
+    mkdir -p $WEEWX_HTML
 }
 
 # set the permissions on the data so they are owned by weewx user
 set_permissions() {
-    for d in /etc/weewx /var/lib/weewx /var/www/html/weewx; do
+    for d in /etc/weewx $WEEWX_HOME $WEEWX_HTML; do
         chmod 2775 $d
         chown -R $WEEWX_USER:$WEEWX_GROUP $d
     done
@@ -320,9 +322,9 @@ set_permissions() {
 # V5 location, then move aside the old location
 migrate_extensions() {
     if [ -d /usr/share/weewx/user ]; then
-        echo "Migrating old extensions to /etc/weewx/bin/user"
-        mkdir -p /etc/weewx/bin/user
-        cp -rp /usr/share/weewx/user/* /etc/weewx/bin/user
+        echo "Migrating old extensions to $WEEWX_USERDIR"
+        mkdir -p $WEEWX_USERDIR
+        cp -rp /usr/share/weewx/user/* $WEEWX_USERDIR
         ts=`date +"%Y%m%d%H%M%S"`
         echo "Saving old extensions to /usr/share/weewx/user-$ts"
         mv /usr/share/weewx/user /usr/share/weewx/user-$ts
@@ -336,38 +338,40 @@ if [ -d /run/systemd/system ]; then
 fi
 
 case "$1" in
-configure)
-    if [ "$2" != "" ]; then
-        # this is an upgrade so create a maintainers version by merging
-        merge_weewxconf
-        # migrate any extensions from V4 location to V5
-        migrate_extensions
-    else
-        # virgin install so insert debconf values into the config file
-        install_weewxconf
-    fi
+    configure)
+        get_user
 
-    create_user
-    setup_init
-    setup_udev
-    setup_skins
-    setup_user_dir
-    setup_data_dirs
+        if [ "$2" != "" ]; then
+            # this is an upgrade so create a maintainers version by merging
+            merge_weewxconf
+            # migrate any extensions from V4 location to V5
+            migrate_extensions
+        else
+            # virgin install so insert debconf values into the config file
+            install_weewxconf
+        fi
 
-    # precompile the bytecode
-    python3 -m compileall /usr/share/weewx > /dev/null
+        create_user
+        setup_init
+        setup_udev
+        setup_skins
+        setup_user_dir
+        setup_data_dirs
 
-    set_permissions
+        # precompile the bytecode
+        python3 -m compileall /usr/share/weewx > /dev/null
 
-    # configure for system startup and start weewx
-    if [ "$pid1" = "systemd" ]; then
-	systemctl enable weewx
-	systemctl start weewx
-    fi
-    ;;
+        set_permissions
 
-abort-remove)
-    ;;
+        # configure for system startup and start weewx
+        if [ "$pid1" = "systemd" ]; then
+	    systemctl enable weewx
+	    systemctl start weewx
+        fi
+        ;;
+
+    abort-remove)
+        ;;
 esac
 
 # let debconf know that we are finished
