@@ -254,17 +254,19 @@ get_user() {
 
 # create the user that the daemon will run as, but only if not already exist
 create_user() {
-    if ! getent group | grep -q "^$WEEWX_GROUP:"; then
-        echo -n "Adding group $WEEWX_GROUP..."
-        addgroup --quiet --system $WEEWX_GROUP || true
-        echo "done"
-    fi
-    if ! getent passwd | grep -q "^$WEEWX_USER:"; then
-        echo -n "Adding system user $WEEWX_USER..."
-        adduser --quiet --system --ingroup $WEEWX_GROUP \
-                --no-create-home --home $WEEWX_HOME \
-                --disabled-password weewx || true
-        echo "done"
+    if [ "$WEEWX_USER" = "weewx" ]; then
+        if ! getent group | grep -q "^$WEEWX_GROUP:"; then
+            echo -n "Adding group $WEEWX_GROUP..."
+            addgroup --quiet --system $WEEWX_GROUP || true
+            echo "done"
+        fi
+        if ! getent passwd | grep -q "^$WEEWX_USER:"; then
+            echo -n "Adding system user $WEEWX_USER..."
+            adduser --quiet --system --ingroup $WEEWX_GROUP \
+                    --no-create-home --home $WEEWX_HOME \
+                    --disabled-password weewx || true
+            echo "done"
+        fi
     fi
 }
 
