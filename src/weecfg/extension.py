@@ -100,7 +100,7 @@ class ExtensionEngine(object):
             no_confirm(bool): If False, ask for a confirmation before installing. Otherwise,
                 just do it.
         """
-        ans = weeutil.weeutil.y_or_n(f"Install extension '{extension_path}'? ",
+        ans = weeutil.weeutil.y_or_n(f"Install extension '{extension_path}' (y/n)? ",
                                      noprompt=no_confirm)
         if ans == 'n':
             self.printer.out("Nothing done.")
@@ -377,7 +377,7 @@ class ExtensionEngine(object):
                 just do it.
         """
 
-        ans = weeutil.weeutil.y_or_n(f"Uninstall extension '{extension_name}'? (y/n) ",
+        ans = weeutil.weeutil.y_or_n(f"Uninstall extension '{extension_name}' (y/n)? ",
                                      noprompt=no_confirm)
         if ans == 'n':
             self.printer.out("Nothing done.")

@@ -420,7 +420,7 @@ def config_registry(config_dict, register=None, station_url=None, no_prompt=Fals
         print("your station (such as a website, or a WeatherUnderground link).")
         default_prompt = 'y' if default_register else 'n'
         ans = weeutil.weeutil.y_or_n(f"Include station in the station "
-                                     f"registry [{default_prompt}]? ",
+                                     f"registry [{default_prompt}] (y/n)? ",
                                      default=default_register)
         final_register = to_bool(ans)
         if final_register:
@@ -701,7 +701,7 @@ def station_upgrade(config_dict, dist_config_path=None, examples_root=None,
     abbrev = {'config': 'configuration file',
               'util': 'utility files'}
     choices = ', '.join([abbrev.get(p, p) for p in what])
-    msg = f"\nUpgrade {choices} in {config_dict['WEEWX_ROOT']}? (Y/n) "
+    msg = f"\nUpgrade {choices} in {config_dict['WEEWX_ROOT']} (Y/n)? "
 
     ans = weeutil.weeutil.y_or_n(msg, noprompt=no_prompt, default='y')
 
