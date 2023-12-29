@@ -77,7 +77,10 @@ class ExtensionEngine(object):
                 self.printer.out("%-18s%-10s%s" % ("Extension Name", "Version", "Description"),
                                  level=0)
                 for f in exts:
-                    info = self.get_extension_info(f)
+                    try:
+                        info = self.get_extension_info(f)
+                    except weecfg.ExtensionError as e:
+                        info = {'name': f, 'version': '???', 'description': str(e)}
                     msg = "%(name)-18s%(version)-10s%(description)s" % info
                     self.printer.out(msg, level=0)
             else:
