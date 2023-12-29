@@ -1,3 +1,6 @@
+weewx (5.0.0rc2-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Fri, 29 Dec 2023 08:40:25 -0500
 weewx (5.0.0rc1-4) unstable; urgency=low
   * create user dir if it does not exist
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 28 Dec 2023 22:54:31 -0500
