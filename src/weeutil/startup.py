@@ -59,8 +59,8 @@ def initialize(config_dict):
     root_dict = extract_roots(config_dict)
 
     # Add the 'user' package to PYTHONPATH
-    user_dir = os.path.abspath(os.path.join(root_dict['USER_DIR'], '..'))
-    sys.path.append(user_dir)
+    parent_of_user_dir = os.path.abspath(os.path.join(root_dict['USER_DIR'], '..'))
+    sys.path.append(parent_of_user_dir)
 
     # Now we can import user.extensions
     try:
@@ -68,4 +68,4 @@ def initialize(config_dict):
     except ModuleNotFoundError as e:
         log.error("Cannot load user extensions: %s", e)
 
-    return config_dict['WEEWX_ROOT'], user_dir
+    return config_dict['WEEWX_ROOT'], root_dict['USER_DIR']

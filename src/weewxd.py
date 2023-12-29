@@ -104,7 +104,7 @@ def main():
     log.info("Command line: %s", ' '.join(sys.argv))
 
     # Set up debug, add USER_ROOT to PYTHONPATH, read user.extensions:
-    weewx_root, user_dir = weeutil.startup.initialize(config_dict)
+    weewx_root, user_module = weeutil.startup.initialize(config_dict)
 
     # Log key bits of information.
     log.info("Using Python %s", sys.version)
@@ -112,9 +112,9 @@ def main():
     log.info("Platform %s", platform.platform())
     log.info("Locale: '%s'", locale.setlocale(locale.LC_ALL))
     log.info("Entry path: %s", __file__)
-    log.info("Configuration file: %s", config_path)
     log.info("WEEWX_ROOT: %s", weewx_root)
-    log.info("User directory: %s", user_dir)
+    log.info("Configuration file: %s", config_path)
+    log.info("User module: %s", user_module)
     log.info("Debug: %s", weewx.debug)
 
     # If no command line --loop-on-init was specified, look in the config file.
