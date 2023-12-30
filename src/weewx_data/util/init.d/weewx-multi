@@ -35,9 +35,9 @@ DESC=weewx
 
 WEEWX_INSTANCES="weewx"
 WEEWX_PYTHON=python3
-WEEWX_BINDIR=/opt/weewx
+WEEWX_BINDIR=/usr/share/weewx
 WEEWX_CFGDIR=/etc/weewx
-WEEWX_RUNDIR=/var/run/weewx
+WEEWX_RUNDIR=/var/lib/weewx
 WEEWX_USER=root
 WEEWX_GROUP=root
 

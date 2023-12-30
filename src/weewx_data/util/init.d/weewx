@@ -9,7 +9,7 @@
 WEEWX_PYTHON=python3
 WEEWX_BINDIR=/usr/share/weewx
 WEEWX_CFGDIR=/etc/weewx
-WEEWX_RUNDIR=/var/run
+WEEWX_RUNDIR=/var/lib/weewx
 WEEWX_CFG=weewx.conf
 
 # Read configuration variable file if it is present
@@ -18,6 +18,11 @@ WEEWX_CFG=weewx.conf
 
 WEEWXD=$WEEWX_BINDIR/weewxd.py
 WEEWX_PID=$WEEWX_RUNDIR/weewx.pid
+
+# ensure that the rundir exists
+if [ ! -d $WEEWX_RUNDIR ]; then
+    mkdir -p $WEEWX_RUNDIR
+fi
 
 case "$1" in
   "start")
