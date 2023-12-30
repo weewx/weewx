@@ -6,10 +6,8 @@
 #
 # install this file as /usr/local/etc/rc.d/weewx
 #
-# to enable it, put this in /etc/rc.conf.local
-# weewx_enable=YES
-#
-# to disable it, use weewx_enable=NO
+# to enable it:
+# sudo sysrc weewx_enable=YES
 
 WEEWX_PYTHON=/usr/local/bin/python3
 WEEWX_BINDIR=/usr/local/weewx/src
