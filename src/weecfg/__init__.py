@@ -64,10 +64,8 @@ def find_file(file_path=None, args=None, locations=DEFAULT_LOCATIONS,
         file_path (str|None): A candidate path to the file.
         args (list[str]|None): command-line arguments. If the file cannot be found in file_path,
             then the members of args will be tried.
-        locations (list[str]): A list of directories to be searched. If they do not
-            start with a slash ('/'), then they will be treated as relative to
-            this file (bin/weecfg/__init__.py).
-            Default is ['../..', '/etc/weewx', '/home/weewx'].
+        locations (list[str]): A list of directories to be searched. Default is ['~/weewx-data',
+            '/etc/weewx', '/home/weewx'].
         file_name (str): The name of the file to be found. This is used
             only if the directories must be searched. Default is 'weewx.conf'.
 
