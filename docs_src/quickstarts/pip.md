@@ -112,6 +112,21 @@ for help.
     ```
     _Tested on macOS 13.4 (Ventura)_    
 
+=== "FreeBSD"
+
+    ```{ .shell .copy }
+    sudo pkg install py39-pip
+    sudo pkg install py39-sqlite3
+    sudo pkg isntall py39-Pillow
+    # Create the virtual environment
+    python3 -m venv ~/weewx-venv
+    # Activate the WeeWX virtual environment
+    source ~/weewx-venv/bin/activate
+    # Install WeeWX into the virtual environment
+    python3 -m pip install weewx
+    ```
+    _Tested on FreeBSD 13.2_
+
 === "Other"
 
     ```{ .shell .copy }

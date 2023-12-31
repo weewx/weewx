@@ -1,0 +1,80 @@
+#!/bin/sh
+#
+# Install files that integrate WeeWX into a BSD system.
+# This script must be run using sudo, or as root.
+#
+set -e
+
+UTIL_ROOT=$HOME/weewx-data/util
+
+if [ "$(id -u)" != "0" ]; then
+  echo "This script requires admin privileges.  Use 'sudo' or run as root."
+  exit 1
+fi
+
+if [ ! -d /usr/local/etc/rc.d ]; then
+    echo "Apparently this system does not use BSD init"
+    exit 1
+fi
+
+ts=`date +"%Y%m%d%H%M%S"`
+
+copy_file() {
+    src=$1
+    dst=$2
+    if [ -f "$dst" ]; then
+	mv ${dst} ${dst}.${ts}
+    fi
+    cp $src $dst
+}
+
+remove_file() {
+    dst=$1
+    if [ -f "$dst" ]; then
+	rm $dst
+    fi
+}
+
+do_install() {
+    echo "Set up the files necessary to run WeeWX at system startup."
+
+    if [ ! -d $UTIL_ROOT ]; then
+        echo "Cannot find utility files at location '$UTIL_ROOT'"
+        exit 1
+    fi
+
+    echo "Copying files from $UTIL_ROOT..."
+    if [ -d /etc/defaults ]; then
+        echo "  defaults"
+        copy_file $UTIL_ROOT/default/weewx /etc/defaults/weewx.conf
+    fi
+
+    echo "  init script"
+    copy_file $UTIL_ROOT/init.d/weewx.bsd /usr/local/etc/rc.d/weewx
+    chmod 755 /usr/local/etc/rc.d/weewx
+
+    echo "Enabling weewx..."
+    sysrc weewx_enable="YES"
+
+    echo "You can start weewx with the following command:"
+    echo "  '\033[1msudo service weewx start\033[0m'"
+}
+
+do_uninstall() {
+    echo "Stopping weewx..."
+    service weewx stop
+    echo "Disabling weewx..."
+    sysrc weewx_enable="NO"
+    echo "Removing files..."
+    echo "  init script"
+    remove_file /usr/local/etc/rc.d/weewx
+    echo "  defaults"
+    remove_file /etc/defaults/weewx.conf
+}
+
+ACTION=$1
+if [ "$ACTION" = "" -o "$ACTION" = "install" ]; then
+    do_install
+elif [ "$ACTION" = "uninstall" ]; then
+    do_uninstall
+fi
