@@ -13,9 +13,7 @@ from unittest.mock import patch
 
 import configobj
 
-import weecfg.extension
-import weecfg.station_config
-import weecfg.update_config
+import weectllib.station_actions
 import weeutil.config
 import weeutil.weeutil
 import weewx
@@ -48,75 +46,75 @@ class CommonConfigTest(unittest.TestCase):
 class LocationConfigTest(CommonConfigTest):
 
     def test_default_config_location(self):
-        weecfg.station_config.config_location(self.config_dict, no_prompt=True)
+        weectllib.station_actions.config_location(self.config_dict, no_prompt=True)
         self.assertEqual(self.config_dict['Station']['location'], "WeeWX station")
         del self.config_dict['Station']['location']
-        weecfg.station_config.config_location(self.config_dict, no_prompt=True)
+        weectllib.station_actions.config_location(self.config_dict, no_prompt=True)
         self.assertEqual(self.config_dict['Station']['location'], "WeeWX station")
 
     def test_arg_config_location(self):
-        weecfg.station_config.config_location(self.config_dict, location='foo', no_prompt=True)
+        weectllib.station_actions.config_location(self.config_dict, location='foo', no_prompt=True)
         self.assertEqual(self.config_dict['Station']['location'], "foo")
 
     @suppress_stdout
     def test_prompt_config_location(self):
-        with patch('weecfg.station_config.input', side_effect=['']):
-            weecfg.station_config.config_location(self.config_dict)
+        with patch('weectllib.station_actions.input', side_effect=['']):
+            weectllib.station_actions.config_location(self.config_dict)
             self.assertEqual(self.config_dict['Station']['location'], "WeeWX station")
-        with patch('weecfg.station_config.input', side_effect=['bar']):
-            weecfg.station_config.config_location(self.config_dict)
+        with patch('weectllib.station_actions.input', side_effect=['bar']):
+            weectllib.station_actions.config_location(self.config_dict)
             self.assertEqual(self.config_dict['Station']['location'], "bar")
 
 
 class AltitudeConfigTest(CommonConfigTest):
 
     def test_default_config_altitude(self):
-        weecfg.station_config.config_altitude(self.config_dict, no_prompt=True)
+        weectllib.station_actions.config_altitude(self.config_dict, no_prompt=True)
         self.assertEqual(self.config_dict['Station']['altitude'], ["0", "foot"])
         # Delete the value in the configuration dictionary
         del self.config_dict['Station']['altitude']
         # Now we should get the hardwired default
-        weecfg.station_config.config_altitude(self.config_dict, no_prompt=True)
+        weectllib.station_actions.config_altitude(self.config_dict, no_prompt=True)
         self.assertEqual(self.config_dict['Station']['altitude'], ["0", "foot"])
 
     def test_arg_config_altitude(self):
-        weecfg.station_config.config_altitude(self.config_dict, altitude="500, meter")
+        weectllib.station_actions.config_altitude(self.config_dict, altitude="500, meter")
         self.assertEqual(self.config_dict['Station']['altitude'], ["500", "meter"])
 
     def test_badarg_config_altitude(self):
         with self.assertRaises(ValueError):
             # Bad unit
-            weecfg.station_config.config_altitude(self.config_dict, altitude="500, foo")
+            weectllib.station_actions.config_altitude(self.config_dict, altitude="500, foo")
         with self.assertRaises(ValueError):
             # Bad value
-            weecfg.station_config.config_altitude(self.config_dict, altitude="500f, foot")
+            weectllib.station_actions.config_altitude(self.config_dict, altitude="500f, foot")
 
     @suppress_stdout
     def test_prompt_config_altitude(self):
-        with patch('weecfg.station_config.input', side_effect=['']):
-            weecfg.station_config.config_altitude(self.config_dict)
+        with patch('weectllib.station_actions.input', side_effect=['']):
+            weectllib.station_actions.config_altitude(self.config_dict)
             self.assertEqual(self.config_dict['Station']['altitude'], ["0", "foot"])
-        with patch('weecfg.station_config.input', side_effect=['110, meter']):
-            weecfg.station_config.config_altitude(self.config_dict)
+        with patch('weectllib.station_actions.input', side_effect=['110, meter']):
+            weectllib.station_actions.config_altitude(self.config_dict)
             self.assertEqual(self.config_dict['Station']['altitude'], ["110", "meter"])
         # Try 'feet' instead of 'foot'
-        with patch('weecfg.station_config.input', side_effect=['700, feet']):
-            weecfg.station_config.config_altitude(self.config_dict)
+        with patch('weectllib.station_actions.input', side_effect=['700, feet']):
+            weectllib.station_actions.config_altitude(self.config_dict)
             self.assertEqual(self.config_dict['Station']['altitude'], ["700", "foot"])
         # Try 'meters' instead of 'meter':
-        with patch('weecfg.station_config.input', side_effect=['110, meters']):
-            weecfg.station_config.config_altitude(self.config_dict)
+        with patch('weectllib.station_actions.input', side_effect=['110, meters']):
+            weectllib.station_actions.config_altitude(self.config_dict)
             self.assertEqual(self.config_dict['Station']['altitude'], ["110", "meter"])
 
     @suppress_stdout
     def test_badprompt_config_altitude(self):
         # Include a bad unit. It should prompt again
-        with patch('weecfg.station_config.input', side_effect=['100, foo', '110, meter']):
-            weecfg.station_config.config_altitude(self.config_dict)
+        with patch('weectllib.station_actions.input', side_effect=['100, foo', '110, meter']):
+            weectllib.station_actions.config_altitude(self.config_dict)
             self.assertEqual(self.config_dict['Station']['altitude'], ["110", "meter"])
         # Include a bad value. It should prompt again
-        with patch('weecfg.station_config.input', side_effect=['100f, foot', '110, meter']):
-            weecfg.station_config.config_altitude(self.config_dict)
+        with patch('weectllib.station_actions.input', side_effect=['100f, foot', '110, meter']):
+            weectllib.station_actions.config_altitude(self.config_dict)
             self.assertEqual(self.config_dict['Station']['altitude'], ["110", "meter"])
 
 
@@ -124,30 +122,31 @@ class LatLonConfigTest(CommonConfigTest):
 
     def test_default_config_latlon(self):
         # Use the default as supplied by CONFIG_DICT
-        weecfg.station_config.config_latlon(self.config_dict, no_prompt=True)
+        weectllib.station_actions.config_latlon(self.config_dict, no_prompt=True)
         self.assertEqual(float(self.config_dict['Station']['latitude']), 0.0)
         self.assertEqual(float(self.config_dict['Station']['longitude']), 0.0)
         # Delete the values in the configuration dictionary
         del self.config_dict['Station']['latitude']
         del self.config_dict['Station']['longitude']
         # Now the defaults should be the hardwired defaults
-        weecfg.station_config.config_latlon(self.config_dict, no_prompt=True)
+        weectllib.station_actions.config_latlon(self.config_dict, no_prompt=True)
         self.assertEqual(float(self.config_dict['Station']['latitude']), 0.0)
         self.assertEqual(float(self.config_dict['Station']['longitude']), 0.0)
 
     def test_arg_config_latlon(self):
-        weecfg.station_config.config_latlon(self.config_dict, latitude='-20', longitude='-40')
+        weectllib.station_actions.config_latlon(self.config_dict, latitude='-20', longitude='-40')
         self.assertEqual(float(self.config_dict['Station']['latitude']), -20.0)
         self.assertEqual(float(self.config_dict['Station']['longitude']), -40.0)
 
     def test_badarg_config_latlon(self):
         with self.assertRaises(ValueError):
-            weecfg.station_config.config_latlon(self.config_dict, latitude="-20f", longitude='-40')
+            weectllib.station_actions.config_latlon(self.config_dict, latitude="-20f",
+                                                    longitude='-40')
 
     @suppress_stdout
     def test_prompt_config_latlong(self):
         with patch('weecfg.input', side_effect=['-21', '-41']):
-            weecfg.station_config.config_latlon(self.config_dict)
+            weectllib.station_actions.config_latlon(self.config_dict)
             self.assertEqual(float(self.config_dict['Station']['latitude']), -21.0)
             self.assertEqual(float(self.config_dict['Station']['longitude']), -41.0)
 
@@ -155,23 +154,24 @@ class LatLonConfigTest(CommonConfigTest):
 class RegistryConfigTest(CommonConfigTest):
 
     def test_default_register(self):
-        weecfg.station_config.config_registry(self.config_dict, no_prompt=True)
+        weectllib.station_actions.config_registry(self.config_dict, no_prompt=True)
         self.assertFalse(
             self.config_dict['StdRESTful']['StationRegistry']['register_this_station'])
 
     def test_args_register(self):
         # Missing station_url:
         with self.assertRaises(weewx.ViolatedPrecondition):
-            weecfg.station_config.config_registry(self.config_dict, register='True',
-                                                  no_prompt=True)
+            weectllib.station_actions.config_registry(self.config_dict, register='True',
+                                                      no_prompt=True)
         # This time we supply a station_url. Should be OK.
-        weecfg.station_config.config_registry(self.config_dict, register='True',
-                                              station_url=STATION_URL, no_prompt=True)
+        weectllib.station_actions.config_registry(self.config_dict, register='True',
+                                                  station_url=STATION_URL, no_prompt=True)
         self.assertTrue(self.config_dict['StdRESTful']['StationRegistry']['register_this_station'])
         self.assertEqual(self.config_dict['Station']['station_url'], STATION_URL)
         # Alternatively, the config file already had a station_url:
         self.config_dict['Station']['station_url'] = STATION_URL
-        weecfg.station_config.config_registry(self.config_dict, register='True', no_prompt=True)
+        weectllib.station_actions.config_registry(self.config_dict, register='True',
+                                                  no_prompt=True)
         self.assertTrue(self.config_dict['StdRESTful']['StationRegistry']['register_this_station'])
         self.assertEqual(self.config_dict['Station']['station_url'], STATION_URL)
 
@@ -179,21 +179,21 @@ class RegistryConfigTest(CommonConfigTest):
     def test_prompt_register(self):
         with patch('weeutil.weeutil.input', side_effect=['y']):
             with patch('weecfg.input', side_effect=[STATION_URL]):
-                weecfg.station_config.config_registry(self.config_dict)
+                weectllib.station_actions.config_registry(self.config_dict)
         self.assertTrue(self.config_dict['StdRESTful']['StationRegistry']['register_this_station'])
         self.assertEqual(self.config_dict['Station']['station_url'], STATION_URL)
 
         # Try again, but without specifying an URL. Should ask twice.
         with patch('weeutil.weeutil.input', side_effect=['y']):
             with patch('weecfg.input', side_effect=["", STATION_URL]):
-                weecfg.station_config.config_registry(self.config_dict)
+                weectllib.station_actions.config_registry(self.config_dict)
         self.assertTrue(self.config_dict['StdRESTful']['StationRegistry']['register_this_station'])
         self.assertEqual(self.config_dict['Station']['station_url'], STATION_URL)
 
         # Now with a bogus URL
         with patch('weeutil.weeutil.input', side_effect=['y']):
             with patch('weecfg.input', side_effect=['https://www.example.com', STATION_URL]):
-                weecfg.station_config.config_registry(self.config_dict)
+                weectllib.station_actions.config_registry(self.config_dict)
         self.assertTrue(self.config_dict['StdRESTful']['StationRegistry']['register_this_station'])
         self.assertEqual(self.config_dict['Station']['station_url'], STATION_URL)
 
@@ -201,40 +201,40 @@ class RegistryConfigTest(CommonConfigTest):
 class UnitsConfigTest(CommonConfigTest):
 
     def test_default_units(self):
-        weecfg.station_config.config_units(self.config_dict, no_prompt=True)
+        weectllib.station_actions.config_units(self.config_dict, no_prompt=True)
         self.assertEqual(self.config_dict['StdReport']['Defaults']['unit_system'], 'us')
 
     def test_custom_units(self):
         del self.config_dict['StdReport']['Defaults']['unit_system']
-        weecfg.station_config.config_units(self.config_dict, no_prompt=True)
+        weectllib.station_actions.config_units(self.config_dict, no_prompt=True)
         self.assertNotIn('unit_system', self.config_dict['StdReport']['Defaults'])
 
     def test_args_units(self):
-        weecfg.station_config.config_units(self.config_dict, unit_system='metricwx',
-                                           no_prompt=True)
+        weectllib.station_actions.config_units(self.config_dict, unit_system='metricwx',
+                                               no_prompt=True)
         self.assertEqual(self.config_dict['StdReport']['Defaults']['unit_system'], 'metricwx')
 
     @suppress_stdout
     def test_prompt_units(self):
         with patch('weecfg.input', side_effect=['metricwx']):
-            weecfg.station_config.config_units(self.config_dict)
+            weectllib.station_actions.config_units(self.config_dict)
         self.assertEqual(self.config_dict['StdReport']['Defaults']['unit_system'], 'metricwx')
         # Do it again, but with a wrong unit system name. It should ask again.
         with patch('weecfg.input', side_effect=['metricwz', 'metricwx']):
-            weecfg.station_config.config_units(self.config_dict)
+            weectllib.station_actions.config_units(self.config_dict)
         self.assertEqual(self.config_dict['StdReport']['Defaults']['unit_system'], 'metricwx')
 
 
 class DriverConfigTest(CommonConfigTest):
 
     def test_default_config_driver(self):
-        weecfg.station_config.config_driver(self.config_dict, no_prompt=True)
+        weectllib.station_actions.config_driver(self.config_dict, no_prompt=True)
         self.assertEqual(self.config_dict['Station']['station_type'], 'Simulator')
         self.assertEqual(self.config_dict['Simulator']['driver'], 'weewx.drivers.simulator')
 
     def test_arg_config_driver(self):
-        weecfg.station_config.config_driver(self.config_dict, driver='weewx.drivers.vantage',
-                                            no_prompt=True)
+        weectllib.station_actions.config_driver(self.config_dict, driver='weewx.drivers.vantage',
+                                                no_prompt=True)
         self.assertEqual(self.config_dict['Station']['station_type'], 'Vantage')
         self.assertEqual(self.config_dict['Vantage']['driver'], 'weewx.drivers.vantage')
 
@@ -246,9 +246,9 @@ class DriverConfigTest(CommonConfigTest):
         del weewx.drivers.vantage.confeditor_loader
         # At this point, there is no configuration loader, so a minimal version of [Vantage]
         # should be supplied.
-        weecfg.station_config.config_driver(self.config_dict,
-                                            driver='weewx.drivers.vantage',
-                                            no_prompt=True)
+        weectllib.station_actions.config_driver(self.config_dict,
+                                                driver='weewx.drivers.vantage',
+                                                no_prompt=True)
         self.assertEqual(self.config_dict['Station']['station_type'], 'Vantage')
         self.assertEqual(self.config_dict['Vantage']['driver'], 'weewx.drivers.vantage')
         # The rest of the [Vantage] stanza should be missing. Try a key.
@@ -259,13 +259,13 @@ class DriverConfigTest(CommonConfigTest):
     @suppress_stdout
     def test_prompt_config_driver(self):
         with patch('weecfg.input', side_effect=['6', '', '/dev/ttyS0']):
-            weecfg.station_config.config_driver(self.config_dict)
+            weectllib.station_actions.config_driver(self.config_dict)
             self.assertEqual(self.config_dict['Station']['station_type'], 'Vantage')
             self.assertEqual(self.config_dict['Vantage']['port'], '/dev/ttyS0')
 
         # Do it again. This time, the stanza ['Vantage'] will exist, and we'll just modify it
         with patch('weecfg.input', side_effect=['', '', '/dev/ttyS1']):
-            weecfg.station_config.config_driver(self.config_dict)
+            weectllib.station_actions.config_driver(self.config_dict)
             self.assertEqual(self.config_dict['Station']['station_type'], 'Vantage')
             self.assertEqual(self.config_dict['Vantage']['port'], '/dev/ttyS1')
 
@@ -273,8 +273,8 @@ class DriverConfigTest(CommonConfigTest):
 class TestConfigRoots(CommonConfigTest):
 
     def test_args_config_roots(self):
-        weecfg.station_config.config_roots(self.config_dict, skin_root='foo',
-                                           html_root='bar', sqlite_root='baz')
+        weectllib.station_actions.config_roots(self.config_dict, skin_root='foo',
+                                               html_root='bar', sqlite_root='baz')
         self.assertEqual(self.config_dict['StdReport']['SKIN_ROOT'], 'foo')
         self.assertEqual(self.config_dict['StdReport']['HTML_ROOT'], 'bar')
         self.assertEqual(self.config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'], 'baz')
@@ -283,7 +283,7 @@ class TestConfigRoots(CommonConfigTest):
         del self.config_dict['StdReport']['SKIN_ROOT']
         del self.config_dict['StdReport']['HTML_ROOT']
         del self.config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT']
-        weecfg.station_config.config_roots(self.config_dict)
+        weectllib.station_actions.config_roots(self.config_dict)
         self.assertEqual(self.config_dict['StdReport']['SKIN_ROOT'], 'skins')
         self.assertEqual(self.config_dict['StdReport']['HTML_ROOT'], 'public_html')
         self.assertEqual(self.config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'],
@@ -299,7 +299,7 @@ class TestCreateStation(unittest.TestCase):
             config_path = os.path.join(dirname, 'weewx.conf')
             # We have not run 'pip', so the only copy of weewxd.py is the one in the repository.
             # Create a station using the defaults
-            weecfg.station_config.station_create(config_path, no_prompt=True)
+            weectllib.station_actions.station_create(config_path, no_prompt=True)
 
             # Retrieve the config file that was created and check it:
             config_dict = configobj.ConfigObj(config_path, encoding='utf-8')
