@@ -7,8 +7,9 @@
 import os.path
 import sys
 
-import weecfg.station_config
+import weecfg
 import weectllib
+import weectllib.station_actions
 import weewx
 from weeutil.weeutil import bcolors
 
@@ -194,23 +195,24 @@ def add_subparser(subparsers):
 def create_station(namespace):
     """Map 'namespace' to a call to station_create()"""
     try:
-        config_dict = weecfg.station_config.station_create(config_path=namespace.config,
-                                                           dist_config_path=namespace.dist_config,
-                                                           driver=namespace.driver,
-                                                           location=namespace.location,
-                                                           altitude=namespace.altitude,
-                                                           latitude=namespace.latitude,
-                                                           longitude=namespace.longitude,
-                                                           register=namespace.register,
-                                                           station_url=namespace.station_url,
-                                                           unit_system=namespace.unit_system,
-                                                           weewx_root=namespace.weewx_root,
-                                                           skin_root=namespace.skin_root,
-                                                           sqlite_root=namespace.sqlite_root,
-                                                           html_root=namespace.html_root,
-                                                           examples_root=namespace.examples_root,
-                                                           no_prompt=namespace.no_prompt,
-                                                           dry_run=namespace.dry_run)
+        config_dict \
+            = weectllib.station_actions.station_create(config_path=namespace.config,
+                                                       dist_config_path=namespace.dist_config,
+                                                       driver=namespace.driver,
+                                                       location=namespace.location,
+                                                       altitude=namespace.altitude,
+                                                       latitude=namespace.latitude,
+                                                       longitude=namespace.longitude,
+                                                       register=namespace.register,
+                                                       station_url=namespace.station_url,
+                                                       unit_system=namespace.unit_system,
+                                                       weewx_root=namespace.weewx_root,
+                                                       skin_root=namespace.skin_root,
+                                                       sqlite_root=namespace.sqlite_root,
+                                                       html_root=namespace.html_root,
+                                                       examples_root=namespace.examples_root,
+                                                       no_prompt=namespace.no_prompt,
+                                                       dry_run=namespace.dry_run)
     except weewx.ViolatedPrecondition as e:
         sys.exit(e)
     script_dir = os.path.join(config_dict["WEEWX_ROOT"], "scripts")
@@ -232,35 +234,35 @@ def create_station(namespace):
 def reconfigure_station(config_dict, namespace):
     """Map namespace to a call to station_reconfigure()"""
     try:
-        weecfg.station_config.station_reconfigure(config_dict=config_dict,
-                                                  driver=namespace.driver,
-                                                  location=namespace.location,
-                                                  altitude=namespace.altitude,
-                                                  latitude=namespace.latitude,
-                                                  longitude=namespace.longitude,
-                                                  register=namespace.register,
-                                                  station_url=namespace.station_url,
-                                                  unit_system=namespace.unit_system,
-                                                  weewx_root=namespace.weewx_root,
-                                                  skin_root=namespace.skin_root,
-                                                  sqlite_root=namespace.sqlite_root,
-                                                  html_root=namespace.html_root,
-                                                  no_prompt=namespace.no_prompt,
-                                                  no_backup=namespace.no_backup,
-                                                  dry_run=namespace.dry_run)
+        weectllib.station_actions.station_reconfigure(config_dict=config_dict,
+                                                      driver=namespace.driver,
+                                                      location=namespace.location,
+                                                      altitude=namespace.altitude,
+                                                      latitude=namespace.latitude,
+                                                      longitude=namespace.longitude,
+                                                      register=namespace.register,
+                                                      station_url=namespace.station_url,
+                                                      unit_system=namespace.unit_system,
+                                                      weewx_root=namespace.weewx_root,
+                                                      skin_root=namespace.skin_root,
+                                                      sqlite_root=namespace.sqlite_root,
+                                                      html_root=namespace.html_root,
+                                                      no_prompt=namespace.no_prompt,
+                                                      no_backup=namespace.no_backup,
+                                                      dry_run=namespace.dry_run)
     except weewx.ViolatedPrecondition as e:
-        sys.exit(e)
+        sys.exit(str(e))
 
 
 def upgrade_station(config_dict, namespace):
-    weecfg.station_config.station_upgrade(config_dict=config_dict,
-                                          dist_config_path=namespace.dist_config,
-                                          examples_root=namespace.examples_root,
-                                          skin_root=namespace.skin_root,
-                                          what=namespace.what,
-                                          no_prompt=namespace.no_prompt,
-                                          no_backup=namespace.no_backup,
-                                          dry_run=namespace.dry_run)
+    weectllib.station_actions.station_upgrade(config_dict=config_dict,
+                                              dist_config_path=namespace.dist_config,
+                                              examples_root=namespace.examples_root,
+                                              skin_root=namespace.skin_root,
+                                              what=namespace.what,
+                                              no_prompt=namespace.no_prompt,
+                                              no_backup=namespace.no_backup,
+                                              dry_run=namespace.dry_run)
 
 
 # ==============================================================================
