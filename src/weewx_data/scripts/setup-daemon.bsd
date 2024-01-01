@@ -53,11 +53,12 @@ do_install() {
     copy_file $UTIL_ROOT/init.d/weewx.bsd /usr/local/etc/rc.d/weewx
     chmod 755 /usr/local/etc/rc.d/weewx
 
-    echo "Enabling weewx..."
+    echo "Enabling weewx to start when system boots..."
     sysrc weewx_enable="YES"
 
-    echo "You can start weewx with the following command:"
+    echo "You can start/stop weewx with the following commands:"
     echo "  '\033[1msudo service weewx start\033[0m'"
+    echo "  '\033[1msudo service weewx stop\033[0m'"
 }
 
 do_uninstall() {
