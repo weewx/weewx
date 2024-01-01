@@ -3,14 +3,12 @@ weewx: package-contains-documentation-outside-usr-share-doc *
 weewx: copyright-should-refer-to-common-license-file-for-gpl
 weewx: spelling-error-in-copyright
 weewx: using-first-person-in-templates weewx/units
-weewx: extra-license-file *
-weewx: font-outside-font-dir *
-weewx: font-in-non-font-package *
-weewx: duplicate-font-file *
-weewx: python-script-but-no-python-dep usr/share/weewx/weewx_data/util/i18n/i18n-report #!python
+weewx: extra-license-file
+weewx: font-outside-font-dir
+weewx: font-in-non-font-package
+weewx: duplicate-font-file
+weewx: python-script-but-no-python-dep usr/share/weewx/weewx_data/util/i18n/i18n-report
 weewx: binary-without-manpage usr/bin/weectl
 weewx: binary-without-manpage usr/bin/weewxd
-weewx: maintainer-script-should-not-use-recursive-chown-or-chmod *
-weewx: maintainer-script-calls-systemctl postinst:*
-weewx: maintainer-script-calls-systemctl prerm:*
-
+weewx: maintainer-script-should-not-use-recursive-chown-or-chmod
+weewx: maintainer-script-calls-systemctl
