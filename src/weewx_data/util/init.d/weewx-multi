@@ -47,7 +47,7 @@ WEEWX_GROUP=root
 WEEWXD=$WEEWX_BINDIR/weewxd.py
 
 # Exit if the package is not installed
-if [ ! -x "$WEEWXD" ]; then
+if [ ! -f "$WEEWXD" ]; then
     echo "The $DESC daemon is not installed at $WEEWXD"
     exit 0
 fi
