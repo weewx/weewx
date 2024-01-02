@@ -159,8 +159,9 @@ weewxd
 ### Run as a daemon
 
 To make WeeWX start when the system is booted, you will want to run `weewxd`
-as a daemon. Run the daemon setup script, to configure your system. You will
-need root privileges to do this.
+as a daemon. Run the daemon setup script to configure your system. This script
+installs the startup/shutdown configuration appropriate to your operating
+system. You will need root privileges to do this.
 
 ```{ .shell .copy }
 sudo sh ~/weewx-data/scripts/setup-daemon.sh
