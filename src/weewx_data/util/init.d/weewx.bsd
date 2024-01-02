@@ -25,8 +25,6 @@ WEEWXD=${WEEWX_BINDIR}/weewxd.py
 
 . /etc/rc.subr
 
-: ${weewx_enable="NO"}
-
 name="weewx"
 rcvar=weewx_enable
 
@@ -37,6 +35,8 @@ weewx_config=${WEEWX_CFGDIR}/${WEEWX_CFG}
 
 start_cmd=weewx_start
 stop_cmd=weewx_stop
+extra_commands=status
+status_cmd=weewx_status
 
 weewx_start() {
   echo "starting ${name}"
@@ -47,6 +47,14 @@ weewx_stop() {
   if [ -f ${weewx_pid} ]; then
     echo "stopping ${name}"
     kill `cat ${weewx_pid}`
+  else
+    echo "${name} is not running"
+  fi
+}
+
+weewx_status() {
+  if [ -f ${weewx_pid} ]; then
+    echo "${name} is running with PID `cat ${weewx_pid}`"
   else
     echo "${name} is not running"
   fi
