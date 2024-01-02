@@ -1,9 +1,14 @@
 # V5.0 "To Do"
 
-## startup
 
-- tk before logger is initialized, output to stdout/stderr as appropriate
-- tk Rationalize startup procedure, making it consistent.
+## Docs
+
+- tk WEEWX-ROOT is now relative to the location of the config file. Reflect 
+    this in docs
+
+## weectl
+
+- mw Resolve "FIXME" in `station_actions.copy_utils()`
 
 
 ## deb/rpm installs

@@ -295,29 +295,30 @@ class TestCreateStation(unittest.TestCase):
     def test_create_default(self):
         "Test creating a new station"
         # Get a temporary directory to create it in
-        with tempfile.TemporaryDirectory(dir='/var/tmp') as dirname:
-            config_path = os.path.join(dirname, 'weewx.conf')
+        with tempfile.TemporaryDirectory(dir='/var/tmp') as weewx_root:
             # We have not run 'pip', so the only copy of weewxd.py is the one in the repository.
             # Create a station using the defaults
-            weectllib.station_actions.station_create(config_path, no_prompt=True)
+            weectllib.station_actions.station_create(weewx_root=weewx_root, no_prompt=True)
+            config_path = os.path.join(weewx_root, 'weewx.conf')
 
             # Retrieve the config file that was created and check it:
             config_dict = configobj.ConfigObj(config_path, encoding='utf-8')
-            self.assertEqual(config_dict['WEEWX_ROOT'], dirname)
+            self.assertEqual(config_dict['WEEWX_ROOT'], './')
+            self.assertNotIn('WEEWX_ROOT_ORIG', config_dict)
             self.assertEqual(config_dict['Station']['station_type'], 'Simulator')
             self.assertEqual(config_dict['Simulator']['driver'], 'weewx.drivers.simulator')
-            self.assertEqual(config_dict['StdReport']['SKIN_ROOT'], 'skins')
-            self.assertEqual(config_dict['StdReport']['HTML_ROOT'], 'public_html')
-            self.assertEqual(config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'], 'archive')
+            self.assertEqual(config_dict['StdReport']['SKIN_ROOT'], './skins')
+            self.assertEqual(config_dict['StdReport']['HTML_ROOT'], './public_html')
+            self.assertEqual(config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'], './archive')
 
             # Make sure all the skins are there
             for skin in ['Seasons', 'Smartphone', 'Mobile', 'Standard',
                          'Ftp', 'Rsync']:
-                p = os.path.join(dirname, config_dict['StdReport']['SKIN_ROOT'], skin)
+                p = os.path.join(weewx_root, config_dict['StdReport']['SKIN_ROOT'], skin)
                 self.assertTrue(os.path.isdir(p))
 
             # Retrieve the systemd utility file and check it
-            path = os.path.join(dirname, 'util/systemd/weewx.service')
+            path = os.path.join(weewx_root, 'util/systemd/weewx.service')
             with open(path, 'rt') as fd:
                 for line in fd:
                     if line.startswith('ExecStart'):

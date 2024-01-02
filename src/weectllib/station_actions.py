@@ -7,13 +7,12 @@
 
 import getpass
 import grp
-import importlib
 import logging
 import os
-import stat
 import os.path
 import re
 import shutil
+import stat
 import sys
 import urllib.parse
 
@@ -34,44 +33,31 @@ from weeutil.weeutil import to_float, to_bool, bcolors
 log = logging.getLogger('weectl-station')
 
 
-def station_create(config_path, *args,
+def station_create(weewx_root=weecfg.default_weewx_root,
+                   rel_config_path='./weewx.conf',
+                   driver='weewx.drivers.simulator',
+                   location='WeeWX station',
+                   altitude='0, foot',
+                   latitude=0, longitude=0,
+                   register=False, station_url='https://example.com',
+                   unit_system='us',
+                   skin_root='./skins',
+                   sqlite_root='./archive',
+                   html_root='./public_html',
+                   examples_root='./examples',
+                   user_root='./bin/user',
                    dist_config_path=None,
-                   weewx_root=None,
-                   examples_root=None,
-                   user_root=None,
-                   dry_run=False,
-                   **kwargs):
-    """Create a brand-new station by creating a new configuration file.
-
-    If a value  of weewx_root is not given, then it will be chosen as the
-    directory the resultant configuration file is in.
-
-    This function first checks whether the configuration file already exists.
-    If it does, then an exception is raised.
-
-    It then:
-      1. If no_prompt is false, it creates the configuration file by prompting
-         the user. If true, it uses defaults.
-      2. Copies the examples and utility files out of package resources and
-         into WEEWX_ROOT.
-    """
+                   no_prompt=False,
+                   dry_run=False):
+    """Create a brand-new station data area at weewx_root, then equip it with a
+    configuration file."""
 
     if dry_run:
         print("This is a dry run. Nothing will actually be done.")
 
-    # If no configuration file was specified, use the default (which is only
-    # 'correct' for pip/git installs).
-    if not config_path:
-        config_path = weecfg.default_config_path
-
-    # If a value of WEEWX_ROOT was specified, use that, overriding whatever
-    # might have been specified for the configuration file.  Otherwise, use the
-    # directory in which the configuration file resides.
-    if weewx_root:
-        _, filename = os.path.split(config_path)
-        config_path = os.path.join(weewx_root, filename)
-    else:
-        weewx_root = os.path.abspath(os.path.dirname(config_path))
+    # Invert the relationship between weewx_root and the relative path to the config file.
+    # When done, weewx_root will be relative to the directory the config file will be in.
+    config_path, rel_weewx_root = _calc_paths(weewx_root, rel_config_path)
 
     # Make sure there is not a configuration file at the designated location.
     if os.path.exists(config_path):
@@ -81,7 +67,7 @@ def station_create(config_path, *args,
 
     # If a distribution configuration was specified, use the contents from that
     # for the new configuration. Otherwise, extract the contents from the
-    # config in the python package resources.
+    # configuration file in the python package resources.
     if dist_config_path:
         dist_config_dict = configobj.ConfigObj(dist_config_path, encoding='utf-8', file_error=True)
     else:
@@ -89,8 +75,24 @@ def station_create(config_path, *args,
         with weeutil.weeutil.get_resource_fd('weewx_data', 'weewx.conf') as fd:
             dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
 
-    config_config(config_path, dist_config_dict, weewx_root=weewx_root,
-                  dry_run=dry_run, *args, **kwargs)
+    dist_config_dict['WEEWX_ROOT_ORIG'] = rel_weewx_root
+    config_dir = os.path.dirname(config_path)
+    dist_config_dict['WEEWX_ROOT'] = os.path.abspath(os.path.join(config_dir, rel_weewx_root))
+
+    # Modify the configuration dictionary config_dict, prompting if necessary.
+    config_config(config_dict=dist_config_dict,
+                  config_path=config_path,
+                  driver=driver,
+                  location=location,
+                  altitude=altitude,
+                  latitude=latitude, longitude=longitude,
+                  register=register, station_url=station_url,
+                  unit_system=unit_system,
+                  skin_root=skin_root,
+                  sqlite_root=sqlite_root,
+                  html_root=html_root,
+                  user_root=user_root,
+                  no_prompt=no_prompt)
     copy_skins(dist_config_dict, dry_run=dry_run)
     copy_examples(dist_config_dict, examples_root=examples_root, dry_run=dry_run)
     copy_user(dist_config_dict, user_root=user_root, dry_run=dry_run)
@@ -105,10 +107,73 @@ def station_create(config_path, *args,
     return dist_config_dict
 
 
-def station_reconfigure(config_dict, no_backup=False, dry_run=False, *args, **kwargs):
+def _calc_paths(weewx_root=None, rel_config_path=None):
+    """When creating a station, the config path is specified relative to WEEWX_ROOT.
+    However, within the configuration file, WEEWX_ROOT is relative to the location
+    of the config file. So, we need to invert their relationships.
+
+    Args:
+        weewx_root (str): A path to the station data area.
+        rel_config_path (str): A path relative to weewx_root where the configuration
+            file will be located.
+
+    Returns:
+        tuple[str, str]: A 2-way tuple containing the absolute path to the config file, and
+            the path to the station data area, relative to the config file
+    """
+    # Apply defaults if necessary:
+    if not weewx_root:
+        weewx_root = weecfg.default_weewx_root
+    if not rel_config_path:
+        rel_config_path = './weewx.conf'
+
+    # Convert to absolute paths
+    abs_weewx_root = os.path.abspath(weewx_root)
+    abs_config_path = os.path.abspath(os.path.join(abs_weewx_root, rel_config_path))
+
+    # Get WEEWX_ROOT relative to the directory the configuration file is sitting in:
+    final_weewx_root = os.path.relpath(weewx_root, os.path.dirname(abs_config_path))
+    # Don't let the relative path get out of hand. If we have to ascend more than two levels,
+    # use the absolute path:
+    if '../..' in final_weewx_root:
+        final_weewx_root = abs_weewx_root
+    if final_weewx_root == '.':
+        final_weewx_root = './'
+    return abs_config_path, final_weewx_root
+
+
+def station_reconfigure(config_dict,
+                        driver,
+                        location,
+                        altitude,
+                        latitude, longitude,
+                        register, station_url,
+                        unit_system,
+                        weewx_root,
+                        skin_root,
+                        sqlite_root,
+                        html_root,
+                        user_root,
+                        no_prompt=False,
+                        no_backup=False,
+                        dry_run=False):
     """Reconfigure an existing station"""
 
-    config_config(config_dict['config_path'], config_dict, dry_run=dry_run, *args, **kwargs)
+    if weewx_root:
+        config_dict['WEEWX_ROOT'] = config_dict['WEEWX_ROOT_ORIG'] = weewx_root
+    config_config(config_dict,
+                  config_path=config_dict['config_path'],
+                  driver=driver,
+                  location=location,
+                  altitude=altitude,
+                  latitude=latitude, longitude=longitude,
+                  register=register, station_url=station_url,
+                  unit_system=unit_system,
+                  skin_root=skin_root,
+                  sqlite_root=sqlite_root,
+                  html_root=html_root,
+                  user_root=user_root,
+                  no_prompt=no_prompt)
 
     print(f"Saving configuration file {config_dict['config_path']}")
     if dry_run:
@@ -120,17 +185,20 @@ def station_reconfigure(config_dict, no_backup=False, dry_run=False, *args, **kw
             print(f"Saved old configuration file as {backup_path}")
 
 
-def config_config(config_path, config_dict,
-                  driver=None, location=None,
-                  altitude=None, latitude=None, longitude=None,
+def config_config(config_dict,
+                  config_path,
+                  driver=None,
+                  location=None,
+                  altitude=None,
+                  latitude=None, longitude=None,
                   register=None, station_url=None,
                   unit_system=None,
-                  weewx_root=None, skin_root=None,
-                  html_root=None, sqlite_root=None,
+                  skin_root=None,
+                  sqlite_root=None,
+                  html_root=None,
                   user_root=None,
-                  no_prompt=False,
-                  dry_run=False):
-    """Modify a configuration file."""
+                  no_prompt=False):
+    """Set the various options in a configuration file"""
     print(f"Processing configuration file {config_path}")
     config_location(config_dict, location=location, no_prompt=no_prompt)
     config_altitude(config_dict, altitude=altitude, no_prompt=no_prompt)
@@ -138,7 +206,7 @@ def config_config(config_path, config_dict,
     config_units(config_dict, unit_system=unit_system, no_prompt=no_prompt)
     config_driver(config_dict, driver=driver, no_prompt=no_prompt)
     config_registry(config_dict, register=register, station_url=station_url, no_prompt=no_prompt)
-    config_roots(config_dict, weewx_root, skin_root, html_root, sqlite_root, user_root)
+    config_roots(config_dict, skin_root, html_root, sqlite_root, user_root)
 
 
 def config_location(config_dict, location=None, no_prompt=False):
@@ -456,15 +524,9 @@ def config_registry(config_dict, register=None, station_url=None, no_prompt=Fals
         weecfg.inject_station_url(config_dict, final_station_url)
 
 
-def config_roots(config_dict,
-                 weewx_root=None,
-                 skin_root=None,
-                 html_root=None,
-                 sqlite_root=None,
-                 user_root=None):
+def config_roots(config_dict, skin_root=None, html_root=None, sqlite_root=None, user_root=None):
     """Set the location of various root directories in the configuration dictionary."""
-    if weewx_root:
-        config_dict['WEEWX_ROOT'] = weewx_root
+
     if user_root:
         config_dict['USER_ROOT'] = user_root
 
