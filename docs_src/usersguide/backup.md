@@ -44,7 +44,7 @@ The location of these items depends on how you installed WeeWX.
     |---------------|-----------------------------------|
     | Configuration | `~/weewx-data/weewx.conf`         |
     | Skins         | `~/weewx-data/skins`              |
-    | Custom code   | `~/weewx-data/user`               |
+    | Custom code   | `~/weewx-data/bin/user`           |
     | Database      | `~/weewx-data/archive/weewx.sdb`  |
 
 It is not necessary to back up the generated images, HTML files, or NOAA
