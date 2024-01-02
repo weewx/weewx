@@ -1,4 +1,4 @@
-# Copyright 2012-2023 Matthew Wall
+# Copyright 2012-2024 Matthew Wall
 # See the file LICENSE.txt for your full rights.
 #
 # Thanks to Jim Easterbrook for pywws.  This implementation includes

@@ -1,5 +1,5 @@
 # installer for the 'basic' skin
-# Copyright 2014-2023 Matthew Wall
+# Copyright 2014-2024 Matthew Wall
 
 import os.path
 from io import StringIO

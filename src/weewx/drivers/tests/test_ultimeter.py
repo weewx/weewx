@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2021-2023 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2021-2024 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #

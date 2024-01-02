@@ -1,6 +1,6 @@
 # -*- makefile -*-
 # this makefile controls the build and packaging of weewx
-# Copyright 2013-2023 Matthew Wall
+# Copyright 2013-2024 Matthew Wall
 
 # if you do not want to sign the packages, set SIGN to 0
 SIGN=1

@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Matthew Wall
+# Copyright 2013-2024 Matthew Wall
 # See the file LICENSE.txt for your full rights.
 #
 # Thanks to Eddie De Pieri for the first Python implementation for WS-28xx.

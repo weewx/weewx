@@ -1,4 +1,4 @@
-# Copyright 2013-2023 Matthew Wall, Andrew Miles
+# Copyright 2013-2024 Matthew Wall, Andrew Miles
 # See the file LICENSE.txt for your full rights.
 #
 # Thanks to Andrew Miles for figuring out how to read history records

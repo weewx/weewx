@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 # debian makefile for weewx
-# Copyright 2013-2023 Matthew Wall
+# Copyright 2013-2024 Matthew Wall
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1

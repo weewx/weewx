@@ -1,6 +1,6 @@
 #!/bin/sh
 # postrm script for weewx debian package
-# Copyright 2013-2023 Matthew Wall
+# Copyright 2013-2024 Matthew Wall
 #
 # ways this script might be invoked:
 #

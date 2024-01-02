@@ -1,5 +1,5 @@
 #! /bin/sh
-# Copyright 2016-2023 Matthew Wall, all rights reserved
+# Copyright 2016-2024 Matthew Wall, all rights reserved
 # init script to run multiple instances of weewx
 #
 # each weewx instance is identified by name.  that name is used to identify the

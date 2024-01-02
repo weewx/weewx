@@ -1,5 +1,5 @@
 # installer for pmon
-# Copyright 2014-2023 Matthew Wall
+# Copyright 2014-2024 Matthew Wall
 
 from weecfg.extension import ExtensionInstaller
 
