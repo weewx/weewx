@@ -303,13 +303,13 @@ class TestCreateStation(unittest.TestCase):
 
             # Retrieve the config file that was created and check it:
             config_dict = configobj.ConfigObj(config_path, encoding='utf-8')
-            self.assertEqual(config_dict['WEEWX_ROOT'], './')
+            self.assertNotIn('WEEWX_ROOT', config_dict)
             self.assertNotIn('WEEWX_ROOT_ORIG', config_dict)
             self.assertEqual(config_dict['Station']['station_type'], 'Simulator')
             self.assertEqual(config_dict['Simulator']['driver'], 'weewx.drivers.simulator')
-            self.assertEqual(config_dict['StdReport']['SKIN_ROOT'], './skins')
-            self.assertEqual(config_dict['StdReport']['HTML_ROOT'], './public_html')
-            self.assertEqual(config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'], './archive')
+            self.assertEqual(config_dict['StdReport']['SKIN_ROOT'], 'skins')
+            self.assertEqual(config_dict['StdReport']['HTML_ROOT'], 'public_html')
+            self.assertEqual(config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'], 'archive')
 
             # Make sure all the skins are there
             for skin in ['Seasons', 'Smartphone', 'Mobile', 'Standard',
