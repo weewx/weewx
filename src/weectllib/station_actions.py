@@ -644,7 +644,6 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
     username = getpass.getuser()
     groupname = grp.getgrgid(os.getgid()).gr_name
     weewx_root = config_dict['WEEWX_ROOT']
-    html_dir = os.path.join(weewx_root, 'public_html') # FIXME: get from conf
     util_dir = os.path.join(weewx_root, 'util')
     bin_dir = os.path.dirname(weewxd_path)
 
