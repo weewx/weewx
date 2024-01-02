@@ -57,8 +57,8 @@ do_install() {
     sysrc weewx_enable="YES"
 
     echo "You can start/stop weewx with the following commands:"
-    echo "  '\033[1msudo service weewx start\033[0m'"
-    echo "  '\033[1msudo service weewx stop\033[0m'"
+    echo "  \033[1msudo service weewx start\033[0m"
+    echo "  \033[1msudo service weewx stop\033[0m"
 }
 
 do_uninstall() {

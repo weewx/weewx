@@ -64,8 +64,8 @@ install_systemd() {
     systemctl enable weewx
         
     echo "You can start/stop weewx with the following commands:"
-    echo "  '\033[1msudo systemctl start weewx\033[0m'"
-    echo "  '\033[1msudo systemctl stop weewx\033[0m'"
+    echo "  \033[1msudo systemctl start weewx\033[0m"
+    echo "  \033[1msudo systemctl stop weewx\033[0m"
 }
 
 uninstall_systemd() {
@@ -96,8 +96,8 @@ install_sysv() {
     update-rc.d weewx defaults
 
     echo "You can start/stop weewx with the following commands:"
-    echo "  '\033[1m/etc/init.d/weewx start\033[0m'"
-    echo "  '\033[1m/etc/init.d/weewx stop\033[0m'"
+    echo "  \033[1m/etc/init.d/weewx start\033[0m"
+    echo "  \033[1m/etc/init.d/weewx stop\033[0m"
 }
 
 uninstall_sysv() {
