@@ -48,8 +48,8 @@ do_install() {
     copy_file $UTIL_ROOT/launchd/com.weewx.weewxd.plist /Library/LaunchDaemons
 
     echo "You can start/stop weewx with the following commands:"
-    echo "  '\033[1msudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist\033[0m'"
-    echo "  '\033[1msudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist\033[0m'"
+    echo "  '\033[1msudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist\033[0m"
+    echo "  \033[1msudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist\033[0m"
 }
 
 do_uninstall() {

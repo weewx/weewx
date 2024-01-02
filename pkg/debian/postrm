@@ -16,32 +16,57 @@
 # abort if any command returns error
 set -e
 
+pid1=none
+if [ -d /run/systemd/system ]; then
+    pid1=systemd
+else
+    pid1=init
+fi
+
 case "$1" in
 remove)
-        ;;
+    # stop the weewx daemon and remove the startup configuration
+    if [ "$pid1" = "systemd" ]; then
+        systemctl disable weewx
+        for f in weewx.service weewx@.service; do
+	    if [ -f /usr/lib/systemd/system/$f ]; then
+	        rm -f /usr/lib/systemd/system/$f
+	    fi
+        done
+    elif [ "$pid1" = "init" ]; then
+        update-rc.d weewx remove > /dev/null
+        if [ -f /etc/init.d/weewx ]; then
+            rm /etc/init.d/weewx
+        fi
+    fi
+    # remove udev rules
+    if [ -f /usr/lib/udev/rules.d/60-weewx.rules ]; then
+        rm -f /usr/lib/udev/rules.d/60-weewx.rules
+    fi
+    ;;
 
 purge)
-        # remove any debconf entries
-        if [ -e /usr/share/debconf/confmodule ]; then
-            . /usr/share/debconf/confmodule
-            db_purge
-        fi
-        ;;
+    # remove any debconf entries
+    if [ -e /usr/share/debconf/confmodule ]; then
+        . /usr/share/debconf/confmodule
+        db_purge
+    fi
+    ;;
 
 upgrade)
-        ;;
+    ;;
 
 abort-install)
-        ;;
+    ;;
 
 failed-upgrade)
-        ;;
+    ;;
 
 abort-install)
-        ;;
+    ;;
 
 abort-upgrade)
-        ;;
+    ;;
 
 esac
 

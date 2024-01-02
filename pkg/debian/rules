@@ -57,6 +57,9 @@ install:
 	cp -r $(SRC)/src/weewx_data/util/logwatch $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/rsyslog.d $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/logrotate.d $(DST_CFGDIR)
+	mkdir $(DST_CFGDIR)/init.d
+	cp $(SRC)/src/weewx_data/util/init.d/weewx $(DST_CFGDIR)/init.d
+	cp $(SRC)/src/weewx_data/util/init.d/weewx-multi $(DST_CFGDIR)/init.d
 	mkdir $(DST_CFGDIR)/systemd
 	cp $(SRC)/pkg/etc/systemd/system/weewx.service $(DST_CFGDIR)/systemd
 	cp $(SRC)/pkg/etc/systemd/system/weewx@.service $(DST_CFGDIR)/systemd
