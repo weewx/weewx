@@ -156,7 +156,6 @@ To remove every trace of WeeWX:
 sudo yum remove weewx
 sudo rm -r /var/www/html/weewx
 sudo rm -r /var/lib/weewx
-sudo rm -r /var/log/weewx
 sudo rm -r /etc/weewx
 sudo userdel weewx
 ```
