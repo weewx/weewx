@@ -34,18 +34,18 @@ log = logging.getLogger('weectl-station')
 
 
 def station_create(weewx_root=weecfg.default_weewx_root,
-                   rel_config_path='./weewx.conf',
+                   rel_config_path='weewx.conf',
                    driver='weewx.drivers.simulator',
                    location='WeeWX station',
                    altitude='0, foot',
                    latitude=0, longitude=0,
                    register=False, station_url='https://example.com',
                    unit_system='us',
-                   skin_root='./skins',
-                   sqlite_root='./archive',
-                   html_root='./public_html',
-                   examples_root='./examples',
-                   user_root='./bin/user',
+                   skin_root='skins',
+                   sqlite_root='archive',
+                   html_root='public_html',
+                   examples_root='examples',
+                   user_root='bin/user',
                    dist_config_path=None,
                    no_prompt=False,
                    dry_run=False):
@@ -125,7 +125,7 @@ def _calc_paths(weewx_root=None, rel_config_path=None):
     if not weewx_root:
         weewx_root = weecfg.default_weewx_root
     if not rel_config_path:
-        rel_config_path = './weewx.conf'
+        rel_config_path = 'weewx.conf'
 
     # Convert to absolute paths
     abs_weewx_root = os.path.abspath(weewx_root)
@@ -137,8 +137,6 @@ def _calc_paths(weewx_root=None, rel_config_path=None):
     # use the absolute path:
     if '../..' in final_weewx_root:
         final_weewx_root = abs_weewx_root
-    if final_weewx_root == '.':
-        final_weewx_root = './'
     return abs_config_path, final_weewx_root
 
 
