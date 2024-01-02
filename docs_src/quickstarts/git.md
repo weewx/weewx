@@ -79,7 +79,7 @@ new station:
 # If necessary, activate the WeeWX virtual environment
 source ~/weewx-venv/bin/activate
 # Provision a new station
-weectl station create
+python3 ~/weewx/src/weectl.py station create
 ```
 
 The tool `weectl` will ask you a series of questions, then create a directory
@@ -101,7 +101,7 @@ stop when you log out, or when you terminate it with `control-c`.
 # If necessary, activate the WeeWX virtual environment
 source ~/weewx-venv/bin/activate
 # Run weewxd
-weewxd
+python3 ~/weewx/src/weewxd.py
 ```
 
 To run `weewxd` as a daemon, install an init configuration that is appropriate
