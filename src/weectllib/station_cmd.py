@@ -7,19 +7,19 @@
 import os.path
 import sys
 
-import weecfg.station_config
+import weecfg
 import weectllib
+import weectllib.station_actions
 import weewx
 from weeutil.weeutil import bcolors
 
-station_create_usage = f"""{bcolors.BOLD}weectl station create
+station_create_usage = f"""{bcolors.BOLD}weectl station create [WEEWX-ROOT]
             [--driver=DRIVER]
             [--location=LOCATION]
             [--altitude=ALTITUDE,(foot|meter)]
             [--latitude=LATITUDE] [--longitude=LONGITUDE]
             [--register=(y,n) [--station-url=URL]]
             [--units=(us|metricwx|metric)]
-            [--weewx-root=DIRECTORY]
             [--skin-root=DIRECTORY]
             [--sqlite-root=DIRECTORY]
             [--html-root=DIRECTORY]
@@ -37,10 +37,11 @@ station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure
             [--latitude=LATITUDE] [--longitude=LONGITUDE]
             [--register=(y,n) [--station-url=URL]]
             [--units=(us|metricwx|metric)]
-            [--weewx-root=DIRECTORY]
             [--skin-root=DIRECTORY]
             [--sqlite-root=DIRECTORY]
             [--html-root=DIRECTORY]
+            [--user-root=DIRECTORY]
+            [--weewx-root=DIRECTORY]
             [--no-backup]
             [--no-prompt]
             [--config=FILENAME] 
@@ -60,15 +61,18 @@ station_upgrade_usage = f"""{bcolors.BOLD}weectl station upgrade
 station_usage = '\n       '.join((station_create_usage, station_reconfigure_usage,
                                   station_upgrade_usage))
 
-WEEWX_ROOT_DESCRIPTION = f"""In what follows, {bcolors.BOLD}WEEWX_ROOT{bcolors.ENDC} is the
-directory that contains the configuration file. For example, if 
-"--config={weecfg.default_config_path}", then WEEWX_ROOT will be "{weecfg.default_weewx_root}"."""
+CREATE_DESCRIPTION = f"""Create a new station data area at the location WEEWX-ROOT. If WEEWX-ROOT 
+is not provided, the location {weecfg.default_weewx_root} will be used."""
 
-CREATE_DESCRIPTION = """Create a new station data area, including a configuration file. """ \
-                     + WEEWX_ROOT_DESCRIPTION
+RECONFIGURE_DESCRIPTION = f"""Reconfigure an existing configuration file at the location given
+by the --config option. If the option is not provided, the location {weecfg.default_config_path}
+will be used. Unless the --no-prompt option has been specified, the user will be prompted for
+new values."""
 
-UPGRADE_DESCRIPTION = """Upgrade an existing station data area, including any combination of the 
-examples, utility files, configuration file, and skins. """ + WEEWX_ROOT_DESCRIPTION
+UPGRADE_DESCRIPTION = f"""Upgrade an existing station data area managed by the configuration file
+given by the --config option. If the option is not provided, the location 
+{weecfg.default_config_path} will be used. Any combination of the examples, utility files, 
+configuration file, and skins can be upgraded, """
 
 
 def add_subparser(subparsers):
@@ -85,59 +89,143 @@ def add_subparser(subparsers):
                                                   title='Which action to take')
 
     # ---------- Action 'create' ----------
-    station_create_parser = action_parser.add_parser('create',
-                                                     description=CREATE_DESCRIPTION,
-                                                     usage=station_create_usage,
-                                                     help='Create a new station data area, '
-                                                          'including a configuration file.')
-    _add_common_args(station_create_parser)
-    station_create_parser.add_argument('--user-root',
-                                       metavar='DIRECTORY',
-                                       help='Where to put the "user" directory, relative to '
-                                            'WEEWX_ROOT. Default is "bin/user"')
-    station_create_parser.add_argument('--examples-root',
-                                       metavar='DIRECTORY',
-                                       help='Where to put the examples, relative to '
-                                            'WEEWX_ROOT. Default is "examples".')
-    station_create_parser.add_argument('--no-prompt', action='store_true',
-                                       help='Do not prompt. Use default values.')
-    station_create_parser.add_argument('--config',
-                                       metavar='FILENAME',
-                                       help=f'Path to configuration file. It must not already '
-                                            f'exist. Default is "{weecfg.default_config_path}".')
-    station_create_parser.add_argument('--dist-config',
-                                       metavar='FILENAME',
-                                       help='Use configuration file DIST-CONFIG-PATH as the '
-                                            'new configuration file. Default is to retrieve it '
-                                            'from package resources. The average user is '
-                                            'unlikely to need this option.')
-    station_create_parser.add_argument('--dry-run',
-                                       action='store_true',
-                                       help='Print what would happen, but do not actually '
-                                            'do it.')
-    station_create_parser.set_defaults(func=create_station)
+    create_parser = action_parser.add_parser('create',
+                                             description=CREATE_DESCRIPTION,
+                                             usage=station_create_usage,
+                                             help='Create a new station data area, including a '
+                                                  'configuration file.')
+    create_parser.add_argument('--driver',
+                               help='Driver to use. Default is "weewx.drivers.simulator".')
+    create_parser.add_argument('--location',
+                               help='A description of the station. This will be used for report '
+                                    'titles. Default is "WeeWX".')
+    create_parser.add_argument('--altitude', metavar='ALTITUDE,{foot|meter}',
+                               help='The station altitude in either feet or meters. For example, '
+                                    '"750,foot" or "320,meter". Default is "0, foot".')
+    create_parser.add_argument('--latitude',
+                               help='The station latitude in decimal degrees. Default is "0.00".')
+    create_parser.add_argument('--longitude',
+                               help='The station longitude in decimal degrees. Default is "0.00".')
+    create_parser.add_argument('--register', choices=['y', 'n'],
+                               help='Register this station in the weewx registry? Default is "n" '
+                                    '(do not register).')
+    create_parser.add_argument('--station-url',
+                               metavar='URL',
+                               help='Unique URL to be used if registering the station. Required '
+                                    'if the station is to be registered.')
+    create_parser.add_argument('--units', choices=['us', 'metricwx', 'metric'],
+                               dest='unit_system',
+                               help='Set display units to us, metricwx, or metric. '
+                                    'Default is "us".')
+    create_parser.add_argument('--skin-root',
+                               metavar='DIRECTORY',
+                               help='Where to put the skins, relatve to WEEWX_ROOT. '
+                                    'Default is "skins".')
+    create_parser.add_argument('--sqlite-root',
+                               metavar='DIRECTORY',
+                               help='Where to put the SQLite database, relative to WEEWX_ROOT. '
+                                    'Default is "archive".')
+    create_parser.add_argument('--html-root',
+                               metavar='DIRECTORY',
+                               help='Where to put the generated HTML and images, relative to '
+                                    'WEEWX_ROOT. Default is "public_html".')
+    create_parser.add_argument('--user-root',
+                               metavar='DIRECTORY',
+                               help='Where to put the user extensions, relative to WEEWX_ROOT. '
+                                    'Default is "bin/user".')
+    create_parser.add_argument('--examples-root',
+                               metavar='DIRECTORY',
+                               help='Where to put the examples, relative to WEEWX_ROOT. '
+                                    'Default is "examples".')
+    create_parser.add_argument('--no-prompt', action='store_true',
+                               help='Do not prompt. Use default values.')
+    create_parser.add_argument('--config',
+                               metavar='FILENAME',
+                               help='Where to put the configuration file, relative to WEEWX-ROOT. '
+                                    'It must not already exist. Default is "./weewx.conf".')
+    create_parser.add_argument('--dist-config',
+                               metavar='FILENAME',
+                               help='Use configuration file DIST-CONFIG-PATH as the new '
+                                    'configuration file. Default is to retrieve it from package '
+                                    'resources. The average user is unlikely to need this option.')
+    create_parser.add_argument('--dry-run',
+                               action='store_true',
+                               help='Print what would happen, but do not actually do it.')
+    create_parser.add_argument('weewx_root',
+                               nargs='?',
+                               metavar='WEEWX_ROOT',
+                               help='Path to the WeeWX station data area to be created. '
+                                    f'Default is {weecfg.default_weewx_root}.')
+    create_parser.set_defaults(func=create_station)
 
     # ---------- Action 'reconfigure' ----------
-    station_reconfigure_parser = \
+    reconfigure_parser = \
         action_parser.add_parser('reconfigure',
+                                 description=RECONFIGURE_DESCRIPTION,
                                  usage=station_reconfigure_usage,
-                                 help='Reconfigure a station configuration file.')
+                                 help='Reconfigure an existing station configuration file.')
 
-    _add_common_args(station_reconfigure_parser)
-    station_reconfigure_parser.add_argument('--no-backup', action='store_true',
-                                            help='Do not backup the old configuration file.')
-    station_reconfigure_parser.add_argument('--no-prompt', action='store_true',
-                                            help='Do not prompt. Use default values.')
-    station_reconfigure_parser.add_argument('--config',
-                                            metavar='FILENAME',
-                                            help=f'Path to configuration file. '
-                                                 f'Default is "{weecfg.default_config_path}"')
-    station_reconfigure_parser.add_argument('--dry-run',
-                                            action='store_true',
-                                            help='Print what would happen, but do not actually '
-                                                 'do it.')
-    station_reconfigure_parser.set_defaults(func=weectllib.dispatch)
-    station_reconfigure_parser.set_defaults(action_func=reconfigure_station)
+    reconfigure_parser.add_argument('--driver',
+                                    help='New driver to use. Default is the old driver.')
+    reconfigure_parser.add_argument('--location',
+                                    help='A new description for the station. This will be used '
+                                         'for report titles. Default is the old description.')
+    reconfigure_parser.add_argument('--altitude', metavar='ALTITUDE,{foot|meter}',
+                                    help='The new station altitude in either feet or meters. '
+                                         'For example, "750,foot" or "320,meter". '
+                                         'Default is the old altitude.')
+    reconfigure_parser.add_argument('--latitude',
+                                    help='The new station latitude in decimal degrees. '
+                                         'Default is the old latitude.')
+    reconfigure_parser.add_argument('--longitude',
+                                    help='The new station longitude in decimal degrees. '
+                                         'Default is the old longitude.')
+    reconfigure_parser.add_argument('--register', choices=['y', 'n'],
+                                    help='Register this station in the weewx registry? '
+                                         'Default is the old value.')
+    reconfigure_parser.add_argument('--station-url',
+                                    metavar='URL',
+                                    help='A new unique URL to be used if registering the . '
+                                         'station. Default is the old URL.')
+    reconfigure_parser.add_argument('--units', choices=['us', 'metricwx', 'metric'],
+                                    dest='unit_system',
+                                    help='New display units. Set to to us, metricwx, or metric. '
+                                         'Default is the old unit system.')
+    reconfigure_parser.add_argument('--skin-root',
+                                    metavar='DIRECTORY',
+                                    help='New location where to find the skins, relatve '
+                                         'to WEEWX_ROOT. Default is the old location.')
+    reconfigure_parser.add_argument('--sqlite-root',
+                                    metavar='DIRECTORY',
+                                    help='New location where to find the SQLite database, '
+                                         'relative to WEEWX_ROOT. Default is the old location.')
+    reconfigure_parser.add_argument('--html-root',
+                                    metavar='DIRECTORY',
+                                    help='New location where to put the generated HTML and '
+                                         'images, relative to WEEWX_ROOT. '
+                                         'Default is the old location.')
+    reconfigure_parser.add_argument('--user-root',
+                                    metavar='DIRECTORY',
+                                    help='New location where to find the user extensions, '
+                                         'relative to WEEWX_ROOT. Default is the old location.')
+    reconfigure_parser.add_argument('--weewx-root',
+                                    metavar='WEEWX_ROOT',
+                                    help='New path to the WeeWX station data area. '
+                                         'Default is the old path.')
+    reconfigure_parser.add_argument('--no-backup', action='store_true',
+                                    help='Do not backup the old configuration file.')
+    reconfigure_parser.add_argument('--no-prompt', action='store_true',
+                                    help='Do not prompt. Use default values.')
+    reconfigure_parser.add_argument('--config',
+                                    metavar='FILENAME',
+                                    help=f'Path to configuration file. '
+                                         f'Default is "{weecfg.default_config_path}"')
+    reconfigure_parser.add_argument('--dry-run',
+                                    action='store_true',
+                                    help='Print what would happen, but do not actually '
+                                         'do it.')
+    reconfigure_parser.set_defaults(func=weectllib.dispatch)
+    reconfigure_parser.set_defaults(action_func=reconfigure_station)
 
     # ---------- Action 'upgrade' ----------
     station_upgrade_parser = \
@@ -194,25 +282,27 @@ def add_subparser(subparsers):
 def create_station(namespace):
     """Map 'namespace' to a call to station_create()"""
     try:
-        config_dict = weecfg.station_config.station_create(config_path=namespace.config,
-                                                           dist_config_path=namespace.dist_config,
-                                                           driver=namespace.driver,
-                                                           location=namespace.location,
-                                                           altitude=namespace.altitude,
-                                                           latitude=namespace.latitude,
-                                                           longitude=namespace.longitude,
-                                                           register=namespace.register,
-                                                           station_url=namespace.station_url,
-                                                           unit_system=namespace.unit_system,
-                                                           weewx_root=namespace.weewx_root,
-                                                           skin_root=namespace.skin_root,
-                                                           sqlite_root=namespace.sqlite_root,
-                                                           html_root=namespace.html_root,
-                                                           examples_root=namespace.examples_root,
-                                                           no_prompt=namespace.no_prompt,
-                                                           dry_run=namespace.dry_run)
+        config_dict = weectllib.station_actions.station_create(
+            weewx_root=namespace.weewx_root,
+            rel_config_path=namespace.config,
+            driver=namespace.driver,
+            location=namespace.location,
+            altitude=namespace.altitude,
+            latitude=namespace.latitude,
+            longitude=namespace.longitude,
+            register=namespace.register,
+            station_url=namespace.station_url,
+            unit_system=namespace.unit_system,
+            skin_root=namespace.skin_root,
+            sqlite_root=namespace.sqlite_root,
+            html_root=namespace.html_root,
+            examples_root=namespace.examples_root,
+            user_root=namespace.user_root,
+            dist_config_path=namespace.dist_config,
+            no_prompt=namespace.no_prompt,
+            dry_run=namespace.dry_run)
     except weewx.ViolatedPrecondition as e:
-        sys.exit(e)
+        sys.exit(str(e))
 
     # if this is an operating system for which we have a setup script, then
     # provide some guidance about running that script.
@@ -238,80 +328,33 @@ def create_station(namespace):
 def reconfigure_station(config_dict, namespace):
     """Map namespace to a call to station_reconfigure()"""
     try:
-        weecfg.station_config.station_reconfigure(config_dict=config_dict,
-                                                  driver=namespace.driver,
-                                                  location=namespace.location,
-                                                  altitude=namespace.altitude,
-                                                  latitude=namespace.latitude,
-                                                  longitude=namespace.longitude,
-                                                  register=namespace.register,
-                                                  station_url=namespace.station_url,
-                                                  unit_system=namespace.unit_system,
-                                                  weewx_root=namespace.weewx_root,
-                                                  skin_root=namespace.skin_root,
-                                                  sqlite_root=namespace.sqlite_root,
-                                                  html_root=namespace.html_root,
-                                                  no_prompt=namespace.no_prompt,
-                                                  no_backup=namespace.no_backup,
-                                                  dry_run=namespace.dry_run)
+        weectllib.station_actions.station_reconfigure(config_dict=config_dict,
+                                                      driver=namespace.driver,
+                                                      location=namespace.location,
+                                                      altitude=namespace.altitude,
+                                                      latitude=namespace.latitude,
+                                                      longitude=namespace.longitude,
+                                                      register=namespace.register,
+                                                      station_url=namespace.station_url,
+                                                      unit_system=namespace.unit_system,
+                                                      weewx_root=namespace.weewx_root,
+                                                      skin_root=namespace.skin_root,
+                                                      sqlite_root=namespace.sqlite_root,
+                                                      html_root=namespace.html_root,
+                                                      user_root=namespace.user_root,
+                                                      no_prompt=namespace.no_prompt,
+                                                      no_backup=namespace.no_backup,
+                                                      dry_run=namespace.dry_run)
     except weewx.ViolatedPrecondition as e:
-        sys.exit(e)
+        sys.exit(str(e))
 
 
 def upgrade_station(config_dict, namespace):
-    weecfg.station_config.station_upgrade(config_dict=config_dict,
-                                          dist_config_path=namespace.dist_config,
-                                          examples_root=namespace.examples_root,
-                                          skin_root=namespace.skin_root,
-                                          what=namespace.what,
-                                          no_prompt=namespace.no_prompt,
-                                          no_backup=namespace.no_backup,
-                                          dry_run=namespace.dry_run)
-
-
-# ==============================================================================
-#                            Utilities
-# ==============================================================================
-
-def _add_common_args(parser):
-    """Add common arguments"""
-    parser.add_argument('--driver',
-                        help='Driver to use. Default is "weewx.drivers.simulator".')
-    parser.add_argument('--location',
-                        help='A description of the station. This will be used '
-                             'for report titles. Default is "WeeWX".')
-    parser.add_argument('--altitude', metavar='ALTITUDE,{foot|meter}',
-                        help='The station altitude in either feet or meters. '
-                             'For example, "750,foot" or "320,meter". '
-                             'Default is "0, foot".')
-    parser.add_argument('--latitude',
-                        help='The station latitude in decimal degrees. '
-                             'Default is "0.00".')
-    parser.add_argument('--longitude',
-                        help='The station longitude in decimal degrees. '
-                             'Default is "0.00".')
-    parser.add_argument('--register', choices=['y', 'n'],
-                        help='Register this station in the weewx registry? '
-                             'Default is "n" (do not register).')
-    parser.add_argument('--station-url',
-                        metavar='URL',
-                        help='Unique URL to be used if registering the station. '
-                             'Required if the station is to be registered.')
-    parser.add_argument('--units', choices=['us', 'metricwx', 'metric'],
-                        dest='unit_system',
-                        help='Set display units to us, metricwx, or metric. '
-                             'Default is "us".')
-    parser.add_argument('--weewx-root',
-                        metavar='DIRECTORY',
-                        help="Location of WEEWX_ROOT.")
-    parser.add_argument('--skin-root',
-                        metavar='DIRECTORY',
-                        help='Where to put the skins, relatve to WEEWX_ROOT. Default is "skins".')
-    parser.add_argument('--sqlite-root',
-                        metavar='DIRECTORY',
-                        help='Where to put the SQLite database, relative to WEEWX_ROOT. '
-                             'Default is "archive".')
-    parser.add_argument('--html-root',
-                        metavar='DIRECTORY',
-                        help='Where to put the generated HTML and images, relative to WEEWX_ROOT. '
-                             'Default is "public_html".')
+    weectllib.station_actions.station_upgrade(config_dict=config_dict,
+                                              dist_config_path=namespace.dist_config,
+                                              examples_root=namespace.examples_root,
+                                              skin_root=namespace.skin_root,
+                                              what=namespace.what,
+                                              no_prompt=namespace.no_prompt,
+                                              no_backup=namespace.no_backup,
+                                              dry_run=namespace.dry_run)

@@ -4,8 +4,8 @@
 #      See the file LICENSE.txt for your full rights.
 #
 
-import unittest
 import datetime
+import unittest
 
 from weectllib import parse_dates
 
