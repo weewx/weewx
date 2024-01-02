@@ -272,15 +272,33 @@ create_user() {
 
 # put the init files in place
 setup_init() {
-    if [ -d /usr/lib/systemd/system ]; then
-        cat /etc/weewx/systemd/weewx.service | sed \
+    if [ "$1" = "systemd" -a -d /usr/lib/systemd/system ]; then
+        for f in weewx.service weewx@.service; do
+            cat /etc/weewx/systemd/$f | sed \
  -e "s/User=.*/User=${WEEWX_USER}/" \
  -e "s/Group=.*/Group=${WEEWX_GROUP}/" \
- > /usr/lib/systemd/system/weewx.service
-        cat /etc/weewx/systemd/weewx@.service | sed \
- -e "s/User=.*/User=${WEEWX_USER}/" \
- -e "s/Group=.*/Group=${WEEWX_GROUP}/" \
- > /usr/lib/systemd/system/weewx@.service
+ > /usr/lib/systemd/system/$f
+        done
+        systemctl daemon-reload
+    elif [ "$1" = "init" ]; then
+        cp /etc/weewx/init.d/weewx-multi /etc/init.d/weewx
+        chmod 755 /etc/init.d/weewx
+    fi
+}
+
+enable_init() {
+    if [ "$1" = "systemd" ]; then
+	systemctl enable weewx
+    elif [ "$1" = "init" ]; then
+        update-rc.d weewx defaults > /dev/null
+    fi
+}
+
+start_weewx() {
+    if [ "$1" = "systemd" ]; then
+	systemctl start weewx
+    elif [ "$1" = "init" ]; then
+        invoke-rc.d weewx start
     fi
 }
 
@@ -288,7 +306,7 @@ setup_init() {
 setup_udev() {
     if [ -d /usr/lib/udev/rules.d ]; then
         cat /etc/weewx/udev/weewx.rules | sed \
- -e "/GROUP=\"weewx\"/GROUP=\"${WEEWX_GROUP}\"/" \
+ -e "s/GROUP=\"weewx\"/GROUP=\"${WEEWX_GROUP}\"/" \
  > /usr/lib/udev/rules.d/60-weewx.rules
     fi
 }
@@ -340,6 +358,8 @@ migrate_extensions() {
 pid1=none
 if [ -d /run/systemd/system ]; then
     pid1=systemd
+else
+    pid1=init
 fi
 
 case "$1" in
@@ -357,7 +377,7 @@ case "$1" in
         fi
 
         create_user
-        setup_init
+        setup_init $pid1
         setup_udev
         setup_skins
         setup_user_dir
@@ -368,11 +388,8 @@ case "$1" in
 
         set_permissions
 
-        # configure for system startup and start weewx
-        if [ "$pid1" = "systemd" ]; then
-	    systemctl enable weewx
-	    systemctl start weewx
-        fi
+        enable_init $pid1
+        start_weewx $pid1
         ;;
 
     abort-remove)

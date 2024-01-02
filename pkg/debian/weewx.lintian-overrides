@@ -12,3 +12,4 @@ weewx: binary-without-manpage usr/bin/weectl
 weewx: binary-without-manpage usr/bin/weewxd
 weewx: maintainer-script-should-not-use-recursive-chown-or-chmod
 weewx: maintainer-script-calls-systemctl
+weewx: init.d-script-not-included-in-package

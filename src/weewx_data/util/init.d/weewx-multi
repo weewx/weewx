@@ -46,13 +46,19 @@ WEEWX_GROUP=root
 
 WEEWXD=$WEEWX_BINDIR/weewxd.py
 
+# the start-stop-daemon requires a full path to the DAEMON.  prefer to use
+# the wrapper in /usr/bin, but if that is not available, then use the direct
+# python invocation of the weewxd entry script.
+DAEMON=/usr/bin/weewxd
+if [ ! -x $DAEMON ]; then
+    DAEMON="$WEEWX_PYTHON $WEEWXD"
+fi
+
 # Exit if the package is not installed
 if [ ! -f "$WEEWXD" ]; then
     echo "The $DESC daemon is not installed at $WEEWXD"
     exit 0
 fi
-
-DAEMON="$WEEWX_PYTHON $WEEWXD"
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh

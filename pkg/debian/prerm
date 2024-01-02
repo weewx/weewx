@@ -17,6 +17,8 @@ set -e
 pid1=none
 if [ -d /run/systemd/system ]; then
     pid1=systemd
+else
+    pid1=init
 fi
 
 case "$1" in
@@ -24,16 +26,8 @@ remove|upgrade)
     # stop the weewx daemon and remove the startup configuration
     if [ "$pid1" = "systemd" ]; then
 	systemctl stop weewx
-        systemctl disable weewx
-        for f in weewx.service weewx@.service; do
-	    if [ -f /usr/lib/systemd/system/$f ]; then
-	        rm -f /usr/lib/systemd/system/$f
-	    fi
-        done
-    fi
-    # remove udev rules
-    if [ -f /usr/lib/udev/rules.d/60-weewx.rules ]; then
-        rm -f /usr/lib/udev/rules.d/60-weewx.rules
+    elif [ "$pid1" = "init" ]; then
+        invoke-rc.d weewx stop
     fi
     # remove any bytecompiled code
     find /usr/share/weewx -name '*.pyc' -delete
