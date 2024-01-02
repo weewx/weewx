@@ -1,7 +1,7 @@
 pmon - Process Monitor
 ======================
 
-Copyright 2014-2023 Matthew Wall
+Copyright 2014-2024 Matthew Wall
 
 This example illustrates how to implement a service and package it so that it
 can be installed by the extension installer.  The pmon service collects memory

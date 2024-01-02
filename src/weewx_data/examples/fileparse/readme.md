@@ -1,7 +1,7 @@
 fileparse - simple driver that reads data from a file
 ==========
 
-Copyright 2014-2023 Matthew Wall
+Copyright 2014-2024 Matthew Wall
 
 This example illustrates how to implement a driver and package it so that it
 can be installed by the extension installer.  The fileparse driver reads data

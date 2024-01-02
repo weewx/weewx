@@ -29,7 +29,7 @@ stations using WeeWX.
 * Extensive almanac information
 * Uploads to your website via FTP, FTPS, or rsync
 * Uploads to online weather services
-* Requires Python 3.7 or greater
+* Requires Python 3.6 or greater
 
 Support for many online weather services, including:
 
@@ -117,4 +117,4 @@ WeeWX is licensed under the GNU Public License v3.
 
 ## Copyright
 
-© 2009-2023 Thomas Keffer, Matthew Wall, and Gary Roderick
+© 2009-2024 Thomas Keffer, Matthew Wall, and Gary Roderick

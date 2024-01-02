@@ -3,7 +3,7 @@ xstats
 
 WeeWX extension that provides extended statistics for reports
 
-Copyright 2014-2023 Matthew Wall
+Copyright 2014-2024 Matthew Wall
 
 This search list extension offers extra tags:
 

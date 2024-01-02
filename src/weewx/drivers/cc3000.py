@@ -1,4 +1,4 @@
-# Copyright 2014-2023 Matthew Wall
+# Copyright 2014-2024 Matthew Wall
 # See the file LICENSE.txt for your rights.
 
 """Driver for CC3000 data logger

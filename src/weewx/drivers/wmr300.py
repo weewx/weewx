@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Matthew Wall
+# Copyright 2015-2024 Matthew Wall
 # See the file LICENSE.txt for your rights.
 #
 # Credits:

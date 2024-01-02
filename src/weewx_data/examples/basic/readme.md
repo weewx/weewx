@@ -1,7 +1,7 @@
 basic - a very basic WeeWX skin
 =============
 
-Copyright 2014-2023 Matthew Wall
+Copyright 2014-2024 Matthew Wall
 
 This example illustrates how to implement a skin and package it so that it can be installed by the
 extension installer. It also illustrates how to internationalize a skin.
