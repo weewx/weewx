@@ -613,6 +613,7 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
             r"^WEEWX_PYTHON=.*": rf"WEEWX_PYTHON={sys.executable}",
             r"^WEEWX_BINDIR=.*": rf"WEEWX_BINDIR={bin_dir}",
             r"^WEEWX_CFGDIR=.*": rf"WEEWX_CFGDIR={cfg_dir}",
+            r"^WEEWX_RUNDIR=.*": rf"WEEWX_RUNDIR={cfg_dir}",
             r"^WEEWX_USER=.*": rf"WEEWX_USER={username}",
             r"^WEEWX_GROUP=.*": rf"WEEWX_GROUP={groupname}",
         },

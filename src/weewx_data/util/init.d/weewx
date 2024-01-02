@@ -13,7 +13,6 @@ WEEWX_RUNDIR=/var/lib/weewx
 WEEWX_CFG=weewx.conf
 
 # Read configuration variable file if it is present
-[ -r /etc/defaults/weewx ] && . /etc/defaults/weewx
 [ -r /etc/default/weewx ] && . /etc/default/weewx
 
 WEEWXD=$WEEWX_BINDIR/weewxd.py
