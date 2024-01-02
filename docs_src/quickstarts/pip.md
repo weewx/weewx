@@ -159,17 +159,19 @@ weewxd
 ### Run as a daemon
 
 To make WeeWX start when the system is booted, you will want to run `weewxd`
-as a daemon. Follow the directions below for your system. You will need root
-privileges.
+as a daemon. Run the daemon setup script, to configure your system. You will
+need root privileges to do this.
+
+```{ .shell .copy }
+sudo sh ~/weewx-data/scripts/setup-daemon.sh
+```
+
+Then follow the directions below to start `weewxd` as a daemon.
 
 === "systemd"
 
     ```{ .shell .copy }
     # For Linux systems that use systemd, e.g., Debian, Redhat, and SUSE.
-    # This will install the systemd unit and set permissions for USB/serial
-    # communication.
-    sudo sh ~/weewx-data/scripts/setup-daemon.linux
-    # Start WeeWX
     sudo systemctl start weewx
     ```
 
@@ -182,10 +184,6 @@ privileges.
 
     ```{ .shell .copy }
     # For Linux systems that use SysV init, e.g., Slackware, Devuan, and Puppy.
-    # This will install the init script, and set permissions for USB/serial
-    # communication.
-    sudo sh ~/weewx-data/scripts/setup-daemon.linux
-    # Start WeeWX
     sudo /etc/init.d/weewx start
     ```
 
@@ -197,19 +195,14 @@ privileges.
 === "FreeBSD"
 
     ```{ .shell .copy }
-    # For BSD systems, e.g., FreeBSD and OpenBSD. This will install the init
-    # script and configure the system to start WeeWX on boot.
-    sudo sh ~/weewx-data/scripts/setup-daemon.bsd
-    # Start WeeWX
+    # For BSD systems, e.g., FreeBSD and OpenBSD.
     sudo service weewx start
     ```
 
 === "macOS"
 
     ```{ .shell .copy }
-    # For macOS systems. This will install the LaunchDaemon plist file.
-    sudo sh ~/weewx-data/scripts/setup-daemon.macos
-    # Start WeeWX
+    # For macOS systems.
     sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist
     ```
 
@@ -383,35 +376,35 @@ weectl station upgrade --what config
 
 Before you uninstall, be sure that `weewxd` is not running.
 
-If you installed a daemon configuration, remove it.
-
 === "systemd"
 
     ```{ .shell .copy }
     sudo systemctl stop weewx
-    sudo sh ~/weewx-data/scripts/setup-daemon.linux uninstall
     ```
 
 === "sysV"
 
     ```{ .shell .copy }
     sudo /etc/init.d/weewx stop
-    sudo sh ~/weewx-data/scripts/setup-daemon.linux uninstall
     ```
 
 === "FreeBSD"
 
     ```{ .shell .copy }
     sudo service weewx stop
-    sudo sh ~/weewx-data/scripts/setup-daemon.bsd uninstall
     ```
 
 === "macOS"
 
     ```{ .shell .copy }
     sudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist
-    sudo sh ~/weewx-data/scripts/setup-daemon.macos uninstall
     ```
+
+If you installed a daemon configuration, remove it:
+
+```{ .shell .copy }
+sudo sh ~/weewx-data/scripts/setup-daemon.sh uninstall
+```
 
 To delete the applications and code, remove the WeeWX virtual environment:
 
