@@ -198,6 +198,9 @@ def save(config_dict, config_path, backup=False):
         # Reset WEEWX_ROOT to what it originally was, then pop WEEWX_ROOT_ORIG
         write_dict['WEEWX_ROOT'] = write_dict['WEEWX_ROOT_ORIG']
         write_dict.pop('WEEWX_ROOT_ORIG', None)
+    # If the final path is just '.', get rid of it entirely --- that's the default.
+    if write_dict.get('WEEWX_ROOT') == '.':
+        write_dict.pop('WEEWX_ROOT')
 
     # Check to see if the file exists, and we are supposed to make backup:
     if os.path.exists(config_path) and backup:
