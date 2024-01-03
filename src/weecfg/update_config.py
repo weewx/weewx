@@ -556,7 +556,8 @@ def update_to_v32(config_dict):
 
     # For interpolation to work, it's critical that WEEWX_ROOT not end
     # with a trailing slash ('/'). Convert it to the normative form:
-    config_dict['WEEWX_ROOT'] = os.path.normpath(config_dict['WEEWX_ROOT'])
+    if 'WEEWX_ROOT_CONFIG' in config_dict:
+        config_dict['WEEWX_ROOT_CONFIG'] = os.path.normpath(config_dict['WEEWX_ROOT_CONFIG'])
 
     # Add a default database-specific top-level stanzas if necessary
     if 'DatabaseTypes' not in config_dict:
@@ -963,8 +964,6 @@ def update_to_v50(config_dict):
 
     - If the config file uses '/' for WEEWX_ROOT, set it to '/etc/weewx'
     """
-    if 'WEEWX_ROOT' in config_dict and config_dict['WEEWX_ROOT'] == '/':
-        config_dict['WEEWX_ROOT'] = '/etc/weewx'
     if 'WEEWX_ROOT_CONFIG' in config_dict and config_dict['WEEWX_ROOT_CONFIG'] == '/':
         config_dict['WEEWX_ROOT_CONFIG'] = '/etc/weewx'
 
