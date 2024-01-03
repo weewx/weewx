@@ -9,17 +9,6 @@ information in the log file. This is strongly recommended if you are having
 trouble. Set to `2` for even more information. Otherwise, set to `0`. Default is
 `0` (no debug).
 
-#### WEEWX_ROOT
-
-Set to the root directory of the WeeWX file hierarchy for this station.
-Normally, this is set automatically by the installation process. Required. No
-default.
-
-#### USER_ROOT
-
-The location of the user package, relative to `WEEWX_ROOT`. WeeWX will look for
-any user-installed extensions in this directory. Default is `bin/user`.
-
 #### ==log_success==
 
 If set to `true`, the default will be to log a successful operation (for
@@ -31,6 +20,25 @@ etc.) to the system log. Default is `true`.
 If set to `true`, the default will be to log an unsuccessful operation (for
 example, failure to generate a report, or failure to upload to the Weather
 Underground, etc.) to the system log. Default is `true`.
+
+#### WEEWX_ROOT
+
+`WEEWX_ROOT` is the path to the root directory of the station data area,
+relative to the directory of the configuration file. For example, if a
+configuration file is located in `/etc/weewx/weewx.conf`, then its directory
+will be `/etc/weewx`. If `WEEWX_ROOT = barn` is specified in this file, then its
+absolute location will be `/etc/weewx/barn`.
+
+If `WEEWX_ROOT` is not specified at all, then its default value is "`.`", that
+is the directory of the configuration file.
+
+The average user rarely needs to specify a value.
+
+
+#### USER_ROOT
+
+The location of the user package, relative to `WEEWX_ROOT`. WeeWX will look for
+any user-installed extensions in this directory. Default is `bin/user`.
 
 #### socket_timeout
 
