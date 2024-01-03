@@ -23,14 +23,14 @@ Underground, etc.) to the system log. Default is `true`.
 
 #### WEEWX_ROOT
 
-`WEEWX_ROOT` is the path to the root directory of the station data area,
-relative to the directory of the configuration file. For example, if a
-configuration file is located in `/etc/weewx/weewx.conf`, then its directory
-will be `/etc/weewx`. If `WEEWX_ROOT = barn` is specified in this file, then its
-absolute location will be `/etc/weewx/barn`.
+`WEEWX_ROOT` is the path to the root directory of the station data area. 
 
-If `WEEWX_ROOT` is not specified at all, then its default value is "`.`", that
-is the directory of the configuration file.
+If not specified, its default value is the directory of the configuration file.
+For example, if the configuration file is `/etc/weewx/weewx.conf`, then the
+default value will be `/etc/weewx`.
+
+If a relative path is specified, then it will be relative to the directory of
+the configuration file. 
 
 The average user rarely needs to specify a value.
 
