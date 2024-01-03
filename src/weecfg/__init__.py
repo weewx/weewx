@@ -194,15 +194,15 @@ def save(config_dict, config_path, backup=False):
     write_dict = weeutil.config.deep_copy(config_dict)
     write_dict.pop('config_path', None)
     write_dict.pop('entry_path', None)
-    if write_dict.get('WEEWX_ROOT_ORIG'):
-        # Reset WEEWX_ROOT to what it originally was, then pop WEEWX_ROOT_ORIG
+    if 'WEEWX_ROOT_ORIG' in write_dict:
+        # Reset WEEWX_ROOT to what it originally was, then delete WEEWX_ROOT_ORIG
         write_dict['WEEWX_ROOT'] = write_dict['WEEWX_ROOT_ORIG']
-        write_dict.pop('WEEWX_ROOT_ORIG', None)
+        del write_dict['WEEWX_ROOT_ORIG']
     # If the final path is just '.', get rid of it entirely --- that's the default.
-    if write_dict.get('WEEWX_ROOT') == '.':
-        write_dict.pop('WEEWX_ROOT')
+    if 'WEEWX_ROOT' in write_dict and os.path.normpath(config_dict['WEEWX_ROOT']) == '.':
+        del write_dict['WEEWX_ROOT']
 
-    # Check to see if the file exists, and we are supposed to make backup:
+    # Check to see if the file exists, and we are supposed to make a backup:
     if os.path.exists(config_path) and backup:
 
         # Yes. We'll have to back it up.
