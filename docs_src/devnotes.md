@@ -7,70 +7,70 @@ project WeeWX.
 
 The primary design goals of WeeWX are:
 
--   Architectural simplicity. No semaphores, no named pipes, no
-    inter-process communications, no complex multi-threading to manage.
+- Architectural simplicity. No semaphores, no named pipes, no
+  inter-process communications, no complex multi-threading to manage.
 
--   Extensibility. Make it easy for the user to add new features or to
-    modify existing features.
+- Extensibility. Make it easy for the user to add new features or to
+  modify existing features.
 
--   *Fast enough* In any design decision, architectural simplicity and
-    elegance trump speed.
+- *Fast enough* In any design decision, architectural simplicity and
+  elegance trump speed.
 
--   One code base. A single code base should be used for all platforms,
-    all weather stations, all reports, and any combination of features.
-    Ample configuration and customization options should be provided so
-    the user does not feel tempted to start hacking code. At worse, the
-    user may have to subclass, which is much easier to port to newer
-    versions of the code base, than customizing the base code.
+- One code base. A single code base should be used for all platforms,
+  all weather stations, all reports, and any combination of features.
+  Ample configuration and customization options should be provided so
+  the user does not feel tempted to start hacking code. At worse, the
+  user may have to subclass, which is much easier to port to newer
+  versions of the code base, than customizing the base code.
 
--   Minimal dependencies. The code should rely on a minimal number of
-    external packages, so the user does not have to go chase them down
-    all over the Web before getting started.
+- Minimal dependencies. The code should rely on a minimal number of
+  external packages, so the user does not have to go chase them down
+  all over the Web before getting started.
 
--   Simple data model. The implementation should use a very simple data
-    model that is likely to support many different types of hardware.
+- Simple data model. The implementation should use a very simple data
+  model that is likely to support many different types of hardware.
 
--   A *pythonic* code base. The code should be written in a style that
-    others will recognize.
+- A *pythonic* code base. The code should be written in a style that
+  others will recognize.
 
 ## Strategies
 
 To meet these goals, the following strategies were used:
 
--   A *micro-kernel* design. The WeeWX engine actually does very
-    little. Its primary job is to load and run *services* at runtime,
-    making it easy for users to add or subtract features.
+- A *micro-kernel* design. The WeeWX engine actually does very
+  little. Its primary job is to load and run *services* at runtime,
+  making it easy for users to add or subtract features.
 
--   A largely stateless design style. For example, many of the
-    processing routines read the data they need directly from the
-    database, rather than caching it and sharing with other routines.
-    While this means the same data may be read multiple times, it also
-    means the only point of possible cache incoherence is through the
-    database, where transactions are easily controlled. This greatly
-    reduces the chances of corrupting the data, making it much easier to
-    understand and modify the code base.
+- A largely stateless design style. For example, many of the
+  processing routines read the data they need directly from the
+  database, rather than caching it and sharing with other routines.
+  While this means the same data may be read multiple times, it also
+  means the only point of possible cache incoherence is through the
+  database, where transactions are easily controlled. This greatly
+  reduces the chances of corrupting the data, making it much easier to
+  understand and modify the code base.
 
--   Isolated data collection and archiving. The code for collecting and
-    archiving data run in a single thread that is simple enough that it
-    is unlikely to crash. The report processing is where most mistakes
-    are likely to happen, so isolate that in a separate thread. If it
-    crashes, it will not affect the main data thread.
+- Isolated data collection and archiving. The code for collecting and
+  archiving data run in a single thread that is simple enough that it
+  is unlikely to crash. The report processing is where most mistakes
+  are likely to happen, so isolate that in a separate thread. If it
+  crashes, it will not affect the main data thread.
 
--   A powerful configuration parser. The
-    [ConfigObj](https://configobj.readthedocs.io) module, by Michael
-    Foord and Nicola Larosa, was chosen to read the configuration file.
-    This allows many options that might otherwise have to go in the
-    code, to be in a configuration file.
+- A powerful configuration parser. The
+  [ConfigObj](https://configobj.readthedocs.io) module, by Michael
+  Foord and Nicola Larosa, was chosen to read the configuration file.
+  This allows many options that might otherwise have to go in the
+  code, to be in a configuration file.
 
--   A powerful templating engine. The
-    [Cheetah](https://cheetahtemplate.org/) module was chosen for
-    generating html and other types of files from templates. Cheetah
-    allows *search list extensions* to be defined, making it easy to
-    extend WeeWX with new template tags.
+- A powerful templating engine. The
+  [Cheetah](https://cheetahtemplate.org/) module was chosen for
+  generating html and other types of files from templates. Cheetah
+  allows *search list extensions* to be defined, making it easy to
+  extend WeeWX with new template tags.
 
--   Pure Python. The code base is 100% Python &mdash; no underlying C
-    libraries need be built to install WeeWX. This also means no
-    Makefiles are needed.
+- Pure Python. The code base is 100% Python &mdash; no underlying C
+  libraries need be built to install WeeWX. This also means no
+  Makefiles are needed.
 
 While WeeWX is nowhere near as fast at generating images and HTML as its
 predecessor, *wview* (this is partially because WeeWX uses
@@ -104,15 +104,15 @@ putting them in the database.
 In general, there are three different areas where the unit system makes
 a difference:
 
-1.  On the weather station hardware. Different manufacturers use
-    different unit systems for their hardware. The Davis Vantage series
-    use U.S. Customary units exclusively, Fine Offset and LaCrosse
-    stations use metric, while Oregon Scientific, Peet Bros, and Hideki
-    stations use a mishmash of US and metric.
+1. On the weather station hardware. Different manufacturers use
+   different unit systems for their hardware. The Davis Vantage series
+   use U.S. Customary units exclusively, Fine Offset and LaCrosse
+   stations use metric, while Oregon Scientific, Peet Bros, and Hideki
+   stations use a mishmash of US and metric.
 
-2.  In the database. Either US or Metric can be used.
+2. In the database. Either US or Metric can be used.
 
-3.  In the presentation (i.e., html and image files).
+3. In the presentation (i.e., html and image files).
 
 The general strategy is that measurements are converted by service
 `StdConvert` as they come off the weather station into a target
@@ -342,15 +342,15 @@ Most modern code editors, such as Eclipse, or PyCharm, have the ability
 to automatically format code. Resist the temptation and *don't use this
 feature!* Two reasons:
 
--   Unless all developers use the same tool, using the same settings, we
-    will just thrash back and forth between slightly different versions.
+- Unless all developers use the same tool, using the same settings, we
+  will just thrash back and forth between slightly different versions.
 
--   Automatic formatters play a useful role, but some of what they do
-    are really trivial changes, such as removing spaces in otherwise
-    blank lines. Now if someone is trying to figure out what real,
-    syntactic, changes you have made, s/he will have to wade through all
-    those extraneous *changed lines,* trying to find the important
-    stuff.
+- Automatic formatters play a useful role, but some of what they do
+  are really trivial changes, such as removing spaces in otherwise
+  blank lines. Now if someone is trying to figure out what real,
+  syntactic, changes you have made, s/he will have to wade through all
+  those extraneous *changed lines,* trying to find the important
+  stuff.
 
 If you are working with a file where the formatting is so ragged that
 you really must do a reformat, then do it as a separate commit. This
@@ -388,14 +388,14 @@ model](http://nvie.com/posts/a-successful-git-branching-model/). Ignore
 the complicated diagram at the beginning of the article, and just focus
 on the text. In this model, there are two key branches:
 
--   'master'. Fixes go into this branch. We tend to use fewer
-    *hot fix* branches and, instead, just incorporate any fixes
-    directly into the branch. Releases are tagged relative to this
-    branch.
+- 'master'. Fixes go into this branch. We tend to use fewer
+  *hot fix* branches and, instead, just incorporate any fixes
+  directly into the branch. Releases are tagged relative to this
+  branch.
 
--   'development' (called `develop` in Vince's article).
-    This is where new features go. Before a release, they will be merged
-    into the `master` branch.
+- 'development' (called `develop` in Vince's article).
+  This is where new features go. Before a release, they will be merged
+  into the `master` branch.
 
 What this means to you is that if you submit a pull request that
 includes a new feature, make sure you commit your changes relative to
@@ -404,7 +404,7 @@ committed against the `master` branch.
 
 ### Forking the repository
 
-The WeeWX GitHub repository is configured to use 
+The WeeWX GitHub repository is configured to use
 [GitHub Actions](https://docs.github.com/en/actions/learn-github-actions/understanding-github-actions)
 to run Continuous Integration (CI) workflows automatically if certain
 `git` operations are done on branches under active development.
@@ -416,7 +416,6 @@ an email from GitHub if these tasks fail for some reason on your fork.
 To control GitHub Actions for your fork, see the recommended solutions in this
 [GitHub discussion](https://github.com/orgs/community/discussions/26704#discussioncomment-3252979)
 on this topic.
-
 
 ## Tools
 
@@ -764,5 +763,15 @@ A 3-way tuple. First element is a value, second element the unit type the value
 is in, the third the unit group. An example would be <span class="code">(21.2,
 &#39;degree_C&#39;, &#39;group_temperature&#39;)</span>.
     </td>
+  </tr>
+  <tr>
+    <td class="text_highlight"><span class="code">WEEWX_ROOT</span></td>
+    <td>
+The location of the station data area. Unfortunately, due to legacy reasons, 
+its value can be interpreted two different ways. In the 
+configuration file <span class="code">weewx.conf</span>, its value
+is relative to the location of the configuration file. In memory, in the 
+data structure <span class="code">config_dict</span>, it is an absolute path.
+</td>
   </tr>
 </table>
