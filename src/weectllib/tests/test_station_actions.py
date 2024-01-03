@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 import configobj
 
+import weecfg
 import weectllib.station_actions
 import weeutil.config
 import weeutil.weeutil
@@ -324,6 +325,36 @@ class TestCreateStation(unittest.TestCase):
                     if line.startswith('ExecStart'):
                         self.assertEqual(line.strip(),
                                          f"ExecStart={sys.executable} {weewxd_path} {config_path}")
+
+
+class TestReconfigureStation(unittest.TestCase):
+
+    def test_reconfigure(self):
+        "Test reconfiguring a station"
+        # Get a temporary directory to create a station in
+        with tempfile.TemporaryDirectory(dir='/var/tmp') as weewx_root:
+            # Create a station using the defaults
+            weectllib.station_actions.station_create(weewx_root=weewx_root, no_prompt=True)
+
+            # Now retrieve the config file that was created. The retrieval must use "read_config()"
+            # because that's what station_reconfigure() is expecting.
+            config_path = os.path.join(weewx_root, 'weewx.conf')
+            config_path, config_dict = weecfg.read_config(config_path)
+            # Now reconfigure it:
+            weectllib.station_actions.station_reconfigure(config_dict,
+                                                          weewx_root='/etc/weewx',
+                                                          driver='weewx.drivers.vantage',
+                                                          no_prompt=True)
+            # Re-read it:
+            config_dict = configobj.ConfigObj(config_path, encoding='utf-8')
+            # Check it out.
+            self.assertEqual(config_dict['WEEWX_ROOT'], '/etc/weewx')
+            self.assertNotIn('WEEWX_ROOT_ORIG', config_dict)
+            self.assertEqual(config_dict['Station']['station_type'], 'Vantage')
+            self.assertEqual(config_dict['Vantage']['driver'], 'weewx.drivers.vantage')
+            self.assertEqual(config_dict['StdReport']['SKIN_ROOT'], 'skins')
+            self.assertEqual(config_dict['StdReport']['HTML_ROOT'], 'public_html')
+            self.assertEqual(config_dict['DatabaseTypes']['SQLite']['SQLITE_ROOT'], 'archive')
 
 
 if __name__ == "__main__":
