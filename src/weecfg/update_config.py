@@ -964,8 +964,11 @@ def update_to_v50(config_dict):
 
     - If the config file uses '/' for WEEWX_ROOT, set it to '/etc/weewx'
     """
-    if 'WEEWX_ROOT_CONFIG' in config_dict and config_dict['WEEWX_ROOT_CONFIG'] == '/':
-        config_dict['WEEWX_ROOT_CONFIG'] = '/etc/weewx'
+    if 'WEEWX_ROOT' in config_dict:
+        if config_dict['WEEWX_ROOT'] == '/':
+            config_dict['WEEWX_ROOT'] = '/etc/weewx'
+        # Some older versions of weewx.conf use a trailing slash on WEEWX_ROOT. Standardize.
+        config_dict['WEEWX_ROOT'] = os.path.normpath(config_dict['WEEWX_ROOT'])
 
     config_dict['version'] = '5.0.0'
 

@@ -144,10 +144,15 @@ class ConfigTest(unittest.TestCase):
         """Test an upgrade against a typical user's configuration file"""
 
         # Start with a typical V2.0 user file:
-        config_dict = configobj.ConfigObj('weewx20_user.conf', encoding='utf-8')
-
+        config_dict = configobj.ConfigObj('weewx20_user.conf',
+                                          interpolation=False,
+                                          encoding='utf-8',
+                                          file_error=True)
         # The current config file becomes the template:
-        template = configobj.ConfigObj(current_config_dict_path, encoding='utf-8')
+        template = configobj.ConfigObj(current_config_dict_path,
+                                       interpolation=False,
+                                       encoding='utf-8',
+                                       file_error=True)
 
         # First update, then merge:
         weecfg.update_config.update_and_merge(config_dict, template)

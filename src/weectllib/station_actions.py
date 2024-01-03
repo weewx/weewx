@@ -771,17 +771,29 @@ def station_upgrade(config_dict, dist_config_path=None, examples_root=None,
         print("Nothing done.")
         return
 
-    # Unless we've been given a path to the new configuration file, retrieve it from
-    # package resources.
-    if dist_config_path:
-        dist_config_dict = configobj.ConfigObj(dist_config_path, encoding='utf-8', file_error=True)
-    else:
-        # Retrieve the new configuration file from package resources:
-        with importlib_resources.open_text('weewx_data', 'weewx.conf', encoding='utf-8') as fd:
-            dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
-
     if 'config' in what:
-        weecfg.update_config.update_and_merge(config_dict, dist_config_dict)
+        # Update the config file. Note that the upgrade algorithms take an unadulterated version
+        # of the dictionaries, so reread them using ConfigObj:
+        stn_config_dict = configobj.ConfigObj(config_path,
+                                              encoding='utf-8',
+                                              interpolation=False,
+                                              file_error=True)
+        # Unless we've been given a path to the new configuration file, retrieve it from
+        # package resources.
+        if dist_config_path:
+            dist_config_dict = configobj.ConfigObj(dist_config_path,
+                                                   encoding='utf-8',
+                                                   interpolation=False,
+                                                   file_error=True)
+        else:
+            # Retrieve the new configuration file from package resources:
+            with importlib_resources.open_text('weewx_data', 'weewx.conf', encoding='utf-8') as fd:
+                dist_config_dict = configobj.ConfigObj(fd,
+                                                       encoding='utf-8',
+                                                       interpolation=False,
+                                                       file_error=True)
+
+        weecfg.update_config.update_and_merge(stn_config_dict, dist_config_dict)
         print(f"Finished upgrading configuration file {config_path}")
         print(f"Saving configuration file {config_path}")
         # Save the updated config file with backup
