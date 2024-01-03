@@ -9,26 +9,27 @@ See the section [_Options_](#options) below for details of the various options.
 
 ## Create a new station data directory
 
-    weectl station create
+    weectl station create [WEEWX-ROOT]
         [--driver=DRIVER]
         [--location=LOCATION]
         [--altitude=ALTITUDE,(foot|meter)]
         [--latitude=LATITUDE] [--longitude=LONGITUDE]
         [--register=(y,n) [--station-url=URL]]
         [--units=(us|metricwx|metric)]
-        [--weewx-root=DIRECTORY]
         [--skin-root=DIRECTORY]
         [--sqlite-root=DIRECTORY]
         [--html-root=DIRECTORY]
         [--user-root=DIRECTORY]
-        [--docs-root=DIRECTORY]
         [--examples-root=DIRECTORY]
         [--no-prompt]
         [--config=FILENAME]
         [--dist-config=FILENAME]
         [--dry-run]
 
-The `create` action will create a directory and populate it with station data.
+The `create` action will create a new directory in location `WEEWX-ROOT` and
+populate it with station data. The default location for `WEEWX-ROOT` is
+`~/weewx-data`, that is, the directory `weewx-data` in your home directory.
+
 After the command completes, the directory will contain:
 
 - a configuration file called `weewx.conf`;
@@ -40,6 +41,21 @@ After the command completes, the directory will contain:
 This action is typically used to create the initial station configuration when
 installing WeeWX for the first time.  It can also be used to create
 configurations for multiple stations.
+
+For example, to create a station data area in the default area `~/weewx-data`,
+you would specify
+
+    weectl station create
+
+The resultant directory would contain a configuration file `weewx.conf`. 
+
+To add another station using the same station data area, but a separate 
+configuration file named `barn.conf`, you would specify
+
+    weectl station create --config=barn.conf
+
+You would end up with a single station data area, `~/weewx-data`, with two
+different configuration files, `weewx.conf` and `barn.conf`.
 
 If invoked without any options, the `create` action will prompt you for
 various settings, such as the type of hardware you are using, the station
@@ -70,9 +86,11 @@ for any setting that is not specified.
         [--skin-root=DIRECTORY]
         [--sqlite-root=DIRECTORY]
         [--html-root=DIRECTORY]
+        [--user-root=DIRECTORY]
+        [--weewx-root=DIRECTORY]
         [--no-backup]
         [--no-prompt]
-        [--config=FILENAME]
+        [--config=FILENAME] 
         [--dry-run]
 
 The `reconfigure` action will modify the contents of an existing configuration
@@ -133,9 +151,11 @@ See the details below for [option `--what`](#what-option).
 
 ## Options
 
-In what follows, `WEEWX_ROOT` is the directory holding the configuration file.
-For a pip install, this is typically `~/weewx-data`. For a Debian, Redhat, or
-SUSE install, it is `/etc/weewx`.
+
+### WEEWX-ROOT
+
+Use this option with `weectl station create` to specify a directory that is to
+hold the station data area. Default is `~/weewx-data`.
 
 ### --driver=DRIVER
 
@@ -188,45 +208,40 @@ Path to the configuration file, *relative to `WEEWX_ROOT`*.
 If the filename starts with a slash (`/`), it is an absolute path.
 Default is `weewx.conf`.
 
-### --weewx-root=DIR
-
-The `WEEWX_ROOT` directory. This is typically `~/weewx-data` or `/etc/weewx`.
-
-### --skin-root=DIR
+### --skin-root=DIRECTORY
 
 The location of the directory holding the skins *relative to `WEEWX_ROOT`*.
 If the directory starts with a slash (`/`), it is an absolute path.
-Default is `skins`.
+Default is `skins`. This option is rarely needed by the average user.
 
-### --sqlite-root=DIR
+### --sqlite-root=DIRECTORY
 
 The location of the directory holding the SQLite database *relative to
 `WEEWX_ROOT`*. If the directory starts with a slash (`/`), it is an absolute
-path. Default is `skins`.
+path. Default is `skins`. This option is rarely needed by the average user.
 
-### --html-root=DIR
+### --html-root=DIRECTORY
 
 Where generated HTML files should be placed, *relative to `WEEWX_ROOT`*.
 If the directory starts with a slash (`/`), it is an absolute path.
-Default is `public_html`.
+Default is `public_html`. This option is rarely needed by the average user.
 
-### --user-root=DIR
+### --user-root=DIRECTORY
 
 Where user extensions can be found, *relative to `WEEWX_ROOT`*.
 If the directory starts with a slash (`/`), it is an absolute path.
-Default is `bin/user`.
+Default is `bin/user`. This option is rarely needed by the average user.
 
-### --docs-root=DIR
-
-Where the WeeWX documentation can be found, *relative to `WEEWX_ROOT`*.
-If the directory starts with a slash (`/`), it is an absolute path.
-Default is `docs`.
-
-### --examples-root=DIR
+### --examples-root=DIRECTORY
 
 Where the WeeWX examples can be found, *relative to `WEEWX_ROOT`*.
 If the directory starts with a slash (`/`), it is an absolute path.
-Default is `examples`.
+Default is `examples`. This option is rarely needed by the average user.
+
+### --weewx-root=DIRECTORY
+
+Use this option with `weectl station reconfigure` to change the station data
+area. This option is rarely needed by the average user.
 
 ### --what {#what-option}
 
