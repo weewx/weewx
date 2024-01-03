@@ -75,7 +75,7 @@ def station_create(weewx_root=None,
         with weeutil.weeutil.get_resource_fd('weewx_data', 'weewx.conf') as fd:
             dist_config_dict = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
 
-    dist_config_dict['WEEWX_ROOT_ORIG'] = rel_weewx_root
+    dist_config_dict['WEEWX_ROOT_CONFIG'] = rel_weewx_root
     config_dir = os.path.dirname(config_path)
     dist_config_dict['WEEWX_ROOT'] = os.path.abspath(os.path.join(config_dir, rel_weewx_root))
 
@@ -158,7 +158,9 @@ def station_reconfigure(config_dict,
     """Reconfigure an existing station"""
 
     if weewx_root:
-        config_dict['WEEWX_ROOT'] = config_dict['WEEWX_ROOT_ORIG'] = weewx_root
+        config_dict['WEEWX_ROOT_CONFIG'] = weewx_root
+        config_dict['WEEWX_ROOT'] = os.path.abspath(
+            os.path.join(os.path.dirname(config_dict['config_path']), weewx_root))
     config_config(config_dict,
                   config_path=config_dict['config_path'],
                   driver=driver,

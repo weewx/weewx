@@ -121,7 +121,7 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
 
     This version also adds two entries to the returned ConfigObj:
         config_path: Location of the actual configuration file that was used.
-        WEEWX_ROOT_ORIG: The original value of WEEWX_ROOT, or None if there
+        WEEWX_ROOT_CONFIG: The original value of WEEWX_ROOT, or None if there
             was no original value
 
     Args:
@@ -158,7 +158,7 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
     config_dict['config_path'] = os.path.realpath(config_path)
     # Remember the original value for WEEWX_ROOT. In case we need to write this file out, we
     # can restore it.
-    config_dict['WEEWX_ROOT_ORIG'] = config_dict.get('WEEWX_ROOT')
+    config_dict['WEEWX_ROOT_CONFIG'] = config_dict.get('WEEWX_ROOT')
 
     if 'WEEWX_ROOT' not in config_dict:
         # If missing, set WEEWX_ROOT to the directory the config file is in
@@ -194,10 +194,14 @@ def save(config_dict, config_path, backup=False):
     write_dict = weeutil.config.deep_copy(config_dict)
     write_dict.pop('config_path', None)
     write_dict.pop('entry_path', None)
-    if 'WEEWX_ROOT_ORIG' in write_dict:
-        # Reset WEEWX_ROOT to what it originally was, then delete WEEWX_ROOT_ORIG
-        write_dict['WEEWX_ROOT'] = write_dict['WEEWX_ROOT_ORIG']
-        del write_dict['WEEWX_ROOT_ORIG']
+    # If there was a value for WEEWX_ROOT in the config file, restore it
+    if 'WEEWX_ROOT_CONFIG' in write_dict:
+        write_dict['WEEWX_ROOT'] = write_dict['WEEWX_ROOT_CONFIG']
+        #  Add a comment if it doesn't already have one
+        if not write_dict.comments['WEEWX_ROOT']:
+            write_dict.comments['WEEWX_ROOT'] = ['', 'Path to the station data area, relative to '
+                                                     'the configuration file.']
+        del write_dict['WEEWX_ROOT_CONFIG']
     # If the final path is just '.', get rid of it entirely --- that's the default.
     if 'WEEWX_ROOT' in write_dict and os.path.normpath(write_dict['WEEWX_ROOT']) == '.':
         del write_dict['WEEWX_ROOT']

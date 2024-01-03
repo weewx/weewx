@@ -305,7 +305,7 @@ class TestCreateStation(unittest.TestCase):
             # Retrieve the config file that was created and check it:
             config_dict = configobj.ConfigObj(config_path, encoding='utf-8')
             self.assertNotIn('WEEWX_ROOT', config_dict)
-            self.assertNotIn('WEEWX_ROOT_ORIG', config_dict)
+            self.assertNotIn('WEEWX_ROOT_CONFIG', config_dict)
             self.assertEqual(config_dict['Station']['station_type'], 'Simulator')
             self.assertEqual(config_dict['Simulator']['driver'], 'weewx.drivers.simulator')
             self.assertEqual(config_dict['StdReport']['SKIN_ROOT'], 'skins')
@@ -349,7 +349,7 @@ class TestReconfigureStation(unittest.TestCase):
             config_dict = configobj.ConfigObj(config_path, encoding='utf-8')
             # Check it out.
             self.assertEqual(config_dict['WEEWX_ROOT'], '/etc/weewx')
-            self.assertNotIn('WEEWX_ROOT_ORIG', config_dict)
+            self.assertNotIn('WEEWX_ROOT_CONFIG', config_dict)
             self.assertEqual(config_dict['Station']['station_type'], 'Vantage')
             self.assertEqual(config_dict['Vantage']['driver'], 'weewx.drivers.vantage')
             self.assertEqual(config_dict['StdReport']['SKIN_ROOT'], 'skins')
