@@ -46,10 +46,10 @@ sudo weectl station upgrade --config=/etc/weewx/other.conf
 
 ### Python 2.7 no longer supported
 
-It has now been over 3 years since the end-of-life for Python 2.7. It's time
-to move on. WeeWX V5.x requires Python 3.6 or greater. These days, all but the
-most ancient of operating systems offer Python 3, although you may have to
-install it.
+It has now been over 4 years since the end-of-life of Python 2.7. It's time to
+move on. WeeWX V5.x requires Python 3.6 (released 7 years ago) or greater. These
+days, all but the most ancient of operating systems offer Python 3, although you
+may have to install it.
 
 ### New utilities
 
@@ -103,24 +103,6 @@ now `/etc/weewx/bin/user`.  If you upgrade a DEB or RPM installation, any
 extensions that were installed in `/usr/share/weewx/user` will be copied to
 `/etc/weewx/bin/user`, and the old `user` directory will be moved aside.
 
-### The value of `WEEWX_ROOT`
-
-This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
-that use the DEB or RPM packages). Installations that use a `setup.py` install
-are not affected.
-
-Previous versions of WeeWX set `WEEWX_ROOT=/` (the root directory) in the
-configuration file `/etc/weewx/weewx.conf`. In version 5, while the value will
-not be modified by the normal upgrade process, a value of `/` will be treated as
-`/etc/weewx` at runtime. This means that effectively `WEEWX_ROOT` equals
-`/etc/weewx`.
-
-If you wish, you can explicitly upgrade the configuration file by using the
-utility [`weectl station
-upgrade`](../utilities/weectl-station#upgrade-an-existing-station), in which case
-`WEEWX_ROOT=/` will be changed to `WEEWX_ROOT=/etc/weewx`.
-
-    sudo weectl station upgrade --what config
 
 ### Use of systemd units for services
 
@@ -158,6 +140,26 @@ part of the upgrade process.
 
 If you use a pip install, the rules are applied by the same script that installs
 the files necessary to run as a daemon.
+
+### `WEEWX_ROOT` is now relative to the configuration file
+
+In previous versions, `WEEWX_ROOT` was an absolute path that specified the
+location of the root of the WeeWX directory tree. That requirement has been
+relaxed and it can now be a _relative_ path, relative to the directory of the
+configuration file. If it is not specified at all (the default for new
+installs), it defaults to the directory of the configuration file.
+
+This has the advantage that it allows the entire station data area to be rooted
+anywhere in the file tree &mdash; one need only specify the location of the
+configuration file using `--config`.
+
+Old configuration files with an absolute path will continue to function as
+before. However, if you wish, you can explicitly upgrade the configuration file
+by using the utility [`weectl station
+upgrade`](../utilities/weectl-station#upgrade-an-existing-station), in which
+case `WEEWX_ROOT=/` will be changed to `WEEWX_ROOT=/etc/weewx`.
+
+    sudo weectl station upgrade --what config
 
 ### `SQLITE_ROOT` is now relative to `WEEWX_ROOT`
 
