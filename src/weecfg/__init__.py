@@ -199,7 +199,7 @@ def save(config_dict, config_path, backup=False):
         write_dict['WEEWX_ROOT'] = write_dict['WEEWX_ROOT_ORIG']
         del write_dict['WEEWX_ROOT_ORIG']
     # If the final path is just '.', get rid of it entirely --- that's the default.
-    if 'WEEWX_ROOT' in write_dict and os.path.normpath(config_dict['WEEWX_ROOT']) == '.':
+    if 'WEEWX_ROOT' in write_dict and os.path.normpath(write_dict['WEEWX_ROOT']) == '.':
         del write_dict['WEEWX_ROOT']
 
     # Check to see if the file exists, and we are supposed to make a backup:
