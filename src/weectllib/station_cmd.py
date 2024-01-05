@@ -52,7 +52,7 @@ station_upgrade_usage = f"""{bcolors.BOLD}weectl station upgrade
             [--skin-root=DIRECTORY]
             [--what ITEM [ITEM ...]
             [--no-backup]
-            [--no-prompt]
+            [--yes]
             [--config=FILENAME]
             [--dist-config=FILENAME]]
             [--dry-run]{bcolors.ENDC}
@@ -254,8 +254,8 @@ def add_subparser(subparsers):
                                              "examples, and utility files.")
     station_upgrade_parser.add_argument('--no-backup', action='store_true',
                                         help='Do not backup the old configuration file.')
-    station_upgrade_parser.add_argument('--no-prompt', action='store_true',
-                                        help='Do not prompt. Use default values.')
+    station_upgrade_parser.add_argument('-y', '--yes', action='store_true',
+                                          help="Don't ask for confirmation. Just do it.")
     station_upgrade_parser.add_argument('--config',
                                         metavar='FILENAME',
                                         help=f'Path to configuration file. '
@@ -341,6 +341,6 @@ def upgrade_station(config_dict, namespace):
                                               examples_root=namespace.examples_root,
                                               skin_root=namespace.skin_root,
                                               what=namespace.what,
-                                              no_prompt=namespace.no_prompt,
+                                              no_confirm=namespace.yes,
                                               no_backup=namespace.no_backup,
                                               dry_run=namespace.dry_run)

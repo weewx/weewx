@@ -752,20 +752,18 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
 
 
 def station_upgrade(config_dict, dist_config_path=None, examples_root=None,
-                    skin_root=None, what=None, no_prompt=False, no_backup=False, dry_run=False):
+                    skin_root=None, what=None, no_confirm=False, no_backup=False, dry_run=False):
     """Upgrade the user data for the configuration file found at config_path"""
 
     if what is None:
         what = ('config', 'examples', 'util')
 
     config_path = config_dict['config_path']
-
-    abbrev = {'config': 'configuration file',
-              'util': 'utility files'}
+    abbrev = {'config': 'configuration file', 'util': 'utility files'}
     choices = ', '.join([abbrev.get(p, p) for p in what])
     msg = f"\nUpgrade {choices} in {config_dict['WEEWX_ROOT']} (Y/n)? "
 
-    ans = weeutil.weeutil.y_or_n(msg, noprompt=no_prompt, default='y')
+    ans = weeutil.weeutil.y_or_n(msg, noprompt=no_confirm, default='y')
 
     if ans != 'y':
         print("Nothing done.")
@@ -802,7 +800,7 @@ def station_upgrade(config_dict, dist_config_path=None, examples_root=None,
             print(f"Saved old configuration file as {backup_path}")
 
     if 'skins' in what:
-        upgrade_skins(config_dict, skin_root=skin_root, no_prompt=no_prompt, dry_run=dry_run)
+        upgrade_skins(config_dict, skin_root=skin_root, dry_run=dry_run)
 
     if 'examples' in what:
         examples_dir = copy_examples(config_dict, examples_root=examples_root,
@@ -820,7 +818,7 @@ def station_upgrade(config_dict, dist_config_path=None, examples_root=None,
         print("This was a dry run. Nothing was actually done.")
 
 
-def upgrade_skins(config_dict, skin_root=None, no_prompt=False, dry_run=False):
+def upgrade_skins(config_dict, skin_root=None, dry_run=False):
     """Make a backup of the old skins, then copy over new skins."""
 
     if not skin_root:

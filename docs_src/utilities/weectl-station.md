@@ -115,7 +115,7 @@ use
         [--skin-root=DIRECTORY]
         [--what ITEM [ITEM ...]
         [--no-backup]
-        [--no-prompt]
+        [--yes]
         [--config=FILENAME]
         [--dist-config=FILENAME]]
         [--dry-run]
