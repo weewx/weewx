@@ -156,7 +156,7 @@ configuration file using `--config`.
 Old configuration files with an absolute path will continue to function as
 before. However, if you wish, you can explicitly upgrade the configuration file
 by using the utility [`weectl station
-upgrade`](../utilities/weectl-station#upgrade-an-existing-station), in which
+upgrade`](utilities/weectl-station.md#upgrade-an-existing-station), in which
 case `WEEWX_ROOT=/` will be changed to `WEEWX_ROOT=/etc/weewx`.
 
     sudo weectl station upgrade --what config

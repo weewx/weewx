@@ -71,7 +71,7 @@ facility.  On some systems, the log messages end up in files that you can
 browse as you would any other file.  On other systems you will have to use
 tools provided by the operating system to see the log messages.
 
-See the section [_Monitoring WeeWX_](../monitoring/#log-messages).
+See the section [_Monitoring WeeWX_](monitoring.md/#log-messages).
 
 
 ## Location of executables in a pip install
