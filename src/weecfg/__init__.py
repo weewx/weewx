@@ -156,15 +156,18 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
 
     # Remember where we found the config file
     config_dict['config_path'] = os.path.realpath(config_path)
-    # Remember the original value for WEEWX_ROOT. In case we need to write this file out, we
-    # can restore it.
-    config_dict['WEEWX_ROOT_CONFIG'] = config_dict.get('WEEWX_ROOT')
+    # If there was a value for WEEWX_ROOT in the configuration file, remember it so we can
+    # restore it later.
+    if 'WEEWX_ROOT' in config_dict:
+        config_dict['WEEWX_ROOT_CONFIG'] = config_dict['WEEWX_ROOT']
 
+    # If WEEWX_ROOT is not in the configuration file, supply a default:
     if 'WEEWX_ROOT' not in config_dict:
-        # If missing, set WEEWX_ROOT to the directory the config file is in
         config_dict['WEEWX_ROOT'] = os.path.dirname(config_path)
     elif config_dict['WEEWX_ROOT'] == '/':
+        # Patch for older config files
         config_dict['WEEWX_ROOT'] = '/etc/weewx'
+
     # In case WEEWX_ROOT is a relative path, join it with the location of the config file, then
     # convert it to an absolute path.
     config_dict['WEEWX_ROOT'] = os.path.abspath(os.path.join(os.path.dirname(config_path),
@@ -194,6 +197,7 @@ def save(config_dict, config_path, backup=False):
     write_dict = weeutil.config.deep_copy(config_dict)
     write_dict.pop('config_path', None)
     write_dict.pop('entry_path', None)
+
     # If there was a value for WEEWX_ROOT in the config file, restore it
     if 'WEEWX_ROOT_CONFIG' in write_dict:
         write_dict['WEEWX_ROOT'] = write_dict['WEEWX_ROOT_CONFIG']
@@ -202,7 +206,11 @@ def save(config_dict, config_path, backup=False):
             write_dict.comments['WEEWX_ROOT'] = ['', 'Path to the station data area, relative to '
                                                      'the configuration file.']
         del write_dict['WEEWX_ROOT_CONFIG']
-    # If the final path is just '.', get rid of it entirely --- that's the default.
+    else:
+        # There was no value for WEEWX_ROOT in the original config file, so delete it.
+        del write_dict['WEEWX_ROOT']
+
+    # If the final path is just '.', get rid of it --- that's the default.
     if 'WEEWX_ROOT' in write_dict and os.path.normpath(write_dict['WEEWX_ROOT']) == '.':
         del write_dict['WEEWX_ROOT']
 

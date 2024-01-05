@@ -358,10 +358,8 @@ class ExtensionInstallTest(unittest.TestCase):
         ExtensionInstallTest._build_mini_weewx(self.weewx_root)
 
         # Retrieve the configuration file from the mini-weewx
-        self.config_path = os.path.join(self.weewx_root, 'weewx.conf')
-        self.config_dict = configobj.ConfigObj(self.config_path, encoding='utf-8')
-        # Note that the actual location of the "mini-weewx" is over in /var/tmp
-        self.config_dict['WEEWX_ROOT'] = self.weewx_root
+        config_path = os.path.join(self.weewx_root, 'weewx.conf')
+        self.config_path, self.config_dict = weecfg.read_config(config_path)
 
         # Initialize the install engine.
         self.engine = weecfg.extension.ExtensionEngine(self.config_path,
@@ -440,7 +438,7 @@ class ExtensionInstallTest(unittest.TestCase):
                                                      'skin.conf')))
 
         # Get the modified config dict, which had the extension removed from it
-        test_dict = configobj.ConfigObj(self.config_path, encoding='utf-8')
+        test_path, test_dict = weecfg.read_config(self.config_path)
 
         # It should be the same as our original:
         self.assertEqual(test_dict, self.config_dict)
