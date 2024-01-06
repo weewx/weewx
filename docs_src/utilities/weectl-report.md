@@ -76,20 +76,20 @@ This would generate a report for 12-May-2022 at 8AM (unix epoch time
 
 These are options used by most of the actions.
 
-### --help
-
-Show the help message, then exit.
-
 ### --config
 
 Path to the configuration file. Default is `~/weewx-data/weewx.conf`.
-
-### --epoch=EPOCH_TIME
-
-Generate the reports so that they are current as of the given unix epoch time.
 
 ### --date=YYYY-mm-dd and --time=HH:MM
 
 Generate the reports so that they are current as of the given date
 and time. The date should be given in the form `YYYY-mm-dd` and the time should
 be given as `HH:MM`.
+
+### --epoch=EPOCH_TIME
+
+Generate the reports so that they are current as of the given unix epoch time.
+
+### --help
+
+Show the help message, then exit.
