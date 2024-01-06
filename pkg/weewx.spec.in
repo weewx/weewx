@@ -107,7 +107,6 @@ cp pkg/etc/udev/rules.d/weewx.rules %{buildroot}%{dst_cfg_dir}/udev
 
 # create the weewx configuration
 cat src/weewx_data/weewx.conf | sed \
- -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /etc/weewx%' \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
  -e 's:HTML_ROOT = public_html:HTML_ROOT = %{html_root}:' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
