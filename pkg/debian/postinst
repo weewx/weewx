@@ -288,7 +288,7 @@ setup_init() {
 
 enable_init() {
     if [ "$1" = "systemd" ]; then
-	systemctl enable weewx
+	systemctl enable weewx > /dev/null
     elif [ "$1" = "init" ]; then
         update-rc.d weewx defaults > /dev/null
     fi

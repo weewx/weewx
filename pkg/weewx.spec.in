@@ -4,9 +4,9 @@
 
 # the operating system release number is specified externaly, so that we can
 # do cross-release (but not cross-platform) packaging.
-%define os_target OSREL
+%global os_target OSREL
 %global relnum RPMREVISION
-%define weewx_version WEEWX_VERSION
+%global weewx_version WEEWX_VERSION
 
 # suse 15: python3
 %if 0%{?suse_version} && "%{os_target}" == "15"
@@ -48,9 +48,9 @@
 %global dst_user_dir %{dst_cfg_dir}/bin/user
 %global dst_doc_dir  %{_datadir}/weewx-doc
 %global cfg_file     %{dst_cfg_dir}/weewx.conf
-%define systemd_dir  /usr/lib/systemd/system
-%define udev_dir     /usr/lib/udev/rules.d
-%define html_root    /var/www/html/weewx
+%global systemd_dir  %{_unitdir}
+%global udev_dir     %{_udevrulesdir}
+%global html_root    /var/www/html/weewx
 
 %define entry_points weewxd weectl
 
@@ -215,7 +215,7 @@ if [ "$1" = "1" ]; then
   # pre-compile the python code
   precompile
   if [ "$pid1" = "systemd" ]; then
-    systemctl enable weewx
+    systemctl enable weewx > /dev/null
     systemctl start weewx
   fi
 elif [ $1 -gt 1 ]; then
@@ -275,7 +275,7 @@ if [ "$1" = "0" ]; then
   # this is an uninstall, so stop and remove everything
   if [ "$pid1" = "systemd" ]; then
     systemctl stop weewx
-    systemctl disable weewx
+    systemctl disable weewx > /dev/null
     for f in weewx.service weewx@.service; do
 	if [ -f %{systemd_dir}/$f ]; then
 	    rm -f %{systemd_dir}/$f
