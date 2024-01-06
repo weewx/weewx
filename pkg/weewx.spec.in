@@ -130,6 +130,18 @@ cat pkg/etc/default/weewx | sed \
 
 
 %pre
+# if there is already a database directory, then use ownership of that to
+# determine what user/group we should use for permissions and running.
+# otherwise, use 'weewx' for user and group.
+WEEWX_USER=weewx
+WEEWX_GROUP=weewx
+if [ -d /var/lib/weewx ]; then
+    WEEWX_USER=$(stat -c "%%U" /var/lib/weewx)
+    WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)
+fi
+/usr/bin/getent group $WEEWX_GROUP || /usr/sbin/groupadd -r $WEEWX_GROUP
+/usr/bin/getent passwd $WEEWX_USER || /usr/sbin/useradd -r -g $WEEWX_GROUP -M -s /sbin/nologin $WEEWX_USER
+
 if [ $1 -gt 1 ]; then
   # this is an upgrade
   if [ -f %{cfg_file} ]; then
@@ -139,24 +151,18 @@ if [ $1 -gt 1 ]; then
 fi
 
 
+
 %post
 precompile() {
-    echo Precompile using %{python} in %{dst_code_dir}
     %{python} -m compileall %{dst_code_dir} > /dev/null
 }
 
-# if there is already a database directory, then use ownership of that to
-# determine what user/group we should use for permissions and running.
-# otherwise, we create a weewx user and group and use that.
+# figure out which user should own everything
 WEEWX_USER=weewx
 WEEWX_GROUP=weewx
 if [ -d /var/lib/weewx ]; then
     WEEWX_USER=$(stat -c "%%U" /var/lib/weewx)
     WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)
-fi
-if [ "$WEEWX_USER" = "weewx" ]; then
-    /usr/bin/getent group $WEEWX_GROUP || /usr/sbin/groupadd -r $WEEWX_GROUP
-    /usr/bin/getent passwd $WEEWX_USER || /usr/sbin/useradd -r -g $WEEWX_GROUP -M -s /sbin/nologin $WEEWX_USER
 fi
 
 # see which init system (if any) is running
@@ -196,26 +202,30 @@ if [ ! -d %{dst_user_dir} ]; then
 fi
 
 # create database directory
-mkdir -p /var/lib/weewx
-# create the reports directory
-mkdir -p /var/www/html/weewx
+if [ ! -d /var/lib/weewx ]; then
+    mkdir -p /var/lib/weewx
+    chown -R $WEEWX_USER /var/lib/weewx
+    chgrp -R $WEEWX_GROUP /var/lib/weewx
+fi
 
-# ensure correct ownership
-chown -R $WEEWX_USER %{dst_cfg_dir}
-chgrp -R $WEEWX_GROUP %{dst_cfg_dir}
-chown -R $WEEWX_USER /var/lib/weewx
-chgrp -R $WEEWX_GROUP /var/lib/weewx
-chown -R $WEEWX_USER /var/www/html/weewx
-chgrp -R $WEEWX_GROUP /var/www/html/weewx
+# create the reports directory
+if [ ! -d /var/www/html/weewx ]; then
+    mkdir -p /var/www/html/weewx
+    chown -R $WEEWX_USER /var/www/html/weewx
+    chgrp -R $WEEWX_GROUP /var/www/html/weewx
+fi
 
 if [ "$1" = "1" ]; then
   # this is a new installation
   # create a sane configuration file with simulator as the station type
-  /usr/bin/weectl station reconfigure --config=%{cfg_file} --driver=weewx.drivers.simulator --no-prompt --no-backup
+  /usr/bin/weectl station reconfigure --config=%{cfg_file} --driver=weewx.drivers.simulator --no-prompt --no-backup > /dev/null
   # pre-compile the python code
   precompile
+  # ensure correct ownership of configuration, skins, and extensions
+  chown -R $WEEWX_USER %{dst_cfg_dir}
+  chgrp -R $WEEWX_GROUP %{dst_cfg_dir}
   if [ "$pid1" = "systemd" ]; then
-    systemctl enable weewx > /dev/null
+    systemctl enable weewx > /dev/null 2>&1
     systemctl start weewx
   fi
 elif [ $1 -gt 1 ]; then
@@ -237,7 +247,7 @@ elif [ $1 -gt 1 ]; then
     cp -p %{cfg_file}.prev %{cfg_file}-$MNT
     if [ -f %{cfg_file}-%{weewx_version} ]; then
       echo Creating maintainer config file as %{cfg_file}-$MNT
-      /usr/bin/weectl station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg_file}-%{weewx_version} --what=config --no-prompt --no-backup
+      /usr/bin/weectl station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg_file}-%{weewx_version} --what=config --no-prompt --no-backup > /dev/null
     fi
   fi
   # if this is an upgrade from V4, copy any extensions to the V5 location
@@ -252,6 +262,9 @@ elif [ $1 -gt 1 ]; then
   fi
   # pre-compile the python code
   precompile
+  # ensure correct ownership of configuration, skins, and extensions
+  chown -R $WEEWX_USER %{dst_cfg_dir}
+  chgrp -R $WEEWX_GROUP %{dst_cfg_dir}
   # do a full restart of weewx
   if [ "$pid1" = "systemd" ]; then
     systemctl stop weewx
@@ -275,7 +288,7 @@ if [ "$1" = "0" ]; then
   # this is an uninstall, so stop and remove everything
   if [ "$pid1" = "systemd" ]; then
     systemctl stop weewx
-    systemctl disable weewx > /dev/null
+    systemctl disable weewx > /dev/null 2>&1
     for f in weewx.service weewx@.service; do
 	if [ -f %{systemd_dir}/$f ]; then
 	    rm -f %{systemd_dir}/$f
