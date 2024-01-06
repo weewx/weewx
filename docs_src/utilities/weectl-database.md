@@ -8,8 +8,9 @@ Specify `--help` to see the various actions and options:
 
 ## Create a new database
 
-    weectl database create
-        [--config=FILENAME] [--binding=BINDING] [--dry-run]
+     weectl database create
+        [--config=FILENAME] [--binding=BINDING-NAME]
+        [--dry-run] [-y]
 
 This action is used to create a new database by using the specifications in
 the WeeWX configuration file. It is rarely needed, as `weewxd` will do this
@@ -23,7 +24,8 @@ Use the `--help` option to see how to use this action.
 ## Drop the daily summaries
 
     weectl database drop-daily
-        [--config=FILENAME] [--binding=BINDING] [--dry-run]
+        [--config=FILENAME] [--binding=BINDING-NAME]
+        [--dry-run] [-y]
 
 In addition to the regular archive data, every WeeWX database also includes
 a daily summary table for each observation type. Because there can be dozens
@@ -39,9 +41,10 @@ Use the `--help` option to see how to use this action:
 
 ## Rebuild the daily summaries
 
-    weectl database rebuild-daily 
-        [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]] 
-        [--config=FILENAME] [--binding=BINDING] [--dry-run]
+    weectl database rebuild-daily
+        [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
+        [--config=FILENAME] [--binding=BINDING-NAME] 
+        [--dry-run] [-y]
 
 This action is the inverse of action `weectk database drop-daily` in that it
 rebuilds the daily summaries from the archive data.
@@ -77,7 +80,8 @@ for `--from` is from the first day in the database. The default value for
 
     weectl database add-column NAME
         [--type=COLUMN-DEF]
-        [--config=FILENAME] [--binding=BINDING] [--dry-run]
+        [--config=FILENAME] [--binding=BINDING-NAME]
+        [--dry-run] [-y]
 
 This action adds a new database observation type (column), given by `NAME`, to
 the database. The option `--type` is any valid SQL column definition. It
@@ -92,7 +96,8 @@ For example, to add a new observation `pulseCount` with a SQL type of
 ## Rename an observation type
 
     weectl database rename-column FROM-NAME TO-NAME
-        [--config=FILENAME [--binding=BINDING] [--dry-run]
+        [--config=FILENAME] [--binding=BINDING-NAME]
+        [--dry-run] [-y]
 
 Use this action to rename a database observation type (column) to a new name.
 
@@ -105,7 +110,8 @@ For example, to rename the column `luminosity` in your database to
 ## Drop (remove) observation types
 
     weectl database drop-columns NAME...
-        [--config=FILENAME] [--binding=BINDING] [--dry-run]
+        [--config=FILENAME] [--binding=BINDING-NAME]
+        [--dry-run] [-y]
 
 This action will drop one or more observation types (columns) from the
 database. If more than one column name is given, they should be separated
@@ -121,8 +127,9 @@ by spaces.
 
 ## Reconfigure a database
 
-    weectl database reconfigure
-        [--config=FILENAME] [--binding=BINDING] [--dry-run]
+     weectl database reconfigure 
+        [--config=FILENAME] [--binding=BINDING-NAME]
+        [--dry-run] [-y]
 
 This action is useful for changing the schema or unit system in your database.
 
@@ -140,7 +147,8 @@ Guide_ for step-by-step instructions that use this option.
 ## Transfer (copy) a database
 
     weectl database transfer --dest-binding=BINDING-NAME
-        [--config=FILENAME] [--binding=BINDING] [--dry-run]
+        [--config=FILENAME] [--binding=BINDING-NAME]
+        [--dry-run] [-y]
 
 This action is useful for moving your database from one type of database to
 another, such as from SQLite to MySQL. To use it, you must have two bindings
@@ -159,8 +167,8 @@ by using `weectl database transfer`.
 
     weectl database calc-missing
         [--date=YYYY-mm-dd | [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
-        [--config=FILENAME] [--binding=BINDING-NAME]
-        [--dry-run]
+        [--config=FILENAME] [--binding=BINDING-NAME] [--tranche=INT]
+        [--dry-run] [-y]
 
 This action calculates derived observations for archive records in the database
 and then stores the calculated observations in the database. This can be useful
@@ -212,9 +220,9 @@ This utility check whether your database is affected. See
 
 ## Update a database
 
-    weectl database update
+     weectl database update
         [--config=FILENAME] [--binding=BINDING-NAME]
-        [--dry-run]
+        [--dry-run] [-y]
 
 This action updates the daily summary tables to use interval weighted
 calculations (see [Issue #61](https://github.com/weewx/weewx/issues/61)) as
@@ -234,8 +242,9 @@ in the [_Upgrade Guide_](../upgrade.md).
 ## Recalculate daily summary weights
 
     weectl database reweight
-        [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]] 
-        [--config=FILENAME] [--binding=BINDING] [--dry-run]
+        [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
+        [--config=FILENAME] [--binding=BINDING-NAME] 
+        [--dry-run] [-y]
 
 As an alternative to dropping and rebuilding the daily summaries, this action
 simply rebuilds the weighted daily sums (used to calculate averages) from the
@@ -246,19 +255,49 @@ remain unchanged.
 Other options are as in `weectl database rebuild-daily`.
 
 
-## Options
+## Optional arguments
 
 These are options used by most of the actions.
-
-### --config
-
-Path to the configuration file. Default is `~/weewx-data/weewx.conf`.
 
 ### --binding
 
 The database binding to use. Default is `wx_binding`.
 
+### --config
+
+Path to the configuration file. Default is `~/weewx-data/weewx.conf`.
+
+### --date
+
+Nominate a single date to be acted on. The format should be `YYYY-mm-dd`.
+For example, `2012-02-08` would specify 8 February 2012. If used, neither
+option `--from` nor option `--to` can be used.
+
 ### --dry-run
 
 Show what would happen if the action was run, but do not actually make any
 writable changes.
+
+### --from
+
+Nominate a starting date for an action (inclusive). The format should be
+`YYYY-mm-dd`. For example, `2012-02-08` would specify 8 February 2012. If not
+specified, the first day in the database will be used. If specified, option
+`--date` cannot be used.
+
+### --to
+
+Nominate an ending date for an action (inclusive). The format should be
+`YYYY-mm-dd`. For example, `2012-02-08` would specify 8 February 2012. If not
+specified, the last day in the database will be used. If specified, option
+`--date` cannot be used.
+
+### --tranche
+
+Some of the actions can be quite memory intensive, so they done in "tranches",
+specified in days. If you are working on a small machine, a smaller tranche size
+might be necessary. Default is 10.
+
+### -y | --yes
+
+Do not ask for confirmation. Just do it.

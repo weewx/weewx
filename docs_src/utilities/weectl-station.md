@@ -149,14 +149,14 @@ weectl station upgrade --what skins
 See the details below for [option `--what`](#what-option).
 
 
-## Positional options
+## Positional argument
 
 ### WEEWX-ROOT
 
 Use this option with `weectl station create` to specify a directory that is to
 hold the station data area. Default is `~/weewx-data`.
 
-## Switch options
+## Optional arguments
 
 ### --altitude=ALTITUDE
 
