@@ -33,7 +33,8 @@ check the log!
 
 ## Log messages
 
-In the default configuration, WeeWX logs to the system logging facility.
+In the default configuration, messages from WeeWX go to the system logging
+facility.
 
 The following sections show how to view WeeWX log messages on systems that use
 `syslog` and `systemd-journald` logging facilities. See the wiki article
@@ -112,21 +113,17 @@ Fortunately, there is a simple workaround. Put this at the bottom of your
         handlers = timed_rotate,
 
     [[handlers]]
-        # Log to a set of rotating files
         [[[timed_rotate]]]
             level = DEBUG
             formatter = verbose
             class = logging.handlers.TimedRotatingFileHandler
-            # File to log to, relative to WEEWX_ROOT:
             filename = log/{process_name}.log
-            # When to rotate:
             when = midnight
-            # How many log files to save
             backupCount = 7
 ```
 
-This reconfigures the root logger to send log messages to the file
-`~/weewx-data/log/weewxd.log` instead of the system logger.
+This makes messages from WeeWX go to the file `~/weewx-data/log/weewxd.log`
+instead of the system logger.
 
 For an explanation of what all these lines mean, see the wiki article on
 [WeeWX logging](https://github.com/weewx/weewx/wiki/WeeWX-v4-and-logging).

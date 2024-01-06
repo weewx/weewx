@@ -7,7 +7,8 @@ it as a daemon.
 
 ## Running directly
 
-To run WeeWX directly, invoke the main program, `weewxd`.
+To run WeeWX directly, invoke the main program, `weewxd`.  To stop it, type
+`ctrl-c` (press and hold the `control` key then hit the `c` key).
 
 ```shell
 weewxd
@@ -51,6 +52,41 @@ the installer finishes with WeeWX running in the background.
 
 For a pip install, you will have to do this yourself. See the section [_Run as
 a daemon_](../quickstarts/pip.md#run-as-a-daemon) in the pip quick start guide.
+
+To start and stop WeeWX as a daemon, use the tools appropriate to your
+operating system.
+
+=== "systemd"
+
+    ```{ .shell .copy }
+    # For Linux systems that use systemd, e.g., Debian, Redhat, SUSE
+    sudo systemctl start weewx
+    sudo systemctl stop weewx
+    ```
+
+=== "sysV"
+
+    ```{ .shell .copy }
+    # For Linux systems that use SysV init, e.g., Slackware, Devuan, Puppy
+    sudo /etc/init.d/weewx start
+    sudo /etc/init.d/weewx stop
+    ```
+
+=== "FreeBSD"
+
+    ```{ .shell .copy }
+    # For BSD systems, e.g., FreeBSD, OpenBSD
+    sudo service weewx start
+    sudo service weewx stop
+    ```
+
+=== "macOS"
+
+    ```{ .shell .copy }
+    # For macOS systems.
+    sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist
+    sudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist
+    ```
 
 When `weewxd` runs in the background, you will not see sensor data or any other
 indication that it is running.  However, there are several approaches you can
