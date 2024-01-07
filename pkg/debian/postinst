@@ -321,18 +321,27 @@ setup_user_dir() {
     fi
 }
 
-# create the database and reporting directories
-setup_data_dirs() {
-    mkdir -p $WEEWX_HOME
-    mkdir -p $WEEWX_HTML
+# create the database directory
+setup_database_dir() {
+    if [ ! -d $WEEWX_HOME ]; then
+        mkdir -p $WEEWX_HOME
+        chmod 2775 $WEEWX_HOME
+        chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HOME
+    fi
 }
 
-# set the permissions on the data so they are owned by weewx user
+# create the reporting directory
+setup_reporting_dir() {
+    if [ ! -d $WEEWX_HTML ]; then
+        mkdir -p $WEEWX_HTML
+        chmod 2775 $WEEWX_HTML
+        chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HTML
+    fi
+}
+
+# set the permissions on the configuration, skins, and extensions
 set_permissions() {
-    for d in /etc/weewx $WEEWX_HOME $WEEWX_HTML; do
-        chmod 2775 $d
-        chown -R $WEEWX_USER:$WEEWX_GROUP $d
-    done
+    chown -R $WEEWX_USER:$WEEWX_GROUP /etc/weewx
 }
 
 # if there are any existing extensions in the V4 location, copy them to the
@@ -375,7 +384,8 @@ case "$1" in
         setup_udev
         setup_skins
         setup_user_dir
-        setup_data_dirs
+        setup_database_dir
+        setup_reporting_dir
 
         # precompile the bytecode
         python3 -m compileall /usr/share/weewx > /dev/null
