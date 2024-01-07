@@ -20,11 +20,17 @@ def extract_roots(config_dict):
     The extracted paths are *absolute* paths. That is, they are no longer relative to WEEWX_ROOT.
 
     Args:
-        config_dict(dict): The configuration dictionary
+        config_dict(dict): The configuration dictionary. It must contain a value for WEEWX_ROOT.
     Returns:
-        dict[str, str]: Key is the type of root, value is its location.
+        dict[str, str]: Key is the type of root, value is its absolute location.
     """
-    user_root = config_dict.get('USER_ROOT', 'bin/user')
+    # Check if this dictionary is from a pre-V5 package install. If so, we have to patch
+    # USER_ROOT to its new location.
+    if config_dict['WEEWX_ROOT'] == '/':
+        user_root = '/etc/weewx/bin/user'
+    else:
+        user_root = config_dict.get('USER_ROOT', 'bin/user')
+
     root_dict = {
         'WEEWX_ROOT': config_dict['WEEWX_ROOT'],
         'USER_DIR': os.path.abspath(os.path.join(config_dict['WEEWX_ROOT'], user_root)),
