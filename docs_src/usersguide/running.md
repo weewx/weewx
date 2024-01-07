@@ -47,14 +47,16 @@ other stations.
 For unattended operations it is best to have WeeWX run as a daemon, so that
 it is started automatically when the computer is rebooted.
 
-If you installed WeeWX from DEB or RPM package, this is done automatically;
-the installer finishes with WeeWX running in the background.
+If you installed WeeWX from DEB or RPM package, the daemon configuration is
+done automatically; the installer finishes with WeeWX running in the
+background.
 
-For a pip install, you will have to do this yourself. See the section [_Run as
-a daemon_](../quickstarts/pip.md#run-as-a-daemon) in the pip quick start guide.
+For a pip install, you will have to configure the daemon yourself. See the
+section [_Run as a daemon_](../quickstarts/pip.md#run-as-a-daemon) in the pip
+quick start guide.
 
-To start and stop WeeWX as a daemon, use the tools appropriate to your
-operating system.
+After the daemon is configured, use the tools appropriate to your operating
+system to start and stop WeeWX.
 
 === "systemd"
 
