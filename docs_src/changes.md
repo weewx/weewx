@@ -144,6 +144,13 @@ Fixed a long-standing bug in the log message format that made 'python' or
 
 The process name for weewxd is now 'weewxd'.  In V4 it was 'weewx'.
 
+The rc script and configuration for FreeBSD/OpenBSD has been updated and now
+uses standard BSD conventions.
+
+The DEB/RPM packaging now detect whether systemd is running, so on systems that
+use SysV, the rc scripts will be installed, and on systems such as docker that
+do not use systemd, no systemd dependencies will be introduced.
+
 
 ### 4.10.2 02/22/2023
 

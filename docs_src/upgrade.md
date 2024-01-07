@@ -88,6 +88,30 @@ the user doing the install. However, old installations can continue to use
 `/home/weewx` by following the guide [_Migrating setup.py installs to Version
 5.0_](https://github.com/weewx/weewx/wiki/v5-upgrade).
 
+### `WEEWX_ROOT` is now relative to the configuration file
+
+In previous versions, `WEEWX_ROOT` was specified in the configuration file as an
+absolute path. That requirement has been relaxed and refined.  In V5,
+`WEEWX_ROOT` can be specified in the configuration file as a _relative_ path,
+or not at all.  If it is specified as a relative path, it will be relative to
+the directory of the configuration file. If it is not specified at all (the
+default for new installs), it defaults to the directory of the configuration
+file.
+
+This has the advantage that it allows the entire station data area to be rooted
+anywhere in the file tree &mdash; one need only specify the location of the
+configuration file to locate everything, for example, using the `--config` to
+`weectl` or `weewxd`.
+
+Old configuration files with an absolute path will continue to function as
+before.
+
+### `SQLITE_ROOT` is now relative to `WEEWX_ROOT`
+
+Previously, `SQLITE_ROOT` was expected to be an absolute path, but now relative
+paths are accepted. A relative path is considered relative to `WEEWX_ROOT`.
+Because this is _less restrictive_, it is not expected to affect any users.
+
 ### New location for `user` directory
 
 This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
@@ -102,7 +126,6 @@ from the WeeWX code.  For DEB and RPM installations, the `user` directory is
 now `/etc/weewx/bin/user`.  If you upgrade a DEB or RPM installation, any
 extensions that were installed in `/usr/share/weewx/user` will be copied to
 `/etc/weewx/bin/user`, and the old `user` directory will be moved aside.
-
 
 ### Use of systemd units for services
 
@@ -122,50 +145,29 @@ This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
 that use the DEB or RPM packages). Installations that use a `setup.py` install
 are not affected.
 
-For these package installers, `weewxd` will run as the user `weewx`.  The
-configuration files, skins, databases, and reports are owned by the `weewx`
-group.  This makes it easier to manage a WeeWX installation. Put yourself into
-the `weewx` group, then you will not have to `sudo` to make changes to skins or
-configurations.  You *will* have to `sudo` to start/stop `weewxd`.
+For new installations, `weewxd` will run as the user `weewx`.  The configuration
+files, skins, databases, and reports are owned by the `weewx` group.  This makes
+it easier to manage a WeeWX installation. Put yourself into the `weewx` group,
+then you will not have to `sudo` to make changes to skins or configurations.
+You *will* have to `sudo` to start/stop `weewxd`.
+
+For upgrades, the installer will check the ownership of `/var/lib/weewx`, and it
+will run `weewxd` as that user and group.
 
 ### udev rules installed for core hardware
 
-Version 5 includes `udev` rules for hardware that is supported by WeeWX. This
-makes any hardware that uses USB or serial ports accessible to anyone in the
-`weewx` group.  So if you put yourself in the `weewx` group, you will not have
-to `sudo` to communicate with a supported USB or serial device.
+Version 5 includes a small change to the `udev` rules for hardware that is
+supported by WeeWX. The rules include permissions that make any hardware that
+uses USB or serial ports accessible to non-root users.
 
-If you install WeeWX using `apt`, `yum`, or `zypper`, these rules are applied as
-part of the upgrade process.
+If you install WeeWX using `apt`, `yum`, or `zypper`, the udev rules are
+installed as part of the installation process.  In this case, the rules make
+the devices accessible to anyone in the `weewx` group.  So if you put yourself
+in the `weewx` group, you will not have to `sudo` to communicate with a
+supported USB or serial device.
 
-If you use a pip install, the rules are applied by the same script that installs
-the files necessary to run as a daemon.
-
-### `WEEWX_ROOT` is now relative to the configuration file
-
-In previous versions, `WEEWX_ROOT` was an absolute path that specified the
-location of the root of the WeeWX directory tree. That requirement has been
-relaxed and it can now be a _relative_ path, relative to the directory of the
-configuration file. If it is not specified at all (the default for new
-installs), it defaults to the directory of the configuration file.
-
-This has the advantage that it allows the entire station data area to be rooted
-anywhere in the file tree &mdash; one need only specify the location of the
-configuration file using `--config`.
-
-Old configuration files with an absolute path will continue to function as
-before. However, if you wish, you can explicitly upgrade the configuration file
-by using the utility [`weectl station
-upgrade`](utilities/weectl-station.md#upgrade-an-existing-station), in which
-case `WEEWX_ROOT=/` will be changed to `WEEWX_ROOT=/etc/weewx`.
-
-    sudo weectl station upgrade --what config
-
-### `SQLITE_ROOT` is now relative to `WEEWX_ROOT`
-
-Previously, `SQLITE_ROOT` was expected to be an absolute path, but now relative
-paths are accepted. A relative path is considered relative to `WEEWX_ROOT`.
-Because this is _less restrictive_, it is not expected to affect any users.
+If you install using `pip`, the rules are installed by the same script that
+installs the files necessary to run as a daemon.
 
 ### Class `weewx.units.UnknownType` has been renamed
 

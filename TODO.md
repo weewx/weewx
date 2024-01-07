@@ -3,9 +3,6 @@
 
 ## Docs
 
-- mw Check over the upgrade document for accuracy of package installs. More
-  detail would be useful.
-
 
 ## deb/rpm installs
 
