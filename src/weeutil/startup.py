@@ -26,7 +26,7 @@ def extract_roots(config_dict):
     """
     # Check if this dictionary is from a pre-V5 package install. If so, we have to patch
     # USER_ROOT to its new location.
-    if config_dict['WEEWX_ROOT'] == '/':
+    if 'USER_ROOT' not in config_dict and config_dict['WEEWX_ROOT'] == '/':
         user_root = '/etc/weewx/bin/user'
     else:
         user_root = config_dict.get('USER_ROOT', 'bin/user')
