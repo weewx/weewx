@@ -119,10 +119,10 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
         - If it is a relative path, then it is converted to an absolute path by
         prepending the directory where the configuration file was found.
 
-    This version also adds two entries to the returned ConfigObj:
+    This version also adds two possible entries to the returned ConfigObj:
         config_path: Location of the actual configuration file that was used.
-        WEEWX_ROOT_CONFIG: The original value of WEEWX_ROOT, or None if there
-            was no original value
+        WEEWX_ROOT_CONFIG: If the original file included a value of WEEWX_ROOT, this is included
+            and set to it. Otherwise, it is not included.
 
     Args:
         config_path (str|None): configuration filename.
@@ -645,27 +645,6 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
 # ==============================================================================
 #            Miscellaneous utilities
 # ==============================================================================
-
-def extract_roots(config_dict):
-    """Get the location of the various root directories used by weewx.
-    The extracted paths are *absolute* paths. That is, they are no longer relative to WEEWX_ROOT.
-    """
-    root_dict = dict()
-    root_dict['WEEWX_ROOT'] = config_dict['WEEWX_ROOT']
-    root_dict['USER_DIR'] = os.path.join(config_dict['WEEWX_ROOT'],
-                                         config_dict.get('USER_ROOT', 'bin/user'))
-    root_dict['BIN_DIR'] = os.path.abspath(os.path.join(root_dict['USER_DIR'], '..'))
-    root_dict['EXT_DIR'] = os.path.join(root_dict['USER_DIR'], 'installer')
-
-    # Add SKIN_ROOT if it can be found:
-    try:
-        root_dict['SKIN_DIR'] = os.path.abspath(os.path.join(
-            root_dict['WEEWX_ROOT'],
-            config_dict['StdReport']['SKIN_ROOT']))
-    except KeyError:
-        pass
-
-    return root_dict
 
 
 def extract_tar(filename, target_dir, printer=None):
