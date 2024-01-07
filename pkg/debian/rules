@@ -66,7 +66,7 @@ install:
 	mkdir $(DST_CFGDIR)/udev
 	cp $(SRC)/pkg/etc/udev/rules.d/weewx.rules $(DST_CFGDIR)/udev
 
-# create the default configuration
+# create the configuration file
 	sed \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = skins%' \
  -e 's%HTML_ROOT = public_html%HTML_ROOT = /var/www/html/weewx%' \
