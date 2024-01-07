@@ -41,7 +41,6 @@ install:
 	mkdir -p $(DST_CFGDIR)
 	mkdir -p $(DST_DOCDIR)
 	mkdir -p $(DST)/usr/bin
-	mkdir -p $(DST)/etc/default
 
 # copyright, license, and upstream changelog
 	cp docs_src/copyright.md $(DST_DOCDIR)/copyright
@@ -84,11 +83,6 @@ install:
  -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
  $(SRC)/bin/$$f > $(DST)/usr/bin/$$f; \
 done
-
-# the defaults file indicates which python and weewx to use
-	sed \
- -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
- $(SRC)/pkg/etc/default/weewx > $(DST)/etc/default/weewx
 
 # additional debian control files that dpkg-buildpackage seems to ignore
 	mkdir -p $(DST)/DEBIAN

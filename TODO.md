@@ -5,8 +5,6 @@
 
 - mw Check over the upgrade document for accuracy of package installs. More
   detail would be useful.
-- mw Do we want `weectl station upgrade --what config` to convert `WEEWX_ROOT =
-  /` to `WEEWX_ROOT = /etc/weewx`, or to delete `WEEWX_ROOT` entirely?
 
 
 ## deb/rpm installs

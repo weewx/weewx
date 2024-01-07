@@ -84,7 +84,6 @@ mkdir -p %{buildroot}%{dst_code_dir}
 mkdir -p %{buildroot}%{dst_cfg_dir}
 mkdir -p %{buildroot}%{dst_doc_dir}
 mkdir -p %{buildroot}%{_bindir}
-mkdir -p %{buildroot}/etc/default
 
 # rpm wants copyright and license even if no docs
 cp docs_src/copyright.md %{buildroot}%{dst_doc_dir}/copyright
@@ -122,11 +121,6 @@ for f in %{entry_points}; do \
  -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=%{python}%' \
  bin/$f > %{buildroot}%{_bindir}/$f; \
 done
-
-# configure defaults
-    sed \
- -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=%{python}%' \
- pkg/etc/default/weewx > %{buildroot}/etc/default/weewx
 
 
 %pre
@@ -175,21 +169,32 @@ if [ -d /var/lib/weewx ]; then
     WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)
 fi
 
+# insert values into the defaults file (used by the entry points)
+dflts=/etc/default/weewx
+if [ ! -f $dflts ]; then
+    echo "WEEWX_PYTHON=python3" > $dflts
+    echo "WEEWX_BINDIR=/usr/share/weewx" >> $dflts
+else
+    grep -q "^WEEWX_PYTHON=" $dflts || \
+        echo "WEEWX_PYTHON=python3" >> $dflts
+    grep -q "^WEEWX_BINDIR=" $dflts || \
+        echo "WEEWX_BINDIR=/usr/share/weewx" >> $dflts
+fi
+
 # see which init system (if any) is running
 pid1=none
 if [ -d /run/systemd/system ]; then
   pid1=systemd
 fi
+
 # install the init files
 if [ -d %{systemd_dir} ]; then
+  for f in weewx.service weewx@.service; do
     sed \
  -e "s/User=.*/User=${WEEWX_USER}/" \
  -e "s/Group=.*/Group=${WEEWX_GROUP}/" \
- %{dst_cfg_dir}/systemd/weewx.service > %{systemd_dir}/weewx.service
-    sed \
- -e "s/User=.*/User=${WEEWX_USER}/" \
- -e "s/Group=.*/Group=${WEEWX_GROUP}/" \
- %{dst_cfg_dir}/systemd/weewx@.service > %{systemd_dir}/weewx@.service
+ %{dst_cfg_dir}/systemd/$f > %{systemd_dir}/$f
+  done
 fi
 
 # install the udev rules
@@ -322,7 +327,6 @@ rm -rf %{buildroot}
 %attr(0755,root,root) %{_bindir}/weectl
 %{dst_code_dir}/
 %doc %{dst_doc_dir}/
-%config(noreplace) %{_sysconfdir}/default/weewx
 %config(noreplace) %{dst_cfg_dir}/
 
 %changelog

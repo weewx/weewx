@@ -248,6 +248,42 @@ get_user() {
     fi
 }
 
+# create/modify the defaults file to match this installation
+setup_defaults() {
+    dflts=/etc/default/weewx
+    if [ ! -f $dflts ]; then
+        echo "WEEWX_PYTHON=python3" > $dflts
+        echo "WEEWX_BINDIR=/usr/share/weewx" >> $dflts
+    else
+        grep -q "^WEEWX_PYTHON=" $dflts || \
+            echo "WEEWX_PYTHON=python3" >> $dflts
+        grep -q "^WEEWX_BINDIR=" $dflts || \
+            echo "WEEWX_BINDIR=/usr/share/weewx" >> $dflts
+    fi
+
+    # the SysV rc script uses additional variables, so set values for them
+    if [ "$1" = "init" ]; then
+        if [ ! -f $dflts ]; then
+            echo "WEEWX_CFGDIR=/etc/weewx" >> $dflts
+            echo "WEEWX_RUNDIR=/var/lib/weewx" >> $dflts
+            echo "WEEWX_USER=$WEEWX_USER" >> $dflts
+            echo "WEEWX_GROUP=$WEEWX_GROUP" >> $dflts
+            echo "WEEWX_INSTANCES=\"weewx\"" >> $dflts
+        else
+            grep -q "^WEEWX_CFGDIR=" $dflts || \
+                echo "WEEWX_CFGDIR=/etc/weewx" >> $dflts
+            grep -q "^WEEWX_RUNDIR=" $dflts || \
+                echo "WEEWX_RUNDIR=/var/lib/weewx" >> $dflts
+            grep -q "^WEEWX_USER=" $dflts || \
+                echo "WEEWX_USER=$WEEWX_USER" >> $dflts
+            grep -q "^WEEWX_GROUP=" $dflts || \
+                echo "WEEWX_GROUP=$WEEWX_GROUP" >> $dflts
+            grep -q "^WEEWX_INSTANCES=" $dflts || \
+                echo "WEEWX_INSTANCES=\"weewx\"" >> $dflts
+        fi
+    fi
+}
+
 # create the user that the daemon will run as, but only if not already exist
 create_user() {
     if ! getent group | grep -q "^$WEEWX_GROUP:"; then
@@ -368,6 +404,7 @@ fi
 case "$1" in
     configure)
         get_user
+        setup_defaults $pid1
 
         if [ "$2" != "" ]; then
             # this is an upgrade so create a maintainers version by merging
