@@ -221,7 +221,7 @@ merge_weewxconf() {
 	        MNT=$OLDVER-$NEWVER
                 echo "Creating maintainer config file as $cfgfile-$MNT"
                 cp -p $cfgfile $cfgfile-$MNT
-                $cfgapp station upgrade --config=$cfgfile-$MNT --dist-config=$cfgfile-$NEWVER --what=config --no-prompt --no-backup --yes
+                $cfgapp station upgrade --config=$cfgfile-$MNT --dist-config=$cfgfile-$NEWVER --what=config --no-backup --yes
             fi
         else
             # this is a new config, so just insert debconf values into it
