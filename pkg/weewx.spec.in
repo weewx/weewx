@@ -157,6 +157,16 @@ precompile() {
     %{python} -m compileall %{dst_code_dir} > /dev/null
 }
 
+# get the version number from the specified file, without the debian revisions
+get_conf_version() {
+    v=$(grep '^version.*=' $1 | sed -e 's/\s*version\s*=\s*//' | sed -e 's/-.*//')
+    if [ "$v" = "" ]; then
+        # someone might have messed with the version string
+        v="xxx"
+    fi
+    echo $v
+}
+
 # figure out which user should own everything
 WEEWX_USER=weewx
 WEEWX_GROUP=weewx
@@ -237,16 +247,11 @@ elif [ $1 -gt 1 ]; then
   #   weewx.conf-old-new  - user's conf upgraded to this weewx version
   #   weewx.conf.rpmnew   - new conf from this rpm (created by rpm rules)
   if [ -f %{cfg_file}.prev ]; then
-    OLDVER=`grep version %{cfg_file}.prev | sed -e 's/\s*version\s*=\s*//'`
-    if [ "$OLDVER" = "" ]; then
-      # someone might have messed with the version string
-      OLDVER="xxx"
-    fi
-    MNT=${OLDVER}-%{weewx_version}
-    echo Copying previous config file to %{cfg_file}-$MNT
-    cp -p %{cfg_file}.prev %{cfg_file}-$MNT
+    OLDVER=$(get_conf_version %{cfg_file}.prev)
     if [ -f %{cfg_file}-%{weewx_version} ]; then
+      MNT=${OLDVER}-%{weewx_version}
       echo Creating maintainer config file as %{cfg_file}-$MNT
+      cp -p %{cfg_file}.prev %{cfg_file}-$MNT
       /usr/bin/weectl station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg_file}-%{weewx_version} --what=config --no-backup --yes > /dev/null
     fi
   fi

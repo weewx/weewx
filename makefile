@@ -259,10 +259,11 @@ deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	cp pkg/debian/postrm $(DEBBLDDIR)/debian
 	cp pkg/debian/preinst $(DEBBLDDIR)/debian
 	cp pkg/debian/prerm $(DEBBLDDIR)/debian
-	cp pkg/debian/rules $(DEBBLDDIR)/debian
 	cp pkg/debian/source/format $(DEBBLDDIR)/debian/source
 	cp pkg/debian/templates $(DEBBLDDIR)/debian
 	cp pkg/debian/weewx.lintian-overrides $(DEBBLDDIR)/debian
+	sed -e 's%WEEWX_VERSION%$(VERSION)%' \
+  pkg/debian/rules > $(DEBBLDDIR)/debian/rules
 
 # run lintian on the deb package
 check-debian:

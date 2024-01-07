@@ -7,6 +7,7 @@
 #export DH_VERBOSE=1
 
 PKG=weewx
+PKG_VERSION=WEEWX_VERSION
 PYTHON=python3
 SRC=$(CURDIR)
 DST=$(CURDIR)/debian/$(PKG)
@@ -74,7 +75,7 @@ install:
  > $(DST_CFGDIR)/weewx.conf
 
 # make a virgin copy of the configuration file
-	cp $(DST_CFGDIR)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist
+	cp $(DST_CFGDIR)/weewx.conf $(DST_CFGDIR)/weewx.conf-$(PKG_VERSION)
 
 # create the entry points
 	for f in $(ENTRIES); do \
