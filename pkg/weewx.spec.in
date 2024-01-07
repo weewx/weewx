@@ -247,7 +247,7 @@ elif [ $1 -gt 1 ]; then
     cp -p %{cfg_file}.prev %{cfg_file}-$MNT
     if [ -f %{cfg_file}-%{weewx_version} ]; then
       echo Creating maintainer config file as %{cfg_file}-$MNT
-      /usr/bin/weectl station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg_file}-%{weewx_version} --what=config --no-prompt --no-backup > /dev/null
+      /usr/bin/weectl station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg_file}-%{weewx_version} --what=config --no-backup --yes > /dev/null
     fi
   fi
   # if this is an upgrade from V4, copy any extensions to the V5 location
