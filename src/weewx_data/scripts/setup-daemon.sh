@@ -55,8 +55,8 @@ install_systemd() {
     systemctl enable weewx
         
     echo "You can start/stop weewx with the following commands:"
-    echo "  \033[1msudo systemctl start weewx\033[0m"
-    echo "  \033[1msudo systemctl stop weewx\033[0m"
+    echo "  sudo systemctl start weewx"
+    echo "  sudo systemctl stop weewx"
 }
 
 uninstall_systemd() {
@@ -79,8 +79,8 @@ install_sysv() {
     update-rc.d weewx defaults
 
     echo "You can start/stop weewx with the following commands:"
-    echo "  \033[1m/etc/init.d/weewx start\033[0m"
-    echo "  \033[1m/etc/init.d/weewx stop\033[0m"
+    echo "  /etc/init.d/weewx start"
+    echo "  /etc/init.d/weewx stop"
 }
 
 uninstall_sysv() {
@@ -103,8 +103,8 @@ install_bsd() {
     sysrc weewx_enable="YES"
 
     echo "You can start/stop weewx with the following commands:"
-    echo "  \033[1msudo service weewx start\033[0m"
-    echo "  \033[1msudo service weewx stop\033[0m"
+    echo "  sudo service weewx start"
+    echo "  sudo service weewx stop"
 }
 
 uninstall_bsd() {
@@ -120,8 +120,8 @@ install_macos() {
     copy_file $UTIL_ROOT/launchd/com.weewx.weewxd.plist /Library/LaunchDaemons
 
     echo "You can start/stop weewx with the following commands:"
-    echo "  \033[1msudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist\033[0m"
-    echo "  \033[1msudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist\033[0m"
+    echo "  sudo launchctl load /Library/LaunchDaemons/com.weewx.weewxd.plist"
+    echo "  sudo launchctl unload /Library/LaunchDaemons/com.weewx.weewxd.plist"
 }
 
 uninstall_macos() {
