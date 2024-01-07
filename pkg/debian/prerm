@@ -23,7 +23,7 @@ fi
 
 case "$1" in
 remove|upgrade)
-    # stop the weewx daemon and remove the startup configuration
+    # stop the weewx daemon
     if [ "$pid1" = "systemd" ]; then
 	systemctl stop weewx
     elif [ "$pid1" = "init" ]; then

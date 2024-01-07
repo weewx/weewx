@@ -25,7 +25,7 @@ fi
 
 case "$1" in
 remove)
-    # stop the weewx daemon and remove the startup configuration
+    # remove the startup configuration
     if [ "$pid1" = "systemd" ]; then
         systemctl disable weewx > /dev/null
         for f in weewx.service weewx@.service; do

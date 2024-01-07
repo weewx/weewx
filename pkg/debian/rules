@@ -68,27 +68,27 @@ install:
 	cp $(SRC)/pkg/etc/udev/rules.d/weewx.rules $(DST_CFGDIR)/udev
 
 # create the default configuration
-	cat $(SRC)/src/weewx_data/weewx.conf | sed \
+	sed \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = skins%' \
  -e 's%HTML_ROOT = public_html%HTML_ROOT = /var/www/html/weewx%' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
- > $(DST_CFGDIR)/weewx.conf
+ $(SRC)/src/weewx_data/weewx.conf > $(DST_CFGDIR)/weewx.conf
 
 # make a virgin copy of the configuration file
 	cp $(DST_CFGDIR)/weewx.conf $(DST_CFGDIR)/weewx.conf-$(PKG_VERSION)
 
 # create the entry points
 	for f in $(ENTRIES); do \
-cat $(SRC)/bin/$$f | sed \
-  -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
-  -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
-  > $(DST)/usr/bin/$$f; \
+  sed \
+ -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
+ -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
+ $(SRC)/bin/$$f > $(DST)/usr/bin/$$f; \
 done
 
 # the defaults file indicates which python and weewx to use
-	cat $(SRC)/pkg/etc/default/weewx | sed \
+	sed \
  -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
- > $(DST)/etc/default/weewx
+ $(SRC)/pkg/etc/default/weewx > $(DST)/etc/default/weewx
 
 # additional debian control files that dpkg-buildpackage seems to ignore
 	mkdir -p $(DST)/DEBIAN

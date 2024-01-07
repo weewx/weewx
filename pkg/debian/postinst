@@ -268,10 +268,10 @@ create_user() {
 setup_init() {
     if [ "$1" = "systemd" -a -d /usr/lib/systemd/system ]; then
         for f in weewx.service weewx@.service; do
-            cat /etc/weewx/systemd/$f | sed \
+            sed \
  -e "s/User=.*/User=${WEEWX_USER}/" \
  -e "s/Group=.*/Group=${WEEWX_GROUP}/" \
- > /usr/lib/systemd/system/$f
+ /etc/weewx/systemd/$f > /usr/lib/systemd/system/$f
         done
         systemctl daemon-reload
     elif [ "$1" = "init" ]; then
@@ -299,9 +299,9 @@ start_weewx() {
 # put the udev rules in place
 setup_udev() {
     if [ -d /usr/lib/udev/rules.d ]; then
-        cat /etc/weewx/udev/weewx.rules | sed \
+        sed \
  -e "s/GROUP=\"weewx\"/GROUP=\"${WEEWX_GROUP}\"/" \
- > /usr/lib/udev/rules.d/60-weewx.rules
+ /etc/weewx/udev/weewx.rules > /usr/lib/udev/rules.d/60-weewx.rules
     fi
 }
 

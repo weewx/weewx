@@ -106,27 +106,27 @@ mkdir %{buildroot}%{dst_cfg_dir}/udev
 cp pkg/etc/udev/rules.d/weewx.rules %{buildroot}%{dst_cfg_dir}/udev
 
 # create the weewx configuration
-cat src/weewx_data/weewx.conf | sed \
+sed \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
  -e 's:HTML_ROOT = public_html:HTML_ROOT = %{html_root}:' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
- > %{buildroot}%{dst_cfg_dir}/weewx.conf
+ src/weewx_data/weewx.conf > %{buildroot}%{dst_cfg_dir}/weewx.conf
 
 # make a copy of the generic configuration file
 cp %{buildroot}%{dst_cfg_dir}/weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf-%{weewx_version}
 
 # create the entry points
 for f in %{entry_points}; do \
-  cat bin/$f | sed \
-   -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
-   -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=%{python}%' \
-   > %{buildroot}%{_bindir}/$f; \
+    sed \
+ -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
+ -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=%{python}%' \
+ bin/$f > %{buildroot}%{_bindir}/$f; \
 done
 
 # configure defaults
-cat pkg/etc/default/weewx | sed \
+    sed \
  -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=%{python}%' \
- > %{buildroot}/etc/default/weewx
+ pkg/etc/default/weewx > %{buildroot}/etc/default/weewx
 
 
 %pre
@@ -157,7 +157,7 @@ precompile() {
     %{python} -m compileall %{dst_code_dir} > /dev/null
 }
 
-# get the version number from the specified file, without the debian revisions
+# get the version number from the specified file, without the rpm revisions
 get_conf_version() {
     v=$(grep '^version.*=' $1 | sed -e 's/\s*version\s*=\s*//' | sed -e 's/-.*//')
     if [ "$v" = "" ]; then
@@ -182,21 +182,21 @@ if [ -d /run/systemd/system ]; then
 fi
 # install the init files
 if [ -d %{systemd_dir} ]; then
-    cat %{dst_cfg_dir}/systemd/weewx.service | sed \
+    sed \
  -e "s/User=.*/User=${WEEWX_USER}/" \
  -e "s/Group=.*/Group=${WEEWX_GROUP}/" \
- > %{systemd_dir}/weewx.service
-    cat %{dst_cfg_dir}/systemd/weewx@.service | sed \
+ %{dst_cfg_dir}/systemd/weewx.service > %{systemd_dir}/weewx.service
+    sed \
  -e "s/User=.*/User=${WEEWX_USER}/" \
  -e "s/Group=.*/Group=${WEEWX_GROUP}/" \
- > %{systemd_dir}/weewx@.service
+ %{dst_cfg_dir}/systemd/weewx@.service > %{systemd_dir}/weewx@.service
 fi
 
 # install the udev rules
 if [ -d %{udev_dir} ]; then
-    cat %{dst_cfg_dir}/udev/weewx.rules | sed \
+    sed \
  -e "s/GROUP=\"weewx\"/GROUP=\"{$WEEWX_GROUP}\"/" \
- > %{udev_dir}/60-weewx.rules
+ %{dst_cfg_dir}/udev/weewx.rules > %{udev_dir}/60-weewx.rules
 fi
 
 # copy the skins if there are not already skins in place
