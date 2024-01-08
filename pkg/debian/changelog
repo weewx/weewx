@@ -1,3 +1,6 @@
+weewx (5.0.0rc3-2) unstable; urgency=low
+  * change ownership of database and report directories unconditionally
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Mon, 08 Jan 2024 14:41:13 -0500
 weewx (5.0.0rc3-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sun, 07 Jan 2024 13:32:38 -0500
