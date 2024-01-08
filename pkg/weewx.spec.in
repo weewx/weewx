@@ -217,18 +217,16 @@ if [ ! -d %{dst_user_dir} ]; then
 fi
 
 # create database directory
-if [ ! -d /var/lib/weewx ]; then
-    mkdir -p /var/lib/weewx
-    chown -R $WEEWX_USER /var/lib/weewx
-    chgrp -R $WEEWX_GROUP /var/lib/weewx
-fi
+mkdir -p /var/lib/weewx
+chmod 2775 /var/lib/weewx
+chown -R $WEEWX_USER /var/lib/weewx
+chgrp -R $WEEWX_GROUP /var/lib/weewx
 
 # create the reports directory
-if [ ! -d /var/www/html/weewx ]; then
-    mkdir -p /var/www/html/weewx
-    chown -R $WEEWX_USER /var/www/html/weewx
-    chgrp -R $WEEWX_GROUP /var/www/html/weewx
-fi
+mkdir -p /var/www/html/weewx
+chmod 2775 /var/www/html/weewx
+chown -R $WEEWX_USER /var/www/html/weewx
+chgrp -R $WEEWX_GROUP /var/www/html/weewx
 
 if [ "$1" = "1" ]; then
   # this is a new installation

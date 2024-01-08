@@ -359,20 +359,16 @@ setup_user_dir() {
 
 # create the database directory
 setup_database_dir() {
-    if [ ! -d $WEEWX_HOME ]; then
-        mkdir -p $WEEWX_HOME
-        chmod 2775 $WEEWX_HOME
-        chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HOME
-    fi
+    mkdir -p $WEEWX_HOME
+    chmod 2775 $WEEWX_HOME
+    chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HOME
 }
 
 # create the reporting directory
 setup_reporting_dir() {
-    if [ ! -d $WEEWX_HTML ]; then
-        mkdir -p $WEEWX_HTML
-        chmod 2775 $WEEWX_HTML
-        chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HTML
-    fi
+    mkdir -p $WEEWX_HTML
+    chmod 2775 $WEEWX_HTML
+    chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HTML
 }
 
 # set the permissions on the configuration, skins, and extensions
