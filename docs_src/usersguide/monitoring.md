@@ -23,14 +23,23 @@ On systems that use `SysV` init scripts, check it like this:
 When it is running properly, WeeWX will generate reports, typically every five
 minutes.  The reports are not (re)generated until data have been received and
 accumulated, so it could be a few minutes before you see a report or a change
-to a report. The location of the reports depends on the operating system and
-how WeeWX was installed.
+to a report.
 
-See `HTML_ROOT` in the [*Where to find things*](where.md) section.
+The location of the reports depends on the operating system and how WeeWX was
+installed. See `HTML_ROOT` in the [*Where to find things*](where.md) section.
+
+If everything is working, the report directory will contain a bunch of HTML
+and PNG files.  Some of these will be updated each archive interval, others
+will be updated less frequently, such as each day or week.
+
+You can view the reports directly with a web browser on the computer that is
+running WeeWX.  If the computer has no GUI, consider running a web server
+or pushing the reports to a computer that has a web server.  These options
+are explained in the section [*Web server integration*](webserver.md).
 
 Depending on the configuration, if WeeWX cannot get data from the sensors,
-then it will probably not generate any reports.  So if you do not see reports,
-check the log!
+then it will probably not generate or update any reports.  So if you do not
+see reports, or the reports are not changing, check the log!
 
 ## Log messages
 
