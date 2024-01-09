@@ -770,14 +770,8 @@ def station_upgrade(config_dict, dist_config_path=None, examples_root=None,
         return
 
     if 'config' in what:
-        # Update the config file. Note that the upgrade algorithms take an unadulterated version
-        # of the dictionaries, so reread them using ConfigObj:
-        stn_config_dict = configobj.ConfigObj(config_path,
-                                              encoding='utf-8',
-                                              interpolation=False,
-                                              file_error=True)
-        # Unless we've been given a path to the new configuration file, retrieve it from
-        # package resources.
+        # If a path to a distribution template has been provided, use that. Otherwise, retrieve
+        # from package resources
         if dist_config_path:
             dist_config_dict = configobj.ConfigObj(dist_config_path,
                                                    encoding='utf-8',
@@ -791,7 +785,7 @@ def station_upgrade(config_dict, dist_config_path=None, examples_root=None,
                                                        interpolation=False,
                                                        file_error=True)
 
-        weecfg.update_config.update_and_merge(stn_config_dict, dist_config_dict)
+        weecfg.update_config.update_and_merge(config_dict, dist_config_dict)
         print(f"Finished upgrading configuration file {config_path}")
         print(f"Saving configuration file {config_path}")
         # Save the updated config file with backup
