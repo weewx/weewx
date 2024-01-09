@@ -247,7 +247,7 @@ probably want to switch to using real hardware. This is how to reconfigure.
     sudo systemctl start weewx
     ```
 
-=== "sysV"
+=== "SysV"
 
     ```{ .shell .copy }
     # Stop the weewx daemon:
@@ -262,7 +262,7 @@ probably want to switch to using real hardware. This is how to reconfigure.
     sudo /etc/init.d/weewx start
     ```
 
-=== "FreeBSD"
+=== "BSD"
 
     ```{ .shell .copy }
     # Stop the weewx daemon:
@@ -320,14 +320,14 @@ WeeWX must be restarted for the changes to take effect.
     sudo systemctl restart weewx
     ```
 
-=== "sysV"
+=== "SysV"
 
     ```{ .shell .copy }
     sudo /etc/init.d/weewx stop
     sudo /etc/init.d/weewx start
     ```
 
-=== "FreeBSD"
+=== "BSD"
 
     ```{ .shell .copy }
     sudo service weewx stop
@@ -383,13 +383,13 @@ Before you uninstall, be sure that `weewxd` is not running.
     sudo systemctl stop weewx
     ```
 
-=== "sysV"
+=== "SysV"
 
     ```{ .shell .copy }
     sudo /etc/init.d/weewx stop
     ```
 
-=== "FreeBSD"
+=== "BSD"
 
     ```{ .shell .copy }
     sudo service weewx stop
