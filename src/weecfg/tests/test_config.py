@@ -370,7 +370,7 @@ class ExtensionInstallTest(unittest.TestCase):
         "Remove any installed test configuration"
         shutil.rmtree(self.weewx_root, ignore_errors=True)
 
-    def test_install(self):
+    def test_file_install(self):
         # Make sure the root dictionary got calculated correctly:
         self.assertEqual(self.engine.root_dict['WEEWX_ROOT'], '/var/tmp/wee_test')
         self.assertEqual(self.engine.root_dict['USER_DIR'], '/var/tmp/wee_test/bin/user')
@@ -414,6 +414,18 @@ class ExtensionInstallTest(unittest.TestCase):
 
         self.assertTrue(
             'user.pmon.ProcessMonitor' in test_dict['Engine']['Services']['process_services'])
+
+    def test_http_install(self):
+        self.engine.install_extension(
+            'https://github.com/chaunceygardiner/weewx-loopdata/releases/download/v3.3.2/weewx-loopdata-3.3.2.zip',
+            no_confirm=True)
+        # Test that it got installed correctly
+        self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['USER_DIR'],
+                                                    'loopdata.py')))
+        self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['USER_DIR'],
+                                                    'installer',
+                                                    'loopdata',
+                                                    'install.py')))
 
     def test_uninstall(self):
         # First install...
