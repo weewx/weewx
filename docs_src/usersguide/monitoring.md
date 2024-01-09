@@ -1,8 +1,9 @@
 # Monitoring WeeWX
 
 Whether you run `weewxd` directly or in the background, `weewxd` emits
-messages about its status and generates reports.  The status messages will
-help you diagnose problems.
+messages about its status and generates reports.  The following sections
+explain how to check the status of `weewxd`, locate and view the reports
+that it generates, and locate and view the log messages that it emits.
 
 ## Status
 
@@ -12,7 +13,7 @@ like this:
 ```{.shell .copy}
 systemctl status weewx
 ```
-On systems that use `sysV` init scripts, check it like this:
+On systems that use `SysV` init scripts, check it like this:
 ```{.shell .copy}
 /etc/init.d/weewx status
 ```

@@ -66,7 +66,7 @@ system to start and stop WeeWX.
     sudo systemctl stop weewx
     ```
 
-=== "sysV"
+=== "SysV"
 
     ```{ .shell .copy }
     # For Linux systems that use SysV init, e.g., Slackware, Devuan, Puppy
@@ -74,7 +74,7 @@ system to start and stop WeeWX.
     sudo /etc/init.d/weewx stop
     ```
 
-=== "FreeBSD"
+=== "BSD"
 
     ```{ .shell .copy }
     # For BSD systems, e.g., FreeBSD, OpenBSD
