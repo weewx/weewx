@@ -70,8 +70,8 @@ Linux Package Managers](https://packaging.python.org/en/latest/guides/installing
     _Tested with FreeBSD 13.2 and 14.0_
 
     _On BSD systems, it is easier to use the packaged py39-Pillow than it is
-    to do a pip install of Pillow, since the latter requires many other
-    development packages_
+    to do a pip install of Pillow into a virtual environment, since the latter
+    requires many other development packages_
 
 === "macOS"
 
@@ -181,7 +181,7 @@ Then follow the directions below to start `weewxd` as a daemon.
         as `root`, you will have to modify the unit file
         `/etc/systemd/system/weewx.service`.
     
-=== "sysV"
+=== "SysV"
 
     ```{ .shell .copy }
     # For Linux systems that use SysV init, e.g., Slackware, Devuan, and Puppy.
@@ -193,7 +193,7 @@ Then follow the directions below to start `weewxd` as a daemon.
         as `root`, you will have to modify the file
         `/etc/default/weewx`.
 
-=== "FreeBSD"
+=== "BSD"
 
     ```{ .shell .copy }
     # For BSD systems, e.g., FreeBSD and OpenBSD.
