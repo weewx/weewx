@@ -102,22 +102,6 @@ If you have any problems, see the wiki article
 [_Troubleshooting pip installs_](https://github.com/weewx/weewx/wiki/pip-troubleshooting)
 for help.
 
-!!! Note
-    If you plan to use MySQL or MariaDB with `sha256_password` or
-    `caching_sha2_password` authentication, you will also need to install the
-    module `cryptography`. On some operating systems this can be a bit of a
-    struggle, but the following usually works. The key step is to update `pip`
-    before trying the install.
-    
-    ```{.shell .copy}
-    # Activate the WeeWX virtual environment
-    source ~/weewx-venv/bin/activate
-    # Make sure pip is up-to-date
-    python3 -m pip install pip --upgrade
-    # Install cryptography
-    python3 -m pip install cryptography
-    ```
-
 ## Provision a new station
 
 While the instructions above install WeeWX, they do not set up the
