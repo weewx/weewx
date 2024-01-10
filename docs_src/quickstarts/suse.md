@@ -23,7 +23,7 @@ trust weewx.com, and know where to find the WeeWX releases.
 
     ```{.shell .copy}
     curl -s https://weewx.com/suse/weewx.repo | \
-        sudo tee /etc/zypper/repos.d/weewx.repo
+        sudo tee /etc/zypp/repos.d/weewx.repo
     ```
 
 
