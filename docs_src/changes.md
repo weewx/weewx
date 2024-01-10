@@ -4,7 +4,7 @@ WeeWX change history
 ### 5.0.0 MM/DD/YYYY
 
 Python 2.7 is no longer supported. You must have Python 3.6 (introduced
-December 2016) or greater.  WeeWX 5 uses the importlib.resources module,
+December 2016) or greater.  WeeWX 5 uses the module `importlib.resources`,
 which was introduced in Python 3.7. So those using Python 3.6 must install
 the backport, either using the system's package manager, or pip.
 
@@ -20,6 +20,12 @@ and `wee_config`. Try `weectl --help` to see how to use it.
 
 Individual reports can now be run using `weectl report run`. For example,
 `weectl report run MobileReport`.
+
+The extension installer can now install from an `http` address, not just a
+file or directory.
+
+When using `weectl database` with action `calc-missing`, the tranche size can
+now be set.
 
 Documentation now uses [MkDocs](https://www.mkdocs.org/). It is no longer included in the
 distribution, but can always be accessed online at https://weewx.com/docs.
@@ -2869,7 +2875,7 @@ Now does a CRC check on LOOP data.
 
 Changed VantagePro.accumulateLoop to make it slightly more robust.
 
-##1.9.2 11/20/10
+### 1.9.2 11/20/10
 
 Now catches exception of type OverflowError when calculating celsius
 dewpoint. (Despite the documentation indicating otherwise, math.log() can
