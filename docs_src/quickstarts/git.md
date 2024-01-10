@@ -34,7 +34,15 @@ Before starting, you must install the pre-requisite Python and Python modules.
     python3 -m pip install Pillow
     ```
 
-5. Depending on your situation, you may want to install these additional
+5. If you are running Python 3.6, you must install a backport to allow 
+importation of package resources:
+
+    ``` {.shell .copy}
+    # for Python 3.6 only:
+    python3 -m pip install importlib-resources
+    ```
+
+6. Depending on your situation, you may want to install these additional
 dependencies:
 
     ``` {.shell .copy}
