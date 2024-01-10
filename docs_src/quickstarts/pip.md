@@ -70,8 +70,8 @@ Linux Package Managers](https://packaging.python.org/en/latest/guides/installing
     _Tested with FreeBSD 13.2 and 14.0_
 
     _On BSD systems, it is easier to use the packaged py39-Pillow than it is
-    to do a pip install of Pillow, since the latter requires many other
-    development packages_
+    to do a pip install of Pillow into a virtual environment, since the latter
+    requires many other development packages_
 
 === "macOS"
 
@@ -181,7 +181,7 @@ Then follow the directions below to start `weewxd` as a daemon.
         as `root`, you will have to modify the unit file
         `/etc/systemd/system/weewx.service`.
     
-=== "sysV"
+=== "SysV"
 
     ```{ .shell .copy }
     # For Linux systems that use SysV init, e.g., Slackware, Devuan, and Puppy.
@@ -193,7 +193,7 @@ Then follow the directions below to start `weewxd` as a daemon.
         as `root`, you will have to modify the file
         `/etc/default/weewx`.
 
-=== "FreeBSD"
+=== "BSD"
 
     ```{ .shell .copy }
     # For BSD systems, e.g., FreeBSD and OpenBSD.
@@ -247,7 +247,7 @@ probably want to switch to using real hardware. This is how to reconfigure.
     sudo systemctl start weewx
     ```
 
-=== "sysV"
+=== "SysV"
 
     ```{ .shell .copy }
     # Stop the weewx daemon:
@@ -262,7 +262,7 @@ probably want to switch to using real hardware. This is how to reconfigure.
     sudo /etc/init.d/weewx start
     ```
 
-=== "FreeBSD"
+=== "BSD"
 
     ```{ .shell .copy }
     # Stop the weewx daemon:
@@ -320,14 +320,14 @@ WeeWX must be restarted for the changes to take effect.
     sudo systemctl restart weewx
     ```
 
-=== "sysV"
+=== "SysV"
 
     ```{ .shell .copy }
     sudo /etc/init.d/weewx stop
     sudo /etc/init.d/weewx start
     ```
 
-=== "FreeBSD"
+=== "BSD"
 
     ```{ .shell .copy }
     sudo service weewx stop
@@ -383,13 +383,13 @@ Before you uninstall, be sure that `weewxd` is not running.
     sudo systemctl stop weewx
     ```
 
-=== "sysV"
+=== "SysV"
 
     ```{ .shell .copy }
     sudo /etc/init.d/weewx stop
     ```
 
-=== "FreeBSD"
+=== "BSD"
 
     ```{ .shell .copy }
     sudo service weewx stop

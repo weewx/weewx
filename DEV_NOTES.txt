@@ -340,6 +340,22 @@ separately from the system's python, as well as the non-linux, non-pip
 installations.
 
 
+signing packages --------------------------------------------------------------
+
+gpg is used to sign the deb and rpm packages.  SHA1 is no longer acceptable for
+signing, so use SHA256 instead.  this should be the default when building on
+redhat9 and later.  if it is not the default, then it can be forced with a
+change to the signing macro in .rpmmacros - add the line --digest-algo sha256
+
+%__gpg_sign_cmd			%{__gpg} \
+	gpg --no-verbose --no-armor \
+	%{?_gpg_digest_algo:--digest-algo %{_gpg_digest_algo}} \
+	--no-secmem-warning \
+	--digest-algo sha256 \
+	%{?_gpg_sign_cmd_extra_args:%{_gpg_sign_cmd_extra_args}} \
+	-u "%{_gpg_name}" -sbo %{__signature_filename} %{__plaintext_filename}
+
+
 unit tests --------------------------------------------------------------------
 
 prerequisites:

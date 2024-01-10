@@ -116,14 +116,22 @@ class ExtensionEngine(object):
             import tempfile
             # Download the file into a temporary file
             with tempfile.NamedTemporaryFile() as test_fd:
+                # "filename" is a string with the path to the downloaded file;
+                # "info" is an instance of http.client.HTTPMessage.
                 filename, info = urllib.request.urlretrieve(extension_path, test_fd.name)
-                # Now install the temporary file. The file type can be found in the download
-                # header's "subtype". This will be something like "zip".
-                extension_name = self._install_from_file(test_fd.name, info.get_content_subtype())
+                downloaded_name = info.get_filename()
+                if not downloaded_name:
+                    raise IOError(f"Unknown extension type found at '{extension_path}'")
+                # Something like weewx-loopdata-3.3.2.zip
+                if downloaded_name.endswith('.zip'):
+                    filetype = 'zip'
+                else:
+                    filetype = 'tar'
+                extension_name = self._install_from_file(test_fd.name, filetype)
         elif os.path.isfile(extension_path):
             # It's a file. Figure out what kind, then install. If it's not a zipfile, assume
             # it's a tarfile.
-            if extension_path[-4:] == '.zip':
+            if extension_path.endswith('.zip'):
                 filetype = 'zip'
             else:
                 filetype = 'tar'

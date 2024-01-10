@@ -24,7 +24,7 @@ used by WeeWX are in that repository.
 2. Tell `yum` where to find the WeeWX repository.
 
     ```{.shell .copy}
-    curl -s https://weewx.com/yum/weewx-el9.repo | \
+    curl -s https://weewx.com/yum/weewx.repo | \
         sudo tee /etc/yum.repos.d/weewx.repo
     ```
 

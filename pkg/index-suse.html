@@ -52,11 +52,7 @@ h2 {
 
 <h2>Tell zypper where to find the WeeWX repository</h2>
 
-For SUSE15 (WeeWX5 and Python3):
-<pre class='tty'>curl -s http://weewx.com/suse/weewx-suse15.repo | sudo tee /etc/zypp/repos.d/weewx.repo</pre>
-
-For SUSE12 (WeeWX4 and Python2):
-<pre class='tty'>curl -s http://weewx.com/suse/weewx-suse12.repo | sudo tee /etc/zypp/repos.d/weewx.repo</pre>
+<pre class='tty'>curl -s http://weewx.com/suse/weewx.repo | sudo tee /etc/zypp/repos.d/weewx.repo</pre>
 
 <h2>Install weeWX</h2>
 <pre class='tty'>sudo zypper install weewx</pre>

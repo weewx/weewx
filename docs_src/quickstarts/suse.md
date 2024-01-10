@@ -22,8 +22,8 @@ trust weewx.com, and know where to find the WeeWX releases.
 2. Tell `zypper` where to find the WeeWX repository.
 
     ```{.shell .copy}
-    curl -s https://weewx.com/suse/weewx-suse15.repo | \
-        sudo tee /etc/zypp/repos.d/weewx.repo
+    curl -s https://weewx.com/suse/weewx.repo | \
+        sudo tee /etc/zypper/repos.d/weewx.repo
     ```
 
 
