@@ -8,7 +8,7 @@ someone else has already solved.
 [Software problems](software.md)<br/>
 [Meteorological problems](meteo.md)
 
-Be sure to search the
+Read the [Frequently Asked Questions](https://github.com/weewx/weewx/wiki/WeeWX-Frequently-Asked-Questions) (FAQ).  Search the
 [weewx-user group](https://groups.google.com/g/weewx-user), especially
 if you are using a driver or skin that is not part of the WeeWX core.
 
