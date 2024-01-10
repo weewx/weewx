@@ -45,7 +45,7 @@ other stations.
 ## Running as a daemon
 
 For unattended operations it is best to have WeeWX run as a daemon, so that
-it is started automatically when the computer is rebooted.
+it is started automatically when the computer starts up.
 
 If you installed WeeWX from DEB or RPM package, the daemon configuration is
 done automatically; the installer finishes with WeeWX running in the

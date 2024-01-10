@@ -6,15 +6,36 @@ help you diagnose problems.
 
 ## Status
 
-If WeeWX is running in the background, you can use the system's `init` tools
-to check the status.  For example, on systems that use `systemd`, check it
-like this:
-```{.shell .copy}
-systemctl status weewx
+If WeeWX was configured to run as a daemon, you can use the system's `init`
+tools to check the status.
+
+=== "systemd"
+
+    ```{ .shell .copy }
+    # For Linux systems that use systemd, e.g., Debian, Redhat, SUSE
+    sudo systemctl status weewx
+    ```
+
+=== "sysV"
+
+    ```{ .shell .copy }
+    # For Linux systems that use SysV init, e.g., Slackware, Devuan, Puppy
+    sudo /etc/init.d/weewx status
+    ```
+
+=== "BSD"
+
+    ```{ .shell .copy }
+    # For BSD systems, e.g., FreeBSD, OpenBSD
+    sudo service weewx status
+    ```
+
+Another way to see whether WeeWX is running is the `ps` tool.  For example,
+this will tell you whether `weewxd` is running, and if it is, you will see the
+additional information including process identifier (PID), memory used, and
+how long it has been running.
 ```
-On systems that use `sysV` init scripts, check it like this:
-```{.shell .copy}
-/etc/init.d/weewx status
+ps aux | grep weewxd
 ```
 
 ## Reports
