@@ -31,11 +31,12 @@ tools to check the status.
     sudo service weewx status
     ```
 
-Another way to see whether WeeWX is running is the `ps` tool.  For example,
-this will tell you whether `weewxd` is running, and if it is, you will see the
-additional information including process identifier (PID), memory used, and
-how long it has been running.
-```
+Another way to see whether WeeWX is running a process monitoring tool such as
+`ps`, `top`, or `htop`.  For example, the following command will tell you
+whether `weewxd` is running, and if it is, you will see the additional
+information including process identifier (PID), memory used, and how long it
+has been running.
+```{ .shell .copy }
 ps aux | grep weewxd
 ```
 
