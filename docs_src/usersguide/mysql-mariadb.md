@@ -88,6 +88,6 @@ to whatever MySQL user you choose. Here are the necessary minimum permissions,
 again assuming user `weewx` with password `weewx`. Adjust as necessary.
 
 ``` {.sql .copy}
-mysql> CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
-mysql> GRANT select, update, create, delete, insert, alter, drop ON weewx.* TO weewx@localhost;
+CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
+GRANT select, update, create, delete, insert, alter, drop ON weewx.* TO weewx@localhost;
 ```
