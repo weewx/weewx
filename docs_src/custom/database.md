@@ -75,10 +75,10 @@ If you did a Debian install, here's how you would do this:
 
 ``` shell
  # Copy the wview_small schema over to the user subdirectory and rename it myschema:
-sudo cp /usr/share/weewx/schemas/wview_small.py /usr/share/weewx/user/myschema.py
+sudo cp /usr/share/weewx/schemas/wview_small.py /etc/weewx/bin/user/myschema.py
 
  # Edit it using your favorite text editor
-sudo nano /usr/share/weewx/user/myschema.py
+sudo nano /etc/weewx/bin/user/myschema.py
 ```
 
 If you did a pip install, it can be difficult to find the starting schema
@@ -162,9 +162,9 @@ There are two ways to do this. Both are covered below.
     way, This choice is best for large modifications.
 
 !!! Warning
-    Before using `weectl database`, MAKE A BACKUP FIRST!
+    Before using `weectl database`, MAKE A BACKUP!
 
-    Be sure to stop `weewxd` first.
+    Be sure to stop `weewxd` before making any changes to the database.
 
 ### Modify the database *in situ*
 
