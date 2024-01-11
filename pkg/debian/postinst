@@ -317,7 +317,7 @@ setup_init() {
         done
         systemctl daemon-reload
     elif [ "$1" = "init" ]; then
-        echo "Installing SysV rc"
+        echo "Installing SysV rc script"
         cp /etc/weewx/init.d/weewx-multi /etc/init.d/weewx
         chmod 755 /etc/init.d/weewx
     fi

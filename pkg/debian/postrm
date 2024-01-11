@@ -27,6 +27,7 @@ case "$1" in
 remove)
     # remove the startup configuration
     if [ "$pid1" = "systemd" ]; then
+        echo "Removing systemd units"
         systemctl disable weewx > /dev/null
         for f in weewx.service weewx@.service; do
 	    if [ -f /usr/lib/systemd/system/$f ]; then
@@ -34,6 +35,7 @@ remove)
 	    fi
         done
     elif [ "$pid1" = "init" ]; then
+        echo "Removing SysV rc script"
         update-rc.d weewx remove > /dev/null
         if [ -f /etc/init.d/weewx ]; then
             rm /etc/init.d/weewx
@@ -41,6 +43,7 @@ remove)
     fi
     # remove udev rules
     if [ -f /usr/lib/udev/rules.d/60-weewx.rules ]; then
+        echo "Removing udev rules"
         rm -f /usr/lib/udev/rules.d/60-weewx.rules
     fi
     ;;
