@@ -231,6 +231,15 @@ merge_weewxconf() {
     fi
 }
 
+# precompile the bytecode
+precompile() {
+    rc=$(python3 -m compileall -q -x 'user' /usr/share/weewx)
+    if [ "$rc" != "" ]; then
+        echo "Pre-compile failed!"
+        echo "$rc"
+    fi
+}
+
 # get the version number from the specified file, without the debian revisions
 get_conf_version() {
     v=$(grep '^version.*=' $1 | sed -e 's/\s*version\s*=\s*//' | sed -e 's/-.*//')
@@ -425,12 +434,8 @@ case "$1" in
         setup_user_dir
         setup_database_dir
         setup_reporting_dir
-
-        # precompile the bytecode
-        python3 -m compileall /usr/share/weewx > /dev/null
-
+        precompile
         set_permissions
-
         enable_init $pid1
         start_weewx $pid1
         ;;

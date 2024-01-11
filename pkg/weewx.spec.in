@@ -148,7 +148,11 @@ fi
 
 %post
 precompile() {
-    %{python} -m compileall %{dst_code_dir} > /dev/null
+    rc=$(%{python} -m compileall -q -x 'user' %{dst_code_dir})
+    if [ "$rc" != "" ]; then
+        echo "Pre-compile failed!"
+        echo "$rc"
+    fi
 }
 
 # get the version number from the specified file, without the rpm revisions
