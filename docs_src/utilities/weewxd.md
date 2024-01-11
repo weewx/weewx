@@ -14,14 +14,14 @@ Specify `--help` to see how it is used:
 weewxd --help
 ```
 ```
-usage: weewxd.py --help
-       weewxd.py --version
-       weewxd.py [FILENAME|--config=FILENAME]
-                 [--daemon]
-                 [--pidfile=PIDFILE]
-                 [--exit]
-                 [--loop-on-init]
-                 [--log-label=LABEL]
+usage: weewxd --help
+       weewxd --version
+       weewxd [FILENAME|--config=FILENAME]
+              [--daemon]
+              [--pidfile=PIDFILE]
+              [--exit]
+              [--loop-on-init]
+              [--log-label=LABEL]
 
 The main entry point for WeeWX. This program will gather data from your
 station, archive its data, then generate reports.
