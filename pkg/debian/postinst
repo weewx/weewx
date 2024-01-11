@@ -246,12 +246,16 @@ get_user() {
         WEEWX_USER=$(stat -c "%U" $WEEWX_HOME)
         WEEWX_GROUP=$(stat -c "%G" $WEEWX_HOME)
     fi
+    echo "Using $WEEWX_USER:$WEEWX_GROUP as user:group"
 }
 
-# create/modify the defaults file to match this installation
+# create/modify the defaults file to match this installation.  if the file does
+# not exist, then create it with our values.  otherwise, put our values in if
+# the variables have not yet been specified.
 setup_defaults() {
     dflts=/etc/default/weewx
     if [ ! -f $dflts ]; then
+        echo "Creating /etc/default/weewx"
         echo "WEEWX_PYTHON=python3" > $dflts
         echo "WEEWX_BINDIR=/usr/share/weewx" >> $dflts
     else
@@ -263,24 +267,16 @@ setup_defaults() {
 
     # the SysV rc script uses additional variables, so set values for them
     if [ "$1" = "init" ]; then
-        if [ ! -f $dflts ]; then
+        grep -q "^WEEWX_CFGDIR=" $dflts || \
             echo "WEEWX_CFGDIR=/etc/weewx" >> $dflts
+        grep -q "^WEEWX_RUNDIR=" $dflts || \
             echo "WEEWX_RUNDIR=/var/lib/weewx" >> $dflts
+        grep -q "^WEEWX_USER=" $dflts || \
             echo "WEEWX_USER=$WEEWX_USER" >> $dflts
+        grep -q "^WEEWX_GROUP=" $dflts || \
             echo "WEEWX_GROUP=$WEEWX_GROUP" >> $dflts
+        grep -q "^WEEWX_INSTANCES=" $dflts || \
             echo "WEEWX_INSTANCES=\"weewx\"" >> $dflts
-        else
-            grep -q "^WEEWX_CFGDIR=" $dflts || \
-                echo "WEEWX_CFGDIR=/etc/weewx" >> $dflts
-            grep -q "^WEEWX_RUNDIR=" $dflts || \
-                echo "WEEWX_RUNDIR=/var/lib/weewx" >> $dflts
-            grep -q "^WEEWX_USER=" $dflts || \
-                echo "WEEWX_USER=$WEEWX_USER" >> $dflts
-            grep -q "^WEEWX_GROUP=" $dflts || \
-                echo "WEEWX_GROUP=$WEEWX_GROUP" >> $dflts
-            grep -q "^WEEWX_INSTANCES=" $dflts || \
-                echo "WEEWX_INSTANCES=\"weewx\"" >> $dflts
-        fi
     fi
 }
 
@@ -303,6 +299,7 @@ create_user() {
 # put the init files in place
 setup_init() {
     if [ "$1" = "systemd" -a -d /usr/lib/systemd/system ]; then
+        echo "Installing systemd units"
         for f in weewx.service weewx@.service; do
             sed \
  -e "s/User=.*/User=${WEEWX_USER}/" \
@@ -311,12 +308,14 @@ setup_init() {
         done
         systemctl daemon-reload
     elif [ "$1" = "init" ]; then
+        echo "Installing SysV rc"
         cp /etc/weewx/init.d/weewx-multi /etc/init.d/weewx
         chmod 755 /etc/init.d/weewx
     fi
 }
 
 enable_init() {
+    echo "Enabling startup using $1"
     if [ "$1" = "systemd" ]; then
 	systemctl enable weewx > /dev/null
     elif [ "$1" = "init" ]; then
@@ -325,6 +324,7 @@ enable_init() {
 }
 
 start_weewx() {
+    echo "Starting weewxd using $1"
     if [ "$1" = "systemd" ]; then
 	systemctl start weewx
     elif [ "$1" = "init" ]; then
@@ -335,6 +335,7 @@ start_weewx() {
 # put the udev rules in place
 setup_udev() {
     if [ -d /usr/lib/udev/rules.d ]; then
+        echo "Installing udev rules"
         sed \
  -e "s/GROUP=\"weewx\"/GROUP=\"${WEEWX_GROUP}\"/" \
  /etc/weewx/udev/weewx.rules > /usr/lib/udev/rules.d/60-weewx.rules
@@ -344,6 +345,7 @@ setup_udev() {
 # create the skins if skins do not already exist
 setup_skins() {
     if [ ! -d /etc/weewx/skins ]; then
+        echo "Creating skins directory /etc/weewx/skins"
         cp -rp /usr/share/weewx/weewx_data/skins /etc/weewx
     fi
 }
@@ -351,6 +353,7 @@ setup_skins() {
 # create the user extensions directory if one does not already exist
 setup_user_dir() {
     if [ ! -d $WEEWX_USERDIR ]; then
+        echo "Creating user extension directory $WEEWX_USERDIR"
         mkdir -p $WEEWX_USERDIR
         cp /usr/share/weewx/weewx_data/bin/user/__init__.py $WEEWX_USERDIR
         cp /usr/share/weewx/weewx_data/bin/user/extensions.py $WEEWX_USERDIR
@@ -359,6 +362,7 @@ setup_user_dir() {
 
 # create the database directory
 setup_database_dir() {
+    echo "Configuring database directory $WEEWX_HOME"
     mkdir -p $WEEWX_HOME
     chmod 2775 $WEEWX_HOME
     chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HOME
@@ -366,6 +370,7 @@ setup_database_dir() {
 
 # create the reporting directory
 setup_reporting_dir() {
+    echo "Configuring reporting directory $WEEWX_HTML"
     mkdir -p $WEEWX_HTML
     chmod 2775 $WEEWX_HTML
     chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HTML
@@ -373,6 +378,7 @@ setup_reporting_dir() {
 
 # set the permissions on the configuration, skins, and extensions
 set_permissions() {
+    echo "Setting permissions $WEEWX_USER:$WEEWX_GROUP on /etc/weewx"
     chown -R $WEEWX_USER:$WEEWX_GROUP /etc/weewx
 }
 
