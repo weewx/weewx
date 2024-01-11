@@ -1,3 +1,6 @@
+weewx (5.0.0rc3-3) unstable; urgency=low
+  * added output to postinst to aid failure diagnostics
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Wed, 10 Jan 2024 20:24:04 -0500
 weewx (5.0.0rc3-2) unstable; urgency=low
   * change ownership of database and report directories unconditionally
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Mon, 08 Jan 2024 14:41:13 -0500
