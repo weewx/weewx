@@ -14,6 +14,7 @@
 # abort if any command returns error
 set -e
 
+# see which init system is running
 pid1=none
 if [ -d /run/systemd/system ]; then
     pid1=systemd

@@ -307,15 +307,22 @@ create_user() {
 
 # put the init files in place
 setup_init() {
-    if [ "$1" = "systemd" -a -d /usr/lib/systemd/system ]; then
-        echo "Installing systemd units"
-        for f in weewx.service weewx@.service; do
-            sed \
+    if [ "$1" = "systemd" ]; then
+        # prefer /usr/lib but fall back to /usr
+        dst="/usr/lib/systemd/system"
+        if [ ! -d $dst ]; then
+            dst="/lib/systemd/system"
+        fi
+        if [ -d $dst ]; then
+            echo "Installing systemd units"
+            for f in weewx.service weewx@.service; do
+                sed \
  -e "s/User=.*/User=${WEEWX_USER}/" \
  -e "s/Group=.*/Group=${WEEWX_GROUP}/" \
- /etc/weewx/systemd/$f > /usr/lib/systemd/system/$f
-        done
-        systemctl daemon-reload
+ /etc/weewx/systemd/$f > $dst/$f
+            done
+            systemctl daemon-reload
+        fi
     elif [ "$1" = "init" ]; then
         echo "Installing SysV rc script"
         cp /etc/weewx/init.d/weewx-multi /etc/init.d/weewx
@@ -343,11 +350,16 @@ start_weewx() {
 
 # put the udev rules in place
 setup_udev() {
-    if [ -d /usr/lib/udev/rules.d ]; then
+    # prefer /usr/lib but fall back to /lib
+    dst=/usr/lib/udev/rules.d
+    if [ ! -d $dst ]; then
+        dst=/lib/udev/rules.d
+    fi
+    if [ -d $dst ]; then
         echo "Installing udev rules"
         sed \
  -e "s/GROUP=\"weewx\"/GROUP=\"${WEEWX_GROUP}\"/" \
- /etc/weewx/udev/weewx.rules > /usr/lib/udev/rules.d/60-weewx.rules
+ /etc/weewx/udev/weewx.rules > $dst/60-weewx.rules
     fi
 }
 
@@ -405,6 +417,7 @@ migrate_extensions() {
 }
 
 
+# see which init system is running
 pid1=none
 if [ -d /run/systemd/system ]; then
     pid1=systemd
