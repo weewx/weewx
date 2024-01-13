@@ -1,9 +1,17 @@
 # udev rules for hardware recognized by weewx
-# make recognized devices accessible to non-root users
+# The rules in this file make recognized devices accessible to non-root users.
 #
-# copy this file to /etc/udev/rules.d
-# sudo udevadm control --reload-rules
-# unplug then replug the USB device
+# Copy this file to /etc/udev/rules.d/60-weewx.rules
+#
+# To load the rules manually:
+#   sudo udevadm control --reload-rules
+#   sudo udevadm trigger
+# If udevadm does not work, you may have to unplug then replug the USB device
+#
+# To inspect the attributes of devices:
+#   lsusb
+#   sudo udevadm info --attribute-walk --name /dev/bus/usb/XXX/YYY
+# Where XXX and YYY are obtained from the lsusb output
 
 # acurite
 SUBSYSTEM=="usb",ATTRS{idVendor}=="24c0",ATTRS{idProduct}=="0003",MODE="0666"

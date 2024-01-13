@@ -1,10 +1,4 @@
 # udev rules for hardware recognized by weewx
-#
-# copy this file to /etc/udev/rules.d
-# sudo udevadm control --reload-rules
-# unplug then replug the USB device
-#
-# these rules make the weather stations read/write to the weewx group
 
 # acurite
 SUBSYSTEM=="usb",ATTRS{idVendor}=="24c0",ATTRS{idProduct}=="0003",MODE="0664",GROUP="weewx"
