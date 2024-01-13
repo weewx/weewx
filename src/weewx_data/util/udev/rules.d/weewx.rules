@@ -6,7 +6,7 @@
 # unplug then replug the USB device
 
 # acurite
-SUBSYSTEM=="usb",ATTRS{idVendor}=="24C0",ATTRS{idProduct}=="0003",MODE="0666"
+SUBSYSTEM=="usb",ATTRS{idVendor}=="24c0",ATTRS{idProduct}=="0003",MODE="0666"
 
 # fine offset usb
 SUBSYSTEM=="usb",ATTRS{idVendor}=="1941",ATTRS{idProduct}=="8021",MODE="0666"

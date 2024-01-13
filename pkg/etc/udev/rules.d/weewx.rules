@@ -7,7 +7,7 @@
 # these rules make the weather stations read/write to the weewx group
 
 # acurite
-SUBSYSTEM=="usb",ATTRS{idVendor}=="24C0",ATTRS{idProduct}=="0003",MODE="0664",GROUP="weewx"
+SUBSYSTEM=="usb",ATTRS{idVendor}=="24c0",ATTRS{idProduct}=="0003",MODE="0664",GROUP="weewx"
 
 # fine offset usb
 SUBSYSTEM=="usb",ATTRS{idVendor}=="1941",ATTRS{idProduct}=="8021",MODE="0664",GROUP="weewx"
