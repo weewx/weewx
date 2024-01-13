@@ -1,3 +1,7 @@
+weewx (5.0.0rc3-5) unstable; urgency=low
+  * provide feedback about existing systemd/sysv configurations
+  * prefer /usr/lib but fall back to /lib
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 13 Jan 2024 11:02:21 -0500
 weewx (5.0.0rc3-4) unstable; urgency=low
   * fix for pre-compile fails
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Wed, 10 Jan 2024 23:57:51 -0500

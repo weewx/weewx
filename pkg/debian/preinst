@@ -1,19 +1,44 @@
 #!/bin/sh
 # preinst script for weewx debian package
-# Copyright 2014 Matthew Wall
+# Copyright 2014-2024 Matthew Wall
 
 # abort if any command returns error
 set -e
 
-# get debconf stuff so we can set configuration defaults
-. /usr/share/debconf/confmodule
+check_init() {
+    files=""
+    if [ "$1" = "systemd" ]; then
+        filelist="/etc/init.d/weewx-multi /etc/init.d/weewx /etc/systemd/system/weewx.service"
+    elif [ "$1" = "init" ]; then
+        filelist="/etc/init.d/weewx-multi"
+    fi
+    for f in $filelist; do
+        if [ -f $f ]; then
+            files="$files $f"
+        fi
+    done
+    if [ "$files" != "" ]; then
+        echo "The following files might interfere with the init configuration:"
+        for f in $files; do
+            echo "  $f"
+        done
+    fi
+}
+
+pid1=none
+if [ -d /run/systemd/system ]; then
+    pid1=systemd
+else
+    pid1=init
+fi
 
 case "$1" in
-     install|upgrade)
-     ;;
+    install|upgrade)
+        check_init $pid1
+    ;;
 
-     abort-upgrade)
-     ;;
+    abort-upgrade)
+    ;;
 esac
 
 #DEBHELPER#
