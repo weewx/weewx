@@ -22,6 +22,7 @@ import weeutil.logger
 import weeutil.weeutil
 import weewx
 import weewx.accum
+import weewx.manager
 import weewx.reportengine
 import weewx.station
 import weewx.units
