@@ -9,3 +9,5 @@ use one of our _Quickstart guides_:
 * [SUSE](suse.md) - including openSUSE. Uses `zypper`.
 * [pip](pip.md) - any operating system. Uses `pip`
 * [git](git.md) - any operating system. Run directly from repository.
+
+For detailed installation instructions, see the [*Users guide*](../usersguide/installing.md)
