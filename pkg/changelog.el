@@ -1,3 +1,17 @@
+* Thu Jan 11 2024 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc3-3
+- there is no pre-built pyephem for redhat9 (as of 9.3)
+* Mon Jan 08 2024 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc3-2
+- change ownership of database and report directories unconditionally
+* Sun Jan 07 2024 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc3-1
+- new upstream release
+* Fri Dec 29 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc2-1
+- new upstream release
+* Thu Dec 28 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc1-3
+- do skins in post
+- do systemd units in post
+- do udev rules in post
+* Tue Dec 26 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc1-2
+- include ephem as a dependency
 * Thu Dec 21 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc1-1
 - new upstream release
 * Mon Dec 18 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b18-1

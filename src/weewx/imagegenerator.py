@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -45,8 +45,8 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
         # text_dict contains translated text strings
         self.text_dict = self.skin_dict.get('Texts', {})
         self.image_dict = self.skin_dict['ImageGenerator']
-        self.formatter  = weewx.units.Formatter.fromSkinDict(self.skin_dict)
-        self.converter  = weewx.units.Converter.fromSkinDict(self.skin_dict)
+        self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
+        self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
         # ensure that the skin_dir is in the image_dict
         self.image_dict['skin_dir'] = os.path.join(
             self.config_dict['WEEWX_ROOT'],
@@ -223,32 +223,26 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     log.error("Line type %s skipped", var_type)
                     continue
 
-            # we need to pass the line options and plotgen_ts to our xtype
-            # first get a copy of line_options
+            # We need to pass the line options and plotgen_ts to our xtype.
+            # First get a copy of line_options...
             option_dict = dict(line_options)
-            # but we need to pop off aggregate_type and
-            # aggregate_interval as they are used as explicit arguments
-            # in our xtypes call
+            # ...then pop off aggregate_type and aggregate_interval because they appear as explicit
+            # arguments in our xtypes call...
             option_dict.pop('aggregate_type', None)
             option_dict.pop('aggregate_interval', None)
-            # then add plotgen_ts
+            # ...then add plotgen_ts.
             option_dict['plotgen_ts'] = plotgen_ts
-            try:
-                start_vec_t, stop_vec_t, data_vec_t = weewx.xtypes.get_series(
-                    var_type,
-                    x_domain,
-                    db_manager,
-                    aggregate_type=aggregate_type,
-                    aggregate_interval=aggregate_interval,
-                    **option_dict)
-            except weewx.UnknownType:
-                # If skip_if_empty is set, it's OK if a type is unknown.
-                if not skip:
-                    raise
+            # Now we're ready to fetch the data
+            start_vec_t, stop_vec_t, data_vec_t = weewx.xtypes.get_series(
+                var_type,
+                x_domain,
+                db_manager,
+                aggregate_type=aggregate_type,
+                aggregate_interval=aggregate_interval,
+                **option_dict)
 
             # Get the type of plot ('bar', 'line', or 'vector')
             plot_type = line_options.get('plot_type', 'line').lower()
-
             if plot_type not in {'line', 'bar', 'vector'}:
                 log.error("Unknown plot type '%s'. Ignored", plot_type)
                 continue
@@ -367,7 +361,7 @@ def _skip_this_plot(time_ts, plot_options, img_file):
 
     # If we're on an aggregation boundary, regenerate.
     time_dt = datetime.datetime.fromtimestamp(time_ts)
-    tdiff = time_dt -  time_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    tdiff = time_dt - time_dt.replace(hour=0, minute=0, second=0, microsecond=0)
     if abs(tdiff.seconds % aggregate_interval) < 1:
         return False
 

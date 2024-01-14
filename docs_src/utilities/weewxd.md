@@ -14,31 +14,33 @@ Specify `--help` to see how it is used:
 weewxd --help
 ```
 ```
-Usage: weewxd --help
+usage: weewxd --help
        weewxd --version
-       weewxd  [CONFIG_FILE|--config=CONFIG_FILE]
+       weewxd [FILENAME|--config=FILENAME]
               [--daemon]
               [--pidfile=PIDFILE]
               [--exit]
               [--loop-on-init]
               [--log-label=LABEL]
-           
-  Entry point to the weewx weather program. Can be run directly, or as a daemon
-  by specifying the '--daemon' option.
 
-Arguments:
-    CONFIG_FILE: The weewx configuration file to be used. Optional.
+The main entry point for WeeWX. This program will gather data from your
+station, archive its data, then generate reports.
 
+positional arguments:
+  FILENAME
 
-Options:
+optional arguments:
   -h, --help            show this help message and exit
-  --config=CONFIG_FILE  Use configuration file CONFIG_FILE.
+  --config FILENAME     Use configuration file FILENAME
   -d, --daemon          Run as a daemon
-  -p PIDFILE, --pidfile=PIDFILE
+  -p PIDFILE, --pidfile PIDFILE
                         Store the process ID in PIDFILE
   -v, --version         Display version number then exit
   -x, --exit            Exit on I/O and database errors instead of restarting
   -r, --loop-on-init    Retry forever if device is not ready on startup
-  -n LABEL, --log-label=LABEL
+  -n LABEL, --log-label LABEL
                         Label to use in syslog entries
+
+Specify either the positional argument FILENAME, or the optional argument
+using --config, but not both.
 ```

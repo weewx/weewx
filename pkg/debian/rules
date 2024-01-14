@@ -1,18 +1,19 @@
 #!/usr/bin/make -f
 # -*- makefile -*-
 # debian makefile for weewx
-# Copyright 2013-2023 Matthew Wall
+# Copyright 2013-2024 Matthew Wall
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
 PKG=weewx
+PKG_VERSION=WEEWX_VERSION
 PYTHON=python3
 SRC=$(CURDIR)
 DST=$(CURDIR)/debian/$(PKG)
 DST_BINDIR=$(DST)/usr/share/weewx
 DST_CFGDIR=$(DST)/etc/weewx
-DST_USERDIR=$(DST)/etc/weewx/bin/user
+DST_DOCDIR=$(DST)/usr/share/doc/weewx
 
 # these are the entry points
 ENTRIES=weewxd weectl
@@ -38,69 +39,50 @@ install:
 # create the directory structure
 	mkdir -p $(DST_BINDIR)
 	mkdir -p $(DST_CFGDIR)
-	mkdir -p $(DST_USERDIR)
+	mkdir -p $(DST_DOCDIR)
 	mkdir -p $(DST)/usr/bin
-	mkdir -p $(DST)/etc/default
-	mkdir -p $(DST)/lib/systemd/system
-	mkdir -p $(DST)/lib/udev/rules.d
-	mkdir -p $(DST)/var/lib/weewx
-	mkdir -p $(DST)/var/log/weewx
-	mkdir -p $(DST)/var/www/html/weewx
-	mkdir -p $(DST)/usr/share/doc/weewx
 
 # copyright, license, and upstream changelog
-	cp docs_src/copyright.md $(DST)/usr/share/doc/weewx/copyright
-	cp LICENSE.txt $(DST)/usr/share/doc/weewx/license
-	cp docs_src/changes.md $(DST)/usr/share/doc/weewx/changelog
+	cp docs_src/copyright.md $(DST_DOCDIR)/copyright
+	cp LICENSE.txt $(DST_DOCDIR)/license
+	cp docs_src/changes.md $(DST_DOCDIR)/changelog
 	dh_compress usr/share/doc/weewx/changelog
 
 # copy the weewx code
 	cp -r $(SRC)/src/* $(DST_BINDIR)
 
-# create the user extensions directory
-	cp $(SRC)/src/weewx_data/bin/user/__init__.py $(DST_USERDIR)
-	cp $(SRC)/src/weewx_data/bin/user/extensions.py $(DST_USERDIR)
-
 # copy selected ancillary files to the config dir
 	cp -r $(SRC)/src/weewx_data/examples $(DST_CFGDIR)
-	cp -r $(SRC)/src/weewx_data/skins $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/import $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/logwatch $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/rsyslog.d $(DST_CFGDIR)
 	cp -r $(SRC)/src/weewx_data/util/logrotate.d $(DST_CFGDIR)
+	mkdir $(DST_CFGDIR)/init.d
+	cp $(SRC)/src/weewx_data/util/init.d/weewx $(DST_CFGDIR)/init.d
+	cp $(SRC)/src/weewx_data/util/init.d/weewx-multi $(DST_CFGDIR)/init.d
+	mkdir $(DST_CFGDIR)/systemd
+	cp $(SRC)/pkg/etc/systemd/system/weewx.service $(DST_CFGDIR)/systemd
+	cp $(SRC)/pkg/etc/systemd/system/weewx@.service $(DST_CFGDIR)/systemd
+	mkdir $(DST_CFGDIR)/udev
+	cp $(SRC)/pkg/etc/udev/rules.d/weewx.rules $(DST_CFGDIR)/udev
 
-# create the default configuration
-	cat $(SRC)/src/weewx_data/weewx.conf | sed \
- -e 's%^WEEWX_ROOT =.*%WEEWX_ROOT = /etc/weewx%' \
+# create the configuration file
+	sed \
  -e 's%SKIN_ROOT =.*%SKIN_ROOT = skins%' \
  -e 's%HTML_ROOT = public_html%HTML_ROOT = /var/www/html/weewx%' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
- -e 's%LOG_ROOT = .*%LOG_ROOT = /var/log/weewx%' \
- > $(DST_CFGDIR)/weewx.conf
+ $(SRC)/src/weewx_data/weewx.conf > $(DST_CFGDIR)/weewx.conf
 
 # make a virgin copy of the configuration file
-	cp $(DST_CFGDIR)/weewx.conf $(DST_CFGDIR)/weewx.conf.dist
-
-# create the system init configuration
-# FIXME: if no systemd, then install sysV script
-	cp $(SRC)/pkg/etc/systemd/system/weewx.service $(DST)/lib/systemd/system
-	cp $(SRC)/pkg/etc/systemd/system/weewx@.service $(DST)/lib/systemd/system
+	cp $(DST_CFGDIR)/weewx.conf $(DST_CFGDIR)/weewx.conf-$(PKG_VERSION)
 
 # create the entry points
 	for f in $(ENTRIES); do \
-cat $(SRC)/bin/$$f | sed \
-  -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
-  -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
-  > $(DST)/usr/bin/$$f; \
-done
-
-# the defaults file indicates which python and weewx to use
-	cat $(SRC)/pkg/etc/default/weewx | sed \
+  sed \
+ -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
  -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=$(PYTHON)%' \
- > $(DST)/etc/default/weewx
-
-# put the udev rules in place
-	cp $(SRC)/pkg/etc/udev/rules.d/weewx.rules $(DST)/lib/udev/rules.d/60-weewx.rules
+ $(SRC)/bin/$$f > $(DST)/usr/bin/$$f; \
+done
 
 # additional debian control files that dpkg-buildpackage seems to ignore
 	mkdir -p $(DST)/DEBIAN

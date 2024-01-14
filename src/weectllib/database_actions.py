@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com> and Matthew Wall
+#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com> and Matthew Wall
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -102,7 +102,7 @@ def rebuild_daily(config_dict,
 
     log.info(msg)
     print(msg)
-    ans = y_or_n(f"Rebuild the daily summaries in the database '{database_name}'? (y/n) ",
+    ans = y_or_n(f"Rebuild the daily summaries in the database '{database_name}' (y/n)? ",
                  noprompt=no_confirm)
     if ans == 'n':
         log.info("Nothing done.")
@@ -160,7 +160,7 @@ def add_column(config_dict,
     column_type = column_type or 'REAL'
     ans = y_or_n(
         f"Add new column '{column_name}' of type '{column_type}' "
-        f"to database '{database_name}'? (y/n) ", noprompt=no_confirm)
+        f"to database '{database_name}' (y/n)? ", noprompt=no_confirm)
     if ans == 'y':
         with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbm:
             if not dry_run:
@@ -180,7 +180,7 @@ def rename_column(config_dict,
     database_name = manager_dict['database_dict']['database_name']
 
     ans = y_or_n(f"Rename column '{from_name}' to '{to_name}' "
-                 f"in database {database_name}? (y/n) ", noprompt=no_confirm)
+                 f"in database {database_name} (y/n)? ", noprompt=no_confirm)
     if ans == 'y':
         with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbm:
             if not dry_run:
@@ -196,7 +196,7 @@ def drop_columns(config_dict,
                  dry_run=False,
                  no_confirm=False):
     """Drop a set of columns from the database"""
-    ans = y_or_n(f"Drop column(s) '{', '.join(column_names)}' from the database? (y/n) ",
+    ans = y_or_n(f"Drop column(s) '{', '.join(column_names)}' from the database (y/n)? ",
                  noprompt=no_confirm)
     if ans == 'y':
         drop_set = set(column_names)
@@ -238,7 +238,7 @@ def reconfigure_database(config_dict,
             weedb.create(new_database_dict)
     except weedb.DatabaseExists:
         ans = y_or_n("New database '%s' already exists. "
-                     "Delete it first? (y/n) " % new_database_dict['database_name'],
+                     "Delete it first (y/n)? " % new_database_dict['database_name'],
                      noprompt=no_confirm)
         if ans == 'y':
             weedb.drop(new_database_dict)
@@ -272,7 +272,7 @@ def reconfigure_database(config_dict,
               (weewx.units.unit_nicknames[old_unit_system],
                weewx.units.unit_nicknames[target_unit_system]))
 
-    ans = y_or_n("Are you sure you wish to proceed? (y/n) ", noprompt=no_confirm)
+    ans = y_or_n("Are you sure you wish to proceed (y/n)? ", noprompt=no_confirm)
     if ans == 'y':
         t1 = time.time()
         weewx.manager.reconfig(manager_dict['database_dict'],
@@ -345,7 +345,7 @@ def transfer_database(config_dict,
 
         # not a dry run, actually do the transfer
         ans = y_or_n("Transfer %s records from source database '%s' "
-                     "to destination database '%s'? (y/n) "
+                     "to destination database '%s' (y/n)? "
                      % (num_recs, src_manager.database_name,
                         dest_manager_dict['database_dict']['database_name']),
                      noprompt=no_confirm)
@@ -452,7 +452,7 @@ def calc_missing(config_dict,
     msg = "%s%s" % (_head, _tail)
     log.info(msg)
     print(msg)
-    ans = y_or_n("Proceed? (y/n) ", noprompt=no_confirm)
+    ans = y_or_n("Proceed (y/n)? ", noprompt=no_confirm)
     if ans == 'n':
         msg = "Nothing done."
         log.info(msg)

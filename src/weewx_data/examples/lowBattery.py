@@ -1,4 +1,4 @@
-#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
 #    See the file LICENSE.txt for your rights.
 
 """Example of how to implement a low battery alarm in WeeWX.

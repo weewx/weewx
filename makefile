@@ -1,6 +1,6 @@
 # -*- makefile -*-
 # this makefile controls the build and packaging of weewx
-# Copyright 2013-2023 Matthew Wall
+# Copyright 2013-2024 Matthew Wall
 
 # if you do not want to sign the packages, set SIGN to 0
 SIGN=1
@@ -267,10 +267,11 @@ deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	cp pkg/debian/postrm $(DEBBLDDIR)/debian
 	cp pkg/debian/preinst $(DEBBLDDIR)/debian
 	cp pkg/debian/prerm $(DEBBLDDIR)/debian
-	cp pkg/debian/rules $(DEBBLDDIR)/debian
 	cp pkg/debian/source/format $(DEBBLDDIR)/debian/source
 	cp pkg/debian/templates $(DEBBLDDIR)/debian
 	cp pkg/debian/weewx.lintian-overrides $(DEBBLDDIR)/debian
+	sed -e 's%WEEWX_VERSION%$(VERSION)%' \
+  pkg/debian/rules > $(DEBBLDDIR)/debian/rules
 
 # run lintian on the deb package
 check-debian:
@@ -455,6 +456,7 @@ YUM_REPO=~/.yum/weewx
 yum-repo:
 	mkdir -p $(YUM_REPO)/{el7,el8,el9}/RPMS
 	cp -p pkg/index-yum.html ~/.yum/index.html
+	cp -p pkg/weewx-el.repo ~/.yum/weewx.repo
 	cp -p pkg/weewx-el7.repo ~/.yum
 	cp -p pkg/weewx-el8.repo ~/.yum
 	cp -p pkg/weewx-el9.repo ~/.yum
@@ -487,6 +489,7 @@ SUSE_REPO=~/.suse/weewx
 suse-repo:
 	mkdir -p $(SUSE_REPO)/{suse12,suse15}/RPMS
 	cp -p pkg/index-suse.html ~/.suse/index.html
+	cp -p pkg/weewx-suse.repo ~/.suse/weewx.repo
 	cp -p pkg/weewx-suse12.repo ~/.suse
 	cp -p pkg/weewx-suse15.repo ~/.suse
 

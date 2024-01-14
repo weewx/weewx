@@ -1,5 +1,5 @@
 #! /bin/sh
-# Copyright 2016-2023 Matthew Wall, all rights reserved
+# Copyright 2016-2024 Matthew Wall, all rights reserved
 # init script to run multiple instances of weewx
 #
 # each weewx instance is identified by name.  that name is used to identify the
@@ -35,9 +35,9 @@ DESC=weewx
 
 WEEWX_INSTANCES="weewx"
 WEEWX_PYTHON=python3
-WEEWX_BINDIR=/opt/weewx
+WEEWX_BINDIR=/usr/share/weewx
 WEEWX_CFGDIR=/etc/weewx
-WEEWX_RUNDIR=/var/run/weewx
+WEEWX_RUNDIR=/var/lib/weewx
 WEEWX_USER=root
 WEEWX_GROUP=root
 
@@ -46,13 +46,19 @@ WEEWX_GROUP=root
 
 WEEWXD=$WEEWX_BINDIR/weewxd.py
 
+# the start-stop-daemon requires a full path to the DAEMON.  prefer to use
+# the wrapper in /usr/bin, but if that is not available, then use the direct
+# python invocation of the weewxd entry script.
+DAEMON=/usr/bin/weewxd
+if [ ! -x $DAEMON ]; then
+    DAEMON="$WEEWX_PYTHON $WEEWXD"
+fi
+
 # Exit if the package is not installed
-if [ ! -x "$WEEWXD" ]; then
+if [ ! -f "$WEEWXD" ]; then
     echo "The $DESC daemon is not installed at $WEEWXD"
     exit 0
 fi
-
-DAEMON=$WEEWX_PYTHON $WEEWXD
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
@@ -99,7 +105,8 @@ do_start() {
 #   other if a failure occurred
 do_stop() {
     INSTANCE=$1
-    PIDFILE=$WEEWX_RUNDIR/$(get_procname $INSTANCE).pid
+    PROCNAME=$(get_procname $INSTANCE)
+    PIDFILE=$WEEWX_RUNDIR/$PROCNAME.pid
 
     # bail out if the app is not running
     NPROC=$(count_procs $INSTANCE)
@@ -135,7 +142,8 @@ do_stop() {
 # send a SIGHUP to the daemon
 do_reload() {
     INSTANCE=$1
-    PIDFILE=$WEEWX_RUNDIR/$(get_procname $INSTANCE).pid
+    PROCNAME=$(get_procname $INSTANCE)
+    PIDFILE=$WEEWX_RUNDIR/$PROCNAME.pid
 
     start-stop-daemon --stop --signal 1 --quiet --user $WEEWX_USER --pidfile $PIDFILE
     return 0
@@ -153,15 +161,16 @@ do_status() {
 
 count_procs() {
     INSTANCE=$1
-    PIDFILE=$(get_procname $INSTANCE).pid
-    NPROC=`ps ax | grep $DAEMON | grep $PIDFILE | wc -l`
+    PROCNAME=$(get_procname $INSTANCE)
+    PIDFILE=$PROCNAME.pid
+    NPROC=`ps ax | grep $WEEWXD | grep $PIDFILE | wc -l`
     echo $NPROC
 }
 
 get_procname() {
     INSTANCE=$1
     LABEL=weewxd
-    if [ "$INSTANCE" ne "weewx" ]; then
+    if [ "$INSTANCE" != "weewx" ]; then
         LABEL=weewxd-$INSTANCE
     fi
     echo -n $LABEL

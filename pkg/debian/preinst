@@ -1,24 +1,16 @@
 #!/bin/sh
 # preinst script for weewx debian package
-# Copyright 2014 Matthew Wall
+# Copyright 2014-2024 Matthew Wall
 
 # abort if any command returns error
 set -e
 
-# get debconf stuff so we can set configuration defaults
-. /usr/share/debconf/confmodule
-
 case "$1" in
-     install|upgrade)
-     ;;
+    install|upgrade)
+    ;;
 
-     abort-upgrade)
-     ;;
-
-     *)
-        echo "preinst called with unknown argument \`$1'" >&2
-        exit 1
-     ;;
+    abort-upgrade)
+    ;;
 esac
 
 #DEBHELPER#

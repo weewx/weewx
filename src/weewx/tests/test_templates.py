@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -24,6 +24,7 @@ import weeutil.logger
 import weeutil.weeutil
 import weewx
 import weewx.accum
+import weewx.manager
 import weewx.reportengine
 import weewx.station
 import weewx.units

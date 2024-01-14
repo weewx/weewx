@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -441,16 +441,10 @@ class StdCalibrate(StdService):
                 try:
                     event.packet[obs_type] = eval(self.corrections[obs_type], {'math': math},
                                                   event.packet)
-                except TypeError as e:
-                    # ignore errors involving 'None' values. Everthing else gets reraised:
-                    if 'NoneType' in str(e):
-                        if weewx.debug > 1:
-                            log.debug("NoneType in loop expression '%s'"
-                                      % self.expressions[obs_type])
-                    else:
-                        raise
-                except:
-                    raise
+                except (TypeError, NameError):
+                    pass
+                except ValueError as e:
+                    log.error("StdCalibration loop error %s", e)
 
     def new_archive_record(self, event):
         """Apply a calibration correction to an archive packet"""
@@ -463,16 +457,10 @@ class StdCalibrate(StdService):
                 try:
                     event.record[obs_type] = eval(self.corrections[obs_type], {'math': math},
                                                   event.record)
-                except TypeError as e:
-                    # ignore errors involving 'None' values. Everthing else gets reraised:
-                    if 'NoneType' in str(e):
-                        if weewx.debug > 1:
-                            log.debug("NoneType in archive expression '%s'"
-                                      % self.expressions[obs_type])
-                    else:
-                        raise
-                except:
-                    raise
+                except (TypeError, NameError):
+                    pass
+                except ValueError as e:
+                    log.error("StdCalibration archive error %s", e)
 
 
 # ==============================================================================

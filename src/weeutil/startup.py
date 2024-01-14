@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -9,9 +9,10 @@ import logging
 import os.path
 import sys
 
-import weeutil.logger
 import weewx
 from weeutil.weeutil import to_int
+
+log = logging.getLogger(__name__)
 
 
 def extract_roots(config_dict):
@@ -19,11 +20,17 @@ def extract_roots(config_dict):
     The extracted paths are *absolute* paths. That is, they are no longer relative to WEEWX_ROOT.
 
     Args:
-        config_dict(dict): The configuration dictionary
+        config_dict(dict): The configuration dictionary. It must contain a value for WEEWX_ROOT.
     Returns:
-        dict[str, str]: Key is the type of root, value is its location.
+        dict[str, str]: Key is the type of root, value is its absolute location.
     """
-    user_root = config_dict.get('USER_ROOT', 'bin/user')
+    # Check if this dictionary is from a pre-V5 package install. If so, we have to patch
+    # USER_ROOT to its new location.
+    if 'USER_ROOT' not in config_dict and config_dict['WEEWX_ROOT'] == '/':
+        user_root = '/etc/weewx/bin/user'
+    else:
+        user_root = config_dict.get('USER_ROOT', 'bin/user')
+
     root_dict = {
         'WEEWX_ROOT': config_dict['WEEWX_ROOT'],
         'USER_DIR': os.path.abspath(os.path.join(config_dict['WEEWX_ROOT'], user_root)),
@@ -42,12 +49,11 @@ def extract_roots(config_dict):
     return root_dict
 
 
-def initialize(config_dict, log_label):
+def initialize(config_dict):
     """Set debug, set up the logger, and add the user path
 
     Args:
         config_dict(dict): The configuration dictionary
-        log_label(str): A label to be used in the log for this process
 
     Returns:
         tuple[str,str]: A tuple containing (WEEWX_ROOT, USER_ROOT)
@@ -56,20 +62,16 @@ def initialize(config_dict, log_label):
     # Set weewx.debug as necessary:
     weewx.debug = to_int(config_dict.get('debug', 0))
 
-    # Customize the logging with user settings.
-    weeutil.logger.setup(log_label, config_dict)
-
     root_dict = extract_roots(config_dict)
 
     # Add the 'user' package to PYTHONPATH
-    user_dir = os.path.abspath(os.path.join(root_dict['USER_DIR'], '..'))
-    sys.path.append(user_dir)
+    parent_of_user_dir = os.path.abspath(os.path.join(root_dict['USER_DIR'], '..'))
+    sys.path.append(parent_of_user_dir)
 
     # Now we can import user.extensions
     try:
         importlib.import_module('user.extensions')
     except ModuleNotFoundError as e:
-        log = logging.getLogger(__name__)
         log.error("Cannot load user extensions: %s", e)
 
-    return config_dict['WEEWX_ROOT'], user_dir
+    return config_dict['WEEWX_ROOT'], root_dict['USER_DIR']

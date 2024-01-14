@@ -119,10 +119,6 @@ Finished removing extension 'windy'
 
 These are options used by most of the actions.
 
-### --help
-
-Show the help message, then exit.
-
 ### --config
 
 Path to the configuration file. Default is `~/weewx-data/weewx.conf`.
@@ -131,6 +127,10 @@ Path to the configuration file. Default is `~/weewx-data/weewx.conf`.
 
 Show what would happen if the action was run, but do not actually make any
 writable changes.
+
+### --help
+
+Show the help message, then exit.
 
 ### --verbosity=(0|1|2|3)
 

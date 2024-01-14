@@ -71,7 +71,7 @@ facility.  On some systems, the log messages end up in files that you can
 browse as you would any other file.  On other systems you will have to use
 tools provided by the operating system to see the log messages.
 
-See the section [_Monitoring WeeWX_](../monitoring/#log-messages).
+See the section [_Monitoring WeeWX_](monitoring.md/#log-messages).
 
 
 ## Location of executables in a pip install
@@ -83,9 +83,9 @@ the executables will depend on how the installation was done.
 | Install method                                      | Commands                                                                     | Location of executables |
 |-----------------------------------------------------|------------------------------------------------------------------------------|-------------------------|
 | Virtual environment<br/>(recommended)               | `python3 -m venv ~/ve`<br/>`source ~/ve/bin/activate`<br/>`pip3 install weewx` | `~/ve/bin/`             |
-| pip, no sudo, with `--user`                         | `pip3 install weewx --user`                                                  | `~/.local/bin/`         |
-| pip, no sudo, no `--user`                           | `pip3 install weewx`                                                         | `~/.local/bin/`         |
-| pip with sudo<br/>(not recommended)                 | `sudo pip3 install weewx`                                                    | `/usr/local/bin/` (1)   |
-| Virtual environment with `--user`<br/>(not allowed) | `python3 -m venv ~/ve`<br/>`source ~/ve/bin/activate`<br/>`pip3 install weewx --user` | N/A                     |
+| pip<br/>no sudo<br/>with `--user`                   | `pip3 install weewx --user`                                                  | `~/.local/bin/`         |
+| pip<br/>no sudo<br/>no `--user`                     | `pip3 install weewx`                                                         | `~/.local/bin/`         |
+| pip<br/>with sudo<br/>(not recommended)             | `sudo pip3 install weewx`                                                    | `/usr/local/bin/` (1)   |
+| Virtual environment<br/>with `--user`<br/>(not allowed) | `python3 -m venv ~/ve`<br/>`source ~/ve/bin/activate`<br/>`pip3 install weewx --user` | N/A                     |
 
 (1) Checked on Ubuntu 22.02 and Rocky v9.1

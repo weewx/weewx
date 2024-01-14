@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -9,6 +9,7 @@ import io
 import os.path
 import sys
 import unittest
+import tempfile
 
 import configobj
 
@@ -149,18 +150,21 @@ class ConfigTest(unittest.TestCase):
         """Test an upgrade against a typical user's configuration file"""
 
         # Start with a typical V2.0 user file:
-        config_dict = configobj.ConfigObj('weewx20_user.conf', encoding='utf-8')
-
+        _, config_dict = weecfg.read_config('weewx20_user.conf')
         # The current config file becomes the template:
-        template = configobj.ConfigObj(current_config_dict_path, encoding='utf-8')
+        _, template = weecfg.read_config(current_config_dict_path)
 
         # First update, then merge:
         weecfg.update_config.update_and_merge(config_dict, template)
 
-        # with open('expected/weewx43_user_expected.conf', 'wb') as fd:
-        #     config_dict.write(fd)
+        with tempfile.NamedTemporaryFile() as fd:
+            # Save it to the temporary file:
+            weecfg.save(config_dict, fd.name)
+            # Now read it back in again:
+            check_dict = configobj.ConfigObj(fd, encoding='utf-8')
 
-        self._check_against_expected(config_dict, 'expected/weewx43_user_expected.conf')
+        # Check the results.
+        self._check_against_expected(check_dict, 'expected/weewx43_user_expected.conf')
 
     def _check_against_expected(self, config_dict, expected):
         """Check a ConfigObj against an expected version

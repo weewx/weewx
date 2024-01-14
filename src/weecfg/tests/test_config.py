@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -362,10 +362,8 @@ class ExtensionInstallTest(unittest.TestCase):
         ExtensionInstallTest._build_mini_weewx(self.weewx_root)
 
         # Retrieve the configuration file from the mini-weewx
-        self.config_path = os.path.join(self.weewx_root, 'weewx.conf')
-        self.config_dict = configobj.ConfigObj(self.config_path, encoding='utf-8')
-        # Note that the actual location of the "mini-weewx" is over in /var/tmp
-        self.config_dict['WEEWX_ROOT'] = self.weewx_root
+        config_path = os.path.join(self.weewx_root, 'weewx.conf')
+        self.config_path, self.config_dict = weecfg.read_config(config_path)
 
         # Initialize the install engine.
         self.engine = weecfg.extension.ExtensionEngine(self.config_path,
@@ -376,7 +374,7 @@ class ExtensionInstallTest(unittest.TestCase):
         "Remove any installed test configuration"
         shutil.rmtree(self.weewx_root, ignore_errors=True)
 
-    def test_install(self):
+    def test_file_install(self):
         # Make sure the root dictionary got calculated correctly:
         self.assertEqual(self.engine.root_dict['WEEWX_ROOT'], '/var/tmp/wee_test')
         self.assertEqual(self.engine.root_dict['USER_DIR'], '/var/tmp/wee_test/bin/user')
@@ -421,6 +419,18 @@ class ExtensionInstallTest(unittest.TestCase):
         self.assertTrue(
             'user.pmon.ProcessMonitor' in test_dict['Engine']['Services']['process_services'])
 
+    def test_http_install(self):
+        self.engine.install_extension(
+            'https://github.com/chaunceygardiner/weewx-loopdata/releases/download/v3.3.2/weewx-loopdata-3.3.2.zip',
+            no_confirm=True)
+        # Test that it got installed correctly
+        self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['USER_DIR'],
+                                                    'loopdata.py')))
+        self.assertTrue(os.path.isfile(os.path.join(self.engine.root_dict['USER_DIR'],
+                                                    'installer',
+                                                    'loopdata',
+                                                    'install.py')))
+
     def test_uninstall(self):
         # First install...
         self.engine.install_extension('./pmon.tgz', no_confirm=True)
@@ -444,7 +454,7 @@ class ExtensionInstallTest(unittest.TestCase):
                                                      'skin.conf')))
 
         # Get the modified config dict, which had the extension removed from it
-        test_dict = configobj.ConfigObj(self.config_path, encoding='utf-8')
+        test_path, test_dict = weecfg.read_config(self.config_path)
 
         # It should be the same as our original:
         self.assertEqual(test_dict, self.config_dict)

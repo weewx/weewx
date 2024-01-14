@@ -1,17 +1,13 @@
 # V5.0 "To Do"
 
-## startup
 
-- tk before logger is initialized, output to stdout/stderr as appropriate
-- tk Rationalize startup procedure, making it consistent.
+## Docs
 
-- mw make weewx-multi work on any sysv os (remove lsb dependencies)
 
 ## deb/rpm installs
 
-- mw verify upgrade behavior for v4 running as root.root - ensure that v5
-   runs as root.root (check the user in systemd unit)
-- mw verify upgrade behavior from v4 to v5 related to sysv-to-systemd change
+- ensure that 'systemctl disable weewx' will also disable any template units
+    that might have been created by system administrator
 
 
 ## Testing
@@ -31,3 +27,6 @@
 Update the wiki entries for going from MySQL to SQLite and for SQLite to MySQL,
 this time by using `weectl database transfer`.
 
+# Future
+
+- mw make weewx-multi work on any sysv os (remove lsb dependencies)

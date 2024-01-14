@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -88,29 +88,33 @@ def main():
         traceback.print_exc(file=sys.stderr)
         sys.exit(weewx.CONFIG_ERROR)
 
-    # Now that we have the configuration dictionary, we can set up the user-
-    # configured logging and debug, as well as perform other housekeeping
-    # chores
+    # Customize the logging with user settings.
     try:
-        weewx_root, user_dir = weeutil.startup.initialize(config_dict, namespace.log_label)
+        weeutil.logger.setup(namespace.log_label, config_dict)
     except Exception as e:
-        print(f"Failure during initialization: {e}", file=sys.stderr)
+        print(f"Unable to set up logger: {e}", file=sys.stderr)
         import traceback
         traceback.print_exc(file=sys.stderr)
         sys.exit(weewx.CONFIG_ERROR)
 
     # Get a logger. This one will have the requested configuration.
     log = logging.getLogger(__name__)
+    # Announce the startup
+    log.info("Initializing weewxd version %s", weewx.__version__)
+    log.info("Command line: %s", ' '.join(sys.argv))
+
+    # Set up debug, add USER_ROOT to PYTHONPATH, read user.extensions:
+    weewx_root, user_module = weeutil.startup.initialize(config_dict)
+
     # Log key bits of information.
-    log.info("Initializing weewx version %s", weewx.__version__)
     log.info("Using Python %s", sys.version)
     log.info("Located at %s", sys.executable)
     log.info("Platform %s", platform.platform())
     log.info("Locale: '%s'", locale.setlocale(locale.LC_ALL))
     log.info("Entry path: %s", __file__)
-    log.info("Configuration file: %s", config_path)
     log.info("WEEWX_ROOT: %s", weewx_root)
-    log.info("User directory: %s", user_dir)
+    log.info("Configuration file: %s", config_path)
+    log.info("User module: %s", user_module)
     log.info("Debug: %s", weewx.debug)
 
     # If no command line --loop-on-init was specified, look in the config file.

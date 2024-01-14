@@ -1,12 +1,12 @@
 #
-#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """Package weewx, containing modules specific to the weewx runtime engine."""
 import time
 
-__version__ = "5.0.0rc1"
+__version__ = "5.0.0rc3"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'

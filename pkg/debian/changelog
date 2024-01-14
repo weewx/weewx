@@ -1,3 +1,33 @@
+weewx (5.0.0rc3-5) unstable; urgency=low
+  * provide feedback about existing systemd/sysv configurations
+  * prefer /usr/lib but fall back to /lib
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 13 Jan 2024 11:02:21 -0500
+weewx (5.0.0rc3-4) unstable; urgency=low
+  * fix for pre-compile fails
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Wed, 10 Jan 2024 23:57:51 -0500
+weewx (5.0.0rc3-3) unstable; urgency=low
+  * added output to postinst to aid failure diagnostics
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Wed, 10 Jan 2024 20:24:04 -0500
+weewx (5.0.0rc3-2) unstable; urgency=low
+  * change ownership of database and report directories unconditionally
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Mon, 08 Jan 2024 14:41:13 -0500
+weewx (5.0.0rc3-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sun, 07 Jan 2024 13:32:38 -0500
+weewx (5.0.0rc2-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Fri, 29 Dec 2023 08:40:25 -0500
+weewx (5.0.0rc1-4) unstable; urgency=low
+  * create user dir if it does not exist
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 28 Dec 2023 22:54:31 -0500
+weewx (5.0.0rc1-3) unstable; urgency=low
+  * do skins in post
+  * do systemd units in post
+  * do udev rules in post
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 28 Dec 2023 21:08:30 -0500
+weewx (5.0.0rc1-2) unstable; urgency=low
+  * include ephem as a dependency
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Tue, 26 Dec 2023 17:05:12 -0500
 weewx (5.0.0rc1-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 21 Dec 2023 17:43:27 -0500

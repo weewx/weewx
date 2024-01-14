@@ -1,2 +1,0 @@
-# make any te923 station connected via usb accessible to non-root
-SUBSYSTEM=="usb", ATTRS{idVendor}=="1130", ATTRS{idProduct}=="6801", MODE="0666"

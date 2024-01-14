@@ -1,20 +1,43 @@
 # Monitoring WeeWX
 
 Whether you run `weewxd` directly or in the background, `weewxd` emits
-messages about its status and generates reports.  The status messages will
-help you diagnose problems.
+messages about its status and generates reports.  The following sections
+explain how to check the status of `weewxd`, locate and view the reports
+that it generates, and locate and view the log messages that it emits.
 
 ## Status
 
-If WeeWX is running in the background, you can use the system's `init` tools
-to check the status.  For example, on systems that use `systemd`, check it
-like this:
-```{.shell .copy}
-systemctl status weewx
-```
-On systems that use `sysV` init scripts, check it like this:
-```{.shell .copy}
-/etc/init.d/weewx status
+If WeeWX was configured to run as a daemon, you can use the system's `init`
+tools to check the status.
+
+=== "systemd"
+
+    ```{ .shell .copy }
+    # For Linux systems that use systemd, e.g., Debian, Redhat, SUSE
+    sudo systemctl status weewx
+    ```
+
+=== "sysV"
+
+    ```{ .shell .copy }
+    # For Linux systems that use SysV init, e.g., Slackware, Devuan, Puppy
+    sudo /etc/init.d/weewx status
+    ```
+
+=== "BSD"
+
+    ```{ .shell .copy }
+    # For BSD systems, e.g., FreeBSD, OpenBSD
+    sudo service weewx status
+    ```
+
+Another way to see whether WeeWX is running is to use a process monitoring tool
+such as `ps`, `top`, or `htop`.  For example, the following command will tell
+you whether `weewxd` is running, and if it is, you will see the additional
+information including process identifier (PID), memory used, and how long it
+has been running.
+```{ .shell .copy }
+ps aux | grep weewxd
 ```
 
 ## Reports
@@ -22,18 +45,28 @@ On systems that use `sysV` init scripts, check it like this:
 When it is running properly, WeeWX will generate reports, typically every five
 minutes.  The reports are not (re)generated until data have been received and
 accumulated, so it could be a few minutes before you see a report or a change
-to a report. The location of the reports depends on the operating system and
-how WeeWX was installed.
+to a report.
 
-See `HTML_ROOT` in the [*Where to find things*](where.md) section.
+The location of the reports depends on the operating system and how WeeWX was
+installed. See `HTML_ROOT` in the [*Where to find things*](where.md) section.
+
+If everything is working, the report directory will contain a bunch of HTML
+and PNG files.  Some of these will be updated each archive interval, others
+will be updated less frequently, such as each day or week.
+
+You can view the reports directly with a web browser on the computer that is
+running WeeWX.  If the computer has no GUI, consider running a web server
+or pushing the reports to a computer that has a web server.  These options
+are explained in the section [*Web server integration*](webserver.md).
 
 Depending on the configuration, if WeeWX cannot get data from the sensors,
-then it will probably not generate any reports.  So if you do not see reports,
-check the log!
+then it will probably not generate or update any reports.  So if you do not
+see reports, or the reports are not changing, check the log!
 
 ## Log messages
 
-In the default configuration, WeeWX logs to the system logging facility.
+In the default configuration, messages from WeeWX go to the system logging
+facility.
 
 The following sections show how to view WeeWX log messages on systems that use
 `syslog` and `systemd-journald` logging facilities. See the wiki article
@@ -112,21 +145,17 @@ Fortunately, there is a simple workaround. Put this at the bottom of your
         handlers = timed_rotate,
 
     [[handlers]]
-        # Log to a set of rotating files
         [[[timed_rotate]]]
             level = DEBUG
             formatter = verbose
             class = logging.handlers.TimedRotatingFileHandler
-            # File to log to, relative to WEEWX_ROOT:
             filename = log/{process_name}.log
-            # When to rotate:
             when = midnight
-            # How many log files to save
             backupCount = 7
 ```
 
-This reconfigures the root logger to send log messages to the file
-`~/weewx-data/log/weewxd.log` instead of the system logger.
+This makes messages from WeeWX go to the file `~/weewx-data/log/weewxd.log`
+instead of the system logger.
 
 For an explanation of what all these lines mean, see the wiki article on
 [WeeWX logging](https://github.com/weewx/weewx/wiki/WeeWX-v4-and-logging).

@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com> and Matthew Wall
+#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com> and Matthew Wall
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -77,7 +77,10 @@ class ExtensionEngine(object):
                 self.printer.out("%-18s%-10s%s" % ("Extension Name", "Version", "Description"),
                                  level=0)
                 for f in exts:
-                    info = self.get_extension_info(f)
+                    try:
+                        info = self.get_extension_info(f)
+                    except weecfg.ExtensionError as e:
+                        info = {'name': f, 'version': '???', 'description': str(e)}
                     msg = "%(name)-18s%(version)-10s%(description)s" % info
                     self.printer.out(msg, level=0)
             else:
@@ -100,7 +103,7 @@ class ExtensionEngine(object):
             no_confirm(bool): If False, ask for a confirmation before installing. Otherwise,
                 just do it.
         """
-        ans = weeutil.weeutil.y_or_n(f"Install extension '{extension_path}'? ",
+        ans = weeutil.weeutil.y_or_n(f"Install extension '{extension_path}' (y/n)? ",
                                      noprompt=no_confirm)
         if ans == 'n':
             self.printer.out("Nothing done.")
@@ -113,14 +116,22 @@ class ExtensionEngine(object):
             import tempfile
             # Download the file into a temporary file
             with tempfile.NamedTemporaryFile() as test_fd:
+                # "filename" is a string with the path to the downloaded file;
+                # "info" is an instance of http.client.HTTPMessage.
                 filename, info = urllib.request.urlretrieve(extension_path, test_fd.name)
-                # Now install the temporary file. The file type can be found in the download
-                # header's "subtype". This will be something like "zip".
-                extension_name = self._install_from_file(test_fd.name, info.get_content_subtype())
+                downloaded_name = info.get_filename()
+                if not downloaded_name:
+                    raise IOError(f"Unknown extension type found at '{extension_path}'")
+                # Something like weewx-loopdata-3.3.2.zip
+                if downloaded_name.endswith('.zip'):
+                    filetype = 'zip'
+                else:
+                    filetype = 'tar'
+                extension_name = self._install_from_file(test_fd.name, filetype)
         elif os.path.isfile(extension_path):
             # It's a file. Figure out what kind, then install. If it's not a zipfile, assume
             # it's a tarfile.
-            if extension_path[-4:] == '.zip':
+            if extension_path.endswith('.zip'):
                 filetype = 'zip'
             else:
                 filetype = 'tar'
@@ -377,7 +388,7 @@ class ExtensionEngine(object):
                 just do it.
         """
 
-        ans = weeutil.weeutil.y_or_n(f"Uninstall extension '{extension_name}'? (y/n) ",
+        ans = weeutil.weeutil.y_or_n(f"Uninstall extension '{extension_name}' (y/n)? ",
                                      noprompt=no_confirm)
         if ans == 'n':
             self.printer.out("Nothing done.")

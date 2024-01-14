@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2023 Tom Keffer <tkeffer@gmail.com> and Matthew Wall
+#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com> and Matthew Wall
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -23,7 +23,7 @@ rebuild_usage = f"""{bcolors.BOLD}weectl database rebuild-daily
             [--config=FILENAME] [--binding=BINDING-NAME] 
             [--dry-run] [-y]{bcolors.ENDC}"""
 add_column_usage = f"""{bcolors.BOLD}weectl database add-column NAME
-            [--type=(REAL|INTEGER)]
+            [--type=COLUMN-DEF]
             [--config=FILENAME] [--binding=BINDING-NAME]
             [--dry-run] [-y]{bcolors.ENDC}"""
 rename_column_usage = f"""{bcolors.BOLD}weectl database rename-column FROM-NAME TO-NAME
@@ -40,7 +40,7 @@ transfer_usage = f"""{bcolors.BOLD}weectl database transfer --dest-binding=BINDI
             [--dry-run] [-y]{bcolors.ENDC}"""
 calc_missing_usage = f"""{bcolors.BOLD}weectl database calc-missing
             [--date=YYYY-mm-dd | [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
-            [--config=FILENAME] [--binding=BINDING-NAME] [--tranche=TRANCHE-SIZE]
+            [--config=FILENAME] [--binding=BINDING-NAME] [--tranche=INT]
             [--dry-run] [-y]{bcolors.ENDC}"""
 check_usage = f"""{bcolors.BOLD}weectl database check
             [--config=FILENAME] [--binding=BINDING-NAME]{bcolors.ENDC}"""
@@ -158,8 +158,9 @@ def add_subparser(subparsers):
     add_column_parser.add_argument('--type',
                                    choices=['REAL', 'INTEGER', 'real', 'integer', 'int'],
                                    default='REAL',
+                                   metavar='COLUMN-DEF',
                                    dest='column_type',
-                                   help="Type of the new column. Default is 'REAL'.")
+                                   help="Any valid SQL column definition. Default is 'REAL'.")
     _add_common_args(add_column_parser)
     add_column_parser.set_defaults(func=weectllib.dispatch)
     add_column_parser.set_defaults(action_func=add_column)
@@ -246,10 +247,10 @@ def add_subparser(subparsers):
                                      dest='to_date',
                                      help="Calculate ending with this datetime.")
     calc_missing_parser.add_argument("--tranche",
-                                     metavar="TRANCHE",
+                                     metavar="INT",
                                      type=int,
                                      default=10,
-                                     help="Perform database transactions on TRANCHE days "
+                                     help="Perform database transactions on INT days "
                                           "of records at a time. Default is 10.")
     _add_common_args(calc_missing_parser)
     calc_missing_parser.set_defaults(func=weectllib.dispatch)

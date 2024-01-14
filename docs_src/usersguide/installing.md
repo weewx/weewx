@@ -66,7 +66,7 @@ There are several different ways to install WeeWX.
 <table>
   <tr><th>Installer</th><th>Systems</th><th>Best for...</th></tr>
   <tr>
-    <td><a href="../quickstarts/debian.md">Debian</a></td>
+    <td><a href="../../quickstarts/debian">Debian</a></td>
     <td>including Ubuntu, Mint, Raspberry Pi OS, Devuan</td>
     <td rowspan=3>
       This is the fastest and easiest way to get up and running. The Debian,
@@ -76,15 +76,15 @@ There are several different ways to install WeeWX.
     </td>
   </tr>
   <tr>
-    <td><a href="../quickstarts/redhat.md">Redhat</a></td>
+    <td><a href="../../quickstarts/redhat">Redhat</a></td>
     <td>including Fedora, CentOS, Rocky</td>
   </tr>
   <tr>
-    <td><a href="../quickstarts/suse.md">SUSE</a></td>
+    <td><a href="../../quickstarts/suse">SUSE</a></td>
     <td>including openSUSE</td>
   </tr>
   <tr>
-    <td><a href="../quickstarts/pip.md">pip</a></td>
+    <td><a href="../../quickstarts/pip">pip</a></td>
     <td>any operating system</td>
     <td>
 The pip installer will work on any operating system. Use this approach for
@@ -97,7 +97,7 @@ may be needed to run.
     </td>
   </tr>
   <tr>
-    <td><a href="../../quickstarts/git/">git</a></td>
+    <td><a href="../../quickstarts/git">git</a></td>
     <td>any operating system</td>
     <td>
 If you want to install WeeWX on a system with very little storage, or if you

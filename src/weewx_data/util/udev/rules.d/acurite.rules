@@ -1,2 +1,0 @@
-# make any acurite station connected via usb accessible to non-root
-SUBSYSTEM=="usb", ATTRS{idVendor}=="24C0", ATTRS{idProduct}=="0003", MODE="0666"

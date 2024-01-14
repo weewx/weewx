@@ -17,7 +17,8 @@ Depends:
  python3-cheetah,
  python3-pil,
  python3-serial,
- python3-usb
+ python3-usb,
+ python3-ephem
 Suggests:
  sqlite,
  rsync,

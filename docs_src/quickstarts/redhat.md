@@ -24,7 +24,7 @@ used by WeeWX are in that repository.
 2. Tell `yum` where to find the WeeWX repository.
 
     ```{.shell .copy}
-    curl -s https://weewx.com/yum/weewx-el9.repo | \
+    curl -s https://weewx.com/yum/weewx.repo | \
         sudo tee /etc/yum.repos.d/weewx.repo
     ```
 
@@ -156,7 +156,6 @@ To remove every trace of WeeWX:
 sudo yum remove weewx
 sudo rm -r /var/www/html/weewx
 sudo rm -r /var/lib/weewx
-sudo rm -r /var/log/weewx
 sudo rm -r /etc/weewx
 sudo userdel weewx
 ```
