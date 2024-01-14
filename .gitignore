@@ -1,9 +1,19 @@
 *~
 \#*
-.DS_Store
-*.pyc
+
+# Python compile stuff
 __pycache__
+*.pyc
 *.egg-info
+
+# pytest caching and coverage
+.pytest_cache
+.coverage
+
+# Ignore the macOS turds
+.DS_Store
+
+# Ignore any misplaced virtual environments
 .venv
 venv
 
