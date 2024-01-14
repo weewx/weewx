@@ -5,7 +5,11 @@
 #
 set -e
 
-UTIL_ROOT=$HOME/weewx-data/util
+HOMDIR=$HOME
+if [ "$SUDO_USER" != "" ]; then
+    HOMEDIR=$(getent passwd $SUDO_USER | cut -d: -f6)
+fi
+UTIL_ROOT=$HOMEDIR/weewx-data/util
 
 if [ "$(id -u)" != "0" ]; then
   echo "This script requires admin privileges.  Use 'sudo' or run as root."
@@ -130,6 +134,31 @@ uninstall_macos() {
     remove_file /Library/LaunchDaemons/com.weewx.weewxd.plist
 }
 
+# check for systemd and/or sysV init files that might affect the init setup
+# that we install.  no need to check for the files that we install, since we
+# move aside any direct conflicts.
+check_init() {
+    init_system=$1
+    files_to_check="/etc/init.d/weewx-multi"
+    if [ "$init_system" = "systemd" ]; then
+        files_to_check="$files_to_check /etc/init.d/weewx"
+    elif [ "$init_system" = "init" ]; then
+        files_to_check="$files_to_check /etc/systemd/system/weewx.service"
+    fi
+    files=""
+    for f in $files_to_check; do
+        if [ -f $f ]; then
+            files="$files $f"
+        fi
+    done
+    if [ "$files" != "" ]; then
+        echo "The following files might interfere with the init configuration:"
+        for f in $files; do
+            echo "  $f"
+        done
+    fi
+}
+
 
 do_install() {
     init_system=$1
@@ -149,9 +178,11 @@ do_install() {
     elif [ "$init_system" = "systemd" ]; then
         install_udev
         install_systemd
+        check_init $init_system
     elif [ "$init_system" = "init" ]; then
         install_udev
         install_sysv
+        check_init $init_system
     else
         echo "Unrecognized platform with init system $init_system"
     fi
