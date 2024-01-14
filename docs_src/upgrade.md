@@ -112,11 +112,27 @@ Previously, `SQLITE_ROOT` was expected to be an absolute path, but now relative
 paths are accepted. A relative path is considered relative to `WEEWX_ROOT`.
 Because this is _less restrictive_, it is not expected to affect any users.
 
+### New script to configure a daemon
+
+This affects WeeWX installations that use `pip`.  Installations that use `apt`,
+`yum`, or `zypper` (installs that use the DEB or RPM packages) are not affected.
+
+There is a new script `setup-daemon.sh` that will install the files necessary to
+run WeeWX as a daemon.  This script recognizes many operating systems, including
+Linux (with or without systemd), BSD, and macOS.
+
+This script is not run automatically - you must invoke it explicitly after you
+install or upgrade using `pip`.
+
+For upgrades, if you already have a systemd unit in `/etc/systemd/system`, a
+SysV script in `/etc/init.d/weewx`, a launchd plist in `/Library/LaunchDaemons`,
+or BSD rc in `/usr/local/etc/rc.d`, the setup script will move that aside.
+
 ### New location for `user` directory
 
 This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
-that use the DEB or RPM packages). Installations that use a `setup.py` install
-are not affected.
+that use the DEB or RPM packages). Installations that use a `setup.py` or `pip`
+install are not affected.
 
 Previous versions of WeeWX would install code used by extensions alongside
 other WeeWX code, usually in `/usr/share/weewx/user`.
@@ -130,8 +146,8 @@ extensions that were installed in `/usr/share/weewx/user` will be copied to
 ### Use of systemd units for services
 
 This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
-that use the DEB or RPM packages). Installations that use a `setup.py` install
-are not affected.
+that use the DEB or RPM packages). Installations that use a `setup.py` or `pip`
+install are not affected.
 
 This only affects operating systems that use systemd.
 
@@ -157,8 +173,8 @@ use the `.d` pattern instead.  See the systemd documentation for details.
 ### WeeWX runs as the `weewx` user
 
 This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
-that use the DEB or RPM packages). Installations that use a `setup.py` install
-are not affected.
+that use the DEB or RPM packages). Installations that use a `setup.py` or `pip`
+install are not affected.
 
 For new installations, `weewxd` will run as the user `weewx`.  The configuration
 files, skins, databases, and reports are owned by the `weewx` group.  This makes
