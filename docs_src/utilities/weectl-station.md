@@ -131,10 +131,9 @@ Use the `upgrade` action to upgrade one or more of these items.
 weectl station upgrade
 ```
 
-When invoked with no options, the `upgrade` action upgrades only the
-documentation, examples, and utility files. By default, the configuration file
-and skins are not upgraded. This is to avoid overwriting any changes you might
-have made.
+When invoked with no options, the `upgrade` action upgrades only the examples,
+and utility files. By default, the configuration file and skins are not
+upgraded. This is to avoid overwriting any changes you might have made.
 
 However, you can use the `--what` option to explicitly choose what to upgrade.
 
