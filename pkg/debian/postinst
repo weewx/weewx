@@ -416,6 +416,28 @@ migrate_extensions() {
     fi
 }
 
+# check for systemd and/or sysV init files that might affect the init setup
+# that we install.
+check_init() {
+    files=""
+    if [ "$1" = "systemd" ]; then
+        filelist="/etc/init.d/weewx-multi /etc/init.d/weewx /etc/systemd/system/weewx.service"
+    elif [ "$1" = "init" ]; then
+        filelist="/etc/init.d/weewx-multi"
+    fi
+    for f in $filelist; do
+        if [ -f $f ]; then
+            files="$files $f"
+        fi
+    done
+    if [ "$files" != "" ]; then
+        echo "The following files might interfere with the init configuration:"
+        for f in $files; do
+            echo "  $f"
+        done
+    fi
+}
+
 
 # see which init system is running
 pid1=none
@@ -451,6 +473,7 @@ case "$1" in
         set_permissions
         enable_init $pid1
         start_weewx $pid1
+        check_init $pid1
         ;;
 
     abort-remove)
