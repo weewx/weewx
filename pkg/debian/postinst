@@ -419,13 +419,14 @@ migrate_extensions() {
 # check for systemd and/or sysV init files that might affect the init setup
 # that we install.
 check_init() {
-    files=""
+    files_to_check=""
     if [ "$1" = "systemd" ]; then
-        filelist="/etc/init.d/weewx-multi /etc/init.d/weewx /etc/systemd/system/weewx.service"
+        files_to_check="/etc/init.d/weewx-multi /etc/init.d/weewx /etc/systemd/system/weewx.service"
     elif [ "$1" = "init" ]; then
-        filelist="/etc/init.d/weewx-multi"
+        files_to_check="/etc/init.d/weewx-multi"
     fi
-    for f in $filelist; do
+    files=""
+    for f in $files_to_check; do
         if [ -f $f ]; then
             files="$files $f"
         fi
