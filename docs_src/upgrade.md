@@ -133,11 +133,26 @@ This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
 that use the DEB or RPM packages). Installations that use a `setup.py` install
 are not affected.
 
+This only affects operating systems that use systemd.
+
 For these package installers, two systemd unit files will be installed: the
 standard service unit `weewx.service`, and the template service unit
 `weewx@.service`.   The template unit makes it very easy to run multiple
 instances of `weewxd` (for example, if you have more than one weather station or
 multiple sets of sensors).
+
+If you upgrade from V4, the init script `/etc/init.d/weewx` will remain - you
+can safely delete it, since the new systemd unit files have precedence.  If you
+modified the init script, you will have to migrate your changes to the systemd
+methods for running daemons.
+
+If you added a systemd unit file `/etc/systemd/system/weewx.service` to a V4
+installation, then you upgrade from V4, you might want to remove the unit file
+then `sudo systemctl daemon-reload` followed by `sudo systemctl enable weewx`.
+Until you do this, the unit file in `/etc/systemd` will have precedence over
+the unit and unit template that are installed by the installer.  If you just
+want to override behavior of the units installed by the installer, you should
+use the `.d` pattern instead.  See the systemd documentation for details.
 
 ### WeeWX runs as the `weewx` user
 
