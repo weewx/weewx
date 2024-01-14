@@ -1,37 +1,41 @@
 checklist for doing a release:
 
 1. Check weewx.conf for local changes.  In particular, check to make sure:
-     1. WEEWX_ROOT points to /home/weewx
-     2. debug=0 in weewx.conf
+     1. debug=0 in weewx.conf
 2. Make sure the version is correct
      1. modify pyproject.toml
      2. make version
 3. Make sure all changes have been logged
-     1. docs/changes.md
-     2. docs/upgrading.htm
+     1. doc_src/changes.md
+     2. doc_src/upgrade.md
      3. make deb-changelog
      4. make redhat-changelog
      5. make suse-changelog
-4. Build the documentation (may emit bogus warnings about dead links)
+4. Build the documentation
      1. make build-docs
 5. Create the packages
      1. make pypi-package
      2. make debian-package
      3. make redhat-package
      4. make suse-package
-6. Sanity check on production machine
-     1. unpack the tarball, install, run
-7. Commit and tag:
-     1. git commit -m "Version 1.3.1"
-     1. git tag -a v1.3.1 -m "v1.3.1"
+6. Check of each installation method
+     1. do a git install + upgrade
+     2. do a pip install + upgrade
+     3. do a debian install + upgrade
+     4. do a redhat install + upgrade
+7. Commit and tag
+     1. git commit -m "Version X.Y.Z"
+     2. git push
+     3. git tag vX.Y.Z
+     4. git push --tags
 8. Upload wheel to pypi.org
      1. make upload-pypi
 9. Upload to weewx.com
-     1. make upload-src
-     2. make upload-debian
-     3. make upload-redhat
-     4. make upload-suse
-     6. make upload-docs
+     1. make upload-docs
+     2. make upload-src
+     3. make upload-debian
+     4. make upload-redhat
+     5. make upload-suse
 10. Update the deb repository
      1. make pull-apt-repo
      2. make update-apt-repo
@@ -210,7 +214,7 @@ aptly has two different mechanisms for doing a 'publish': switch or update.
 we use snapshots, and publish using 'publish switch', rather than publishing
 using a simple 'publish update'.
 
-there are two apt repositories: python2 and python3
+There are two apt repositories: python2 and python3
 
 to do apt repo updates you must first install aptly:
   https://www.aptly.info/download/
@@ -272,13 +276,15 @@ for clients to use an apt repo at weewx.com:
 howto: yum repository ---------------------------------------------------------
 
 create yum repo:
-  mkdir -p ~/.yum/weewx/{el7,el8}/RPMS
+  mkdir -p ~/.yum/weewx/{el7,el8,el9}/RPMS
 
 update local yum repo with latest rpm:
   cp *.el7.rpm ~/.yum/weewx/el7/RPMS
   createrepo -o ~/.yum/weewx/el7 ~/.yum/weewx/el7
   cp *.el8.rpm ~/yum/weewx/el8/RPMS
   createrepo -o ~/.yum/weewx/el8 ~/.yum/weewx/el8
+  cp *.el9.rpm ~/yum/weewx/el9/RPMS
+  createrepo -o ~/.yum/weewx/el9 ~/.yum/weewx/el9
 
 clone the published yum repo to local space:
   mkdir -p ~/.yum
@@ -354,6 +360,13 @@ change to the signing macro in .rpmmacros - add the line --digest-algo sha256
 	--digest-algo sha256 \
 	%{?_gpg_sign_cmd_extra_args:%{_gpg_sign_cmd_extra_args}} \
 	-u "%{_gpg_name}" -sbo %{__signature_filename} %{__plaintext_filename}
+
+In the debian world, you sign the repository (specifically the file 'Release'),
+not the individual .deb files.  So if you need to re-sign, you re-build and
+re-sign the repository; there is no need touch the individual .deb files.  This
+is a bit odd, since the dpkg-build has options -us and -uc that tell it to *not*
+sign the .deb files, and if you do not specify -us and -uc, the .deb files are
+not signed, but dpkg-build will complain.
 
 
 unit tests --------------------------------------------------------------------
