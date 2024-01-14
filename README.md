@@ -58,6 +58,7 @@ Support for over 70 types of hardware including, but not limited to:
 * Fine Offset WH10xx, WH20xx, and WH30xx series (including Ambient, Elecsa, Maplin, Tycon, Watson, and others);
 * Fine Offset WH23xx, WH4000 (including Tycon TP2700, MiSol WH2310);
 * Fine Offset WH2600, HP1000 (including Ambient Observer, Aercus WeatherSleuth, XC0422);
+* Fine Offset GW1000, GW1100, GW2000 (including Ecowitt)
 * LaCrosse WS-23XX and WS-28XX (including TFA);
 * LaCrosse GW1000U bridge;
 * Hideki TE923, TE831, TE838, DV928 (including TFA, Cresta, Honeywell, and others);
@@ -85,7 +86,7 @@ WeeWX.
 
 ## Install
 
-[https://weewx.com/docs/5.0/quickstarts](https://weewx.com/docs/5.0/quickstarts)
+[https://weewx.com/docs/quickstarts.html](https://weewx.com/docs/quickstarts.html)
 
 ## Download
 
@@ -101,7 +102,7 @@ For the latest source code:
 
 Guides for installation, upgrading, and customization:
 
-[https://weewx.com/docs/5.0/](https://weewx.com/docs/5.0/)
+[https://weewx.com/docs/](https://weewx.com/docs/)
 
 The wiki includes user-contributed extensions and suggestions:
 
