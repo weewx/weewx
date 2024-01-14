@@ -1,7 +1,7 @@
 WeeWX change history
 --------------------
 
-### 5.0.0 MM/DD/YYYY
+### 5.0.0 01/14/2024
 
 Python 2.7 is no longer supported. You must have Python 3.6 (introduced
 December 2016) or greater.  WeeWX 5 uses the module `importlib.resources`,
@@ -1424,8 +1424,8 @@ a BOM. Fixes issue #172.
 
 Fixed bug in wunderfixer.
 
-Fixed handling of `StdWXCalculate.Calculations` in `modify_config` in the wmr100,
-wmr200, wmr300, and wmr9x8 drivers.
+Fixed handling of `StdWXCalculate.Calculations` in `modify_config` in the
+wmr100, wmr200, wmr300, and wmr9x8 drivers.
 
 Eliminate the apache2, ftp, and rsync suggested dependencies from the deb
 package.  This keeps the weewx dependencies to a bare minimum.

@@ -1,3 +1,5 @@
+* Sun Jan 14 2024 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0-1
+- new upstream release
 * Thu Jan 11 2024 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc3-3
 - there is no pre-built pyephem for redhat9 (as of 9.3)
 * Mon Jan 08 2024 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc3-2

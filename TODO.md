@@ -1,15 +1,3 @@
-# V5.0 "To Do"
-
-
-## Docs
-
-
-## deb/rpm installs
-
-- ensure that 'systemctl disable weewx' will also disable any template units
-    that might have been created by system administrator
-
-
 ## Testing
 
 - mw convert to pytest
@@ -27,6 +15,8 @@
 Update the wiki entries for going from MySQL to SQLite and for SQLite to MySQL,
 this time by using `weectl database transfer`.
 
+
 # Future
 
-- mw make weewx-multi work on any sysv os (remove lsb dependencies)
+- mw implement weewx-multi that works on any SysV init (no lsb dependencies)
+
