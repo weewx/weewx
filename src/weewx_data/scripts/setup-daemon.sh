@@ -5,7 +5,7 @@
 #
 set -e
 
-HOMDIR=$HOME
+HOMEDIR=$HOME
 if [ "$SUDO_USER" != "" ]; then
     HOMEDIR=$(getent passwd $SUDO_USER | cut -d: -f6)
 fi
