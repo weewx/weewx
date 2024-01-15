@@ -11,9 +11,7 @@ install Python 3 then [install WeeWX using pip](pip.md).
 ## Configure `yum`
 
 The first time you install WeeWX, you must configure `yum` so that it will
-trust weewx.com, and know where to find the WeeWX releases.  You must also
-configure `yum` to use the `epel` repository, since some of the Python modules
-used by WeeWX are in that repository.
+trust weewx.com, and know where to find the WeeWX releases.
 
 1. Tell your system to trust weewx.com:
 
@@ -27,12 +25,26 @@ used by WeeWX are in that repository.
     curl -s https://weewx.com/yum/weewx.repo | \
         sudo tee /etc/yum.repos.d/weewx.repo
     ```
-
-3. Configure `yum` to use the `epel-release` repository.
-
+    If you are using Redhat 8, you must also configure `yum` to use
+    `epel-release`, since some of the Python modules are in that respository.
     ```{.shell .copy}
     sudo dnf config-manager --set-enabled crb
     sudo dnf -y install epel-release
+    ```
+
+!!! Note
+    If you are using Fedora, specify the repository that corresponds to your
+    Fedora release.
+
+    For example, Fedora 28 should use Redhat 8
+    ```{.shell .copy}
+    curl -s https://weewx.com/yum/weewx-el8.repo | \
+        sudo tee /etc/yum.repos.d/weewx.repo
+    ```
+    Fedora 34 should use Redhat 9
+    ```{.shell .copy}
+    curl -s https://weewx.com/yum/weewx-el9.repo | \
+        sudo tee /etc/yum.repos.d/weewx.repo
     ```
 
 ## Install
