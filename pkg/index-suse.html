@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Language" content="en-us"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>weeWX: Installation using zypper</title>
+    <title>WeeWX: Installation using zypper</title>
     <style> 
 body{
   font-family: Verdana,Helvetica,sans-serif;
@@ -44,24 +44,20 @@ h2 {
 
 <body>
 
-<h1 class="title">SUSE repository for weeWX</h1>
+<h1 class="title">SUSE repository for WeeWX</h1>
 
 <h2>Tell the system to trust weewx.com</h2>
 
 <pre class='tty'>sudo rpm --import http://weewx.com/keys.html</pre>
 
-<h2>Configure</h2>
+<h2>Tell zypper where to find the WeeWX repository</h2>
 
-For python3 (suse 15):
-<pre class='tty'>curl -s http://weewx.com/suse/weewx-suse15.repo | sudo tee /etc/zypp/repos.d/weewx.repo</pre>
+<pre class='tty'>curl -s http://weewx.com/suse/weewx.repo | sudo tee /etc/zypp/repos.d/weewx.repo</pre>
 
-For python2 (suse 12):
-<pre class='tty'>curl -s http://weewx.com/suse/weewx-suse12.repo | sudo tee /etc/zypp/repos.d/weewx.repo</pre>
-
-<h2>Install weeWX</h2>
+<h2>Install WeeWX</h2>
 <pre class='tty'>sudo zypper install weewx</pre>
 
-<h2>Update weeWX</h2>
+<h2>Update WeeWX</h2>
 <pre class='tty'>sudo zypper update weewx</pre>
 
 </body>

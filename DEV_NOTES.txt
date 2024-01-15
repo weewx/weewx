@@ -1,109 +1,131 @@
 checklist for doing a release:
 
 1. Check weewx.conf for local changes.  In particular, check to make sure:
-     1. WEEWX_ROOT points to /home/weewx
-     2. debug=0 in weewx.conf
+     1. debug=0 in weewx.conf
 2. Make sure the version is correct
-     1. modify bin/weewx/__init__.py
+     1. modify pyproject.toml
      2. make version
 3. Make sure all changes have been logged
-     1. docs/changes.txt
-     2. make deb-changelog
-     3. make redhat-changelog
-     4. make suse-changelog
-     5. docs/upgrading.htm
-4. Create the packages
-     1. make src-package
-     2. make debian-packages
-     3. make redhat-packages
-     4. make suse-packages
-5. Sanity check on production machine
-     1. unpack the tarball, install, run
-6. Tag it
-     1. git tag -a v1.3.1 -m "Version 1.3.1 release"
-7. Upload to weewx.com
-     1. make upload-src
-     2. make upload-debian
-     3. make upload-redhat
-     4. make upload-suse
-     6. make upload-docs
-8. Update the deb repository
+     1. doc_src/changes.md
+     2. doc_src/upgrade.md
+     3. make deb-changelog
+     4. make redhat-changelog
+     5. make suse-changelog
+4. Build the documentation
+     1. make build-docs
+5. Create the packages
+     1. make pypi-package
+     2. make debian-package
+     3. make redhat-package
+     4. make suse-package
+6. Check of each installation method
+     1. do a git install + upgrade
+     2. do a pip install + upgrade
+     3. do a debian install + upgrade
+     4. do a redhat install + upgrade
+7. Commit and tag
+     1. git commit -m "Version X.Y.Z"
+     2. git push
+     3. git tag vX.Y.Z
+     4. git push --tags
+8. Upload wheel to pypi.org
+     1. make upload-pypi
+9. Upload to weewx.com
+     1. make upload-docs
+     2. make upload-src
+     3. make upload-debian
+     4. make upload-redhat
+     5. make upload-suse
+10. Update the deb repository
      1. make pull-apt-repo
      2. make update-apt-repo
      3. make push-apt-repo
-9. Update the redhat repository
+11. Update the redhat repository
      1. make pull-yum-repo
      2. make update-yum-repo
      3. make push-yum-repo
-10. Update the suse repository
+12. Update the suse repository
      1. make pull-suse-repo
      2. make update-suse-repo
      3. make push-suse-repo
-11. Reshuffle files on the server
+13. Reshuffle files on the server
      1. make release
      2. make release-apt-repo
      3. make release-yum-repo
      4. make release-suse-repo
-12. Announce the release to the weewx user's group.
+14. Announce the release to the weewx user's group.
 
 
 pre-requisites ----------------------------------------------------------------
 
+Building the documentation requires mkdocs, which is installed using pip.
 Signing packages requires gpg and local copy of authorized private+public keys.
+Verifying the packages requires rpmlint/lintian.
 The debian repo management requires aptly.
 The redhat repo management requires createrepo.
 The suse repo management requires createrepo.
+
+To build the docs:
+  pip3 install --user mkdocs
+  pip3 install --user mkdocs-material
+
+To build pypi package install the following (see the pypi section):
+  pip3 install --user poetry
 
 To build debian package install the following (use 'apt-get install'):
   git
   rsync
   gpg
   debhelper
-  python3-distutils
+  lintian
 
 To build redhat package install the following (use 'yum install'):
   git
   rsync
+  gnupg
   rpm-build
   rpm-sign
+  rpmlint
 
 To build suse package install the following (use 'zypper install'):
   git
   rsync
   rpm-build
+  rpmlint
+  createrepo_c
 
 
 howto -------------------------------------------------------------------------
 
 how to update the version number:
-  perl -pi -e 's/__version__=".*"/__version__="x.y.z"/' bin/weewx/__init__.py
+  Change the version number in pyproject.toml
   make version                  # this propagates the version number everywhere
   git commit -a -m "bump to version x.y.z"
 
-how to build source package:
-  make src-package
+how to build wheel and source tarball:
+  make pypi-package
 
-how to build debian packages:
+how to build debian package:
   make deb-changelog
-  emacs pkg/debian/changelog    # add any package-specific changes, if any
+  emacs pkg/debian/changelog    # add package-specific changes, if any
   git commit -m "update deb changelog" pkg/debian/changelog
-  make debian-packages
+  make debian-package
 
-how to build redhat packages:
+how to build redhat package:
   make redhat-changelog
-  emacs pkg/changelog.el       # add any package-specific changes, if any
+  emacs pkg/changelog.el       # add package-specific changes, if any
   git commit -m "update redhat changelog" pkg/changelog.el
-  make redhat-packages
+  make redhat-package
 
-how to build redhat packages:
+how to build redhat package:
   make suse-changelog
   emacs pkg/changelog.suse     # add any package-specific changes, if any
   git commit -m "update suse changelog" pkg/changelog.suse
-  make suse-packages
+  make suse-package
 
 to build redhat packages with custom rpm revision:
   make redhat-changelog RPMREVISION=2
-  make redhat-packages RPMREVISION=2
+  make redhat-package RPMREVISION=2
   make pull-yum-repo
   make update-yum-repo RPMREVISION=2
   make push-yum-repo
@@ -128,9 +150,10 @@ to generate gpg key used for signing packages:
 to export the text version of a public key:
   gpg --export -a "YOUR_NAME_HERE" > username.gpg.key
 
-source install:
-  python ./setup.py install
-  python ./setup.py install home=/opt/weewx-x.y.z     (this does not work!)
+Install using pip
+  make pypi-package
+  pip install dist/weewx-x.y.z-py3-none-any.whl
+  weectl station create
 
 debian install/remove:
   apt-get install weewx         # install with apt
@@ -154,13 +177,44 @@ suse install/remove:
   rpm -e weewx                                    # remove with rpm
 
 
+howto: build the documents --------------------------------------------------
+
+Prerequisites:
+    - Python 3.7 or greater, with pip installed
+    - Install mkdocs:
+        python3 -m pip install mkdocs
+    - Install the theme "material" for mkdocs:
+        python3 -m pip install mkdocs-material
+
+Steps:
+    - make build-docs
+
+
+howto: build and publish wheels to pypi.org -----------------------------------
+
+Prerequisites:
+    - Python 3.7 or greater, with pip installed
+    - Install poetry:
+        curl -sSL https://install.python-poetry.org | python3 -
+    - Get an API token from pypi.org
+        See https://pypi.org/manage/account/token/
+    - Tell poetry to use it:
+        poetry config pypi-token.pypi pypi-substitute-your-pypi-key
+
+Steps:
+    - Build the wheel
+        make pypi-package
+    - Publish to pypi.org
+        make upload-pypi
+
+
 howto: deb repository ---------------------------------------------------------
 
 aptly has two different mechanisms for doing a 'publish': switch or update.
 we use snapshots, and publish using 'publish switch', rather than publishing
 using a simple 'publish update'.
 
-there are two apt repositories: python2 and python3
+There are two apt repositories: python2 and python3
 
 to do apt repo updates you must first install aptly:
   https://www.aptly.info/download/
@@ -222,13 +276,15 @@ for clients to use an apt repo at weewx.com:
 howto: yum repository ---------------------------------------------------------
 
 create yum repo:
-  mkdir -p ~/.yum/weewx/{el7,el8}/RPMS
+  mkdir -p ~/.yum/weewx/{el7,el8,el9}/RPMS
 
 update local yum repo with latest rpm:
   cp *.el7.rpm ~/.yum/weewx/el7/RPMS
   createrepo -o ~/.yum/weewx/el7 ~/.yum/weewx/el7
   cp *.el8.rpm ~/yum/weewx/el8/RPMS
   createrepo -o ~/.yum/weewx/el8 ~/.yum/weewx/el8
+  cp *.el9.rpm ~/yum/weewx/el9/RPMS
+  createrepo -o ~/.yum/weewx/el9 ~/.yum/weewx/el9
 
 clone the published yum repo to local space:
   mkdir -p ~/.yum
@@ -244,7 +300,7 @@ switch from testing to production (this is done at weewx.com):
 notes -------------------------------------------------------------------------
 
 there are multiple changelogs:
-  docs/changes.txt - definitive changelog for the application
+  docs/changes.md - definitive changelog for the application
   pkg/debian/changelog - changes to the debian packaging
   pkg/changelog.el - changes to the redhat packaging
   pkg/changelog.suse - changes to the suse packaging
@@ -270,26 +326,55 @@ than a tight coupling to the operating system's python as an error and refuse
 to accept it.  however, the bsd platforms prefer this as the shebang, and the
 other approach fails on bsd.  macos uses something else.
 
-weewx supports python 2.7 and any python 3.5+ so it should not be tightly
-coupled to any specific python installation.
+since weewx5 supports any python 3.7+. older weewx supports python 2.7 and any
+python 3.5+, weewx does not have to be tightly coupled to any specific python
+installation on the system.
 
-so use the source code should use the '/usr/bin/env python' shebang.  on
-platforms that refuse to accept this, replace the package builder will replace
-this with whatever that platform will accept.  the /etc/default/weewx plus
-shell stubs in /usr/bin/wee* is used in platform installations to provide
-python flexibility so that users do not have to install weewx multiple times
-to experiment with different versions of python.  users who run weewx directly
-from a git clone get all of the 'env python' goodness of being able to specify
-whatever python interpreter they want.
+so the source code should use the '/usr/bin/env python' shebang.  on platforms
+that refuse to accept this, the package builder will replace this with
+whatever that platform will accept.  for pip installs, pip does the shebang
+mangling and sets entry points that are appropriate for its configuration.
+for everything else, using the env in shebang and making the entry points
+executable enables either 'python foo.py' or 'foo.py' invocation.
+
+the /etc/default/weewx plus shell stubs in /usr/bin/wee* is used in deb/rpm
+and non-linux installations to provide python flexibility, so that users can
+use a single weewx installation to experiment with different python versions.
+this is particularly helpful when running weewx directly from source in a git
+clone, it also works in the deb/rpm installs where the python is managed
+separately from the system's python, as well as the non-linux, non-pip
+installations.
+
+
+signing packages --------------------------------------------------------------
+
+gpg is used to sign the deb and rpm packages.  SHA1 is no longer acceptable for
+signing, so use SHA256 instead.  this should be the default when building on
+redhat9 and later.  if it is not the default, then it can be forced with a
+change to the signing macro in .rpmmacros - add the line --digest-algo sha256
+
+%__gpg_sign_cmd			%{__gpg} \
+	gpg --no-verbose --no-armor \
+	%{?_gpg_digest_algo:--digest-algo %{_gpg_digest_algo}} \
+	--no-secmem-warning \
+	--digest-algo sha256 \
+	%{?_gpg_sign_cmd_extra_args:%{_gpg_sign_cmd_extra_args}} \
+	-u "%{_gpg_name}" -sbo %{__signature_filename} %{__plaintext_filename}
+
+In the debian world, you sign the repository (specifically the file 'Release'),
+not the individual .deb files.  So if you need to re-sign, you re-build and
+re-sign the repository; there is no need touch the individual .deb files.  This
+is a bit odd, since the dpkg-build has options -us and -uc that tell it to *not*
+sign the .deb files, and if you do not specify -us and -uc, the .deb files are
+not signed, but dpkg-build will complain.
 
 
 unit tests --------------------------------------------------------------------
 
 prerequisites:
 
-python 2.7
+python 3.7
 python-usb
-python-mock 0.6
 pyephem
 
 to set up mysql server with user and permissions for testing:
@@ -315,19 +400,23 @@ testing -----------------------------------------------------------------------
 what to test when creating debian and redhat packages:
   install, upgrade, remove, purge
   install, modify files, remove
-  install, modify files, upgrade
+  install previous release, modify files, upgrade, remove
 
-any linux:
-- new install using setup.py to /home/weewx
-  setup.py install
+Using pip:
 
-- upgrade using setup.py to /home/weewx
-  setup.py install
-  modify /home/weewx/weewx.conf
-  setup.py install
+- new install to user space
+  make pypi-package
+  pip install dist/weewx-x.y.z-py3-none-any.whl --user
+  weectl station create
 
-- new install using setup.py to /opt/weewx
-  setup.py install home=/opt/weewx
+- upgrade user data
+  modify ~/weewx-data/weewx.conf
+  weectl station upgrade
+
+- new install using pip to /opt/weewx
+  make pypi-package
+  sudo pip install dist/weewx-x.y.z-py3-none-any.whl
+  sudo weectl station create /opt/weewx/weewx.conf
 
 - upgrade using setup.py to /opt/weewx
   setup.py install home=/opt/weewx
@@ -369,13 +458,11 @@ debian:
 all platforms:
 
 - installation and removal of extensions
-  wee_extension --install cmon
-  wee_extension --install pmon
-  wee_extension --remove cmon
+  weectl extension install https://github.com/matthewwall/weewx-cmon/archive/master.zip
+  weectl extension install ~/weewx-data/examples/pmon
+  weectl extension uninstall cmon
+  weectl extension uninstall pmon
 
-- reconfigure using wee_config
-  wee_config --reconfigure
-  wee_config --reconfigure --driver=weewx.drivers.vantage
-
-- list drivers
-  wee_config --list-drivers
+- reconfigure
+  weectl station reconfigure
+  weectl station reconfigure --driver=weewx.drivers.vantage --no-prompt

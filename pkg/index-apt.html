@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Language" content="en-us"/>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>weeWX: Installation using apt-get</title>
+    <title>WeeWX: Installation using apt-get</title>
     <style> 
 body{
   font-family: Verdana,Helvetica,sans-serif;
@@ -44,21 +44,22 @@ h2 {
 
 <body>
 
-<h1 class="title">apt repository for weeWX</h1>
+<h1 class="title">apt repository for WeeWX</h1>
 
 <h2>Tell the system to trust weewx.com</h2>
 
-<pre class='tty'>curl -s http://weewx.com/keys.html | sudo apt-key add -</pre>
+<pre class='tty'>sudo apt-get -y install wget gnupg
+wget -qO - https://weewx.com/keys.html | sudo gpg --dearmor --output /etc/apt/trusted.gpg.d/weewx.gpg</pre>
 
-<h2>Configure apt</h2>
+<h2>Tell apt where to find the WeeWX repository</h2>
 
-For python3 (debian10 and later):
-<pre class='tty'>curl -s http://weewx.com/apt/weewx-python3.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+For Debian10 and later (WeeWX5 and Python3):
+<pre class='tty'>echo "deb [arch=all] https://weewx.com/apt/python3 buster main" | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
 
-For python2 (debian9 and earlier):
-<pre class='tty'>curl -s http://weewx.com/apt/weewx-python2.list | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+For Debian9 and earlier (WeeWX4 and Python2):
+<pre class='tty'>echo "deb [arch=all] https://weewx.com/apt/python2 squeeze main" | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
 
-<h2>Install and/or Upgrade weeWX</h2>
+<h2>Install and/or Upgrade WeeWX</h2>
 <pre class='tty'>sudo apt-get update
 sudo apt-get install weewx</pre>
 

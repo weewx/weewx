@@ -1,0 +1,5 @@
+[weewx]
+name=weewx
+baseurl=http://weewx.com/suse/weewx/suse$releasever_major
+enabled=1
+gpgcheck=1

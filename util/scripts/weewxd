@@ -1,9 +1,0 @@
-#!/bin/sh
-app=weewxd
-
-# Get the weewx location and interpreter.  Default to something sane, but
-# look for overrides from the system defaults.
-WEEWX_BINDIR=/home/weewx/bin
-WEEWX_PYTHON=python3
-[ -r /etc/default/weewx ] && . /etc/default/weewx
-exec "$WEEWX_PYTHON" $WEEWX_PYTHON_ARGS "$WEEWX_BINDIR/$app" "$@"

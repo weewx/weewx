@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Test almanac</title>
+    <style>
+        table {
+            border: thin solid #000000;
+        }
+
+        td {
+            border: thin solid #000000;
+            padding: 2px;
+        }
+    </style>
+</head>
+<body>
+<h1>Test for $almanac. Requires pyephem</h1>
+<h2>Sun</h2>
+<table>
+    <tr>
+        <td>$almanac.sun.az (old-style)</td>
+        <td>134.962</td>
+    </tr>
+    <tr>
+        <td>$almanac.sun.alt (old-style)</td>
+        <td>43.127</td>
+    </tr>
+    <tr>
+        <td>$almanac.sun.azimuth</td>
+        <td>135&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.sun.azimuth.format("%03.2f")</td>
+        <td>134.96&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.sun.altitude</td>
+        <td>43&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.sun.altitude.format("%02.2f")</td>
+        <td>43.13&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.sun.altitude.radian</td>
+        <td>0.753 rad</td>
+    </tr>
+    <tr>
+        <td>$almanac.sun.astro_ra</td>
+        <td>162&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.sun.astro_dec</td>
+        <td>07&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.sun.geo_ra</td>
+        <td>163&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.sun.geo_dec</td>
+        <td>07&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.sun.topo_ra</td>
+        <td>163&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.sun.topo_dec</td>
+        <td>07&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.sidereal_time</td>
+        <td>131.19896418033775</td>
+    </tr>
+    <tr>
+        <td>$almanac.sidereal_angle</td>
+        <td>131&#176;</td>
+    </tr>
+</table>
+
+<h2>Jupiter</h2>
+<table>
+    <tr>
+        <td>$almanac.jupiter.az (old-style)</td>
+        <td>300.152</td>
+    </tr>
+    <tr>
+        <td>$almanac.jupiter.alt (old-style)</td>
+        <td>-27.598</td>
+    </tr>
+    <tr>
+        <td>$almanac.jupiter.azimuth</td>
+        <td>300&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.jupiter.altitude</td>
+        <td>-28&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.jupiter.astro_ra</td>
+        <td>001&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.jupiter.astro_dec</td>
+        <td>-1&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.jupiter.geo_ra</td>
+        <td>001&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.jupiter.geo_dec</td>
+        <td>-1&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.jupiter.topo_ra</td>
+        <td>001&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.jupiter.topo_dec</td>
+        <td>-1&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac.jupiter.topo_dec.radian</td>
+        <td>-0.021 rad</td>
+    </tr>
+</table>
+
+<h2>Venus</h2>
+<p>Example from the <a href="https://rhodesmill.org/pyephem/quick.html#body-compute-observer">PyEphem manual</a>:</p>
+<table>
+    <tr>
+        <td>$almanac(lon=-84.39733, lat=33.775867, altitude=320, almanac_time=454782176).venus.altitude</td>
+        <td>72.33&#176;</td>
+    </tr>
+    <tr>
+        <td>$almanac(lon=-84.39733, lat=33.775867, altitude=320, almanac_time=454782176).venus.azimuth</td>
+        <td>134.24&#176;</td>
+    </tr>
+</table>
+
+<h2>Example from the docs</h2>
+Current time is 03-Sep-2010 11:00
+    <pre>
+    Sunrise, transit, sunset: 06:29 13:05 19:40
+    Moonrise, transit, moonset: 00:29 08:37 16:39
+    Mars rise, transit, set: 10:12 15:38 21:04
+    Azimuth, altitude of Mars: 111&#176; 08&#176;
+    Next new, full moon: 08-Sep-2010 03:29; 23-Sep-2010 02:17
+    Next summer, winter solstice: 21-Jun-2011 10:16; 21-Dec-2010 15:38
+    </pre>
+</body>
+</html>

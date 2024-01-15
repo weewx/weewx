@@ -1,0 +1,75 @@
+[tool.poetry]
+name = "weewx"
+version = "5.0.0"
+description = "The WeeWX weather software system."
+authors = [
+    "Tom Keffer <tkeffer@gmail.com>",
+    "Matthew Wall <mwall@users.sourceforge.net>"
+]
+license = "GPL3"
+readme = 'README.md'
+repository = "https://github.com/weewx/weewx"
+homepage = "https://weewx.com"
+documentation = "https://weewx.com/docs"
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'Intended Audience :: End Users/Desktop',
+    'Intended Audience :: Science/Research',
+    'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+    'Operating System :: POSIX :: Linux',
+    'Operating System :: Unix',
+    'Operating System :: MacOS',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Topic :: Scientific/Engineering :: Physics'
+]
+packages = [
+    { include = "schemas", from = "src" },
+    { include = "weecfg", from = "src" },
+    { include = "weectllib", from = "src" },
+    { include = "weedb", from = "src" },
+    { include = "weeimport", from = "src" },
+    { include = "weeplot", from = "src" },
+    { include = "weeutil", from = "src" },
+    { include = "weewx", from = "src" },
+    { include = "weewx_data", from = "src" },
+    { include = "weectl.py", from = "src" },
+    { include = "weewxd.py", from = "src" },
+]
+
+include = [
+    { path = "LICENSE.txt" },
+    { path = "README.md"},
+]
+
+exclude = [
+    './src/**/tests/**/*',
+]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+configobj = "^5.0"
+# This is the renamed "Cheetah" package:
+CT3 = "^3.1"
+Pillow = ">=5.2"
+ephem = "^4.1"
+PyMySQL = "^1.0"
+pyserial = "^3.4"
+pyusb = "^1.0.2"
+importlib-resources = {version = ">=3.3", python = "3.6"}
+
+[tool.poetry.scripts]
+weectl = 'weectl:main'
+weewxd = 'weewxd:main'
+
+[build-system]
+# Minimum requirements for the build system to execute.
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+

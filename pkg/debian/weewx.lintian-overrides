@@ -1,0 +1,15 @@
+weewx: debian-changelog-file-contains-invalid-email-address mwall@picodeb8
+weewx: package-contains-documentation-outside-usr-share-doc *
+weewx: copyright-should-refer-to-common-license-file-for-gpl
+weewx: spelling-error-in-copyright
+weewx: using-first-person-in-templates
+weewx: extra-license-file
+weewx: font-outside-font-dir
+weewx: font-in-non-font-package
+weewx: duplicate-font-file
+weewx: truetype-font-prohibits-installable-embedding
+weewx: python-script-but-no-python-dep usr/share/weewx/weewx_data/util/i18n/i18n-report #!python
+weewx: binary-without-manpage
+weewx: maintainer-script-should-not-use-recursive-chown-or-chmod
+weewx: maintainer-script-calls-systemctl
+weewx: init.d-script-not-included-in-package

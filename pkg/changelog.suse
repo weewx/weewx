@@ -1,3 +1,30 @@
+* Sun Jan 14 2024 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0-1
+- new upstream release
+* Mon Jan 08 2024 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc3-2
+- change ownership of database and report directories unconditionally
+* Sun Jan 07 2024 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc3-1
+- new upstream release
+* Fri Dec 29 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc2-1
+- new upstream release
+* Thu Dec 28 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc1-3
+- do skins in post
+- do systemd units in post
+- do udev rules in post
+* Tue Dec 26 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc1-2
+- include ephem as a dependency
+- systemd units go in /usr/lib not /lib
+* Thu Dec 21 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc1-1
+- new upstream release
+* Mon Dec 18 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b18-1
+- new upstream release
+* Tue Nov 28 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b16-1
+- new upstream release
+* Sat May 06 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b1-1
+- new upstream release
+* Sat May 06 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0a30-1
+- new upstream release
+* Fri May 05 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0a29-1
+- new upstream release
 * Wed Feb 22 2023 Thomas Keffer (Author of weewx) <tkeffer@gmail.com> - 4.10.2-1
 - new upstream release
 * Mon Jan 30 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 4.10.1-1

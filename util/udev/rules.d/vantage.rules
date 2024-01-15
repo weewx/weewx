@@ -1,7 +1,0 @@
-# udev rules for davis vantage connected via usb (ea60 or ea61)
-ACTION=="add", SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="vantage"
-ACTION=="add", SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea61", SYMLINK+="vantage"
-
-# use this rule if you are using systemd
-#ACTION=="add", SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="vantage", TAG+="systemd", ENV{SYSTEMD_WANTS}="weewx.service"
-#ACTION=="add", SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea61", SYMLINK+="vantage", TAG+="systemd", ENV{SYSTEMD_WANTS}="weewx.service"

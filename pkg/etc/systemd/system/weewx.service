@@ -1,0 +1,19 @@
+# systemd service configuration file for WeeWX
+
+[Unit]
+Description=WeeWX
+Documentation=https://weewx.com/docs
+Requires=time-sync.target
+After=time-sync.target
+
+[Service]
+ExecStart=weewxd /etc/weewx/weewx.conf
+StandardOutput=null
+StandardError=journal+console
+RuntimeDirectory=weewx
+RuntimeDirectoryMode=775
+User=weewx
+Group=weewx
+
+[Install]
+WantedBy=multi-user.target

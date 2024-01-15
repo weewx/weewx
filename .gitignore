@@ -1,19 +1,30 @@
 *~
-!/.idea
-/.idea/*
-!/.idea/codeStyles
-.project
-.pydevproject
-.settings
+\#*
+
+# Python compile stuff
+__pycache__
 *.pyc
+*.egg-info
+
+# pytest caching and coverage
+.pytest_cache
+.coverage
+
+# Ignore the macOS turds
+.DS_Store
+
+# Ignore any misplaced virtual environments
+.venv
+venv
+
+# Exclude all of the JetBrains .idea directory
+.idea
+
+# Ignore artifacts produced during build/packaging
+MANIFEST
 build
 dist
-MANIFEST
-junk*
-*.sln
-*.user
-*.pyproj
-*.suo
-.DS_Store
-*.config
-*.egg-info
+
+# Ignore database, HTML directories, and built documentation
+src/weewx_data/archive/
+src/weewx_data/public_html/

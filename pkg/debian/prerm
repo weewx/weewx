@@ -1,6 +1,6 @@
 #!/bin/sh
 # prerm script for weewx debian package
-# Copyright 2013 Matthew Wall
+# Copyright 2013-2023 Matthew Wall
 #
 # ways this script might be invoked:
 #
@@ -14,15 +14,29 @@
 # abort if any command returns error
 set -e
 
+# see which init system is running
+pid1=none
+if [ -d /run/systemd/system ]; then
+    pid1=systemd
+else
+    pid1=init
+fi
+
 case "$1" in
 remove|upgrade)
-        # stop the weewx daemon
+    # stop the weewx daemon
+    echo "Stopping weewxd using $pid1"
+    if [ "$pid1" = "systemd" ]; then
+	systemctl stop weewx
+    elif [ "$pid1" = "init" ]; then
         invoke-rc.d weewx stop
-
-        # remove any bytecompiled code
-        find /usr/share/weewx -name '*.pyc' -delete
-	find /usr/share/weewx -name __pycache__ -delete
-        ;;
+    fi
+    # remove any bytecompiled code
+    find /usr/share/weewx -name '*.pyc' -delete
+    find /usr/share/weewx -name __pycache__ -delete
+    find /etc/weewx/bin -name '*.pyc' -delete
+    find /etc/weewx/bin -name __pycache__ -delete
+    ;;
 esac
 
 exit 0

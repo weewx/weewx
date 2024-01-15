@@ -1,67 +1,79 @@
 # -*- makefile -*-
 # this makefile controls the build and packaging of weewx
-# Copyright 2013 Matthew Wall
+# Copyright 2013-2024 Matthew Wall
 
 # if you do not want to sign the packages, set SIGN to 0
 SIGN=1
 
-# WWW server
-WEEWX_COM=weewx.com
-
-# location of the html documentation
+# the WeeWX WWW server
+WEEWX_COM:=weewx.com
+# location of the html documentation on the WWW server
 WEEWX_HTMLDIR=/var/www/html
 # location of weewx downloads
 WEEWX_DOWNLOADS=$(WEEWX_HTMLDIR)/downloads
 # location for staging weewx package uploads
 WEEWX_STAGING=$(WEEWX_HTMLDIR)/downloads/development_versions
 
-# extract version to be used in package controls and labels
-VERSION=$(shell grep "__version__.*=" bin/weewx/__init__.py | sed -e 's/__version__=//' | sed -e 's/"//g')
+# Directory for artifacts created during the build process
+BLDDIR=build
+# Directory for completed files that will be tested and/or distributed
+DSTDIR=dist
+# Location of doc sources
+DOC_SRC=docs_src
+# Location of built docs
+DOC_BUILT=$(BLDDIR)/docs
+# Location of the skins
+SKINLOC=src/weewx_data/skins
+
+CWD=$(shell pwd)
+# the current version is extracted from the pyproject.toml file
+VERSION:=$(shell sed -ne 's/^version = "\(.*\)"/\1/p;' pyproject.toml)
 # just the major.minor part of the version
 MMVERSION:=$(shell echo "$(VERSION)" | sed -e 's%.[0-9a-z]*$$%%')
 
-CWD = $(shell pwd)
-BLDDIR=build
-DSTDIR=dist
+SRCPKG=weewx-$(VERSION).tgz
+WHEELSRC=weewx-$(VERSION).tar.gz
+WHEEL=weewx-$(VERSION)-py3-none-any.whl
 
-ifndef PYTHON
-PYTHON=python3
-endif
+PYTHON?=python3
+
+TMPDIR?=/var/tmp
 
 all: help
 
 help: info
 	@echo "options include:"
 	@echo "          info  display values of variables we care about"
-	@echo "       install  run the generic python install"
-	@echo "       version  get version from __init__ and insert elsewhere"
+	@echo "       version  get version from pyproject.toml and insert elsewhere"
 	@echo ""
-	@echo "    deb-changelog prepend stub changelog entry for deb"
-	@echo " redhat-changelog prepend stub changelog entry for redhat"
-	@echo "   suse-changelog prepend stub changelog entry for suse"
+	@echo " debian-changelog  prepend stub changelog entry for debian"
+	@echo " redhat-changelog  prepend stub changelog entry for redhat"
+	@echo "   suse-changelog  prepend stub changelog entry for suse"
 	@echo ""
-	@echo "    src-package create source tarball suitable for distribution"
-	@echo "debian-packages create the debian packages"
-	@echo "redhat-packages create the redhat packages"
-	@echo "  suse-packages create the suse packages"
+	@echo "  pypi-package  create wheel and source tarball for pypi"
+	@echo "debian-package  create the debian package(s)"
+	@echo "redhat-package  create the redhat package(s)"
+	@echo "  suse-package  create the suse package(s)"
 	@echo ""
-	@echo "     check-deb  check the deb package"
-	@echo "     check-rpm  check the rpm package"
+	@echo "  check-debian  check the debian package"
+	@echo "  check-redhat  check the redhat package"
+	@echo "    check-suse  check the suse package"
 	@echo "    check-docs  run weblint on the docs"
 	@echo ""
-	@echo "    upload-src  upload the src package"
-	@echo " upload-debian  upload the debian deb packages"
+	@echo "    upload-src  upload the src package to $(WEEWX_COM)"
+	@echo "   upload-pypi  upload wheel and src package to pypi.org"
+	@echo " upload-debian  upload the debian deb package"
 	@echo " upload-redhat  upload the redhat rpm packages"
 	@echo "   upload-suse  upload the suse rpm packages"
 	@echo ""
-	@echo "   upload-docs  upload docs to weewx.com"
+	@echo "    build-docs  build the docs using mkdocs"
+	@echo "   upload-docs  upload docs to $(WEEWX_COM)"
 	@echo ""
-	@echo "       release  rearrange files on the download server"
+	@echo "       release  promote staged files on the download server"
 	@echo ""
 	@echo "          test  run all unit tests"
 	@echo "                SUITE=path/to/foo.py to run only foo tests"
 	@echo "    test-clean  remove test databases"
-	@echo "                recommended when switching between python 2 and 3"
 	@echo ""
 	@echo " apt repository management"
 	@echo "    pull-apt-repo"
@@ -80,32 +92,48 @@ help: info
 	@echo ""
 
 info:
-	@echo "     VERSION: $(VERSION)"
-	@echo "   MMVERSION: $(MMVERSION)"
-	@echo "      PYTHON: $(PYTHON)"
-	@echo "         CWD: $(CWD)"
-	@echo "        USER: $(USER)"
-	@echo "   WEEWX_COM: $(WEEWX_COM)"
-	@echo " STAGING_DIR: $(STAGING_DIR)"
+	@echo "       VERSION: $(VERSION)"
+	@echo "     MMVERSION: $(MMVERSION)"
+	@echo "        PYTHON: $(PYTHON)"
+	@echo "           CWD: $(CWD)"
+	@echo "          USER: $(USER)"
+	@echo "     WEEWX_COM: $(WEEWX_COM)"
+	@echo " WEEWX_STAGING: $(WEEWX_STAGING)"
+	@echo "       DOC_SRC: $(DOC_SRC)"
+	@echo "     DOC_BUILT: $(DOC_BUILT)"
+	@echo "       SKINLOC: $(SKINLOC)"
+	@echo ""
 
 clean:
-	find . -name "*.pyc" -exec rm {} \;
-	find . -name __pycache__ -exec rm -rf {} \;
-	rm -rf bin/weewx.egg-info
+	find src -name "*.pyc" -exec rm {} \;
+	find src -name "__pycache__" -prune -exec rm -rf {} \;
+	rm -rf $(BLDDIR) $(DSTDIR)
 
-realclean:
-	rm -f MANIFEST
-	rm -rf build
-	rm -rf dist
 
-check-docs:
-	weblint docs/*.htm
+###############################################################################
+# update the version in all relevant places
+VCONFIGS=src/weewx_data/weewx.conf src/weecfg/tests/expected/weewx43_user_expected.conf
+VSKINS=Ftp/skin.conf Mobile/skin.conf Rsync/skin.conf Seasons/skin.conf Smartphone/skin.conf Standard/skin.conf
+version:
+	sed -e "s/^site_name.*/site_name: \'WeeWX $(MMVERSION)\'/" mkdocs.yml > mkdocs.yml.tmp; mv mkdocs.yml.tmp mkdocs.yml
+	for f in $(VCONFIGS); do \
+  sed -e 's/version = [0-9].*/version = $(VERSION)/' $$f > $$f.tmp; \
+  mv $$f.tmp $$f; \
+done
+	for f in $(VSKINS); do \
+  sed -e 's/^SKIN_VERSION = [0-9].*/SKIN_VERSION = $(VERSION)/' $(SKINLOC)/$$f > $(SKINLOC)/$$f.tmp; \
+  mv $(SKINLOC)/$$f.tmp $(SKINLOC)/$$f; \
+done
+	sed -e 's/__version__ *=.*/__version__ = "$(VERSION)"/' src/weewx/__init__.py > weeinit.py.tmp
+	mv weeinit.py.tmp src/weewx/__init__.py
+
+
+###############################################################################
+## testing targets
 
 # if no suite is specified, find all test suites in the source tree
-ifndef SUITE
-SUITE=`find bin examples -name "test_*.py"`
-endif
-test:
+SUITE?=`find src -name "test_*.py"`
+test: src/weewx_data/
 	@rm -f $(BLDDIR)/test-results
 	@mkdir -p $(BLDDIR)
 	@echo "Python interpreter in use:" >> $(BLDDIR)/test-results 2>&1;
@@ -113,7 +141,7 @@ test:
 	@for f in $(SUITE); do \
   echo running $$f; \
   echo $$f >> $(BLDDIR)/test-results; \
-  PYTHONPATH="bin:examples:bin/weewx/tests" $(PYTHON) $$f >> $(BLDDIR)/test-results 2>&1; \
+  PYTHONPATH="src:src/weewx_data/examples:src/weewx/tests" $(PYTHON) $$f >> $(BLDDIR)/test-results 2>&1; \
   echo >> $(BLDDIR)/test-results; \
 done
 	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results || echo "no failures"
@@ -122,10 +150,10 @@ done
 	@grep -q "ERROR:\|FAIL:" $(BLDDIR)/test-results && exit 1 || true
 
 test-setup:
-	bin/weedb/tests/setup_mysql.sh
+	src/weedb/tests/setup_mysql.sh
 
 test-setup-ci:
-	MYSQL_NO_OPTS=1 bin/weedb/tests/setup_mysql.sh
+	MYSQL_NO_OPTS=1 src/weedb/tests/setup_mysql.sh
 
 TESTDIR=/var/tmp/weewx_test
 MYSQLCLEAN="drop database test_weewx;\n\
@@ -139,47 +167,61 @@ test-clean:
 	rm -rf $(TESTDIR)
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
 
-install:
-	$(PYTHON) ./setup.py --install
 
-SRCPKG=weewx-$(VERSION).tar.gz
-src-package $(DSTDIR)/$(SRCPKG): MANIFEST.in
-	rm -f MANIFEST
-	$(PYTHON) ./setup.py sdist
+###############################################################################
+## documentation targets
+
+# Build the documentation:
+build-docs: $(DOC_BUILT)
+
+$(DOC_BUILT): $(shell find $(DOC_SRC) -type f)
+	@rm -rf $(DOC_BUILT)
+	@mkdir -p $(DOC_BUILT)
+	@echo "Building documents"
+	$(PYTHON) -m mkdocs --quiet build --site-dir=$(DOC_BUILT)
+
+check-docs:
+	weblint $(DOC_BUILT)/*.htm
+
+# upload docs to the web site
+upload-docs: $(DOC_BUILT)
+	rsync -Orv --delete --exclude *~ --exclude "#*" $(DOC_BUILT)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/docs/$(MMVERSION)
+
+
+###############################################################################
+## source targets
+
+src-tarball: $(DSTDIR)/$(SRCPKG)
+
+$(DSTDIR)/$(SRCPKG):
+	mkdir -p $(BLDDIR)/weewx-$(VERSION)
+	rsync -ar ./ $(BLDDIR)/weewx-$(VERSION) --exclude-from .gitignore --exclude .git --exclude .editorconfig --exclude .github --exclude .gitignore --delete
+	mkdir -p $(DSTDIR)
+	tar cfz $(DSTDIR)/$(SRCPKG) -C $(BLDDIR) weewx-$(VERSION)
 
 # upload the source tarball to the web site
 upload-src:
 	scp $(DSTDIR)/$(SRCPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
-# upload docs to the web site
-upload-docs:
-	rsync -Orv docs $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)
 
-# update the version in all relevant places
-VDOCS=readme.htm customizing.htm devnotes.htm hardware.htm usersguide.htm upgrading.htm utilities.htm
-VCONFIGS=weewx.conf bin/weecfg/tests/expected/weewx43_user_expected.conf
-VSKINS=skins/Ftp/skin.conf skins/Mobile/skin.conf skins/Rsync/skin.conf skins/Seasons/skin.conf skins/Smartphone/skin.conf skins/Standard/skin.conf
-version:
-	for f in $(VDOCS); do \
-  sed -e 's/^Version: [0-9].*/Version: $(MMVERSION)/' docs/$$f > docs/$$f.tmp; \
-  mv docs/$$f.tmp docs/$$f; \
-done
-	for f in $(VCONFIGS); do \
-  sed -e 's/version = [0-9].*/version = $(VERSION)/' $$f > $$f.tmp; \
-  mv $$f.tmp $$f; \
-done
-	for f in $(VSKINS); do \
-  sed -e 's/^SKIN_VERSION = [0-9].*/SKIN_VERSION = $(VERSION)/' $$f > $$f.tmp; \
-  mv $$f.tmp $$f; \
-done
-	sed -e 's/^VERSION = .*/VERSION = "$(VERSION)"/' setup.py > setup.py.tmp
-	mv setup.py.tmp setup.py
-	chmod 755 setup.py
+###############################################################################
+## pypi targets
+
+pypi-package $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL): pyproject.toml
+	poetry build
+
+# Upload wheel and src package to pypi.org
+upload-pypi: $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL)
+	poetry publish
+
+
+###############################################################################
+## debian targets
 
 DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)
 # add a skeleton entry to deb changelog
-deb-changelog:
+debian-changelog:
 	if [ "`grep $(DEBVER) pkg/debian/changelog`" = "" ]; then \
   pkg/mkchangelog.pl --action stub --format debian --release-version $(DEBVER) > pkg/debian/changelog.new; \
   cat pkg/debian/changelog >> pkg/debian/changelog.new; \
@@ -195,11 +237,15 @@ DEBPKG=weewx_$(DEBVER)_$(DEBARCH).deb
 ifneq ("$(SIGN)","1")
 DPKG_OPT=-us -uc
 endif
-debian-packages: deb-package-python2 deb-package-python3
+debian-package: deb-package-prep
+	cp pkg/debian/control $(DEBBLDDIR)/debian/control
+	rm -f $(DEBBLDDIR)/debian/files
+	(cd $(DEBBLDDIR); dpkg-buildpackage $(DPKG_OPT))
+	mkdir -p $(DSTDIR)
+	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python3-$(DEBPKG)
 
 deb-package-prep: $(DSTDIR)/$(SRCPKG)
-	mkdir -p $(BLDDIR)
-	tar xfz $(DSTDIR)/$(SRCPKG) -C $(BLDDIR)
+	mkdir -p $(DEBBLDDIR)
 	cp -p $(DSTDIR)/$(SRCPKG) $(BLDDIR)/weewx_$(VERSION).orig.tar.gz
 	rm -rf $(DEBBLDDIR)/debian
 	mkdir -m 0755 $(DEBBLDDIR)/debian
@@ -213,33 +259,22 @@ deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	cp pkg/debian/postrm $(DEBBLDDIR)/debian
 	cp pkg/debian/preinst $(DEBBLDDIR)/debian
 	cp pkg/debian/prerm $(DEBBLDDIR)/debian
-	cp pkg/debian/rules $(DEBBLDDIR)/debian
 	cp pkg/debian/source/format $(DEBBLDDIR)/debian/source
 	cp pkg/debian/templates $(DEBBLDDIR)/debian
-
-deb-package-python2: deb-package-prep
-	cp pkg/debian/control.python2 $(DEBBLDDIR)/debian/control
-	rm -f $(DEBBLDDIR)/debian/files
-	rm -rf $(DEBBLDDIR)/debian/weewx*
-	(cd $(DEBBLDDIR); DEB_BUILD_OPTIONS=python2 dpkg-buildpackage $(DPKG_OPT))
-	mkdir -p $(DSTDIR)
-	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python-$(DEBPKG)
-
-deb-package-python3: deb-package-prep
-	cp pkg/debian/control.python3 $(DEBBLDDIR)/debian/control
-	rm -f $(DEBBLDDIR)/debian/files
-	rm -rf $(DEBBLDDIR)/debian/weewx*
-	(cd $(DEBBLDDIR);  DEB_BUILD_OPTIONS=python3 dpkg-buildpackage $(DPKG_OPT))
-	mkdir -p $(DSTDIR)
-	mv $(BLDDIR)/$(DEBPKG) $(DSTDIR)/python3-$(DEBPKG)
+	cp pkg/debian/weewx.lintian-overrides $(DEBBLDDIR)/debian
+	sed -e 's%WEEWX_VERSION%$(VERSION)%' \
+  pkg/debian/rules > $(DEBBLDDIR)/debian/rules
 
 # run lintian on the deb package
-check-deb:
-	lintian -Ivi $(DSTDIR)/$(DEBPKG)
+check-debian:
+	lintian -Ivi $(DSTDIR)/python3-$(DEBPKG)
 
 upload-debian:
-	scp $(DSTDIR)/python-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 	scp $(DSTDIR)/python3-$(DEBPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+
+
+###############################################################################
+## rpm targets
 
 # specify the operating system release target (e.g., 7 for centos7)
 OSREL=
@@ -270,12 +305,12 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
 	mkdir -p -m 0755 $(RPMBLDDIR)/SOURCES
 	mkdir -p -m 0755 $(RPMBLDDIR)/SPECS
 	mkdir -p -m 0755 $(RPMBLDDIR)/SRPMS
-	sed -e 's%Version:.*%Version: $(VERSION)%' \
+	sed -e 's%WEEWX_VERSION%$(VERSION)%' \
             -e 's%RPMREVISION%$(RPMREVISION)%' \
             -e 's%OSREL%$(OSREL)%' \
             pkg/weewx.spec.in > $(RPMBLDDIR)/SPECS/weewx.spec
 	cat pkg/changelog.$(RPMOS) >> $(RPMBLDDIR)/SPECS/weewx.spec
-	cp dist/weewx-$(VERSION).tar.gz $(RPMBLDDIR)/SOURCES
+	cp $(DSTDIR)/$(SRCPKG) $(RPMBLDDIR)/SOURCES/weewx-$(VERSION).tar.gz
 	rpmbuild -ba --clean --define '_topdir $(CWD)/$(RPMBLDDIR)' --target noarch $(CWD)/$(RPMBLDDIR)/SPECS/weewx.spec
 	mkdir -p $(DSTDIR)
 	mv $(RPMBLDDIR)/RPMS/$(RPMARCH)/$(RPMPKG) $(DSTDIR)
@@ -288,62 +323,85 @@ endif
 redhat-changelog:
 	make rpm-changelog RPMOS=el
 
-redhat-packages: rpm-package-el7 rpm-package-el8
+redhat-package: rpm-package-rh8 rpm-package-rh9
 
-rpm-package-el7:
-	make rpm-package RPMOS=el OSREL=7
-
-rpm-package-el8:
+rpm-package-rh8:
 	make rpm-package RPMOS=el OSREL=8
+
+rpm-package-rh9:
+	make rpm-package RPMOS=el OSREL=9
 
 suse-changelog:
 	make rpm-changelog RPMOS=suse
 
-suse-packages: rpm-package-suse12 rpm-package-suse15
-
-rpm-package-suse12:
-	make rpm-package RPMOS=suse OSREL=12
+suse-package: rpm-package-suse15
 
 rpm-package-suse15:
 	make rpm-package RPMOS=suse OSREL=15
 
 # run rpmlint on the rpm package
 check-rpm:
-	rpmlint $(DSTDIR)/$(RPMPKG)
+	rpmlint -f pkg/rpmlint.$(RPMOS) $(DSTDIR)/$(RPMPKG)
+
+check-redhat: check-rh8 check-rh9
+
+check-rh8:
+	make check-rpm RPMOS=el OSREL=8
+
+check-rh9:
+	make check-rpm RPMOS=el OSREL=9
+
+check-suse:
+	make check-rpm RPMOS=suse OSREL=15
 
 upload-rpm:
 	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
-upload-redhat:
-	make upload-rpm RPMOS=el OSREL=7
+upload-redhat: upload-rh8 upload-rh9
+
+upload-rh8:
 	make upload-rpm RPMOS=el OSREL=8
 
+upload-rh9:
+	make upload-rpm RPMOS=el OSREL=9
+
 upload-suse:
-	make upload-rpm RPMOS=suse OSREL=12
 	make upload-rpm RPMOS=suse OSREL=15
 
 # shortcut to upload all packages from a single machine
-DEB2_PKG=python-weewx_$(DEBVER)_$(DEBARCH).deb
 DEB3_PKG=python3-weewx_$(DEBVER)_$(DEBARCH).deb
-RHEL7_PKG=weewx-$(RPMVER).el7.$(RPMARCH).rpm
 RHEL8_PKG=weewx-$(RPMVER).el8.$(RPMARCH).rpm
-SUSE12_PKG=weewx-$(RPMVER).suse12.$(RPMARCH).rpm
+RHEL9_PKG=weewx-$(RPMVER).el9.$(RPMARCH).rpm
 SUSE15_PKG=weewx-$(RPMVER).suse15.$(RPMARCH).rpm
 upload-pkgs:
-	scp $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(DEB2_PKG) $(DSTDIR)/$(DEB3_PKG) $(DSTDIR)/$(RHEL7_PKG) $(DSTDIR)/$(RHEL8_PKG) $(DSTDIR)/$(SUSE12_PKG) $(DSTDIR)/$(SUSE15_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+	scp $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(DEB3_PKG) $(DSTDIR)/$(RHEL8_PKG) $(DSTDIR)/$(RHEL9_PKG) $(DSTDIR)/$(SUSE15_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # move files from the upload directory to the release directory and set up the
 # symlinks to them from the download root directory
 DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
 RELDIR=$(WEEWX_DOWNLOADS)/released_versions
-ARTIFACTS=$(DEB2_PKG) $(DEB3_PKG) $(RHEL7_PKG) $(RHEL8_PKG) $(SUSE12_PKG) $(SUSE15_PKG) $(SRCPKG)
+ARTIFACTS=$(DEB3_PKG) $(RHEL8_PKG) $(RHEL9_PKG) $(SUSE15_PKG) $(SRCPKG)
 release:
 	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
 	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
 	ssh $(USER)@$(WEEWX_COM) "if [ -f $(RELDIR)/$(SRCPKG) ]; then ln -s released_versions/$(SRCPKG) $(WEEWX_DOWNLOADS); fi"
 	ssh $(USER)@$(WEEWX_COM) "chmod 664 $(WEEWX_DOWNLOADS)/released_versions/weewx?$(VERSION)*"
 
-# this is only used when creating a new apt repository from scratch
+
+###############################################################################
+## repository management targets
+
+# update the repository html index files, without touching the contents of the
+# repositories.  this is rarely necessary, since the index files are included
+# in the pull/push cycle of repository maintenance.  it is needed when the
+# operating systems make changes that are not backward compatible, for example
+# when debian deprecated the use of apt-key.
+upload-repo-index:
+	scp pkg/index-apt.html $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/public/index.html
+	scp pkg/index-yum.html $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/index.html
+	scp pkg/index-suse.html $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/index.html
+
+# 'apt-repo' is only used when creating a new apt repository from scratch
 # the .html and .list files are not part of an official apt repository.  they
 # are included to make the repository self-documenting.
 apt-repo:
@@ -367,12 +425,6 @@ pull-apt-repo:
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
-	aptly repo add python2-weewx $(DSTDIR)/python-$(DEBPKG)
-	aptly snapshot create python-weewx-$(DEBVER) from repo python2-weewx
-	aptly publish drop squeeze python2
-	aptly publish -architectures=all snapshot python-weewx-$(DEBVER) python2
-# i would prefer to just do a switch, but that does not work. idkw
-#	aptly publish switch squeeze python2 python-weewx-$(DEBVER)
 	aptly repo add python3-weewx $(DSTDIR)/python3-$(DEBPKG)
 	aptly snapshot create python3-weewx-$(DEBVER) from repo python3-weewx
 	aptly publish drop buster python3
@@ -389,22 +441,29 @@ push-apt-repo:
 release-apt-repo:
 	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz /var/www/html/aptly-test/ /var/www/html/aptly"
 
+# 'yum-repo' is only used when creating a new yum repository from scratch
+# the index.html is not part of an official rpm repository.  it is included
+# to make the repository self-documenting.
 YUM_REPO=~/.yum/weewx
 yum-repo:
-	mkdir -p $(YUM_REPO)/{el7,el8}/RPMS
+	mkdir -p $(YUM_REPO)/{el7,el8,el9}/RPMS
 	cp -p pkg/index-yum.html ~/.yum/index.html
+	cp -p pkg/weewx-el.repo ~/.yum/weewx.repo
 	cp -p pkg/weewx-el7.repo ~/.yum
 	cp -p pkg/weewx-el8.repo ~/.yum
+	cp -p pkg/weewx-el9.repo ~/.yum
 
 pull-yum-repo:
 	mkdir -p $(YUM_REPO)
 	rsync -Oarvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ ~/.yum
 
 update-yum-repo:
-	cp -p $(DSTDIR)/weewx-$(RPMVER).el7.$(RPMARCH).rpm $(YUM_REPO)/el7/RPMS
-	createrepo $(YUM_REPO)/el7
+	mkdir -p $(YUM_REPO)/el8/RPMS
 	cp -p $(DSTDIR)/weewx-$(RPMVER).el8.$(RPMARCH).rpm $(YUM_REPO)/el8/RPMS
 	createrepo $(YUM_REPO)/el8
+	mkdir -p $(YUM_REPO)/el9/RPMS
+	cp -p $(DSTDIR)/weewx-$(RPMVER).el9.$(RPMARCH).rpm $(YUM_REPO)/el9/RPMS
+	createrepo $(YUM_REPO)/el9
 
 push-yum-repo:
 	find ~/.yum -type f -exec chmod 664 {} \;
@@ -415,10 +474,14 @@ push-yum-repo:
 release-yum-repo:
 	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz /var/www/html/yum-test/ /var/www/html/yum"
 
+# 'suse-repo' is only used when creating a new suse repository from scratch
+# the index.html is not part of an official rpm repository.  it is included
+# to make the repository self-documenting.
 SUSE_REPO=~/.suse/weewx
 suse-repo:
 	mkdir -p $(SUSE_REPO)/{suse12,suse15}/RPMS
 	cp -p pkg/index-suse.html ~/.suse/index.html
+	cp -p pkg/weewx-suse.repo ~/.suse/weewx.repo
 	cp -p pkg/weewx-suse12.repo ~/.suse
 	cp -p pkg/weewx-suse15.repo ~/.suse
 
@@ -427,8 +490,6 @@ pull-suse-repo:
 	rsync -Oarvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/ ~/.suse
 
 update-suse-repo:
-	cp -p $(DSTDIR)/weewx-$(RPMVER).suse12.$(RPMARCH).rpm $(SUSE_REPO)/suse12/RPMS
-	createrepo $(SUSE_REPO)/suse12
 	cp -p $(DSTDIR)/weewx-$(RPMVER).suse15.$(RPMARCH).rpm $(SUSE_REPO)/suse15/RPMS
 	createrepo $(SUSE_REPO)/suse15
 
@@ -457,4 +518,4 @@ critic:
 	perlcritic -1 --verbose 8 pkg/mkchangelog.pl
 
 code-summary:
-	cloc --force-lang="HTML",tmpl --force-lang="INI",conf --force-lang="INI",inc bin docs examples skins util
+	cloc --force-lang="HTML",tmpl --force-lang="INI",conf --force-lang="INI",inc src docs_src

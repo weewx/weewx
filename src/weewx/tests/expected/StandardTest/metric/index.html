@@ -1,0 +1,1036 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head profile="http://www.w3.org/2005/10/profile">
+  <title>TEST: Current Weather Conditions</title>
+  <style type="text/css">
+  table {
+    border: thin solid #000000;
+  }
+  td {
+    border: thin solid #000000;
+    padding: 2px;
+  }
+</style>
+</head>
+<body style="background-color:aliceblue">
+
+  <h1>Tests for tag $station</h1>
+  <table>
+    <tr>
+      <td>Station location:</td>
+      <td>&#313;&#333;&#263;&#257;&#355;&#297;&#337;&#324; with UTF8 characters</td>
+    </tr>
+    <tr>
+      <td align="right">Latitude:</td>
+      <td align="left">45&deg; 41.16' N</td>
+    </tr>
+    <tr>
+      <td align="right">Longitude:</td>
+      <td align="left">121&deg; 33.96' W</td>
+    </tr>
+    <tr>
+      <td align="right">Altitude (default unit):</td>
+      <td align="left">100 m</td>
+    </tr>
+    <tr>
+      <td align="right">Altitude (feet):</td>
+      <td align="left">328 feet</td>
+    </tr>
+    <tr>
+      <td align="right">Altitude (meters):</td>
+      <td align="left">100 m</td>
+    </tr>
+  </table>
+  
+  <hr/>
+
+  <h1>Tests for tag $current</h1>
+  <table>
+    <tr>
+      <td>Current dateTime:</td>
+      <td>03-Sep-2010 11:00</td>
+    </tr>
+    <tr>
+      <td>Current dateTime with formatting:</td>
+      <td>11:00</td>
+    </tr>
+    <tr>
+      <td>Raw dateTime:</td>
+      <td>1283536800</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (normal formatting)</td>
+      <td>17.7&#176;C</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (explicit unit conversion to Celsius)</td>
+      <td>17.7&#176;C</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (explicit unit conversion to Fahrenheit)</td>
+      <td>63.9&#176;F</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (explicit unit conversion to Celsius, plus formatting)</td>
+      <td>17.734&#176;C</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (explicit unit conversion to Fahrenheit, plus formatting)</td>
+      <td>63.921&#176;F</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (with explicit binding to 'wx_binding')</td>
+      <td>17.7&#176;C</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature (with explicit binding to 'alt_binding')</td>
+      <td>-3.9&#176;C</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature with nonsense binding $current($data_binding='foo_binding').outTemp</td>
+      <td>$current($data_binding='foo_binding').outTemp</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature with explicit time</td>
+      <td>17.7&#176;C</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature with nonsense time</td>
+      <td>   N/A</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature trend (3 Stunden)</td>
+      <td>8.4&#176;C</td>
+    </tr>
+    <tr>
+      <td>Outside Temperature trend with explicit time_delta (3600 seconds)</td>
+      <td>2.9&#176;C</td>
+    </tr>
+    <tr>
+      <td>Trend with nonsense type</td>
+      <td>$trend.foobar</td>
+    </tr>
+    <tr>
+      <td>Barometer (normal)</td>
+      <td>989.1 mbar</td>
+    </tr>
+    <tr>
+      <td>Barometer trend where previous value is known to be None (3 Stunden)</td>
+      <td>   N/A</td>
+    </tr>
+    <tr>
+      <td>Barometer using $latest</td>
+      <td>989.1 mbar</td>
+    </tr>
+    <tr>
+      <td>Barometer using $latest and explicit data binding</td>
+      <td>1004.8 mbar at 1283536800</td>
+    </tr>
+    <tr>
+      <td>Wind Chill (normal)</td>
+      <td>17.7&#176;C</td>
+    </tr>
+    <tr>
+      <td>Heat Index (normal)</td>
+      <td>17.7&#176;C</td>
+    </tr>
+    <tr>
+      <td>Heat Index (in Celsius)</td>
+      <td>17.7&#176;C</td>
+    </tr>
+    <tr>
+      <td>Heat Index (in Fahrenheit)</td>
+      <td>63.9&#176;F</td>
+    </tr>
+    <tr>
+      <td>Dewpoint</td>
+      <td>14.6&#176;C</td>
+    </tr>
+    <tr>
+      <td>Humidity</td>
+      <td>82%</td>
+    </tr>
+    <tr>
+      <td>Wind</td>
+      <td>29 kph from 128&#176;</td>
+    </tr>
+    <tr>
+      <td>Wind (beaufort)</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>Rain Rate</td>
+      <td>0.0 mm/h</td>
+    </tr>
+    <tr>
+      <td>Inside Temperature</td>
+      <td>20.0&#176;C</td>
+    </tr>
+    <tr>
+      <td>Test tag "exists" for an existent type: $current.outTemp.exists</td>
+      <td>TRUE</td>
+    </tr>
+    <tr>
+      <td>Test tag "exists" for a nonsense type: $current.nonsense.exists</td>
+      <td>FALSE</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for an existing type with data: $current.outTemp.has_data</td>
+      <td>TRUE</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for an existing type without data: $current.hail.has_data</td>
+      <td>FALSE</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for a nonsense type: $current.nonsense.has_data</td>
+      <td>FALSE</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for the last hour: $hour.outTemp.has_data</td>
+      <td>TRUE</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for the last hour of a nonsense type: $hour.nonsense.has_data</td>
+      <td>FALSE</td>
+    </tr>
+    <tr>
+      <td>Test for a bad observation type on a $current tag: $current.foobar</td>
+      <td>?'foobar'?</td>
+    </tr>
+  </table>
+
+  <hr/>
+
+  <h1>Tests for tag $hour</h1>
+  <table>
+    <tr>
+        <td>Start of hour:</td>
+        <td>09/03/2010 10:00:00</td>
+    </tr>
+    <tr>
+        <td>Start of hour (unix epoch time):</td>
+        <td>1283533200</td>
+    </tr>
+    <tr>
+      <td>Max Temperature</td>
+      <td>17.7&#176;C</td>
+    </tr>
+    <tr>
+      <td>Min Temperature</td>
+      <td>16.3&#176;C</td>
+    </tr>
+    <tr>
+      <td>Time of max temperature:</td>
+      <td>11:00</td>
+    </tr>
+    <tr>
+      <td>Time of min temperature:</td>
+      <td>10:30</td>
+    </tr>
+  </table>
+  
+  <h1>Wind related tags</h1>
+    <h2>$current</h2>
+      <table>
+        <tr>
+          <td>$current.windSpeed</td>
+          <td>29 kph</td>
+        </tr>
+          <td>$current.windDir</td>
+          <td>128&#176;</td>
+        </tr>
+        <tr>
+          <td>$current.windGust</td>
+          <td>35 kph</td>
+        </tr>
+        <tr>
+          <td>$current.windGustDir</td>
+          <td>128&#176;</td>
+        </tr>
+      </table>
+
+    <h2>$hour</h2>
+      <table>
+        <tr>
+          <td>Hour start, stop</td>
+          <td>1283533200<br/>1283536800</td>
+        </tr>
+        <tr>
+          <td>$hour.wind.vecdir</td>
+          <td>127&#176;</td>
+        </tr>
+        <tr>
+          <td>$hour.wind.vecavg</td>
+          <td>29 kph</td>
+        </tr>
+        <tr>
+          <td>$hour.wind.max</td>
+          <td>35 kph</td>
+        </tr>
+        <tr>
+          <td>$hour.wind.gustdir</td>
+          <td>126&#176;</td>
+        </tr>
+        <tr>
+          <td>$hour.wind.maxtime</td>
+          <td>10:30</td>
+        </tr>
+      </table>
+
+      <h2>$month</h2>
+        <table>
+          <tr>
+            <td>$month.start.raw</td>
+            <td>1283324400</td>
+          </tr>
+          <tr>
+            <td>$month.end.raw</td>
+            <td>1285916400</td>
+          </tr>
+          <tr>
+            <td>$month.length.raw</td>
+            <td>2592000</td>
+          </tr>
+          <tr>
+            <td>$month.start</td>
+            <td>01-Sep-2010 00:00</td>
+          </tr>
+          <tr>
+            <td>$month.end</td>
+            <td>01-Oct-2010 00:00</td>
+          </tr>
+          <tr>
+            <td>$month.length</td>
+            <td>2592000 Sekunden</td>
+          </tr>
+          <tr>
+            <td>$month.length.long_form("%(day)d %(day_label)s")</td>
+            <td>30  Tage</td>
+          </tr>
+          <tr>
+            <td>$month.windSpeed.avg</td>
+            <td>18 kph</td>
+          </tr>
+          <tr>
+            <td>$month.wind.avg</td>
+            <td>18 kph</td>
+          </tr>
+          <tr>
+            <td>$month.wind.vecavg</td>
+            <td>13 kph</td>
+          </tr>
+          <tr>
+            <td>$month.wind.vecdir</td>
+            <td>061&#176;</td>
+          </tr>
+          <tr>
+            <td>$month.windGust.max</td>
+            <td>39 kph</td>
+          </tr>
+          <tr>
+            <td>$month.wind.max</td>
+            <td>39 kph</td>
+          </tr>
+          <tr>
+            <td>$month.wind.gustdir</td>
+            <td>090&#176;</td>
+          </tr>
+          <tr>
+            <td>$month.windGust.maxtime</td>
+            <td>03-Sep-2010 01:00</td>
+          </tr>
+          <tr>
+            <td>$month.wind.maxtime</td>
+            <td>03-Sep-2010 01:00</td>
+          </tr>
+          <tr>
+            <td>$month.windSpeed.max</td>
+            <td>32 kph</td>
+          </tr>
+          <tr>
+            <td>$month.windDir.avg</td>
+            <td>168&#176;</td>
+          </tr>
+    </table>
+
+  <h1>Iterate over three hours:</h1>
+  <table>
+    <tr>
+      <td>Start of hour</td>
+      <td>Min temperature</td>
+      <td>When</td>
+    </tr>
+    <tr>
+      <td>07:00</td>
+      <td>8.1&#176;C</td>
+      <td>07:30</td>
+    </tr>
+    <tr>
+      <td>08:00</td>
+      <td>10.6&#176;C</td>
+      <td>08:30</td>
+    </tr>
+    <tr>
+      <td>09:00</td>
+      <td>13.4&#176;C</td>
+      <td>09:30</td>
+    </tr>
+    <tr>
+      <td>10:00</td>
+      <td>16.3&#176;C</td>
+      <td>10:30</td>
+    </tr>
+  </table>
+  
+  <hr/>
+  
+  <h1>Tests for tag $span</h1>
+  <table>
+    <tr>
+      <td>Current dateTime:</td>
+      <td>03-Sep-2010 11:00</td>
+    </tr>
+    <tr>
+      <td>Min Temperature in last hour (via $span($time_delta=3600)):</td>
+      <td>16.3&#176;C</td>
+    </tr>
+    <tr>
+      <td>Min Temperature in last hour (via $span($hour_delta=1)):</td>
+      <td>16.3&#176;C</td>
+    </tr>
+    <tr>
+      <td>Min Temperature in last 90 min (via $span($time_delta=5400)):</td>
+      <td>14.9&#176;C</td>
+    </tr>
+    <tr>
+      <td>Min Temperature in last 90 min (via $span($hour_delta=1.5)):</td>
+      <td>14.9&#176;C</td>
+    </tr>
+    <tr>
+      <td>Max Temperature in last 24 hours (via $span($time_delta=86400)):</td>
+      <td>26.2&#176;C</td>
+    </tr>
+    <tr>
+      <td>Max Temperature in last 24 hours (via $span($hour_delta=24)):</td>
+      <td>26.2&#176;C</td>
+    </tr>
+    <tr>
+      <td>Max Temperature in last 24 hours (via $span($day_delta=1)):</td>
+      <td>26.2&#176;C</td>
+    </tr>
+    <tr>
+      <td>Min Temperature in last 7 days (via $span($time_delta=604800)):</td>
+      <td>3.8&#176;C</td>
+    </tr>
+    <tr>
+      <td>Min Temperature in last 7 days (via $span($hour_delta=168)):</td>
+      <td>3.8&#176;C</td>
+    </tr>
+    <tr>
+      <td>Min Temperature in last 7 days (via $span($day_delta=7)):</td>
+      <td>3.8&#176;C</td>
+    </tr>
+    <tr>
+      <td>Min Temperature in last 7 days (via $span($week_delta=1)):</td>
+      <td>3.8&#176;C</td>
+    </tr>
+    <tr>
+      <td>Rainfall in last 24 hours (via $span($time_delta=86400)):</td>
+      <td>32.5 mm</td>
+    </tr>
+    <tr>
+      <td>Rainfall in last 24 hours (via $span($hour_delta=24)):</td>
+      <td>32.5 mm</td>
+    </tr>
+    <tr>
+      <td>Rainfall in last 24 hours (via $span($day_delta=1)):</td>
+      <td>32.5 mm</td>
+    </tr>
+    <tr>
+      <td>Max Windchill in last hour (existing obs type that is None):</td>
+      <td>17.7&#176;C</td>
+    </tr>
+  </table>
+  
+  <hr/>
+  
+  <h1>Tests for tag $day</h1>
+  <table>
+    <tr>
+        <td>Start of day:</td>
+        <td>09/03/2010 00:00:00</td>
+    </tr>
+    <tr>
+        <td>Start of day (unix epoch time):</td>
+        <td>1283497200</td>
+    </tr>
+    <tr>
+        <td>End of day (unix epoch time):</td>
+        <td>1283583600</td>
+    </tr>
+    <tr>
+      <td>Max Temperature</td>
+      <td>17.7&#176;C</td>
+    </tr>
+    <tr>
+      <td>Min Temperature</td>
+      <td>3.8&#176;C</td>
+    </tr>
+    <tr>
+      <td>Time of max temperature:</td>
+      <td>11:00</td>
+    </tr>
+    <tr>
+      <td>Time of min temperature:</td>
+      <td>04:00</td>
+    </tr>
+    <tr>
+      <td>Last temperature of the day</td>
+      <td>17.7&#176;C</td>
+    </tr>
+    <tr>
+      <td>Time of the last temperature of the day</td>
+      <td>09/03/2010 11:00:00</td>
+    </tr>
+    <tr>
+      <td>First temperature of the day</td>
+      <td>8.2&#176;C</td>
+    </tr>
+    <tr>
+      <td>Time of the first temperature of the day</td>
+      <td>09/03/2010 00:30:00</td>
+    </tr>
+    <tr>
+      <td>Max Temperature in alt_binding</td>
+      <td>-3.9&#176;C</td>
+    </tr>
+    <tr>
+      <td>Max Temperature with bogus binding</td>
+      <td>$day($data_binding='foo_binding').outTemp.max</td>
+    </tr>
+    <tr>
+      <td>Min temp with explicit conversion to Celsius</td>
+      <td>3.8&#176;C</td>
+    </tr>
+    <tr>
+      <td>Min temp with explicit conversion to Fahrenheit</td>
+      <td>38.9&#176;F</td>
+    </tr>
+    <tr>
+      <td>Min temp with explicit conversion to nonsense type</td>
+      <td>$day.outTemp.min.badtype</td>
+    </tr>
+    <tr>
+      <td>Min temperature with inappropriate conversion: $day.outTemp.min.mbar</td>
+      <td>$day.outTemp.min.mbar</td>
+    </tr>
+    <tr>
+      <td>Max value for a type with no data: $day.UV.max</td>
+      <td>   N/A</td>
+    </tr>
+    <tr>
+      <td>Sum aggregation (rain)</td>
+      <td>19.3 mm</td>
+    </tr>
+    <tr>
+      <td>Aggregation of xtype: $day.humidex.avg</td>
+      <td>8.8&#176;C</td>
+    </tr>
+    <tr>
+      <td>Aggregation of xtype: $day.humidex.min</td>
+      <td>3.8&#176;C</td>
+    </tr>
+    <tr>
+      <td>Aggregation of xtype: $day.humidex.mintime</td>
+      <td>04:00</td>
+    </tr>
+    <tr>
+      <td>Aggregation of xtype: $day.humidex.max</td>
+      <td>21.4&#176;C</td>
+    </tr>
+    <tr>
+      <td>Aggregation of xtype: $day.humidex.maxtime</td>
+      <td>11:00</td>
+    </tr>
+    <tr>
+      <td>High Wind from "$day.wind.max"</td>
+      <td>39 kph from 090&#176; at 01:00</td>
+    </tr>
+    <tr>
+      <td>High Wind from "$day.windGust.max"</td>
+      <td>39 kph</td>
+    </tr>
+    <tr>
+      <td>High Wind from "$day.windSpeed.max"</td>
+      <td>32 kph</td>
+    </tr>
+    <tr>
+      <td>Average wind from "$day.wind.avg"</td>
+      <td>31 kph</td>
+    </tr>
+    <tr>
+      <td>Average wind from "$day.windSpeed.avg"</td>
+      <td>31 kph</td>
+    </tr>
+    <tr>
+      <td>Average wind w/alt_binding: "$day(data_binding='alt_binding').wind.avg"</td>
+      <td>11 kph</td>
+    </tr>
+    <tr>
+      <td>RMS aggregation: "$day.wind.rms"</td>
+      <td>31 kph</td>
+    </tr>
+    <tr>
+      <td>Vector average: "$day.wind.vecavg"</td>
+      <td>30 kph</td>
+    </tr>
+    <tr>
+      <td>Aggregation Vector Direction (wind)</td>
+      <td>107&#176;</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" with nonsense type $day.nonsense.has_data</td>
+      <td>FALSE</td>
+    </tr>
+    <tr>
+      <td>Test tag "exists" with an existing type that has no data $day.UV.exists</td>
+      <td>TRUE</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" with existent type that has no data $day.UV.has_data</td>
+      <td>FALSE</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" with existent type that has data $day.outTemp.has_data</td>
+      <td>TRUE</td>
+    </tr>
+    <tr>
+      <td>Test tag "not_null" with existent type that has no data $day.UV.not_null</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>Test tag "not_null" with existent type that has data $day.outTemp.not_null</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <td>Test for a bad observation type on a $day tag: $day.foobar.min</td>
+      <td>$day.foobar.min</td>
+    </tr>
+    </tr>
+    <tr>
+      <td>Test for a bad aggregation type on a $day tag: $day.outTemp.foo</td>
+      <td>$day.outTemp.foo</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for an xtype: $day.humidex.has_data</td>
+      <td>TRUE</td>
+    </tr>
+    <tr>
+      <td>Test tag "has_data" for another xtype: $month.heatdeg.has_data</td>
+      <td>TRUE</td>
+    </tr>
+    <tr>
+      <td>Test for sunshineDur: $day.sunshineDur.sum</td>
+      <td>25200 Sekunden</td>
+    </tr>
+    <tr>
+      <td>Test for sunshineDur: $day.sunshineDur.sum.long_form</td>
+      <td>7 Stunden, 0 Minuten, 0 Sekunden</td>
+    </tr>
+    <tr>
+      <td>Test for sunshineDur, custom format:</td>
+      <td>7 Stunden, 0 Minuten</td>
+    </tr>
+    <tr>
+      <td>sunshineDur in hours:</td>
+      <td>7.00 Stunden</td>
+    </tr>
+    <tr>
+      <td>$day.stringData.first.raw</td>
+      <td>S1283499000</td>
+    </tr>
+    <tr>
+      <td>$day.stringData.last.raw</td>
+      <td>S1283536800</td>
+    </tr>
+    <tr>
+      <td>$day.stringData.first.format("%s")</td>
+      <td>S1283499000</td>
+    </tr>
+  </table>
+
+  <hr/>
+  
+  <h1>Tests for tag $yesterday</h1>
+  <table>
+    <tr>
+        <td>Start of yesterday:</td>
+        <td>09/02/2010 00:00:00</td>
+    </tr>
+    <tr>
+        <td>Start of yesterday (unix epoch time):</td>
+        <td>1283410800</td>
+    </tr>
+    <tr>
+      <td>Max Temperature yesterday</td>
+      <td>26.2&#176;C</td>
+    </tr>
+    <tr>
+      <td>Min Temperature yesterday</td>
+      <td>4.2&#176;C</td>
+    </tr>
+    <tr>
+      <td>Time of max temperature yesterday:</td>
+      <td>16:00</td>
+    </tr>
+    <tr>
+      <td>Time of min temperature yesterday:</td>
+      <td>04:00</td>
+    </tr>
+    <tr>
+      <td>Yesterday's last temperature</td>
+      <td>9.5&#176;C</td>
+    </tr>
+    <tr>
+      <td>Time of yesterday's last temperature</td>
+      <td>09/03/2010 00:00:00</td>
+    </tr>  
+  </table>
+  
+  <h1>Tests for tag $rainyear</h1>
+  <table>
+    <tr>
+      <td>Rainyear total</td>
+      <td>2015.7 mm</td>
+    </tr>
+  </table>
+    
+  <h1>Test for tag $alltime</h1>
+  <table>
+    <tr>
+      <td align="right">Max temp from $alltime.outTemp.max</td>
+      <td align="left">37.8&#176;C <br/>
+      at 02-Jul-2010 16:00</td>
+    </tr>
+    <tr>
+      <td align="right">High Wind from "$alltime.wind.max"</td>
+      <td align="left">
+      39 kph <br/>
+      from 090&#176; <br/>
+      at 02-Jan-2010 00:00
+      </td>
+    </tr>
+  </table>
+
+  <h1>Test for tag $seven_day</h1>
+  <table>
+    <tr>
+      <td align="right">Max temp from $seven_day.outTemp.max</td>
+      <td align="left">28.2&#176;C <br/>
+      at 27-Aug-2010 16:00</td>
+    </tr>
+    <tr>
+      <td align="right">High Wind from "$seven_day.wind.max"</td>
+      <td align="left">
+      39 kph <br/>
+      from 090&#176; <br/>
+      at 30-Aug-2010 01:00
+      </td>
+    </tr>
+  </table>
+
+  <h1>Test for various versions of $colorize</h1>
+  <table>
+    <tr>
+      <td align="right">Current temperature using $colorize_1</td>
+      <td align="left" style="background-color:moccasin">17.7&#176;C</td>
+    </tr>
+    <tr>
+      <td align="right">Current temperature using $colorize_2</td>
+      <td align="left" style="background-color:moccasin">17.7&#176;C</td>
+    </tr>
+    <tr>
+      <td align="right">Current temperature using $colorize_3</td>
+      <td align="left" style="background-color:moccasin">17.7&#176;C</td>
+    </tr>
+  </table>
+  <p>Tests at timestamp 1280692800, when the temperature is null:</p>
+  <table>
+    <tr>
+      <td align="right">Null temperature using $colorize_1</td>
+      <td align="left" style="background-color:#00000000">   N/A</td>
+    </tr>
+    <tr>
+      <td align="right">Null temperature using $colorize_2</td>
+      <td align="left" style="background-color:#00000000">   N/A</td>
+    </tr>
+    <tr>
+      <td align="right">Null temperature using $colorize_3</td>
+      <td align="left" style="background-color:lightgray">   N/A</td>
+    </tr>
+  </table>
+
+  <hr/>
+  <h1>Tests for tag $Extras</h1>
+  <table>
+    <tr>
+      <td>Radar URL</td>
+      <td>&quot;http://radar.weather.gov/ridge/lite/N0R/RTX_loop.gif&quot;</td>
+    </tr>
+  </table>
+
+  <hr/>
+
+  <h1>Tests for tag $almanac</h1>
+  <table>
+    <tr>
+      <td align="right">Sunrise:</td>
+      <td align="left">06:29</td>
+    </tr>
+    <tr>
+      <td align="right">Sunset:</td>
+      <td align="left">19:40</td>
+    </tr>
+    <tr>
+       <td align="right">Moon:</td>
+       <td align="left">abnehmend (29%full)</td>
+    </tr>
+    <tr>
+       <td align="right">$almanac.sun.visible:</td>
+       <td align="left">13 Stunden, 10 Minuten, 42 Sekunden <br/>(47442 Sekunden)</td>
+    </tr>
+    <tr>
+       <td align="right">$almanac.sun.visible_change:</td>
+       <td align="left">3 Minuten, 6 Sekunden (-186 Sekunden)</td>
+    </tr>
+  </table>
+  
+  <hr/>
+
+  <h1>Test for tag $unit</h1>
+  <table>
+    <tr>
+      <td align="right">Tag &quot;$unit.unit_type.outTemp&quot;</td>
+      <td align="left">degree_C</td>
+    </tr>
+    <tr>
+      <td align="right">Tag &quot;$unit.label.outTemp&quot;</td>
+      <td align="left">&#176;C</td>
+    </tr>
+    <tr>
+      <td align="right">Tag &quot;$unit.format.outTemp&quot;</td>
+      <td align="left">%.1f</td>
+    </tr>
+    <tr>
+      <td align="right">Example from customizing guide<br/>
+      (&quot;$day.outTemp.max.format(add_label=False)$unit.label.outTemp&quot;)</td>
+      <td align="left">17.7&#176;C</td>
+    </tr>
+    <tr>
+      <td align="right">Test the above with backwards compatibility<br/>
+      (&quot;$day.outTemp.max.formatted$unit.label.outTemp&quot;)</td>
+      <td align="left">17.7&#176;C</td>
+    </tr>
+    <tr>
+      <td align="right">Add a new unit type, existing group</td>
+      <td align="left">degree_C</td>
+    </tr>
+    <tr>
+      <td align="right">Check its label</td>
+      <td align="left">&#176;C</td>
+    </tr>
+    <tr>
+      <td align="right">Check its format</td>
+      <td align="left">%.1f</td>
+    </tr>
+    <tr>
+      <td align="right">Add a new unit type, new group</td>
+      <td align="left">amp</td>
+    </tr>
+    <tr>
+      <td align="right">Check its label</td>
+      <td align="left"> A</td>
+    </tr>
+    <tr>
+      <td align="right">Check its format</td>
+      <td align="left">%.1f</td>
+    </tr>
+  </table>
+  
+  <h1>Test for tag $obs</h1>
+  <table>
+    <tr>
+      <td align="right">Tag &quot;$obs.label.outTemp&quot;</td>
+      <td align="left">Au&#223;entemperatur</td>
+    </tr>
+  </table>
+
+  <hr/>
+
+  <h1>Test for formatting examples in the Customizing Guide</h1>
+  <table>
+      <tr>
+        <td align="right">$current.outTemp</td>
+        <td align="left">17.7&#176;C</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.format</td>
+        <td align="left">17.7&#176;C</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.format()</td>
+        <td align="left">17.7&#176;C</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.format(format_string="%.3f")</td>
+        <td align="left">17.734&#176;C</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.format("%.3f")</td>
+        <td align="left">17.734&#176;C</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.format(add_label=False)</td>
+        <td align="left">17.7</td>
+      </tr>
+      <tr>
+        <td align="right">$current.UV</td>
+        <td align="left">   N/A</td>
+      </tr>
+      <tr>
+        <td align="right">$current.UV.format(None_string="No UV")</td>
+        <td align="left">No UV</td>
+      </tr>
+      <tr>
+        <td align="right">$current.windDir</td>
+        <td align="left">128&#176;</td>
+      </tr>
+      <tr>
+        <td align="right">$current.windDir.ordinal_compass</td>
+        <td align="left">SO</td>
+      </tr>
+      <tr>
+        <td align="right">$current.dateTime</td>
+        <td align="left">03-Sep-2010 11:00</td>
+      </tr>
+      <tr>
+        <td align="right">$current.dateTime.format(format_string="%H:%M")</td>
+        <td align="left">11:00</td>
+      </tr>
+      <tr>
+        <td align="right">$current.dateTime.format("%H:%M")</td>
+        <td align="left">11:00</td>
+      </tr>
+      <tr>
+        <td align="right">$current.dateTime.raw</td>
+        <td align="left">1283536800</td>
+      </tr>
+      <tr>
+        <td align="right">$current.outTemp.raw</td>
+        <td align="left">17.73414</td>
+      </tr>
+  </table>
+    
+  <h1>Test for aggregates</h1>
+  <table>
+      <tr>
+        <td align="right">$month.outTemp.maxmin</td>
+        <td align="left">4.5&#176;C</td>
+      </tr>
+      <tr>
+        <td align="right">$month.outTemp.maxmintime</td>
+        <td align="left">01-Sep-2010 04:00</td>
+      </tr>
+      <tr>
+        <td align="right">$month.outTemp.minmax</td>
+        <td align="left">17.7&#176;C</td>
+      </tr>
+      <tr>
+        <td align="right">$month.outTemp.minmaxtime</td>
+        <td align="left">03-Sep-2010 11:00</td>
+      </tr>
+      <tr>
+        <td align="right">$month.outTemp.minsum</td>
+        <td align="left">527.6&#176;C</td>
+      </tr>
+      <tr>
+        <td align="right">$month.outTemp.minsumtime</td>
+        <td align="left">03-Sep-2010 00:00</td>
+      </tr>
+      <tr>
+        <td align="right">$month.outTemp.maxsumtime</td>
+        <td align="left">02-Sep-2010 00:00</td>
+      </tr>
+      <tr>
+        <td align="right">$month.heatdeg.sum</td>
+        <td align="left">16.3&#176;C-day</td>
+      </tr>
+      <tr>
+        <td align="right">$month.cooldeg.sum</td>
+        <td align="left">0.0&#176;C-day</td>
+      </tr>
+      <tr>
+        <td align="right">$month.growdeg.sum</td>
+        <td align="left">10.5&#176;C-day</td>
+      </tr>
+      <tr>
+        <td align="right">$year.rain.sum_le((0.1, 'inch', 'group_rain'))</td>
+        <td align="left">122</td>
+      </tr>
+      <tr>
+        <td align="right">$year.outTemp.avg_ge((41, 'degree_F', 'group_temperature'))</td>
+        <td align="left">153</td>
+      </tr>
+      <tr>
+        <td align="right">$year.outTemp.avg_le((32, 'degree_F', 'group_temperature'))</td>
+        <td align="left">80</td>
+      </tr>
+  </table>
+
+  <hr/>
+  <h1>Tests for $gettext</h1>
+  <table>
+    <tr>
+      <td align="right">$lang</td>
+      <td align="left">de</td>
+    </tr>
+    <tr>
+      <td align="right">$page</td>
+      <td align="left">test</td>
+    </tr>
+    <tr>
+      <td align="right">$gettext("Foo")</td>
+      <td align="left">Foo</td>
+    </tr>
+    <tr>
+      <td align="right">$gettext("Today")</td>
+      <td align="left">Heute</td>
+    </tr>
+    <tr>
+      <td align="right">$pgettext("test","Plots")</td>
+      <td align="left">test</td>
+    </tr>
+    <tr>
+      <td align="right">$pgettext($page,"Plots")</td>
+      <td align="left">Diagramme</td>
+    </tr>
+    <tr>
+      <td align="right">$pgettext($page,"Something")</td>
+      <td align="left">Something</td>
+    </tr>
+    <tr>
+      <td align="right">$pgettext("Foo","Plots")</td>
+      <td align="left">Plots</td>
+    </tr>
+    <tr>
+      <td align="right">$pgettext("Foo","Bar")</td>
+      <td align="left">Bar</td>
+    </tr>
+  </table>
+  <hr/>
+
+</body>
+
+</html>

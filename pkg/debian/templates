@@ -3,7 +3,7 @@ Type: select
 Default: us
 Choices: us, metric, metricwx
 Description: display units:
- Choose a standard unit system: us (F, inHg, in, mph), metric (C, mbar, cm, km/h), or metricwx (C, mbar, mm, m/s).  Your choice can be modified later to any combination of units.
+ Choose a unit system: us (F, inHg, in, mph), metric (C, mbar, cm, km/h), or metricwx (C, mbar, mm, m/s).  The unit system can be modified later to any combination of units.
 
 Template: weewx/location
 Type: string
@@ -22,6 +22,17 @@ Type: string
 Default: 0, meter
 Description: altitude of the weather station:
  Normally the altitude is downloaded from the station hardware, but not all stations support this.  Specify the altitude of the station and the singular form of the unit used for the altitude, for example '700, foot' or '120, meter'
+
+Template: weewx/register
+Type: boolean
+Default: false
+Description: register this station?
+ The station can be registered at weewx.com, where it will be included in a map. Registration requires a unique URL to identify the station, such as a website, or a WeatherUnderground link.
+
+Template: weewx/station_url
+Type: string
+Description: unique URL for the station:
+ Provide a unique URL for the station. It must be a valid URL, starting with 'http://' or 'https://'
 
 Template: weewx/station_type
 Type: select

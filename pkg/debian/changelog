@@ -1,3 +1,107 @@
+weewx (5.0.0-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sun, 14 Jan 2024 11:38:34 -0500
+weewx (5.0.0rc3-5) unstable; urgency=low
+  * provide feedback about existing systemd/sysv configurations
+  * prefer /usr/lib but fall back to /lib
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 13 Jan 2024 11:02:21 -0500
+weewx (5.0.0rc3-4) unstable; urgency=low
+  * fix for pre-compile fails
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Wed, 10 Jan 2024 23:57:51 -0500
+weewx (5.0.0rc3-3) unstable; urgency=low
+  * added output to postinst to aid failure diagnostics
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Wed, 10 Jan 2024 20:24:04 -0500
+weewx (5.0.0rc3-2) unstable; urgency=low
+  * change ownership of database and report directories unconditionally
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Mon, 08 Jan 2024 14:41:13 -0500
+weewx (5.0.0rc3-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sun, 07 Jan 2024 13:32:38 -0500
+weewx (5.0.0rc2-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Fri, 29 Dec 2023 08:40:25 -0500
+weewx (5.0.0rc1-4) unstable; urgency=low
+  * create user dir if it does not exist
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 28 Dec 2023 22:54:31 -0500
+weewx (5.0.0rc1-3) unstable; urgency=low
+  * do skins in post
+  * do systemd units in post
+  * do udev rules in post
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 28 Dec 2023 21:08:30 -0500
+weewx (5.0.0rc1-2) unstable; urgency=low
+  * include ephem as a dependency
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Tue, 26 Dec 2023 17:05:12 -0500
+weewx (5.0.0rc1-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Thu, 21 Dec 2023 17:43:27 -0500
+weewx (5.0.0b18-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Mon, 18 Dec 2023 22:12:38 -0500
+weewx (5.0.0b17-4) unstable; urgency=low
+  * fix permissions on /var/log/weewx, especially for ubuntu
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Tue, 15 Dec 2023 21:00:00 -0500
+weewx (5.0.0b17-3) unstable; urgency=low
+  * do not enable unit template
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Tue, 13 Dec 2023 21:00:00 -0500
+weewx (5.0.0b17-2) unstable; urgency=low
+  * do not fail if there is no systemd
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Tue, 13 Dec 2023 20:34:00 -0500
+weewx (5.0.0b17-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Tue, 12 Dec 2023 19:15:36 -0500
+weewx (5.0.0b16-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Tue, 28 Nov 2023 14:44:05 -0500
+weewx (5.0.0b15-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 29 Oct 2023 22:41:56 -0400
+weewx (5.0.0b14-1) unstable; urgency=low
+  * Refactor, using 'src' instead of 'bin'.
+  * Put weewx_data in version control. Put built docs in it.
+ -- Tom Keffer (Author of WeeWX) <tkeffer@gmail.com>  Tue, 17 Oct 2023 04:30:09 -0700
+weewx (5.0.0b10-1) unstable; urgency=low
+  * weectl device replaces wee_device
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Thu, 03 Aug 2023 18:46:49 -0700
+weewx (5.0.0b9-1) unstable; urgency=low
+  * new upstream release
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 14 Jul 2023 06:25:50 -0700
+weewx (5.0.0b3-1) unstable; urgency=low
+  * Update version numbers
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Sat, 27 May 2023 08:03:33 -0700
+weewx (5.0.0b2-1) unstable; urgency=low
+  * Remove utility wunderfixer.
+  * Most almanac attributes now return a ValueHelper.
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Sat, 27 May 2023 05:07:43 -0700
+weewx (5.0.0b1-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 06 May 2023 07:35:56 -0400
+weewx (5.0.0a30-1) unstable; urgency=low
+  * Back up skins individually, instead of the whole directory.
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 05 May 2023 11:28:04 -0700
+weewx (5.0.0a29-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Fri, 05 May 2023 13:35:31 -0400
+weewx (5.0.0a28-1) unstable; urgency=low
+  * Use flag --config-only to upgrade config file
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 07 Apr 2023 05:36:56 -0700
+weewx (5.0.0a27-1) unstable; urgency=low
+  * Fix bug in postinst
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Wed, 29 Mar 2023 14:47:50 -0700
+weewx (5.0.0a26-1) unstable; urgency=low
+  * Use /etc/default/weewx with systemd
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Tue, 28 Mar 2023 16:26:30 -0700
+weewx (5.0.0a25-1) unstable; urgency=low
+  * Switch to systemd install
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Sun, 26 Mar 2023 05:18:19 -0700
+weewx (5.0.0a24-1) unstable; urgency=low
+  * new upstream release
+ -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Fri, 24 Mar 2023 06:25:32 -0700
+weewx (5.0.0a21-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Fri, 03 Mar 2023 23:21:55 -0500
+weewx (5.0.0a20-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sat, 25 Feb 2023 19:01:01 -0500
 weewx (4.10.2-1) unstable; urgency=low
   * new upstream release
  -- Thomas Keffer (Author of weewx) <tkeffer@gmail.com>  Wed, 22 Feb 2023 17:05:04 -0800

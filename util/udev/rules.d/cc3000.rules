@@ -1,2 +1,0 @@
-# udev rules for rainwise cc3000
-ACTION=="add", SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", SYMLINK+="cc3000"

@@ -16,8 +16,6 @@ jobs:
           python3-ephem \
           python3-mock \
           python3-mysqldb \
-          python3-pil \
-          python3-pillow \
           python3-serial \
           python3-usb \
           python3-pip \
@@ -27,6 +25,12 @@ jobs:
           sqlite
 
     - uses: actions/checkout@v3
+
+    - name: pip install
+      run: |
+        python3 -m pip install --user "Pillow>=9.2"
+        python3 -m pip install --user mkdocs
+        python3 -m pip install --user mkdocs-material
 
     - name: Setup tests
       run: |

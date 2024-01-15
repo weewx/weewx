@@ -1,0 +1,42 @@
+# udev rules for hardware recognized by weewx
+# The rules in this file make recognized devices accessible to non-root users.
+#
+# Copy this file to /etc/udev/rules.d/60-weewx.rules
+#
+# To load the rules manually:
+#   sudo udevadm control --reload-rules
+#   sudo udevadm trigger
+# If udevadm does not work, you may have to unplug then replug the USB device
+#
+# To inspect the attributes of devices:
+#   lsusb
+#   sudo udevadm info --attribute-walk --name /dev/bus/usb/XXX/YYY
+# Where XXX and YYY are obtained from the lsusb output
+
+# acurite
+SUBSYSTEM=="usb",ATTRS{idVendor}=="24c0",ATTRS{idProduct}=="0003",MODE="0666"
+
+# fine offset usb
+SUBSYSTEM=="usb",ATTRS{idVendor}=="1941",ATTRS{idProduct}=="8021",MODE="0666"
+
+# te923
+SUBSYSTEM=="usb",ATTRS{idVendor}=="1130",ATTRS{idProduct}=="6801",MODE="0666"
+
+# oregon scientific wmr100
+SUBSYSTEM=="usb",ATTRS{idVendor}=="0FDE",ATTRS{idProduct}=="CA01",MODE="0666"
+
+# oregon scientific wmr200
+SUBSYSTEM=="usb",ATTRS{idVendor}=="0FDE",ATTRS{idProduct}=="CA01",MODE="0666"
+
+# oregon scientific wmr300
+SUBSYSTEM=="usb",ATTRS{idVendor}=="0FDE",ATTRS{idProduct}=="CA08",MODE="0666"
+
+# ws28xx transceiver
+SUBSYSTEM=="usb",ATTRS{idVendor}=="6666",ATTRS{idProduct}=="5555",MODE="0666"
+
+# rainwise cc3000 connected via usb-serial
+SUBSYSTEM=="tty",ATTRS{idVendor}=="0403",ATTRS{idProduct}=="6001",MODE="0666",SYMLINK+="cc3000"
+
+# davis vantage connected via usb-serial
+SUBSYSTEM=="tty",ATTRS{idVendor}=="10c4",ATTRS{idProduct}=="ea60",MODE="0666",SYMLINK+="vantage"
+SUBSYSTEM=="tty",ATTRS{idVendor}=="10c4",ATTRS{idProduct}=="ea61",MODE="0666",SYMLINK+="vantage"

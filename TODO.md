@@ -1,17 +1,22 @@
-# To do
+## Testing
 
-## For the poetry implementation
+- mw convert to pytest
+- mw Automate the testing of install/upgrade/uninstall for each installation
+    method using vagrant
 
-Applications need to be converted into poetry scripts.
 
-What to do with `weewx.conf` and the skins? 
-- Cannot access them as package data using `importlib.resources` because package data is supposed 
-to be readonly. So, even if the user was willing to find them deep in the virtual environment, 
-s/he could not edit them. 
-- Have to move them to some place where they are writable.
+## Drivers
 
-So, what's the final resting point? `~/.weewx`
+- mw The `fousb` driver needs to be ported to Python 12.  post weewx 5.0 release
 
-Think about namespaces. Problem areas:
-- Package `user`
-- Package `schemas`
+
+## Wiki
+
+Update the wiki entries for going from MySQL to SQLite and for SQLite to MySQL,
+this time by using `weectl database transfer`.
+
+
+# Future
+
+- mw implement weewx-multi that works on any SysV init (no lsb dependencies)
+

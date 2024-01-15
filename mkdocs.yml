@@ -1,0 +1,228 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+site_name: 'WeeWX 5.0'
+site_url: 'https://www.weewx.com'
+site_author: "Tom Keffer <tkeffer@gmail.com>"
+# do not display GitHub info since it is always obscured anyway
+#repo_url: https://github.com/weewx/weewx
+#repo_name: WeeWX GitHub Repository
+# Shut off the "edit on GitHub" feature:
+edit_uri: ''
+copyright: Copyright © 2009-2024 Thomas Keffer, Matthew Wall, and Gary Roderick, all rights reserved
+theme:
+  name: 'material'
+  logo: 'images/logo-weewx.png'
+  favicon: 'images/favicon.png'
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.indexes
+    - navigation.top
+    - toc.follow
+    - search.highlight
+    - search.share
+    - search.suggest
+    - content.tabs.link
+
+  font:
+    text: 'Noto Sans'
+    code: 'Inconsolata Mono'
+
+  palette:
+    - scheme: default
+      primary: teal
+      accent: white
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+    - scheme: slate
+      primary: white
+      accent: teal
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+
+extra_css:
+  - css/weewx_docs.css
+
+extra:
+  generator: false
+
+docs_dir: 'docs_src'
+site_dir: 'build/docs'
+
+nav:
+  - "Overview" : index.md
+
+  - "Quick start":
+    - Debian: quickstarts/debian.md
+    - RedHat: quickstarts/redhat.md
+    - SuSE: quickstarts/suse.md
+    - pip: quickstarts/pip.md
+    - git: quickstarts/git.md
+
+  - "User's guide":
+    - "Introduction": usersguide/introduction.md
+    - "Installing WeeWX": usersguide/installing.md
+    - "Where to find things" : usersguide/where.md
+    - "Running WeeWX": usersguide/running.md
+    - "Monitoring WeeWX": usersguide/monitoring.md
+    - "Web server integration": usersguide/webserver.md
+    - "Backup & restore": usersguide/backup.md
+    - "MySQL/MariaDB": usersguide/mysql-mariadb.md
+    - "Troubleshooting":
+      - "What to do": usersguide/troubleshooting/what-to-do.md
+      - "Hardware problems": usersguide/troubleshooting/hardware.md
+      - "Software problems": usersguide/troubleshooting/software.md
+      - "Meteorological problems": usersguide/troubleshooting/meteo.md
+
+  - Customization guide:
+    - "Introduction": custom/introduction.md
+    - "Customizing reports": custom/custom-reports.md
+    - "Scheduling reports": custom/report-scheduling.md
+    - "The Cheetah generator": custom/cheetah-generator.md
+    - "The Image generator": custom/image-generator.md
+    - "Localization": custom/localization.md
+    - "Customizing the database": custom/database.md
+    - "Customizing units": custom/units.md
+    - "Multiple data bindings": custom/multiple-bindings.md
+    - "Search lists": custom/sle.md
+    - "Services": custom/service-engine.md
+    - "Derived types": custom/derived.md
+    - "Drivers": custom/drivers.md
+    - "Extensions": custom/extensions.md
+
+  - Utilities guide:
+    - weewxd: utilities/weewxd.md
+    - weectl: utilities/weectl-about.md
+    - weectl database: utilities/weectl-database.md
+    - weectl debug: utilities/weectl-debug.md
+    - weectl device: utilities/weectl-device.md
+    - weectl extension: utilities/weectl-extension.md
+    - weectl import:
+      - Introduction: utilities/weectl-import-about.md
+      - Common options: utilities/weectl-import-common-opt.md
+      - Configuration options: utilities/weectl-import-config-opt.md
+      - CSV: utilities/weectl-import-csv.md
+      - Weather Underground: utilities/weectl-import-wu.md
+      - Cumulus: utilities/weectl-import-cumulus.md
+      - Weather Display: utilities/weectl-import-wd.md
+      - WeatherCat: utilities/weectl-import-weathercat.md
+      - Troubleshooting: utilities/weectl-import-troubleshoot.md
+    - weectl report: utilities/weectl-report.md
+    - weectl station: utilities/weectl-station.md
+
+  - "Hardware guide":
+    - Drivers: hardware/drivers.md
+    - AcuRite: hardware/acurite.md
+    - CC3000: hardware/cc3000.md
+    - FineOffset: hardware/fousb.md
+    - TE923: hardware/te923.md
+    - Ultimeter: hardware/ultimeter.md
+    - Vantage: hardware/vantage.md
+    - WMR100: hardware/wmr100.md
+    - WMR300: hardware/wmr300.md
+    - WMR9x8: hardware/wmr9x8.md
+    - WS1: hardware/ws1.md
+    - WS23xx: hardware/ws23xx.md
+    - WS28xx: hardware/ws28xx.md
+
+  - "Upgrade guide": upgrade.md
+
+  - Reference:
+    - "Application options":
+      - "Introduction": reference/weewx-options/introduction.md
+      - "General options": reference/weewx-options/general.md
+      - "[Station]": reference/weewx-options/stations.md
+      - "[StdRESTful]": reference/weewx-options/stdrestful.md
+      - "[StdReport]": reference/weewx-options/stdreport.md
+      - "[StdConvert]": reference/weewx-options/stdconvert.md
+      - "[StdCalibrate]": reference/weewx-options/stdcalibrate.md
+      - "[StdQC]": reference/weewx-options/stdqc.md
+      - "[StdWXCalculate]": reference/weewx-options/stdwxcalculate.md
+      - "[StdArchive]": reference/weewx-options/stdarchive.md
+      - "[StdTimeSynch]": reference/weewx-options/stdtimesynch.md
+      - "[DataBindings]": reference/weewx-options/data-bindings.md
+      - "[Databases]": reference/weewx-options/databases.md
+      - "[DatabaseTypes]": reference/weewx-options/database-types.md
+      - "[Engine]": reference/weewx-options/engine.md
+    - "Skin options":
+      - "Introduction": reference/skin-options/introduction.md
+      - "[Extras]": reference/skin-options/extras.md
+      - "[Labels]": reference/skin-options/labels.md
+      - "[Almanac]": reference/skin-options/almanac.md
+      - "[Units]": reference/skin-options/units.md
+      - "[Texts]": reference/skin-options/texts.md
+      - "[CheetahGenerator]": reference/skin-options/cheetahgenerator.md
+      - "[ImageGenerator]": reference/skin-options/imagegenerator.md
+      - "[CopyGenerator]": reference/skin-options/copygenerator.md
+      - "[Generators]": reference/skin-options/generators.md
+    - "Aggregation types": reference/aggtypes.md
+    - "Durations": reference/durations.md
+    - "Units": reference/units.md
+    - "ValueTuple": reference/valuetuple.md
+    - "ValueHelper": reference/valuehelper.md
+
+  - "Notes for developers": devnotes.md
+  - "Change log": changes.md
+
+plugins:
+  - search
+
+markdown_extensions:
+
+  # Code highlighting in ``` ``` blocks
+  # https://squidfunk.github.io/mkdocs-material/setup/extensions/python-markdown-extensions/#highlight
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+
+  - pymdownx.superfences
+
+  # https://squidfunk.github.io/mkdocs-material/setup/extensions/python-markdown-extensions/#details
+  - pymdownx.details
+
+  # linkifies URL and email links without having to wrap them in Markdown syntax. Also, allows shortens repository issue, pull request, and commit links.
+  - pymdownx.magiclink
+
+  # Highlight words with ==mark me==
+  - pymdownx.mark
+
+  # Adds support for strike through ~~strike me~~ and subscript text~a\ subscript~
+  - pymdownx.tilde
+
+  # Tabbed provides a syntax to easily add tabbed Markdown content.
+  # https://facelessuser.github.io/pymdown-extensions/extensions/tabbed/
+  - pymdownx.tabbed:
+      alternate_style: true
+
+  - pymdownx.snippets:
+      # auto_append abbreviations.md to every file
+      # https://squidfunk.github.io/mkdocs-material/reference/tooltips/#adding-a-glossary
+      auto_append:
+        - docs/abbreviations.md
+
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+  # Adds the ability to define abbreviations (https://squidfunk.github.io/mkdocs-material/reference/tooltips/)
+  - abbr
+
+  # block-styled side content
+  # https://squidfunk.github.io/mkdocs-material/reference/admonitions/
+  - admonition
+
+  - attr_list
+
+  # Adds syntax for defining footnotes in Markdown documents (https://squidfunk.github.io/mkdocs-material/reference/footnotes/)
+  - footnotes
+
+  - md_in_html
+
+  - tables
+
+  # Table of Contents`
+  # https://python-markdown.github.io/extensions/toc/
+  - toc:
+      permalink: true

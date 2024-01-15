@@ -1,0 +1,251 @@
+#! /bin/sh
+# Copyright 2016-2024 Matthew Wall, all rights reserved
+# init script to run multiple instances of weewx
+#
+# each weewx instance is identified by name.  that name is used to identify the
+# configuration and pid files.  if no list of instances is specified, then run
+# a single instance of weewxd using the configuration file weewx.conf.
+#
+# to configure the script, override variables in /etc/default/weewx
+# for example:
+#
+#   WEEWX_INSTANCES="vantage acurite"
+#   WEEWX_PYTHON=python3
+#   WEEWX_BINDIR=/opt/weewx
+#   WEEWX_CFGDIR=/etc/weewx
+#   WEEWX_RUNDIR=/var/run/weewx
+#   WEEWX_USER=weewx
+#   WEEWX_GROUP=weewx
+
+### BEGIN INIT INFO
+# Provides:          weewx-multi
+# Required-Start:    $local_fs $remote_fs $syslog $time
+# Required-Stop:     $local_fs $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: weewx-multi
+# Description:       Manages multiple instances of weewx
+### END INIT INFO
+
+# Try to keep systemd from screwing everything up
+export SYSTEMCTL_SKIP_REDIRECT=1
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC=weewx
+
+WEEWX_INSTANCES="weewx"
+WEEWX_PYTHON=python3
+WEEWX_BINDIR=/usr/share/weewx
+WEEWX_CFGDIR=/etc/weewx
+WEEWX_RUNDIR=/var/lib/weewx
+WEEWX_USER=root
+WEEWX_GROUP=root
+
+# Read configuration variable file if it is present
+[ -r /etc/default/weewx ] && . /etc/default/weewx
+
+WEEWXD=$WEEWX_BINDIR/weewxd.py
+
+# the start-stop-daemon requires a full path to the DAEMON.  prefer to use
+# the wrapper in /usr/bin, but if that is not available, then use the direct
+# python invocation of the weewxd entry script.
+DAEMON=/usr/bin/weewxd
+if [ ! -x $DAEMON ]; then
+    DAEMON="$WEEWX_PYTHON $WEEWXD"
+fi
+
+# Exit if the package is not installed
+if [ ! -f "$WEEWXD" ]; then
+    echo "The $DESC daemon is not installed at $WEEWXD"
+    exit 0
+fi
+
+# Load the VERBOSE setting and other rcS variables
+. /lib/init/vars.sh
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.0-6) to ensure that this file is present.
+. /lib/lsb/init-functions
+
+# ensure that the rundir exists and is writable by the user running weewx
+if [ ! -d $WEEWX_RUNDIR ]; then
+    mkdir -p $WEEWX_RUNDIR
+    chown $WEEWX_USER $WEEWX_RUNDIR
+    chgrp $WEEWX_GROUP $WEEWX_RUNDIR
+fi
+
+# start the daemon
+#   0 if daemon has been started
+#   1 if daemon was already running
+#   2 if daemon could not be started
+do_start() {
+    INSTANCE=$1
+    PROCNAME=$(get_procname $INSTANCE)
+    PIDFILE=$WEEWX_RUNDIR/$PROCNAME.pid
+    CFGFILE=$WEEWX_CFGDIR/$INSTANCE.conf
+    DAEMON_ARGS="--daemon --log-label=$LOGNAME --pidfile=$PIDFILE $CFGFILE"
+
+    if [ ! -f "$CFGFILE" ]; then
+        echo "The instance $INSTANCE does not have a config at $CFGFILE"
+        return 2
+    fi
+
+    NPROC=$(count_procs $INSTANCE)
+    if [ $NPROC != 0 ]; then
+        return 1
+    fi
+    start-stop-daemon --start --chuid $WEEWX_USER --pidfile $PIDFILE --exec $DAEMON -- $DAEMON_ARGS || return 2
+    return 0
+}
+
+# stop the daemon
+#   0 if daemon has been stopped
+#   1 if daemon was already stopped
+#   2 if daemon could not be stopped
+#   other if a failure occurred
+do_stop() {
+    INSTANCE=$1
+    PROCNAME=$(get_procname $INSTANCE)
+    PIDFILE=$WEEWX_RUNDIR/$PROCNAME.pid
+
+    # bail out if the app is not running
+    NPROC=$(count_procs $INSTANCE)
+    if [ $NPROC = 0 ]; then
+        return 1
+    fi
+    # bail out if there is no pid file
+    if [ ! -f $PIDFILE ]; then
+        return 1
+    fi
+    start-stop-daemon --stop --user $WEEWX_USER --pidfile $PIDFILE
+    # we cannot trust the return value from start-stop-daemon
+    RC=2
+    c=0
+    while [ $c -lt 24 -a "$RC" = "2" ]; do
+        c=`expr $c + 1`
+        # it may take awhile for the process to complete, so check it
+        NPROC=$(count_procs $INSTANCE)
+        if [ $NPROC = 0 ]; then
+            RC=0
+        else
+            echo -n "."
+            sleep 5
+        fi
+    done
+    if [ "$RC" = "0" -o "$RC" = "1" ]; then
+        # delete the pid file just in case
+        rm -f $PIDFILE
+    fi
+    return "$RC"
+}
+
+# send a SIGHUP to the daemon
+do_reload() {
+    INSTANCE=$1
+    PROCNAME=$(get_procname $INSTANCE)
+    PIDFILE=$WEEWX_RUNDIR/$PROCNAME.pid
+
+    start-stop-daemon --stop --signal 1 --quiet --user $WEEWX_USER --pidfile $PIDFILE
+    return 0
+}
+
+do_status() {
+    INSTANCE=$1
+    NPROC=$(count_procs $INSTANCE)
+    echo -n "$INSTANCE is "
+    if [ $NPROC = 0 ]; then
+        echo -n "not "
+    fi
+    echo "running."
+}
+
+count_procs() {
+    INSTANCE=$1
+    PROCNAME=$(get_procname $INSTANCE)
+    PIDFILE=$PROCNAME.pid
+    NPROC=`ps ax | grep $WEEWXD | grep $PIDFILE | wc -l`
+    echo $NPROC
+}
+
+get_procname() {
+    INSTANCE=$1
+    LABEL=weewxd
+    if [ "$INSTANCE" != "weewx" ]; then
+        LABEL=weewxd-$INSTANCE
+    fi
+    echo -n $LABEL
+}
+
+CMD=$1
+if [ "$1" != "" ]; then
+    shift
+fi
+INSTANCES="$@"
+if [ "$INSTANCES" = "" ]; then
+    INSTANCES=$WEEWX_INSTANCES
+fi
+
+
+RETVAL=0
+case "$CMD" in
+    start)
+        for i in $INSTANCES; do
+            log_daemon_msg "Starting $DESC" "$i"
+            do_start $i
+            case "$?" in
+                0) log_end_msg 0 ;;
+                1) log_action_cont_msg " already running" && log_end_msg 0 ;;
+                2) log_end_msg 1; RETVAL=1 ;;
+            esac
+        done
+        ;;
+    stop)
+        for i in $INSTANCES; do
+            log_daemon_msg "Stopping $DESC" "$i"
+            do_stop $i
+            case "$?" in
+                0) log_end_msg 0 ;;
+                1) log_action_cont_msg " not running" && log_end_msg 0 ;;
+                2) log_end_msg 1; RETVAL=1 ;;
+            esac
+        done
+        ;;
+    status)
+        for i in $INSTANCES; do
+            do_status "$i"
+        done
+        ;;
+    reload|force-reload)
+        for i in $INSTANCES; do
+            log_daemon_msg "Reloading $DESC" "$i"
+            do_reload $i
+            log_end_msg $?
+        done
+        ;;
+    restart)
+        for i in $INSTANCES; do
+            log_daemon_msg "Restarting $DESC" "$i"
+            do_stop $i
+            case "$?" in
+                0|1)
+                    do_start $i
+                    case "$?" in
+                        0) log_end_msg 0 ;;
+                        1) log_end_msg 1; RETVAL=1 ;; # Old process is still running
+                        *) log_end_msg 1; RETVAL=1 ;; # Failed to start
+                    esac
+                    ;;
+                *)
+                    log_end_msg 1
+                    RETVAL=1
+                    ;;
+            esac
+        done
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|reload} [instance]" >&2
+        exit 3
+        ;;
+esac
+
+exit $RETVAL

@@ -1,0 +1,306 @@
+/* Styles for the weewx documentation
+ *
+ *  Copyright (c) 2009-2019 Tom Keffer <tkeffer@gmail.com>
+ *
+ *  See the file LICENSE.txt for your rights.
+ *
+ */
+/*noinspection CssUnknownTarget,CssUnknownTarget*/
+@import url('https://fonts.googleapis.com/css?family=Roboto:700|Noto+Sans|Inconsolata:400,700|Droid+Serif');
+
+:root {
+    --md-accent-fg-color: teal;
+}
+
+h1 {
+    background-color: #aacccc;
+    border-radius: 3px;
+    border: 1px solid #999999;
+    clear:both;
+    color:teal;
+    font-family: 'Roboto', sans-serif;
+    font-size: 160%;
+    font-weight: bold;
+    margin-bottom: 0;
+    margin-top: 2em;
+    padding-left: .5em;
+    padding-right: .5em;
+}
+
+h2 {
+    border-bottom: 1px solid #999999;
+    clear:both;
+    color: teal;
+    font-family: 'Roboto', sans-serif;
+    font-size: 140%;
+    font-weight: bold;
+    margin-bottom: 0;
+    margin-top: 2em;
+}
+
+h3 {
+    clear:left;
+    color: teal;
+    font-family: 'Roboto', sans-serif;
+    font-size: 120%;
+    font-weight: bold;
+    margin-bottom: 0;
+    margin-top: 1.5em;
+}
+
+h4 {
+    clear:left;
+    color: teal;
+    font-family: 'Roboto', sans-serif;
+    font-size: 100%;
+    font-weight: bold;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table .tty {
+    margin: 0;
+    border: none;
+}
+
+tr {
+    vertical-align: top;
+}
+
+th {
+    background-color: #ddefef;
+    border: .05rem solid #cccccc;
+    padding: 4px 20px 4px 10px;
+}
+
+td {
+    border: .05rem solid #cccccc;
+    padding: 4px 20px 4px 10px;
+}
+
+table .first_row {
+    font-weight: bold;
+    background-color: #ddefef;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+table.fixed_width td {
+    width: 10%;
+}
+
+caption {
+    background-color: #aacccc;
+    margin: 0 0 8px;
+    border: 1px solid #888888;
+    padding: 6px 16px;
+    font-weight: bold;
+}
+
+.code {
+    font-family: 'Inconsolata', monospace;
+}
+
+p .code, td .code, li .code, dd .code {
+    background-color: #ecf3f3;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+.symcode {
+    font-family: 'Inconsolata', monospace;
+    font-style: italic;
+}
+
+p .symcode {
+    background-color: #ecf3f3;
+    padding-left: 1px;
+    padding-right: 1px;
+}
+
+.station_data {
+    margin-left: 40px;
+    margin-right: 80px;
+    width: 500px;
+}
+
+.station_data_key {
+    font-size: 80%;
+    font-style: italic;
+    margin-left: 40px;
+    margin-right: 80px;
+    width: 500px;
+}
+
+.cmd {
+/*    font-weight: bold; */
+}
+
+.tty {
+    font-family: 'Inconsolata', monospace;
+    background-color: var(--md-code-bg-color), #f5f5f5;
+    border: 1px solid #ccd3d3;
+    padding: 3px 8px 3px 8px;
+    margin: 5px 15px 5px 15px;
+    white-space: pre;
+    line-height: normal;
+/*    font-weight: bold; */
+    color: var(--md-code-fg-color), #36464e;
+    overflow: auto;
+}
+
+.highlight {
+    background-color: #ffff99;
+}
+
+.text_highlight, .first_col {
+    font-weight: bold;
+    background-color: #eef0f0;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.center {
+    text-align: center;
+}
+
+.example_output {
+    font-family: 'Droid Serif', serif;
+    padding: 15px 20px 15px 20px;
+    margin: 5px 15px 5px 15px;
+    border: 1px solid #cccccc;
+    box-shadow: 2px 2px 2px #dddddd;
+    display: inline-block;
+}
+
+.example_text {
+    font-family: 'Noto Sans', sans-serif;
+    font-weight: bold;
+    background-color: #ecf3f3;
+    padding: 0px 4px 0px 4px;
+}
+
+.image {
+    padding: 5px;
+}
+
+.note {
+    background-color: #ddf0e0;
+    border: 1px solid #bbd0c0;
+    margin: 10px 30px 10px 30px;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.warning {
+    background-color: #ffeeee;
+    border: 1px solid #ffdddd;
+    margin: 10px 30px 10px 30px;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+/*
+ * The stats styles mimic the styles used in the default standard template
+ * output so that examples in the docs match those of the standard template.
+ */
+.stats {
+    font-family: 'Noto Sans', sans-serif;
+    padding: 13px 58px 13px 58px;
+}
+
+.stats table {
+    border: thin solid #000000;
+    width: 100%;
+}
+
+.stats td {
+    border: thin solid #000000;
+    padding: 2px;
+}
+
+.stats_label {
+    color: green;
+}
+
+.stats_data {
+    color: red;
+}
+
+/* change indicators in the upgrade guide */
+.removed { background: #ffdddd; }
+.changed { background: #ffe0b0; }
+.added { background: #ccffcc; }
+
+/* override settings in material */
+
+.md-typeset table:not([class]) {
+    border: none; /* no border on table, since we do it on cells */
+}
+
+.md-typeset table:not([class]) tbody tr:hover {
+    background-color: inherit; /* do not change backgrounds on mouseovers */
+}
+
+.md-typeset table:not([class]) th {
+    padding: 0.2em 1em;
+}
+
+.md-typeset table:not([class]) td {
+    padding: 0.2em 1em;
+}
+
+.md-typeset table:not([class]) {
+    font-size: inherit;  /* match the body; the default of 0.64 is too small */
+}
+
+.md-typeset .tabbed-labels > label {
+    font-size: inherit;  /* match the body; the default of 0.64 is too small */
+}
+
+/* make the admonitions (note/warning) less dominant */
+.md-typeset .admonition-title, md-typeset summary {
+    padding-bottom: 0;
+    padding-top: 0;
+}
+
+.md-typeset .admonition-title::before, md-typeset summary:before {
+    top: 0.2em;
+}
+
+.md-typeset .admonition, .md-typeset details {
+    font-size: 0.7rem;  /* match the body; the default of 0.64 is too small */
+    margin: 0.4em .8em;  /* make the box a bit smaller than the doc width */
+}
+
+.md-typeset code, .md-typeset .linenos {
+    font-weight: bold;
+    font-size: .9em;
+}
+
+.md-source__facts li {
+    margin-right: 7%;   /* over 7% breaks the github banner */
+}
+
+.md-header__button.md-logo {
+    background-color: white; /* make logo fully visible */
+}
+
+.md-typeset h1 {
+    color: teal; /* ensure that h1 looks ok in dark mode */
+}
+
+.md-typeset pre > code {
+    scrollbar-width: auto; /* make scrollbars wide enough to use */
+}
+
+.md-typeset pre > code:hover {
+    scrollbar-color: teal #0000; /* replace the default blue color */
+    scrollbar-width: auto; /* make scrollbars wide enough to use */
+}
+
+.md-typeset__table {
+    display: inherit; /* eliminate extra padding */
+}

@@ -1,0 +1,8 @@
+0.3 23jan2023
+* Port to WeeWX V5.0 -tk
+
+0.2 13nov2014
+* update to work with weewx v3
+
+0.1 02feb2014
+* initial release as packaged weewx extension

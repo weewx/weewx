@@ -1,6 +1,6 @@
 #!/bin/sh
 # postinst script for weewx debian package
-# Copyright 2013-2019 Matthew Wall
+# Copyright 2013-2024 Matthew Wall
 #
 # ways this script might be invoked:
 #
@@ -18,27 +18,19 @@ set -e
 . /usr/share/debconf/confmodule
 
 cfgfile=/etc/weewx/weewx.conf
-cfgapp=/usr/bin/wee_config
+cfgapp=/usr/bin/weectl
 
-# insert any configuration variables into the configuration file
-insert_debconf_variables() {
+WEEWX_USER=weewx
+WEEWX_GROUP=weewx
+WEEWX_HOME=/var/lib/weewx
+WEEWX_HTML=/var/www/html/weewx
+WEEWX_USERDIR=/etc/weewx/bin/user
+
+# insert the driver and stanza into the configuration file
+insert_driver() {
     if [ ! -f $cfgfile ]; then
         return
     fi
-
-    db_get weewx/location
-    sed -i "/\[Station\]/,/\[.*\]/ s%location =.*%location = \"$RET\"%" $cfgfile
-
-    db_get weewx/latlon
-    lat=$(echo $RET | cut -d, -f1 | sed 's/^ //g' | sed 's/ $//g')
-    lon=$(echo $RET | cut -d, -f2 | sed 's/^ //g' | sed 's/ $//g')
-    sed -i "/\[Station\]/,/\[.*\]/ s%latitude[ ]*=.*%latitude = $lat%" $cfgfile
-    sed -i "/\[Station\]/,/\[.*\]/ s%longitude[ ]*=.*%longitude = $lon%" $cfgfile
-
-    db_get weewx/altitude
-    a=$(echo $RET | cut -d, -f1 | sed 's/^ //g' | sed 's/ $//g')
-    u=$(echo $RET | cut -d, -f2 | sed 's/^ //g' | sed 's/ $//g')
-    sed -i "/\[Station\]/,/\[.*\]/ s%altitude[ ]*=.*%altitude = $a, $u%" $cfgfile
 
     # FIXME: generalize this so it does not have to be modified every time a
     #        new station type is added or new station options are added.
@@ -164,71 +156,328 @@ install_weewxconf() {
         units=metricwx
     fi
 
-    $cfgapp --install --dist-config=$cfgfile --output=$cfgfile --driver=$driver --unit-system=$units --no-prompt --no-backup
+    db_get weewx/location
+    location=$RET
 
-    insert_debconf_variables
+    db_get weewx/latlon
+    lat=$(echo $RET | cut -d, -f1 | sed 's/^ //g' | sed 's/ $//g')
+    lon=$(echo $RET | cut -d, -f2 | sed 's/^ //g' | sed 's/ $//g')
+
+    db_get weewx/altitude
+    altitude=$(echo $RET | cut -d, -f1 | sed 's/^ //g' | sed 's/ $//g')
+    altitude_unit=$(echo $RET | cut -d, -f2 | sed 's/^ //g' | sed 's/ $//g')
+
+    db_get weewx/register
+    if [ "$RET" = 'true' ]; then
+      register=y
+      db_get weewx/station_url
+      station_url_param="--station-url=$RET"
+    else
+      register=n
+      station_url_param=" "
+    fi
+
+    $cfgapp station reconfigure --config=$cfgfile \
+      --driver=$driver --units=$units --location="$location" \
+      --latitude=$lat --longitude=$lon --altitude=$altitude,$altitude_unit \
+      --register=$register $station_url_param \
+      --no-prompt --no-backup
+
+    insert_driver
 }
 
-# use weewx setup utilities to merge new features into existing weewx.conf
+# use weewx setup utilities to merge new features into existing weewx.conf.
+# user will be prompted about whether to accept the new version or the previous
+# configuration.
+#
+# if they choose existing, then they end up with:
+#   weewx.conf           - previous config
+#   weewx.conf.x.y.z     - new config
+#
+# if they choose new, then they end up with:
+#   weewx.conf.dpkg-old  - previous config
+#   weewx.conf           - new config
+#
+# new install:
+#   weewx.conf           - new config filled with values from debconf
+#   weewx.conf-new       - new config (created by dpkg rules)
+#
+# upgrade:
+#   weewx.conf           - previous config
+#   weewx.conf-new       - new config (created by dpkg rules)
+#   weewx.conf-old-new   - old config upgraded to this version
+#
 merge_weewxconf() {
     if [ ! -f $cfgfile ]; then
         return
     fi
 
-    NEWVER=`$cfgapp --version`
-    OLDVER=$(get_conf_version $cfgfile)
-    if dpkg --compare-versions $OLDVER lt $NEWVER; then
-        # this is an old config, so merge it into a new config
-        if [ -f $cfgfile.dist ]; then
-            DSTVER=$(get_conf_version $cfgfile.dist)
-            if dpkg --compare-versions $DSTVER eq $NEWVER; then
-                echo saving previous config file as $cfgfile-$OLDVER
-                mv $cfgfile $cfgfile-$OLDVER
-                echo saving distribution config file as $cfgfile-$NEWVER
-                cp -p $cfgfile.dist $cfgfile-$NEWVER
-                echo merging previous and distribution into $cfgfile
-                $cfgapp --upgrade --config=$cfgfile-$OLDVER --dist-config=$cfgfile-$NEWVER --output=$cfgfile --no-prompt --no-backup
-            else
-                echo distribution config file is wrong version for merging
+    if [ -f $cfgfile ]; then
+        NEWVER=$($cfgapp --version | cut -d' ' -f2)
+        OLDVER=$(get_conf_version $cfgfile)
+        if dpkg --compare-versions $OLDVER lt $NEWVER; then
+            # this is an old config, so create a maintainer's version
+            if [ -f $cfgfile-$NEWVER ]; then
+	        MNT=$OLDVER-$NEWVER
+                echo "Creating maintainer config file as $cfgfile-$MNT"
+                cp -p $cfgfile $cfgfile-$MNT
+                $cfgapp station upgrade --config=$cfgfile-$MNT --dist-config=$cfgfile-$NEWVER --what=config --no-backup --yes
             fi
         else
-            echo no distribution config with which to merge
+            # this is a new config, so just insert debconf values into it
+            echo "Using debconf configuration values from previous install"
+            install_weewxconf
         fi
-    else
-        # this is a new config, so just insert debconf values into it
-        echo using debconf configuration values from previous install
-        install_weewxconf
+    fi
+}
+
+# precompile the bytecode
+precompile() {
+    rc=$(python3 -m compileall -q -x 'user' /usr/share/weewx)
+    if [ "$rc" != "" ]; then
+        echo "Pre-compile failed!"
+        echo "$rc"
     fi
 }
 
 # get the version number from the specified file, without the debian revisions
 get_conf_version() {
-    echo `grep '^version.*=' $1 | sed -e 's/\s*version\s*=\s*//' | sed -e 's/-.*//'`
+    v=$(grep '^version.*=' $1 | sed -e 's/\s*version\s*=\s*//' | sed -e 's/-.*//')
+    if [ "$v" = "" ]; then
+        # someone might have messed with the version string
+        v="xxx"
+    fi
+    echo $v
 }
 
+get_user() {
+    if [ -d $WEEWX_HOME ]; then
+        WEEWX_USER=$(stat -c "%U" $WEEWX_HOME)
+        WEEWX_GROUP=$(stat -c "%G" $WEEWX_HOME)
+    fi
+    echo "Using $WEEWX_USER:$WEEWX_GROUP as user:group"
+}
+
+# create/modify the defaults file to match this installation.  if the file does
+# not exist, then create it with our values.  otherwise, put our values in if
+# the variables have not yet been specified.
+setup_defaults() {
+    dflts=/etc/default/weewx
+    if [ ! -f $dflts ]; then
+        echo "Creating /etc/default/weewx"
+        echo "WEEWX_PYTHON=python3" > $dflts
+        echo "WEEWX_BINDIR=/usr/share/weewx" >> $dflts
+    else
+        grep -q "^WEEWX_PYTHON=" $dflts || \
+            echo "WEEWX_PYTHON=python3" >> $dflts
+        grep -q "^WEEWX_BINDIR=" $dflts || \
+            echo "WEEWX_BINDIR=/usr/share/weewx" >> $dflts
+    fi
+
+    # the SysV rc script uses additional variables, so set values for them
+    if [ "$1" = "init" ]; then
+        grep -q "^WEEWX_CFGDIR=" $dflts || \
+            echo "WEEWX_CFGDIR=/etc/weewx" >> $dflts
+        grep -q "^WEEWX_RUNDIR=" $dflts || \
+            echo "WEEWX_RUNDIR=/var/lib/weewx" >> $dflts
+        grep -q "^WEEWX_USER=" $dflts || \
+            echo "WEEWX_USER=$WEEWX_USER" >> $dflts
+        grep -q "^WEEWX_GROUP=" $dflts || \
+            echo "WEEWX_GROUP=$WEEWX_GROUP" >> $dflts
+        grep -q "^WEEWX_INSTANCES=" $dflts || \
+            echo "WEEWX_INSTANCES=\"weewx\"" >> $dflts
+    fi
+}
+
+# create the user that the daemon will run as, but only if not already exist
+create_user() {
+    if ! getent group | grep -q "^$WEEWX_GROUP:"; then
+        echo -n "Adding group $WEEWX_GROUP..."
+        addgroup --quiet --system $WEEWX_GROUP || true
+        echo "done"
+    fi
+    if ! getent passwd | grep -q "^$WEEWX_USER:"; then
+        echo -n "Adding system user $WEEWX_USER..."
+        adduser --quiet --system --ingroup $WEEWX_GROUP \
+                --no-create-home --home $WEEWX_HOME \
+                --disabled-password weewx || true
+        echo "done"
+    fi
+}
+
+# put the init files in place
+setup_init() {
+    if [ "$1" = "systemd" ]; then
+        # prefer /usr/lib but fall back to /usr
+        dst="/usr/lib/systemd/system"
+        if [ ! -d $dst ]; then
+            dst="/lib/systemd/system"
+        fi
+        if [ -d $dst ]; then
+            echo "Installing systemd units"
+            for f in weewx.service weewx@.service; do
+                sed \
+ -e "s/User=.*/User=${WEEWX_USER}/" \
+ -e "s/Group=.*/Group=${WEEWX_GROUP}/" \
+ /etc/weewx/systemd/$f > $dst/$f
+            done
+            systemctl daemon-reload
+        fi
+    elif [ "$1" = "init" ]; then
+        echo "Installing SysV rc script"
+        cp /etc/weewx/init.d/weewx-multi /etc/init.d/weewx
+        chmod 755 /etc/init.d/weewx
+    fi
+}
+
+enable_init() {
+    echo "Enabling startup using $1"
+    if [ "$1" = "systemd" ]; then
+	systemctl enable weewx > /dev/null
+    elif [ "$1" = "init" ]; then
+        update-rc.d weewx defaults > /dev/null
+    fi
+}
+
+start_weewx() {
+    echo "Starting weewxd using $1"
+    if [ "$1" = "systemd" ]; then
+	systemctl start weewx
+    elif [ "$1" = "init" ]; then
+        invoke-rc.d weewx start
+    fi
+}
+
+# put the udev rules in place
+setup_udev() {
+    # prefer /usr/lib but fall back to /lib
+    dst=/usr/lib/udev/rules.d
+    if [ ! -d $dst ]; then
+        dst=/lib/udev/rules.d
+    fi
+    if [ -d $dst ]; then
+        echo "Installing udev rules"
+        sed \
+ -e "s/GROUP=\"weewx\"/GROUP=\"${WEEWX_GROUP}\"/" \
+ /etc/weewx/udev/weewx.rules > $dst/60-weewx.rules
+    fi
+}
+
+# create the skins if skins do not already exist
+setup_skins() {
+    if [ ! -d /etc/weewx/skins ]; then
+        echo "Creating skins directory /etc/weewx/skins"
+        cp -rp /usr/share/weewx/weewx_data/skins /etc/weewx
+    fi
+}
+
+# create the user extensions directory if one does not already exist
+setup_user_dir() {
+    if [ ! -d $WEEWX_USERDIR ]; then
+        echo "Creating user extension directory $WEEWX_USERDIR"
+        mkdir -p $WEEWX_USERDIR
+        cp /usr/share/weewx/weewx_data/bin/user/__init__.py $WEEWX_USERDIR
+        cp /usr/share/weewx/weewx_data/bin/user/extensions.py $WEEWX_USERDIR
+    fi
+}
+
+# create the database directory
+setup_database_dir() {
+    echo "Configuring database directory $WEEWX_HOME"
+    mkdir -p $WEEWX_HOME
+    chmod 2775 $WEEWX_HOME
+    chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HOME
+}
+
+# create the reporting directory
+setup_reporting_dir() {
+    echo "Configuring reporting directory $WEEWX_HTML"
+    mkdir -p $WEEWX_HTML
+    chmod 2775 $WEEWX_HTML
+    chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HTML
+}
+
+# set the permissions on the configuration, skins, and extensions
+set_permissions() {
+    echo "Setting permissions $WEEWX_USER:$WEEWX_GROUP on /etc/weewx"
+    chown -R $WEEWX_USER:$WEEWX_GROUP /etc/weewx
+}
+
+# if there are any existing extensions in the V4 location, copy them to the
+# V5 location, then move aside the old location
+migrate_extensions() {
+    if [ -d /usr/share/weewx/user ]; then
+        echo "Migrating old extensions to $WEEWX_USERDIR"
+        mkdir -p $WEEWX_USERDIR
+        cp -rp /usr/share/weewx/user/* $WEEWX_USERDIR
+        ts=`date +"%Y%m%d%H%M%S"`
+        echo "Saving old extensions to /usr/share/weewx/user-$ts"
+        mv /usr/share/weewx/user /usr/share/weewx/user-$ts
+    fi
+}
+
+# check for systemd and/or sysV init files that might affect the init setup
+# that we install.
+check_init() {
+    files_to_check=""
+    if [ "$1" = "systemd" ]; then
+        files_to_check="/etc/init.d/weewx-multi /etc/init.d/weewx /etc/systemd/system/weewx.service"
+    elif [ "$1" = "init" ]; then
+        files_to_check="/etc/init.d/weewx-multi"
+    fi
+    files=""
+    for f in $files_to_check; do
+        if [ -f $f ]; then
+            files="$files $f"
+        fi
+    done
+    if [ "$files" != "" ]; then
+        echo "The following files might interfere with the init configuration:"
+        for f in $files; do
+            echo "  $f"
+        done
+    fi
+}
+
+
+# see which init system is running
+pid1=none
+if [ -d /run/systemd/system ]; then
+    pid1=systemd
+else
+    pid1=init
+fi
+
 case "$1" in
-configure)
+    configure)
+        get_user
+        setup_defaults $pid1
+
         if [ "$2" != "" ]; then
-            # this is an upgrade so attempt to merge
+            # this is an upgrade so create a maintainers version by merging
             merge_weewxconf
+            # migrate any extensions from V4 location to V5
+            migrate_extensions
         else
             # virgin install so insert debconf values into the config file
             install_weewxconf
         fi
 
-        # precompile the bytecode
-        #python -m compileall /usr/share/weewx
-
-        # configure for system startup
-        update-rc.d weewx defaults 98 > /dev/null
-
-        # start the weewx daemon
-        invoke-rc.d weewx start
+        create_user
+        setup_init $pid1
+        setup_udev
+        setup_skins
+        setup_user_dir
+        setup_database_dir
+        setup_reporting_dir
+        precompile
+        set_permissions
+        enable_init $pid1
+        start_weewx $pid1
+        check_init $pid1
         ;;
 
-abort-remove)
-        # precompile the bytecode
-        #python -m compileall /usr/share/weewx
+    abort-remove)
         ;;
 esac
 

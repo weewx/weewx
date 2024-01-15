@@ -1,0 +1,84 @@
+## Copyright 2009-2018 Tom Keffer, Matthew Wall
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+
+#set $periods = $to_list($DisplayOptions.get('periods', ['day', 'week', 'month', 'year']))
+#set $plot_groups = $to_list($DisplayOptions.get('plot_groups', ['tempdew', 'wind', 'rain']))
+
+## use this span to determine whether there are any data to consider.
+#set $recent=$span($day_delta=30, boundary='midnight')
+
+<!DOCTYPE html>
+<html lang="$lang">
+  <head>
+    <meta charset="UTF-8">
+    <title>$station.location</title>
+    <link rel="icon" type="image/png" href="favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="seasons.css"/>
+    #if $station.station_url
+    <link rel="canonical" href="$station.station_url/$filename" />
+    #end if
+    <script src="seasons.js"></script>
+    #include "analytics.inc"
+  </head>
+
+  <body onload="setup();">
+    #include "titlebar.inc"
+    
+    <div id="contents">
+      <div id="widget_group">
+        #include "current.inc"
+        #include "sunmoon.inc"
+        #include "hilo.inc"
+        #include "sensors.inc"
+        #include "about.inc"
+        #include "radar.inc"
+        #include "satellite.inc"
+        #include "map.inc"
+      </div>
+
+      <div id="plot_group">
+        <div id="history_widget" class="widget">
+          <div id="plot_title" class="widget_title">$gettext("History"):&nbsp;&nbsp;
+            <a class="button_selected" id="button_history_day"
+               onclick="choose_history('day')">$gettext("Day")</a>
+            <a class="button" id="button_history_week"
+               onclick="choose_history('week')">$gettext("Week")</a>
+            <a class="button" id="button_history_month"
+               onclick="choose_history('month')">$gettext("Month")</a>
+            <a class="button" id="button_history_year"
+               onclick="choose_history('year')">$gettext("Year")</a>
+          </div>
+
+#for period in $periods
+          <div id="history_${period}" class="plot_container" style="display:none">
+  #for plot_group in $plot_groups
+    #set $show_plot = 0
+    #*
+      The plot name is just the concatenation of the period and the plot group.
+      For example, 'year' + 'tempdew' yields 'yeartempdew'.
+    *#
+    #set $plot_name = $period + $plot_group
+    #for obs in $getobs($plot_name)
+      #if $recent.check_for_data($obs)
+        #set $show_plot = 1
+      #end if
+    #end for
+    #if $show_plot
+            <img src="${plot_name}.png" alt="${plot_name}"/>
+    #end if
+  #end for
+          </div>
+#end for
+
+        </div>
+      </div>
+    </div>
+
+    <p class="footnote">
+      $gettext("This station is controlled by <a href='https://weewx.com'>WeeWX</a>, an experimental weather software system written in Python.")
+    </p>
+
+  </body>
+
+</html>

@@ -12,8 +12,9 @@ db_version 2.0
 # this conf script is capable of backing up
 db_capb backup
 
-STATE=1 
-while [ "$STATE" != 0 -a "$STATE" != 7 ]; do
+STATE=1
+while [ "$STATE" != 0 -a "$STATE" != 9 ]; do
+
     case "$STATE" in
         1)
             db_input high weewx/location || true
@@ -96,6 +97,18 @@ while [ "$STATE" != 0 -a "$STATE" != 7 ]; do
             if [ "$RET" = "WS28xx" ]; then
                 db_input high weewx/ws28xx_model || true
                 db_input high weewx/ws28xx_frequency || true
+            fi
+            ;;
+
+        7)
+            db_input high weewx/register || true
+            ;;
+
+        8) # if the user requested station registration, get an url
+            db_get weewx/register
+
+            if [ "$RET" = "true" ]; then
+                db_input high weewx/station_url || true
             fi
             ;;
     esac

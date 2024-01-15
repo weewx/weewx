@@ -1,0 +1,9 @@
+/var/log/weewx/*.log {
+  weekly
+  missingok
+  rotate 4
+  compress
+  delaycompress  # do not compress the most recently rotated file
+  copytruncate   # copy the file, then truncate
+  notifempty
+}

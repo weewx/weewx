@@ -1,0 +1,161 @@
+#errorCatcher Echo
+#encoding UTF-8
+<!DOCTYPE html>
+<html lang="$lang">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Test almanac</title>
+    <style>
+        table {
+            border: thin solid #000000;
+        }
+
+        td {
+            border: thin solid #000000;
+            padding: 2px;
+        }
+    </style>
+</head>
+<body>
+<h1>Test for \$almanac. Requires pyephem</h1>
+<h2>Sun</h2>
+<table>
+    <tr>
+        <td>\$almanac.sun.az (old-style)</td>
+        <td>$("%.3f" % $almanac.sun.az)</td>
+    </tr>
+    <tr>
+        <td>\$almanac.sun.alt (old-style)</td>
+        <td>$("%.3f" % $almanac.sun.alt)</td>
+    </tr>
+    <tr>
+        <td>\$almanac.sun.azimuth</td>
+        <td>$almanac.sun.azimuth</td>
+    </tr>
+    <tr>
+        <td>\$almanac.sun.azimuth.format("%03.2f")</td>
+        <td>$almanac.sun.azimuth.format("%03.2f")</td>
+    </tr>
+    <tr>
+        <td>\$almanac.sun.altitude</td>
+        <td>$almanac.sun.altitude</td>
+    </tr>
+    <tr>
+        <td>\$almanac.sun.altitude.format("%02.2f")</td>
+        <td>$almanac.sun.altitude.format("%02.2f")</td>
+    </tr>
+    <tr>
+        <td>\$almanac.sun.altitude.radian</td>
+        <td>$almanac.sun.altitude.radian</td>
+    </tr>
+    <tr>
+        <td>\$almanac.sun.astro_ra</td>
+        <td>$almanac.sun.astro_ra</td>
+    </tr>
+    <tr>
+        <td>\$almanac.sun.astro_dec</td>
+        <td>$almanac.sun.astro_dec</td>
+    </tr>
+    <tr>
+        <td>\$almanac.sun.geo_ra</td>
+        <td>$almanac.sun.geo_ra</td>
+    </tr>
+    <tr>
+        <td>\$almanac.sun.geo_dec</td>
+        <td>$almanac.sun.geo_dec</td>
+    </tr>
+    <tr>
+        <td>\$almanac.sun.topo_ra</td>
+        <td>$almanac.sun.topo_ra</td>
+    </tr>
+    <tr>
+        <td>\$almanac.sun.topo_dec</td>
+        <td>$almanac.sun.topo_dec</td>
+    </tr>
+    <tr>
+        <td>\$almanac.sidereal_time</td>
+        <td>$almanac.sidereal_time</td>
+    </tr>
+    <tr>
+        <td>\$almanac.sidereal_angle</td>
+        <td>$almanac.sidereal_angle</td>
+    </tr>
+</table>
+
+<h2>Jupiter</h2>
+<table>
+    <tr>
+        <td>\$almanac.jupiter.az (old-style)</td>
+        <td>$("%.3f" % $almanac.jupiter.az)</td>
+    </tr>
+    <tr>
+        <td>\$almanac.jupiter.alt (old-style)</td>
+        <td>$("%.3f" % $almanac.jupiter.alt)</td>
+    </tr>
+    <tr>
+        <td>\$almanac.jupiter.azimuth</td>
+        <td>$almanac.jupiter.azimuth</td>
+    </tr>
+    <tr>
+        <td>\$almanac.jupiter.altitude</td>
+        <td>$almanac.jupiter.altitude</td>
+    </tr>
+    <tr>
+        <td>\$almanac.jupiter.astro_ra</td>
+        <td>$almanac.jupiter.astro_ra</td>
+    </tr>
+    <tr>
+        <td>\$almanac.jupiter.astro_dec</td>
+        <td>$almanac.jupiter.astro_dec</td>
+    </tr>
+    <tr>
+        <td>\$almanac.jupiter.geo_ra</td>
+        <td>$almanac.jupiter.geo_ra</td>
+    </tr>
+    <tr>
+        <td>\$almanac.jupiter.geo_dec</td>
+        <td>$almanac.jupiter.geo_dec</td>
+    </tr>
+    <tr>
+        <td>\$almanac.jupiter.topo_ra</td>
+        <td>$almanac.jupiter.topo_ra</td>
+    </tr>
+    <tr>
+        <td>\$almanac.jupiter.topo_dec</td>
+        <td>$almanac.jupiter.topo_dec</td>
+    </tr>
+    <tr>
+        <td>\$almanac.jupiter.topo_dec.radian</td>
+        <td>$almanac.jupiter.topo_dec.radian</td>
+    </tr>
+</table>
+
+<h2>Venus</h2>
+<p>Example from the <a href="https://rhodesmill.org/pyephem/quick.html#body-compute-observer">PyEphem manual</a>:</p>
+<table>
+    <tr>
+        <td>\$almanac(lon=-84.39733, lat=33.775867, altitude=320, almanac_time=454782176).venus.altitude</td>
+        <td>$almanac(lon=-84.39733, lat=33.775867, altitude=320, almanac_time=454782176).venus.altitude.format("%02.2f")</td>
+    </tr>
+    <tr>
+        <td>\$almanac(lon=-84.39733, lat=33.775867, altitude=320, almanac_time=454782176).venus.azimuth</td>
+        <td>$almanac(lon=-84.39733, lat=33.775867, altitude=320, almanac_time=454782176).venus.azimuth.format("%03.2f")</td>
+    </tr>
+</table>
+
+<h2>Example from the docs</h2>
+Current time is $current.dateTime
+#if $almanac.hasExtras
+    <pre>
+    Sunrise, transit, sunset: $almanac.sun.rise $almanac.sun.transit $almanac.sun.set
+    Moonrise, transit, moonset: $almanac.moon.rise $almanac.moon.transit $almanac.moon.set
+    Mars rise, transit, set: $almanac.mars.rise $almanac.mars.transit $almanac.mars.set
+    Azimuth, altitude of Mars: $almanac.mars.azimuth $almanac.mars.altitude
+    Next new, full moon: $almanac.next_new_moon; $almanac.next_full_moon
+    Next summer, winter solstice: $almanac.next_summer_solstice; $almanac.next_winter_solstice
+    </pre>
+#else
+    Sunrise, sunset: $almanac.sunrise $almanac.sunset
+#end if
+</body>
+</html>
