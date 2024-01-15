@@ -572,6 +572,10 @@ class UnknownObsType:
     def __str__(self):
         return u"?'%s'?" % self.obs_type
 
+# Backwards compatible reference:
+UnknownType = UnknownObsType
+
+
 #==============================================================================
 #                        class Formatter
 #==============================================================================
