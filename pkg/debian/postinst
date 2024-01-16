@@ -166,6 +166,13 @@ install_weewxconf() {
     db_get weewx/altitude
     altitude=$(echo $RET | cut -d, -f1 | sed 's/^ //g' | sed 's/ $//g')
     altitude_unit=$(echo $RET | cut -d, -f2 | sed 's/^ //g' | sed 's/ $//g')
+    if [ "$altitude_unit" = "feet" ]; then
+        altitude_unit=foot
+    elif [ "$altitude_unit" = "meters" ]; then
+        altitude_unit=meter
+    elif [ "$altitude_unit" != "foot" -a "$altitude_unit" != "meter" ]; then
+        altitude_unit=foot
+    fi
 
     db_get weewx/register
     if [ "$RET" = 'true' ]; then
