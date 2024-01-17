@@ -8,6 +8,9 @@ Include backwards compatible reference to `weewx.UnknownType`.
 Fixed problem with installing extensions into installations that used V4 config
 files that were installed by a package installer.
 
+Fix problem with `weectl device` when using drivers that were installed 
+using the extension installer. Fixes issue #918.
+
 
 ### 5.0.0 01/14/2024
 

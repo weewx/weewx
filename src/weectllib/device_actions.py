@@ -17,8 +17,9 @@ import configobj
 
 import weecfg
 import weeutil.logger
+import weeutil.startup
 import weewx
-from weeutil.weeutil import to_int
+from weeutil.weeutil import to_int, bcolors
 
 log = logging.getLogger('weectl-device')
 
@@ -31,15 +32,22 @@ def device():
     # Load the configuration file
     try:
         config_fn, config_dict = weecfg.read_config(config_path, sys.argv[2:])
-    except (OSError, configobj.ConfigObjError) as e:
-        sys.exit(e)
-    print(f'Using configuration file {config_fn}')
+    except (IOError, configobj.ConfigObjError) as e:
+        print(f"Error parsing config file: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
+        sys.exit(weewx.CONFIG_ERROR)
+
+    print(f"Using configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
 
     # Set weewx.debug as necessary:
     weewx.debug = to_int(config_dict.get('debug', 0))
 
     # Customize the logging with user settings.
     weeutil.logger.setup('weectl', config_dict)
+
+    # Set up debug, add USER_ROOT to PYTHONPATH, read user.extensions:
+    weeutil.startup.initialize(config_dict)
 
     try:
         # Find the device driver
