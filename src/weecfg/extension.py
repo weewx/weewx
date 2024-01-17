@@ -280,7 +280,7 @@ class ExtensionEngine(object):
         """Generate tuples of (source, destination) from a file_list"""
 
         # Go through all the files used by the extension. A "source tuple" is something like
-        # (bin, [user/myext.py, user/otherext.py]).
+        # (bin/user, [bin/user/myext.py, bin/user/otherext.py]).
         for source_tuple in file_list:
             # Expand the source tuple
             dest_dir, source_files = source_tuple

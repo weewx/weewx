@@ -558,6 +558,7 @@ def update_to_v32(config_dict):
     # with a trailing slash ('/'). Convert it to the normative form:
     if 'WEEWX_ROOT_CONFIG' in config_dict:
         config_dict['WEEWX_ROOT_CONFIG'] = os.path.normpath(config_dict['WEEWX_ROOT_CONFIG'])
+        config_dict['WEEWX_ROOT'] = os.path.normpath(config_dict['WEEWX_ROOT'])
 
     # Add a default database-specific top-level stanzas if necessary
     if 'DatabaseTypes' not in config_dict:

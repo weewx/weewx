@@ -156,19 +156,23 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
 
     # Remember where we found the config file
     config_dict['config_path'] = os.path.realpath(config_path)
-    # If there was a value for WEEWX_ROOT in the configuration file, remember it so we can
-    # restore it later.
-    if 'WEEWX_ROOT' in config_dict:
-        config_dict['WEEWX_ROOT_CONFIG'] = config_dict['WEEWX_ROOT']
 
-    # If WEEWX_ROOT is not in the configuration file, supply a default:
-    if 'WEEWX_ROOT' not in config_dict:
+    # Process WEEWX_ROOT
+    if 'WEEWX_ROOT' in config_dict:
+        # There is a value for WEEWX_ROOT. Save it.
+        config_dict['WEEWX_ROOT_CONFIG'] = config_dict['WEEWX_ROOT']
+        # Check for an older config file. If found, patch to new location
+        if config_dict['WEEWX_ROOT'] == '/':
+            config_dict['WEEWX_ROOT'] = '/etc/weewx'
+    else:
+        # No WEEWX_ROOT in the config dictionary. Supply a default.
         config_dict['WEEWX_ROOT'] = os.path.dirname(config_path)
 
-    # In case WEEWX_ROOT is a relative path, join it with the location of the config file, then
-    # convert it to an absolute path.
-    config_dict['WEEWX_ROOT'] = os.path.abspath(os.path.join(os.path.dirname(config_path),
-                                                             config_dict['WEEWX_ROOT']))
+    # If the result of all that is not an absolute path, join it with the location of the config
+    # file, which will make it into an absolute path.
+    if not os.path.abspath(config_dict['WEEWX_ROOT']):
+        config_dict['WEEWX_ROOT'] = os.path.normpath(os.path.join(os.path.dirname(config_path),
+                                                                  config_dict['WEEWX_ROOT']))
 
     return config_path, config_dict
 
