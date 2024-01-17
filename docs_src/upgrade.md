@@ -200,12 +200,6 @@ supported USB or serial device.
 If you install using `pip`, the rules are installed by the same script that
 installs the files necessary to run as a daemon.
 
-### Class `weewx.units.UnknownType` has been renamed
-
-Its name was too similar to `weewx.UnknownType`, so it has been renamed to
-`weewx.units.UnknownObsType`. It is very unlikely any users would be affected
-by this.
-
 ### `import` utility changes
 
 The use of a field map by the `import` utility has been revised and is now 

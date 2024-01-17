@@ -1,6 +1,11 @@
 WeeWX change history
 --------------------
 
+### 5.0.1 mm/DD/YYYY
+
+Include backwards compatible reference to `weewx.UnknownType`.
+
+
 ### 5.0.0 01/14/2024
 
 Python 2.7 is no longer supported. You must have Python 3.6 (introduced
