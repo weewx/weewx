@@ -5,6 +5,9 @@ WeeWX change history
 
 Include backwards compatible reference to `weewx.UnknownType`.
 
+Fixed problem with installing extensions into installations that used V4 config
+files that were installed by a package installer.
+
 
 ### 5.0.0 01/14/2024
 
