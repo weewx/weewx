@@ -11,6 +11,9 @@ files that were installed by a package installer.
 Fix problem with `weectl device` when using drivers that were installed 
 using the extension installer. Fixes issue #918.
 
+Minor corrections to the Norwegian translations. Thanks to user Aslak!
+PR #919.
+
 
 ### 5.0.0 01/14/2024
 
