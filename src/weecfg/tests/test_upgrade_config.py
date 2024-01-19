@@ -158,6 +158,9 @@ class ConfigTest(unittest.TestCase):
             # Now read it back in again:
             check_dict = configobj.ConfigObj(fd, encoding='utf-8')
 
+        # with open('expected/weewx43_user_expected.conf', 'wb') as fd:
+        #     check_dict.write(fd)
+
         # Check the results.
         self._check_against_expected(check_dict, 'expected/weewx43_user_expected.conf')
 

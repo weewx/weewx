@@ -873,14 +873,6 @@ def update_to_v40(config_dict):
         config_dict['StdReport']['Defaults']['Units']['DegreeDays'].comments['growing_base'] = \
             ["Base temperature for growing days, with unit:"]
 
-    # Add the WU API key if it hasn't already been added
-    if 'StdRESTful' in config_dict \
-            and 'Wunderground' in config_dict['StdRESTful'] \
-            and 'api_key' not in config_dict['StdRESTful']['Wunderground']:
-        config_dict['StdRESTful']['Wunderground']['api_key'] = 'replace_me'
-        config_dict['StdRESTful']['Wunderground'].comments['api_key'] = \
-            ["", "If you plan on using wunderfixer, set the following", "to your API key:"]
-
     # The following types were never listed in weewx.conf and, instead, depended on defaults.
     if 'StdWXCalculate' in config_dict \
             and 'Calculations' in config_dict['StdWXCalculate']:
@@ -944,8 +936,8 @@ def update_to_v42(config_dict):
                                'archive_services')
         config_dict['Engine']['Services'].comments['prep_services'] = []
         config_dict['Engine']['Services'].comments['xtype_services'] = []
-        config_dict['Engine'].comments['Services'] = ['The following section specifies which '
-                                                      'services should be run and in what order.']
+        config_dict['Engine'].comments['Services'] = ['', 'This section specifies which services '
+                                                          'should be run and in what order.']
     config_dict['version'] = '4.2.0'
 
 

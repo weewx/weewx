@@ -50,8 +50,8 @@ Y_STR = """
 
 import weewx_data
 
-resource_dir = os.path.dirname(weewx_data.__file__)
-current_config_dict_path = os.path.join(resource_dir, 'weewx.conf')
+RESOURCE_DIR = os.path.dirname(weewx_data.__file__)
+current_config_dict_path = os.path.join(RESOURCE_DIR, 'weewx.conf')
 
 
 def suppress_stdout(func):
@@ -346,7 +346,7 @@ class ExtensionInstallTest(unittest.TestCase):
         shutil.rmtree(weewx_root, ignore_errors=True)
         os.makedirs(os.path.join(weewx_root, 'skins'))
         # Copy over the current version of the 'user' package
-        shutil.copytree(os.path.join(resource_dir, 'bin/user'),
+        shutil.copytree(os.path.join(RESOURCE_DIR, 'bin/user'),
                         os.path.join(weewx_root, 'user'))
         # Copy over the current version of weewx.conf
         shutil.copy(current_config_dict_path, weewx_root)
