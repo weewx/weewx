@@ -14,6 +14,8 @@ using the extension installer. Fixes issue #918.
 Minor corrections to the Norwegian translations. Thanks to user Aslak!
 PR #919.
 
+Allow the use of the tilde (~) prefix with `--config` options.
+
 
 ### 5.0.0 01/14/2024
 
