@@ -16,6 +16,8 @@ PR #919.
 
 Allow the use of the tilde (~) prefix with `--config` options.
 
+Chinese language code changed to `zh`. Fixes issue #912.
+
 
 ### 5.0.0 01/14/2024
 

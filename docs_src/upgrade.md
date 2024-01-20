@@ -94,6 +94,17 @@ import configuration file options being  deprecated. Refer to the `import`
 utility documentation and comments in the example import configuration files 
 for further details.
 
+#### Chinese language code changed to `zh`
+
+Previously, the non-standard code "`cn`" was used. V5 changes to `zh`. This
+will require manually changing any options
+
+    lang = cn
+
+to
+
+    lang = zh
+
 ### Non-breaking changes
 
 Changes in this category involve new functionality, or are not of interest to
