@@ -44,14 +44,22 @@ sudo weectl station upgrade --config=/etc/weewx/other.conf
 
 ## Upgrading to V5.0
 
-### Python 2.7 no longer supported
+There have been many changes with Version 5, but only a handful are likely to
+affect users. With that in mind, we have broken this section down into two
+sub-sections: breaking changes, and [non-breaking changes](#non-breaking-changes).
+
+### Breaking changes
+
+Changes in this category may require your attention.
+
+#### Python 2.7 no longer supported
 
 It has now been over 4 years since the end-of-life of Python 2.7. It's time to
 move on. WeeWX V5.x requires Python 3.6 (released 7 years ago) or greater. These
 days, all but the most ancient of operating systems offer Python 3, although you
 may have to install it.
 
-### New utilities
+#### New utilities
 
 The old utilities have been collected and put under one master utility,
 `weectl`. This make it easy to use `weectl --help` to see which one you want.
@@ -66,12 +74,38 @@ The old utilities have been collected and put under one master utility,
 | `wee_reports`   | `weectl report`    |
 | `wee_config`    | `weectl station`   |
 
-### Utility `wunderfixer` has been removed.
+#### pip installs to new location
+
+The default location for a `setup.py` install was `/home/weewx`. The new pip
+install method installs to a directory called `weewx-data` in the home directory
+of the user doing the install. However, old installations can continue to use
+`/home/weewx` by following the guide [_Migrating setup.py installs to Version
+5.0_](https://github.com/weewx/weewx/wiki/v5-upgrade).
+
+#### Changes in the utility `import`
+
+The use of a field map by the `import` utility has been revised and is now 
+more consistent across import sources. The result is the `import` utility now 
+requires a field map definition stanza for all import sources with the field 
+map defining the mapping from import source field to WeeWX archive field in 
+addition to defining source field units and identifying cumulative and text 
+fields. The expanded field map has resulted in the `rain` and `[[Units]]` 
+import configuration file options being  deprecated. Refer to the `import` 
+utility documentation and comments in the example import configuration files 
+for further details.
+
+### Non-breaking changes
+
+Changes in this category involve new functionality, or are not of interest to
+existing users, or the upgrade process takes care of old configurations
+transparently.
+
+#### Utility `wunderfixer` has been removed.
 
 The Weather Underground no longer allows past-dated posts, so the utility is
 no longer useful.
 
-### setup.py installs no longer possible
+#### setup.py installs no longer possible
 
 The package `distutils`, and the imperative approach on which the WeeWX
 `setup.py` install method depends, [has been
@@ -80,15 +114,7 @@ The future is clearly pip installs using `pyproject.toml`. See the wiki article
 on [Version 5](https://github.com/weewx/weewx/wiki/Version-5) for the technical
 reasons why.
 
-### pip installs to new location
-
-The default location for a `setup.py` install was `/home/weewx`. The new pip
-install method installs to a directory called `weewx-data` in home directory of
-the user doing the install. However, old installations can continue to use
-`/home/weewx` by following the guide [_Migrating setup.py installs to Version
-5.0_](https://github.com/weewx/weewx/wiki/v5-upgrade).
-
-### `WEEWX_ROOT` is now relative to the configuration file
+#### `WEEWX_ROOT` is now relative to the configuration file
 
 In previous versions, `WEEWX_ROOT` was specified in the configuration file as an
 absolute path. That requirement has been relaxed and refined.  In V5,
@@ -106,13 +132,13 @@ configuration file to locate everything, for example, using the `--config` to
 Old configuration files with an absolute path will continue to function as
 before.
 
-### `SQLITE_ROOT` is now relative to `WEEWX_ROOT`
+#### `SQLITE_ROOT` is now relative to `WEEWX_ROOT`
 
 Previously, `SQLITE_ROOT` was expected to be an absolute path, but now relative
 paths are accepted. A relative path is considered relative to `WEEWX_ROOT`.
 Because this is _less restrictive_, it is not expected to affect any users.
 
-### New script to configure a daemon
+#### New script to configure a daemon
 
 This affects WeeWX installations that use `pip`.  Installations that use `apt`,
 `yum`, or `zypper` (installs that use the DEB or RPM packages) are not affected.
@@ -128,7 +154,7 @@ For upgrades, if you already have a systemd unit in `/etc/systemd/system`, a
 SysV script in `/etc/init.d/weewx`, a launchd plist in `/Library/LaunchDaemons`,
 or BSD rc in `/usr/local/etc/rc.d`, the setup script will move that aside.
 
-### New location for `user` directory
+#### New location for `user` directory
 
 This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
 that use the DEB or RPM packages). Installations that use a `setup.py` or `pip`
@@ -143,13 +169,11 @@ now `/etc/weewx/bin/user`.  If you upgrade a DEB or RPM installation, any
 extensions that were installed in `/usr/share/weewx/user` will be copied to
 `/etc/weewx/bin/user`, and the old `user` directory will be moved aside.
 
-### Use of systemd units for services
+#### Use of systemd units for services
 
-This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
-that use the DEB or RPM packages). Installations that use a `setup.py` or `pip`
+This affects users who use a DEB or RPM package install, and are running on
+operating systems that use systemd, Installations that use a `setup.py` or `pip`
 install are not affected.
-
-This only affects operating systems that use systemd.
 
 For these package installers, two systemd unit files will be installed: the
 standard service unit `weewx.service`, and the template service unit
@@ -170,7 +194,7 @@ the unit and unit template that are installed by the installer.  If you just
 want to override behavior of the units installed by the installer, you should
 use the `.d` pattern instead.  See the systemd documentation for details.
 
-### WeeWX runs as the `weewx` user
+#### WeeWX runs as the `weewx` user
 
 This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
 that use the DEB or RPM packages). Installations that use a `setup.py` or `pip`
@@ -185,7 +209,7 @@ You *will* have to `sudo` to start/stop `weewxd`.
 For upgrades, the installer will check the ownership of `/var/lib/weewx`, and it
 will run `weewxd` as that user and group.
 
-### udev rules installed for core hardware
+#### udev rules installed for core hardware
 
 Version 5 includes a small change to the `udev` rules for hardware that is
 supported by WeeWX. The rules include permissions that make any hardware that
@@ -199,18 +223,6 @@ supported USB or serial device.
 
 If you install using `pip`, the rules are installed by the same script that
 installs the files necessary to run as a daemon.
-
-### `import` utility changes
-
-The use of a field map by the `import` utility has been revised and is now 
-more consistent across import sources. The result is the `import` utility now 
-requires a field map definition stanza for all import sources with the field 
-map defining the mapping from import source field to WeeWX archive field in 
-addition to defining source field units and identifying cumulative and text 
-fields. The expanded field map has resulted in the `rain` and `[[Units]]` 
-import configuration file options being  deprecated. Refer to the `import` 
-utility documentation and comments in the example import configuration files 
-for further details.
 
 ## Upgrading to V4.10
 
