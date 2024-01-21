@@ -11,10 +11,10 @@ files that were installed by a package installer.
 Fix problem with `weectl device` when using drivers that were installed 
 using the extension installer. Fixes issue #918.
 
+Allow the use of the tilde (~) prefix with `--config` options.
+
 Minor corrections to the Norwegian translations. Thanks to user Aslak!
 PR #919.
-
-Allow the use of the tilde (~) prefix with `--config` options.
 
 Chinese language code changed to `zh`. Fixes issue #912.
 

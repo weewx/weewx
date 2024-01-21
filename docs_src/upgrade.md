@@ -96,12 +96,13 @@ for further details.
 
 #### Chinese language code changed to `zh`
 
-Previously, the non-standard code "`cn`" was used. V5 changes to `zh`. This
-will require manually changing any options
+Previously, the non-standard code "`cn`" was used for Chinese language
+translations. V5 changes this to `zh`. This will require manually changing any
+option that looks like this
 
     lang = cn
 
-to
+to this
 
     lang = zh
 
