@@ -1,6 +1,13 @@
 WeeWX change history
 --------------------
 
+### 5.1.0 mm/DD/YYYY
+
+Allow country codes to be used in addition to a language code. For example,
+`zh_CN` would specify Chinese language, mainland China (Simplified Chinese),
+while `zh_TW` would specify Chinese language, Taiwan (Traditional Chinese).
+
+
 ### 5.0.1 mm/DD/YYYY
 
 Include backwards compatible reference to `weewx.UnknownType`.
