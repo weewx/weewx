@@ -1,3 +1,6 @@
+weewx (5.0.1-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall <mwall.weewx@gmail.com>  Mon, 22 Jan 2024 20:21:32 -0500
 weewx (5.0.0-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall (weewx) <mwall@users.sourceforge.net>  Sun, 14 Jan 2024 11:38:34 -0500

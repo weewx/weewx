@@ -222,7 +222,7 @@ DEBREVISION=1
 DEBVER=$(VERSION)-$(DEBREVISION)
 # add a skeleton entry to deb changelog
 debian-changelog:
-	if [ "`grep $(DEBVER) pkg/debian/changelog`" = "" ]; then \
+	if [ "`grep '($(DEBVER))' pkg/debian/changelog`" = "" ]; then \
   pkg/mkchangelog.pl --action stub --format debian --release-version $(DEBVER) > pkg/debian/changelog.new; \
   cat pkg/debian/changelog >> pkg/debian/changelog.new; \
   mv pkg/debian/changelog.new pkg/debian/changelog; \
@@ -285,7 +285,7 @@ RPMREVISION=1
 RPMVER=$(VERSION)-$(RPMREVISION)
 # add a skeleton entry to rpm changelog
 rpm-changelog:
-	if [ "`grep $(RPMVER) pkg/changelog.$(RPMOS)`" = "" ]; then \
+	if [ "`grep '\- $(RPMVER)' pkg/changelog.$(RPMOS)`" = "" ]; then \
   pkg/mkchangelog.pl --action stub --format redhat --release-version $(RPMVER) > pkg/changelog.$(RPMOS).new; \
   cat pkg/changelog.$(RPMOS) >> pkg/changelog.$(RPMOS).new; \
   mv pkg/changelog.$(RPMOS).new pkg/changelog.$(RPMOS); \

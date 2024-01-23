@@ -1,3 +1,4 @@
+updating pkg/changelog.suse pkg/mkchangelog.pl --action stub --format redhat --release-version 5.0.1-1
 * Sun Jan 14 2024 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0-1
 - new upstream release
 * Mon Jan 08 2024 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0rc3-2
