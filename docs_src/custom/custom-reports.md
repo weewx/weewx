@@ -234,34 +234,51 @@ something like this:
 ```
 ls -l /etc/weewx/skins/Seasons/lang
 total 136
--rw-rw-r-- 1 tkeffer tkeffer  9844 Mar 13 12:31 cz.conf
--rw-rw-r-- 1 tkeffer tkeffer  9745 Mar 13 12:31 de.conf
--rw-rw-r-- 1 tkeffer tkeffer  9459 Mar 13 12:31 en.conf
--rw-rw-r-- 1 tkeffer tkeffer 10702 Mar 13 12:31 es.conf
--rw-rw-r-- 1 tkeffer tkeffer 10673 May 31 07:50 fr.conf
--rw-rw-r-- 1 tkeffer tkeffer 11838 Mar 13 12:31 gr.conf
--rw-rw-r-- 1 tkeffer tkeffer  9947 Mar 13 12:31 it.conf
--rw-rw-r-- 1 tkeffer tkeffer  9548 Mar 13 12:31 nl.conf
--rw-rw-r-- 1 tkeffer tkeffer 10722 Apr 15 14:52 no.conf
--rw-rw-r-- 1 tkeffer tkeffer 15356 Mar 13 12:31 th.conf
--rw-rw-r-- 1 tkeffer tkeffer  9447 Jul  1 11:11 zh.conf
+total 328
+-rw-r--r--  1 root  wheel   9.6K Jan 17 07:30 cz.conf
+-rw-r--r--  1 root  wheel   9.5K Jan 17 07:30 de.conf
+-rw-r--r--  1 root  wheel   9.2K Jan 17 07:30 en.conf
+-rw-r--r--  1 root  wheel   672B Jan 22 07:23 en_AU.conf
+-rw-r--r--  1 root  wheel   672B Jan 22 07:23 en_CA.conf
+-rw-r--r--  1 root  wheel   672B Jan 22 07:20 en_GB.conf
+-rw-r--r--  1 root  wheel   672B Jan 22 07:23 en_NZ.conf
+-rw-r--r--  1 root  wheel    10K Jan 17 07:30 es.conf
+-rw-r--r--  1 root  wheel    10K Jan 17 07:30 fr.conf
+-rw-r--r--  1 root  wheel    12K Jan 17 07:30 gr.conf
+-rw-r--r--  1 root  wheel   9.7K Jan 17 07:30 it.conf
+-rw-r--r--  1 root  wheel   9.3K Jan 17 07:30 nl.conf
+-rw-r--r--  1 root  wheel    10K Jan 22 04:53 no.conf
+-rw-r--r--  1 root  wheel    15K Jan 17 07:30 th.conf
+-rw-r--r--@ 1 root  wheel   9.1K Jan 22 05:55 zh.conf
+-rw-r--r--  1 root  wheel   9.5K Jan 22 05:55 zh_CN.conf
 ```
 
-This means that the _Seasons_ skin has been localized for the following
-languages[^1]:
+The file names are either a two-letter code (for example, `en`), or a
+four-letter code separated by an underscore (_e.g._, `en_GB`). The first two
+letters (`en` in this case) signify the base _language_. The last two letters,
+if present, signify any specialized text for a specific _country_ (`GB`, or
+Great Britain, in this case).
 
-| File    | Language           |
-|---------|--------------------|
-| cz.conf | Czeck              | 
-| de.conf | German             |
-| en.conf | English            |
-| es.conf | Spanish            |
-| fr.conf | French             |
-| it.conf | Italian            |
-| gr.conf | Greek              |
-| nl.conf | Dutch              |
-| th.conf | Thai               |
-| zh.conf | Simplified Chinese |
+Given this, from the file listing above, this means that the _Seasons_ skin 
+includes text files for the following:
+
+| File       | Language                |
+|------------|-------------------------|
+| cz.conf    | Czeck                   | 
+| de.conf    | German                  |
+| en.conf    | English                 |
+| en_AU.conf | English (Australia)     |
+| en_CA.conf | English (Canada)        |
+| en_GB.conf | English (Great Britain) |
+| en_NZ.conf | English (New Zealand)   |
+| es.conf    | Spanish                 |
+| fr.conf    | French                  |
+| it.conf    | Italian                 |
+| gr.conf    | Greek                   |
+| nl.conf    | Dutch                   |
+| th.conf    | Thai                    |
+| zh.conf    | Chinese (Traditional)   |
+| zh_CN.conf | Simplified Chinese      |
 
 If you want to use the _Seasons_ skin and are working with one of these
 languages, then you are in luck: you can simply override the `lang` option.
@@ -501,12 +518,3 @@ in `weewx.conf`. To do this, make the following changes in `weewx.conf`:
 This will cause the default label Outside Temperature to be replaced with the
 new label "Barn Temperature" everywhere in your report. The label for type
 `inTemp` will be untouched.
-
-[^1]:  V5 uses two letter [ISO 639 language
-codes](https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes) to signify
-a language. It does not support four letter country codes (such as `en_NZ`).
-Naturally, this simple model comes with limitations. For example, Simplified
-Chinese is usually signified by `zh_CN`, while Traditional Chinese by `zh_TW`.
-With only a two letter code available, we must choose which we mean. We have
-chosen the former, Simplified Chinese. This two-letter limitation may be relaxed
-in the future.
