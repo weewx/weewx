@@ -30,7 +30,7 @@ change, if it's already there):
         lang = de
 ```
 
-### Internationalized, but your language is missing {#missing-language}
+### Internationalized, but your language is missing {#internationalized-missing-language}
 
 If the `lang` subdirectory is present in the skin directory, then
 the skin has been internationalized. However, if your language code is
@@ -54,6 +54,8 @@ Then change things that look like this:
     "7-day" = "7-day"
     "24h" = "24h"
     "About this weather station" = "About this weather station"
+    "email" : "email"
+    ...
 ```
 
 to something that looks like this:
@@ -65,19 +67,34 @@ to something that looks like this:
     "7-day" = "7-jours"
     "24h" = "24h"
     "About this weather station" = "A propos de cette station"
+    "email" : "mail"
+    ...
 ```
 
-And so on. When you're done, the skin author may be interested in your
-localization file to ship it together with the skin for the use of other
-users. If the skin is one that came with WeeWX, contact the WeeWX team
-via a post to the [weewx-user
-group](https://groups.google.com/forum/#!forum/weewx-user) and, with
-your permission, we may include your localization file in a future WeeWX
-release.
+And so on.
+
+If you wish to supply a _specializing_ file for a country, then add a second
+file with the country code, and fill it with any differences from the base
+language. For example, if you wished to supply specialized spellings for French
+Canada, you would add a file `fr_CA.conf` and fill it with any differences:
+
+``` ini
+[Texts]
+    Language = Canadian French
+
+    "email" : "courriel"
+    ...
+```
+
+When you're done, the skin author may be interested in your localization file to
+ship it together with the skin for the use of other users. If the skin is one
+that came with WeeWX, contact the WeeWX team via a post to the [weewx-user
+group](https://groups.google.com/forum/#!forum/weewx-user) and, with your
+permission, we may include your localization file in a future WeeWX release.
 
 Finally, set the option `lang` in `weewx.conf` to your language code (`fr` in
-this example) as described in the
-[User's Guide](../reference/weewx-options/stdreport.md#lang).
+this example, or `fr_CA` for Canadian French) as described in the [User's
+Guide](../reference/weewx-options/stdreport.md#lang).
 
 ## How to internationalize a skin
 
