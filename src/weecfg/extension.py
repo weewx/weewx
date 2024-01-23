@@ -142,7 +142,7 @@ class ExtensionEngine(object):
         else:
             raise InstallError(f"Unrecognized type for {extension_path}")
 
-        self.printer.out(f"Finished installing extension {extension_name} from {extension_path}.")
+        self.printer.out(f"Finished installing extension {extension_name} from {extension_path}")
 
     def _install_from_file(self, filepath, filetype):
         """Install an extension from a file.
@@ -171,14 +171,14 @@ class ExtensionEngine(object):
 
     def install_from_dir(self, extension_dir):
         """Install the extension whose components are in extension_dir"""
-        self.printer.out(f"Request to install extension found in directory {extension_dir}.",
+        self.printer.out(f"Request to install extension found in directory {extension_dir}",
                          level=2)
 
         # The "installer" is actually a dictionary containing what is to be installed and where.
         # The "installer_path" is the path to the file containing that dictionary.
         installer_path, installer = weecfg.get_extension_installer(extension_dir)
         extension_name = installer.get('name', 'Unknown')
-        self.printer.out(f"Found extension with name '{extension_name}'.", level=2)
+        self.printer.out(f"Found extension with name '{extension_name}'", level=2)
 
         # Install any files:
         if 'files' in installer:
@@ -218,7 +218,7 @@ class ExtensionEngine(object):
         # Save the extension's install.py file in the extension's installer
         # directory for later use enumerating and uninstalling
         extension_installer_dir = os.path.join(self.root_dict['EXT_DIR'], extension_name)
-        self.printer.out(f"Saving installer file to {extension_installer_dir}.")
+        self.printer.out(f"Saving installer file to {extension_installer_dir}")
         if not self.dry_run:
             try:
                 os.makedirs(os.path.join(extension_installer_dir))
@@ -228,7 +228,7 @@ class ExtensionEngine(object):
 
         if save_config:
             backup_path = weecfg.save_with_backup(self.config_dict, self.config_path)
-            self.printer.out(f"Saved configuration dictionary. Backup copy at {backup_path}.")
+            self.printer.out(f"Saved copy of configuration as {backup_path}")
 
         return extension_name
 
