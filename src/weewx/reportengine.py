@@ -332,14 +332,32 @@ def merge_unit_system(report_units_base, skin_dict):
 
 
 def get_lang_dict(lang_spec, config_dict, report):
-    """Given a language specification, return its corresponding locale dictionary. """
+    """Given a language specification, return its corresponding locale dictionary.
+
+    Args:
+        lang_spec (str|None): Language specification string. Can be of the form 'en', or 'en_AU'.
+        config_dict (dict): Configuration dictionary.
+        report (str): The name of the report for which the locale dicationary will be returned.
+    Returns:
+        dict: The locale dictionary as a ConfigObj
+    Raises:
+        configobj.SyntaxError: If the language text file contains a syntax error.
+    """
+    # The results will be merged into this empty dictionary:
+    lang_dict = configobj.ConfigObj({}, encoding='utf-8', interpolation=False)
+    if not lang_spec:
+        # If no language spec has been specified, return the empty dictionary
+        return lang_dict
+
+    # Split the language spec into language code and (possibly) a country code.
     codes = lang_spec.split('_')
     if len(codes) == 1:
+        # Just a language spec
         code_list = [codes[0]]
     else:
+        # A language spec and a country code
         code_list = [codes[0], lang_spec]
 
-    lang_dict = configobj.ConfigObj({}, encoding='utf-8', interpolation=False)
     for code in code_list:
         # The language's corresponding text file will be found in subdirectory 'lang', with
         # a suffix '.conf'. Find the path to it:.
@@ -364,7 +382,7 @@ def get_lang_dict(lang_spec, config_dict, report):
             log.debug("**** Using defaults instead.")
             merge_dict = configobj.ConfigObj({}, encoding='utf-8', interpolation=False)
         except SyntaxError as e:
-            log.error("Syntax error while reading localization file %s for report '%s': %s",
+            log.error("Syntax error while reading localization text file %s for report '%s': %s",
                       lang_config_path, report, e)
             raise
 
