@@ -38,7 +38,7 @@ def device():
         traceback.print_exc(file=sys.stderr)
         sys.exit(weewx.CONFIG_ERROR)
 
-    print(f"Using configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
+    print(f"Using configuration file {bcolors.BOLD}{config_fn}{bcolors.ENDC}")
 
     # Set weewx.debug as necessary:
     weewx.debug = to_int(config_dict.get('debug', 0))
