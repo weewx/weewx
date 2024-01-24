@@ -25,9 +25,6 @@ PR #919.
 
 Chinese language code changed to `zh`. Fixes issue #912.
 
-Chinese language translation changed from Traditional to Simplified. Thanks to
-user Kranz! 
-
 
 ### 5.0.0 01/14/2024
 
