@@ -127,14 +127,15 @@ done
 # if there is already a database directory, then use ownership of that to
 # determine what user/group we should use for permissions and running.
 # otherwise, use 'weewx' for user and group.
-WEEWX_USER=weewx
-WEEWX_GROUP=weewx
+WEEWX_USER="${WEEWX_USER:-weewx}"
+WEEWX_GROUP="${WEEWX_GROUP:-weewx}"
+WEEWX_HOME="${WEEWX_HOME:-/var/lib/weewx}"
 if [ -d /var/lib/weewx ]; then
     WEEWX_USER=$(stat -c "%%U" /var/lib/weewx)
     WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)
 fi
 /usr/bin/getent group $WEEWX_GROUP || /usr/sbin/groupadd -r $WEEWX_GROUP
-/usr/bin/getent passwd $WEEWX_USER || /usr/sbin/useradd -r -g $WEEWX_GROUP -M -s /sbin/nologin $WEEWX_USER
+/usr/bin/getent passwd $WEEWX_USER || /usr/sbin/useradd -r -g $WEEWX_GROUP -M -d $WEEWX_HOME -s /sbin/nologin $WEEWX_USER
 
 if [ $1 -gt 1 ]; then
   # this is an upgrade
@@ -166,8 +167,8 @@ get_conf_version() {
 }
 
 # figure out which user should own everything
-WEEWX_USER=weewx
-WEEWX_GROUP=weewx
+WEEWX_USER="${WEEWX_USER:-weewx}"
+WEEWX_GROUP="${WEEWX_GROUP:-weewx}"
 if [ -d /var/lib/weewx ]; then
     WEEWX_USER=$(stat -c "%%U" /var/lib/weewx)
     WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)

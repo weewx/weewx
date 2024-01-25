@@ -18,6 +18,11 @@ PR #919.
 
 Chinese language code changed to `zh`. Fixes issue #912.
 
+Fixed bug in redhat/suse scriptlet that incorrectly substituted "{weewx}"
+instead of "weewx" in the udev rules file.
+
+In the redhat/suse installers, use /var/lib/weewx as the HOME for user weewx.
+
 
 ### 5.0.0 01/14/2024
 
