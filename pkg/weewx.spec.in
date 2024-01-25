@@ -204,7 +204,7 @@ fi
 # install the udev rules
 if [ -d %{udev_dir} ]; then
     sed \
- -e "s/GROUP=\"weewx\"/GROUP=\"{$WEEWX_GROUP}\"/" \
+ -e "s/GROUP=\"weewx\"/GROUP=\"${WEEWX_GROUP}\"/" \
  %{dst_cfg_dir}/udev/weewx.rules > %{udev_dir}/60-weewx.rules
 fi
 
