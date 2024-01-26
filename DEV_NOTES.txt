@@ -348,10 +348,11 @@ installations.
 
 signing packages --------------------------------------------------------------
 
-gpg is used to sign the deb and rpm packages.  SHA1 is no longer acceptable for
-signing, so use SHA256 instead.  this should be the default when building on
-redhat9 and later.  if it is not the default, then it can be forced with a
-change to the signing macro in .rpmmacros - add the line --digest-algo sha256
+gpg is used to sign the deb repository and rpm packages.  SHA1 is no longer
+acceptable for signing, so be sure that your gpg keys and the signing command
+use SHA256 instead.  this should be the default when building on redhat9 and
+later.  if it is not the default, then it can be forced with a change to the
+signing macro in .rpmmacros - add the line --digest-algo sha256
 
 %__gpg_sign_cmd			%{__gpg} \
 	gpg --no-verbose --no-armor \
@@ -363,10 +364,10 @@ change to the signing macro in .rpmmacros - add the line --digest-algo sha256
 
 In the debian world, you sign the repository (specifically the file 'Release'),
 not the individual .deb files.  So if you need to re-sign, you re-build and
-re-sign the repository; there is no need touch the individual .deb files.  This
-is a bit odd, since the dpkg-build has options -us and -uc that tell it to *not*
-sign the .deb files, and if you do not specify -us and -uc, the .deb files are
-not signed, but dpkg-build will complain.
+re-sign the repository; there is no need touch the individual .deb files.
+Signing is controlled by the -us and -uc options to dpkg-build.  If you do not
+specify those options, then dpkg-build will try to sign the .dsc, .buildinfo,
+and .changes files.  The .deb itself is not signed.
 
 
 unit tests --------------------------------------------------------------------
