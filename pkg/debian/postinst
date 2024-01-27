@@ -20,10 +20,10 @@ set -e
 cfgfile=/etc/weewx/weewx.conf
 cfgapp=/usr/bin/weectl
 
-WEEWX_USER=weewx
-WEEWX_GROUP=weewx
-WEEWX_HOME=/var/lib/weewx
-WEEWX_HTML=/var/www/html/weewx
+WEEWX_USER="${WEEWX_USER:-weewx}"
+WEEWX_GROUP="${WEEWX_GROUP:-weewx}"
+WEEWX_HOME="${WEEWX_HOME:-/var/lib/weewx}"
+WEEWX_HTMLDIR="${WEEWX_HTMLDIR:-/var/www/html/weewx}"
 WEEWX_USERDIR=/etc/weewx/bin/user
 
 # insert the driver and stanza into the configuration file
@@ -398,10 +398,10 @@ setup_database_dir() {
 
 # create the reporting directory
 setup_reporting_dir() {
-    echo "Configuring reporting directory $WEEWX_HTML"
-    mkdir -p $WEEWX_HTML
-    chmod 2775 $WEEWX_HTML
-    chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HTML
+    echo "Configuring reporting directory $WEEWX_HTMLDIR"
+    mkdir -p $WEEWX_HTMLDIR
+    chmod 2775 $WEEWX_HTMLDIR
+    chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HTMLDIR
 }
 
 # set the permissions on the configuration, skins, and extensions

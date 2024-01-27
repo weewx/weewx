@@ -111,22 +111,37 @@ def rebuild_daily(config_dict,
 
     t1 = time.time()
 
-    log.info("Rebuilding daily summaries in database '%s' ..." % database_name)
-    print("Rebuilding daily summaries in database '%s' ..." % database_name)
-    if dry_run:
-        return
+    msg = f"Rebuilding daily summaries in database '{database_name}' ..."
+    log.info(msg)
+    print(msg)
 
-    # Open up the database. This will create the tables necessary for the daily
-    # summaries if they don't already exist:
-    with weewx.manager.open_manager_with_config(config_dict,
-                                                db_binding, initialize=True) as dbm:
-        # Do the actual rebuild
-        nrecs, ndays = dbm.backfill_day_summary(start_d=from_d,
-                                                stop_d=to_d,
-                                                trans_days=20)
+    # Open the database using the Manager object, which does not use daily summaries. This allows
+    # us to retrieve the SQL keys without triggering an exception because of the missing daily
+    # summaries.
+    with weewx.manager.Manager.open(manager_dict['database_dict'],
+                                    manager_dict['table_name']) as db:
+        sqlkeys = db.sqlkeys
+    # From the keys, build a schema for the daily summaries that reflects what is in the database
+    day_summaries_schemas = [(e, 'scalar') for e in sqlkeys
+                             if e not in ('dateTime', 'usUnits', 'interval')]
+    if 'windSpeed' in sqlkeys:
+        # For backwards compatibility, include 'wind'
+        day_summaries_schemas += [('wind', 'vector')]
+    # Replace the static schema with the one we just built:
+    manager_dict['schema'] = {'day_summaries': day_summaries_schemas}
+
+    # Open up the database. Use initialize=True, so the daily summary tables will be created:
+    with weewx.manager.open_manager(manager_dict, initialize=True) as dbm:
+        if dry_run:
+            nrecs = ndays = 0
+        else:
+            # Do the actual rebuild
+            nrecs, ndays = dbm.backfill_day_summary(start_d=from_d,
+                                                    stop_d=to_d,
+                                                    trans_days=20)
     tdiff = time.time() - t1
     # advise the user/log what we did
-    log.info("Rebuild of daily summaries in database '%s' complete." % database_name)
+    log.info(f"Rebuild of daily summaries in database '{database_name}' complete.")
     if nrecs:
         sys.stdout.flush()
         # fix a bit of formatting inconsistency if less than 1000 records
@@ -140,6 +155,8 @@ def rebuild_daily(config_dict,
                   f"{tdiff:.2f} seconds."
         print(msg)
         print(f"Rebuild of daily summaries in database '{database_name}' complete.")
+    elif dry_run:
+        print("Dry run: no records processed.")
     else:
         print(f"Daily summaries up to date in '{database_name}'.")
 

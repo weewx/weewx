@@ -164,7 +164,7 @@ class Manager(object):
                       'host': 'localhost',
                       'user': 'weewx',
                       'password': 'weewx-password',
-                      'database_name' : 'weeewx',
+                      'database_name' : 'weewx',
                       'driver' : 'weedb.mysql'
                     }
 

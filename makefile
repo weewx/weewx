@@ -229,7 +229,7 @@ debian-changelog:
 fi
 
 # use dpkg-buildpackage to create the debian package
-# -us -uc - skip gpg signature on .dsc and .changes
+# -us -uc - skip gpg signature on .dsc, .buildinfo, and .changes
 # the latest version in the debian changelog must match the packaging version
 DEBARCH=all
 DEBBLDDIR=$(BLDDIR)/weewx-$(VERSION)
