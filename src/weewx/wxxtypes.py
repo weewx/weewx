@@ -592,6 +592,8 @@ class Delta(weewx.xtypes.XType):
     [StdWXCalculate]
         [[Calculations]]
             ...
+            rain = prefer_hardware
+            ...
         [[Delta]]
             [[[rain]]]
                 input = totalRain
