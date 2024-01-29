@@ -116,10 +116,9 @@ weectl station create
 ```
 
 The tool `weectl` will ask you a series of questions, then create a directory
-`weewx-data` in your home directory with a new configuration file. It will
-also install skins, documentation, utility files, and examples in the same
-directory. The database and reports will also go into that directory, but
-only after you run `weewxd`, as shown in the following step.
+`weewx-data` in your home directory with a new configuration file, skins,
+utility files, and examples. The database and reports will also go into that
+directory, but only after you run `weewxd`, as shown in the following step.
 
 
 ## Run `weewxd`
