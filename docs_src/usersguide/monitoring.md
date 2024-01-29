@@ -126,12 +126,12 @@ sudo journalctl -u weewx -f
 
 ## Logging on macOS
 
-Unfortunately, with the introduction of macOS Monterey (12.x), the logging
-handler
+Unfortunately, with the introduction of macOS Monterey (12.x), the Python
+logging handler
 [`SysLogHandler`](https://docs.python.org/3/library/logging.handlers.html#sysloghandler),
 which is used by WeeWX, does not work[^1]. Indeed, the only handlers in the
-Python [`logging`](https://docs.python.org/3/library/logging.html) facility
-that work with macOS 12.x or later are standalone handlers that log to files.
+Python [`logging`](https://docs.python.org/3/library/logging.html) facility that
+work with macOS 12.x or later are standalone handlers that log to files.
 
 [^1]: See Python issue [#91070](https://github.com/python/cpython/issues/91070).
 
@@ -154,8 +154,9 @@ Fortunately, there is a simple workaround. Put this at the bottom of your
             backupCount = 7
 ```
 
-This makes messages from WeeWX go to the file `~/weewx-data/log/weewxd.log`
-instead of the system logger.
+This makes messages from the WeeWX application `weewxd` go to the file
+`~/weewx-data/log/weewxd.log` instead of the system logger. Messages from
+`weectl` will go to `~/weewx-data/log/weectl.log`.
 
 For an explanation of what all these lines mean, see the wiki article on
 [WeeWX logging](https://github.com/weewx/weewx/wiki/WeeWX-v4-and-logging).
