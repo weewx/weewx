@@ -36,7 +36,9 @@
 %if "%{os_target}" == "9"
 %define relos .el9
 # rh9 ships with python 3.9, which has pre-built modules required by weewx.
-%define deps python3, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
+# python3-cheetah, python3-pillow are in epel
+# ephem is not available for redhat9
+%define deps epel-release, python3, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
 %define python python3
 %endif
 %endif
