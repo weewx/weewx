@@ -264,7 +264,7 @@ get_conf_version() {
 get_user() {
     if [ -d $WEEWX_HOME ]; then
         TMP_USER=$(stat -c "%U" $WEEWX_HOME)
-        if [ "$TMP_USER" ne "root" -a "$TMP_USER" ne "weewx" ]; then
+        if [ "$TMP_USER" != "root" -a "$TMP_USER" != "weewx" ]; then
             WEEWX_USER=$TMP_USER
             WEEWX_GROUP=$(stat -c "%G" $WEEWX_HOME
         fi
@@ -316,6 +316,29 @@ create_user() {
                 --no-create-home --home $WEEWX_HOME \
                 --disabled-password weewx || true
         echo "done"
+    fi
+}
+
+# add the user who is installing into the weewx group, if appropriate
+add_to_group() {
+    # add user only if the group is not a privileged group
+    if [ "$WEEWX_GROUP" != "root" ]; then
+        # see who is running the installation
+        inst_user=$USER
+        if [ "$SUDO_USER" != "" ]; then
+            inst_user=$SUDO_USER
+        fi
+        # if user is already in the group, then skip it
+        if ! getent group | grep -q $inst_user; then
+            # put the user who is doing the installation into the weewx group,
+            # but only if it is not root or the weewx user.
+            if [ "$inst_user" != "root" -a "$inst_user" != "$WEEWX_USER" ]; then
+                echo "Adding user $inst_user to group $WEEWX_GROUP"
+                usermod -aG $WEEWX_GROUP $inst_user
+            fi
+        else
+            echo "User $inst_user is already in group $WEEWX_GROUP"
+        fi
     fi
 }
 
@@ -480,6 +503,7 @@ case "$1" in
         fi
 
         create_user
+        add_to_group
         setup_init $pid1
         setup_udev
         setup_skins

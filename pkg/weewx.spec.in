@@ -134,13 +134,35 @@ WEEWX_USER="${WEEWX_USER:-weewx}"
 WEEWX_GROUP="${WEEWX_GROUP:-weewx}"
 if [ -d /var/lib/weewx ]; then
     TMP_USER=$(stat -c "%%U" /var/lib/weewx)
-    if [ "$TMP_USER" ne "root" -a "$TMP_USER" ne "weewx" ]; then
+    if [ "$TMP_USER" != "root" -a "$TMP_USER" != "weewx" ]; then
         WEEWX_USER=$TMP_USER
         WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)
     fi
 fi
+
+# create the weewx user and group if they do not yet exist
 /usr/bin/getent group $WEEWX_GROUP || /usr/sbin/groupadd -r $WEEWX_GROUP
 /usr/bin/getent passwd $WEEWX_USER || /usr/sbin/useradd -r -g $WEEWX_GROUP -M -d $WEEWX_HOME -s /sbin/nologin $WEEWX_USER
+
+# add the user doing the install to the weewx group, if appropriate
+if [ "$WEEWX_GROUP" != "root" ]; then
+    # see who is running the installation
+    inst_user=$USER
+    if [ "$SUDO_USER" != "" ]; then
+        inst_user=$SUDO_USER
+    fi
+    # if user is already in the group, then skip it
+    if ! getent group | grep -q $inst_user; then
+        # put the user who is doing the installation into the weewx group,
+        # but only if it is not root or the weewx user.
+        if [ "$inst_user" != "root" -a "$inst_user" != "$WEEWX_USER" ]; then
+            echo "Adding user $inst_user to group $WEEWX_GROUP"
+            usermod -aG $WEEWX_GROUP $inst_user
+        fi
+    else
+        echo "User $inst_user is already in group $WEEWX_GROUP"
+    fi
+fi
 
 if [ $1 -gt 1 ]; then
   # this is an upgrade
@@ -176,7 +198,7 @@ WEEWX_USER="${WEEWX_USER:-weewx}"
 WEEWX_GROUP="${WEEWX_GROUP:-weewx}"
 if [ -d /var/lib/weewx ]; then
     TMP_USER=$(stat -c "%%U" /var/lib/weewx)
-    if [ "$TMP_USER" ne "root" -a "$TMP_USER" ne "weewx" ]; then
+    if [ "$TMP_USER" != "root" -a "$TMP_USER" != "weewx" ]; then
         WEEWX_USER=$TMP_USER
         WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)
     fi
