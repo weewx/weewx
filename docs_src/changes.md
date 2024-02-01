@@ -16,6 +16,8 @@ modified by using `weectl database drop-columns`.
 
 Allow the use of the tilde (`~`) prefix with `--config` options.
 
+Fix problem that prevented debug statements from being logged.
+
 Minor corrections to the Norwegian translations. Thanks to user Aslak!
 PR #919.
 

@@ -9,9 +9,6 @@ import logging
 import os.path
 import sys
 
-import weewx
-from weeutil.weeutil import to_int
-
 log = logging.getLogger(__name__)
 
 
@@ -58,9 +55,6 @@ def initialize(config_dict):
     Returns:
         tuple[str,str]: A tuple containing (WEEWX_ROOT, USER_ROOT)
     """
-
-    # Set weewx.debug as necessary:
-    weewx.debug = to_int(config_dict.get('debug', 0))
 
     root_dict = extract_roots(config_dict)
 
