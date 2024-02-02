@@ -103,7 +103,7 @@ def main():
     log.info("Initializing weewxd version %s", weewx.__version__)
     log.info("Command line: %s", ' '.join(sys.argv))
 
-    # Set up debug, add USER_ROOT to PYTHONPATH, read user.extensions:
+    # Add USER_ROOT to PYTHONPATH, read user.extensions:
     weewx_root, user_module = weeutil.startup.initialize(config_dict)
 
     # Log key bits of information.

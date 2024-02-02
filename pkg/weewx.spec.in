@@ -36,7 +36,9 @@
 %if "%{os_target}" == "9"
 %define relos .el9
 # rh9 ships with python 3.9, which has pre-built modules required by weewx.
-%define deps python3, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
+# python3-cheetah, python3-pillow are in epel
+# ephem is not available for redhat9
+%define deps epel-release, python3, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
 %define python python3
 %endif
 %endif
@@ -127,12 +129,15 @@ done
 # if there is already a database directory, then use ownership of that to
 # determine what user/group we should use for permissions and running.
 # otherwise, use 'weewx' for user and group.
+WEEWX_HOME="${WEEWX_HOME:-/var/lib/weewx}"
 WEEWX_USER="${WEEWX_USER:-weewx}"
 WEEWX_GROUP="${WEEWX_GROUP:-weewx}"
-WEEWX_HOME="${WEEWX_HOME:-/var/lib/weewx}"
 if [ -d /var/lib/weewx ]; then
-    WEEWX_USER=$(stat -c "%%U" /var/lib/weewx)
-    WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)
+    TMP_USER=$(stat -c "%%U" /var/lib/weewx)
+    if [ "$TMP_USER" ne "root" -a "$TMP_USER" ne "weewx" ]; then
+        WEEWX_USER=$TMP_USER
+        WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)
+    fi
 fi
 /usr/bin/getent group $WEEWX_GROUP || /usr/sbin/groupadd -r $WEEWX_GROUP
 /usr/bin/getent passwd $WEEWX_USER || /usr/sbin/useradd -r -g $WEEWX_GROUP -M -d $WEEWX_HOME -s /sbin/nologin $WEEWX_USER
@@ -170,8 +175,11 @@ get_conf_version() {
 WEEWX_USER="${WEEWX_USER:-weewx}"
 WEEWX_GROUP="${WEEWX_GROUP:-weewx}"
 if [ -d /var/lib/weewx ]; then
-    WEEWX_USER=$(stat -c "%%U" /var/lib/weewx)
-    WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)
+    TMP_USER=$(stat -c "%%U" /var/lib/weewx)
+    if [ "$TMP_USER" ne "root" -a "$TMP_USER" ne "weewx" ]; then
+        WEEWX_USER=$TMP_USER
+        WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)
+    fi
 fi
 
 # insert values into the defaults file (used by the entry points)
@@ -212,6 +220,7 @@ fi
 # copy the skins if there are not already skins in place
 if [ ! -d %{dst_cfg_dir}/skins ]; then
     cp -rp %{dst_code_dir}/weewx_data/skins %{dst_cfg_dir}
+    chmod 2775 %{dst_cfg_dir}/skins
 fi
 
 # create the user extensions directory if one does not already exist
@@ -219,6 +228,7 @@ if [ ! -d %{dst_user_dir} ]; then
     mkdir -p %{dst_user_dir}
     cp %{dst_code_dir}/weewx_data/bin/user/__init__.py %{dst_user_dir}
     cp %{dst_code_dir}/weewx_data/bin/user/extensions.py %{dst_user_dir}
+    chmod 2775 %{dts_user_dir}
 fi
 
 # create database directory

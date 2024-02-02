@@ -1875,7 +1875,7 @@ def _decode_rain(p, k):
         # 0.1 mm bucket
         return p[k] * 0.00393700787
     else:
-        log.warning("Unknown bucket type $s" % p['bucket_type'])
+        log.warning("Unknown bucket type %s" % p['bucket_type'])
 
 
 def _decode_windSpeed_H(p, k):

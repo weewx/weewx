@@ -257,10 +257,17 @@ get_conf_version() {
     echo $v
 }
 
+# if this is an upgrade and the owner of the previous data is other than weewx
+# or root, then use that user as the weewx user.  net effect is that we convert
+# ownership to weewx:weewx for anything other than a previous install with
+# customized ownership.
 get_user() {
     if [ -d $WEEWX_HOME ]; then
-        WEEWX_USER=$(stat -c "%U" $WEEWX_HOME)
-        WEEWX_GROUP=$(stat -c "%G" $WEEWX_HOME)
+        TMP_USER=$(stat -c "%U" $WEEWX_HOME)
+        if [ "$TMP_USER" ne "root" -a "$TMP_USER" ne "weewx" ]; then
+            WEEWX_USER=$TMP_USER
+            WEEWX_GROUP=$(stat -c "%G" $WEEWX_HOME
+        fi
     fi
     echo "Using $WEEWX_USER:$WEEWX_GROUP as user:group"
 }
@@ -375,6 +382,7 @@ setup_skins() {
     if [ ! -d /etc/weewx/skins ]; then
         echo "Creating skins directory /etc/weewx/skins"
         cp -rp /usr/share/weewx/weewx_data/skins /etc/weewx
+        chmod 2775 /etc/weewx/skins
     fi
 }
 
@@ -385,6 +393,7 @@ setup_user_dir() {
         mkdir -p $WEEWX_USERDIR
         cp /usr/share/weewx/weewx_data/bin/user/__init__.py $WEEWX_USERDIR
         cp /usr/share/weewx/weewx_data/bin/user/extensions.py $WEEWX_USERDIR
+        chmod 2775 $WEEWX_USERDIR
     fi
 }
 
@@ -405,7 +414,7 @@ setup_reporting_dir() {
 }
 
 # set the permissions on the configuration, skins, and extensions
-set_permissions() {
+set_config_permissions() {
     echo "Setting permissions $WEEWX_USER:$WEEWX_GROUP on /etc/weewx"
     chown -R $WEEWX_USER:$WEEWX_GROUP /etc/weewx
 }
@@ -478,7 +487,7 @@ case "$1" in
         setup_database_dir
         setup_reporting_dir
         precompile
-        set_permissions
+        set_config_permissions
         enable_init $pid1
         start_weewx $pid1
         check_init $pid1
