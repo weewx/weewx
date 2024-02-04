@@ -304,12 +304,6 @@ def create_station(namespace):
     except weewx.ViolatedPrecondition as e:
         sys.exit(str(e))
 
-    # provide some guidance about running the daemon setup script.
-    script_dir = os.path.join(config_dict["WEEWX_ROOT"], "scripts")
-    path = os.path.join(script_dir, 'setup-daemon.sh')
-    print("\nYou can set up a daemon by running the daemon setup script:")
-    print(f"  {bcolors.BOLD}sudo {path}{bcolors.ENDC}")
-
 
 def reconfigure_station(config_dict, namespace):
     """Map namespace to a call to station_reconfigure()"""
