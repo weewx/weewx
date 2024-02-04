@@ -14,6 +14,7 @@ import os.path
 import threading
 import time
 import traceback
+from contextlib import contextmanager
 
 # 3rd party imports
 import configobj
@@ -62,6 +63,17 @@ SPANS = (MINUTES, HOURS, DOM, MONTHS, DOW)
 NAMES = ((), (), (), MONTH_NAMES, DAY_NAMES)
 # list of name maps for CRON like fields
 MAPS = ((), (), (), MONTH_NAME_MAP, DAY_NAME_MAP)
+
+
+@contextmanager
+def set_cwd(new_cwd):
+    """Set the current working directory within a context manager"""
+    old_cwd = os.getcwd()
+    try:
+        os.chdir(new_cwd)
+        yield new_cwd
+    finally:
+        os.chdir(old_cwd)
 
 
 # =============================================================================
@@ -175,55 +187,54 @@ class StdReportEngine(threading.Thread):
                                   "running report anyway", report)
                         log.debug("       ****  %s", timing.validation_error)
 
-            # Save the current working directory
-            cwd = os.getcwd()
-            # Change directory to the skin subdirectory:
-            os.chdir(os.path.join(self.config_dict['WEEWX_ROOT'],
-                                  skin_dict['SKIN_ROOT'],
-                                  skin_dict['skin']))
+            # Set the current working directory to the skin's location. This allows #include
+            # statements to work.
+            with set_cwd(os.path.join(self.config_dict['WEEWX_ROOT'],
+                                      skin_dict['SKIN_ROOT'],
+                                      skin_dict['skin'])) as cwd:
+                log.debug("Running generators for report '%s' in directory '%s'", report, cwd)
 
-            if 'Generators' in skin_dict and 'generator_list' in skin_dict['Generators']:
-                for generator in weeutil.weeutil.option_as_list(skin_dict['Generators']['generator_list']):
+                if 'Generators' in skin_dict and 'generator_list' in skin_dict['Generators']:
+                    for generator in weeutil.weeutil.option_as_list(
+                            skin_dict['Generators']['generator_list']):
 
-                    try:
-                        # Instantiate an instance of the class.
-                        obj = weeutil.weeutil.get_object(generator)(
-                            self.config_dict,
-                            skin_dict,
-                            self.gen_ts,
-                            self.first_run,
-                            self.stn_info,
-                            self.record)
-                    except Exception as e:
-                        log.error("Unable to instantiate generator '%s'", generator)
-                        log.error("        ****  %s", e)
-                        weeutil.logger.log_traceback(log.error, "        ****  ")
-                        log.error("        ****  Generator ignored")
-                        traceback.print_exc()
-                        continue
+                        try:
+                            # Instantiate an instance of the class.
+                            obj = weeutil.weeutil.get_object(generator)(
+                                self.config_dict,
+                                skin_dict,
+                                self.gen_ts,
+                                self.first_run,
+                                self.stn_info,
+                                self.record)
+                        except Exception as e:
+                            log.error("Unable to instantiate generator '%s'", generator)
+                            log.error("        ****  %s", e)
+                            weeutil.logger.log_traceback(log.error, "        ****  ")
+                            log.error("        ****  Generator ignored")
+                            traceback.print_exc()
+                            continue
 
-                    try:
-                        # Call its start() method
-                        obj.start()
+                        try:
+                            # Call its start() method
+                            obj.start()
 
-                    except Exception as e:
-                        # Caught unrecoverable error. Log it, continue on to the
-                        # next generator.
-                        log.error("Caught unrecoverable exception in generator '%s'", generator)
-                        log.error("        ****  %s", e)
-                        weeutil.logger.log_traceback(log.error, "        ****  ")
-                        log.error("        ****  Generator terminated")
-                        traceback.print_exc()
-                        continue
+                        except Exception as e:
+                            # Caught unrecoverable error. Log it, continue on to the
+                            # next generator.
+                            log.error("Caught unrecoverable exception in generator '%s'",
+                                      generator)
+                            log.error("        ****  %s", e)
+                            weeutil.logger.log_traceback(log.error, "        ****  ")
+                            log.error("        ****  Generator terminated")
+                            traceback.print_exc()
+                            continue
 
-                    finally:
-                        obj.finalize()
+                        finally:
+                            obj.finalize()
 
-            else:
-                log.debug("No generators specified for report '%s'", report)
-
-            # Restore the current working directory
-            os.chdir(cwd)
+                else:
+                    log.debug("No generators specified for report '%s'", report)
 
 
 def build_skin_dict(config_dict, report):
@@ -370,7 +381,6 @@ def get_lang_dict(lang_spec, config_dict, report):
 
 
 def merge_lang(lang_spec, config_dict, report, skin_dict):
-
     lang_dict = get_lang_dict(lang_spec, config_dict, report)
     # There may or may not be a unit system specified. If so, honor it.
     if 'unit_system' in lang_dict:
@@ -828,7 +838,8 @@ class ReportTiming(object):
                             # was a match on a restricted DOM field
                             dom_match = True
                             dom_restricted_match = self.dom_restrict
-                        elif field_span == DOW and not (dom_restricted_match or self.dow_restrict or dom_match):
+                        elif field_span == DOW and not (
+                                dom_restricted_match or self.dow_restrict or dom_match):
                             break
                         continue
                     elif field_span == DOW and dom_restricted_match or field_span == DOM:
