@@ -6,12 +6,6 @@
     in v4.  is there a way to remove that in v5 so that v5 'fixes' the confness
     of skins?
 
-- mw verify that upgrade to v5 while simultaneously changing from python2 to
-    python3 works.  5.0.0 has a problem where v5 invokes /usr/bin/weectl but
-    /etc/default/weewx uses python2, so the weectl.py invocation for version
-    fails.  probably need to invoke python3 explicitly throughout the deb
-    package scripts.
-
 ## Testing
 
 - mw convert to pytest

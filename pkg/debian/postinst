@@ -19,6 +19,7 @@ set -e
 
 cfgfile=/etc/weewx/weewx.conf
 cfgapp=/usr/bin/weectl
+ts=`date +"%Y%m%d%H%M%S"`
 
 WEEWX_USER="${WEEWX_USER:-weewx}"
 WEEWX_GROUP="${WEEWX_GROUP:-weewx}"
@@ -266,27 +267,24 @@ get_user() {
         TMP_USER=$(stat -c "%U" $WEEWX_HOME)
         if [ "$TMP_USER" != "root" -a "$TMP_USER" != "weewx" ]; then
             WEEWX_USER=$TMP_USER
-            WEEWX_GROUP=$(stat -c "%G" $WEEWX_HOME
+            WEEWX_GROUP=$(stat -c "%G" $WEEWX_HOME)
         fi
     fi
     echo "Using $WEEWX_USER:$WEEWX_GROUP as user:group"
 }
 
 # create/modify the defaults file to match this installation.  if the file does
-# not exist, then create it with our values.  otherwise, put our values in if
-# the variables have not yet been specified.
+# not exist, then create it with our values.  if there are already values, then
+# move it aside.
 setup_defaults() {
     dflts=/etc/default/weewx
-    if [ ! -f $dflts ]; then
-        echo "Creating /etc/default/weewx"
-        echo "WEEWX_PYTHON=python3" > $dflts
-        echo "WEEWX_BINDIR=/usr/share/weewx" >> $dflts
-    else
-        grep -q "^WEEWX_PYTHON=" $dflts || \
-            echo "WEEWX_PYTHON=python3" >> $dflts
-        grep -q "^WEEWX_BINDIR=" $dflts || \
-            echo "WEEWX_BINDIR=/usr/share/weewx" >> $dflts
+    if [ -f $dflts ]; then
+        echo "Saving old defaults to ${dflts}-$ts"
+        mv $dflts ${dflts}-$ts
     fi
+    echo "Creating /etc/default/weewx"
+    echo "WEEWX_PYTHON=python3" > $dflts
+    echo "WEEWX_BINDIR=/usr/share/weewx" >> $dflts
 
     # the SysV rc script uses additional variables, so set values for them
     if [ "$1" = "init" ]; then
@@ -345,7 +343,7 @@ add_to_group() {
 # put the init files in place
 setup_init() {
     if [ "$1" = "systemd" ]; then
-        # prefer /usr/lib but fall back to /usr
+        # prefer /usr/lib but fall back to /lib
         dst="/usr/lib/systemd/system"
         if [ ! -d $dst ]; then
             dst="/lib/systemd/system"
@@ -449,7 +447,6 @@ migrate_extensions() {
         echo "Migrating old extensions to $WEEWX_USERDIR"
         mkdir -p $WEEWX_USERDIR
         cp -rp /usr/share/weewx/user/* $WEEWX_USERDIR
-        ts=`date +"%Y%m%d%H%M%S"`
         echo "Saving old extensions to /usr/share/weewx/user-$ts"
         mv /usr/share/weewx/user /usr/share/weewx/user-$ts
     fi

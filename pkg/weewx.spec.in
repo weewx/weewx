@@ -193,6 +193,9 @@ get_conf_version() {
     echo $v
 }
 
+# timestamp for files we must move aside
+ts=`/usr/bin/date +"%%Y%%m%%d%%H%%M%%S"`
+
 # figure out which user should own everything
 WEEWX_USER="${WEEWX_USER:-weewx}"
 WEEWX_GROUP="${WEEWX_GROUP:-weewx}"
@@ -206,15 +209,11 @@ fi
 
 # insert values into the defaults file (used by the entry points)
 dflts=/etc/default/weewx
-if [ ! -f $dflts ]; then
-    echo "WEEWX_PYTHON=python3" > $dflts
-    echo "WEEWX_BINDIR=/usr/share/weewx" >> $dflts
-else
-    grep -q "^WEEWX_PYTHON=" $dflts || \
-        echo "WEEWX_PYTHON=python3" >> $dflts
-    grep -q "^WEEWX_BINDIR=" $dflts || \
-        echo "WEEWX_BINDIR=/usr/share/weewx" >> $dflts
+if [ -f $dflts ]; then
+    mv $dflts ${dflts}-$ts
 fi
+echo "WEEWX_PYTHON=python3" > $dflts
+echo "WEEWX_BINDIR=/usr/share/weewx" >> $dflts
 
 # see which init system (if any) is running
 pid1=none
@@ -301,7 +300,6 @@ elif [ $1 -gt 1 ]; then
     cp -rp /usr/share/weewx/user/* /etc/weewx/bin/user
     chown -R $WEEWX_USER /etc/weewx/bin/user
     chgrp -R $WEEWX_GROUP /etc/weewx/bin/user
-    ts=`/usr/bin/date +"%%Y%%m%%d%%H%%M%%S"`
     echo "Moving old extensions to /usr/share/weewx/user-$ts"
     mv /usr/share/weewx/user /usr/share/weewx/user-$ts
   fi
