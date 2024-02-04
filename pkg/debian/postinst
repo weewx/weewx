@@ -326,16 +326,16 @@ add_to_group() {
         if [ "$SUDO_USER" != "" ]; then
             inst_user=$SUDO_USER
         fi
-        # if user is already in the group, then skip it
-        if ! getent group | grep -q $inst_user; then
-            # put the user who is doing the installation into the weewx group,
-            # but only if it is not root or the weewx user.
-            if [ "$inst_user" != "root" -a "$inst_user" != "$WEEWX_USER" ]; then
+        # put the user who is doing the installation into the weewx group,
+        # but only if it is not root or the weewx user.
+        if [ "$inst_user" != "root" -a "$inst_user" != "$WEEWX_USER" ]; then
+            # if user is already in the group, then skip it
+            if ! getent group $WEEWX_GROUP | grep -q $inst_user; then
                 echo "Adding user $inst_user to group $WEEWX_GROUP"
                 usermod -aG $WEEWX_GROUP $inst_user
+            else
+                echo "User $inst_user is already in group $WEEWX_GROUP"
             fi
-        else
-            echo "User $inst_user is already in group $WEEWX_GROUP"
         fi
     fi
 }
