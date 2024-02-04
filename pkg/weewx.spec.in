@@ -52,6 +52,7 @@
 %global cfg_file     %{dst_cfg_dir}/weewx.conf
 %global systemd_dir  %{_unitdir}
 %global udev_dir     %{_udevrulesdir}
+%global sqlite_root  /var/lib/weewx
 %global html_root    /var/www/html/weewx
 
 %define entry_points weewxd weectl
@@ -108,9 +109,8 @@ cp pkg/etc/udev/rules.d/weewx.rules %{buildroot}%{dst_cfg_dir}/udev
 
 # create the weewx configuration
 sed \
- -e 's%SKIN_ROOT =.*%SKIN_ROOT = /etc/weewx/skins%' \
  -e 's:HTML_ROOT = public_html:HTML_ROOT = %{html_root}:' \
- -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
+ -e 's:SQLITE_ROOT = .*:SQLITE_ROOT = %{sqlite_root}:' \
  src/weewx_data/weewx.conf > %{buildroot}%{dst_cfg_dir}/weewx.conf
 
 # make a copy of the generic configuration file
@@ -132,17 +132,25 @@ done
 WEEWX_HOME="${WEEWX_HOME:-/var/lib/weewx}"
 WEEWX_USER="${WEEWX_USER:-weewx}"
 WEEWX_GROUP="${WEEWX_GROUP:-weewx}"
-if [ -d /var/lib/weewx ]; then
-    TMP_USER=$(stat -c "%%U" /var/lib/weewx)
-    if [ "$TMP_USER" != "root" -a "$TMP_USER" != "weewx" ]; then
+if [ -d %{sqlite_root} ]; then
+    TMP_USER=$(stat -c "%%U" %{sqlite_root})
+    if [ "$TMP_USER" != "root" -a "$TMP_USER" != "weewx" -a "$TMP_USER" != "UNKNOWN" ]; then
         WEEWX_USER=$TMP_USER
-        WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)
+        WEEWX_GROUP=$(stat -c "%%G" %{sqlite_root})
     fi
 fi
 
 # create the weewx user and group if they do not yet exist
-/usr/bin/getent group $WEEWX_GROUP || /usr/sbin/groupadd -r $WEEWX_GROUP
-/usr/bin/getent passwd $WEEWX_USER || /usr/sbin/useradd -r -g $WEEWX_GROUP -M -d $WEEWX_HOME -s /sbin/nologin $WEEWX_USER
+if ! /usr/bin/getent group | grep -q "^$WEEWX_GROUP"; then
+    echo -n "Adding system group $WEEWX_GROUP..."
+    /usr/sbin/groupadd -r $WEEWX_GROUP > /dev/null
+    echo "done"
+fi
+if ! /usr/bin/getent passwd | grep -q "^$WEEWX_USER"; then
+    echo -n "Adding system user $WEEWX_USER..."
+    /usr/sbin/useradd -r -g $WEEWX_GROUP -M -d $WEEWX_HOME -s /sbin/nologin $WEEWX_USER > /dev/null
+    echo "done"
+fi
 
 # add the user doing the install to the weewx group, if appropriate
 if [ "$WEEWX_GROUP" != "root" ]; then
@@ -199,11 +207,11 @@ ts=`/usr/bin/date +"%%Y%%m%%d%%H%%M%%S"`
 # figure out which user should own everything
 WEEWX_USER="${WEEWX_USER:-weewx}"
 WEEWX_GROUP="${WEEWX_GROUP:-weewx}"
-if [ -d /var/lib/weewx ]; then
-    TMP_USER=$(stat -c "%%U" /var/lib/weewx)
-    if [ "$TMP_USER" != "root" -a "$TMP_USER" != "weewx" ]; then
+if [ -d %{sqlite_root} ]; then
+    TMP_USER=$(stat -c "%%U" %{sqlite_root})
+    if [ "$TMP_USER" != "root" -a "$TMP_USER" != "weewx" -a "$TMP_USER" != "UNKNOWN" ]; then
         WEEWX_USER=$TMP_USER
-        WEEWX_GROUP=$(stat -c "%%G" /var/lib/weewx)
+        WEEWX_GROUP=$(stat -c "%%G" %{sqlite_root})
     fi
 fi
 
@@ -229,6 +237,9 @@ if [ -d %{systemd_dir} ]; then
  -e "s/Group=.*/Group=${WEEWX_GROUP}/" \
  %{dst_cfg_dir}/systemd/$f > %{systemd_dir}/$f
   done
+  if [ "$pid1" = "systemd" ]; then
+      systemctl daemon-reload
+  fi
 fi
 
 # install the udev rules
@@ -249,20 +260,20 @@ if [ ! -d %{dst_user_dir} ]; then
     mkdir -p %{dst_user_dir}
     cp %{dst_code_dir}/weewx_data/bin/user/__init__.py %{dst_user_dir}
     cp %{dst_code_dir}/weewx_data/bin/user/extensions.py %{dst_user_dir}
-    chmod 2775 %{dts_user_dir}
+    chmod 2775 %{dst_user_dir}
 fi
 
 # create database directory
-mkdir -p /var/lib/weewx
-chmod 2775 /var/lib/weewx
-chown -R $WEEWX_USER /var/lib/weewx
-chgrp -R $WEEWX_GROUP /var/lib/weewx
+mkdir -p %{sqlite_root}
+chmod 2775 %{sqlite_root}
+chown -R $WEEWX_USER %{sqlite_root}
+chgrp -R $WEEWX_GROUP %{sqlite_root}
 
 # create the reports directory
-mkdir -p /var/www/html/weewx
-chmod 2775 /var/www/html/weewx
-chown -R $WEEWX_USER /var/www/html/weewx
-chgrp -R $WEEWX_GROUP /var/www/html/weewx
+mkdir -p %{html_root}
+chmod 2775 %{html_root}
+chown -R $WEEWX_USER %{html_root}
+chgrp -R $WEEWX_GROUP %{html_root}
 
 if [ "$1" = "1" ]; then
   # this is a new installation
