@@ -386,7 +386,10 @@ class ObservationBinder(object):
                                                   'not_null', db_manager)[0])
         else:
             # Nope. Try the xtypes system.
-            val = weewx.xtypes.has_data(self.obs_type, self.timespan, db_manager)
+            try:
+                val = weewx.xtypes.has_data(self.obs_type, self.timespan, db_manager)
+            except weewx.CannotCalculate:
+                return False
         return val
 
     def series(self, aggregate_type=None,

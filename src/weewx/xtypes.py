@@ -159,8 +159,6 @@ def has_data(obs_type, timespan, db_manager):
                 return True
         except (weewx.UnknownType, weewx.UnknownAggregation):
             pass
-        except weewx.CannotCalculate:
-            return False
     # Tried all the  get_aggregates() and didn't find a non-null value. Either it doesn't exist,
     # or doesn't have any data
     return False
