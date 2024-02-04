@@ -163,7 +163,7 @@ if [ "$WEEWX_GROUP" != "root" ]; then
     # but only if it is not root or the weewx user.
     if [ "$inst_user" != "root" -a "$inst_user" != "$WEEWX_USER" ]; then
         # if user is already in the group, then skip it
-        if ! getent group $WEEWX_GROUP | grep -q $inst_user; then
+        if ! /usr/bin/getent group $WEEWX_GROUP | grep -q $inst_user; then
             echo "Adding user $inst_user to group $WEEWX_GROUP"
             usermod -aG $WEEWX_GROUP $inst_user
         else
@@ -238,7 +238,7 @@ if [ -d %{systemd_dir} ]; then
  %{dst_cfg_dir}/systemd/$f > %{systemd_dir}/$f
   done
   if [ "$pid1" = "systemd" ]; then
-      systemctl daemon-reload
+      systemctl daemon-reload > /dev/null 2>&1 || :
   fi
 fi
 
@@ -285,8 +285,8 @@ if [ "$1" = "1" ]; then
   chown -R $WEEWX_USER %{dst_cfg_dir}
   chgrp -R $WEEWX_GROUP %{dst_cfg_dir}
   if [ "$pid1" = "systemd" ]; then
-    systemctl enable weewx > /dev/null 2>&1
-    systemctl start weewx
+    systemctl enable weewx > /dev/null 2>&1 || :
+    systemctl start weewx > /dev/null 2>&1 || :
   fi
 elif [ $1 -gt 1 ]; then
   # this is an upgrade
@@ -321,8 +321,8 @@ elif [ $1 -gt 1 ]; then
   chgrp -R $WEEWX_GROUP %{dst_cfg_dir}
   # do a full restart of weewx
   if [ "$pid1" = "systemd" ]; then
-    systemctl stop weewx
-    systemctl start weewx
+    systemctl stop weewx > /dev/null 2>&1 || :
+    systemctl start weewx > /dev/null 2>&1 || :
   fi
 fi
 
@@ -341,8 +341,8 @@ fi
 if [ "$1" = "0" ]; then
   # this is an uninstall, so stop and remove everything
   if [ "$pid1" = "systemd" ]; then
-    systemctl stop weewx
-    systemctl disable weewx > /dev/null 2>&1
+    systemctl stop weewx > /dev/null 2>&1 || :
+    systemctl disable weewx > /dev/null 2>&1 || :
     for f in weewx.service weewx@.service; do
 	if [ -f %{systemd_dir}/$f ]; then
 	    rm -f %{systemd_dir}/$f
