@@ -403,7 +403,6 @@ setup_skins() {
     if [ ! -d /etc/weewx/skins ]; then
         echo "Creating skins directory /etc/weewx/skins"
         cp -rp /usr/share/weewx/weewx_data/skins /etc/weewx
-        chmod 2775 /etc/weewx/skins
     fi
 }
 
@@ -414,30 +413,37 @@ setup_user_dir() {
         mkdir -p $WEEWX_USERDIR
         cp /usr/share/weewx/weewx_data/bin/user/__init__.py $WEEWX_USERDIR
         cp /usr/share/weewx/weewx_data/bin/user/extensions.py $WEEWX_USERDIR
-        chmod 2775 $WEEWX_USERDIR
     fi
+}
+
+set_permissions() {
+    usr=$1
+    grp=$2
+    dir=$3
+    find $3 -type f -exec chmod 644 {} \;
+    find $3 -type d -exec chmod 2755 {} \;
+    chmod 2775 $dir
+    chown -R $usr:$grp $dir
 }
 
 # create the database directory
 setup_database_dir() {
     echo "Configuring database directory $WEEWX_HOME"
     mkdir -p $WEEWX_HOME
-    chmod 2775 $WEEWX_HOME
-    chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HOME
+    set_permissions $WEEWX_USER $WEEWX_GROUP $WEEWX_HOME
 }
 
 # create the reporting directory
 setup_reporting_dir() {
     echo "Configuring reporting directory $WEEWX_HTMLDIR"
     mkdir -p $WEEWX_HTMLDIR
-    chmod 2775 $WEEWX_HTMLDIR
-    chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HTMLDIR
+    set_permissions $WEEWX_USER $WEEWX_GROUP $WEEWX_HTMLDIR
 }
 
 # set the permissions on the configuration, skins, and extensions
 set_config_permissions() {
     echo "Setting permissions $WEEWX_USER:$WEEWX_GROUP on /etc/weewx"
-    chown -R $WEEWX_USER:$WEEWX_GROUP /etc/weewx
+    set_permissions $WEEWX_USER $WEEWX_GROUP /etc/weewx
 }
 
 # if there are any existing extensions in the V4 location, copy them to the

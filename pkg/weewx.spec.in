@@ -201,6 +201,17 @@ get_conf_version() {
     echo $v
 }
 
+set_permissions() {
+    usr=$1
+    grp=$2
+    dir=$3
+    find $3 -type f -exec chmod 644 {} \;
+    find $3 -type d -exec chmod 2755 {} \;
+    chmod 2775 $dir
+    chown -R $usr $dir
+    chgrp -R $grp $dir
+}
+
 # timestamp for files we must move aside
 ts=`/usr/bin/date +"%%Y%%m%%d%%H%%M%%S"`
 
@@ -252,7 +263,6 @@ fi
 # copy the skins if there are not already skins in place
 if [ ! -d %{dst_cfg_dir}/skins ]; then
     cp -rp %{dst_code_dir}/weewx_data/skins %{dst_cfg_dir}
-    chmod 2775 %{dst_cfg_dir}/skins
 fi
 
 # create the user extensions directory if one does not already exist
@@ -260,20 +270,15 @@ if [ ! -d %{dst_user_dir} ]; then
     mkdir -p %{dst_user_dir}
     cp %{dst_code_dir}/weewx_data/bin/user/__init__.py %{dst_user_dir}
     cp %{dst_code_dir}/weewx_data/bin/user/extensions.py %{dst_user_dir}
-    chmod 2775 %{dst_user_dir}
 fi
 
 # create database directory
 mkdir -p %{sqlite_root}
-chmod 2775 %{sqlite_root}
-chown -R $WEEWX_USER %{sqlite_root}
-chgrp -R $WEEWX_GROUP %{sqlite_root}
+set_permissions $WEEWX_USER $WEEWX_GROUP %{sqlite_root}
 
 # create the reports directory
 mkdir -p %{html_root}
-chmod 2775 %{html_root}
-chown -R $WEEWX_USER %{html_root}
-chgrp -R $WEEWX_GROUP %{html_root}
+set_permissions $WEEWX_USER $WEEWX_GROUP %{html_root}
 
 if [ "$1" = "1" ]; then
   # this is a new installation
@@ -282,8 +287,7 @@ if [ "$1" = "1" ]; then
   # pre-compile the python code
   precompile
   # ensure correct ownership of configuration, skins, and extensions
-  chown -R $WEEWX_USER %{dst_cfg_dir}
-  chgrp -R $WEEWX_GROUP %{dst_cfg_dir}
+  set_permissions $WEEWX_USER $WEEWX_GROUP %{dst_cfg_dir}
   if [ "$pid1" = "systemd" ]; then
     systemctl enable weewx > /dev/null 2>&1 || :
     systemctl start weewx > /dev/null 2>&1 || :
@@ -309,16 +313,13 @@ elif [ $1 -gt 1 ]; then
   if [ -d /usr/share/weewx/user ]; then
     echo "Copying old extensions to /etc/weewx/bin/user"
     cp -rp /usr/share/weewx/user/* /etc/weewx/bin/user
-    chown -R $WEEWX_USER /etc/weewx/bin/user
-    chgrp -R $WEEWX_GROUP /etc/weewx/bin/user
     echo "Moving old extensions to /usr/share/weewx/user-$ts"
     mv /usr/share/weewx/user /usr/share/weewx/user-$ts
   fi
   # pre-compile the python code
   precompile
   # ensure correct ownership of configuration, skins, and extensions
-  chown -R $WEEWX_USER %{dst_cfg_dir}
-  chgrp -R $WEEWX_GROUP %{dst_cfg_dir}
+  set_permissions $WEEWX_USER $WEEWX_GROUP %{dst_cfg_dir}
   # do a full restart of weewx
   if [ "$pid1" = "systemd" ]; then
     systemctl stop weewx > /dev/null 2>&1 || :
