@@ -66,9 +66,9 @@ To switch from the `Simulator` to real hardware, reconfigure the driver.
 # Stop the daemon
 sudo systemctl stop weewx
 # Reconfigure to use your hardware
-sudo weectl station reconfigure
+weectl station reconfigure
 # Delete the old database
-sudo rm /var/lib/weewx/weewx.sdb
+rm /var/lib/weewx/weewx.sdb
 # Start the daemon
 sudo systemctl start weewx
 ```
@@ -80,7 +80,7 @@ To enable uploads, or to enable other reports, modify the configuration file
 `/etc/weewx/weewx.conf` using any text editor such as `nano`:
 
 ```{.shell .copy}
-sudo nano /etc/weewx/weewx.conf
+nano /etc/weewx/weewx.conf
 ```
 
 The reference
@@ -96,14 +96,6 @@ utility](../utilities/weectl-extension.md).
 WeeWX must be restarted for the changes to take effect.
 ```{.shell .copy}
 sudo systemctl restart weewx
-```
-
-If you plan to do a lot of customization, consider putting yourself into the
-`weewx` group.  When you are in the `weewx` group, you can do many things
-without having to `sudo`, including modifying the WeeWX configuration and
-installing extensions.
-```{.shell .copy}
-sudo usermod -aG weewx $USER
 ```
 
 
@@ -149,5 +141,8 @@ sudo zypper remove weewx
 sudo rm -r /var/www/html/weewx
 sudo rm -r /var/lib/weewx
 sudo rm -r /etc/weewx
+sudo rm /etc/default/weewx
 sudo userdel weewx
+sudo gpasswd -d $USER weewx
+sudo groupdel weewx
 ```

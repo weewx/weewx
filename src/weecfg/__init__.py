@@ -481,7 +481,7 @@ def prompt_for_driver(dflt_driver=None):
     infos = get_all_driver_infos()
     keys = sorted(infos)
     dflt_idx = None
-    print("\nInstalled drivers include:")
+    print("\nChoose a driver. Installed drivers include:")
     for i, d in enumerate(keys):
         print(" %s%2d%s) %-15s %-25s %s" % (bcolors.BOLD, i, bcolors.ENDC,
                                             infos[d].get('driver_name', '?'),
@@ -489,9 +489,9 @@ def prompt_for_driver(dflt_driver=None):
         if dflt_driver == d:
             dflt_idx = i
     if dflt_idx is None:
-        msg = "choose a driver: "
+        msg = "driver: "
     else:
-        msg = f"choose a driver [{dflt_idx:d}]: "
+        msg = f"driver [{dflt_idx:d}]: "
     idx = 0
     ans = None
     while ans is None:

@@ -219,9 +219,9 @@ def config_location(config_dict, location=None, no_prompt=False):
     if location is not None:
         final_location = location
     elif not no_prompt:
-        print("\nGive a description of your station. This will be used for the title "
+        print("\nGive a description of the station. This will be used for the title "
               "of reports.")
-        ans = input(f"Description [{default_location}]: ").strip()
+        ans = input(f"description [{default_location}]: ").strip()
         final_location = ans if ans else default_location
     else:
         final_location = default_location
@@ -256,8 +256,8 @@ def config_altitude(config_dict, altitude=None, no_prompt=False):
         final_altitude = [value, unit]
     elif not no_prompt:
         print("\nSpecify altitude, with units 'foot' or 'meter'.  For example:")
-        print("35, foot")
-        print("12, meter")
+        print("  35, foot")
+        print("  12, meter")
         msg = "altitude [%s]: " % weeutil.weeutil.list_as_string(default_altitude)
         final_altitude = None
 
@@ -362,11 +362,13 @@ def config_units(config_dict, unit_system=None, no_prompt=False):
     if unit_system:
         final_unit_system = unit_system
     elif not no_prompt:
-        print("\nChoose a unit system for your reports. Possible choices are:")
-        print(f"  '{bcolors.BOLD}us{bcolors.ENDC}' (ºF, inHg, in, mph)")
-        print(f"  '{bcolors.BOLD}metricwx{bcolors.ENDC}' (ºC, mbar, mm, m/s)")
-        print(f"  '{bcolors.BOLD}metric{bcolors.ENDC}' (ºC, mbar, cm, km/h)")
-        print("Later, you can modify your choice, or choose a combination of units.")
+        print("\nChoose a unit system for the reports. Later, you can modify")
+        print("your choice, or choose a combination of units. Unit systems")
+        print("include:")
+        print(f"  {bcolors.BOLD}us{bcolors.ENDC}         (ºF, inHg, in, mph)")
+        print(f"  {bcolors.BOLD}metricwx{bcolors.ENDC}   (ºC, mbar, mm, m/s)")
+        print(f"  {bcolors.BOLD}metric{bcolors.ENDC}     (ºC, mbar, cm, km/h)")
+
         # Get what unit system the user wants
         options = ['us', 'metricwx', 'metric']
         final_unit_system = weecfg.prompt_with_options(f"unit system",
@@ -483,16 +485,16 @@ def config_registry(config_dict, register=None, station_url=None, no_prompt=Fals
         final_register = to_bool(register)
         final_station_url = station_url or default_station_url
     elif not no_prompt:
-        print("\nYou can register your station on weewx.com, where it will be included")
-        print("in a map. If you choose to do so, you will also need a unique URL to identify ")
-        print("your station (such as a website, or a WeatherUnderground link).")
+        print("\nYou can register the station on weewx.com, where it will be included in a")
+        print("map. If you choose to register, you will also need a unique URL to identify ")
+        print("the station (such as a website, or a WeatherUnderground link).")
         default_prompt = 'y' if default_register else 'n'
-        ans = weeutil.weeutil.y_or_n(f"Include station in the station "
-                                     f"registry [{default_prompt}] (y/n)? ",
+        ans = weeutil.weeutil.y_or_n(f"register this station (y/n)? "
+                                     f"[{default_prompt}] ",
                                      default=default_register)
         final_register = to_bool(ans)
         if final_register:
-            print("\nNow give a unique URL for your station. A Weather Underground ")
+            print("\nNow give a unique URL for the station. A Weather Underground ")
             print("URL such as https://www.wunderground.com/dashboard/pws/KORPORT12 will do.")
             while True:
                 url = weecfg.prompt_with_options("Unique URL", default_station_url)

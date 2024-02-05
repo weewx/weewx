@@ -30,9 +30,13 @@ remove)
     if [ "$pid1" = "systemd" ]; then
         echo "Removing systemd units"
         systemctl disable weewx > /dev/null
+        dst="/usr/lib/systemd/system"
+        if [ ! -d $dst ]; then
+            dst="/lib/systemd/system"
+        fi
         for f in weewx.service weewx@.service; do
-	    if [ -f /usr/lib/systemd/system/$f ]; then
-	        rm -f /usr/lib/systemd/system/$f
+	    if [ -f $dst/$f ]; then
+	        rm -f $dst/$f
 	    fi
         done
     elif [ "$pid1" = "init" ]; then
@@ -43,9 +47,13 @@ remove)
         fi
     fi
     # remove udev rules
-    if [ -f /usr/lib/udev/rules.d/60-weewx.rules ]; then
+    dst=/usr/lib/udev/rules.d
+    if [ ! -d $dst ]; then
+        dst=/lib/udev/rules.d
+    fi
+    if [ -f $dst/60-weewx.rules ]; then
         echo "Removing udev rules"
-        rm -f /usr/lib/udev/rules.d/60-weewx.rules
+        rm -f $dst/60-weewx.rules
     fi
     ;;
 

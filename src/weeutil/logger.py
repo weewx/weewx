@@ -106,6 +106,8 @@ def setup(process_name, config_dict=None):
     if config_dict:
         log_config.merge(config_dict)
         weewx_root = config_dict.get("WEEWX_ROOT")
+        # Set weewx.debug as necessary:
+        weewx.debug = int(config_dict.get('debug', 0))
     else:
         weewx_root = None
 
@@ -114,9 +116,6 @@ def setup(process_name, config_dict=None):
     log_root = log_config['Logging'].pop('LOG_ROOT', '')
     if weewx_root:
         log_root = os.path.join(weewx_root, log_root)
-
-    # Set weewx.debug as necessary:
-    weewx.debug = int(config_dict.get('debug', 0))
 
     # Adjust the logging level in accordance to whether the 'debug' flag is on
     log_level = 'DEBUG' if weewx.debug else 'INFO'
