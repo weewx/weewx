@@ -1,3 +1,5 @@
+* Sun Feb 04 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.0.1-3
+- fix permissions for real this time
 * Sun Feb 04 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.0.1-2
 - set permissions on all files and directories in /etc/weewx
 * Mon Jan 22 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.0.1-1

@@ -420,8 +420,8 @@ set_permissions() {
     usr=$1
     grp=$2
     dir=$3
-    find $3 -type f -exec chmod 644 {} \;
-    find $3 -type d -exec chmod 2755 {} \;
+    find $3 -type f -exec chmod 664 {} \;
+    find $3 -type d -exec chmod 2775 {} \;
     chmod 2775 $dir
     chown -R $usr:$grp $dir
 }
