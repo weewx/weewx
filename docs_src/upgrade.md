@@ -218,8 +218,10 @@ it easier to manage a WeeWX installation. Put yourself into the `weewx` group,
 then you will not have to `sudo` to make changes to skins or configurations.
 You *will* have to `sudo` to start/stop `weewxd`.
 
-For upgrades, the installer will check the ownership of `/var/lib/weewx`, and it
-will run `weewxd` as that user and group.
+For upgrades, the installer will check the ownership of `/var/lib/weewx`.  If
+the ownership is `root:root`, the installer will create the `weewx` user and
+run `weewxd` as that user and group. Otherwise, `weewxd` will run as the
+previously configured user.
 
 #### udev rules installed for core hardware
 

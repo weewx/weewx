@@ -1,7 +1,7 @@
 WeeWX change history
 --------------------
 
-### 5.0.1 mm/DD/YYYY
+### 5.0.1 02/04/2024
 
 Include backwards compatible reference to `weewx.UnknownType`.
 
