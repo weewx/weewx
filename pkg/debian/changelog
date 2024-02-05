@@ -1,3 +1,6 @@
+weewx (5.0.1-2) unstable; urgency=low
+  * set permissions on all files and directories in /etc/weewx
+ -- Matthew Wall <mwall.weewx@gmail.com>  Sun, 04 Feb 2024 21:29:29 -0500
 weewx (5.0.1-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall <mwall.weewx@gmail.com>  Mon, 22 Jan 2024 20:21:32 -0500
