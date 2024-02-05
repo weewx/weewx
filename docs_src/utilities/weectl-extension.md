@@ -48,8 +48,8 @@ weectl extension install ~/Downloads/windy-0.1.zip
         [--config=FILENAME]
         [--dry-run] [--yes] [--verbosity=N] [-y]
 
-This action uninstalls an extension. Use the `list` action to see what to use
-for `NAME`. 
+This action uninstalls an extension. Use the [action
+`list`](#list-installed-extensions) to see what to use for `NAME`.
 
 For example, this would uninstall the extension called `windy`:
 ```shell
