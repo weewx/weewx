@@ -157,7 +157,7 @@ def has_data(obs_type, timespan, db_manager):
             # Check to see if we found a non-null value. Otherwise, keep going.
             if vt[0]:
                 return True
-        except (weewx.UnknownType, weewx.UnknownAggregation):
+        except (weewx.UnknownType, weewx.UnknownAggregation, weewx.CannotCalculate):
             pass
     # Tried all the  get_aggregates() and didn't find a non-null value. Either it doesn't exist,
     # or doesn't have any data
