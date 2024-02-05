@@ -212,16 +212,17 @@ This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
 that use the DEB or RPM packages). Installations that use a `setup.py` or `pip`
 install are not affected.
 
-For new installations, `weewxd` will run as the user `weewx`.  The configuration
-files, skins, databases, and reports are owned by the `weewx` group.  This makes
-it easier to manage a WeeWX installation. Put yourself into the `weewx` group,
-then you will not have to `sudo` to make changes to skins or configurations.
-You *will* have to `sudo` to start/stop `weewxd`.
+For new installations, `weewxd` will run as the user `weewx`, and the
+configuration files, skins, databases, and reports are owned by the `weewx`
+group.  The installer puts you into the `weewx` group, so you will not have to
+`sudo` to make changes to skins or configurations. You *will* have to `sudo`
+to start/stop `weewxd`.
 
 For upgrades, the installer will check the ownership of `/var/lib/weewx`.  If
-the ownership is `root:root`, the installer will create the `weewx` user and
-run `weewxd` as that user and group. Otherwise, `weewxd` will run as the
-previously configured user.
+the ownership is anything other than `root:root`, the installer will respect
+that ownership and continue to run `weewxd` as that user and group. Otherwise,
+the upgrade will create the `weewx` user and set ownership as it would for a
+new installation.
 
 #### udev rules installed for core hardware
 
