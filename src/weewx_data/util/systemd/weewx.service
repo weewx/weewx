@@ -5,6 +5,8 @@ Description=WeeWX weather system
 Documentation=https://weewx.com/docs
 Requires=time-sync.target
 After=time-sync.target
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 ExecStart=WEEWX_PYTHON WEEWXD WEEWX_CFGDIR/weewx.conf

@@ -1,7 +1,10 @@
-## 5.0.1
+## Future
 
 - mw how to provide output from redhat sriptlets without adding noise to yum
     or dnf output?
+- mw or tk: Look into unifying the two versions of the systemd weewx service
+  files.
+
 
 ## Testing
 
