@@ -124,6 +124,16 @@ things:
     sudo systemctl restart udev weewx
     ```
 
+4. If that doesn't work, and you are using an SDR driver, try the `plughw`
+   group:
+    ```{.shell .copy}
+    sudo usermod -aG plughw weewx
+    ```
+   Then restart udev and the daemon:
+    ``` {.shell .copy}
+    sudo systemctl restart udev weewx
+    ```
+
 See, also, the section below [udev rules installed for core
 hardware](#udev-rules-installed-for-core-hardware).
 
