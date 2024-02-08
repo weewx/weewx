@@ -158,11 +158,6 @@ Then follow the directions below to start `weewxd` as a daemon.
     # For Linux systems that use systemd, e.g., Debian, Redhat, and SUSE.
     sudo systemctl start weewx
     ```
-
-    !!! Note
-        The resulting daemon will run as your username. If you prefer to run
-        as `root`, you will have to modify the unit file
-        `/etc/systemd/system/weewx.service`.
     
 === "SysV"
 
@@ -170,11 +165,6 @@ Then follow the directions below to start `weewxd` as a daemon.
     # For Linux systems that use SysV init, e.g., Slackware, Devuan, and Puppy.
     sudo /etc/init.d/weewx start
     ```
-
-    !!! Note
-        The resulting daemon will run as your username. If you prefer to run
-        as `root`, you will have to modify the file
-        `/etc/default/weewx`.
 
 === "BSD"
 

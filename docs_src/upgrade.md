@@ -82,61 +82,34 @@ of the user doing the install. However, old installations can continue to use
 `/home/weewx` by following the guide [_Migrating setup.py installs to Version
 5.0_](https://github.com/weewx/weewx/wiki/v5-upgrade).
 
-#### WeeWX runs as the `weewx` user
+#### WeeWX runs as non-root user
 
-This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
-that use the DEB or RPM packages). Installations that use a `setup.py` or `pip`
-install are not affected.
+For new installations and most upgrades, `weewxd` will now run as a non-root
+user.  The configuration files, skins, databases, and reports are no longer
+owned by root.  This means that root privilege is no longer required to modify
+the WeeWX configuration and the WeeWX daemon no longer runs with escalated
+privileges.  Escalated privilege is still required to start/stop the daemon.
 
-For new installations and most upgrades, `weewxd` will now run as the user
-`weewx`, instead of `root`. The configuration files, skins, databases, and
-reports are owned by the `weewx` group.  This makes it easier to manage a WeeWX
-installation. Put yourself into the `weewx` group, then you will not have to
-`sudo` to make changes to skins or configurations. You *will* have to `sudo` to
-start/stop `weewxd`.
+For installations that use `apt`, `yum`, or `zypper` (installs that use the
+DEB or RPM packages), the WeeWX user is `weewx` and the group is `weewx`.  The
+home directory of the `weewx` user is `/var/lib/weewx`. The installer puts the
+user who does the installation into the `weewx` group.  For upgrades, the
+installer checks the ownership of `/var/lib/weewx`.  If the ownership was other
+than `root:root`, the installer will respect the previous configured user and
+not change it.
 
-For upgrades where the ownership of `/var/lib/weewx` was other than `root:root`,
-the installer will respect the previous configured user and not change it.
+For installations that use `pip` or `git`, the WeeWX user is whoever created
+the station data.
 
-However, note that in general, user `weewx` may not have the necessary
-permissions to access your device. Normally this is handled by a "udev" rule
-that is installed by the WeeWX package installers, which is supposed to give
-`weewx` the necessary permissions, but it does not always get things right. If
-the daemon fails to load because of device permissions problems, try these
-things:
+There are a few places where this change to permissions may affect an existing
+WeeWX installation:
 
-1. Unplug your device, then plug it back in.
-2. If that doesn't work, add user `weewx` to the `dialout` group:
-    ```{.shell .copy}
-    sudo usermod -aG dialout weewx
-    ```
-   Then restart udev and the daemon:
-    ``` {.shell .copy}
-    sudo systemctl restart udev weewx
-    ```
-3. If that doesn't work, and you are using an SDR driver, add user `weewx` to
-   the `plugdev` group:
-    ```{.shell .copy}
-    sudo usermod -aG plugdev weewx
-    ```
-   Then restart udev and the daemon:
-    ``` {.shell .copy}
-    sudo systemctl restart udev weewx
-    ```
+* access to USB and/or serial devices
+* access to network ports, specifically binding to port 80
+* creation and updating of reports
 
-4. If that doesn't work, and you are using an SDR driver, try the `plughw`
-   group:
-    ```{.shell .copy}
-    sudo usermod -aG plughw weewx
-    ```
-   Then restart udev and the daemon:
-    ``` {.shell .copy}
-    sudo systemctl restart udev weewx
-    ```
-
-See, also, the section below [udev rules installed for core
-hardware](#udev-rules-installed-for-core-hardware).
-
+If you encounter problems when upgrading to V5, please see the wiki article
+[*What you should know about permissions*](https://github.com/weewx/weewx/wiki/Understanding-permissions)
 
 #### Changes in the utility `import`
 
@@ -261,6 +234,23 @@ Until you do this, the unit file in `/etc/systemd` will have precedence over
 the unit and unit template that are installed by the installer.  If you just
 want to override behavior of the units installed by the installer, you should
 use the `.d` pattern instead.  See the systemd documentation for details.
+
+#### WeeWX runs as the `weewx` user
+
+This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
+that use the DEB or RPM packages). Installations that use a `setup.py` or `pip`
+install are not affected.
+
+For new installations, `weewxd` will run as the user `weewx`.  The configuration
+files, skins, databases, and reports are owned by the `weewx` group.  This makes
+it easier to manage a WeeWX installation. Put yourself into the `weewx` group,
+then you will not have to `sudo` to make changes to skins or configurations.
+You *will* have to `sudo` to start/stop `weewxd`.
+
+For upgrades, the installer will check the ownership of `/var/lib/weewx`.  If
+the ownership is `root:root`, the installer will create the `weewx` user and
+run `weewxd` as that user and group. Otherwise, `weewxd` will run as the
+previously configured user.
 
 #### udev rules installed for core hardware
 
