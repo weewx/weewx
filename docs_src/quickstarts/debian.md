@@ -171,7 +171,7 @@ sudo apt purge weewx
 
 When you use `apt` to uninstall WeeWX, it does not touch WeeWX data, logs,
 or any changes you might have made to the WeeWX configuration.  It also leaves
-the `weewx` user, since data and configuration files were owned by that user.
+the `weewx` user, because data and configuration files were owned by that user.
 To remove every trace of WeeWX:
 
 ```{.shell .copy}
@@ -180,6 +180,8 @@ sudo rm -r /var/www/html/weewx
 sudo rm -r /var/lib/weewx
 sudo rm -r /etc/weewx
 sudo rm /etc/default/weewx
+sudo rm /etc/apt/trusted.gpg.d/weewx.gpg
+sudo rm /etc/apt/sources.list.d/weewx.list
 sudo userdel weewx
 sudo gpasswd -d $USER weewx
 sudo groupdel weewx
