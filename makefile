@@ -469,7 +469,7 @@ ifeq ("$(SIGN)","1")
 	gpg --export --armor > $(YUM_REPO)/el8/repodata/repomd.xml.key
 	gpg -abs -o $(YUM_REPO)/el9/repodata/repomd.xml.asc $(YUM_REPO)/el9/repodata/repomd.xml
 	gpg --export --armor > $(YUM_REPO)/el9/repodata/repomd.xml.key
-fi
+endif
 
 push-yum-repo:
 	find ~/.yum -type f -exec chmod 664 {} \;
@@ -502,7 +502,7 @@ update-suse-repo:
 ifeq ("$(SIGN)","1")
 	gpg -abs -o $(SUSE_REPO)/suse15/repodata/repomd.xml.asc $(SUSE_REPO)/suse15/repodata/repomd.xml
 	gpg --export --armor > $(SUSE_REPO)/suse15/repodata/repomd.xml.key
-fi
+endif
 
 push-suse-repo:
 	find ~/.suse -type f -exec chmod 664 {} \;
