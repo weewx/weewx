@@ -68,7 +68,6 @@ install:
 
 # create the configuration file
 	sed \
- -e 's%SKIN_ROOT =.*%SKIN_ROOT = skins%' \
  -e 's%HTML_ROOT = public_html%HTML_ROOT = /var/www/html/weewx%' \
  -e 's%SQLITE_ROOT = .*%SQLITE_ROOT = /var/lib/weewx%' \
  $(SRC)/src/weewx_data/weewx.conf > $(DST_CFGDIR)/weewx.conf

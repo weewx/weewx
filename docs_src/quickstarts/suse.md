@@ -141,5 +141,8 @@ sudo zypper remove weewx
 sudo rm -r /var/www/html/weewx
 sudo rm -r /var/lib/weewx
 sudo rm -r /etc/weewx
+sudo rm /etc/default/weewx
 sudo userdel weewx
+sudo gpasswd -d $USER weewx
+sudo groupdel weewx
 ```

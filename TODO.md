@@ -1,10 +1,10 @@
-## 5.0.1
+## Future
 
-- mw doing 'apt purge weewx' does the right thing if your first install was
-    v5.  but if your first install was v4, then doing a purge will destroy
-    the skins.  this is probably because the skins were declared as conffiles
-    in v4.  is there a way to remove that in v5 so that v5 'fixes' the confness
-    of skins?
+- mw how to provide output from redhat sriptlets without adding noise to yum
+    or dnf output?
+- mw or tk: Look into unifying the two versions of the systemd weewx service
+  files.
+
 
 ## Testing
 
