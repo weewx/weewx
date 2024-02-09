@@ -1,6 +1,12 @@
 WeeWX change history
 --------------------
 
+### 5.0.2 mm/DD/YYYY
+
+Add target `network-online.target` to the weewx systemd unit file. This prevents
+`weewxd` from starting until the network is ready.
+
+
 ### 5.0.1 02/04/2024
 
 Include backwards compatible reference to `weewx.UnknownType`.

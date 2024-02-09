@@ -143,6 +143,9 @@ to sign rpm packages you need .rpmmacros in your home directory:
 ~/.rpmmacros
   %_gpg_name  YOUR_NAME_HERE
 
+to sign the apt Release using key 'XXX':
+  gpg -abs -u XXX -o Release.gpg Release
+
 to generate gpg key used for signing packages:
   gpg --gen-key
   gpg --list-keys
@@ -305,8 +308,11 @@ there are multiple changelogs:
   pkg/changelog.el - changes to the redhat packaging
   pkg/changelog.suse - changes to the suse packaging
 
-when signing, gpg info must match the name and email in the latest package
+when signing RPMs, gpg info must match the name and email in the latest package
 changelog entry.
+
+when signing apt Release using aptly, beware that aptly uses the first gpg key
+that it finds.  that might not be what you want.
 
 the debian changelog *must* have a version number that matches the app version.
 the redhat package will build if the version numbers do not match.  use the
