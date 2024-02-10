@@ -144,7 +144,7 @@ def has_data(obs_type, timespan, db_manager):
     """Search the list, looking for a version that has data.
     Args:
         obs_type(str): The name of a potential xtype
-        timespan(tuple[float, float]): A two-way tuple (start time, stop time)
+        timespan(tuple[float, float])|TimeSpan: A two-way tuple (start time, stop time)
         db_manager(weewx.manager.Manager|None): An open database manager
     Returns:
         bool: True if there is non-null xtype data in the timespan. False otherwise.
