@@ -1,3 +1,5 @@
+* Sat Feb 10 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.0.2-1
+- new upstream release
 * Sun Feb 04 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.0.1-3
 - fix permissions for real this time
 * Sun Feb 04 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.0.1-2
