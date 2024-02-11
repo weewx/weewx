@@ -1,12 +1,13 @@
 ## Future
 
-- mw how to provide output from redhat sriptlets without adding noise to yum
-    or dnf output?
 - mw or tk: Look into unifying the two versions of the systemd weewx service
   files.
 - mw respect the state/masking of weewx unit
 - mw ensure clean migration of weewx-multi
-- mw use macros for redhat/suse instead of duplicating shell scripts
+- mw filter the units for debconf
+- mw for upgrades (and new?), get HTML_ROOT from the config file to determine
+   where to chown/chmod
+- mw be sure to stop/start all existing weewxd processes during upgrade
 
 
 ## Testing

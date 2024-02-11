@@ -378,6 +378,14 @@ scriptlets in redhat 10 - the anaconda installer already does a pretty good
 job of capturing and isolating output from scriptlets, but redhat plans to add
 similar functionality to dnf in redhat 10.
 
+fedora docs say that a service may be enabled if it does not alter other
+services, does not fail, does not require configuration before starting, and
+does not listen for outside connections.  so we can enable the weewx daemon,
+but that does *not* mean we can run it.
+
+for a new install, we only enable and start the primary unit.  for an upgrade,
+on a system with systemd we remove any sysv bits and migrate them to systemd.
+
 
 signing packages --------------------------------------------------------------
 
