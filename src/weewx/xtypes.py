@@ -160,6 +160,8 @@ def has_data(obs_type, timespan, db_manager):
         except (weewx.UnknownType, weewx.UnknownAggregation):
             pass
         except weewx.CannotCalculate:
+            # Function get_aggregate() should not raise CannotCalculate.
+            # But, catch it just in case.
             return False
     # Tried all the  get_aggregates() and didn't find a non-null value. Either it doesn't exist,
     # or doesn't have any data
@@ -215,6 +217,8 @@ class ArchiveTable(XType):
                     agg_vt = get_aggregate(obs_type, stamp, do_aggregate, db_manager,
                                            **option_dict)
                 except weewx.CannotCalculate:
+                    # Function get_aggregate() should not raise CannotCalculate. But, just in case,
+                    # catch it and convert to None.
                     agg_vt = ValueTuple(None, unit, unit_group)
                 if unit:
                     # Make sure units are consistent so far.

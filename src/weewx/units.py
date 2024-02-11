@@ -1477,7 +1477,7 @@ def convertStd(val_t, target_std_unit_system):
         (30.48, mm, group_rain)
 
     Args:
-        val_t (ValueTuple): The ValueTuple to be converted.
+        val_t (ValueTuple|Tuple[float|None,str,str]): The ValueTuple to be converted.
         target_std_unit_system (int):  A standardized WeeWX unit system (weewx.US, weewx.METRIC,
             or weewx.METRICWX)
 
