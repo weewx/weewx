@@ -77,7 +77,25 @@ weewx interacts with a weather station to produce graphs, reports, and HTML
 pages. weewx can upload data to weather services such as WeatherUnderground,
 PWSweather.com, or CWOP.
 
+# define some macros for use in the scriptlets
+
+# if there is already a database directory, then use ownership of that to
+# determine what user/group we should use for permissions and running.
+# otherwise, use 'weewx' for user and group.
+%define weewx_get_user_info \
+WEEWX_HOME="${WEEWX_HOME:-/var/lib/weewx}" \
+WEEWX_USER="${WEEWX_USER:-weewx}" \
+WEEWX_GROUP="${WEEWX_GROUP:-weewx}" \
+if [ -d %{sqlite_root} ]; then \
+    TMP_USER=$(stat -c "%%U" %{sqlite_root}) \
+    if [ "$TMP_USER" != "root" -a "$TMP_USER" != "weewx" -a "$TMP_USER" != "UNKNOWN" ]; then \
+        WEEWX_USER=$TMP_USER \
+        WEEWX_GROUP=$(stat -c "%%G" %{sqlite_root}) \
+    fi \
+fi
+
 %prep
+
 %setup -q
 
 %build
@@ -127,19 +145,8 @@ done
 
 
 %pre
-# if there is already a database directory, then use ownership of that to
-# determine what user/group we should use for permissions and running.
-# otherwise, use 'weewx' for user and group.
-WEEWX_HOME="${WEEWX_HOME:-/var/lib/weewx}"
-WEEWX_USER="${WEEWX_USER:-weewx}"
-WEEWX_GROUP="${WEEWX_GROUP:-weewx}"
-if [ -d %{sqlite_root} ]; then
-    TMP_USER=$(stat -c "%%U" %{sqlite_root})
-    if [ "$TMP_USER" != "root" -a "$TMP_USER" != "weewx" -a "$TMP_USER" != "UNKNOWN" ]; then
-        WEEWX_USER=$TMP_USER
-        WEEWX_GROUP=$(stat -c "%%G" %{sqlite_root})
-    fi
-fi
+
+%weewx_get_user_info
 
 # create the weewx user and group if they do not yet exist
 if ! /usr/bin/getent group | grep -q "^$WEEWX_GROUP"; then
@@ -215,16 +222,7 @@ set_permissions() {
 # timestamp for files we must move aside
 ts=`/usr/bin/date +"%%Y%%m%%d%%H%%M%%S"`
 
-# figure out which user should own everything
-WEEWX_USER="${WEEWX_USER:-weewx}"
-WEEWX_GROUP="${WEEWX_GROUP:-weewx}"
-if [ -d %{sqlite_root} ]; then
-    TMP_USER=$(stat -c "%%U" %{sqlite_root})
-    if [ "$TMP_USER" != "root" -a "$TMP_USER" != "weewx" -a "$TMP_USER" != "UNKNOWN" ]; then
-        WEEWX_USER=$TMP_USER
-        WEEWX_GROUP=$(stat -c "%%G" %{sqlite_root})
-    fi
-fi
+%weewx_get_user_info
 echo "Using $WEEWX_USER:$WEEWX_GROUP as user:group"
 
 # if there is a defaults file and it contains values that would interfere with
