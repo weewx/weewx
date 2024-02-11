@@ -27,7 +27,7 @@ import weewx.reportengine
 import weewx.station
 import weewx.units
 import weewx.wxxtypes
-import fake_xtype
+import misc
 
 weewx.debug = 1
 
