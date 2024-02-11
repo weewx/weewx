@@ -144,7 +144,7 @@ def has_data(obs_type, timespan, db_manager):
     """Search the list, looking for a version that has data.
     Args:
         obs_type(str): The name of a potential xtype
-        timespan(tuple[float, float]): A two-way tuple (start time, stop time)
+        timespan(tuple[float, float])|TimeSpan: A two-way tuple (start time, stop time)
         db_manager(weewx.manager.Manager|None): An open database manager
     Returns:
         bool: True if there is non-null xtype data in the timespan. False otherwise.
@@ -159,6 +159,10 @@ def has_data(obs_type, timespan, db_manager):
                 return True
         except (weewx.UnknownType, weewx.UnknownAggregation):
             pass
+        except weewx.CannotCalculate:
+            # Function get_aggregate() should not raise CannotCalculate.
+            # But, catch it just in case.
+            return False
     # Tried all the  get_aggregates() and didn't find a non-null value. Either it doesn't exist,
     # or doesn't have any data
     return False
@@ -213,6 +217,8 @@ class ArchiveTable(XType):
                     agg_vt = get_aggregate(obs_type, stamp, do_aggregate, db_manager,
                                            **option_dict)
                 except weewx.CannotCalculate:
+                    # Function get_aggregate() should not raise CannotCalculate. But, just in case,
+                    # catch it and convert to None.
                     agg_vt = ValueTuple(None, unit, unit_group)
                 if unit:
                     # Make sure units are consistent so far.
@@ -935,11 +941,14 @@ class XTypeTable(XType):
             else:
                 std_unit_system = record['usUnits']
 
-            # Given a record, use the xtypes system to calculate a value. A ValueTuple will be
-            # returned, so use only the first element. NB: If the xtype cannot be calculated,
-            # the call to get_scalar() will raise a CannotCalculate exception. We let it
-            # bubble up.
-            value = get_scalar(obs_type, record, db_manager)[0]
+            # Given a record, use the xtypes system to calculate a value. If the value cannot be
+            # calculated a CannotCalculate exception will be raised. Be prepared to catch it.
+            try:
+                # A ValueTuple will be returned, so use only the first element.
+                value = get_scalar(obs_type, record, db_manager)[0]
+            except weewx.CannotCalculate:
+                value = None
+
             if value is not None:
                 if aggregate_type == 'not_null':
                     return ValueTuple(True, 'boolean', 'group_boolean')

@@ -13,7 +13,7 @@
 #   WEEWX_PYTHON=python3
 #   WEEWX_BINDIR=/opt/weewx
 #   WEEWX_CFGDIR=/etc/weewx
-#   WEEWX_RUNDIR=/var/run/weewx
+#   WEEWX_RUNDIR=/var/lib/weewx
 #   WEEWX_USER=weewx
 #   WEEWX_GROUP=weewx
 

@@ -30,7 +30,7 @@
 # backported to python 3.6.  python 3.8, python 3.9, and python 3.11 are also
 # available on rh8, but none of the modules required by weewx are available for
 # those python (as of nov2023).
-%define deps epel-release, python3, python3-importlib-resources, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb, python3-ephem
+%define deps python3, python3-importlib-resources, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb, python3-ephem
 %define python python3
 %endif
 %if "%{os_target}" == "9"
@@ -38,7 +38,7 @@
 # rh9 ships with python 3.9, which has pre-built modules required by weewx.
 # python3-cheetah, python3-pillow are in epel
 # ephem is not available for redhat9
-%define deps epel-release, python3, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
+%define deps python3, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
 %define python python3
 %endif
 %endif
@@ -56,6 +56,7 @@
 %global html_root    /var/www/html/weewx
 
 %define entry_points weewxd weectl
+%define cfgapp %{python} /usr/share/weewx/weectl.py
 
 Summary: weather software
 Name: weewx
@@ -119,8 +120,8 @@ cp %{buildroot}%{dst_cfg_dir}/weewx.conf %{buildroot}%{dst_cfg_dir}/weewx.conf-%
 # create the entry points
 for f in %{entry_points}; do \
     sed \
- -e 's%WEEWX_BINDIR=.*%WEEWX_BINDIR=/usr/share/weewx%' \
- -e 's%WEEWX_PYTHON=.*%WEEWX_PYTHON=%{python}%' \
+ -e 's:WEEWX_BINDIR=.*:WEEWX_BINDIR=/usr/share/weewx:' \
+ -e 's:WEEWX_PYTHON=.*:WEEWX_PYTHON=%{python}:' \
  bin/$f > %{buildroot}%{_bindir}/$f; \
 done
 
@@ -207,7 +208,6 @@ set_permissions() {
     dir=$3
     find $3 -type f -exec chmod 664 {} \;
     find $3 -type d -exec chmod 2775 {} \;
-    chmod 2775 $dir
     chown -R $usr $dir
     chgrp -R $grp $dir
 }
@@ -225,14 +225,31 @@ if [ -d %{sqlite_root} ]; then
         WEEWX_GROUP=$(stat -c "%%G" %{sqlite_root})
     fi
 fi
+echo "Using $WEEWX_USER:$WEEWX_GROUP as user:group"
 
-# insert values into the defaults file (used by the entry points)
+# if there is a defaults file and it contains values that would interfere with
+# this installation, make a copy then insert values that we know will work.
 dflts=/etc/default/weewx
 if [ -f $dflts ]; then
-    mv $dflts ${dflts}-$ts
+    WEEWX_PYTHON=$(grep "^WEEWX_PYTHON\s*=" | sed -e "s/WEEWX_PYTHON\s*=\s*//")
+    if [ ! -z "$WEEWX_PYTHON" -a "$WEEWX_PYTHON" != "python3" ]; then
+        REPLACE_PYTHON=1
+    fi
+    WEEWX_BINDIR=$(grep "^WEEWX_BINDIR\s*=" | sed -e "s/WEEWX_BINDIR\s*=\s*//")
+    if [ ! -z "$WEEWX_BINDIR" -a "$WEEWX_BINDIR" != "/usr/share/weewx" ]; then
+        REPLACE_BINDIR=1
+    fi
+    if [ "$REPLACE_PYTHON" != "" -o "$REPLACE_BINDIR" != "" ]; then
+        echo "Saving old defaults to ${dflts}-$ts"
+        cp -p $dflts ${dflts}-$ts
+        if [ "$REPLACE_PYTHON" != "" ]; then
+            sed -i -e "s:^WEEWX_PYTHON\s*=.*:WEEWX_PYTHON=python3:" $dflts
+        fi
+        if [ "$REPLACE_BINDIR" != "" ]; then
+            sed -i -e "s:^WEEWX_BINDIR\s*=.*:WEEWX_BINDIR=/usr/share/weewx:" $dflts
+        fi
+    fi
 fi
-echo "WEEWX_PYTHON=python3" > $dflts
-echo "WEEWX_BINDIR=/usr/share/weewx" >> $dflts
 
 # see which init system (if any) is running
 pid1=none
@@ -283,7 +300,7 @@ set_permissions $WEEWX_USER $WEEWX_GROUP %{html_root}
 if [ "$1" = "1" ]; then
   # this is a new installation
   # create a sane configuration file with simulator as the station type
-  /usr/bin/weectl station reconfigure --config=%{cfg_file} --driver=weewx.drivers.simulator --no-prompt --no-backup > /dev/null
+  %{cfgapp} station reconfigure --config=%{cfg_file} --driver=weewx.drivers.simulator --no-prompt --no-backup > /dev/null
   # pre-compile the python code
   precompile
   # ensure correct ownership of configuration, skins, and extensions
@@ -306,7 +323,7 @@ elif [ $1 -gt 1 ]; then
       MNT=${OLDVER}-%{weewx_version}
       echo Creating maintainer config file as %{cfg_file}-$MNT
       cp -p %{cfg_file}.prev %{cfg_file}-$MNT
-      /usr/bin/weectl station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg_file}-%{weewx_version} --what=config --no-backup --yes > /dev/null
+      %{cfgapp} station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg_file}-%{weewx_version} --what=config --no-backup --yes > /dev/null
     fi
   fi
   # if this is an upgrade from V4, copy any extensions to the V5 location

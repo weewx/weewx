@@ -464,6 +464,12 @@ update-yum-repo:
 	mkdir -p $(YUM_REPO)/el9/RPMS
 	cp -p $(DSTDIR)/weewx-$(RPMVER).el9.$(RPMARCH).rpm $(YUM_REPO)/el9/RPMS
 	createrepo $(YUM_REPO)/el9
+ifeq ("$(SIGN)","1")
+	gpg -abs -o $(YUM_REPO)/el8/repodata/repomd.xml.asc $(YUM_REPO)/el8/repodata/repomd.xml
+	gpg --export --armor > $(YUM_REPO)/el8/repodata/repomd.xml.key
+	gpg -abs -o $(YUM_REPO)/el9/repodata/repomd.xml.asc $(YUM_REPO)/el9/repodata/repomd.xml
+	gpg --export --armor > $(YUM_REPO)/el9/repodata/repomd.xml.key
+endif
 
 push-yum-repo:
 	find ~/.yum -type f -exec chmod 664 {} \;
@@ -490,8 +496,13 @@ pull-suse-repo:
 	rsync -Oarvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/ ~/.suse
 
 update-suse-repo:
+	mkdir -p $(SUSE_REPO)/suse15/RPMS
 	cp -p $(DSTDIR)/weewx-$(RPMVER).suse15.$(RPMARCH).rpm $(SUSE_REPO)/suse15/RPMS
 	createrepo $(SUSE_REPO)/suse15
+ifeq ("$(SIGN)","1")
+	gpg -abs -o $(SUSE_REPO)/suse15/repodata/repomd.xml.asc $(SUSE_REPO)/suse15/repodata/repomd.xml
+	gpg --export --armor > $(SUSE_REPO)/suse15/repodata/repomd.xml.key
+endif
 
 push-suse-repo:
 	find ~/.suse -type f -exec chmod 664 {} \;
