@@ -1,13 +1,22 @@
 WeeWX change history
 --------------------
 
+### 5.0.3 mm/DD/YYYY
+
+Return `False` from XTypes function `has_data()` if the type cannot be 
+calculated. Thanks to Rich Bell! PR #929.
+
+Allow calculation of xtype aggregate with missing constituents.
+Related to PR #929.
+
+Fix bug in tag `$tag.obstype` where `obstype` is an XType that cannot be
+calculated. Related to PR #929
+
+
 ### 5.0.2 02/10/2024
 
 Add target `network-online.target` to the weewx systemd unit file. This prevents
 `weewxd` from starting until the network is ready.
-
-Return `False` from XTypes function `has_data()` if the type cannot be 
-calculated. Thanks to Rich Bell! PR #929.
 
 
 ### 5.0.1 02/04/2024
