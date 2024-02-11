@@ -18,7 +18,7 @@ set -e
 . /usr/share/debconf/confmodule
 
 cfgfile=/etc/weewx/weewx.conf
-cfgapp=/usr/bin/weectl
+cfgapp="python3 /usr/share/weewx/weectl.py"
 ts=`date +"%Y%m%d%H%M%S"`
 
 WEEWX_USER="${WEEWX_USER:-weewx}"
@@ -273,31 +273,30 @@ get_user() {
     echo "Using $WEEWX_USER:$WEEWX_GROUP as user:group"
 }
 
-# create/modify the defaults file to match this installation.  if the file does
-# not exist, then create it with our values.  if there are already values, then
-# move it aside.
+# if there is a defaults file, check to ensure it does not contain something
+# that would interfere with the installation.  if it does, save a copy and
+# replace parameters with values that we know will work.
 setup_defaults() {
     dflts=/etc/default/weewx
     if [ -f $dflts ]; then
-        echo "Saving old defaults to ${dflts}-$ts"
-        mv $dflts ${dflts}-$ts
-    fi
-    echo "Creating /etc/default/weewx"
-    echo "WEEWX_PYTHON=python3" > $dflts
-    echo "WEEWX_BINDIR=/usr/share/weewx" >> $dflts
-
-    # the SysV rc script uses additional variables, so set values for them
-    if [ "$1" = "init" ]; then
-        grep -q "^WEEWX_CFGDIR=" $dflts || \
-            echo "WEEWX_CFGDIR=/etc/weewx" >> $dflts
-        grep -q "^WEEWX_RUNDIR=" $dflts || \
-            echo "WEEWX_RUNDIR=/var/lib/weewx" >> $dflts
-        grep -q "^WEEWX_USER=" $dflts || \
-            echo "WEEWX_USER=$WEEWX_USER" >> $dflts
-        grep -q "^WEEWX_GROUP=" $dflts || \
-            echo "WEEWX_GROUP=$WEEWX_GROUP" >> $dflts
-        grep -q "^WEEWX_INSTANCES=" $dflts || \
-            echo "WEEWX_INSTANCES=\"weewx\"" >> $dflts
+        WEEWX_PYTHON=$(grep "^WEEWX_PYTHON\s*=" | sed -e "s/WEEWX_PYTHON\s*=\s*//")
+        if [ ! -z "$WEEWX_PYTHON" -a "$WEEWX_PYTHON" != "python3" ]; then
+            REPLACE_PYTHON=1
+        fi
+        WEEWX_BINDIR=$(grep "^WEEWX_BINDIR\s*=" | sed -e "s/WEEWX_BINDIR\s*=\s*//")
+        if [ ! -z "$WEEWX_BINDIR" -a "$WEEWX_BINDIR" != "/usr/share/weewx" ]; then
+            REPLACE_BINDIR=1
+        fi
+        if [ "$REPLACE_PYTHON" != "" -o "$REPLACE_BINDIR" != "" ]; then
+            echo "Saving old defaults to ${dflts}-$ts"
+            cp -p $dflts ${dflts}-$ts
+            if [ "$REPLACE_PYTHON" != "" ]; then
+                sed -i -e "s:^WEEWX_PYTHON\s*=.*:WEEWX_PYTHON=python3:" $dflts
+            fi
+            if [ "$REPLACE_BINDIR" != "" ]; then
+                sed -i -e "s:^WEEWX_BINDIR\s*=.*:WEEWX_BINDIR=/usr/share/weewx:" $dflts
+            fi
+        fi
     fi
 }
 
@@ -422,7 +421,6 @@ set_permissions() {
     dir=$3
     find $3 -type f -exec chmod 664 {} \;
     find $3 -type d -exec chmod 2775 {} \;
-    chmod 2775 $dir
     chown -R $usr:$grp $dir
 }
 
