@@ -4,8 +4,10 @@
     or dnf output?
 - mw or tk: Look into unifying the two versions of the systemd weewx service
   files.
-- mw ensure that maintainer scripts use a known working python, not just what
-    might be defined in /usr/bin/weectl
+- mw respect the state/masking of weewx unit
+- mw ensure clean migration of weewx-multi
+- mw use macros for redhat/suse instead of duplicating shell scripts
+
 
 ## Testing
 
