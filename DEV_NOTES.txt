@@ -368,6 +368,16 @@ they can end up getting python2 or a python3 that does not have the right
 modules installed.  so maintainer scripts and scriptlets must ensure that they
 use a known-working python.
 
+prefer to use expressive but no overly verbose output in scriptlets and
+maintainer scripts.  many redhat scriptlets seem to be silent, perhaps only
+emitting messages when there is a failure.  unfortunately, most of our failures
+have been due to things that we never even predicted, let alone created error
+traps for.  so having output from each step helps us figure out where a
+failure came from.  apparently redhat will add better logging/capture from
+scriptlets in redhat 10 - the anaconda installer already does a pretty good
+job of capturing and isolating output from scriptlets, but redhat plans to add
+similar functionality to dnf in redhat 10.
+
 
 signing packages --------------------------------------------------------------
 
