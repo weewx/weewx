@@ -6,7 +6,6 @@
 """Test weewx.xtypes.get_series"""
 
 import functools
-import math
 import os.path
 import sys
 import time
@@ -15,6 +14,7 @@ import unittest
 import configobj
 
 import gen_fake_data
+import misc
 import weewx
 import weewx.units
 import weewx.wxformulas
@@ -34,42 +34,6 @@ month_stop_tt = (2010, 4, 1, 0, 0, 0, 0, 0, -1)
 start_ts = time.mktime(month_start_tt)
 stop_ts = time.mktime(month_stop_tt)
 
-
-class VaporPressure(weewx.xtypes.XType):
-    """Calculate VaporPressure. Used to test generating series of a user-defined type."""
-
-    def get_scalar(self, obs_type, record, db_manager):
-        # We only know how to calculate 'vapor_p'. For everything else, raise an exception
-        if obs_type != 'vapor_p':
-            raise weewx.UnknownType(obs_type)
-
-        # We need outTemp in order to do the calculation.
-        if 'outTemp' not in record or record['outTemp'] is None:
-            raise weewx.CannotCalculate(obs_type)
-
-        # We have everything we need. Start by forming a ValueTuple for the outside temperature.
-        # To do this, figure out what unit and group the record is in ...
-        unit_and_group = weewx.units.getStandardUnitType(record['usUnits'], 'outTemp')
-        # ... then form the ValueTuple.
-        outTemp_vt = weewx.units.ValueTuple(record['outTemp'], *unit_and_group)
-
-        # We need the temperature in Kelvin
-        outTemp_K_vt = weewx.units.convert(outTemp_vt, 'degree_K')
-
-        # Now we can use the formula. Results will be in mmHg. Create a ValueTuple out of it:
-        p_vt = weewx.units.ValueTuple(math.exp(20.386 - 5132.0 / outTemp_K_vt[0]),
-                                      'mmHg',
-                                      'group_pressure')
-
-        # We have the vapor pressure as a ValueTuple. Convert it back to the units used by
-        # the incoming record and return it
-        return weewx.units.convertStd(p_vt, record['usUnits'])
-
-
-# Register vapor pressure
-weewx.units.obs_group_dict['vapor_p'] = "group_pressure"
-# Instantiate and register an instance of VaporPressure:
-weewx.xtypes.xtypes.append(VaporPressure())
 
 
 class Common(object):
@@ -97,22 +61,22 @@ class Common(object):
                                 (-0.61, 9.33), (19.94, 1.31), (0.70, -10.63)]
 
     expected_vapor_pressures = [0.052, 0.052, None, 0.053, 0.055, 0.058]
-    expected_aggregate_vapor_pressures = [0.055, 0.130, 0.238, 0.119, None, 0.133, 0.243, 0.122,
-                                          0.058, 0.136, None, 0.125, 0.060, 0.139, 0.254, 0.128,
-                                          None, 0.143, 0.260, 0.131, 0.063, 0.146, None, 0.135,
-                                          0.064, 0.150, 0.272, 0.138, None, 0.153, 0.279, 0.141,
-                                          0.068, 0.157, None, 0.145, 0.070, 0.161, 0.292, 0.149,
-                                          None, 0.165, 0.299, 0.152, 0.074, None, 0.306, 0.156,
-                                          0.076, 0.173, 0.313, None, 0.076, 0.148, 0.317, 0.196,
-                                          0.081, None, 0.325, 0.201, 0.083, 0.156, 0.333, None,
-                                          0.086, 0.160, 0.341, 0.211, 0.088, None, 0.349, 0.217,
-                                          0.091, 0.168, 0.357, None, 0.093, 0.173, 0.366, 0.228,
-                                          0.096, None, 0.375, 0.234, 0.098, 0.182, 0.384, None,
-                                          0.101, 0.187, 0.393, 0.246, 0.104, None, 0.403, 0.252,
-                                          0.107, 0.197, 0.413, None, 0.110, 0.202, 0.423, 0.265,
-                                          0.113, None, 0.433, 0.272, 0.116, 0.212, 0.444, None,
-                                          0.120, 0.218, 0.454, 0.286, 0.123, None, 0.465, 0.293,
-                                          0.126, 0.229, 0.477, None]
+    expected_aggregate_vapor_pressures = [0.055, 0.130, 0.238, 0.119, 0.057, 0.133, 0.243, 0.122,
+                                          0.058, 0.136, 0.247, 0.125, 0.060, 0.139, 0.254, 0.128,
+                                          0.062, 0.143, 0.260, 0.131, 0.063, 0.146, 0.265, 0.135,
+                                          0.064, 0.150, 0.272, 0.138, 0.066, 0.153, 0.279, 0.141,
+                                          0.068, 0.157, 0.286, 0.145, 0.070, 0.161, 0.292, 0.149,
+                                          0.071, 0.165, 0.299, 0.152, 0.074, 0.161, 0.306, 0.156,
+                                          0.076, 0.173, 0.313, 0.166, 0.076, 0.148, 0.317, 0.196,
+                                          0.081, 0.143, 0.325, 0.201, 0.083, 0.156, 0.333, 0.213,
+                                          0.086, 0.160, 0.341, 0.211, 0.088, 0.159, 0.349, 0.217,
+                                          0.091, 0.168, 0.357, 0.227, 0.093, 0.173, 0.366, 0.228,
+                                          0.096, 0.176, 0.375, 0.234, 0.098, 0.182, 0.384, 0.241,
+                                          0.101, 0.187, 0.393, 0.246, 0.104, 0.193, 0.403, 0.252,
+                                          0.107, 0.197, 0.413, 0.256, 0.110, 0.202, 0.423, 0.265,
+                                          0.113, 0.212, 0.433, 0.272, 0.116, 0.212, 0.444, 0.271,
+                                          0.120, 0.218, 0.454, 0.286, 0.123, 0.231, 0.465, 0.293,
+                                          0.126, 0.229, 0.477, 0.287]
 
     def setUp(self):
         global config_path
@@ -337,22 +301,5 @@ class TestMySQL(Common, unittest.TestCase):
         super().setUp()
 
 
-def suite():
-    tests = [
-        'test_get_series_archive_outTemp',
-        'test_get_series_daily_agg_rain_sum',
-        'test_get_series_archive_agg_rain_sum',
-        'test_get_series_archive_agg_rain_cum',
-        'test_get_series_archive_windvec',
-        'test_get_series_archive_agg_windvec_avg',
-        'test_get_series_archive_agg_windvec_last',
-        'test_get_aggregate_windvec_last',
-        'test_get_series_on_the_fly',
-        'test_get_aggregate_series_on_the_fly',
-    ]
-    return unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
-    # return unittest.TestSuite(list(map(TestSqlite, tests)))
-
-
 if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity=2).run(suite())
+    unittest.main()

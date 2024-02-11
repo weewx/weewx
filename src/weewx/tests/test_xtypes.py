@@ -18,7 +18,7 @@ import weeutil.logger
 import weeutil.weeutil
 import weewx.manager
 import weewx.xtypes
-from weewx.units import ValueTuple
+import misc
 
 weewx.debug = 1
 
@@ -42,18 +42,6 @@ config_path = os.path.join(my_dir, "testgen.conf")
 
 # Month of September 2010:
 month_timespan = weeutil.weeutil.TimeSpan(1283324400, 1285916400)
-
-
-class XTypesTester(weewx.xtypes.XType):
-
-    def get_scalar(self, obs_type, record, db_manager=None, **option_dict):
-        if obs_type == 'testTemp':
-            return ValueTuple(5.0, 'degree_C', 'group_temperature')
-        elif obs_type == 'fooTemp':
-            raise weewx.CannotCalculate('fooTemp')
-        else:
-            raise weewx.UnknownType(obs_type)
-weewx.xtypes.xtypes.append(XTypesTester())
 
 
 class Common(object):
@@ -148,6 +136,14 @@ class Common(object):
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
             result = weewx.xtypes.has_data('otherTemp', month_timespan, db_manager)
             self.assertFalse(result)
+
+    def test_get_aggregate_none(self):
+        """Test get_aggregate() with a type that is known, but cannot be calculated"""
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
+            vt = weewx.xtypes.get_aggregate('fooTemp', month_timespan, 'mintime', db_manager)
+            self.assertIsNone(vt[0])
+            self.assertEqual(vt[1], 'unix_epoch')
+            self.assertEqual(vt[2], 'group_time')
 
 
 class TestSqlite(Common, unittest.TestCase):

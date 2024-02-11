@@ -937,11 +937,14 @@ class XTypeTable(XType):
             else:
                 std_unit_system = record['usUnits']
 
-            # Given a record, use the xtypes system to calculate a value. A ValueTuple will be
-            # returned, so use only the first element. NB: If the xtype cannot be calculated,
-            # the call to get_scalar() will raise a CannotCalculate exception. We let it
-            # bubble up.
-            value = get_scalar(obs_type, record, db_manager)[0]
+            # Given a record, use the xtypes system to calculate a value. If the value cannot be
+            # calculated a CannotCalculate exception will be raised. Be prepared to catch it.
+            try:
+                # A ValueTuple will be returned, so use only the first element.
+                value = get_scalar(obs_type, record, db_manager)[0]
+            except weewx.CannotCalculate:
+                value = None
+
             if value is not None:
                 if aggregate_type == 'not_null':
                     return ValueTuple(True, 'boolean', 'group_boolean')
