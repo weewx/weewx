@@ -428,7 +428,8 @@ set_permissions() {
 setup_database_dir() {
     echo "Configuring database directory $WEEWX_HOME"
     mkdir -p $WEEWX_HOME
-    set_permissions $WEEWX_USER $WEEWX_GROUP $WEEWX_HOME
+    chmod 2775 $WEEWX_HOME
+    chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HOME
 }
 
 # create the reporting directory
