@@ -401,7 +401,7 @@ class Manager(object):
                         self._updateHiLo(accumulator, cursor)
 
                     # Then add the record to the archives:
-                    self._addSingleRecord(record, cursor, update, log_success, log_failure)
+                    self._addSingleRecord(record, cursor, log_success, log_failure, update)
 
                     N += 1
                     if progress_fn and N % 1000 == 0:
@@ -1181,7 +1181,7 @@ class DaySummaryManager(Manager):
         """
 
         # First let my superclass handle adding the record to the main archive table:
-        super()._addSingleRecord(record, cursor, update, log_success, log_failure)
+        super()._addSingleRecord(record, cursor, log_success, log_failure, update)
 
         # Get the start of day for the record:
         _sod_ts = weeutil.weeutil.startOfArchiveDay(record['dateTime'])
