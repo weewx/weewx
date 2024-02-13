@@ -360,10 +360,10 @@ class Manager(object):
 
     def addRecord(self, record_obj,
                   accumulator=None,
-                  update=False,
                   progress_fn=None,
                   log_success=True,
-                  log_failure=True):
+                  log_failure=True,
+                  update = False):
         """
         Commit a single record or a collection of records to the archive.
 
@@ -424,7 +424,7 @@ class Manager(object):
 
         return N
 
-    def _addSingleRecord(self, record, cursor, update=False, log_success=True, log_failure=True):
+    def _addSingleRecord(self, record, cursor, log_success=True, log_failure=True, update=False):
         """Internal function for adding a single record to the main archive table."""
 
         if record['dateTime'] is None:
@@ -1175,7 +1175,7 @@ class DaySummaryManager(Manager):
         for column_name in column_names:
             cursor.execute("DROP TABLE IF EXISTS %s_day_%s;" % (self.table_name, column_name))
 
-    def _addSingleRecord(self, record, cursor, update=False, log_success=True, log_failure=True):
+    def _addSingleRecord(self, record, cursor, log_success=True, log_failure=True, update=False):
         """Specialized version that updates the daily summaries, as well as the main archive
         table.
         """
