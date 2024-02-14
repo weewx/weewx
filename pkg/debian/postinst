@@ -258,6 +258,15 @@ get_conf_version() {
     echo $v
 }
 
+set_permissions() {
+    usr=$1
+    grp=$2
+    dir=$3
+    find $3 -type f -exec chmod 664 {} \;
+    find $3 -type d -exec chmod 2775 {} \;
+    chown -R $usr:$grp $dir
+}
+
 # if this is an upgrade and the owner of the previous data is other than weewx
 # or root, then use that user as the weewx user.  net effect is that we convert
 # ownership to weewx:weewx for anything other than a previous install with
@@ -271,33 +280,6 @@ get_user() {
         fi
     fi
     echo "Using $WEEWX_USER:$WEEWX_GROUP as user:group"
-}
-
-# if there is a defaults file, check to ensure it does not contain something
-# that would interfere with the installation.  if it does, save a copy and
-# replace parameters with values that we know will work.
-setup_defaults() {
-    dflts=/etc/default/weewx
-    if [ -f $dflts ]; then
-        WEEWX_PYTHON=$(grep "^WEEWX_PYTHON\s*=" | sed -e "s/WEEWX_PYTHON\s*=\s*//")
-        if [ ! -z "$WEEWX_PYTHON" -a "$WEEWX_PYTHON" != "python3" ]; then
-            REPLACE_PYTHON=1
-        fi
-        WEEWX_BINDIR=$(grep "^WEEWX_BINDIR\s*=" | sed -e "s/WEEWX_BINDIR\s*=\s*//")
-        if [ ! -z "$WEEWX_BINDIR" -a "$WEEWX_BINDIR" != "/usr/share/weewx" ]; then
-            REPLACE_BINDIR=1
-        fi
-        if [ "$REPLACE_PYTHON" != "" -o "$REPLACE_BINDIR" != "" ]; then
-            echo "Saving old defaults to ${dflts}-$ts"
-            cp -p $dflts ${dflts}-$ts
-            if [ "$REPLACE_PYTHON" != "" ]; then
-                sed -i -e "s:^WEEWX_PYTHON\s*=.*:WEEWX_PYTHON=python3:" $dflts
-            fi
-            if [ "$REPLACE_BINDIR" != "" ]; then
-                sed -i -e "s:^WEEWX_BINDIR\s*=.*:WEEWX_BINDIR=/usr/share/weewx:" $dflts
-            fi
-        fi
-    fi
 }
 
 # create the user that the daemon will run as, but only if not already exist
@@ -339,6 +321,33 @@ add_to_group() {
     fi
 }
 
+# if there is a defaults file, check to ensure it does not contain something
+# that would interfere with the installation.  if it does, save a copy and
+# replace parameters with values that we know will work.
+setup_defaults() {
+    dflts=/etc/default/weewx
+    if [ -f $dflts ]; then
+        WEEWX_PYTHON=$(grep "^WEEWX_PYTHON\s*=" | sed -e "s/WEEWX_PYTHON\s*=\s*//")
+        if [ ! -z "$WEEWX_PYTHON" -a "$WEEWX_PYTHON" != "python3" ]; then
+            REPLACE_PYTHON=1
+        fi
+        WEEWX_BINDIR=$(grep "^WEEWX_BINDIR\s*=" | sed -e "s/WEEWX_BINDIR\s*=\s*//")
+        if [ ! -z "$WEEWX_BINDIR" -a "$WEEWX_BINDIR" != "/usr/share/weewx" ]; then
+            REPLACE_BINDIR=1
+        fi
+        if [ "$REPLACE_PYTHON" != "" -o "$REPLACE_BINDIR" != "" ]; then
+            echo "Saving old defaults to ${dflts}-$ts"
+            cp -p $dflts ${dflts}-$ts
+            if [ "$REPLACE_PYTHON" != "" ]; then
+                sed -i -e "s:^WEEWX_PYTHON\s*=.*:WEEWX_PYTHON=python3:" $dflts
+            fi
+            if [ "$REPLACE_BINDIR" != "" ]; then
+                sed -i -e "s:^WEEWX_BINDIR\s*=.*:WEEWX_BINDIR=/usr/share/weewx:" $dflts
+            fi
+        fi
+    fi
+}
+
 # put the init files in place
 setup_init() {
     if [ "$1" = "systemd" ]; then
@@ -361,24 +370,6 @@ setup_init() {
         echo "Installing SysV rc script"
         cp /etc/weewx/init.d/weewx-multi /etc/init.d/weewx
         chmod 755 /etc/init.d/weewx
-    fi
-}
-
-enable_init() {
-    echo "Enabling startup using $1"
-    if [ "$1" = "systemd" ]; then
-	systemctl enable weewx > /dev/null
-    elif [ "$1" = "init" ]; then
-        update-rc.d weewx defaults > /dev/null
-    fi
-}
-
-start_weewx() {
-    echo "Starting weewxd using $1"
-    if [ "$1" = "systemd" ]; then
-	systemctl start weewx
-    elif [ "$1" = "init" ]; then
-        invoke-rc.d weewx start
     fi
 }
 
@@ -415,20 +406,12 @@ setup_user_dir() {
     fi
 }
 
-set_permissions() {
-    usr=$1
-    grp=$2
-    dir=$3
-    find $3 -type f -exec chmod 664 {} \;
-    find $3 -type d -exec chmod 2775 {} \;
-    chown -R $usr:$grp $dir
-}
-
 # create the database directory
 setup_database_dir() {
     echo "Configuring database directory $WEEWX_HOME"
     mkdir -p $WEEWX_HOME
-    set_permissions $WEEWX_USER $WEEWX_GROUP $WEEWX_HOME
+    chmod 2775 $WEEWX_HOME
+    chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HOME
 }
 
 # create the reporting directory
@@ -453,6 +436,33 @@ migrate_extensions() {
         cp -rp /usr/share/weewx/user/* $WEEWX_USERDIR
         echo "Saving old extensions to /usr/share/weewx/user-$ts"
         mv /usr/share/weewx/user /usr/share/weewx/user-$ts
+    fi
+}
+
+enable_weewxd() {
+    echo "Enabling startup using $1"
+    if [ "$1" = "systemd" ]; then
+	systemctl enable weewx > /dev/null
+    elif [ "$1" = "init" ]; then
+        update-rc.d weewx defaults > /dev/null
+    fi
+}
+
+start_weewxd() {
+    echo "Starting weewxd using $1"
+    if [ "$1" = "systemd" ]; then
+	systemctl start weewx
+    elif [ "$1" = "init" ]; then
+        invoke-rc.d weewx start
+    fi
+}
+
+stop_weewxd() {
+    echo "Stopping weewxd using $1"
+    if [ "$1" = "systemd" ]; then
+	systemctl stop weewx
+    elif [ "$1" = "init" ]; then
+        invoke-rc.d weewx stop
     fi
 }
 
@@ -490,6 +500,7 @@ fi
 
 case "$1" in
     configure)
+        stop_weewxd $pid1
         get_user
         setup_defaults $pid1
 
@@ -513,8 +524,8 @@ case "$1" in
         setup_reporting_dir
         precompile
         set_config_permissions
-        enable_init $pid1
-        start_weewx $pid1
+        enable_weewxd $pid1
+        start_weewxd $pid1
         check_init $pid1
         ;;
 
