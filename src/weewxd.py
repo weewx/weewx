@@ -121,14 +121,14 @@ def main():
     try:
       import pwd
       euid  = pwd.getpwuid(os.geteuid())[0]
-      log.info("User: : %s", euid)
+      log.info("User:   %s", euid)
     except Exception as ex:
       log.info("User unavailable: %s",ex)
 
     try:
       import grp
       egid = grp.getgrgid(os.getegid())[0]
-      log.info("Group:: %s", egid)
+      log.info("Group:  %s", egid)
     except Exception as ex:
       log.info("Group unavailable: %s",ex)
 
@@ -140,7 +140,7 @@ def main():
       mygrouplist = ' '.join(mygroups)
       log.info("Groups: %s", mygrouplist)
     except Exception as ex:
-      log.info("Grouplist unavailable: %s",ex)
+      log.info("Groups unavailable: %s",ex)
 
     # If no command line --loop-on-init was specified, look in the config file.
     if namespace.loop_on_init is None:
