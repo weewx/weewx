@@ -179,6 +179,7 @@ class Source(object):
 
         # process our command line options
         self.dry_run = kwargs['dry_run']
+        self.update = kwargs['update']
         self.verbose = kwargs['verbose']
         self.no_prompt = kwargs['no_prompt']
         self.suppress_warning = kwargs['suppress_warning']
@@ -514,9 +515,15 @@ class Source(object):
                         _msg = "1 duplicate record was ignored."
                         print(_msg)
                         log.info(_msg)
-                    print("Those records with a timestamp already "
-                          "in the archive will not have been")
-                    print("imported. Confirm successful import in the WeeWX log file.")
+                    if self.update:
+                        print("Existing database records may have been updated "
+                              "with imported data.")
+                        print("Confirm successful import in the weectl log file.")
+                    else:
+                        print("Those records with a timestamp already in the "
+                              "archive will not have been")
+                        print("imported. Confirm successful import in the weectl "
+                              "log file.")
 
     def parse_map(self, map, field_map, field_map_extensions):
         """Update a field map with a field map and/or field map extension.
@@ -1057,11 +1064,18 @@ class Source(object):
                         print("Dry run import aborted by user. %d records were processed." % self.total_rec_proc)
                     else:
                         if self.total_rec_proc > 0:
-                            print("Those records with a timestamp already in the "
-                                  "archive will not have been")
-                            print("imported. As the import was aborted before completion "
-                                  "refer to the WeeWX log")
-                            print("file to confirm which records were imported.")
+                            if self.update:
+                                print("Some existing database records may have been updated "
+                                      "with imported data.")
+                                print("As the import was aborted before completion refer to "
+                                      "the weectl log file to")
+                                print("confirm which records were imported.")
+                            else:
+                                print("Those records with a timestamp already in the "
+                                      "archive will not have been")
+                                print("imported. As the import was aborted before completion "
+                                      "refer to the WeeWX log")
+                                print("file to confirm which records were imported.")
                             raise SystemExit('Exiting.')
                         else:
                             print("Import aborted by user. No records saved to archive.")
@@ -1266,7 +1280,7 @@ class Source(object):
                         # add the record only if it is not a dry run
                         if not self.dry_run:
                             # add the record only if it is not a dry run
-                            archive.addRecord(_tranche)
+                            archive.addRecord(_tranche, update=self.update)
                         # add our the dateTime for each record in our tranche
                         # to the dry run set
                         for _trec in _tranche:
@@ -1284,7 +1298,7 @@ class Source(object):
                     # we do so process them
                     if not self.dry_run:
                         # add the record only if it is not a dry run
-                        archive.addRecord(_tranche)
+                        archive.addRecord(_tranche, update=self.update)
                     # add our the dateTime for each record in our tranche to
                     # the dry run set
                     for _trec in _tranche:
@@ -1325,9 +1339,8 @@ class Source(object):
             elif self.ans == 'n':
                 # user does not want to import so display a message and then
                 # ask to exit
-                _msg = "User chose not to import records. Exiting. Nothing done."
-                print(_msg)
-                log.info(_msg)
+                print("User chose not to import records.")
+                log.info("User chose not to import records. Exiting. Nothing done.")
                 raise SystemExit('Exiting. Nothing done.')
         else:
             # we have no records to import, advise the user but what we say
