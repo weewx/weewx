@@ -10,6 +10,9 @@ while `zh_TW` would specify Chinese language, Taiwan (Traditional Chinese).
 Added translation file for Simplified Chinese (`zh_CN.conf`). Thanks to user
 Kranz!
 
+Allow the utility `weectl import` to update old records in addition to importing
+new records. PR #930.
+
 
 ### 5.0.3 mm/DD/YYYY
 
