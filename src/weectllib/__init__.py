@@ -6,7 +6,10 @@
 """The 'weectllib' package."""
 
 import datetime
+import locale
 import logging
+import os
+import platform
 import sys
 
 import configobj
@@ -110,7 +113,43 @@ def dispatch(namespace):
     log.info("Command line: %s", ' '.join(sys.argv))
 
     # Add USER_ROOT to PYTHONPATH, read user.extensions:
-    weeutil.startup.initialize(config_dict)
+    weewx_root, user_module = weeutil.startup.initialize(config_dict)
+
+    # Log key bits of information.
+    log.info("Using Python %s", sys.version)
+    log.info("Located at %s", sys.executable)
+    log.info("Platform %s", platform.platform())
+    log.info("Locale: '%s'", locale.setlocale(locale.LC_ALL))
+    log.info("Entry path: %s", __file__)
+    log.info("WEEWX_ROOT: %s", weewx_root)
+    log.info("Configuration file: %s", config_path)
+    log.info("User module: %s", user_module)
+    log.info("Debug: %s", weewx.debug)
+
+    # these try/except are because not every os will succeed here
+    try:
+        import pwd
+        euid = pwd.getpwuid(os.geteuid())[0]
+        log.info("User:   %s", euid)
+    except Exception as ex:
+        log.info("User unavailable: %s", ex)
+
+    try:
+        import grp
+        egid = grp.getgrgid(os.getegid())[0]
+        log.info("Group:  %s", egid)
+    except Exception as ex:
+        log.info("Group unavailable: %s", ex)
+
+    try:
+        groupList = os.getgroups()
+        mygroups = []
+        for group in groupList:
+            mygroups.append(grp.getgrgid(group)[0])
+        mygrouplist = ' '.join(mygroups)
+        log.info("Groups: %s", mygrouplist)
+    except Exception as ex:
+        log.info("Groups unavailable: %s", ex)
 
     # Note a dry-run, if applicable:
     if hasattr(namespace, 'dry_run') and namespace.dry_run:
