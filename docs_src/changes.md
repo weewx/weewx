@@ -13,6 +13,8 @@ Kranz!
 Allow the utility `weectl import` to update old records in addition to importing
 new records. PR #930.
 
+Include the effective user and group to the log. PR #934.
+
 
 ### 5.0.3 mm/DD/YYYY
 
