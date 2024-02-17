@@ -117,6 +117,31 @@ def main():
     log.info("User module: %s", user_module)
     log.info("Debug: %s", weewx.debug)
 
+    # these try/except are because not every os will succeed here
+    try:
+      import pwd
+      euid  = pwd.getpwuid(os.geteuid())[0]
+      log.info("User:   %s", euid)
+    except Exception as ex:
+      log.info("User unavailable: %s",ex)
+
+    try:
+      import grp
+      egid = grp.getgrgid(os.getegid())[0]
+      log.info("Group:  %s", egid)
+    except Exception as ex:
+      log.info("Group unavailable: %s",ex)
+
+    try:
+      groupList = os.getgroups()
+      mygroups=[ ]
+      for group in groupList:
+        mygroups.append(grp.getgrgid(group)[0])
+      mygrouplist = ' '.join(mygroups)
+      log.info("Groups: %s", mygrouplist)
+    except Exception as ex:
+      log.info("Groups unavailable: %s",ex)
+
     # If no command line --loop-on-init was specified, look in the config file.
     if namespace.loop_on_init is None:
         loop_on_init = to_bool(config_dict.get('loop_on_init', False))
