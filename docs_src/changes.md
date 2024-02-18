@@ -12,6 +12,8 @@ Related to PR #929.
 Fix bug in tag `$tag.obstype` where `obstype` is an XType that cannot be
 calculated. Related to PR #929
 
+Fix bug that caused the `weewx.conf` `loop_on_init` setting to be ignored.
+
 
 ### 5.0.2 02/10/2024
 
