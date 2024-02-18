@@ -47,7 +47,7 @@ Here are some examples:
 from weewx.units import ValueTuple
 
 freezing_vt = ValueTuple(0.0, "degree_C", "group_temperature")
-body_temperature_vt = ValueTuple(98.6, "degree_F", group_temperature")
+body_temperature_vt = ValueTuple(98.6, "degree_F", "group_temperature")
 station_altitude_vt = ValueTuple(120.0, "meter", "group_altitude")
         
 ```

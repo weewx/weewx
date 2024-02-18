@@ -143,10 +143,10 @@ def main():
       log.info("Groups unavailable: %s",ex)
 
     # If no command line --loop-on-init was specified, look in the config file.
-    if namespace.loop_on_init is None:
+    if not namespace.loop_on_init:
         loop_on_init = to_bool(config_dict.get('loop_on_init', False))
     else:
-        loop_on_init = namespace.loop_on_init
+        loop_on_init = True
 
     # Save the current working directory. A service might
     # change it. In case of a restart, we need to change it back.
