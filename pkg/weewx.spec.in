@@ -290,6 +290,18 @@ setup_init() {
     fi
 }
 
+# remove any previous init configuration that could interfere
+migrate_init() {
+    if [ -f /etc/init.d/weewx ]; then
+	chkconfig --del weewx > /dev/null 2>&1
+	mv /etc/init.d/weewx /etc/init.d/weewx.rpmsave
+    fi
+    if [ -f /etc/init.d/weewx-multi ]; then
+	chkconfig --del weewx-multi > /dev/null 2>&1
+	mv /etc/init.d/weewx-multi /etc/init.d/weewx-multi.rpmsave
+    fi
+}
+
 # install the udev rules
 setup_udev() {
     if [ -d %{udev_dir} ]; then
@@ -315,7 +327,8 @@ setup_user_dir() {
     fi
 }
 
-# create database directory
+# create the database directory.  set ownership on everything in the directory
+# but do not mess with permissions.
 setup_database_dir() {
     echo "Configuring database directory %{sqlite_root}"
     mkdir -p %{sqlite_root}
@@ -348,19 +361,34 @@ migrate_extensions() {
 
 enable_weewxd() {
     if [ "$1" = "systemd" ]; then
-        systemctl enable weewx > /dev/null 2>&1 || :
+	cfgs=$2
+	if [ "$cfgs" = "" -o "$cfgs" = "weewx" ]; then
+	    systemctl enable weewx > /dev/null 2>&1 || :
+	else
+	    systemctl enable weewx@ $cfgs > /dev/null 2>&1 || :
+	fi
     fi
 }
 
 start_weewxd() {
     if [ "$1" = "systemd" ]; then
-        systemctl start weewx > /dev/null 2>&1 || :
+	cfgs=$2
+	if [ "$cfgs" = "" ]; then
+	    systemctl start weewx > /dev/null 2>&1 || :
+	else
+	    for cfg in $cfgs; do
+		systemctl start weewx@$cfg > /dev/null 2>&1 || :
+	    done
+	fi
     fi
 }
 
-stop_weewxd() {
+# just in case there is an old weewxd running somehow, shut it down
+stop_old_weewxd() {
     if [ "$1" = "systemd" ]; then
-        systemctl stop weewx > /dev/null 2>&1 || :
+	if [ -f /etc/init.d/weewx-multi ]; then
+	    service stop weewx-multi 2>&1 || :
+	fi
     fi
 }
 
@@ -381,8 +409,8 @@ if [ $1 -gt 1 ]; then
     stop_weewxd $pid1
 fi
 
+stop_old_weewxd $pid1
 setup_defaults $pid1
-setup_init $pid1
 setup_udev
 setup_skins
 setup_user_dir
@@ -392,17 +420,19 @@ setup_reporting_dir
 if [ "$1" = "1" ]; then
     # this is a new install so create a config file
     install_weewxconf
-    # enable daemon to start at boot
-    enable_weewxd $pid1
 elif [ $1 -gt 1 ]; then
     # this is an upgrade so create a maintainers version by merging the config
     merge_weewxconf
     # migrate any extensions from V4 location to V5
     migrate_extensions
+    # remove any previous init configuration that might interfere
+    migrate_init $pid1
 fi
 
 precompile
 set_config_permissions
+setup_init $pid1
+enable_weewxd $pid1
 start_weewxd $pid1
 
 

@@ -29,7 +29,7 @@ remove)
     # remove the startup configuration
     if [ "$pid1" = "systemd" ]; then
         echo "Removing systemd units"
-        systemctl disable weewx > /dev/null
+        systemctl disable weewx > /dev/null || true
         dst="/usr/lib/systemd/system"
         if [ ! -d $dst ]; then
             dst="/lib/systemd/system"
@@ -41,7 +41,7 @@ remove)
         done
     elif [ "$pid1" = "init" ]; then
         echo "Removing SysV rc script"
-        update-rc.d weewx remove > /dev/null
+        update-rc.d weewx remove > /dev/null || true
         if [ -f /etc/init.d/weewx ]; then
             rm /etc/init.d/weewx
         fi

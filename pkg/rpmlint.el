@@ -4,7 +4,6 @@ addFilter("no-manual-page-for-binary weewxd")
 addFilter("dangerous-command-in-%preun rm")
 addFilter("dangerous-command-in-%pre cp")
 addFilter("dangerous-command-in-%post cp")
-addFilter("dangerous-command-in-%post mv")
 # these are helper scripts that use /usr/bin/env
 addFilter("wrong-script-interpreter .*/setup_mysql.sh")
 addFilter("wrong-script-interpreter .*/i18n-report")

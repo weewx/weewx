@@ -27,9 +27,9 @@ remove|upgrade)
     # stop the weewx daemon
     echo "Stopping weewxd using $pid1"
     if [ "$pid1" = "systemd" ]; then
-	systemctl stop weewx
+	systemctl stop weewx > /dev/null || true
     elif [ "$pid1" = "init" ]; then
-        invoke-rc.d weewx stop
+        invoke-rc.d weewx stop > /dev/null || true
     fi
     # remove any bytecompiled code
     find /usr/share/weewx -name '*.pyc' -delete

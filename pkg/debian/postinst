@@ -26,6 +26,7 @@ WEEWX_GROUP="${WEEWX_GROUP:-weewx}"
 WEEWX_HOME="${WEEWX_HOME:-/var/lib/weewx}"
 WEEWX_HTMLDIR="${WEEWX_HTMLDIR:-/var/www/html/weewx}"
 WEEWX_USERDIR=/etc/weewx/bin/user
+WEEWX_INSTANCES="${WEEWX_INSTANCES:-weewx}"
 
 # insert the driver and stanza into the configuration file
 insert_driver() {
@@ -271,7 +272,7 @@ set_permissions() {
 # or root, then use that user as the weewx user.  net effect is that we convert
 # ownership to weewx:weewx for anything other than a previous install with
 # customized ownership.
-get_user() {
+get_user_info() {
     if [ -d $WEEWX_HOME ]; then
         TMP_USER=$(stat -c "%U" $WEEWX_HOME)
         if [ "$TMP_USER" != "root" -a "$TMP_USER" != "weewx" -a "$TMP_USER" != "UNKNOWN" ]; then
@@ -364,12 +365,26 @@ setup_init() {
  -e "s/Group=.*/Group=${WEEWX_GROUP}/" \
  /etc/weewx/systemd/$f > $dst/$f
             done
-            systemctl daemon-reload
+            systemctl daemon-reload > /dev/null || true
         fi
     elif [ "$1" = "init" ]; then
         echo "Installing SysV rc script"
         cp /etc/weewx/init.d/weewx-multi /etc/init.d/weewx
         chmod 755 /etc/init.d/weewx
+    fi
+}
+
+# remove any previous init configuration that could interfere
+migrate_init() {
+    if [ -f /etc/init.d/weewx-multi ]; then
+	update-rc.d weewx-multi remove > /dev/null 2>&1 || true
+	mv /etc/init.d/weewx-multi /etc/init.d/weewx-multi.dpkg-old
+    fi
+    if [ "$1" = "systemd" ]; then
+	if [ -f /etc/init.d/weewx ]; then
+	    update-rc.d weewx remove > /dev/null 2>&1 || true
+	    mv /etc/init.d/weewx /etc/init.d/weewx.dpkg-old
+	fi
     fi
 }
 
@@ -406,7 +421,8 @@ setup_user_dir() {
     fi
 }
 
-# create the database directory
+# create the database directory.  set ownership on everything in the directory
+# but do not mess with permissions.
 setup_database_dir() {
     echo "Configuring database directory $WEEWX_HOME"
     mkdir -p $WEEWX_HOME
@@ -442,50 +458,37 @@ migrate_extensions() {
 enable_weewxd() {
     echo "Enabling startup using $1"
     if [ "$1" = "systemd" ]; then
-	systemctl enable weewx > /dev/null
+	cfgs=$2
+	if [ "$cfgs" = "" ]; then
+	    systemctl enable weewx > /dev/null || true
+	else
+	    systemctl enable weewx@ $cfgs > /dev/null || true
+	fi
     elif [ "$1" = "init" ]; then
-        update-rc.d weewx defaults > /dev/null
+        update-rc.d weewx defaults > /dev/null || true
     fi
 }
 
 start_weewxd() {
     echo "Starting weewxd using $1"
     if [ "$1" = "systemd" ]; then
-	systemctl start weewx
+	cfgs=$2
+	if [ "$cfgs" = "" ]; then
+	    systemctl start weewx > /dev/null || true
+	else
+	    for cfg in $cfgs; do
+		systemctl start weewx@$cfg > /dev/null || true
+	    done
+	fi
     elif [ "$1" = "init" ]; then
-        invoke-rc.d weewx start
+        invoke-rc.d weewx start > /dev/null || true
     fi
 }
 
-stop_weewxd() {
-    echo "Stopping weewxd using $1"
-    if [ "$1" = "systemd" ]; then
-	systemctl stop weewx
-    elif [ "$1" = "init" ]; then
-        invoke-rc.d weewx stop
-    fi
-}
-
-# check for systemd and/or sysV init files that might affect the init setup
-# that we install.
-check_init() {
-    files_to_check=""
-    if [ "$1" = "systemd" ]; then
-        files_to_check="/etc/init.d/weewx-multi /etc/init.d/weewx /etc/systemd/system/weewx.service"
-    elif [ "$1" = "init" ]; then
-        files_to_check="/etc/init.d/weewx-multi"
-    fi
-    files=""
-    for f in $files_to_check; do
-        if [ -f $f ]; then
-            files="$files $f"
-        fi
-    done
-    if [ "$files" != "" ]; then
-        echo "The following files might interfere with the init configuration:"
-        for f in $files; do
-            echo "  $f"
-        done
+# just in case there is an old weewxd running somehow, shut it down
+stop_old_weewxd() {
+    if [ -f /etc/init.d/weewx-multi ]; then
+	invoke-rc.d weewx-multi stop > /dev/null || true
     fi
 }
 
@@ -498,35 +501,42 @@ else
     pid1=init
 fi
 
+# things we have to do in an upgrade or install:
+#  - permisisons
+#  - ownership
+#  - sysv-to-systemd
+#  - v4 extensions to v5 extensions
+#  - multiple instances
 case "$1" in
     configure)
-        stop_weewxd $pid1
-        get_user
+        get_user_info
+        create_user
+        add_to_group
+	stop_old_weewxd $pid1
         setup_defaults $pid1
+        setup_udev
+        setup_skins
+        setup_user_dir
+        setup_database_dir
+        setup_reporting_dir
 
         if [ "$2" != "" ]; then
             # this is an upgrade so create a maintainers version by merging
             merge_weewxconf
             # migrate any extensions from V4 location to V5
             migrate_extensions
+	    # remove any previous init configuration that might interfere
+	    migrate_init $pid1
         else
             # virgin install so insert debconf values into the config file
             install_weewxconf
         fi
 
-        create_user
-        add_to_group
-        setup_init $pid1
-        setup_udev
-        setup_skins
-        setup_user_dir
-        setup_database_dir
-        setup_reporting_dir
         precompile
         set_config_permissions
+        setup_init $pid1
         enable_weewxd $pid1
         start_weewxd $pid1
-        check_init $pid1
         ;;
 
     abort-remove)
