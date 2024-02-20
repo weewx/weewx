@@ -146,11 +146,12 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
 
         # Create a new instance of a time plot and start adding to it
         plot = weeplot.genplot.TimePlot(plot_options)
-
-        time_length = weeutil.weeutil.nominal_spans(plot_options.get('time_length', 86400))
-        # Calculate a suitable min, max time for the requested time.
-        minstamp, maxstamp, timeinc = weeplot.utilities.scaletime(plotgen_ts - time_length,
-                                                                  plotgen_ts)
+        # Calculate the plot start and end times, these are the minimum and
+        # maximum times that must be included in the plot
+        start_time, end_time = _get_plot_times(plotgen_ts, plot_options)
+        # Calculate suitable time scaling for the start and end times.
+        minstamp, maxstamp, timeinc = weeplot.utilities.scaletime(start_time,
+                                                                  end_time)
         x_domain = weeutil.weeutil.TimeSpan(minstamp, maxstamp)
 
         # Override the x interval if the user has given an explicit interval:
@@ -231,7 +232,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
             option_dict.pop('aggregate_type', None)
             option_dict.pop('aggregate_interval', None)
             # ...then add plotgen_ts.
-            option_dict['plotgen_ts'] = plotgen_ts
+            option_dict['plotgen_ts'] = end_time
             # Now we're ready to fetch the data
             start_vec_t, stop_vec_t, data_vec_t = weewx.xtypes.get_series(
                 var_type,
@@ -380,6 +381,72 @@ def _skip_this_plot(time_ts, plot_options, img_file):
         except os.error:
             pass
     return True
+
+
+def _get_plot_times(plotgen_ts, plot_options):
+    """Calculate the minimum and maximum times that must be included in a plot.
+
+    The timespan that must be included in a plot is defined by the end_time
+    and time_length config options. The end_time option specifies the maximum
+    time that must be included in the plot. The time_length option specifies
+    the difference between the minimum and maximum times that must be included
+    in the plot. The end_time option may include a timeshift to move the
+    minimum and maximum times that must be included in a plot. Both end_time
+    and time_length are optional.
+
+    Time shifts may be specified using the format 'now+|-[PERIOD]' where now
+    is the literal text 'now', +|- is either a plus sign or a minus sign and
+    [PERIOD] is a time period specified in seconds or a recognised nominal
+    period such as '2h' or '30d'.
+
+    Args:
+        plotgen_ts: A timestamp for which the plot will be valid. This is
+        generally the last datum to be plotted.
+
+        plot_options: A dictionary of plot options.
+
+    Returns:
+        A two-way tuple containing start (minimum) and end (maximum) times to
+        be included in the plot
+    """
+
+    # Obtain the plot length in seconds, this is the difference between
+    # the minimum and maximum times that must be included in the plot.
+    time_length = weeutil.weeutil.nominal_spans(plot_options.get('time_length',
+                                                                 86400))
+    # Calculate the end time of the plot, this is the maximum time that
+    # must be included in the plot.
+    _end_time = plot_options.get('end_time', 'now').strip()
+    if _end_time.lower() == 'now' or len(_end_time) < 5 or \
+            not _end_time.lower().startswith('now'):
+        # If end_time was not specified, is the keyword 'now', consists of
+        # fewer than five characters or does not start with 'now', default
+        # to using plotgen_ts as the end time.
+        end_time = plotgen_ts
+    else:
+        # There could be a time shift specified in end_time, first look for a
+        # positive time shift
+        _split = _end_time.split('+', 1)
+        # Assume a positive time shift, we will fix this later if the
+        # assumption in wrong.
+        sign = +1
+        if len(_split) <= 1:
+            # There is no '+' in end_time, so not a positive time shift, maybe
+            # it is a negative time shift.
+            _split = _end_time.split('-', 1)
+            if len(_split) > 1:
+                # We have a negative time shift so correct the sign
+                # assumption.
+                sign = -1
+        if len(_split) > 1:
+            # Calculate the end time by applying the time shift to plotgen_ts.
+            end_time = plotgen_ts + (sign * weeutil.weeutil.nominal_spans(_split[1]))
+        else:
+            # We could not find a time shift so default to using plotgen_ts as
+            # the end time.
+            end_time = plotgen_ts
+    # Return a two-way tuple of start and end times.
+    return end_time - time_length, end_time
 
 
 def _get_check_domain(skip_if_empty, x_domain):
