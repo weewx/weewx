@@ -196,6 +196,17 @@ The nominal number of ticks along the y-axis. The default is
 
 ## Plot scaling options
 
+#### end_time
+
+Specifies the timeshift to be applied to a plot. The time period to be 
+plotted may be shifted forward or backward in time with a positive or negative 
+timeshift respectively. A timeshift is specified by use of the word `now` 
+followed by a plus or minus sign (for a positive or negative timeshift 
+respectively) followed by a time period in seconds or using [duration 
+notation](../durations.md). For example, `now-1d` would timeshift the plot 
+one day in the past and `now+2h` would timeshift the plot two hours into the 
+future. Optional. Default is no timeshift.
+
 #### time_length
 
 The nominal length of the time period to be covered in seconds. Alternatively,
