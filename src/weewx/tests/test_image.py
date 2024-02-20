@@ -36,53 +36,53 @@ class TestHelpers(unittest.TestCase):
         options = {}
         ts = 1708423200
         self.assertEqual(weewx.imagegenerator._get_plot_times(ts, options),
-                         (1708336800, 1708423200))
+                         (ts - 86400, ts))
         options['time_length'] = 28800
         self.assertEqual(weewx.imagegenerator._get_plot_times(ts, options),
-                         (1708394400, 1708423200))
+                         (ts - 28800, ts))
         options['time_length'] = '2d'
         self.assertEqual(weewx.imagegenerator._get_plot_times(ts, options),
-                         (1708250400, 1708423200))
+                         (ts - 2 * 86400, ts))
         options['end_time'] = ''
         self.assertEqual(weewx.imagegenerator._get_plot_times(ts, options),
-                         (1708250400, 1708423200))
+                         (ts - 2 * 86400 , ts))
         options['end_time'] = 'cow'
         self.assertEqual(weewx.imagegenerator._get_plot_times(ts, options),
-                         (1708250400, 1708423200))
+                         (ts - 2 * 86400, ts))
         options['end_time'] = 'giraffe'
         self.assertEqual(weewx.imagegenerator._get_plot_times(ts, options),
-                         (1708250400, 1708423200))
+                         (ts - 2 * 86400, ts))
         options['end_time'] = 'now'
         self.assertEqual(weewx.imagegenerator._get_plot_times(ts, options),
-                         (1708250400, 1708423200))
+                         (ts - 2 * 86400, ts))
         options['end_time'] = 'now\t\n\r'
         self.assertEqual(weewx.imagegenerator._get_plot_times(ts, options),
-                         (1708250400, 1708423200))
+                         (ts - 2 * 86400, ts))
         options['time_length'] = 10800
         options['end_time'] = 'now+2h'
         self.assertEqual(weewx.imagegenerator._get_plot_times(ts, options),
-                         (1708419600, 1708430400))
+                         (ts + 7200 - 10800, ts + 7200))
         options['end_time'] = 'now  +  2h'
         self.assertEqual(weewx.imagegenerator._get_plot_times(ts, options),
-                         (1708419600, 1708430400))
+                         (ts + 7200 - 10800, ts + 7200))
         options['end_time'] = 'now-1d'
         self.assertEqual(weewx.imagegenerator._get_plot_times(ts, options),
-                         (1708326000, 1708336800))
+                         (ts - 86400 - 10800, ts - 86400))
         options['end_time'] = 'now-3600'
         self.assertEqual(weewx.imagegenerator._get_plot_times(ts, options),
-                         (1708408800, 1708419600))
+                         (ts - 3600 - 10800, ts - 3600))
         options['end_time'] = 'now-60M'
         self.assertEqual(weewx.imagegenerator._get_plot_times(ts, options),
-                         (1708408800, 1708419600))
+                         (ts - 3600 - 10800, ts - 3600))
         options['end_time'] = 'now-2w'
         self.assertEqual(weewx.imagegenerator._get_plot_times(ts, options),
-                         (1707202800, 1707213600))
+                         (ts - 14 * 86400 - 10800, ts - 14 * 86400))
         options['end_time'] = 'now-3m'
         self.assertEqual(weewx.imagegenerator._get_plot_times(ts, options),
-                         (1705782600, 1705793400))
+                         (ts - 3 * 365.25/12 * 86400 - 10800, ts - 3 * 365.25/12 * 86400))
         options['end_time'] = 'now-1y'
         self.assertEqual(weewx.imagegenerator._get_plot_times(ts, options),
-                         (1676854800, 1676865600))
+                         (ts - 365.25 * 86400 - 10800, ts - 365.25 * 86400))
 
 
 if __name__ == '__main__':
