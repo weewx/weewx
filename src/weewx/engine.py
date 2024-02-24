@@ -449,7 +449,7 @@ class StdCalibrate(StdService):
     def new_archive_record(self, event):
         """Apply a calibration correction to an archive packet"""
         for obs_type in self.corrections:
-            # If a record was softwrae-generated, then the correction has presumably been
+            # If a record was software-generated, then the correction has presumably been
             # already applied in the LOOP packet. So, unless told otherwise, do not do the
             # correction again.
             if ((len(self.which[obs_type]) == 0 and event.origin != 'software')
