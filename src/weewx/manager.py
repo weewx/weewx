@@ -1187,7 +1187,7 @@ class DaySummaryManager(Manager):
 
         self.updated = False
         # First let my superclass handle adding the record to the main archive table:
-        super()._addSingleRecord(record, cursor, log_success, log_failure, update, updated)
+        super()._addSingleRecord(record, cursor, log_success, log_failure, update)
 
         # Get the start of day for the record:
         _sod_ts = weeutil.weeutil.startOfArchiveDay(record['dateTime'])
