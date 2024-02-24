@@ -378,15 +378,9 @@ class ObservationBinder(object):
 
     @property
     def has_data(self):
+        """Check to see if there is any non-null data in the aggregation interval"""
         db_manager = self.db_lookup(self.data_binding)
-        # First see if the type exists in the database.
-        if db_manager.exists(self.obs_type):
-            # Yes. Is it non-null?
-            val = bool(weewx.xtypes.get_aggregate(self.obs_type, self.timespan,
-                                                  'not_null', db_manager)[0])
-        else:
-            # Nope. Try the xtypes system.
-            val = weewx.xtypes.has_data(self.obs_type, self.timespan, db_manager)
+        val = weewx.xtypes.has_data(self.obs_type, self.timespan, db_manager)
         return val
 
     def series(self, aggregate_type=None,
