@@ -1227,7 +1227,8 @@ class DaySummaryManager(Manager):
             _marked.add(_sod_ts)
             # save the updated set of marked daily summaries to metadata
             # TODO. Does the list of timestamps need to be in timestamp order?
-            self._write_metadata(' '.join(['%d' % ts for ts in _marked]))
+            self._write_metadata('marked_summaries',
+                                 ' '.join(['%d' % ts for ts in _marked]))
 
     @staticmethod
     def get_tstamps_from_str(ts_string):
