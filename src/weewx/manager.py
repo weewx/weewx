@@ -469,6 +469,10 @@ class Manager(object):
             cursor.execute(sql_update_stmt, value_list + [record['dateTime'],] + value_list)
             if log_success:
                 if cursor.rowcount > 0:
+                    # we successfully updated a row, flag this for our child so the
+                    # applicable daily summary can be marked for rebuild
+                    if hasattr(self, 'updated'):
+                        self.updated = True
                     log.info("Updated record %s to database '%s'",
                              timestamp_to_string(record['dateTime']),
                              self.database_name)
@@ -1072,6 +1076,7 @@ class DaySummaryManager(Manager):
 
         self.version = None
         self.daykeys = None
+        self.updated = None
         DaySummaryManager._create_sync(self)
         self.patch_sums()
 
@@ -1180,30 +1185,70 @@ class DaySummaryManager(Manager):
         table.
         """
 
+        self.updated = False
         # First let my superclass handle adding the record to the main archive table:
-        super()._addSingleRecord(record, cursor, log_success, log_failure, update)
+        super()._addSingleRecord(record, cursor, log_success, log_failure, update, updated)
 
         # Get the start of day for the record:
         _sod_ts = weeutil.weeutil.startOfArchiveDay(record['dateTime'])
 
-        # Get the weight. If the value for 'interval' is bad, an exception will be raised.
-        try:
-            _weight = self._calc_weight(record)
-        except IntervalError as e:
-            # Bad value for interval. Ignore this record
-            if log_failure:
-                log.info(e)
-                log.info('*** record ignored')
-            return
+        # did we insert an archive record or update an existing archive
+        # record? If we inserted we can update the applicable daily summary
+        # here. If we updated then we need to mark the daily summary so it can
+        # be rebuilt later.
+        if not self.updated:
+            # we inserted a record, so update the applicable daily summary
 
-        # Now add to the daily summary for the appropriate day:
-        _day_summary = self._get_day_summary(_sod_ts, cursor)
-        _day_summary.addRecord(record, weight=_weight)
-        self._set_day_summary(_day_summary, record['dateTime'], cursor)
-        if log_success:
-            log.info("Added record %s to daily summary in '%s'",
-                     timestamp_to_string(record['dateTime']),
-                     self.database_name)
+            # Get the weight. If the value for 'interval' is bad, an exception will be raised.
+            try:
+                _weight = self._calc_weight(record)
+            except IntervalError as e:
+                # Bad value for interval. Ignore this record
+                if log_failure:
+                    log.info(e)
+                    log.info('*** record ignored')
+                return
+
+            # Now add to the daily summary for the appropriate day:
+            _day_summary = self._get_day_summary(_sod_ts, cursor)
+            _day_summary.addRecord(record, weight=_weight)
+            self._set_day_summary(_day_summary, record['dateTime'], cursor)
+            if log_success:
+                log.info("Added record %s to daily summary in '%s'",
+                         timestamp_to_string(record['dateTime']),
+                         self.database_name)
+        else:
+            # we updated an existing archive record so mark the daily summary
+            # for later rebuild
+
+            # get a set of marked daily summaries from metadata
+            _marked = self.get_tstamps_from_str(self._read_metadata('marked_summaries'))
+            # add the current daily summary to the set
+            _marked.add(_sod_ts)
+            # save the updated set of marked daily summaries to metadata
+            # TODO. Does the list of timestamps need to be in timestamp order?
+            self._write_metadata(' '.join(['%d' % ts for ts in _marked]))
+
+    @staticmethod
+    def get_tstamps_from_str(ts_string):
+        """Return a set of integers from a string of space delimited integers.
+
+        Uses a set to avoid duplicate entries.
+
+        If ts_string is None, zero length or contains no integers return an
+        empty set. Otherwise, return a set of integers extracted from
+        ts_string.
+        """
+
+        if ts_string is None:
+            return set()
+        if ' ' not in ts_string.strip():
+            try:
+                return {int(ts_string)}
+            except ValueError:
+                return set()
+        else:
+            return {int(z) for z in ts_string.split()}
 
     def _updateHiLo(self, accumulator, cursor):
         """Use the contents of an accumulator to update the daily hi/lows."""
