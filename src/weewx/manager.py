@@ -1540,7 +1540,7 @@ class DaySummaryManager(Manager):
             # We have finished processing the marked day summaries, so log what
             # was done
             tdiff = time.time() - t1
-            log.info("Processed %d records to backfill %d marked "
+            log.info("Processed %d records to rebuild %d marked "
                      "day summaries in %.2f seconds",nrecs, ndays, tdiff)
         else:
             # There were no marked day summaries so log this
