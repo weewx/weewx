@@ -49,8 +49,9 @@ WeeWX engine.
 
 #### hardware_name
 
-This is an attribute that should return a string with a short nickname for the
-hardware, such as `"ACME X90"`
+This can as implemented as either an attribute, or as a [property
+function](https://docs.python.org/3/library/functions.html#property). It should
+return a string with a short nickname for the hardware, such as `"ACME X90"`
 
 #### genLoopPackets()
 
