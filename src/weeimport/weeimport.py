@@ -332,8 +332,9 @@ class Source(object):
 
         # setup a counter to count the periods of records
         self.period_no = 1
-        # obtain the lastUpdate metadata value before we import anything
+        # obtain some metadata values before we import anything
         last_update = to_int(self.dbm._read_metadata('lastUpdate'))
+        _marked_summaries = self.dbm._read_metadata('marked_summaries')
         with self.dbm as archive:
             if self.first_period:
                 # collect the time for some stats reporting later
@@ -494,9 +495,32 @@ class Source(object):
                         log.info(_msg)
                         # do the calculations
                         self.calc_missing_obj.run()
+                        # The calculation of missing derived obs includes a
+                        # rebuild of all affected day summaries, this negates
+                        # the need to rebuild any marked day summaries due to
+                        # this import. However, this rebuild will not remove
+                        # any marked day summaries from the metadata due to
+                        # this import, we need to adjust the metadat separately
+                        archive._write_metadata('marked_summaries',
+                                                _marked_summaries)
                         _msg = "Finished calculating missing derived observations"
                         print(_msg)
                         log.info(_msg)
+                    else:
+                        # Calculation of missing derived obs includes a daily
+                        # summary rebuild for all days with imported data, if
+                        # missing derived obs were not calculated we need to
+                        # manually force a daily summary rebuild of any marked
+                        # daily summaries
+                        ndays, nrecs = archive.rebuild_marked_day_summary()
+                        # rebuild_marked_day_summary() includes appropriate log
+                        # entries but provides so console output, print an
+                        # appropriate message on the console
+                        if ndays > 0:
+                            print("Processed %d records to rebuild %d marked day "
+                                  "summaries", nrecs, ndays)
+                        else:
+                            print("No marked day summaries to process")
                     # now provide the summary report
                     _msg = "Finished import"
                     print(_msg)
