@@ -1463,21 +1463,21 @@ class DaySummaryManager(Manager):
         t1 = time.time()
 
         # Get the list of marked daily summaries from metadata
-        marked_timestamps = list(self.get_tstamps_from_str(self._read_metadata('marked_summaries')))
+        marked_summary_tstamps = list(self.get_tstamps_from_str(self._read_metadata('marked_summaries')))
         # Initialise day and record counters
         ndays = 0
         nrecs = 0
         # Do we have nay marked day summaries to rebuild
-        if len(marked_timestamps) > 0:
+        if len(marked_summary_tstamps) > 0:
             # Iterate over tranches of 'trans_days' day summaries at a time
-            for trans in range(len(marked_timestamps) // trans_days + 1):
+            for trans in range(len(marked_summary_tstamps) // trans_days + 1):
                 # Do the rebuild of each tranche of marked daily summaries as a
                 # single transaction
                 with weedb.Transaction(self.connection) as cursor:
                     # Iterate over the marked day summaries
-                    while ndays < len(marked_timestamps):
+                    while ndays < len(marked_summary_tstamps):
                         # Get the timestamp of the daily summary to processed
-                        marked = marked_timestamps[ndays]
+                        marked = marked_summary_tstamps[ndays]
                         # Reset the day accumulator we will use
                         day_accum = None
                         # Obtain the archive day time span for the daily summary
@@ -1532,9 +1532,9 @@ class DaySummaryManager(Manager):
                     # yet to be processed
                     # Obtain a list of the marked timestamps yet to be
                     # processed
-                    to_do = marked_timestamps[ndays:]
+                    to_do = marked_summary_tstamps[ndays:]
                     # And write the list of outstanding timestamps to metadata
-                    self._write_metadata('marked_timestamps',
+                    self._write_metadata('marked_summaries',
                                          ' '.join(['%d' % ts for ts in to_do]))
 
             # We have finished processing the marked day summaries, so log what
