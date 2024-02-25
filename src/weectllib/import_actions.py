@@ -22,22 +22,13 @@ from weeutil.weeutil import timestamp_to_string, TimeSpan, bcolors
 
 log = logging.getLogger(__name__)
 
-# minimum WeeWX version required for this version of wee_import
-REQUIRED_WEEWX = "5.0.0"
-
 def obs_import(config_dict, import_config, **kwargs):
-    """Generate information about the user's WeeWX environment
+    """Obtain an appropriate import source object and commence the import.
 
     Args:
         config_dict (dict): The configuration dictionary
-        output (str|None): Path to where the output will be put. Default is stdout.
+        import_config (dict): The import configuration dict
     """
-
-    # check WeeWX version number for compatibility
-    if weeutil.weeutil.version_compare(weewx.__version__, REQUIRED_WEEWX) < 0:
-        print("WeeWX %s or greater is required, found %s. Nothing done, exiting."
-              % (REQUIRED_WEEWX, weewx.__version__))
-        exit(1)
 
     # to do anything we need an import config file, check if one was provided
     if import_config:
