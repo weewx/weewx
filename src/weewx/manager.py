@@ -1420,9 +1420,132 @@ class DaySummaryManager(Manager):
             mark_d += tranche_days
 
         tdiff = time.time() - t1
-        log.info("Processed %d records to backfill %d day summaries in %.2f seconds",
-                 nrecs, ndays, tdiff)
+        log.info("Processed %d records to backfill %d day summaries "
+                 "in %.2f seconds",nrecs, ndays, tdiff)
 
+        return nrecs, ndays
+
+    def rebuild_marked_day_summary(self, progress_fn=show_progress, trans_days=5):
+        """Rebuild marked daily summaries from the archive.
+
+        At times (e.g.: data imported using weectl import --update) a number of possibly
+        non-contiguous daily summaries will require rebuild. This could be achieved by a
+        complete rebuild of the daily summaries, but to save time and to retain existing daily
+        summary fidelity selective rebuilding of marked daily summaries is used. These daily
+        summaries requiring rebuild are marked by inclusion of the daily summary dateTime value
+        in the metadata table marked_summaries field. These marked daily summaries are rebuilt
+        by extracting these dateTime values from the marked_summaries metadata field and
+        rebuilding only those daily summaries.
+
+        To help prevent database errors for large archives, database transactions are limited to
+        trans_days days of archive data. This is a trade-off between speed and memory usage.
+
+        Args:
+
+            progress_fn (function): This function will be called after processing
+                every 1000 records.
+            trans_days (int): Number of days of archive data to be used for each daily summaries
+                database transaction. [Optional. Default is 5.]
+
+        Returns:
+             tuple[int,int]: A 2-way tuple (nrecs, ndays) where
+                  nrecs is the number of records backfilled;
+                  ndays is the number of days backfilled
+        """
+
+        log.info("Starting backfill of marked daily summaries")
+
+        if self.first_timestamp is None:
+            # Nothing in the archive database, so there's nothing to do.
+            log.info("Empty database")
+            return 0, 0
+
+        t1 = time.time()
+
+        # Get the list of marked daily summaries from metadata
+        marked_timestamps = list(self.get_tstamps_from_str(self._read_metadata('marked_summaries')))
+        # Initialise day and record counters
+        ndays = 0
+        nrecs = 0
+        # Do we have nay marked day summaries to rebuild
+        if len(marked_timestamps) > 0:
+            # Iterate over tranches of 'trans_days' day summaries at a time
+            for trans in range(len(marked_timestamps) // trans_days + 1):
+                # Do the rebuild of each tranche of marked daily summaries as a
+                # single transaction
+                with weedb.Transaction(self.connection) as cursor:
+                    # Iterate over the marked day summaries
+                    while ndays < len(marked_timestamps):
+                        # Get the timestamp of the daily summary to processed
+                        marked = marked_timestamps[ndays]
+                        # Reset the day accumulator we will use
+                        day_accum = None
+                        # Obtain the archive day time span for the daily summary
+                        # concerned. The daily summary ts will be on a midnight
+                        # boundary, so we need to offset the marked timestamp as
+                        # midnight records are considered to belong to the previous
+                        # day.
+                        archive_tspan = weeutil.weeutil.archiveDaySpan(marked + 1)
+                        # Go through all the archive records in the time span,
+                        # adding them to the daily summary
+                        for rec in self.genBatchRecords(archive_tspan.start, archive_tspan.stop):
+                            # If this is the very first record, fetch a new accumulator
+                            if not day_accum:
+                                # Get an empty day accumulator:
+                                day_accum = weewx.accum.Accum(archive_tspan)
+                            try:
+                                # Calculate the weight of the record
+                                weight = self._calc_weight(rec)
+                            except IntervalError as e:
+                                # Ignore records with bad values for 'interval'
+                                log.info(e)
+                                log.info('***  ignored.')
+                                continue
+                            # Try updating. We should not encounter a time that is
+                            # out of the accumulator's time span, but if we do an
+                            # exception will be raised.
+                            try:
+                                day_accum.addRecord(rec, weight=weight)
+                            except weewx.accum.OutOfSpan:
+                                # The record is out of the time span. Since we are
+                                # only updating a single daily summary we can
+                                # ignore this record.
+                                pass
+                            # Increment the number of records processed
+                            nrecs += 1
+                            # Update our progress if necessary
+                            if progress_fn and nrecs % 1000 == 0:
+                                progress_fn(rec['dateTime'], nrecs)
+
+                        # We are done with this day of records, save the
+                        # accumulator
+                        self._set_day_summary(day_accum, None, cursor)
+                        # Increment the number of days processed
+                        ndays += 1
+                        # Have we completed a tranche of trans_days?
+                        if ndays % trans_days == 0:
+                            # We have completed this tranche, break so the
+                            # tranche can be written as a single transaction
+                            break
+                    # Before processing the transaction, update the
+                    # marked_summaries metadata with the marked day summaries
+                    # yet to be processed
+                    # Obtain a list of the marked timestamps yet to be
+                    # processed
+                    to_do = marked_timestamps[ndays:]
+                    # And write the list of outstanding timestamps to metadata
+                    self._write_metadata('marked_timestamps',
+                                         ' '.join(['%d' % ts for ts in to_do]))
+
+            # We have finished processing the marked day summaries, so log what
+            # was done
+            tdiff = time.time() - t1
+            log.info("Processed %d records to backfill %d marked "
+                     "day summaries in %.2f seconds",nrecs, ndays, tdiff)
+        else:
+            # There were no marked day summaries so log this
+            log.info("No marked day summaries to process")
+        # Return our results
         return nrecs, ndays
 
     def drop_daily(self):
