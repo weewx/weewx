@@ -601,9 +601,9 @@ class StdArchive(StdService):
         # Backfill the daily summaries, this completes any previously aborted
         # daily summary rebuilds.
         _nrecs, _ndays = dbmanager.backfill_day_summary()
-        # Backfill any marked daily summaries, this rebuilds any daily
-        # summaries that have been previously marked for rebuilding.
-        _nrecs, _ndays = dbmanager.rebuild_day_summary()
+        # Rebuild any marked daily summaries, this rebuilds any daily summaries
+        # that have been previously marked for rebuilding.
+        _nrecs, _ndays = dbmanager.rebuild_marked_day_summary()
 
         # Do a catch-up on any data still on the station, but not yet put in the database.
         if self.no_catchup:
