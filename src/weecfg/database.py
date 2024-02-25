@@ -467,7 +467,7 @@ class CalcMissing(DatabaseFix):
             start_d = datetime.date.fromtimestamp(self.start_ts)
             # Since each daily summary is identified by the midnight timestamp
             # for that day, we need to make sure our stop timestamp is not on
-            # a midnight boundary, or we will rebuild the following days sumamry
+            # a midnight boundary, or we will rebuild the following days summary
             # as well. if it is on a midnight boundary just subtract 1 second
             # and use that.
             summary_stop_ts = self.stop_ts
