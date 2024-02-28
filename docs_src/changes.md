@@ -14,6 +14,9 @@ calculated. Related to PR #929
 
 Fix bug that caused the `weewx.conf` `loop_on_init` setting to be ignored.
 
+Reinstate file `weeutil/timediff.py`. It's not used in WeeWX, but it is used
+by some extensions.
+
 
 ### 5.0.2 02/10/2024
 
