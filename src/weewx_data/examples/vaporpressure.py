@@ -47,7 +47,8 @@ class VaporPressure(weewx.xtypes.XType):
         self.algorithm = algorithm.lower()
 
     def get_scalar(self, obs_type, record, db_manager):
-        # We only know how to calculate 'vapor_p'. For everything else, raise an exception UnknownType
+        # We only know how to calculate 'vapor_p'.
+        # For everything else, raise an exception UnknownType
         if obs_type != 'vapor_p':
             raise weewx.UnknownType(obs_type)
 
@@ -56,42 +57,42 @@ class VaporPressure(weewx.xtypes.XType):
             raise weewx.CannotCalculate(obs_type)
 
         # We have everything we need. Start by forming a ValueTuple for the outside temperature.
-        # To do this, figure out what unit and group the record is in ...
-        unit_and_group = weewx.units.getStandardUnitType(record['usUnits'], 'outTemp')
-        # ... then form the ValueTuple.
-        outTemp_vt = ValueTuple(record['outTemp'], *unit_and_group)
+        outTemp_vt = weewx.units.as_value_tuple(record, 'outTemp')
 
         # Both algorithms need temperature in Celsius, so let's make sure our incoming temperature
         # is in that unit. Use function convert(). The results will be in the form of a ValueTuple
         outTemp_C_vt = weewx.units.convert(outTemp_vt, 'degree_C')
-        # Get the first element of the ValueTuple. This will be in Celsius:
-        outTemp_C = outTemp_C_vt[0]
 
-        if self.algorithm == 'simple':
-            # Use the "Simple" algorithm.
-            # We need temperature in Kelvin.
-            outTemp_K = weewx.units.CtoK(outTemp_C)
-            # Now we can use the formula. Results will be in mmHg. Create a ValueTuple out of it:
-            p_vt = ValueTuple(math.exp(20.386 - 5132.0 / outTemp_K), 'mmHg', 'group_pressure')
-        elif self.algorithm == 'tetens':
-            # Use Teten's algorithm.
-            # Use the formula. Results will be in kPa:
-            p_kPa = 0.61078 * math.exp(17.27 * outTemp_C_vt[0] / (outTemp_C_vt[0] + 237.3))
-            # Form a ValueTuple
-            p_vt = ValueTuple(p_kPa, 'kPa', 'group_pressure')
-        else:
-            # Don't recognize the exception. Fail hard:
-            raise ValueError(self.algorithm)
+        # The attribute ".value" will give us just the value part of the ValueTuple
+        result = calc_vapor_pressure(outTemp_C_vt.value, self.algorithm)
 
-        # If we got this far, we were able to calculate a value. Return it.
-        return p_vt
+        # Convert to the unit system that we are using and return
+        return weewx.units.convertStd(result, record['usUnits'])
+
+
+def calc_vapor_pressure(outTemp_C, algorithm='simple'):
+    """Given a temperature in Celsius, calculate the vapor pressure"""
+    if outTemp_C is None:
+        return ValueTuple(None, 'mmHg', 'group_pressure')
+    if algorithm == 'simple':
+        # Use the "Simple" algorithm.
+        # We need temperature in Kelvin.
+        outTemp_K = weewx.units.CtoK(outTemp_C)
+        # Now we can use the formula. Results will be in mmHg. Create a ValueTuple out of it:
+        p_vt = ValueTuple(math.exp(20.386 - 5132.0 / outTemp_K), 'mmHg', 'group_pressure')
+    elif algorithm == 'teters':
+        # Use Teter's algorithm.
+        # Use the formula. Results will be in kPa:
+        p_kPa = 0.61078 * math.exp(17.27 * outTemp_C / (outTemp_C + 237.3))
+        # Form a ValueTuple
+        p_vt = ValueTuple(p_kPa, 'kPa', 'group_pressure')
+    else:
+        # Don't recognize the algorithm. Fail hard:
+        raise ValueError(algorithm)
+    return p_vt
 
 
 class VaporPressureService(StdService):
-    """ WeeWX service whose job is to register the XTypes extension VaporPressure with the
-    XType system.
-    """
-
     def __init__(self, engine, config_dict):
         super(VaporPressureService, self).__init__(engine, config_dict)
 
@@ -103,8 +104,8 @@ class VaporPressureService(StdService):
 
         # Instantiate an instance of VaporPressure:
         self.vp = VaporPressure(algorithm)
-        # Register it:
-        weewx.xtypes.xtypes.append(self.vp)
+        # Register it with the XTypes system:
+        weewx.xtypes.xtypes.insert(0, self.vp)
 
     def shutDown(self):
         # Remove the registered instance:
