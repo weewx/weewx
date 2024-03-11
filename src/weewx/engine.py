@@ -441,15 +441,16 @@ class StdCalibrate(StdService):
                 try:
                     event.packet[obs_type] = eval(self.corrections[obs_type], {'math': math},
                                                   event.packet)
-                except (TypeError, NameError):
-                    pass
+                except (TypeError, NameError) as e:
+                    if weewx.debug >= 2:
+                        log.debug("StdCalibrate type or name error in LOOP packet: %s", e)
                 except ValueError as e:
-                    log.error("StdCalibration loop error %s", e)
+                    log.error("StdCalibrate value error in LOOP packet %s", e)
 
     def new_archive_record(self, event):
         """Apply a calibration correction to an archive packet"""
         for obs_type in self.corrections:
-            # If a record was softwrae-generated, then the correction has presumably been
+            # If a record was software-generated, then the correction has presumably been
             # already applied in the LOOP packet. So, unless told otherwise, do not do the
             # correction again.
             if ((len(self.which[obs_type]) == 0 and event.origin != 'software')
@@ -457,10 +458,11 @@ class StdCalibrate(StdService):
                 try:
                     event.record[obs_type] = eval(self.corrections[obs_type], {'math': math},
                                                   event.record)
-                except (TypeError, NameError):
-                    pass
+                except (TypeError, NameError) as e:
+                    if weewx.debug >= 2:
+                        log.debug("StdCalibrate type or name error in archive record: %s", e)
                 except ValueError as e:
-                    log.error("StdCalibration archive error %s", e)
+                    log.error("StdCalibrate value error in archive record: %s", e)
 
 
 # ==============================================================================
