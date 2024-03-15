@@ -17,6 +17,9 @@ Fix bug that caused the `weewx.conf` `loop_on_init` setting to be ignored.
 Reinstate file `weeutil/timediff.py`. It's not used in WeeWX, but it is used
 by some extensions.
 
+Fixed bug in station config where config_units would fail if there was no
+Defaults section specified in StdReport.
+
 
 ### 5.0.2 02/10/2024
 

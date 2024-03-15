@@ -377,13 +377,16 @@ def config_units(config_dict, unit_system=None, no_prompt=False):
     else:
         final_unit_system = default_unit_system
 
-    if 'StdReport' in config_dict and final_unit_system:
-        # Make sure the default unit system sits under [[Defaults]].
-        # First, get rid of anything under [StdReport]
-        config_dict['StdReport'].pop('unit_system', None)
-        # Then add it under [[Defaults]]
+    if final_unit_system and 'StdReport' in config_dict:
         if 'Defaults' in config_dict['StdReport']:
+            # If there is a Defaults section, insert the unit_system there
+            # First, get rid of anything under [StdReport]
+            config_dict['StdReport'].pop('unit_system', None)
+            # Then add it under [[Defaults]]
             config_dict['StdReport']['Defaults']['unit_system'] = final_unit_system
+        elif 'unit_system' in config_dict['StdReport']:
+            # otherwise, respect the old configuration
+            config_dict['StdReport']['unit_system'] = final_unit_system
 
 
 def config_driver(config_dict, driver=None, no_prompt=False):
