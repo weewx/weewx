@@ -26,5 +26,5 @@ SUBSYSTEM=="tty",ATTRS{idVendor}=="0403",ATTRS{idProduct}=="6001",MODE="0664",GR
 
 # davis vantage via usb-serial
 SUBSYSTEM=="tty",ATTRS{idVendor}=="10c4",ATTRS{idProduct}=="ea60",MODE="0664",GROUP="weewx",SYMLINK+="vantage"
-SUBSYSTEM=="tty",ATTRS{idVendor}=="10c4",ATTR{idProduct}=="ea61",MODE="0664",GROUP="weewx",SYMLINK+="vantage"
+SUBSYSTEM=="tty",ATTRS{idVendor}=="10c4",ATTRS{idProduct}=="ea61",MODE="0664",GROUP="weewx",SYMLINK+="vantage"
 
