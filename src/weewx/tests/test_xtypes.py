@@ -65,6 +65,25 @@ class Common(object):
     def tearDown(self):
         pass
 
+    def test_daily_scalar(self):
+        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
+            vt_min = weewx.xtypes.DailySummaries.get_aggregate('outTemp',
+                                                               month_timespan,
+                                                               'min',
+                                                               db_manager)
+            vt_mintime = weewx.xtypes.DailySummaries.get_aggregate('outTemp',
+                                                                   month_timespan,
+                                                                   'mintime',
+                                                                   db_manager)
+            vt_avg = weewx.xtypes.DailySummaries.get_aggregate('outTemp',
+                                                               month_timespan,
+                                                               'avg',
+                                                               db_manager)
+
+        self.assertAlmostEqual(vt_min[0], 38.922, 3)
+        self.assertAlmostEqual(vt_avg[0], 57.128, 3)
+        self.assertEqual(vt_mintime[0], 1283511600)
+
     def test_daily_vecdir(self):
         with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
             vt = weewx.xtypes.DailySummaries.get_aggregate('wind',

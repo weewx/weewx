@@ -966,11 +966,13 @@ class XTypeTable(XType):
             result = maxtime
         elif aggregate_type == 'min':
             result = minimum
-        elif aggregate_type == 'not_null':
-            result = False
-        else:
-            assert aggregate_type == 'max'
+        elif aggregate_type == 'max':
             result = maximum
+        elif aggregate_type == 'not_null':
+            return ValueTuple(False, 'boolean', 'group_boolean')
+        else:
+            # We should never get here.
+            raise ValueError(f"Unexpected aggregation type {aggregate_type}")
 
         u, g = weewx.units.getStandardUnitType(std_unit_system, obs_type, aggregate_type)
 
