@@ -23,13 +23,13 @@ SUBSYSTEM=="usb",ATTRS{idVendor}=="1941",ATTRS{idProduct}=="8021",MODE="0666"
 SUBSYSTEM=="usb",ATTRS{idVendor}=="1130",ATTRS{idProduct}=="6801",MODE="0666"
 
 # oregon scientific wmr100
-SUBSYSTEM=="usb",ATTRS{idVendor}=="0FDE",ATTRS{idProduct}=="CA01",MODE="0666"
+SUBSYSTEM=="usb",ATTRS{idVendor}=="0fde",ATTRS{idProduct}=="ca01",MODE="0666"
 
 # oregon scientific wmr200
-SUBSYSTEM=="usb",ATTRS{idVendor}=="0FDE",ATTRS{idProduct}=="CA01",MODE="0666"
+SUBSYSTEM=="usb",ATTRS{idVendor}=="0fde",ATTRS{idProduct}=="ca01",MODE="0666"
 
 # oregon scientific wmr300
-SUBSYSTEM=="usb",ATTRS{idVendor}=="0FDE",ATTRS{idProduct}=="CA08",MODE="0666"
+SUBSYSTEM=="usb",ATTRS{idVendor}=="0fde",ATTRS{idProduct}=="ca08",MODE="0666"
 
 # ws28xx transceiver
 SUBSYSTEM=="usb",ATTRS{idVendor}=="6666",ATTRS{idProduct}=="5555",MODE="0666"

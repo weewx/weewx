@@ -14,12 +14,21 @@ import unittest
 import configobj
 
 import gen_fake_data
-import misc
 import weewx
 import weewx.units
 import weewx.wxformulas
 import weewx.xtypes
 from weeutil.weeutil import TimeSpan
+
+# We will be using the VaporPressure example, so include it in the path
+import weewx_data
+example_dir = os.path.normpath(os.path.join(os.path.dirname(weewx_data.__file__),
+                                            './examples'))
+sys.path.append(example_dir)
+# Now we can import it
+import vaporpressure
+# Register an instance of VaporPressure with the XTypes system:
+weewx.xtypes.xtypes.insert(0, vaporpressure.VaporPressure())
 
 weewx.debug = 1
 

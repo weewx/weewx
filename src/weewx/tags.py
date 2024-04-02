@@ -596,7 +596,7 @@ class CurrentObj(object):
             else:
                 # Couldn't get the value out of the record. Try the XTypes system.
                 try:
-                    vt = weewx.xtypes.get_scalar(obs_type, self.record, db_manager)
+                    vt = weewx.xtypes.get_scalar(obs_type, record, db_manager)
                 except weewx.CannotCalculate:
                     u, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type)
                     vt = ValueTuple(None, u, g)

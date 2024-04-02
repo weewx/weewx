@@ -356,7 +356,7 @@ def config_units(config_dict, unit_system=None, no_prompt=False):
         try:
             default_unit_system = config_dict['StdReport']['Defaults']['unit_system']
         except KeyError:
-            # Not there. It's a custom unit system
+            # there is no default unit system specified
             pass
 
     if unit_system:
@@ -369,19 +369,24 @@ def config_units(config_dict, unit_system=None, no_prompt=False):
         print(f"  {bcolors.BOLD}metricwx{bcolors.ENDC}   (ºC, mbar, mm, m/s)")
         print(f"  {bcolors.BOLD}metric{bcolors.ENDC}     (ºC, mbar, cm, km/h)")
 
-        # Get what unit system the user wants
+        # prompt for a unit system
         options = ['us', 'metricwx', 'metric']
         final_unit_system = weecfg.prompt_with_options(f"unit system",
-                                                       default_unit_system, options)
+                                                       default_unit_system,
+                                                       options)
     else:
         final_unit_system = default_unit_system
 
-    if 'StdReport' in config_dict and final_unit_system:
-        # Make sure the default unit system sits under [[Defaults]]. First, get rid of anything
-        # under [StdReport]
-        config_dict['StdReport'].pop('unit_system', None)
-        # Then add it under [[Defaults]]
-        config_dict['StdReport']['Defaults']['unit_system'] = final_unit_system
+    if final_unit_system and 'StdReport' in config_dict:
+        if 'Defaults' in config_dict['StdReport']:
+            # If there is a Defaults section, insert the unit_system there
+            # First, get rid of anything under [StdReport]
+            config_dict['StdReport'].pop('unit_system', None)
+            # Then add it under [[Defaults]]
+            config_dict['StdReport']['Defaults']['unit_system'] = final_unit_system
+        elif 'unit_system' in config_dict['StdReport']:
+            # otherwise, respect the old configuration
+            config_dict['StdReport']['unit_system'] = final_unit_system
 
 
 def config_driver(config_dict, driver=None, no_prompt=False):
