@@ -20,6 +20,8 @@ by some extensions.
 Fixed bug in station config where config_units would fail if there was no
 Defaults section specified in StdReport.
 
+Use lower-case for the product and vendor codes in udev rules.
+
 
 ### 5.0.2 02/10/2024
 
