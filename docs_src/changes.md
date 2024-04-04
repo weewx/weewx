@@ -15,6 +15,8 @@ new records. PR #930.
 
 Include the effective user and group to the log. PR #934.
 
+Allow extra command line options to be passed on to `rsync`. Fixes issue #951.
+
 
 ### 5.0.3 mm/DD/YYYY
 

@@ -524,6 +524,7 @@ class RsyncGenerator(ReportGenerator):
                 user=self.skin_dict.get('user'),
                 port=to_int(self.skin_dict.get('port')),
                 ssh_options=self.skin_dict.get('ssh_options'),
+                rsync_options=self.skin_dict.get('rsync_options'),
                 compress=to_bool(self.skin_dict.get('compress', False)),
                 delete=to_bool(self.skin_dict.get('delete', False)),
                 log_success=log_success,
