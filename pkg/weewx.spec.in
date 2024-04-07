@@ -164,8 +164,8 @@ create_user() {
 add_to_group() {
     if [ "$WEEWX_GROUP" != "root" ]; then
         # see who is running the installation
-        inst_user=$USER
-        if [ "$SUDO_USER" != "" ]; then
+        inst_user=$(id -nu)
+        if [ "x$SUDO_USER" != "x" ]; then
             inst_user=$SUDO_USER
         fi
         # put the user who is doing the installation into the weewx group,
