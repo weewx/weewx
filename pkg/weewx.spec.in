@@ -170,7 +170,7 @@ add_to_group() {
         fi
         # put the user who is doing the installation into the weewx group,
         # but only if it is not root or the weewx user.
-        if [ "$inst_user" != "root" -a "$inst_user" != "$WEEWX_USER" ]; then
+        if [ "x$inst_user" != "x" -a "$inst_user" != "root" -a "$inst_user" != "$WEEWX_USER" ]; then
             # if user is already in the group, then skip it
             if ! /usr/bin/getent group $WEEWX_GROUP | grep -q $inst_user; then
                 echo "Adding user $inst_user to group $WEEWX_GROUP"
