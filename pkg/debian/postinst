@@ -445,6 +445,9 @@ setup_reporting_dir() {
 set_config_permissions() {
     echo "Setting permissions $WEEWX_USER:$WEEWX_GROUP on /etc/weewx"
     set_permissions $WEEWX_USER $WEEWX_GROUP /etc/weewx
+    # ensure that the configuration files are not world-readable so that
+    # we protect any passwords and tokens
+    chmod 660 /etc/weewx/*.conf*
 }
 
 # if there are any existing extensions in the V4 location, copy them to the

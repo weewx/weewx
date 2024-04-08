@@ -347,6 +347,9 @@ setup_reporting_dir() {
 set_config_permissions() {
     echo "Setting permissions $WEEWX_USER:$WEEWX_GROUP on %{dst_cfg_dir}"
     set_permissions $WEEWX_USER $WEEWX_GROUP %{dst_cfg_dir}
+    # ensure that the configuration files are not world-readable so that
+    # we protect any passwords and tokens
+    chmod 660 /etc/weewx/*.conf*
 }
 
 # if this is an upgrade from V4, copy any extensions to the V5 location

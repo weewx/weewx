@@ -12,6 +12,12 @@ Related to PR #929.
 Fix bug in tag `$tag.obstype` where `obstype` is an XType that cannot be
 calculated. Related to PR #929
 
+Do not make group changes if identity of user doing the install cannot be
+determined. PR #952
+
+For deb/rpm installs, set permissions on the configuration file to be not
+world-readable. PR #948
+
 
 ### 5.0.2 02/10/2024
 
