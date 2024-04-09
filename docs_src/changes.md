@@ -12,7 +12,8 @@ Related to PR #929.
 Fix bug in tag `$tag.obstype` where `obstype` is an XType that cannot be
 calculated. Related to PR #929
 
-Fix bug that caused the `weewx.conf` `loop_on_init` setting to be ignored.
+Fix bug that caused the `loop_on_init` setting in `weewx.conf` to be ignored.
+PR #935.
 
 Reinstate file `weeutil/timediff.py`. It's not used in WeeWX, but it is used
 by some extensions.
