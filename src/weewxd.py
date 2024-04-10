@@ -106,6 +106,12 @@ def main():
     # Add USER_ROOT to PYTHONPATH, read user.extensions:
     weewx_root, user_module = weeutil.startup.initialize(config_dict)
 
+    # If no command line --loop-on-init was specified, look in the config file.
+    if not namespace.loop_on_init:
+        loop_on_init = to_bool(config_dict.get('loop_on_init', False))
+    else:
+        loop_on_init = True
+
     # Log key bits of information.
     log.info("Using Python %s", sys.version)
     log.info("Located at %s", sys.executable)
@@ -116,12 +122,7 @@ def main():
     log.info("Configuration file: %s", config_path)
     log.info("User module: %s", user_module)
     log.info("Debug: %s", weewx.debug)
-
-    # If no command line --loop-on-init was specified, look in the config file.
-    if not namespace.loop_on_init:
-        loop_on_init = to_bool(config_dict.get('loop_on_init', False))
-    else:
-        loop_on_init = True
+    log.debug("loop_on_init: %s", loop_on_init)
 
     # Save the current working directory. A service might
     # change it. In case of a restart, we need to change it back.
