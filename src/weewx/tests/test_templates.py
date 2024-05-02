@@ -8,6 +8,7 @@
 
 import locale
 import logging
+import os
 import os.path
 import shutil
 import sys
@@ -27,6 +28,9 @@ import weewx.reportengine
 import weewx.station
 import weewx.units
 import weewx.wxxtypes
+import weewx.xtypes
+
+# Do not delete the following line. The module is used by an underlying xtype
 import misc
 
 weewx.debug = 1
@@ -38,9 +42,8 @@ weeutil.logger.setup('weetest_templates')
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
 
-# This will use the locale specified by the environment variable 'LANG'
-# Other options are possible. See:
-# http://docs.python.org/2/library/locale.html#locale.setlocale
+# Explicitly set LANG to the US locale. Some of the tests require it.
+os.environ['LANG'] = "us_US.utf8"
 locale.setlocale(locale.LC_ALL, '')
 
 # Find the configuration file. It's assumed to be in the same directory as me, so first figure
@@ -73,6 +76,7 @@ weewx.accum.initialize(config_dict)
 # These tests also test the examples in the 'example' subdirectory.
 # Patch PYTHONPATH to find them.
 import weewx_data
+
 example_dir = os.path.normpath(os.path.join(os.path.dirname(weewx_data.__file__),
                                             './examples'))
 sys.path.append(os.path.join(example_dir, './colorize'))

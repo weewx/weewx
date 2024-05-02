@@ -23,6 +23,8 @@ jobs:
           mariadb-server \
           rsync \
           sqlite
+        sudo locale-gen de_DE.utf8
+        sudo update-locale
 
     - uses: actions/checkout@v3
 

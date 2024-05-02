@@ -152,8 +152,9 @@
       </tr>
     #for ($start, $stop, $data) in $month.outTemp.series(aggregate_type='max', aggregate_interval='day')
       <tr>
+        ## Use a different format for 'start' than for 'stop'
         <td>$start.format("%Y-%m-%d")</td>
-        <td>$stop.format("%Y-%m-%d")</td>
+        <td>$stop.format("%x")</td>
         <td>$data.format("%.2f")</td>
       </tr>
     #end for
