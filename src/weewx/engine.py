@@ -73,14 +73,14 @@ class StdEngine(object):
         # This will hold an instance of the device driver
         self.console = None
 
+        # Set up the database binder
+        self.db_binder = weewx.manager.DBBinder(config_dict)
+
         # Set up the device driver:
         self.setupStation(config_dict)
 
         # Set up information about the station
         self.stn_info = weewx.station.StationInfo(self.console, **config_dict['Station'])
-
-        # Set up the database binder
-        self.db_binder = weewx.manager.DBBinder(config_dict)
 
         # The list of instantiated services
         self.service_obj = []
