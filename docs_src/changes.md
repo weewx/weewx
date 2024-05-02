@@ -3,6 +3,12 @@ WeeWX change history
 
 ### 5.1.0 mm/DD/YYYY
 
+If option `lang` is a valid locale, then it will be used to change locale as
+well as language. If it is not a valid locale, then the user's default locale
+will be used. For example, if `lang=de_DE.utf8`, then the German locale will be
+used. This allows locales to be set on a report-by-report basis. Addresses issue
+#867.
+
 Allow country codes to be used in addition to a language code. For example,
 `zh_CN` would specify Chinese language, mainland China (Simplified Chinese),
 while `zh_TW` would specify Chinese language, Taiwan (Traditional Chinese).
