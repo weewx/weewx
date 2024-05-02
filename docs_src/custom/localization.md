@@ -6,17 +6,16 @@ specific to a locale.
 
 ## If the skin has been internationalized
 
-All the skins that come with WeeWX have been *internationalized*,
-that is, they are capable of being *localized*, although there may or may not
-be a localization available for your specific language. See the section
-[Internationalized skins](custom-reports.md#internationalized-skins) for
-how to tell.
+All the skins that come with WeeWX have been *internationalized*, that is, they
+are capable of being *localized*, although there may or may not be a language
+file available for your specific language. See the section [_Changing
+languages_](custom-reports.md#changing-languages) for how to tell.
 
 ### Internationalized, your language is available
 
 This is the easy case: the skin has been internationalized, and your
-locale is available. In this case, all you need to do is to select your
-locale in `weewx.conf`. For example, to select German (code
+language is available. In this case, all you need to do is to select your
+language in `weewx.conf`. For example, to select German (code
 `de`) for the *Seasons* skin, just add the highlighted line (or
 change, if it's already there):
 
@@ -93,7 +92,7 @@ group](https://groups.google.com/forum/#!forum/weewx-user) and, with your
 permission, we may include your localization file in a future WeeWX release.
 
 Finally, set the option `lang` in `weewx.conf` to your language code (`fr` in
-this example, or `fr_CA` for Canadian French) as described in the [User's
+this example, or `fr_CA` for Canadian French) as described in the [Reference
 Guide](../reference/weewx-options/stdreport.md#lang).
 
 ## How to internationalize a skin
