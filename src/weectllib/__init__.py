@@ -138,13 +138,9 @@ def dispatch(namespace):
         import grp
         egid = grp.getgrgid(os.getegid())[0]
         log.info("Group:  %s", egid)
-    except Exception as ex:
-        log.info("Group unavailable: %s", ex)
-
-    try:
-        groupList = os.getgroups()
+        group_list = os.getgroups()
         mygroups = []
-        for group in groupList:
+        for group in group_list:
             mygroups.append(grp.getgrgid(group)[0])
         mygrouplist = ' '.join(mygroups)
         log.info("Groups: %s", mygrouplist)

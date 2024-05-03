@@ -119,28 +119,24 @@ def main():
 
     # these try/except are because not every os will succeed here
     try:
-      import pwd
-      euid  = pwd.getpwuid(os.geteuid())[0]
-      log.info("User:   %s", euid)
+        import pwd
+        euid  = pwd.getpwuid(os.geteuid())[0]
+        log.info("User:   %s", euid)
     except Exception as ex:
-      log.info("User unavailable: %s",ex)
+        log.info("User unavailable: %s",ex)
 
     try:
-      import grp
-      egid = grp.getgrgid(os.getegid())[0]
-      log.info("Group:  %s", egid)
+        import grp
+        egid = grp.getgrgid(os.getegid())[0]
+        log.info("Group:  %s", egid)
+        group_list = os.getgroups()
+        mygroups = []
+        for group in group_list:
+            mygroups.append(grp.getgrgid(group)[0])
+        mygrouplist = ' '.join(mygroups)
+        log.info("Groups: %s", mygrouplist)
     except Exception as ex:
-      log.info("Group unavailable: %s",ex)
-
-    try:
-      groupList = os.getgroups()
-      mygroups=[ ]
-      for group in groupList:
-        mygroups.append(grp.getgrgid(group)[0])
-      mygrouplist = ' '.join(mygroups)
-      log.info("Groups: %s", mygrouplist)
-    except Exception as ex:
-      log.info("Groups unavailable: %s",ex)
+        log.info("Groups unavailable: %s", ex)
 
     # If no command line --loop-on-init was specified, look in the config file.
     if not namespace.loop_on_init:
