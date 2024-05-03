@@ -47,7 +47,7 @@ def extract_roots(config_dict):
 
 
 def initialize(config_dict):
-    """Set debug, set up the logger, and add the user path
+    """Add user directory to PYTHONPATH; import user.extensions
 
     Args:
         config_dict(dict): The configuration dictionary
