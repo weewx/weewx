@@ -6,19 +6,9 @@
 """The 'weectllib' package."""
 
 import datetime
-import locale
-import logging
-import os
-import platform
-import sys
-
-import configobj
-
-import weecfg
 import weeutil.logger
 import weeutil.startup
 import weewx
-from weeutil.weeutil import bcolors
 
 
 def parse_dates(date=None, from_date=None, to_date=None, as_datetime=False):
@@ -86,67 +76,11 @@ def dispatch(namespace):
     """All weectl commands come here. This function reads the configuration file, sets up logging,
     then dispatches to the actual action.
     """
-    # Read the configuration file
-    try:
-        config_path, config_dict = weecfg.read_config(namespace.config)
-    except (IOError, configobj.ConfigObjError) as e:
-        print(f"Error parsing config file: {e}", file=sys.stderr)
-        import traceback
-        traceback.print_exc(file=sys.stderr)
-        sys.exit(weewx.CONFIG_ERROR)
 
-    print(f"Using configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
-
-    try:
-        # Customize the logging with user settings.
-        weeutil.logger.setup('weectl', config_dict)
-    except Exception as e:
-        print(f"Unable to set up logger: {e}", file=sys.stderr)
-        import traceback
-        traceback.print_exc(file=sys.stderr)
-        sys.exit(weewx.CONFIG_ERROR)
-
-    # Get a logger. This one will have the requested configuration.
-    log = logging.getLogger(__name__)
-    # Announce the startup
-    log.info("Initializing weectl version %s", weewx.__version__)
-    log.info("Command line: %s", ' '.join(sys.argv))
-
-    # Add USER_ROOT to PYTHONPATH, read user.extensions:
-    weewx_root, user_module = weeutil.startup.initialize(config_dict)
-
-    # Log key bits of information.
-    log.info("Using Python %s", sys.version)
-    log.info("Located at %s", sys.executable)
-    log.info("Platform %s", platform.platform())
-    log.info("Locale: '%s'", locale.setlocale(locale.LC_ALL))
-    log.info("Entry path: %s", __file__)
-    log.info("WEEWX_ROOT: %s", weewx_root)
-    log.info("Configuration file: %s", config_path)
-    log.info("User module: %s", user_module)
-    log.info("Debug: %s", weewx.debug)
-
-    # these try/except are because not every os will succeed here
-    try:
-        import pwd
-        euid = pwd.getpwuid(os.geteuid())[0]
-        log.info("User:   %s", euid)
-    except Exception as ex:
-        log.info("User unavailable: %s", ex)
-
-    try:
-        import grp
-        egid = grp.getgrgid(os.getegid())[0]
-        log.info("Group:  %s", egid)
-        group_list = os.getgroups()
-        mygroups = []
-        for group in group_list:
-            mygroups.append(grp.getgrgid(group)[0])
-        mygrouplist = ' '.join(mygroups)
-        log.info("Groups: %s", mygrouplist)
-    except Exception as ex:
-        log.info("Groups unavailable: %s", ex)
-
+    config_path, config_dict, log = weeutil.startup.start_app('weectl',
+                                                              __name__,
+                                                              namespace.config,
+                                                              None)
     # Note a dry-run, if applicable:
     if hasattr(namespace, 'dry_run') and namespace.dry_run:
         print("This is a dry run. Nothing will actually be done.")

@@ -78,66 +78,10 @@ def main():
         print(epilog, file=sys.stderr)
         sys.exit(weewx.CMD_ERROR)
 
-    # Read the configuration file
-    try:
-        config_path, config_dict = weecfg.read_config(namespace.config_arg,
-                                                      [namespace.config_option])
-    except (IOError, configobj.ConfigObjError) as e:
-        print(f"Error parsing config file: {e}", file=sys.stderr)
-        import traceback
-        traceback.print_exc(file=sys.stderr)
-        sys.exit(weewx.CONFIG_ERROR)
-
-    # Customize the logging with user settings.
-    try:
-        weeutil.logger.setup(namespace.log_label, config_dict)
-    except Exception as e:
-        print(f"Unable to set up logger: {e}", file=sys.stderr)
-        import traceback
-        traceback.print_exc(file=sys.stderr)
-        sys.exit(weewx.CONFIG_ERROR)
-
-    # Get a logger. This one will have the requested configuration.
-    log = logging.getLogger(__name__)
-    # Announce the startup
-    log.info("Initializing weewxd version %s", weewx.__version__)
-    log.info("Command line: %s", ' '.join(sys.argv))
-
-    # Add USER_ROOT to PYTHONPATH, read user.extensions:
-    weewx_root, user_module = weeutil.startup.initialize(config_dict)
-
-    # Log key bits of information.
-    log.info("Using Python %s", sys.version)
-    log.info("Located at %s", sys.executable)
-    log.info("Platform %s", platform.platform())
-    log.info("Locale: '%s'", locale.setlocale(locale.LC_ALL))
-    log.info("Entry path: %s", __file__)
-    log.info("WEEWX_ROOT: %s", weewx_root)
-    log.info("Configuration file: %s", config_path)
-    log.info("User module: %s", user_module)
-    log.info("Debug: %s", weewx.debug)
-
-    # these try/except are because not every os will succeed here
-    try:
-        import pwd
-        euid  = pwd.getpwuid(os.geteuid())[0]
-        log.info("User:   %s", euid)
-    except Exception as ex:
-        log.info("User unavailable: %s",ex)
-
-    try:
-        import grp
-        egid = grp.getgrgid(os.getegid())[0]
-        log.info("Group:  %s", egid)
-        group_list = os.getgroups()
-        mygroups = []
-        for group in group_list:
-            mygroups.append(grp.getgrgid(group)[0])
-        mygrouplist = ' '.join(mygroups)
-        log.info("Groups: %s", mygrouplist)
-    except Exception as ex:
-        log.info("Groups unavailable: %s", ex)
-
+    config_path, config_dict, log = weeutil.startup.start_app(namespace.log_label,
+                                                              __name__,
+                                                              namespace.config_option,
+                                                              namespace.config_arg)
     # If no command line --loop-on-init was specified, look in the config file.
     if not namespace.loop_on_init:
         loop_on_init = to_bool(config_dict.get('loop_on_init', False))
