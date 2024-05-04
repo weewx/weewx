@@ -1,5 +1,8 @@
 ## Future
 
+- tk: The commands `weectl xxx` and `weectl xxx --help` should result in
+  identical outputs, that is, the available actions for subcommand `xxx`.
+  Instead, the former lists the vailable subcommands.
 - mw or tk: Look into unifying the two versions of the systemd weewx service
   files.
 - mw respect the state/masking of weewx unit
