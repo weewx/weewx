@@ -292,7 +292,7 @@ Valid values are `1` to enable and `0` to disable. Required. Default is `0`.
 #### rsync_options
 
 Use this option to pass on any additional command line options to `rsync`. It
-should be a comment separated list.  For example
+should be a comma separated list.  For example
 
 ```ini
     rsync_options = --exclude=*.ts, --ipv6
