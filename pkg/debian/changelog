@@ -1,3 +1,6 @@
+weewx (5.1.0b1-1) unstable; urgency=low
+  * fix grep invocation for /etc/default/weewx
+ -- Matthew Wall <mwall.weewx@gmail.com>  Sun, 05 May 2024 03:12:59 -0400
 weewx (5.0.2-1) unstable; urgency=low
   * new upstream release
  -- Matthew Wall <mwall.weewx@gmail.com>  Sat, 10 Feb 2024 02:03:25 -0500
