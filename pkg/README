@@ -1,0 +1,34 @@
+These are the components that the installer manages, and the contexts in which
+the installation/upgrade/migration must work.
+
+- ownership+permissions
+  - reporting directories - get from config or /var/www/html/weewx
+    - ownership on reporting directories
+    - permissions on reporting directories
+  - database directory - /var/lib/weewx
+    - ownership on database directory and all .sdb files
+    - permissions on database directory and all .sdb files
+  - config directory - /etc/weewx
+    - ownership on config directory
+    - permissions on config directory
+
+- new install
+  - install defaults
+  - ownership+permissions
+  - install systemd unit
+  - install systemd template
+  - enable weewxd; start weewxd
+
+- upgrade from 5.x
+  - do not touch defaults
+  - ownership+permissions
+  - systemd unit
+  - systemd template instances
+  - if running, then stop/start, else nothing
+
+- upgrade from 4.x
+  - update defaults
+  - ownership+permissions
+  - convert init.d/weewx to systemd unit
+  - convert init.d/weewx-multi to systemd template instances
+  - if running, then stop/start, else nothing
