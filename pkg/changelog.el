@@ -26,19 +26,19 @@
 - new upstream release
 * Mon Dec 18 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b18-1
 - new upstream release
-* Tue Dec 13 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b17-4
+* Wed Dec 13 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b17-4
 - remove bytecompiled code before removing package
 - do not enable template unit
-* Tue Dec 13 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b17-3
+* Wed Dec 13 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b17-3
 - fix typo in config file macro name
-* Tue Dec 13 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b17-2
+* Wed Dec 13 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b17-2
 - do not fail if there is no systemd
 - set the x bit on weewxd and weectl
 * Tue Dec 12 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b17-1
 - new upstream release
 * Tue Nov 28 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b16-1
 - new upstream release
-* Sat Oct 29 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b15-1
+* Sat Oct 28 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b15-1
 - new upstream release
 * Sat May 06 2023 Matthew Wall (weewx) <mwall@users.sourceforge.net> - 5.0.0b1-1
 - new upstream release
