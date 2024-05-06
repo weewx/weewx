@@ -87,6 +87,7 @@ def main():
         loop_on_init = to_bool(config_dict.get('loop_on_init', False))
     else:
         loop_on_init = True
+    log.debug("loop_on_init: %s", loop_on_init)
 
     # Save the current working directory. A service might
     # change it. In case of a restart, we need to change it back.
