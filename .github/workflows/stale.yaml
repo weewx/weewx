@@ -15,7 +15,7 @@ jobs:
           days-before-issue-stale: 180
           days-before-issue-close: 28
           stale-issue-label: "stale"
-          stale-issue-message: "This issue is stale because it has been open for 180 days with no activity."
+          stale-issue-message: "This issue is stale because it has been open for 180 days with no activity. It will be closed in 28 days."
           close-issue-message: "This issue was closed because it has been inactive for 28 days since being marked as stale."
           days-before-pr-stale: -1
           days-before-pr-close: -1
