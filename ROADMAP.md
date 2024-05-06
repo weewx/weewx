@@ -16,8 +16,6 @@ New, more interactive skin.
 Support for running more than one driver.
 - Would require asynchronous drivers.
 
-Allow more than one locale to be active
-
 `weectl upload` - analogous to `weectl import`, but in reverse. It would upload
 to the various RESTful services offered by restx.
 

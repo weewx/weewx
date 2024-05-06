@@ -13,10 +13,12 @@ import weectllib.report_actions
 from weeutil.weeutil import bcolors
 
 report_list_usage = f"""{bcolors.BOLD}weectl report list
-            [--config=FILENAME]{bcolors.ENDC}"""
+            [--config=FILENAME]{bcolors.ENDC}
+"""
 report_run_usage = f"""  {bcolors.BOLD}weectl report run [NAME ...]
             [--config=FILENAME]
-            [--epoch=EPOCH_TIME | --date=YYYY-mm-dd --time=HH:MM]{bcolors.ENDC}"""
+            [--epoch=EPOCH_TIME | --date=YYYY-mm-dd --time=HH:MM]{bcolors.ENDC}
+"""
 
 report_usage = '\n     '.join((report_list_usage, report_run_usage))
 
@@ -27,8 +29,8 @@ run_epilog = """You may specify either an epoch time (option --epoch), or a date
 def add_subparser(subparsers):
     report_parser = subparsers.add_parser('report',
                                           usage=report_usage,
-                                          description='Manages and runs WeeWX reports',
-                                          help="List and run WeeWX reports.")
+                                          description='List or run WeeWX reports',
+                                          help="List or run WeeWX reports.")
     # In the following, the 'prog' argument is necessary to get a proper error message.
     # See Python issue https://bugs.python.org/issue42297
     action_parser = report_parser.add_subparsers(dest='action',
