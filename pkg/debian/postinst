@@ -332,11 +332,11 @@ add_to_group() {
 setup_defaults() {
     dflts=/etc/default/weewx
     if [ -f $dflts ]; then
-        WEEWX_PYTHON=$(grep "^WEEWX_PYTHON\s*=" | sed -e "s/WEEWX_PYTHON\s*=\s*//")
+        WEEWX_PYTHON=$(grep "^WEEWX_PYTHON\s*=" $dflts | sed -e "s/WEEWX_PYTHON\s*=\s*//")
         if [ ! -z "$WEEWX_PYTHON" -a "$WEEWX_PYTHON" != "python3" ]; then
             REPLACE_PYTHON=1
         fi
-        WEEWX_BINDIR=$(grep "^WEEWX_BINDIR\s*=" | sed -e "s/WEEWX_BINDIR\s*=\s*//")
+        WEEWX_BINDIR=$(grep "^WEEWX_BINDIR\s*=" $dflts | sed -e "s/WEEWX_BINDIR\s*=\s*//")
         if [ ! -z "$WEEWX_BINDIR" -a "$WEEWX_BINDIR" != "/usr/share/weewx" ]; then
             REPLACE_BINDIR=1
         fi
