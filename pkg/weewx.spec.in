@@ -333,6 +333,7 @@ setup_database_dir() {
     echo "Configuring database directory %{sqlite_root}"
     mkdir -p %{sqlite_root}
     chmod 2775 %{sqlite_root}
+    find %{sqlite_root} -name "*.sdb" -exec chmod 664 {} \;
     chown -R $WEEWX_USER:$WEEWX_GROUP %{sqlite_root}
 }
 
@@ -409,16 +410,10 @@ echo "Using $WEEWX_USER:$WEEWX_GROUP as user:group"
 
 if [ $1 -gt 1 ]; then
     # this is an upgrade, so ensure that weewx is not running
-    stop_weewxd $pid1
+    stop_old_weewxd $pid1
 fi
-
-stop_old_weewxd $pid1
 setup_defaults $pid1
 setup_udev
-setup_skins
-setup_user_dir
-setup_database_dir
-setup_reporting_dir
 
 if [ "$1" = "1" ]; then
     # this is a new install so create a config file
@@ -432,6 +427,10 @@ elif [ $1 -gt 1 ]; then
     migrate_init $pid1
 fi
 
+setup_skins
+setup_user_dir
+setup_database_dir
+setup_reporting_dir
 precompile
 set_config_permissions
 setup_init $pid1

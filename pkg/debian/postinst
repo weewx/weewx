@@ -431,6 +431,7 @@ setup_database_dir() {
     echo "Configuring database directory $WEEWX_HOME"
     mkdir -p $WEEWX_HOME
     chmod 2775 $WEEWX_HOME
+    find $WEEWX_HOME -name "*.sdb" -exec chmod 664 {} \;
     chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HOME
 }
 
@@ -492,7 +493,8 @@ start_weewxd() {
     fi
 }
 
-# just in case there is an old weewxd running somehow, shut it down
+# just in case there is an old weewxd running somehow, shut it down.  this is
+# normally not necessary, since the prerm for prior version does a shutdown.
 stop_old_weewxd() {
     if [ -f /etc/init.d/weewx-multi ]; then
 	invoke-rc.d weewx-multi stop > /dev/null || true
@@ -516,16 +518,14 @@ fi
 #  - multiple instances
 case "$1" in
     configure)
+	if [ "$2" != "" ]; then
+	    stop_old_weewxd $pid1
+	fi
         get_user_info
         create_user
         add_to_group
-	stop_old_weewxd $pid1
         setup_defaults $pid1
         setup_udev
-        setup_skins
-        setup_user_dir
-        setup_database_dir
-        setup_reporting_dir
 
         if [ "$2" != "" ]; then
             # this is an upgrade so create a maintainers version by merging
@@ -539,6 +539,10 @@ case "$1" in
             install_weewxconf
         fi
 
+        setup_skins
+        setup_user_dir
+        setup_database_dir
+        setup_reporting_dir
         precompile
         set_config_permissions
         setup_init $pid1
