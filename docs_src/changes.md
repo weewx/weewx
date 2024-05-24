@@ -1,16 +1,50 @@
 WeeWX change history
 --------------------
 
-### 5.0.3 mm/DD/YYYY
+### 5.1.0 mm/DD/YYYY
 
-Return `False` from XTypes function `has_data()` if the type cannot be 
-calculated. Thanks to Rich Bell! PR #929.
+If option `lang` is a valid locale, then it will be used to change locale as
+well as language. If it is not a valid locale, then the user's default locale
+will be used. For example, if `lang=de_DE.utf8`, then the German locale will be
+used. This allows locales to be set on a report-by-report basis. Addresses issue
+[#867](https://github.com/weewx/weewx/issues/867).
+
+Allow country codes to be used in addition to a language code. For example,
+`zh_CN` would specify Chinese language, mainland China (Simplified Chinese),
+while `zh_TW` would specify Chinese language, Taiwan (Traditional Chinese).
+
+Added translation file for Simplified Chinese (`zh_CN.conf`). Thanks to user
+Kranz!
+
+Allow the utility `weectl import` to update old records in addition to importing
+new records. PR [#930](https://github.com/weewx/weewx/issues/930).
+
+Include the effective user and group to the log. PR
+[#934](https://github.com/weewx/weewx/issues/934).
+
+Allow extra command line options to be passed on to `rsync`. Fixes issue
+[#951](https://github.com/weewx/weewx/issues/951).
+
+Return `False` from XTypes function `has_data()` if the type cannot be
+calculated. Thanks to Rich Bell! PR
+[#929](https://github.com/weewx/weewx/issues/929).
 
 Allow calculation of xtype aggregate with missing constituents.
-Related to PR #929.
+Related to PR [#929](https://github.com/weewx/weewx/issues/).
 
 Fix bug in tag `$tag.obstype` where `obstype` is an XType that cannot be
-calculated. Related to PR #929
+calculated. Related to PR [#929](https://github.com/weewx/weewx/issues/).
+
+Fix bug that caused the `loop_on_init` setting in `weewx.conf` to be ignored.
+PR #935.
+
+Reinstate file `weeutil/timediff.py`. It's not used in WeeWX, but it is used
+by some extensions.
+
+Fixed bug in station config where config_units would fail if there was no
+Defaults section specified in StdReport.
+
+Use lower-case for the product and vendor codes in udev rules. Fixes issue #949.
 
 Do not make group changes if identity of user doing the install cannot be
 determined. PR #952
@@ -33,7 +67,7 @@ Fix problem with installing extensions into installations that used V4 config
 files that were installed by a package installer.
 
 Fix problem with `weectl device` when using drivers that were installed 
-using the extension installer. Fixes issue #918.
+using the extension installer. Fixes issue [#918](https://github.com/weewx/weewx/issues/918).
 
 Fix problem that prevented daily summaries from being rebuilt if they had been
 modified by using `weectl database drop-columns`.
@@ -45,7 +79,8 @@ Fix problem that prevented debug statements from being logged.
 Minor corrections to the Norwegian translations. Thanks to user Aslak!
 PR #919.
 
-Change Chinese language code to `zh`. Fixes issue #912.
+Change Chinese language code to `zh`. Fixes issue
+[#912](https://github.com/weewx/weewx/issues/).
 
 Fix bug in redhat/suse scriptlet that incorrectly substituted `{weewx}`
 instead of `weewx` in the udev rules file.
@@ -85,7 +120,7 @@ distribution, but can always be accessed online at https://weewx.com/docs.
 Package installs now use `systemd` instead of the old System V `/etc/init.d`.
 
 Allow `StdCalibrate` to operate only on LOOP packets, or only on archive
-records. Addresses [issue #895](https://github.com/weewx/weewx/issues/895).
+records. Addresses issue [#895](https://github.com/weewx/weewx/issues/895).
 
 Removed all references to the deprecated package `distutils`, which is due to
 be removed in Python v3.12.
@@ -164,7 +199,7 @@ Fix problem that prevented database from getting hit when calculating
 Fix problem that prevented option
 [`stale_age`](reference/skin-options/imagegenerator.md#stale_age) from being
 honored in image generation. Thanks to user Ian for
-[PR #879](https://github.com/weewx/weewx/pull/879)!
+PR [#879](https://github.com/weewx/weewx/pull/879)!
 
 Fix problem that prevented complex aggregates such as `max_ge` from being used
 in plots. Fixes issue [#881](https://github.com/weewx/weewx/issues/881).

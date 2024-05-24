@@ -224,7 +224,7 @@ FALSE#slurp
   <table>
     <tr>
         <td>Start of hour:</td>
-        <td>$hour.dateTime.format("%m/%d/%Y %H:%M:%S")</td>
+        <td>$hour.dateTime.format("%x %H:%M:%S")</td>
     </tr>
     <tr>
         <td>Start of hour (unix epoch time):</td>
@@ -464,7 +464,7 @@ FALSE#slurp
   <table>
     <tr>
         <td>Start of day:</td>
-        <td>$day.dateTime.format("%m/%d/%Y %H:%M:%S")</td>
+        <td>$day.dateTime.format("%x %H:%M:%S")</td>
     </tr>
     <tr>
         <td>Start of day (unix epoch time):</td>
@@ -496,7 +496,7 @@ FALSE#slurp
     </tr>
     <tr>
       <td>Time of the last temperature of the day</td>
-      <td>$day.outTemp.lasttime.format("%m/%d/%Y %H:%M:%S")</td>
+      <td>$day.outTemp.lasttime.format("%x %H:%M:%S")</td>
     </tr>
     <tr>
       <td>First temperature of the day</td>
@@ -504,7 +504,7 @@ FALSE#slurp
     </tr>
     <tr>
       <td>Time of the first temperature of the day</td>
-      <td>$day.outTemp.firsttime.format("%m/%d/%Y %H:%M:%S")</td>
+      <td>$day.outTemp.firsttime.format("%x %H:%M:%S")</td>
     </tr>
     <tr>
       <td>Max Temperature in alt_binding</td>
@@ -671,7 +671,7 @@ FALSE#slurp
   <table>
     <tr>
         <td>Start of yesterday:</td>
-        <td>$yesterday.dateTime.format("%m/%d/%Y %H:%M:%S")</td>
+        <td>$yesterday.dateTime.format("%x %H:%M:%S")</td>
     </tr>
     <tr>
         <td>Start of yesterday (unix epoch time):</td>
@@ -699,7 +699,7 @@ FALSE#slurp
     </tr>
     <tr>
       <td>Time of yesterday's last temperature</td>
-      <td>$yesterday.outTemp.lasttime.format("%m/%d/%Y %H:%M:%S")</td>
+      <td>$yesterday.outTemp.lasttime.format("%x %H:%M:%S")</td>
     </tr>  
   </table>
   

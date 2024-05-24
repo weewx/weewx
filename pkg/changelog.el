@@ -1,3 +1,5 @@
+* Sun May 05 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.1.0b1-1
+- fix grep invocation for /etc/default/weewx
 * Sat Feb 10 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.0.2-1
 - new upstream release
 * Sun Feb 04 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.0.1-3

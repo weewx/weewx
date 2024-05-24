@@ -2,7 +2,8 @@
 #    Copyright (c) 2012 Will Page <compenguy@gmail.com>
 #    Derivative of ftpupload.py, credit to Tom Keffer <tkeffer@gmail.com>
 #
-#    Refactored by tk 3-Jan-2021
+#    3-Jan-2021. Refactored by tk
+#    3-Apr-2024. Added option rsync_options.
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -15,6 +16,8 @@ import subprocess
 import sys
 import time
 
+from weeutil.weeutil import option_as_list
+
 log = logging.getLogger(__name__)
 
 
@@ -25,19 +28,27 @@ class RsyncUpload(object):
 
     def __init__(self, local_root, remote_root,
                  server, user=None, delete=False, port=None,
-                 ssh_options=None, compress=False,
+                 ssh_options=None, rsync_options=None,
+                 compress=False,
                  log_success=True, log_failure=True,
                  timeout=None):
         """Initialize an instance of RsyncUpload.
         
         After initializing, call method run() to perform the upload.
-        
-        server: The remote server to which the files are to be uploaded.
-        
-        user: The username that is to be used. [Optional, maybe]
 
-        delete: delete remote files that don't match with local files. Use
-        with caution.  [Optional.  Default is False.]
+        Args:
+            local_root (str): Path to the local directory to be transferred. Required.
+            remote_root (str): The root of its destination. Required.
+            server (str): The remote server to which the files are to be uploaded.
+            user (str|None): The username that is to be used. [Optional, maybe]
+            delete (bool): delete remote files that don't match with local files.
+                Use with caution.
+            port (int|None): The port to be used. Default is to use the default ssh port.
+            ssh_options (str|None): Any extra options to be passed on to the ssh command.
+            rsync_options(list[str]|None): Any extra options to be passed to the rsync command.
+            log_success (bool): True to log any successful transfers.
+            log_failure (bool): True to log any unsuccessful transfers
+            timeout (int|none): How long to wait for giving up on a transfer.
         """
         self.local_root = os.path.normpath(local_root)
         self.remote_root = os.path.normpath(remote_root)
@@ -46,6 +57,7 @@ class RsyncUpload(object):
         self.delete = delete
         self.port = port
         self.ssh_options = ssh_options
+        self.rsync_options = rsync_options
         self.compress = compress
         self.log_success = log_success
         self.log_failure = log_failure
@@ -95,13 +107,15 @@ class RsyncUpload(object):
             cmd.extend(["--compress"])
         if self.timeout is not None:
             cmd.extend(["--timeout=%s" % self.timeout])
+        if self.rsync_options:
+            cmd += option_as_list(self.rsync_options)
         cmd.extend(["-e"])
         cmd.extend([rsyncsshstring])
         cmd.extend([rsynclocalspec])
         cmd.extend([rsyncremotespec])
 
         try:
-            log.debug("rsyncupload: cmd: [%s]" % cmd)
+            log.debug("rsyncupload: cmd: [%s]", cmd)
             rsynccmd = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
             stdout = rsynccmd.communicate()[0]
@@ -138,37 +152,3 @@ class RsyncUpload(object):
                 log.error("rsync reported errors. Original command: %s", cmd)
                 for line in stroutput.splitlines():
                     log.error("**** %s", line)
-
-
-if __name__ == '__main__':
-    import configobj
-
-    import weewx
-    import weeutil.logger
-
-    weewx.debug = 1
-
-    weeutil.logger.setup('wee_rsyncupload')
-
-    if len(sys.argv) < 2:
-        print("""Usage: rsyncupload.py path-to-configuration-file [path-to-be-rsync'd]""")
-        sys.exit(weewx.CMD_ERROR)
-
-    try:
-        config_dict = configobj.ConfigObj(sys.argv[1], file_error=True, encoding='utf-8')
-    except IOError:
-        print("Unable to open configuration file %s" % sys.argv[1])
-        raise
-
-    if len(sys.argv) == 2:
-        try:
-            rsync_dir = os.path.join(config_dict['WEEWX_ROOT'],
-                                     config_dict['StdReport']['HTML_ROOT'])
-        except KeyError:
-            print("No HTML_ROOT in configuration dictionary.")
-            sys.exit(1)
-    else:
-        rsync_dir = sys.argv[2]
-
-    rsync_upload = RsyncUpload(rsync_dir, **config_dict['StdReport']['RSYNC'])
-    rsync_upload.run()

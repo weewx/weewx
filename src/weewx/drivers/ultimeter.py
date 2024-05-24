@@ -54,8 +54,8 @@ import serial
 
 import weewx.drivers
 import weewx.wxformulas
-from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 from weeutil.weeutil import timestamp_to_string
+from weewx.units import INHG_PER_MBAR, MILE_PER_KM
 
 log = logging.getLogger(__name__)
 
@@ -98,14 +98,15 @@ class UltimeterDriver(weewx.drivers.AbstractDevice):
         """
         self.model = stn_dict.get('model', 'Ultimeter')
         self.port = stn_dict.get('port', Station.DEFAULT_PORT)
-        self.max_tries = int(stn_dict.get('max_tries', 5))
-        self.retry_wait = float(stn_dict.get('retry_wait', 3.0))
         debug_serial = int(stn_dict.get('debug_serial', 0))
         self.last_rain = None
 
         log.info('Driver version is %s', DRIVER_VERSION)
         log.info('Using serial port %s', self.port)
-        self.station = Station(self.port, debug_serial=debug_serial)
+        self.station = Station(self.port,
+                               debug_serial=debug_serial,
+                               max_tries=int(stn_dict.get('max_tries', 5)),
+                               retry_wait=float(stn_dict.get('retry_wait', 3.0)))
         self.station.open()
 
     def closePort(self):
@@ -128,8 +129,7 @@ class UltimeterDriver(weewx.drivers.AbstractDevice):
         while True:
             packet = {'dateTime': int(time.time() + 0.5),
                       'usUnits': weewx.US}
-            readings = self.station.get_readings_with_retry(self.max_tries,
-                                                            self.retry_wait)
+            readings = self.station.get_readings_with_retry()
             data = parse_readings(readings)
             packet.update(data)
             self._augment_packet(packet)
@@ -143,9 +143,15 @@ class UltimeterDriver(weewx.drivers.AbstractDevice):
 class Station(object):
     DEFAULT_PORT = '/dev/ttyUSB0'
 
-    def __init__(self, port, debug_serial=0):
+    def __init__(self, port,
+                 debug_serial=0,
+                 max_tries=3,
+                 retry_wait=3.0):
         self.port = port
         self._debug_serial = debug_serial
+        self.max_tries = max_tries
+        self.retry_wait = retry_wait
+
         self.baudrate = 2400
         self.timeout = 3  # seconds
         self.serial_port = None
@@ -219,18 +225,18 @@ class Station(object):
                 log.debug("Set station to modem mode")
             self.serial_port.write(b">\r")
 
-    def get_readings_with_retry(self, max_tries, retry_wait):
-        for ntries in range(max_tries):
+    def get_readings_with_retry(self):
+        for ntries in range(self.max_tries):
             try:
                 buf = get_readings(self.serial_port, self._debug_serial)
                 validate_string(buf)
                 return buf
             except (serial.SerialException, weewx.WeeWxIOError) as e:
                 log.info("Failed attempt %d of %d to get readings: %s",
-                         ntries + 1, max_tries, e)
-                time.sleep(retry_wait)
+                         ntries + 1, self.max_tries, e)
+                time.sleep(self.retry_wait)
         else:
-            msg = "Max retries (%d) exceeded for readings" % max_tries
+            msg = "Max retries (%d) exceeded for readings" % self.max_tries
             log.error(msg)
             raise weewx.RetriesExceeded(msg)
 

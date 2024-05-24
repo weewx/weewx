@@ -12,7 +12,7 @@ extensions.
 """
 
 import locale
-# This will use the locale specified by the environment variable 'LANG'
-# Other options are possible. See:
-# http://docs.python.org/2/library/locale.html#locale.setlocale
+
+# This sets the locale for all categories to the user’s default setting (typically specified in the
+# LANG environment variable). See: https://docs.python.org/3/library/locale.html#locale.setlocale
 locale.setlocale(locale.LC_ALL, '')

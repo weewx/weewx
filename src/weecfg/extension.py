@@ -128,6 +128,8 @@ class ExtensionEngine(object):
                 else:
                     filetype = 'tar'
                 extension_name = self._install_from_file(test_fd.name, filetype)
+        elif not os.path.exists(extension_path):
+            raise InstallError(f"Path {extension_path} does not exist.")
         elif os.path.isfile(extension_path):
             # It's a file. Figure out what kind, then install. If it's not a zipfile, assume
             # it's a tarfile.

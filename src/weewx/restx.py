@@ -111,7 +111,7 @@ from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, to_s
 log = logging.getLogger(__name__)
 
 
-class FailedPost(IOError):
+class FailedPost(Exception):
     """Raised when a post fails, and is unlikely to succeed if retried."""
 
 

@@ -9,6 +9,7 @@
 import datetime
 import ftplib
 import glob
+import locale
 import logging
 import os.path
 import threading
@@ -74,6 +75,26 @@ def set_cwd(new_cwd):
         yield new_cwd
     finally:
         os.chdir(old_cwd)
+
+
+# Setting a locale is not thread safe, so we need a lock
+LOCALE_LOCK = threading.Lock()
+
+
+@contextmanager
+def set_locale(name):
+    """Set the locale within a context manager"""
+    with LOCALE_LOCK:
+        # Save the old locale
+        saved_locale = locale.setlocale(locale.LC_ALL)
+        # Set a new one. If the locale is invalid, use a default.
+        try:
+            yield locale.setlocale(locale.LC_ALL, name)
+        except locale.Error as e:
+            log.debug("Unable to set locale '%s': %s. Using default.", name, e)
+            yield locale.setlocale(locale.LC_ALL, '')
+        finally:
+            locale.setlocale(locale.LC_ALL, saved_locale)
 
 
 # =============================================================================
@@ -187,12 +208,17 @@ class StdReportEngine(threading.Thread):
                                   "running report anyway", report)
                         log.debug("       ****  %s", timing.validation_error)
 
-            # Set the current working directory to the skin's location. This allows #include
+            # We are using two "with" statements below:
+            # 1. Set the current working directory to the skin's location. This allows #include
             # statements to work.
+            # 2. Set the locale to 'lang'. If 'lang' was not specified, set it to the user's
+            # default locale.
             with set_cwd(os.path.join(self.config_dict['WEEWX_ROOT'],
                                       skin_dict['SKIN_ROOT'],
-                                      skin_dict['skin'])) as cwd:
-                log.debug("Running generators for report '%s' in directory '%s'", report, cwd)
+                                      skin_dict['skin'])) as cwd, \
+                    set_locale(skin_dict.get('lang', '')) as loc:
+                log.debug("Running generators for report '%s' in directory '%s' with locale '%s'",
+                          report, cwd, loc)
 
                 if 'Generators' in skin_dict and 'generator_list' in skin_dict['Generators']:
                     for generator in weeutil.weeutil.option_as_list(
@@ -343,39 +369,67 @@ def merge_unit_system(report_units_base, skin_dict):
 
 
 def get_lang_dict(lang_spec, config_dict, report):
-    """Given a language specification, return its corresponding locale dictionary. """
+    """Given a language specification, return its corresponding locale dictionary.
 
-    # The language's corresponding locale file will be found in subdirectory 'lang', with
-    # a suffix '.conf'. Find the path to it:.
-    lang_config_path = os.path.join(
-        config_dict['WEEWX_ROOT'],
-        config_dict['StdReport']['SKIN_ROOT'],
-        config_dict['StdReport'][report].get('skin', ''),
-        'lang',
-        lang_spec+'.conf')
+    Args:
+        lang_spec (str|None): Language specification string.
+            Can be of the form 'en', 'en_AU', or 'en_AU.utf8.
+        config_dict (dict): Configuration dictionary.
+        report (str): The name of the report for which the locale dicationary will be returned.
+    Returns:
+        dict: The locale dictionary as a ConfigObj
+    Raises:
+        configobj.SyntaxError: If the language text file contains a syntax error.
+    """
+    # The results will be merged into this empty dictionary:
+    lang_dict = configobj.ConfigObj({}, encoding='utf-8', interpolation=False)
+    if not lang_spec:
+        # If no language spec has been specified, return the empty dictionary
+        return lang_dict
 
-    # Retrieve the language dictionary for the skin and requested language. Wrap it in a
-    # try block in case we fail.  It is ok if there is no file - everything for a skin
-    # might be defined in the weewx configuration.
-    try:
-        lang_dict = configobj.ConfigObj(lang_config_path,
-                                        encoding='utf-8',
-                                        interpolation=False,
-                                        file_error=True)
-    except IOError as e:
-        log.debug("Cannot read localization file %s for report '%s': %s",
-                  lang_config_path, report, e)
-        log.debug("**** Using defaults instead.")
-        lang_dict = configobj.ConfigObj({},
-                                        encoding='utf-8',
-                                        interpolation=False)
-    except SyntaxError as e:
-        log.error("Syntax error while reading localization file %s for report '%s': %s",
-                  lang_config_path, report, e)
-        raise
+    # Strip off any possible coding. For example, 'en_AU.utf8' will result in 'en_AU'.
+    lang_country = lang_spec.split('.')[0]
+    # Split the language from the country
+    codes = lang_country.split('_')
+    if len(codes) == 1:
+        # Just a language spec
+        code_list = [codes[0]]
+    else:
+        # A language spec and a country code
+        code_list = [codes[0], lang_country]
 
-    if 'Texts' not in lang_dict:
-        lang_dict['Texts'] = {}
+    for code in code_list:
+        # The language's corresponding text file will be found in subdirectory 'lang', with
+        # a suffix '.conf'. Find the path to it:.
+        lang_config_path = os.path.join(
+            config_dict['WEEWX_ROOT'],
+            config_dict['StdReport']['SKIN_ROOT'],
+            config_dict['StdReport'][report].get('skin', ''),
+            'lang',
+            code + '.conf')
+
+        # Retrieve the language dictionary for the skin and requested language. Wrap it in a
+        # try block in case we fail.  It is ok if there is no file - everything for a skin
+        # might be defined in the weewx configuration.
+        try:
+            merge_dict = configobj.ConfigObj(lang_config_path,
+                                             encoding='utf-8',
+                                             interpolation=False,
+                                             file_error=True)
+        except IOError as e:
+            log.debug("Cannot read localization file %s for report '%s': %s",
+                      lang_config_path, report, e)
+            log.debug("**** Using defaults instead.")
+            merge_dict = configobj.ConfigObj({}, encoding='utf-8', interpolation=False)
+        except SyntaxError as e:
+            log.error("Syntax error while reading localization text file %s for report '%s': %s",
+                      lang_config_path, report, e)
+            raise
+
+        if 'Texts' not in merge_dict:
+            merge_dict['Texts'] = {}
+
+        lang_dict.merge(merge_dict)
 
     return lang_dict
 
@@ -434,7 +488,9 @@ class FtpGenerator(ReportGenerator):
         t1 = time.time()
         try:
             local_root = os.path.join(self.config_dict['WEEWX_ROOT'],
-                                      self.skin_dict.get('HTML_ROOT', self.config_dict['StdReport']['HTML_ROOT']))
+                                      self.skin_dict.get('HTML_ROOT',
+                                                         self.config_dict['StdReport'][
+                                                             'HTML_ROOT']))
             ftp_data = weeutil.ftpupload.FtpUpload(
                 server=self.skin_dict['server'],
                 user=self.skin_dict['user'],
@@ -491,7 +547,9 @@ class RsyncGenerator(ReportGenerator):
         # rsync will report them for us.  Check the debug log messages.
         try:
             local_root = os.path.join(self.config_dict['WEEWX_ROOT'],
-                                      self.skin_dict.get('HTML_ROOT', self.config_dict['StdReport']['HTML_ROOT']))
+                                      self.skin_dict.get('HTML_ROOT',
+                                                         self.config_dict['StdReport'][
+                                                             'HTML_ROOT']))
             rsync_data = weeutil.rsyncupload.RsyncUpload(
                 local_root=local_root,
                 remote_root=self.skin_dict['path'],
@@ -499,6 +557,7 @@ class RsyncGenerator(ReportGenerator):
                 user=self.skin_dict.get('user'),
                 port=to_int(self.skin_dict.get('port')),
                 ssh_options=self.skin_dict.get('ssh_options'),
+                rsync_options=self.skin_dict.get('rsync_options'),
                 compress=to_bool(self.skin_dict.get('compress', False)),
                 delete=to_bool(self.skin_dict.get('delete', False)),
                 log_success=log_success,

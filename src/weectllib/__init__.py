@@ -6,16 +6,9 @@
 """The 'weectllib' package."""
 
 import datetime
-import logging
-import sys
-
-import configobj
-
-import weecfg
 import weeutil.logger
 import weeutil.startup
 import weewx
-from weeutil.weeutil import bcolors
 
 
 def parse_dates(date=None, from_date=None, to_date=None, as_datetime=False):
@@ -83,35 +76,11 @@ def dispatch(namespace):
     """All weectl commands come here. This function reads the configuration file, sets up logging,
     then dispatches to the actual action.
     """
-    # Read the configuration file
-    try:
-        config_path, config_dict = weecfg.read_config(namespace.config)
-    except (IOError, configobj.ConfigObjError) as e:
-        print(f"Error parsing config file: {e}", file=sys.stderr)
-        import traceback
-        traceback.print_exc(file=sys.stderr)
-        sys.exit(weewx.CONFIG_ERROR)
 
-    print(f"Using configuration file {bcolors.BOLD}{config_path}{bcolors.ENDC}")
-
-    try:
-        # Customize the logging with user settings.
-        weeutil.logger.setup('weectl', config_dict)
-    except Exception as e:
-        print(f"Unable to set up logger: {e}", file=sys.stderr)
-        import traceback
-        traceback.print_exc(file=sys.stderr)
-        sys.exit(weewx.CONFIG_ERROR)
-
-    # Get a logger. This one will have the requested configuration.
-    log = logging.getLogger(__name__)
-    # Announce the startup
-    log.info("Initializing weectl version %s", weewx.__version__)
-    log.info("Command line: %s", ' '.join(sys.argv))
-
-    # Add USER_ROOT to PYTHONPATH, read user.extensions:
-    weeutil.startup.initialize(config_dict)
-
+    config_path, config_dict, log = weeutil.startup.start_app('weectl',
+                                                              __name__,
+                                                              namespace.config,
+                                                              None)
     # Note a dry-run, if applicable:
     if hasattr(namespace, 'dry_run') and namespace.dry_run:
         print("This is a dry run. Nothing will actually be done.")

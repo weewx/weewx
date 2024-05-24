@@ -181,6 +181,12 @@ class CSVSource(weeimport.Source):
         print(_msg)
         log.info(_msg)
         self.print_map()
+        if self.update:
+            _msg = "Imported records will overwrite existing database records."
+        else:
+            _msg = "Imported records will not overwrite existing database records."
+        print(_msg)
+        log.info(_msg)
         if self.calc_missing:
             _msg = "Missing derived observations will be calculated."
             print(_msg)

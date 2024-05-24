@@ -217,51 +217,80 @@ language file.
 ## Changing languages
 
 By default, the skins that come with WeeWX are set up for the English language,
-but suppose you wish to switch to another language. How you do so will depend
-on whether the skin you are using has been _internationalized_ and, if so,
-whether it offers your local language.
+but suppose you wish to switch to another language? This is usually easy because
+all the WeeWX skins have been _internationalized_. For other skins that have not
+been internationalized, see the section [_How to internationalize a
+skin_](localization.md#how-to-internationalize-a-skin).
 
-### Internationalized skins
+There are two aspects to localizing a skin:
 
-All the skins included with WeeWX have been internationalized, so if you're
-working with one of them, this is the section you want. Next, you need to check
-whether there is a _localization_ file for your particular language. To check,
-look in the contents of subdirectory `lang` in the skin's directory. For
-example, if you used a package installer and are using the _Seasons_ skin, you
-will want to look in `/etc/weewx/skins/Seasons/lang`. Inside, you will see
-something like this:
+1. Changing the _language_; and
+2. Changing the _locale_.
+
+In WeeWX, both are controlled by option `lang`.
+
+The _language_ is the more familiar aspect. It controls what the user will see
+for labels such as "Outside temperature", or "Max wind speed."
+
+The _locale_ is less familiar. It has to be with regional conventions for
+aspects such as decimal separators, or how dates and times are formatted.
+
+### Language
+
+To switch languages, start by checking whether there is a _language_ file for
+your particular language. To do this, look in the contents of subdirectory
+`lang` in the skin's subdirectory. For example, if you used a package installer
+and are using the _Seasons_ skin, you will want to look in
+`/etc/weewx/skins/Seasons/lang`. If you did a pip install, look in
+`~/weewx-data/skins/Seasons/lang`. Inside, you will see something like this:
 
 ```
 ls -l /etc/weewx/skins/Seasons/lang
 total 136
--rw-rw-r-- 1 tkeffer tkeffer  9844 Mar 13 12:31 cz.conf
--rw-rw-r-- 1 tkeffer tkeffer  9745 Mar 13 12:31 de.conf
--rw-rw-r-- 1 tkeffer tkeffer  9459 Mar 13 12:31 en.conf
--rw-rw-r-- 1 tkeffer tkeffer 10702 Mar 13 12:31 es.conf
--rw-rw-r-- 1 tkeffer tkeffer 10673 May 31 07:50 fr.conf
--rw-rw-r-- 1 tkeffer tkeffer 11838 Mar 13 12:31 gr.conf
--rw-rw-r-- 1 tkeffer tkeffer  9947 Mar 13 12:31 it.conf
--rw-rw-r-- 1 tkeffer tkeffer  9548 Mar 13 12:31 nl.conf
--rw-rw-r-- 1 tkeffer tkeffer 10722 Apr 15 14:52 no.conf
--rw-rw-r-- 1 tkeffer tkeffer 15356 Mar 13 12:31 th.conf
--rw-rw-r-- 1 tkeffer tkeffer  9447 Jul  1 11:11 zh.conf
+-rw-rw-r--  1 weewx weewx  9.6K Jan 17 07:30 cz.conf
+-rw-rw-r--  1 weewx weewx  9.5K Jan 17 07:30 de.conf
+-rw-rw-r--  1 weewx weewx  9.2K Jan 17 07:30 en.conf
+-rw-rw-r--  1 weewx weewx  672B Jan 22 07:23 en_AU.conf
+-rw-rw-r--  1 weewx weewx  672B Jan 22 07:23 en_CA.conf
+-rw-rw-r--  1 weewx weewx  672B Jan 22 07:20 en_GB.conf
+-rw-rw-r--  1 weewx weewx  672B Jan 22 07:23 en_NZ.conf
+-rw-rw-r--  1 weewx weewx   10K Jan 17 07:30 es.conf
+-rw-rw-r--  1 weewx weewx   10K Jan 17 07:30 fr.conf
+-rw-rw-r--  1 weewx weewx   12K Jan 17 07:30 gr.conf
+-rw-rw-r--  1 weewx weewx  9.7K Jan 17 07:30 it.conf
+-rw-rw-r--  1 weewx weewx  9.3K Jan 17 07:30 nl.conf
+-rw-rw-r--  1 weewx weewx   10K Jan 22 04:53 no.conf
+-rw-rw-r--  1 weewx weewx   15K Jan 17 07:30 th.conf
+-rw-rw-r--  1 weewx weewx  9.1K Jan 22 05:55 zh.conf
+-rw-rw-r--  1 weewx weewx  9.5K Jan 22 05:55 zh_CN.conf
 ```
 
-This means that the _Seasons_ skin has been localized for the following
-languages[^1]:
+The file names start with either a two-letter code (for example, `en`), or a
+four-letter code separated by an underscore (_e.g._, `en_GB`). The first two
+letters (`en` in this case) signify the base _language_. The last two letters,
+if present, signify any specialized text for a specific _country_ (`GB`, or
+Great Britain, in this case).
 
-| File    | Language           |
-|---------|--------------------|
-| cz.conf | Czeck              | 
-| de.conf | German             |
-| en.conf | English            |
-| es.conf | Spanish            |
-| fr.conf | French             |
-| it.conf | Italian            |
-| gr.conf | Greek              |
-| nl.conf | Dutch              |
-| th.conf | Thai               |
-| zh.conf | Simplified Chinese |
+Given this, from the file listing above, this means that the _Seasons_ skin 
+includes text files for the following languages:
+
+| File         | Language                |
+|--------------|-------------------------|
+| `cz.conf`    | Czeck                   | 
+| `de.conf`    | German                  |
+| `en.conf`    | English                 |
+| `en_AU.conf` | English (Australia)     |
+| `en_CA.conf` | English (Canada)        |
+| `en_GB.conf` | English (Great Britain) |
+| `en_NZ.conf` | English (New Zealand)   |
+| `es.conf`    | Spanish                 |
+| `fr.conf`    | French                  |
+| `it.conf`    | Italian                 |
+| `gr.conf`    | Greek                   |
+| `nl.conf`    | Dutch                   |
+| `th.conf`    | Thai                    |
+| `zh.conf`    | Chinese (Traditional)   |
+| `zh_CN.conf` | Simplified Chinese      |
 
 If you want to use the _Seasons_ skin and are working with one of these
 languages, then you are in luck: you can simply override the `lang` option.
@@ -284,13 +313,72 @@ localization file for your language, then you will have to supply one. See
 the section [_Internationalized, but your language is missing_](localization.md#internationalized-missing-language).
 
 
+### Locale
+
+A _locale_ controls conventions such as decimal separators and the formatting
+of dates. To change locale, you have two choices:
+
+1. Change it for _all_ programs, not just WeeWX, by using the [command
+   `localectl
+   set-locale`](https://linuxconfig.org/how-to-install-generate-and-list-locale-on-linux).
+   For example,
+
+        localectl set-locale LANG=de_DE.utf8
+   
+    would change the locale to German system-wide.
+
+2. Change it by using the option `lang` in WeeWX. We saw above how option `lang`
+   can be used to change the language. However, if a full locale spec is given
+   for the option, instead of just the language, WeeWX will change the locale as
+   well. For example,
+
+    ```ini hl_lines="8"
+    [StdReport]
+        ...
+        [[SeasonsReport]]
+            # The SeasonsReport uses the 'Seasons' skin, which contains the
+            # images, templates and plots for the report.
+            skin = Seasons
+            enable = true
+            lang = de_DE.utf8
+    ```
+
+   will not only change the language to German, but will also change the locale as
+   well. In particular, the report will use the comma (`,`) for the decimal
+   separator, and German dates.
+
+#### Multiple locales
+
+This last feature allows different reports to use different locales. Consider
+this example:
+
+```ini
+[StdReport]
+    ...
+    [[USReport]]
+        skin = Seasons
+        enable = true
+        lang = en_US.utf8
+        HTML_ROOT = /var/www/html/us
+    [[FrenchReport]]
+        skin = Seasons
+        enable = true
+        lang = fr_FR.utf8
+        HTML_ROOT = /var/www/html/fr
+```
+
+This will run two reports, both using the skin _Seasons_. The first report will
+use US English and locale, and will be put the results in `/var/www/html/us`.
+The second will the French language and locale and will be put in
+`/var/www/html/fr`.
+
 ## Changing date and time formats
 
 Date and time formats are specified using the same format strings used by
 [strftime()](https://docs.python.org/3/library/datetime.html#strftime-strptime-behavior).
 For example, `%Y` indicates the 4-digit year, and `%H:%M` indicates the time
 in hours:minutes. The default values for date and time formats are generally
-`%x %X`, which indicates "use the format for the locale of the computer".
+`%x %X`, which indicates "use the format for the current locale".
 
 Since date formats default to the locale of the computer, a date might appear
 with the format of "month/day/year". What if you prefer dates to have the
@@ -501,12 +589,3 @@ in `weewx.conf`. To do this, make the following changes in `weewx.conf`:
 This will cause the default label Outside Temperature to be replaced with the
 new label "Barn Temperature" everywhere in your report. The label for type
 `inTemp` will be untouched.
-
-[^1]:  V5 uses two letter [ISO 639 language
-codes](https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes) to signify
-a language. It does not support four letter country codes (such as `en_NZ`).
-Naturally, this simple model comes with limitations. For example, Simplified
-Chinese is usually signified by `zh_CN`, while Traditional Chinese by `zh_TW`.
-With only a two letter code available, we must choose which we mean. We have
-chosen the former, Simplified Chinese. This two-letter limitation may be relaxed
-in the future.

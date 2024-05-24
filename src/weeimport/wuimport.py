@@ -273,6 +273,12 @@ class WUSource(weeimport.Source):
         print(_msg)
         log.info(_msg)
         self.print_map()
+        if self.update:
+            _msg = "Imported records will overwrite existing database records."
+        else:
+            _msg = "Imported records will not overwrite existing database records."
+        print(_msg)
+        log.info(_msg)
         if self.calc_missing:
             print("Missing derived observations will be calculated.")
         if kwargs['date'] or kwargs['from_datetime']:

@@ -136,8 +136,11 @@ SUITE?=`find src -name "test_*.py"`
 test: src/weewx_data/
 	@rm -f $(BLDDIR)/test-results
 	@mkdir -p $(BLDDIR)
-	@echo "Python interpreter in use:" >> $(BLDDIR)/test-results 2>&1;
-	@$(PYTHON) -c "import sys;print(sys.executable+'\n')" >> $(BLDDIR)/test-results 2>&1;
+	@echo "Python interpreter and version in use:" >> $(BLDDIR)/test-results 2>&1;
+	@$(PYTHON) -c "import sys;print(sys.executable)" >> $(BLDDIR)/test-results 2>&1;
+	@$(PYTHON) -V >> $(BLDDIR)/test-results 2>&1;
+	@echo "----" >> $(BLDDIR)/test-results 2>&1;
+
 	@for f in $(SUITE); do \
   echo running $$f; \
   echo $$f >> $(BLDDIR)/test-results; \

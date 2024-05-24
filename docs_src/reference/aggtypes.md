@@ -56,7 +56,8 @@
     <tr>
         <td class="first_col code">has_data</td>
         <td>Returns <span class="code">True</span> if the observation type 
-            exists either in the database or as an xtype and is non-null.
+            exists (either in the database or as an xtype) and has at least one
+            non-null value in the aggregation period.
         </td>
     </tr>
     <tr>

@@ -155,8 +155,7 @@ def has_data(obs_type, timespan, db_manager):
             # aggregation.
             vt = xtype.get_aggregate(obs_type, timespan, 'not_null', db_manager)
             # Check to see if we found a non-null value. Otherwise, keep going.
-            if vt[0]:
-                return True
+            return bool(vt[0])
         except (weewx.UnknownType, weewx.UnknownAggregation):
             pass
         except weewx.CannotCalculate:
@@ -166,12 +165,6 @@ def has_data(obs_type, timespan, db_manager):
     # Tried all the  get_aggregates() and didn't find a non-null value. Either it doesn't exist,
     # or doesn't have any data
     return False
-
-    # try:
-    #     vt = get_aggregate(obs_type, timespan, 'not_null', db_manager)
-    #     return bool(vt[0])
-    # except (weewx.UnknownAggregation, weewx.UnknownType):
-    #     return False
 
 
 #
@@ -973,11 +966,13 @@ class XTypeTable(XType):
             result = maxtime
         elif aggregate_type == 'min':
             result = minimum
-        elif aggregate_type == 'not_null':
-            result = False
-        else:
-            assert aggregate_type == 'max'
+        elif aggregate_type == 'max':
             result = maximum
+        elif aggregate_type == 'not_null':
+            return ValueTuple(False, 'boolean', 'group_boolean')
+        else:
+            # We should never get here.
+            raise ValueError(f"Unexpected aggregation type {aggregate_type}")
 
         u, g = weewx.units.getStandardUnitType(std_unit_system, obs_type, aggregate_type)
 

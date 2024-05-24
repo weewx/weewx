@@ -43,14 +43,14 @@ else:
     DEFAULT_LOCATIONS = [default_weewx_root, '/etc/weewx', '/home/weewx']
 
 
-def find_file(file_path=None, args=None, locations=None, file_name='weewx.conf'):
+def find_file(option_path=None, args=None, locations=None, file_name='weewx.conf'):
     """Find and return a path to a file, looking in "the usual places."
 
     General strategy:
 
-    First, if file_path is specified, then it will be used.
+    First, if option_path is specified, then it will be used.
 
-    Second, if file_path was not specified, then the first element of args that does not start
+    Second, if option_path was not specified, then the first element of args that does not start
     with a switch flag ("-") will be used.
 
     If there is no such element, then the list of directory locations is searched, looking for a
@@ -59,9 +59,9 @@ def find_file(file_path=None, args=None, locations=None, file_name='weewx.conf')
     If after all that, the file still cannot be found, then an OSError exception will be raised.
 
     Args:
-        file_path (str|None): A path to the file. Typically, this is
-            from a --config option. None if no option was specified.
-        args (list[str]|None): command-line arguments. If file_path is None, then the first not
+        option_path (str|None): A path to the file, typically from a --config option.
+            None if no option was specified.
+        args (list[str]|None): command-line arguments. If option_path is None, then the first not
             null value in args will be used.
         locations (list[str]|None): A list of directories to be searched.
         file_name (str): The name of the file to be found. This is used
@@ -76,19 +76,19 @@ def find_file(file_path=None, args=None, locations=None, file_name='weewx.conf')
 
     locations = locations or DEFAULT_LOCATIONS
 
-    # If no file_path was supplied, then search args (if available):
-    if file_path is None and args:
+    # If no option_path was supplied, then search args (if available):
+    if option_path is None and args:
         for i, arg in enumerate(args):
             # Ignore empty strings and None values:
             if not arg:
                 continue
             if not arg.startswith('-'):
-                file_path = arg
+                option_path = arg
                 del args[i]
                 break
-    if file_path:
+    if option_path:
         # We have a resolution. Resolve any tilde prefix:
-        file_path = os.path.expanduser(file_path)
+        option_path = os.path.expanduser(option_path)
     else:
         # Still don't have a resolution. Search in "the usual places."
         for directory in locations:
@@ -100,15 +100,15 @@ def find_file(file_path=None, args=None, locations=None, file_name='weewx.conf')
             if os.path.isfile(candidate):
                 return candidate
 
-    if file_path is None:
+    if option_path is None:
         raise OSError(f"Unable to find file '{file_name}'. Tried directories {locations}")
-    elif not os.path.isfile(file_path):
-        raise OSError(f"{file_path} is not a file")
+    elif not os.path.isfile(option_path):
+        raise OSError(f"{option_path} is not a file")
 
-    return file_path
+    return option_path
 
 
-def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
+def read_config(option_path, args=None, locations=DEFAULT_LOCATIONS,
                 file_name='weewx.conf', interpolation='ConfigParser'):
     """Read the specified configuration file, return an instance of ConfigObj
     with the file contents. If no file is specified, look in the standard
@@ -127,23 +127,24 @@ def read_config(config_path, args=None, locations=DEFAULT_LOCATIONS,
             and set to it. Otherwise, it is not included.
 
     Args:
-        config_path (str|None): configuration filename.
-        args (list[str]|None): command-line arguments.
+        option_path (str|None): A path to the file, typically from a --config option.
+            None if no option was specified.
+        args (list[str]|None): command-line arguments. If option_path is None, then the first not
+            null value in args will be used.
         locations (list[str]): A list of directories to search.
         file_name (str): The name of the config file. Default is 'weewx.conf'
         interpolation (str): The type of interpolation to use when reading the config file.
             Default is 'ConfigParser'. See the ConfigObj documentation https://bit.ly/3L593vH
 
     Returns:
-        (str, configobj.ConfigObj): path-to-file, instance-of-ConfigObj
+        tuple[str, configobj.ConfigObj]: path-to-file, instance-of-ConfigObj
 
     Raises:
         SyntaxError: If there is a syntax error in the file
         IOError: If the file cannot be found
     """
     # Find the config file:
-    config_path = find_file(config_path, args,
-                            locations=locations, file_name=file_name)
+    config_path = find_file(option_path, args, locations=locations, file_name=file_name)
     # Now open it up and parse it.
     try:
         config_dict = configobj.ConfigObj(config_path,

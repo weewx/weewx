@@ -14,6 +14,7 @@ import_usage = f"""{bcolors.BOLD}weectl import --help
        weectl import --import-config=IMPORT_CONFIG_FILE
                      [--config=CONFIG_FILE]
                      [[--date=YYYY-mm-dd] | [[--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]]
+                     [--update]
                      [--dry-run][--verbose]
                      [--no-prompt][--suppress-warnings]{bcolors.ENDC}
 """
@@ -36,21 +37,20 @@ def add_subparser(subparsers):
                                           epilog=import_epilog,
                                           help="Import observation data.")
 
-    import_parser.add_argument('--config', 
+    import_parser.add_argument('--config',
                                metavar='FILENAME',
                                help=f'Path to configuration file. '
                                     f'Default is "{weecfg.default_config_path}".')
-    import_parser.add_argument('--import-config', 
+    import_parser.add_argument('--import-config',
                                metavar='IMPORT_CONFIG_FILE',
                                dest='import_config',
                                help=f'Path to import configuration file.')
-    import_parser.add_argument('--dry-run', 
+    import_parser.add_argument('--dry-run',
                                action='store_true',
                                dest='dry_run',
                                help=f'Print what would happen but do not do it.')
-    import_parser.add_argument('--date', 
+    import_parser.add_argument('--date',
                                metavar='YYYY-mm-dd',
-                               # dest='d_date',
                                help=f'Import data for this date. Format is YYYY-mm-dd.')
     import_parser.add_argument('--from',
                                metavar='YYYY-mm-dd[THH:MM]',
@@ -62,6 +62,9 @@ def add_subparser(subparsers):
                                dest='to_datetime',
                                help=f'Import data up until this date or date-time. Format '
                                     f'is YYYY-mm-dd[THH:MM].')
+    import_parser.add_argument('--update',
+                               action='store_true',
+                               help=f'Allow imported data to update existing database records.')
     import_parser.add_argument('--verbose',
                                action='store_true',
                                help=f'Print and log useful extra output.')
@@ -85,6 +88,7 @@ def import_func(config_dict, namespace):
                                         date=namespace.date,
                                         from_datetime=namespace.from_datetime,
                                         to_datetime=namespace.to_datetime,
+                                        update=namespace.update,
                                         verbose=namespace.verbose,
                                         no_prompt=namespace.no_prompt,
                                         suppress_warning=namespace.suppress_warnings)

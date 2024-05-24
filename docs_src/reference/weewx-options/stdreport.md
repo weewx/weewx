@@ -12,14 +12,14 @@ in order.
 
 WeeWX ships with the following subsections:
 
-| subsection |	Description |
-| ----------- | ----------- |
-| [[SeasonsReport]] | A full-featured single-page skin. Statistics and plots are revealed by touch or button press.|
-| [[SmartphoneReport]] | A skin formatted for smaller screens, with a look-and-feel reminiscent of first-generation Apple iPhone.|
-| [[MobileReport]] | A static skin formatted for very small screens, with a look-and-feel reminiscent of WindowsCE or PalmOS.|
-| [[StandardReport]] | The original skin that shipped for many years as the default report. It uses static HTML and images, and requires few resources to generate and display.|
-| [[FTP]] | No presentation elements. Uses the reporting machinery to transfer files to a remote server using FTP.|
-| [[RSYNC]] | No presentation elements. Uses the reporting machinery to transfer files to a remote server using rsync.|
+| subsection           | Description                                                                                                                                              |
+|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [[SeasonsReport]]    | A full-featured single-page skin. Statistics and plots are revealed by touch or button press.                                                            |
+| [[SmartphoneReport]] | A skin formatted for smaller screens, with a look-and-feel reminiscent of first-generation Apple iPhone.                                                 |
+| [[MobileReport]]     | A static skin formatted for very small screens, with a look-and-feel reminiscent of WindowsCE or PalmOS.                                                 |
+| [[StandardReport]]   | The original skin that shipped for many years as the default report. It uses static HTML and images, and requires few resources to generate and display. |
+| [[FTP]]              | No presentation elements. Uses the reporting machinery to transfer files to a remote server using FTP.                                                   |
+| [[RSYNC]]            | No presentation elements. Uses the reporting machinery to transfer files to a remote server using rsync.                                                 |
 
 Order matters. The reports that generate HTML and images, that is,
 `SeasonsReport`, `SmartphoneReport`, `MobileReport`, and `StandardReport`,
@@ -94,13 +94,26 @@ They all have the following options in common:
 
 #### lang
 
-Which language the skin should be localized in. The value is a two-character
-language code as defined in [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes).
+Which language to use. The value can take one of three forms:
+
+| Example      | Meaning                                                       |
+|--------------|---------------------------------------------------------------|
+| `en`         | English language                                              |
+| `en_GB`      | English language, country Great Britain                       |
+| `en_GB.utf8` | English language, country Great Britain, locale Great Britain | 
+
+The language part of the code is as defined in [ISO
+639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes). 
+
 This option only works with skins that have been internationalized. All skins
 that ship with WeeWX have been internationalized, but only a handful of
 languages are included. To see which language a skin supports, look in the
 subdirectory `lang` in the skin's directory. For example, if you see a file
 `fr.conf`, then the skin can be localized in French.
+
+See the section [_Changing
+languages_](../../../custom/custom-reports/#changing-languages) for more
+details.
 
 #### unit_system
 
@@ -275,6 +288,18 @@ location.
     cause unexpected files to be deleted on the remote server. 
     
 Valid values are `1` to enable and `0` to disable. Required. Default is `0`.
+
+#### rsync_options
+
+Use this option to pass on any additional command line options to `rsync`. It
+should be a comma separated list.  For example
+
+```ini
+    rsync_options = --exclude=*.ts, --ipv6
+```
+
+This would exclude any Typescript files from the transfer, and indicate that you
+would prefer to use IPv6.
 
 
 ## [[Defaults]]

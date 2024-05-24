@@ -762,11 +762,14 @@ class SkinInfo(SearchList):
 
     def __init__(self, generator):
         SearchList.__init__(self, generator)
-        for k in ['HTML_ROOT', 'lang', 'REPORT_NAME', 'skin',
+        for k in ['HTML_ROOT', 'REPORT_NAME', 'skin',
                   'SKIN_NAME', 'SKIN_ROOT', 'SKIN_VERSION', 'unit_system'
         ]:
             setattr(self, k, generator.skin_dict.get(k, 'unknown'))
 
+        # For the language code, default to English. We also want only the language, and not the
+        # full language spec. That is, we want 'en', not 'en_AU.utf8'.
+        self.lang = generator.skin_dict.get('lang', 'en').split('_')[0]
 
 # =============================================================================
 # Filter

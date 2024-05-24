@@ -235,6 +235,23 @@ the unit and unit template that are installed by the installer.  If you just
 want to override behavior of the units installed by the installer, you should
 use the `.d` pattern instead.  See the systemd documentation for details.
 
+#### WeeWX runs as the `weewx` user
+
+This affects WeeWX installations that use `apt`, `yum`, or `zypper` (installs
+that use the DEB or RPM packages). Installations that use a `setup.py` or `pip`
+install are not affected.
+
+For new installations, `weewxd` will run as the user `weewx`.  The configuration
+files, skins, databases, and reports are owned by the `weewx` group.  This makes
+it easier to manage a WeeWX installation. Put yourself into the `weewx` group,
+then you will not have to `sudo` to make changes to skins or configurations.
+You *will* have to `sudo` to start/stop `weewxd`.
+
+For upgrades, the installer will check the ownership of `/var/lib/weewx`.  If
+the ownership is `root:root`, the installer will create the `weewx` user and
+run `weewxd` as that user and group. Otherwise, `weewxd` will run as the
+previously configured user.
+
 #### udev rules installed for core hardware
 
 Version 5 includes a small change to the `udev` rules for hardware that is

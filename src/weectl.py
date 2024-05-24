@@ -23,8 +23,8 @@ usagestr = """%(prog)s -v|--version
 """
 
 description = """%(prog)s is the master utility used by WeeWX. It can invoke several different
-subcommands, listed below. You can explore their utility by using the --help option. For example, 
-to find out what the 'database' subcommand can do, use '%(prog)s database --help'."""
+subcommands, listed below. You can explore what each subcommand does by using the --help option.
+For example, to find out what the 'database' subcommand can do, use '%(prog)s database --help'."""
 
 SUBCOMMANDS = ['database', 'debug', 'device', 'extension', 'import', 'report', 'station', ]
 
@@ -47,6 +47,7 @@ def main():
     # Everything else uses argparse. Proceed.
     parser = argparse.ArgumentParser(usage=usagestr, description=description)
     parser.add_argument("-v", "--version", action='version',
+                        help="show the WeeWX version, then exit",
                         version=f"weectl {weewx.__version__}")
 
     # Add a subparser to handle the various subcommands.
