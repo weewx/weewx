@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "weewx"
-version = "5.1.0b1"
+version = "5.1.0b4"
 description = "The WeeWX weather software system."
 authors = [
     "Tom Keffer <tkeffer@gmail.com>",

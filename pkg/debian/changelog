@@ -1,3 +1,6 @@
+weewx (5.1.0b4-1) unstable; urgency=low
+  * Allow multiple locales
+ -- Tom Keffer (Author of WeeWX) <tkeffer@gmail.com>  Sat, 25 May 2024 08:35:36 -0700
 weewx (5.1.0b1-1) unstable; urgency=low
   * fix grep invocation for /etc/default/weewx
  -- Matthew Wall <mwall.weewx@gmail.com>  Sun, 05 May 2024 03:12:59 -0400

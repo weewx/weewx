@@ -1,3 +1,5 @@
+* Sat May 25 2024 Tom Keffer (Author of WeeWX) <tkeffer@gmail.com> - 5.1.0b4-1
+- Allow multiple locales
 * Sun May 05 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.1.0b1-1
 - fix grep invocation for /etc/default/weewx
 * Sat Feb 10 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.0.2-1
