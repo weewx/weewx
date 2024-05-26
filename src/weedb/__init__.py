@@ -116,7 +116,7 @@ def drop(db_dict):
         return driver_mod.drop(**db_dict)
 
 
-class Connection(object):
+class Connection:
     """Abstract base class, representing a connection to a database."""
 
     def __init__(self, connection, database_name, dbtype):
@@ -200,11 +200,11 @@ class Connection(object):
             pass
 
 
-class Cursor(object):
+class Cursor:
     pass
 
 
-class Transaction(object):
+class Transaction:
     """Class to be used to wrap transactions in a 'with' clause."""
 
     def __init__(self, connection):

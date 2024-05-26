@@ -1410,7 +1410,7 @@ def get_object(module_class):
 _get_object = get_object
 
 
-class GenWithPeek(object):
+class GenWithPeek:
     """Generator object which allows a peek at the next object to be returned.
     
     Sometimes Python solves a complicated problem with such elegance! This is
@@ -1468,7 +1468,7 @@ class GenWithPeek(object):
         return self.peek_obj
 
 
-class GenByBatch(object):
+class GenByBatch:
     """Generator wrapper. Calls the wrapped generator in batches of a specified size."""
 
     def __init__(self, generator, batch_size=0):
@@ -1611,7 +1611,7 @@ def dirN(c):
     return value
 
 
-class Polar(object):
+class Polar:
     """Polar notation, except the direction is a compass heading."""
 
     def __init__(self, mag, direction):

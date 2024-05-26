@@ -107,37 +107,37 @@ class NoCalculate(Exception):
 #                       Possible event types.
 # =============================================================================
 
-class STARTUP(object):
+class STARTUP:
     """Event issued when the engine first starts up. Services have been
     loaded."""
 
 
-class PRE_LOOP(object):
+class PRE_LOOP:
     """Event issued just before the main packet loop is entered. Services
     have been loaded."""
 
 
-class NEW_LOOP_PACKET(object):
+class NEW_LOOP_PACKET:
     """Event issued when a new LOOP packet is available. The event contains
     attribute 'packet', which is the new LOOP packet."""
 
 
-class CHECK_LOOP(object):
+class CHECK_LOOP:
     """Event issued in the main loop, right after a new LOOP packet has been
     processed. Generally, it is used to throw an exception, breaking the main
     loop, so the console can be used for other things."""
 
 
-class END_ARCHIVE_PERIOD(object):
+class END_ARCHIVE_PERIOD:
     """Event issued at the end of an archive period."""
 
 
-class NEW_ARCHIVE_RECORD(object):
+class NEW_ARCHIVE_RECORD:
     """Event issued when a new archive record is available. The event contains
     attribute 'record', which is the new archive record."""
 
 
-class POST_LOOP(object):
+class POST_LOOP:
     """Event issued right after the main loop has been broken. Services hook
     into this to access the console for things other than generating LOOP
     packet."""
@@ -155,7 +155,7 @@ all_service_groups = ['prep_services', 'data_services', 'process_services', 'xty
 # =============================================================================
 #                       Class Event
 # =============================================================================
-class Event(object):
+class Event:
     """Represents an event."""
 
     def __init__(self, event_type, **argv):

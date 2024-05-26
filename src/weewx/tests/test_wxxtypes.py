@@ -258,7 +258,7 @@ class TestPressureCooker(unittest.TestCase):
             b = pc.barometer(self.record)
 
 
-class RainGenerator(object):
+class RainGenerator:
     """Generator object that returns an increasing deluge of rain."""
 
     def __init__(self, timestamp, time_increment=60, rain_increment=0.01):

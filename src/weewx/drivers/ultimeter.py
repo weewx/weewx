@@ -140,7 +140,7 @@ class UltimeterDriver(weewx.drivers.AbstractDevice):
         self.last_rain = packet['rain_total']
 
 
-class Station(object):
+class Station:
     DEFAULT_PORT = '/dev/ttyUSB0'
 
     def __init__(self, port,

@@ -472,7 +472,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 # Classes used to implement the Search list
 # =============================================================================
 
-class SearchList(object):
+class SearchList:
     """Abstract base class used for search list extensions."""
 
     def __init__(self, generator):

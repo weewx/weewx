@@ -10,7 +10,7 @@ import time
 import weeutil.weeutil
 import weewx.units
 
-class StationInfo(object):
+class StationInfo:
     """Readonly class with static station information. It has no formatting information. Just a POS.
     
     Attributes:
@@ -56,7 +56,7 @@ class StationInfo(object):
         # For backwards compatibility:
         self.webpath         = self.station_url
 
-class Station(object):
+class Station:
     """Formatted version of StationInfo."""
 
     def __init__(self, stn_info, formatter, converter, skin_dict):

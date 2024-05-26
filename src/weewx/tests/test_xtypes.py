@@ -44,7 +44,7 @@ config_path = os.path.join(my_dir, "testgen.conf")
 month_timespan = weeutil.weeutil.TimeSpan(1283324400, 1285916400)
 
 
-class Common(object):
+class Common:
 
     def setUp(self):
         global config_path

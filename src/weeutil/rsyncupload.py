@@ -21,7 +21,7 @@ from weeutil.weeutil import option_as_list
 log = logging.getLogger(__name__)
 
 
-class RsyncUpload(object):
+class RsyncUpload:
     """Uploads a directory and all its descendants to a remote server.
     
     Keeps track of what files have changed, and only updates changed files."""

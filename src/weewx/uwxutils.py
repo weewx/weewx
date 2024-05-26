@@ -106,7 +106,7 @@ Power = pow
 Exp   = math.exp
 Round = round
 
-class TWxUtils(object):
+class TWxUtils:
 
     gravity = 9.80665          # g at sea level at lat 45.5 degrees in m/sec^2
     uGC = 8.31432              # universal gas constant in J/mole-K
@@ -329,7 +329,7 @@ class TWxUtils(object):
 #                              class TWxUtilsUS
 #==============================================================================
 
-class TWxUtilsUS(object):
+class TWxUtilsUS:
 
     """This class provides US unit versions of the functions in uWxUtils.
     Refer to uWxUtils for documentation. All input and output paramters are
@@ -452,7 +452,7 @@ class TWxUtilsUS(object):
 #                              class TWxUtilsVP
 #==============================================================================
 
-class uWxUtilsVP(object):
+class uWxUtilsVP:
     """ This class contains functions for calculating the raw sensor pressure
     of a Vantage Pro weather station from the sea level reduced pressure it
     provides.

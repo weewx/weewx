@@ -32,7 +32,7 @@ def get_error(e):
     return e.exception.args[0]
 
 
-class Cursor(object):
+class Cursor:
     """Class to be used to wrap a cursor in a 'with' clause."""
 
     def __init__(self, host='localhost', user='', password='', database=''):

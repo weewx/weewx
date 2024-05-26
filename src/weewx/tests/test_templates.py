@@ -93,7 +93,7 @@ colorize_3.Colorize.colorize_3 = colorize_3.Colorize.colorize
 
 
 # We will be testing the ability to extend the unit system, so set that up first:
-class ExtraUnits(object):
+class ExtraUnits:
     def __getitem__(self, obs_type):
         if obs_type.endswith('Temp'):
             # Anything that ends with "Temp" is assumed to be in group_temperature
@@ -120,7 +120,7 @@ weewx.units.default_unit_format_dict["amp"] = "%.1f"
 weewx.units.default_unit_label_dict["amp"] = " A"
 
 
-class Common(object):
+class Common:
 
     def setUp(self):
         global config_dict

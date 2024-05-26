@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 weeutil.logger.setup('weetest_cheetah')
 
 
-class RaiseException(object):
+class RaiseException:
     def __str__(self):
         raise AttributeError("Fine mess you got me in!")
 

@@ -26,7 +26,7 @@ else:
     PIL_HAS_BBOX = True
 
 
-class GeneralPlot(object):
+class GeneralPlot:
     """Holds various parameters necessary for a plot. It should be specialized by the type of plot.
     """
     def __init__(self, plot_dict):
@@ -631,7 +631,7 @@ class TimePlot(GeneralPlot) :
         return xlabel
 
 
-class PlotLine(object):
+class PlotLine:
     """Represents a single line (or bar) in a plot. """
     def __init__(self, x, y, label='', color=None, fill_color=None, width=None, plot_type='line',
                  line_type='solid', marker_type=None, marker_size=10,

@@ -623,7 +623,7 @@ def data_to_packet(data, ts, last_rain=None):
     return packet
 
 
-class WS23xx(object):
+class WS23xx:
     """Wrap the Ws2300 object so we can easily open serial port, read/write,
     close serial port without all of the try/except/finally scaffolding."""
 
@@ -811,7 +811,7 @@ class FatalError(Exception):
 # The serial port interface.  We can talk to the Ws2300 over anything
 # that implements this interface.
 #
-class SerialPort(object):
+class SerialPort:
     #
     # Discard all characters waiting to be read.
     #
@@ -956,7 +956,7 @@ class LinuxSerialPort(SerialPort):
 # read_batch() - Reads data from the device using an scatter/gather interface.
 # write_safe() - Writes data to the device.
 #
-class Ws2300(object):
+class Ws2300:
     #
     # An exception for us.
     #
@@ -1271,7 +1271,7 @@ def num2bin(number, nybble_count):
 # A "Conversion" encapsulates a unit of measurement on the Ws2300.  Eg
 # temperature, or wind speed.
 #
-class Conversion(object):
+class Conversion:
     description	= None # Description of the units.
     nybble_count = None # Number of nybbles used on the WS2300
     units = None # Units name (eg hPa).
@@ -1624,7 +1624,7 @@ class SetresetConversion(ConversionBit):
 # used for all the other measures.
 #
 class HistoryConversion(Conversion):
-    class HistoryRecord(object):
+    class HistoryRecord:
         temp_indoor = None
         temp_outdoor = None
         pressure_absolute = None
@@ -1736,7 +1736,7 @@ conv_wind = WindConversion()
 #  - The location it can be found at in the Ws2300's memory map.
 #  - The Conversion used to represent the figure.
 #
-class Measure(object):
+class Measure:
     IDS = {}       # map,    Measures defined. {id: Measure, ...}
     NAMES = {}     # map,    Measures defined. {name: Measure, ...}
     address = None # int,    Nybble address in the Ws2300

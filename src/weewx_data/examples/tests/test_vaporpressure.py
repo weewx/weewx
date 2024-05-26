@@ -50,7 +50,7 @@ day_start_ts = time.mktime(day_start_tt)
 day_stop_ts = time.mktime(day_stop_tt)
 
 
-class CommonTests(object):
+class CommonTests:
     """Test that inserting records get the weighted sums right. Regression test for issue #623. """
 
     expected_vapor_p = [0.0601, 0.0565, 0.0537, 0.0518, 0.0507, 0.0503, 0.0507, 0.0519, 0.0539,

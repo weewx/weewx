@@ -47,7 +47,7 @@ skin_dict = {'Units': {'Trend': {'time_delta': 3600, 'time_grace': 300},
 
 default_formatter = weewx.units.get_default_formatter()
 
-class Common(object):
+class Common:
 
     def setUp(self):
         global config_path

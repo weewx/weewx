@@ -85,7 +85,7 @@ class TestDatabaseDict(unittest.TestCase):
                                          'driver': 'weedb.sqlite'})
 
 
-class Common(object):
+class Common:
     
     def setUp(self):
         try:

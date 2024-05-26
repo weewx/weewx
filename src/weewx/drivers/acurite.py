@@ -554,7 +554,7 @@ class AcuRiteDriver(weewx.drivers.AbstractDevice):
         return r3
 
 
-class Station(object):
+class Station:
     # these identify the weather station on the USB
     VENDOR_ID = 0x24c0
     PRODUCT_ID = 0x0003

@@ -81,7 +81,7 @@ def wm918_registerpackettype(typecode, size):
     return wrap
 
 
-class SerialWrapper(object):
+class SerialWrapper:
     """Wraps a serial connection returned from package serial"""
 
     def __init__(self, port):

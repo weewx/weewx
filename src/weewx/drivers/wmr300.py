@@ -1474,7 +1474,7 @@ class BadBuffer(DecodeError):
 class UnknownPacketType(DecodeError):
     """unknown packet type"""
 
-class Station(object):
+class Station:
     # these identify the weather station on the USB
     VENDOR_ID = 0x0FDE
     PRODUCT_ID = 0xCA08

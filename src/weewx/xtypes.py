@@ -21,7 +21,7 @@ from weewx.units import ValueTuple
 xtypes = []
 
 
-class XType(object):
+class XType:
     """Base class for extensions to the WeeWX type system."""
 
     def get_scalar(self, obs_type, record, db_manager=None, **option_dict):

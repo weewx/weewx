@@ -36,7 +36,7 @@ else:
              "Change the permissions and try again." % sqdb2_dict['database_name'])
 
 
-class Cursor(object):
+class Cursor:
     """Class to be used to wrap a cursor in a 'with' clause."""
 
     def __init__(self, db_dict):

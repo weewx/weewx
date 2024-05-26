@@ -49,7 +49,7 @@ _resend = b'\x15'  # NB: The Davis documentation gives this code as 0x21, but it
 #                           class BaseWrapper
 # ===============================================================================
 
-class BaseWrapper(object):
+class BaseWrapper:
     """Base class for (Serial|Ethernet)Wrapper"""
 
     def __init__(self, wait_before_retry, command_delay):

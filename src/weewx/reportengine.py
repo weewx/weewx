@@ -447,7 +447,7 @@ def merge_lang(lang_spec, config_dict, report, skin_dict):
 #                    Class ReportGenerator
 # =============================================================================
 
-class ReportGenerator(object):
+class ReportGenerator:
     """Base class for all report generators."""
 
     def __init__(self, config_dict, skin_dict, gen_ts, first_run, stn_info, record=None):
@@ -625,7 +625,7 @@ class CopyGenerator(ReportGenerator):
 #                    Class ReportTiming
 # ===============================================================================
 
-class ReportTiming(object):
+class ReportTiming:
     """Class for processing a CRON like line and determining whether it should
     be fired for a given time.
 

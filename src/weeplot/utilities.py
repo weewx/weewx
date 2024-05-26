@@ -334,7 +334,7 @@ def scaletime(tmin_ts, tmax_ts):
     return start_ts, stop_ts, interval
 
 
-class ScaledDraw(object):
+class ScaledDraw:
     """Like an ImageDraw object, but lines are scaled. """
 
     def __init__(self, draw, imagebox, scaledbox):

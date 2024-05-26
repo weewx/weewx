@@ -109,7 +109,7 @@ class OutOfSpan(ValueError):
 #                             FirstLastAccum
 # ===============================================================================
 
-class FirstLastAccum(object):
+class FirstLastAccum:
     """Minimal accumulator, suitable for strings.
     It can only return the first and last value it has seen, along with their timestamps.
     """
@@ -257,7 +257,7 @@ class ScalarStats(FirstLastAccum):
 #                             VecStats
 # ===============================================================================
 
-class VecStats(object):
+class VecStats:
     """Accumulates statistics for a vector value.
      
     Property 'last' is the last non-None value seen. It is a two-way tuple (mag, dir).

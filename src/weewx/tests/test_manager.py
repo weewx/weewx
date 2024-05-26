@@ -70,7 +70,7 @@ db_dict_mysql = {
 }
 
 
-class CommonWeightTests(object):
+class CommonWeightTests:
     """Test that inserting records get the weighted sums right. Regression test for issue #623. """
 
     def test_weights(self):

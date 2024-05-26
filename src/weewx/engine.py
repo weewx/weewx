@@ -42,7 +42,7 @@ class InitializationError(weewx.WeeWxIOError):
 #                    Class StdEngine
 # ==============================================================================
 
-class StdEngine(object):
+class StdEngine:
     """The main engine responsible for the creating and dispatching of events
     from the weather station.
     
@@ -279,7 +279,7 @@ class StdEngine(object):
 class DummyEngine(StdEngine):
     """A dummy engine, useful for loading services, but without actually running the engine."""
 
-    class DummyConsole(object):
+    class DummyConsole:
         """A dummy console, used to offer an archive_interval."""
 
         def __init__(self, config_dict):
@@ -299,7 +299,7 @@ class DummyEngine(StdEngine):
 #                    Class StdService
 # ==============================================================================
 
-class StdService(object):
+class StdService:
     """Abstract base class for all services."""
 
     def __init__(self, engine, config_dict):

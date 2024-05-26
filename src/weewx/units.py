@@ -580,7 +580,7 @@ UnknownType = UnknownObsType
 #                        class Formatter
 #==============================================================================
 
-class Formatter(object):
+class Formatter:
     """Holds formatting information for the various unit types. """
 
     def __init__(self, unit_format_dict = None,
@@ -859,7 +859,7 @@ class Formatter(object):
 #                        class Converter
 #==============================================================================
 
-class Converter(object):
+class Converter:
     """Holds everything necessary to do conversions to a target unit system."""
 
     def __init__(self, group_unit_dict=USUnits):
@@ -996,7 +996,7 @@ StdUnitConverters = {weewx.US       : Converter(USUnits),
 #                      class ValueHelper
 #==============================================================================
 
-class ValueHelper(object):
+class ValueHelper:
     """A helper class that binds a value tuple together with everything needed to do a
     context-sensitive formatting """
     def __init__(self, value_t, context='current', formatter=Formatter(), converter=None):
@@ -1168,7 +1168,7 @@ class ValueHelper(object):
 #                        SeriesHelper
 #==============================================================================
 
-class SeriesHelper(object):
+class SeriesHelper:
     """Convenience class that binds the series data, along with start and stop times."""
 
     def __init__(self, start, stop, data):
@@ -1323,7 +1323,7 @@ class SeriesHelper(object):
 #                       class UnitInfoHelper and friends
 #==============================================================================
 
-class UnitHelper(object):
+class UnitHelper:
     def __init__(self, converter):
         self.converter = converter
     def __getattr__(self, obs_type):
@@ -1332,7 +1332,7 @@ class UnitHelper(object):
             raise AttributeError
         return self.converter.getTargetUnit(obs_type)[0]
 
-class FormatHelper(object):
+class FormatHelper:
     def __init__(self, formatter, converter):
         self.formatter = formatter
         self.converter = converter
@@ -1342,7 +1342,7 @@ class FormatHelper(object):
             raise AttributeError
         return get_format_string(self.formatter, self.converter, obs_type)
 
-class LabelHelper(object):
+class LabelHelper:
     def __init__(self, formatter, converter):
         self.formatter = formatter
         self.converter = converter
@@ -1352,7 +1352,7 @@ class LabelHelper(object):
             raise AttributeError
         return get_label_string(self.formatter, self.converter, obs_type)
 
-class UnitInfoHelper(object):
+class UnitInfoHelper:
     """Helper class used for the $unit template tag."""
     def __init__(self, formatter, converter):
         """
@@ -1370,7 +1370,7 @@ class UnitInfoHelper(object):
         return self.group_unit_dict
 
 
-class ObsInfoHelper(object):
+class ObsInfoHelper:
     """Helper class to implement the $obs template tag."""
     def __init__(self, skin_dict):
         try:
@@ -1540,7 +1540,7 @@ def get_label_string(formatter, converter, obs_type, plural=True):
     return formatter.get_label_string(u, plural)
 
 
-class GenWithConvert(object):
+class GenWithConvert:
     """Generator wrapper. Converts the output of the wrapped generator to a
     target unit system.
     

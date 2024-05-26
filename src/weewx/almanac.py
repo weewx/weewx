@@ -26,7 +26,7 @@ except ImportError:
 
 # NB: Have Almanac inherit from 'object'. However, this will cause
 # an 'autocall' bug in Cheetah versions before 2.1.
-class Almanac(object):
+class Almanac:
     """Almanac data.
     
     ATTRIBUTES.
@@ -369,7 +369,7 @@ fn_map = {'rise': 'next_rising',
           'transit': 'next_transit'}
 
 
-class AlmanacBinder(object):
+class AlmanacBinder:
     """This class binds the observer properties held in Almanac, with the heavenly
     body to be observed."""
 

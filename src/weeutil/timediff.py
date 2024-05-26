@@ -10,7 +10,7 @@ Not used within WeeWX, but it is used by a few extensions.
 import weewx
 
 
-class TimeDerivative(object):
+class TimeDerivative:
     """Calculate time derivative for a specific observation type."""
 
     def __init__(self, obs_type, stale_age):

@@ -190,7 +190,7 @@ class Simulator(weewx.drivers.AbstractDevice):
         return "Simulator"
 
 
-class Observation(object):
+class Observation:
     
     def __init__(self, magnitude=1.0, average=0.0, period=96.0, phase_lag=0.0, start=None):
         """Initialize an observation function.
@@ -220,7 +220,7 @@ class Observation(object):
         return self.magnitude * math.cos(phase) + self.average
 
 
-class Rain(object):
+class Rain:
 
     bucket_tip = 0.01
 
@@ -252,7 +252,7 @@ class Rain(object):
         return amt
 
 
-class Solar(object):
+class Solar:
 
     def __init__(self, magnitude=10, solar_start=6, solar_length=12):
         """Initialize a solar simulator. The simulator will follow a simple wave sine function
@@ -282,7 +282,7 @@ class Solar(object):
         return amt
 
 
-class BatteryStatus(object):
+class BatteryStatus:
     
     def __init__(self, chance_of_failure=None, min_recovery_time=None):
         """Initialize a battery status.
@@ -315,7 +315,7 @@ class BatteryStatus(object):
         return self.state
 
 
-class BatteryVoltage(object):
+class BatteryVoltage:
 
     def __init__(self, nominal_value=None, max_variance=None):
         """Initialize a battery voltage.
@@ -336,7 +336,7 @@ class BatteryVoltage(object):
         return self.nominal + self.variance * random.random() * random.randint(-1, 1)
 
 
-class SignalStrength(object):
+class SignalStrength:
 
     def __init__(self, minval=0.0, maxval=100.0):
         """Initialize a signal strength simulator.

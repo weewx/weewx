@@ -40,7 +40,7 @@ else:
     sys.exit("Must not have write permissions to '%s'" % sqdb2)
 
 
-class Cursor(object):
+class Cursor:
     """Class to be used to wrap a cursor in a 'with' clause."""
 
     def __init__(self, file_path):

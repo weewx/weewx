@@ -19,7 +19,7 @@ IGNORE_ATTR = {'mro', 'im_func', 'func_code', '__func__', '__code__', '__init__'
 #                    Class TimeBinder
 # ===============================================================================
 
-class TimeBinder(object):
+class TimeBinder:
     """Binds to a specific time. Can be queried for time attributes, such as month.
 
     When a time period is given as an attribute to it, such as obj.month, the next item in the
@@ -143,7 +143,7 @@ class TimeBinder(object):
 #                    Class TimespanBinder
 # ===============================================================================
 
-class TimespanBinder(object):
+class TimespanBinder:
     """Holds a binding between a database and a timespan.
 
     This class is the next class in the chain of helper classes.
@@ -302,7 +302,7 @@ class TimespanBinder(object):
 #                    Class ObservationBinder
 # ===============================================================================
 
-class ObservationBinder(object):
+class ObservationBinder:
     """This is the next class in the chain of helper classes. It binds the
     database, a time period, and an observation type all together.
 
@@ -447,7 +447,7 @@ class ObservationBinder(object):
 #                             Class AggTypeBinder
 # ===============================================================================
 
-class AggTypeBinder(object):
+class AggTypeBinder:
     """This is the final class in the chain of helper classes. It binds everything needed
     for a query."""
 
@@ -514,7 +514,7 @@ class AggTypeBinder(object):
 #                             Class RecordBinder
 # ===============================================================================
 
-class RecordBinder(object):
+class RecordBinder:
 
     def __init__(self, db_lookup, report_time,
                  formatter=None, converter=None,
@@ -544,7 +544,7 @@ class RecordBinder(object):
 #                             Class CurrentObj
 # ===============================================================================
 
-class CurrentObj(object):
+class CurrentObj:
     """Helper class for the "Current" record. Hits the database lazily.
 
     This class allows tags such as:
@@ -612,7 +612,7 @@ class CurrentObj(object):
 #                             Class TrendObj
 # ===============================================================================
 
-class TrendObj(object):
+class TrendObj:
     """Helper class that calculates trends.
 
     This class allows tags such as:

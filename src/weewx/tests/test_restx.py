@@ -20,7 +20,7 @@ os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
 
 
-class MatchRequest(object):
+class MatchRequest:
     """Allows equality testing between Request objects"""
 
     def __init__(self, url, user_agent):

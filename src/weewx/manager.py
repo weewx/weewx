@@ -80,7 +80,7 @@ class IntervalError(ValueError):
 #                         class Manager
 # ==============================================================================
 
-class Manager(object):
+class Manager:
     """Manages a database table. Offers a number of convenient member functions for querying and
     inserting data into the table. These functions encapsulate whatever sql statements are needed.
 
@@ -721,7 +721,7 @@ def reconfig(old_db_dict, new_db_dict, new_unit_system=None, new_schema=None, dr
 #                    Class DBBinder
 # ===============================================================================
 
-class DBBinder(object):
+class DBBinder:
     """Given a binding name, it returns the matching database as a managed object. Caches
     results.
     """

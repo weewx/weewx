@@ -20,7 +20,7 @@ log = logging.getLogger(__name__)
 #                    Class QC
 # ==============================================================================
 
-class QC(object):
+class QC:
     """Class to apply quality checks to a record."""
 
     def __init__(self, mm_dict, log_failure=True):

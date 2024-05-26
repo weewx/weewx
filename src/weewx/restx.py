@@ -687,7 +687,7 @@ class StdWunderground(StdRESTful):
         self.archive_queue.put(event.record)
 
 
-class CachedValues(object):
+class CachedValues:
     """Dictionary of value-timestamp pairs.  Each timestamp indicates when the
     corresponding value was last updated."""
 

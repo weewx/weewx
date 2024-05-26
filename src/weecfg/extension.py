@@ -39,7 +39,7 @@ class ExtensionInstaller(dict):
         return False
 
 
-class ExtensionEngine(object):
+class ExtensionEngine:
     """Engine that manages extensions."""
     # Extension components can be installed to these locations
     target_dirs = {

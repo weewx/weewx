@@ -124,7 +124,7 @@ class WS1Driver(weewx.drivers.AbstractDevice):
 # =========================================================================== #
 
 
-class StationData(object):
+class StationData:
     def __init__(self):
         pass
 
@@ -201,7 +201,7 @@ class StationData(object):
 # =========================================================================== #
 
 
-class StationSerial(object):
+class StationSerial:
     def __init__(self, port, timeout=3):
         self.port = port
         self.baudrate = 2400
@@ -260,7 +260,7 @@ class StationSerial(object):
 # =========================================================================== #
 
 
-class StationSocket(object):
+class StationSocket:
     def __init__(self, addr, protocol='tcp', timeout=3, max_tries=5,
                  wait_before_retry=10):
         import socket

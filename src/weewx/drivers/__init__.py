@@ -10,7 +10,7 @@ import sys
 import weewx
 
 
-class AbstractDevice(object):
+class AbstractDevice:
     """Device drivers should inherit from this class."""
 
     @property
@@ -40,7 +40,7 @@ class AbstractDevice(object):
         pass
 
 
-class AbstractConfigurator(object):
+class AbstractConfigurator:
     """The configurator class defines an interface for configuring devices.
     Inherit from this class to provide a comman-line interface for setting
     up a device, querying device status, and other setup/maintenance
@@ -97,7 +97,7 @@ class AbstractConfigurator(object):
         raise NotImplementedError("Method 'do_options' not implemented")
 
 
-class AbstractConfEditor(object):
+class AbstractConfEditor:
     """The conf editor class provides methods for producing and updating
     configuration stanzas for use in configuration file.
     """

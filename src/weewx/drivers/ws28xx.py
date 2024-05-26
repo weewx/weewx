@@ -1781,7 +1781,7 @@ def getHistoryInterval(i):
 
 # NP - not present
 # OFL - outside factory limits
-class CWeatherTraits(object):
+class CWeatherTraits:
     windDirMap = {
         0: "N", 1: "NNE", 2: "NE", 3: "ENE", 4: "E", 5: "ESE", 6: "SE",
         7: "SSE", 8: "S", 9: "SSW", 10: "SW", 11: "WSW", 12: "W",
@@ -1848,7 +1848,7 @@ class CMeasurement:
         self._IsError = 1
         self._IsOverflow = 1
 
-class CMinMaxMeasurement(object):
+class CMinMaxMeasurement:
     def __init__(self):
         self._Min = CMeasurement()
         self._Max = CMeasurement()
@@ -1856,7 +1856,7 @@ class CMinMaxMeasurement(object):
 # firmware XXX has bogus date values for these fields
 _bad_labels = ['RainLastMonthMax','RainLastWeekMax','PressureRelativeMin']
 
-class USBHardware(object):
+class USBHardware:
     @staticmethod
     def isOFL2(buf, start, StartOnHiNibble):
         if StartOnHiNibble:
@@ -2225,7 +2225,7 @@ class USBHardware(object):
         return result
 
 
-class CCurrentWeatherData(object):
+class CCurrentWeatherData:
 
     def __init__(self):
         self._timestamp = None
@@ -2456,7 +2456,7 @@ class CCurrentWeatherData(object):
         ###log.debug('Instead of PressureRelative._Min._Time we get: _PresRel_hPa_Max= %8.3f, _PresRel_inHg_max =%8.3f;' % (self._PresRel_hPa_Max, self._PresRel_inHg_Max))
 
 
-class CWeatherStationConfig(object):
+class CWeatherStationConfig:
     def __init__(self):
         self._InBufCS = 0  # checksum of received config
         self._OutBufCS = 0 # calculated config checksum from outbuf config
@@ -2856,7 +2856,7 @@ class CWeatherStationConfig(object):
             }
 
 
-class CHistoryData(object):
+class CHistoryData:
 
     def __init__(self):
         self.Time = None
@@ -2929,9 +2929,9 @@ class HistoryCache:
         self.num_scanned = 0
         self.last_ts = 0
 
-class CDataStore(object):
+class CDataStore:
 
-    class TTransceiverSettings(object): 
+    class TTransceiverSettings: 
         def __init__(self):
             self.VendorId       = 0x6666
             self.ProductId      = 0x5555
@@ -2943,7 +2943,7 @@ class CDataStore(object):
             self.SerialNumber   = None
             self.DeviceID       = None
 
-    class TLastStat(object):
+    class TLastStat:
         def __init__(self):
             self.LastBatteryStatus = None
             self.LastLinkQuality = None
@@ -3050,7 +3050,7 @@ class CDataStore(object):
         return self.TransceiverSettings.SerialNumber
 
 
-class sHID(object):
+class sHID:
     """USB driver abstraction"""
 
     def __init__(self):
@@ -3395,7 +3395,7 @@ class sHID(object):
                 addr += 16
         return new_data
 
-class CCommunicationService(object):
+class CCommunicationService:
 
     reg_names = dict()
 

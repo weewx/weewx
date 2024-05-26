@@ -1493,7 +1493,7 @@ class BadWrite(weewx.WeeWxIOError):
 class BadHeader(weewx.WeeWxIOError):
     """Bad header byte"""
 
-class TE923Station(object):
+class TE923Station:
     ENDPOINT_IN = 0x81
     READ_LENGTH = 0x8
     TIMEOUT = 1200

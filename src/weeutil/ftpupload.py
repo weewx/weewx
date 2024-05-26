@@ -17,7 +17,7 @@ import time
 log = logging.getLogger(__name__)
 
 
-class FtpUpload(object):
+class FtpUpload:
     """Uploads a directory and all its descendants to a remote server.
     
     Keeps track of when a file was last uploaded, so it is uploaded only

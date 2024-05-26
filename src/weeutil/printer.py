@@ -3,7 +3,7 @@
 #
 #    See the file LICENSE.txt for your rights.
 #
-class Printer(object):
+class Printer:
     def __init__(self, verbosity=0, fd=None):
         self.verbosity = verbosity
         if fd is None:

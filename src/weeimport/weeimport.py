@@ -72,7 +72,7 @@ class WeeImportDecodeError(Exception):
 #                                class Source
 # ============================================================================
 
-class Source(object):
+class Source:
     """Base class used for interacting with an external data source to import
     records into the WeeWX archive.
 

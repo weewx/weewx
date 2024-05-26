@@ -29,7 +29,7 @@ log = logging.getLogger(__name__)
 # ============================================================================
 
 
-class DatabaseFix(object):
+class DatabaseFix:
     """Base class for fixing bulk data in the weewx database.
 
     Classes for applying different fixes the weewx database data should be

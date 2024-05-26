@@ -730,7 +730,7 @@ def _check_crc(buf):
     except ValueError as e:
         raise BadCRC(a, cs, buf)
 
-class CC3000(object):
+class CC3000:
     DEFAULT_PORT = '/dev/ttyUSB0'
 
     def __init__(self, port):

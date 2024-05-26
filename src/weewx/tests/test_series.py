@@ -45,7 +45,7 @@ stop_ts = time.mktime(month_stop_tt)
 
 
 
-class Common(object):
+class Common:
     # These are the expected results for March 2010
     expected_daily_rain_sum = [0.00, 0.68, 0.60, 0.00, 0.00, 0.68, 0.60, 0.00, 0.00, 0.68, 0.60,
                                0.00, 0.00, 0.52, 0.76, 0.00, 0.00, 0.52, 0.76, 0.00, 0.00, 0.52,
