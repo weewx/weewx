@@ -49,9 +49,11 @@ MONTH_NAME_MAP = list(zip(('jan', 'feb', 'mar', 'apr',
 # map day names to day number
 DAY_NAME_MAP = list(zip(('sun', 'mon', 'tue', 'wed',
                          'thu', 'fri', 'sat'), list(range(7))))
-# map CRON like nicknames to equivalent CRON like line
+# map CRON like nicknames to equivalent CRON like line, incorrectly spelt
+# '@anually' retained for backwards compatibility due to earlier typo
 NICKNAME_MAP = {
     "@yearly": "0 0 1 1 *",
+    "@annually": "0 0 1 1 *",
     "@anually": "0 0 1 1 *",
     "@monthly": "0 0 1 * *",
     "@weekly": "0 0 * * 0",
