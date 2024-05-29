@@ -64,15 +64,15 @@ may have to install it.
 The old utilities have been collected and put under one master utility,
 `weectl`. This make it easy to use `weectl --help` to see which one you want.
 
-| Old utility     | New utility        |
-|-----------------|--------------------|
-| `wee_database`  | `weectl database`  |
-| `wee_debug`     | `weectl debug`     |
-| `wee_device`    | `weectl device`    |
-| `wee_extension` | `weectl extension` |
-| `wee_import`    | `weectl import`    |
-| `wee_reports`   | `weectl report`    |
-| `wee_config`    | `weectl station`   |
+| Old utility     | New utility                                         |
+|-----------------|-----------------------------------------------------|
+| `wee_database`  | [`weectl database`](../utilities/weectl-database)   |
+| `wee_debug`     | [`weectl debug`](../utilities/weectl-debug)         |
+| `wee_device`    | [`weectl device`](../utilities/weectl-device)       |
+| `wee_extension` | [`weectl extension`](../utilities/weectl-extension) |
+| `wee_import`    | [`weectl import`](../utilities/weectl-import-about) |
+| `wee_reports`   | [`weectl report`](../utilities/weectl-report)       |
+| `wee_config`    | [`weectl station`](../utilities/weectl-station)     |
 
 #### pip installs to new location
 
