@@ -55,7 +55,7 @@
 %global sqlite_root  /var/lib/weewx
 %global html_root    /var/www/html/weewx
 
-%define entry_points weewxd weectl wee_database wee_debug wee_device wee_extension wee_import wee_reports wee_config
+%define entry_points weewxd weectl wee_config wee_database wee_debug wee_device wee_extension wee_import wee_reports
 %define cfgapp %{python} /usr/share/weewx/weectl.py
 
 Summary: weather software
@@ -480,6 +480,13 @@ rm -rf %{buildroot}
 %defattr(-,root,root)
 %attr(0755,root,root) %{_bindir}/weewxd
 %attr(0755,root,root) %{_bindir}/weectl
++%attr(0755,root,root) %{_bindir}/wee_config
++%attr(0755,root,root) %{_bindir}/wee_database
++%attr(0755,root,root) %{_bindir}/wee_debug
++%attr(0755,root,root) %{_bindir}/wee_device
++%attr(0755,root,root) %{_bindir}/wee_extension
++%attr(0755,root,root) %{_bindir}/wee_import
++%attr(0755,root,root) %{_bindir}/wee_reports
 %{dst_code_dir}/
 %doc %{dst_doc_dir}/
 %config(noreplace) %{dst_cfg_dir}/
