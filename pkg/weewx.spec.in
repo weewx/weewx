@@ -55,7 +55,7 @@
 %global sqlite_root  /var/lib/weewx
 %global html_root    /var/www/html/weewx
 
-%define entry_points weewxd weectl
+%define entry_points weewxd weectl wee_database wee_debug wee_device wee_extension wee_import wee_reports wee_config
 %define cfgapp %{python} /usr/share/weewx/weectl.py
 
 Summary: weather software
