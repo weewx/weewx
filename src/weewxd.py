@@ -6,18 +6,13 @@
 """Entry point to the weewx weather system."""
 
 import argparse
-import locale
 import logging
 import os
 import os.path
-import platform
 import signal
 import sys
 import time
 
-import configobj
-
-import weecfg
 import weedb
 import weeutil.logger
 import weeutil.startup
