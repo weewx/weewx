@@ -41,6 +41,13 @@ packages = [
     { include = "weewx_data", from = "src" },
     { include = "weectl.py", from = "src" },
     { include = "weewxd.py", from = "src" },
+    { include = "wee_config.py", from = "src" },
+    { include = "wee_database.py", from = "src" },
+    { include = "wee_debug.py", from = "src" },
+    { include = "wee_device.py", from = "src" },
+    { include = "wee_extension.py", from = "src" },
+    { include = "wee_import.py", from = "src" },
+    { include = "wee_reports.py", from = "src" },
 ]
 
 include = [
@@ -67,6 +74,13 @@ importlib-resources = {version = ">=3.3", python = "3.6"}
 [tool.poetry.scripts]
 weectl = 'weectl:main'
 weewxd = 'weewxd:main'
+wee_config = 'wee_config:main'
+wee_database = 'wee_database:main'
+wee_debug = 'wee_debug:main'
+wee_device = 'wee_device:main'
+wee_extension = 'wee_extension:main'
+wee_import = 'wee_import:main'
+wee_reports = 'wee_reports:main'
 
 [build-system]
 # Minimum requirements for the build system to execute.
