@@ -53,7 +53,10 @@ checklist for doing a release:
      2. make release-apt-repo
      3. make release-yum-repo
      4. make release-suse-repo
-14. Announce the release to the weewx user's group.
+14. If minor version changes, update and publish the website repository
+     1. change URL= in docs/*.html
+     2. change version in docs/weedocs.js
+15. Announce the release to the weewx user's group.
 
 
 pre-requisites ----------------------------------------------------------------
