@@ -537,6 +537,7 @@ case "$1" in
 	if [ "$2" != "" ]; then
             # this is an upgrade, so see if weewx is already running
             num_weewxd=$(count_instances)
+            echo "Found $num_weewxd running instances of weewxd"
             # this is an upgrade, so ensure that weewx is not running
             stop_old_weewxd $pid1
 	fi
@@ -566,11 +567,8 @@ case "$1" in
         set_config_permissions
         setup_init $pid1
         enable_weewxd $pid1
-	if [ $num_weewxd -gt 0 ]; then
-	    # if this is a new install, start weewx no matter what.  if this
-	    # is an upgrade, start weewx only if it was running before.
-	    start_weewxd $pid1
-	fi
+        # always try to start weewx
+	start_weewxd $pid1
         ;;
 
     abort-remove)
