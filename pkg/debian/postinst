@@ -502,7 +502,7 @@ stop_old_weewxd() {
 	invoke-rc.d weewx-multi stop > /dev/null || true
     fi
     if [ "$1" = "systemd" ]; then
-	systemctl stop weewx > /dev/null 2>&1 || :
+	systemctl stop weewx > /dev/null || true
     elif [ "$1" = "sysv" ]; then
         invoke-rc.d weewx stop > /dev/null || true
     fi
@@ -534,7 +534,7 @@ case "$1" in
 	num_weewxd=1
 	if [ "$2" != "" ]; then
 	    # this is an upgrade so ensure that weewxd is not running
-	    num_weewxd=count_instances
+	    num_weewxd=$(count_instances)
 	    stop_old_weewxd $pid1
 	fi
         get_user_info

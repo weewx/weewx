@@ -421,7 +421,7 @@ echo "Using $WEEWX_USER:$WEEWX_GROUP as user:group"
 num_weewxd=1
 if [ $1 -gt 1 ]; then
     # this is an upgrade, so ensure that weewx is not running
-    num_weewxd=count_instances
+    num_weewxd=$(count_instances)
     stop_old_weewxd $pid1
 fi
 setup_defaults $pid1
