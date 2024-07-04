@@ -180,9 +180,9 @@ sudo rm -r /var/www/html/weewx
 sudo rm -r /var/lib/weewx
 sudo rm -r /etc/weewx
 sudo rm /etc/default/weewx
+sudo gpasswd -d $USER weewx
+sudo userdel weewx
+sudo groupdel weewx
 sudo rm /etc/apt/trusted.gpg.d/weewx.gpg
 sudo rm /etc/apt/sources.list.d/weewx.list
-sudo userdel weewx
-sudo gpasswd -d $USER weewx
-sudo groupdel weewx
 ```
