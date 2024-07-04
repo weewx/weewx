@@ -30,27 +30,28 @@ calculated. Thanks to Rich Bell! PR
 [#929](https://github.com/weewx/weewx/issues/929).
 
 Allow calculation of xtype aggregate with missing constituents.
-Related to PR [#929](https://github.com/weewx/weewx/issues/).
+Related to PR [#929](https://github.com/weewx/weewx/issues/929).
 
 Fix bug in tag `$tag.obstype` where `obstype` is an XType that cannot be
-calculated. Related to PR [#929](https://github.com/weewx/weewx/issues/).
+calculated. Related to PR [#929](https://github.com/weewx/weewx/issues/929).
 
 Fix bug that caused the `loop_on_init` setting in `weewx.conf` to be ignored.
-PR #935.
+PR [#935](https://github.com/weewx/weewx/issues/935).
 
 Reinstate file `weeutil/timediff.py`. It's not used in WeeWX, but it is used
 by some extensions.
 
-Fixed bug in station config where config_units would fail if there was no
-Defaults section specified in StdReport.
+Fixed bug in station config where `config_units()` would fail if there was no
+`[[Defaults]]` section specified in `[StdReport]`.
 
-Use lower-case for the product and vendor codes in udev rules. Fixes issue #949.
+Use lower-case for the product and vendor codes in udev rules. Fixes issue 
+[#949](https://github.com/weewx/weewx/issues/949).
 
 Do not make group changes if identity of user doing the install cannot be
-determined. PR #952
+determined. PR [#952](https://github.com/weewx/weewx/issues/952).
 
 For deb/rpm installs, set permissions on the configuration file to be not
-world-readable. PR #948
+world-readable. PR [#948](https://github.com/weewx/weewx/issues/948).
 
 
 ### 5.0.2 02/10/2024
