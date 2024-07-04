@@ -447,7 +447,7 @@ precompile
 set_config_permissions
 setup_init $pid1
 enable_weewxd $pid1
-if [ $num_weewx -gt 0 ]; then
+if [ $num_weewxd -gt 0 ]; then
     start_weewxd $pid1
 fi
 
