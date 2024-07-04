@@ -30,7 +30,7 @@ load_rc_config $name
 : ${weewx_enable="NO"}
 : ${weewx_daemon="/usr/local/weewx/bin/weewxd"}
 : ${weewx_pid="/var/run/weewx.pid"}
-: ${weewx_config=/usr/local/etc/weewx/weewx.conf"}
+: ${weewx_config="/usr/local/etc/weewx/weewx.conf"}
 
 command=${weewx_daemon}
 procname=${weewx_procname:-/usr/local/bin/python3}
@@ -45,9 +45,9 @@ weewx_start() {
 }
 
 weewx_stop() {
-  if [ -f ${weewx_pid} ]; then
+  if check_pidfile ${weewx_pid} ${weewx_daemon} ; then
     echo "stopping ${name}"
-    kill `cat ${weewx_pid}`
+    pkill -F "${weewx_pid}"
   else
     echo "${name} is not running"
     exit 1
