@@ -28,7 +28,7 @@ WEEWX_HTMLDIR="${WEEWX_HTMLDIR:-/var/www/html/weewx}"
 WEEWX_USERDIR=/etc/weewx/bin/user
 WEEWX_INSTANCES="${WEEWX_INSTANCES:-weewx}"
 
-is_num() { case ${1#[-]} in '' | . | *[!0-9.]* | *.*.* ) return 1;; esac }
+is_num() { x=`echo $1 | grep "^[+-]\?[0-9]\+$"`; echo $x; }
 
 # insert the driver and stanza into the configuration file
 insert_driver() {
