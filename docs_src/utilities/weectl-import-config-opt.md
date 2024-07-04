@@ -570,12 +570,13 @@ The `[[FieldMap]]` stanza defines the mapping from the Weather Underground
 source data fields to WeeWX archive fields. This allows `weectl import` to 
 take a source data field, perform the appropriate unit conversion and store 
 the resulting value in the appropriate WeeWX archive field. Weather 
-Undergroundimports use a simplified map that consists of one sub-stanza per 
+Underground imports use a simplified map that consists of one sub-stanza per 
 WeeWX archive field being populated using the following format:
 
 ```
     [[[weewx_archive_field_name]]]
         source_field = wu_field_name
+        is_cumulative = True | False
 ```
 
 Where
@@ -588,8 +589,11 @@ Where
 
 Each WeeWX archive field stanza supports the following option:
 
-* `source_field`. The name of the Cumulus field to be mapped to the WeeWX 
-  archive field. Mandatory.
+* `source_field`. The name of the Weather Underground source field to be  
+  mapped to the WeeWX archive field. Mandatory.
+* `is_cumulative`. Whether the WeeWX archive field is to be derived from a 
+  cumulative source field (e.g., daily rainfall) or not. Optional boolean 
+  value. Default is `False`.
 
 A mapping is not required for every WeeWX archive field and neither does 
 every Weather Underground field need to be included in a mapping.
@@ -679,7 +683,12 @@ temperature to WeeWX field `outTemp`, outside humidity to WeeWX field
         source_field = humidityAvg
     [[[rain]]]
         source = precipTotal
+        is_cumulative = True
 ```
+
+!!! Note
+    The inclusion of `is-cumulative = True` under `[[[rain]]]` as Weather 
+    Underground records rainfall as a daily cumulative value.
 
 !!! Note
     Any WeeWX archive fields that are derived (e.g., `dewpoint`) and for 
