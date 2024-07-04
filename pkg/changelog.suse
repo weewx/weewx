@@ -1,3 +1,5 @@
+* Wed Jul 04 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.1.0b5-2
+- fix bug in the instance count
 * Wed Jul 03 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.1.0b5-1
 - new upstream release
 - use systemd presets
