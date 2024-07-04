@@ -1,5 +1,5 @@
 weewx (5.1.0-4) unstable; urgency=low
-  * ?
+  * use process counting that will not break
  -- Matthew Wall <mwall.weewx@gmail.com>  Thu, 04 Jul 2024 16:40:00 -0400
 weewx (5.1.0-3) unstable; urgency=low
   * do not try to validate lat/lon
