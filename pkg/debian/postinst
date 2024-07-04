@@ -371,7 +371,7 @@ setup_init() {
             done
             systemctl daemon-reload > /dev/null || true
         fi
-    elif [ "$1" = "init" ]; then
+    elif [ "$1" = "sysv" ]; then
         echo "Installing SysV rc script"
         cp /etc/weewx/init.d/weewx-multi /etc/init.d/weewx
         chmod 755 /etc/init.d/weewx
@@ -470,9 +470,11 @@ enable_weewxd() {
 	if [ "$cfgs" = "" ]; then
 	    systemctl enable weewx > /dev/null || true
 	else
-	    systemctl enable weewx@ $cfgs > /dev/null || true
+	    for i in $cfgs; do
+		systemctl enable weewx@$i > /dev/null || true
+	    done
 	fi
-    elif [ "$1" = "init" ]; then
+    elif [ "$1" = "sysv" ]; then
         update-rc.d weewx defaults > /dev/null || true
     fi
 }
@@ -484,11 +486,11 @@ start_weewxd() {
 	if [ "$cfgs" = "" ]; then
 	    systemctl start weewx > /dev/null || true
 	else
-	    for cfg in $cfgs; do
-		systemctl start weewx@$cfg > /dev/null || true
+	    for i in $cfgs; do
+		systemctl start weewx@$i > /dev/null || true
 	    done
 	fi
-    elif [ "$1" = "init" ]; then
+    elif [ "$1" = "sysv" ]; then
         invoke-rc.d weewx start > /dev/null || true
     fi
 }
@@ -499,6 +501,17 @@ stop_old_weewxd() {
     if [ -f /etc/init.d/weewx-multi ]; then
 	invoke-rc.d weewx-multi stop > /dev/null || true
     fi
+    if [ "$1" = "systemd" ]; then
+	systemctl stop weewx > /dev/null 2>&1 || :
+    elif [ "$1" = "sysv" ]; then
+        invoke-rc.d weewx stop > /dev/null || true
+    fi
+}
+
+# see how many instances of weewxd are running
+count_instances() {
+    NUM_INSTANCES=$(ps ax | grep -c [wee]wxd)
+    echo $NUM_INSTANCES
 }
 
 
@@ -507,7 +520,7 @@ pid1=none
 if [ -d /run/systemd/system ]; then
     pid1=systemd
 else
-    pid1=init
+    pid1=sysv
 fi
 
 # things we have to do in an upgrade or install:
@@ -518,7 +531,10 @@ fi
 #  - multiple instances
 case "$1" in
     configure)
+	num_weewxd=1
 	if [ "$2" != "" ]; then
+	    # this is an upgrade so ensure that weewxd is not running
+	    num_weewxd=count_instances
 	    stop_old_weewxd $pid1
 	fi
         get_user_info
@@ -547,7 +563,9 @@ case "$1" in
         set_config_permissions
         setup_init $pid1
         enable_weewxd $pid1
-        start_weewxd $pid1
+	if [ $num_weewx -gt 0 ]; then
+            start_weewxd $pid1
+	fi
         ;;
 
     abort-remove)

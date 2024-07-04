@@ -420,6 +420,37 @@ with a single, shared key.
 On SUSE, zypper keeps the repo information in a local cache /var/cache/zypp/raw
 
 
+init --------------------------------------------------------------------------
+
+For the packaged installers, the installer must "do the right thing" with
+respect to starting, restarting, and enabling the weewxd daemon.  This does
+not necessarily align with platform policies.
+
+On systems with systemd (redhat, suse, debian):
+- new install
+  - start weewxd if no preset or preset does not say no
+  - enable weewxd if no preset or preset does not say no
+- upgrade from 4.x
+  - remove any SysV scripts - weewxd and weewx-multi
+  - start weewxd if weewxd was running
+  - enable weewxd if weewxd was enabled
+- upgrade from 5.x
+  - start weewxd only if weewxd was already running
+  - enable weewxd only if not disabled
+
+On systems with SysV (debian):
+- new install
+  - start weewxd
+  - enable weewxd
+- upgrade from 4.x
+  - replace weewx and weewx-multi with weewx
+  - start weewxd if weewxd was running
+  - enable weewxd if weewxd was enabled
+- upgrade from 5.x
+  - start weewxd only if weewxd was already running
+  - enable weewxd only if not disabled
+
+
 unit tests --------------------------------------------------------------------
 
 prerequisites:
