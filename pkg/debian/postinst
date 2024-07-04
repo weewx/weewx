@@ -369,7 +369,7 @@ setup_init() {
  -e "s/Group=.*/Group=${WEEWX_GROUP}/" \
  /etc/weewx/systemd/$f > $dst/$f
             done
-            systemctl daemon-reload > /dev/null || true
+            systemctl daemon-reload > /dev/null 2>&1 || true
         fi
     elif [ "$1" = "sysv" ]; then
         echo "Installing SysV rc script"
@@ -463,19 +463,23 @@ migrate_extensions() {
     fi
 }
 
+# we explicitly do *not* pay attention to the systemd.preset, since that
+# just causes unnecessary confusion, for example between presets for a
+# server or workstation configuration, or even from one version of systemd
+# to another.  just always enable weewx.
 enable_weewxd() {
     echo "Enabling startup using $1"
     if [ "$1" = "systemd" ]; then
 	cfgs=$2
 	if [ "$cfgs" = "" ]; then
-	    systemctl enable weewx > /dev/null || true
+	    systemctl enable weewx > /dev/null 2>&1 || true
 	else
 	    for i in $cfgs; do
-		systemctl enable weewx@$i > /dev/null || true
+		systemctl enable weewx@$i > /dev/null 2>&1 || true
 	    done
 	fi
     elif [ "$1" = "sysv" ]; then
-        update-rc.d weewx defaults > /dev/null || true
+        update-rc.d weewx defaults > /dev/null 2>&1 || true
     fi
 }
 
@@ -484,14 +488,14 @@ start_weewxd() {
     if [ "$1" = "systemd" ]; then
 	cfgs=$2
 	if [ "$cfgs" = "" ]; then
-	    systemctl start weewx > /dev/null || true
+	    systemctl start weewx > /dev/null 2>&1 || true
 	else
 	    for i in $cfgs; do
-		systemctl start weewx@$i > /dev/null || true
+		systemctl start weewx@$i > /dev/null 2>&1 || true
 	    done
 	fi
     elif [ "$1" = "sysv" ]; then
-        invoke-rc.d weewx start > /dev/null || true
+        invoke-rc.d weewx start > /dev/null 2>&1 || true
     fi
 }
 
@@ -499,12 +503,12 @@ start_weewxd() {
 # normally not necessary, since the prerm for prior version does a shutdown.
 stop_old_weewxd() {
     if [ -f /etc/init.d/weewx-multi ]; then
-	invoke-rc.d weewx-multi stop > /dev/null || true
+	invoke-rc.d weewx-multi stop > /dev/null 2>&1 || true
     fi
     if [ "$1" = "systemd" ]; then
-	systemctl stop weewx > /dev/null || true
+	systemctl stop weewx > /dev/null 2>&1 || true
     elif [ "$1" = "sysv" ]; then
-        invoke-rc.d weewx stop > /dev/null || true
+        invoke-rc.d weewx stop > /dev/null 2>&1 || true
     fi
 }
 
@@ -533,8 +537,9 @@ case "$1" in
     configure)
 	num_weewxd=1
 	if [ "$2" != "" ]; then
-	    # this is an upgrade so ensure that weewxd is not running
+	    # this is an upgrade, so see if weewx is already running
 	    num_weewxd=$(count_instances)
+	    # this is an upgrade so ensure that weewxd is not running
 	    stop_old_weewxd $pid1
 	fi
         get_user_info
@@ -564,7 +569,9 @@ case "$1" in
         setup_init $pid1
         enable_weewxd $pid1
 	if [ $num_weewxd -gt 0 ]; then
-            start_weewxd $pid1
+	    # if this is a new install, start weewx no matter what.  if this
+	    # is an upgrade, start weewx only if it was running before.
+	    start_weewxd $pid1
 	fi
         ;;
 

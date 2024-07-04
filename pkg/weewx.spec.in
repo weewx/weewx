@@ -363,14 +363,18 @@ migrate_extensions() {
     fi
 }
 
+# we explicitly do *not* pay attention to the systemd.preset, since that
+# just causes unnecessary confusion, for example between presets for a
+# server or workstation configuration, or even from one version of systemd
+# to another.  just always enable weewx.
 enable_weewxd() {
     if [ "$1" = "systemd" ]; then
 	cfgs=$2
 	if [ "$cfgs" = "" -o "$cfgs" = "weewx" ]; then
-	    systemctl preset weewx > /dev/null 2>&1 || :
+	    systemctl enable weewx > /dev/null 2>&1 || :
 	else
 	    for i in $cfgs; do
-		systemctl preset weewx@$i > /dev/null 2>&1 || :
+		systemctl enable weewx@$i > /dev/null 2>&1 || :
 	    done
 	fi
     fi
@@ -393,7 +397,7 @@ start_weewxd() {
 stop_old_weewxd() {
     if [ "$1" = "systemd" ]; then
 	if [ -f /etc/init.d/weewx-multi ]; then
-	    service stop weewx-multi 2>&1 || :
+	    service stop weewx-multi > /dev/null 2>&1 || :
 	fi
 	systemctl stop weewx > /dev/null 2>&1 || :	
     fi
@@ -420,8 +424,9 @@ echo "Using $WEEWX_USER:$WEEWX_GROUP as user:group"
 # default to running an instance of weewxd
 num_weewxd=1
 if [ $1 -gt 1 ]; then
-    # this is an upgrade, so ensure that weewx is not running
+    # this is an upgrade, so see if weewx is already running
     num_weewxd=$(count_instances)
+    # this is an upgrade, so ensure that weewx is not running
     stop_old_weewxd $pid1
 fi
 setup_defaults $pid1
@@ -448,6 +453,8 @@ set_config_permissions
 setup_init $pid1
 enable_weewxd $pid1
 if [ $num_weewxd -gt 0 ]; then
+    # if this is a new install, start weewx no matter what.  if this
+    # is an upgrade, start weewx only if it was running before.
     start_weewxd $pid1
 fi
 
