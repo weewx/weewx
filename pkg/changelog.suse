@@ -1,3 +1,5 @@
+* Thu Jul 04 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.1.0-1
+- new upstream release
 * Thu Jul 04 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.1.0b6-1
 - new upstream release
 * Wed Jul 04 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.1.0b5-2

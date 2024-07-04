@@ -1,13 +1,13 @@
 WeeWX change history
 --------------------
 
-### 5.1.0 mm/DD/YYYY
+### 5.1.0 07/04/2024
 
 If option `lang` is a valid locale, then it will be used to change locale as
 well as language. If it is not a valid locale, then the user's default locale
 will be used. For example, if `lang=de_DE.utf8`, then the German locale will be
-used. This allows locales to be set on a report-by-report basis. Addresses issue
-[#867](https://github.com/weewx/weewx/issues/867).
+used. This allows locales to be set on a report-by-report basis. Addresses
+issue [#867](https://github.com/weewx/weewx/issues/867).
 
 Allow country codes to be used in addition to a language code. For example,
 `zh_CN` would specify Chinese language, mainland China (Simplified Chinese),
@@ -16,8 +16,8 @@ while `zh_TW` would specify Chinese language, Taiwan (Traditional Chinese).
 Added translation file for Simplified Chinese (`zh_CN.conf`). Thanks to user
 Kranz!
 
-Allow the utility `weectl import` to update old records in addition to importing
-new records. PR [#930](https://github.com/weewx/weewx/issues/930).
+Allow the utility `weectl import` to update old records in addition to
+importing new records. PR [#930](https://github.com/weewx/weewx/issues/930).
 
 Include the effective user and group to the log. PR
 [#934](https://github.com/weewx/weewx/issues/934).
@@ -55,8 +55,8 @@ world-readable. PR #948
 
 ### 5.0.2 02/10/2024
 
-Add target `network-online.target` to the weewx systemd unit file. This prevents
-`weewxd` from starting until the network is ready.
+Add target `network-online.target` to the weewx systemd unit file. This
+prevents `weewxd` from starting until the network is ready.
 
 
 ### 5.0.1 02/04/2024
@@ -114,8 +114,9 @@ file or directory.
 When using `weectl database` with action `calc-missing`, the tranche size can
 now be set.
 
-Documentation now uses [MkDocs](https://www.mkdocs.org/). It is no longer included in the
-distribution, but can always be accessed online at https://weewx.com/docs.
+Documentation now uses [MkDocs](https://www.mkdocs.org/). It is no longer
+included in the distribution, but can always be accessed online at
+https://weewx.com/docs.
 
 Package installs now use `systemd` instead of the old System V `/etc/init.d`.
 
