@@ -1,3 +1,6 @@
+weewx (5.1.0-3) unstable; urgency=low
+  * do not try to validate lat/lon
+ -- Matthew Wall <mwall.weewx@gmail.com>  Thu, 04 Jul 2024 15:59:00 -0400
 weewx (5.1.0-2) unstable; urgency=low
   * fix is_num for lat/lon check
  -- Matthew Wall <mwall.weewx@gmail.com>  Thu, 04 Jul 2024 15:36:00 -0400

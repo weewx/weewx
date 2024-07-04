@@ -166,8 +166,10 @@ install_weewxconf() {
     db_get weewx/latlon
     lat=$(echo $RET | cut -d, -f1 | sed 's/^ //g' | sed 's/ $//g')
     lon=$(echo $RET | cut -d, -f2 | sed 's/^ //g' | sed 's/ $//g')
-    if [ ! is_num $lat ]; then lat=0.0; fi
-    if [ ! is_num $lon ]; then lon=0.0; fi
+#    lat=$(is_num $lat)
+#    lon=$(is_num $lon)
+#    if [ "$lat" = "" ]; then lat=0.0; fi
+#    if [ "$lon" = "" ]; then lon=0.0; fi
 
     db_get weewx/altitude
     altitude=$(echo $RET | cut -d, -f1 | sed 's/^ //g' | sed 's/ $//g')
