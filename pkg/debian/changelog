@@ -1,5 +1,6 @@
 weewx (5.1.0b5-1) unstable; urgency=low
   * new upstream release
+  * on upgrades, do not start weewxd unless it was previously running
  -- Matthew Wall <mwall.weewx@gmail.com>  Wed, 03 Jul 2024 23:17:15 -0400
 weewx (5.1.0b4-1) unstable; urgency=low
   * Allow multiple locales
