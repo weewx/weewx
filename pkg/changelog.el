@@ -1,3 +1,5 @@
+* Wed Jul 03 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.1.0b5-1
+- new upstream release
 * Sat May 25 2024 Tom Keffer (Author of WeeWX) <tkeffer@gmail.com> - 5.1.0b4-1
 - Allow multiple locales
 * Sun May 05 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.1.0b1-1

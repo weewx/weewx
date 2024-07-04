@@ -1,3 +1,6 @@
+weewx (5.1.0b5-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall <mwall.weewx@gmail.com>  Wed, 03 Jul 2024 23:17:15 -0400
 weewx (5.1.0b4-1) unstable; urgency=low
   * Allow multiple locales
  -- Tom Keffer (Author of WeeWX) <tkeffer@gmail.com>  Sat, 25 May 2024 08:35:36 -0700
