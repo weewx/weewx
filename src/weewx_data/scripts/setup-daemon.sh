@@ -97,9 +97,6 @@ uninstall_sysv() {
 }
 
 install_bsd() {
-    if [ -d /etc/defaults ]; then
-        copy_file $UTIL_ROOT/default/weewx /etc/defaults/weewx.conf
-    fi
     copy_file $UTIL_ROOT/init.d/weewx.bsd /usr/local/etc/rc.d/weewx
     chmod 755 /usr/local/etc/rc.d/weewx
 
@@ -117,7 +114,6 @@ uninstall_bsd() {
     echo "Disabling weewx..."
     sysrc weewx_enable="NO"
     remove_file /usr/local/etc/rc.d/weewx
-    remove_file /etc/defaults/weewx.conf
 }
 
 install_macos() {

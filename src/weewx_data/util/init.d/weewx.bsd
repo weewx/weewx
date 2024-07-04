@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # PROVIDE: weewx
+# REQUIRE: DAEMON
 # KEYWORD: shutdown
 #
 # install this file as /usr/local/etc/rc.d/weewx
@@ -12,35 +13,35 @@
 #   sudo service weewx start
 #   sudo service weewx stop
 
-WEEWX_PYTHON=/usr/local/bin/python3
-WEEWX_BINDIR=/usr/local/weewx/src
-WEEWX_CFGDIR=/usr/local/etc/weewx
-WEEWX_RUNDIR=/var/run
-WEEWX_CFG=weewx.conf
-
-# Read configuration variable file if it is present
-[ -r /etc/defaults/weewx.conf ] && . /etc/defaults/weewx.conf
-
-WEEWXD=${WEEWX_BINDIR}/weewxd.py
-
 . /etc/rc.subr
 
+# *BSD does not add /usr/local to PATH during boot therefore the PATH used by
+# Python os.environ['PATH'] will not be able to find third party apps such as
+# /usr/local/bin/rsync, so we add /usr/local/bin here.
+PATH=${PATH}:/usr/local/bin
+export PATH
+
 name="weewx"
-rcvar=weewx_enable
+rcvar=${name}_enable
 
 load_rc_config $name
 
-weewx_pid=${WEEWX_RUNDIR}/weewx.pid
-weewx_config=${WEEWX_CFGDIR}/${WEEWX_CFG}
+# override these by setting values in /etc/rc.conf.local
+: ${weewx_enable="NO"}
+: ${weewx_daemon="/usr/local/weewx/bin/weewxd"}
+: ${weewx_pid="/var/run/weewx.pid"}
+: ${weewx_config=/usr/local/etc/weewx/weewx.conf"}
 
-start_cmd=weewx_start
-stop_cmd=weewx_stop
-extra_commands=status
-status_cmd=weewx_status
+command=${weewx_daemon}
+procname=${weewx_procname:-/usr/local/bin/python3}
+
+start_cmd=${name}_start
+stop_cmd=${name}_stop
+stop_postcmd=${name}_poststop
 
 weewx_start() {
   echo "starting ${name}"
-  ${WEEWX_PYTHON} ${WEEWXD} --daemon --pidfile=${weewx_pid} ${weewx_config}
+  ${weewx_daemon} --daemon --pidfile=${weewx_pid} ${weewx_config}
 }
 
 weewx_stop() {
@@ -49,15 +50,20 @@ weewx_stop() {
     kill `cat ${weewx_pid}`
   else
     echo "${name} is not running"
+    exit 1
   fi
 }
 
-weewx_status() {
-  if [ -f ${weewx_pid} ]; then
-    echo "${name} is running with PID `cat ${weewx_pid}`"
-  else
-    echo "${name} is not running"
-  fi
+# weewx may take awhile to shut down.  this often happens when weewx is killed
+# at the start of a report cycle, and the report thread takes awhile to finish.
+# so give it a chance to exit before a restart.
+weewx_poststop() {
+  local timeout=5
+  while pgrep -qf ${name} && [ ${timeout} -gt 0 ]; do
+    echo "waiting for ${name} to exit"
+    timeout=$(( timeout - 1 ))
+    sleep 1
+  done
 }
 
 run_rc_command "$1"
