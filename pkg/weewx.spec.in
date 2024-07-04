@@ -405,7 +405,7 @@ stop_old_weewxd() {
 
 # see how many instances of weewxd are running
 count_instances() {
-    NUM_INSTANCES=$(ps ax | grep -c [wee]wxd)
+    NUM_INSTANCES=$(ps ax | grep weewxd | egrep -v grep | wc -l)
     echo $NUM_INSTANCES
 }
 

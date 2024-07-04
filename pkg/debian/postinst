@@ -28,8 +28,6 @@ WEEWX_HTMLDIR="${WEEWX_HTMLDIR:-/var/www/html/weewx}"
 WEEWX_USERDIR=/etc/weewx/bin/user
 WEEWX_INSTANCES="${WEEWX_INSTANCES:-weewx}"
 
-is_num() { x=`echo "$1" | grep "^[+-]\?[0-9]\+$"`; echo $x; }
-
 # insert the driver and stanza into the configuration file
 insert_driver() {
     if [ ! -f $cfgfile ]; then
@@ -166,10 +164,8 @@ install_weewxconf() {
     db_get weewx/latlon
     lat=$(echo $RET | cut -d, -f1 | sed 's/^ //g' | sed 's/ $//g')
     lon=$(echo $RET | cut -d, -f2 | sed 's/^ //g' | sed 's/ $//g')
-#    lat=$(is_num $lat)
-#    lon=$(is_num $lon)
-#    if [ "$lat" = "" ]; then lat=0.0; fi
-#    if [ "$lon" = "" ]; then lon=0.0; fi
+    if [ "$lat" = "" ]; then lat=0.0; fi
+    if [ "$lon" = "" ]; then lon=0.0; fi
 
     db_get weewx/altitude
     altitude=$(echo $RET | cut -d, -f1 | sed 's/^ //g' | sed 's/ $//g')
@@ -516,7 +512,7 @@ stop_old_weewxd() {
 
 # see how many instances of weewxd are running
 count_instances() {
-    NUM_INSTANCES=$(ps ax | grep -c [wee]wxd)
+    NUM_INSTANCES=$(ps ax | grep weewxd | egrep -v grep | wc -l)
     echo $NUM_INSTANCES
 }
 
@@ -537,12 +533,12 @@ fi
 #  - multiple instances
 case "$1" in
     configure)
-	num_weewxd=1
+        num_weewxd=1
 	if [ "$2" != "" ]; then
-	    # this is an upgrade, so see if weewx is already running
-	    num_weewxd=$(count_instances)
-	    # this is an upgrade so ensure that weewxd is not running
-	    stop_old_weewxd $pid1
+            # this is an upgrade, so see if weewx is already running
+            num_weewxd=$(count_instances)
+            # this is an upgrade, so ensure that weewx is not running
+            stop_old_weewxd $pid1
 	fi
         get_user_info
         create_user
