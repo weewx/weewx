@@ -53,7 +53,7 @@ checklist for doing a release:
      2. make release-apt-repo
      3. make release-yum-repo
      4. make release-suse-repo
-14. If minor version changes, update and publish the website repository
+14. If minor version changes, update doc links in the website repository
      1. change URL= in docs/*.html
      2. change version in docs/weedocs.js
 15. Announce the release to the weewx user's group.
@@ -75,7 +75,7 @@ To build the docs:
 To build pypi package install the following (see the pypi section):
   pip3 install --user poetry
 
-To build debian package install the following (use 'apt-get install'):
+To build debian package install the following (use 'apt install'):
   git
   rsync
   gpg
@@ -133,7 +133,7 @@ to build redhat packages with custom rpm revision:
   make pull-yum-repo
   make update-yum-repo RPMREVISION=2
   make push-yum-repo
-  ssh weewx.com rsync -arv /var/www/html/yum-test/ /var/www/html/yum
+  make release-yum-repo
 suse also uses RPMREVISION, but debian uses DEBREVISION.  this is useful when
 there is a change to asset(s) in the packaging, but not part of weewx itself.
 
@@ -382,14 +382,6 @@ scriptlets in redhat 10 - the anaconda installer already does a pretty good
 job of capturing and isolating output from scriptlets, but redhat plans to add
 similar functionality to dnf in redhat 10.
 
-fedora docs say that a service may be enabled if it does not alter other
-services, does not fail, does not require configuration before starting, and
-does not listen for outside connections.  so we can enable the weewx daemon,
-but that does *not* mean we can run it.
-
-for a new install, we only enable and start the primary unit.  for an upgrade,
-on a system with systemd we remove any sysv bits and migrate them to systemd.
-
 
 signing packages --------------------------------------------------------------
 
@@ -429,17 +421,34 @@ For the packaged installers, the installer must "do the right thing" with
 respect to starting, restarting, and enabling the weewxd daemon.  This does
 not necessarily align with platform policies.
 
+Fedora docs say that a service may be enabled if it does not alter other
+services, does not fail, does not require configuration before starting, and
+does not listen for outside connections.  However, some systemd docs say that
+you should use presets instead of enable/disable, so that 'spin' maintainers
+can control the app using presets.  So depending how you read this, you could
+argue that weewx could be enabled but not run upon install.
+
+Debian just enables and runs everything upon install.
+
+The weewx packages *always* enable and *always* run weewx on a new install.
+On an upgrade, the suse/redhat installer will run weewx if weewx was running
+before, while the debian installer will always run weewx.  This is because we
+can detect whether weewx was running on suse/redhat, but we cannot on debian.
+
+For a new install, we only enable and start the primary unit.  For an upgrade,
+on a system with systemd we remove any sysv bits and migrate them to systemd.
+
 On systems with systemd (redhat, suse, debian):
 - new install
-  - start weewxd if no preset or preset does not say no
-  - enable weewxd if no preset or preset does not say no
+  - start weewxd
+  - enable weewxd
 - upgrade from 4.x
   - remove any SysV scripts - weewxd and weewx-multi
-  - start weewxd if weewxd was running
-  - enable weewxd if weewxd was enabled
+  - start weewxd (suse/redhat: only if weewxd was already running)
+  - enable weewxd
 - upgrade from 5.x
-  - start weewxd only if weewxd was already running
-  - enable weewxd only if not disabled
+  - start weewxd (suse/redhat: only if weewxd was already running)
+  - enable weewxd
 
 On systems with SysV (debian):
 - new install
@@ -447,33 +456,33 @@ On systems with SysV (debian):
   - enable weewxd
 - upgrade from 4.x
   - replace weewx and weewx-multi with weewx
-  - start weewxd if weewxd was running
-  - enable weewxd if weewxd was enabled
+  - start weewxd
+  - enable weewxd
 - upgrade from 5.x
-  - start weewxd only if weewxd was already running
-  - enable weewxd only if not disabled
+  - start weewxd
+  - enable weewxd
 
 
 unit tests --------------------------------------------------------------------
 
 prerequisites:
 
-python 3.7
-python-usb
-pyephem
+  - python 3.7
+  - python-usb
+  - pyephem
 
 to set up mysql server with user and permissions for testing:
 
-make test-setup
+  make test-setup
 
 to run all unit tests:
 
-make test
-(note: do not run this as root)
+  make test
+    (note: do not run this as root)
 
 to clean up after running tests:
 
-make test-clean
+  make test-clean
 
 guidelines:
 
