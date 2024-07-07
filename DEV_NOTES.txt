@@ -226,7 +226,34 @@ Steps:
         make upload-pypi
 
 
-howto: deb repository ---------------------------------------------------------
+howto: update package repositories --------------------------------------------
+
+There are two repositories for each platform, one for production and one for
+testing.  For example, for debian we have apt and apt-test.  When preparing
+a debian, redhat, or suse package for release, first do testing by installing
+from a local deb/rpm.  When you are ready to release to a repo, the steps are:
+
+1) make pull-xxx-repo - this will copy the production repo to local disk
+
+2) make update-xxx-repo - this will copy staged deb/rpm to local repo, then
+   update repo info and sign with gpg keys
+
+3) make push-xxx-repo - this will copy the local repo to remote test repo
+
+4) make release-xxx-repo - replace production repo with test repo
+
+If you are doing alpha or beta releases, you can push those to the remote test
+repo, but do *not* release them.  After doing alpha and/or beta releases, be
+sure to pull the production repo before you get out of alph/beta, then push to
+the test repo.  Otherwise you risk pushing alpha/beta releases into the
+production repo, which will break many systems.
+
+We must keep alpha/beta releases out of the production repo, since they are
+not handled properly by some package management software.  For example, yum
+thinks that 5.1.0-b6-1 is newer than 5.1.0.
+
+
+howto: deb repository details -------------------------------------------------
 
 aptly has two different mechanisms for doing a 'publish': switch or update.
 we use snapshots, and publish using 'publish switch', rather than publishing
@@ -291,7 +318,7 @@ for clients to use an apt repo at weewx.com:
   echo "deb [arch=all] http://weewx.com/apt/ buster main" | sudo tee /etc/apt/sources.list.d/python3-weewx.list
 
 
-howto: yum repository ---------------------------------------------------------
+howto: yum repository details -------------------------------------------------
 
 create yum repo:
   mkdir -p ~/.yum/weewx/{el7,el8,el9}/RPMS

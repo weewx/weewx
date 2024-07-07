@@ -46,6 +46,14 @@ help: info
 	@echo "          info  display values of variables we care about"
 	@echo "       version  get version from pyproject.toml and insert elsewhere"
 	@echo ""
+	@echo "          test  run all unit tests"
+	@echo "                SUITE=path/to/foo.py to run only foo tests"
+	@echo "    test-clean  remove test databases"
+	@echo ""
+	@echo "    build-docs  build the docs using mkdocs"
+	@echo "   upload-docs  upload docs to $(WEEWX_COM)"
+	@echo "    check-docs  run weblint on the docs"
+	@echo ""
 	@echo " debian-changelog  prepend stub changelog entry for debian"
 	@echo " redhat-changelog  prepend stub changelog entry for redhat"
 	@echo "   suse-changelog  prepend stub changelog entry for suse"
@@ -58,7 +66,6 @@ help: info
 	@echo "  check-debian  check the debian package"
 	@echo "  check-redhat  check the redhat package"
 	@echo "    check-suse  check the suse package"
-	@echo "    check-docs  run weblint on the docs"
 	@echo ""
 	@echo "    upload-src  upload the src package to $(WEEWX_COM)"
 	@echo "   upload-pypi  upload wheel and src package to pypi.org"
@@ -66,29 +73,25 @@ help: info
 	@echo " upload-redhat  upload the redhat rpm packages"
 	@echo "   upload-suse  upload the suse rpm packages"
 	@echo ""
-	@echo "    build-docs  build the docs using mkdocs"
-	@echo "   upload-docs  upload docs to $(WEEWX_COM)"
-	@echo ""
 	@echo "       release  promote staged files on the download server"
-	@echo ""
-	@echo "          test  run all unit tests"
-	@echo "                SUITE=path/to/foo.py to run only foo tests"
-	@echo "    test-clean  remove test databases"
 	@echo ""
 	@echo " apt repository management"
 	@echo "    pull-apt-repo"
 	@echo "  update-apt-repo"
 	@echo "    push-apt-repo"
+	@echo " release-apt-repo"
 	@echo ""
 	@echo " yum repository management"
 	@echo "    pull-yum-repo"
 	@echo "  update-yum-repo"
 	@echo "    push-yum-repo"
+	@echo " release-yum-repo"
 	@echo ""
 	@echo " suse repository management"
-	@echo "   pull-suse-repo"
-	@echo " update-suse-repo"
-	@echo "   push-suse-repo"
+	@echo "    pull-suse-repo"
+	@echo "  update-suse-repo"
+	@echo "    push-suse-repo"
+	@echo " release-suse-repo"
 	@echo ""
 
 info:
@@ -424,7 +427,7 @@ apt-repo:
 # make local copy of the published apt repository
 pull-apt-repo:
 	mkdir -p ~/.aptly
-	rsync -Oarvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/ ~/.aptly
+	rsync -Oarvz --delete $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/ ~/.aptly
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
@@ -438,11 +441,11 @@ update-apt-repo:
 push-apt-repo:
 	find ~/.aptly -type f -exec chmod 664 {} \;
 	find ~/.aptly -type d -exec chmod 2775 {} \;
-	rsync -Ortlvz ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
+	rsync -Ortlvz --delete ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
 
 # copy the testing repository onto the production repository
 release-apt-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz /var/www/html/aptly-test/ /var/www/html/aptly"
+	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz --delete /var/www/html/aptly-test/ /var/www/html/aptly"
 
 # 'yum-repo' is only used when creating a new yum repository from scratch
 # the index.html is not part of an official rpm repository.  it is included
@@ -458,7 +461,7 @@ yum-repo:
 
 pull-yum-repo:
 	mkdir -p $(YUM_REPO)
-	rsync -Oarvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ ~/.yum
+	rsync -Oarvz --delete $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ ~/.yum
 
 update-yum-repo:
 	mkdir -p $(YUM_REPO)/el8/RPMS
@@ -468,20 +471,21 @@ update-yum-repo:
 	cp -p $(DSTDIR)/weewx-$(RPMVER).el9.$(RPMARCH).rpm $(YUM_REPO)/el9/RPMS
 	createrepo $(YUM_REPO)/el9
 ifeq ("$(SIGN)","1")
-	gpg -abs -o $(YUM_REPO)/el8/repodata/repomd.xml.asc $(YUM_REPO)/el8/repodata/repomd.xml
-	gpg --export --armor > $(YUM_REPO)/el8/repodata/repomd.xml.key
-	gpg -abs -o $(YUM_REPO)/el9/repodata/repomd.xml.asc $(YUM_REPO)/el9/repodata/repomd.xml
-	gpg --export --armor > $(YUM_REPO)/el9/repodata/repomd.xml.key
+	for os in el8 el9; do \
+  gpg --export --armor > $(YUM_REPO)/$$os/repodata/repomd.xml.key; \
+  gpg -abs -o $(YUM_REPO)/$$os/repodata/repomd.xml.asc.new $(YUM_REPO)/$$os/repodata/repomd.xml; \
+  mv $(YUM_REPO)/$$os/repodata/repomd.xml.asc.new $(YUM_REPO)/$$os/repodata/repomd.xml.asc; \
+done
 endif
 
 push-yum-repo:
 	find ~/.yum -type f -exec chmod 664 {} \;
 	find ~/.yum -type d -exec chmod 2775 {} \;
-	rsync -Ortlvz ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
+	rsync -Ortlvz --delete ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
 
 # copy the testing repository onto the production repository
 release-yum-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz /var/www/html/yum-test/ /var/www/html/yum"
+	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz --delete /var/www/html/yum-test/ /var/www/html/yum"
 
 # 'suse-repo' is only used when creating a new suse repository from scratch
 # the index.html is not part of an official rpm repository.  it is included
@@ -496,25 +500,26 @@ suse-repo:
 
 pull-suse-repo:
 	mkdir -p $(SUSE_REPO)
-	rsync -Oarvz $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/ ~/.suse
+	rsync -Oarvz --delete $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/ ~/.suse
 
 update-suse-repo:
 	mkdir -p $(SUSE_REPO)/suse15/RPMS
 	cp -p $(DSTDIR)/weewx-$(RPMVER).suse15.$(RPMARCH).rpm $(SUSE_REPO)/suse15/RPMS
 	createrepo $(SUSE_REPO)/suse15
 ifeq ("$(SIGN)","1")
-	gpg -abs -o $(SUSE_REPO)/suse15/repodata/repomd.xml.asc $(SUSE_REPO)/suse15/repodata/repomd.xml
 	gpg --export --armor > $(SUSE_REPO)/suse15/repodata/repomd.xml.key
+	gpg -abs -o $(SUSE_REPO)/suse15/repodata/repomd.xml.asc $(SUSE_REPO)/suse15/repodata/repomd.xml
+	mv $(SUSE_REPO)/suse15/repodata/repomd.xml.asc.new $(SUSE_REPO)/suse15/repodata/repomd.xml.asc
 endif
 
 push-suse-repo:
 	find ~/.suse -type f -exec chmod 664 {} \;
 	find ~/.suse -type d -exec chmod 2775 {} \;
-	rsync -Ortlvz ~/.suse/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse-test
+	rsync -Ortlvz --delete ~/.suse/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse-test
 
 # copy the testing repository onto the production repository
 release-suse-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz /var/www/html/suse-test/ /var/www/html/suse"
+	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz --delete /var/www/html/suse-test/ /var/www/html/suse"
 
 # shortcuts to upload everything.  assumes that the assets have been staged
 # to the local 'dist' directory.

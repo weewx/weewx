@@ -3,3 +3,9 @@ name=weewx
 baseurl=http://weewx.com/suse/weewx/suse$releasever_major
 enabled=1
 gpgcheck=1
+
+[weewx-testing]
+name=weewx
+baseurl=http://weewx.com/suse-test/weewx/suse$releasever_major
+enabled=0
+gpgcheck=1
