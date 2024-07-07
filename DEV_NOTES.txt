@@ -106,6 +106,8 @@ how to update the version number:
   Change the version number in pyproject.toml
   make version                  # this propagates the version number everywhere
   git commit -a -m "bump to version x.y.z"
+  git tag vx.y.z
+  git push --tags
 
 how to build wheel and source tarball:
   make pypi-package
@@ -128,7 +130,7 @@ how to build redhat package:
   git commit -m "update suse changelog" pkg/changelog.suse
   make suse-package
 
-to build redhat packages with custom rpm revision:
+how to build redhat packages with custom rpm revision:
   make redhat-changelog RPMREVISION=2
   make redhat-package RPMREVISION=2
   make pull-yum-repo
@@ -137,6 +139,32 @@ to build redhat packages with custom rpm revision:
   make release-yum-repo
 suse also uses RPMREVISION, but debian uses DEBREVISION.  this is useful when
 there is a change to asset(s) in the packaging, but not part of weewx itself.
+
+how to install using pip:
+  make pypi-package
+  pip install dist/weewx-x.y.z-py3-none-any.whl
+  weectl station create
+
+how to install/remove debian:
+  apt-get install weewx         # install with apt
+  apt-get remove weewx          # remove with apt
+  apt-get purge weewx           # purge removes /etc/weewx and debconf settings
+  dpkg -i weewx_x.y.z-r.deb     # install
+  (apt-get install weewx)       # finish install if dependencies failed
+  dpkg -r weewx                 # remove
+  dpkg -P weewx                 # purge
+
+how to install/remove redhat:
+  yum install weewx-x.y.z-r.rpm [--nogpgcheck]    # install with yum
+  yum remove weewx                                # remove with yum
+  rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
+  rpm -e weewx                                    # remove with rpm
+
+how to install/remove suse:
+  zypper install weewx-x.y.z-r.rpm [--nogpgcheck] # install with zypper
+  zypper remove weewx                             # remove with zypper
+  rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
+  rpm -e weewx                                    # remove with rpm
 
 to display debconf variables:
   sudo debconf-show weewx
@@ -168,32 +196,6 @@ list keys known by rpm:
 
 delete keys known by rpm:
   rpm -e gpg-pubkey-XXXXX
-
-Install using pip
-  make pypi-package
-  pip install dist/weewx-x.y.z-py3-none-any.whl
-  weectl station create
-
-debian install/remove:
-  apt-get install weewx         # install with apt
-  apt-get remove weewx          # remove with apt
-  apt-get purge weewx           # purge removes /etc/weewx and debconf settings
-  dpkg -i weewx_x.y.z-r.deb     # install
-  (apt-get install weewx)       # finish install if dependencies failed
-  dpkg -r weewx                 # remove
-  dpkg -P weewx                 # purge
-
-redhat install/remove:
-  yum install weewx-x.y.z-r.rpm [--nogpgcheck]    # install with yum
-  yum remove weewx                                # remove with yum
-  rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
-  rpm -e weewx                                    # remove with rpm
-
-suse install/remove:
-  zypper install weewx-x.y.z-r.rpm [--nogpgcheck] # install with zypper
-  zypper remove weewx                             # remove with zypper
-  rpm -i weewx-x.y.z-r.rpm                        # install with rpm directly
-  rpm -e weewx                                    # remove with rpm
 
 
 howto: build the documents --------------------------------------------------
@@ -254,7 +256,12 @@ not handled properly by some package management software.  For example, yum
 thinks that 5.1.0-b6-1 is newer than 5.1.0.
 
 
-howto: deb repository details -------------------------------------------------
+apt repository details --------------------------------------------------------
+
+The weewx DEBs are tightly coupled to the major python version (2 or 3), and
+the availability of pre-built python modules in the operating system release.
+This means that the weewx DEBs span not only minor operating system updates,
+but also major operating system releases.
 
 aptly has two different mechanisms for doing a 'publish': switch or update.
 we use snapshots, and publish using 'publish switch', rather than publishing
@@ -305,13 +312,13 @@ update using 'publish update':
 
 clone the published apt repo to local space:
   mkdir -p ~/.aptly
-  rsync -arv USER@weewx.com:/var/www/html/aptly-test/ ~/.aptly
+  rsync -Oarvz --delete USER@weewx.com:/var/www/html/aptly-test/ ~/.aptly
 
 synchronize local aptly changes with the published apt repo:
-  rsync -arv ~/.aptly/ USER@weewx.com:/var/www/html/aptly-test
+  rsync -Oarvz --delete ~/.aptly/ USER@weewx.com:/var/www/html/aptly-test
 
 switch from testing to production (this is done at weewx.com):
-  rsync -arv /var/www/html/aptly-test/ /var/www/html/aptly
+  rsync -Oarvz --delete /var/www/html/aptly-test/ /var/www/html/aptly
 
 for clients to use an apt repo at weewx.com:
   curl -s http://weewx.com/keys.html | sudo apt-key add -
@@ -319,7 +326,12 @@ for clients to use an apt repo at weewx.com:
   echo "deb [arch=all] http://weewx.com/apt/ buster main" | sudo tee /etc/apt/sources.list.d/python3-weewx.list
 
 
-howto: yum repository details -------------------------------------------------
+yum/zypper repository details -------------------------------------------------
+
+The redhat (yum/dnf) and suse (zypper) repositories have similar structure and
+behavior, but the RPMs are not interchangeable.  In each case, the weewx RPMs
+are tightly coupled to the major operating system release.  The weewx RPMs do
+*not* track minor or bugfix releases of the operating system.
 
 create yum repo:
   mkdir -p ~/.yum/weewx/{el7,el8,el9}/RPMS
@@ -334,13 +346,13 @@ update local yum repo with latest rpm:
 
 clone the published yum repo to local space:
   mkdir -p ~/.yum
-  rsync -arv USER@weewx.com:/var/www/html/yum-test/ ~/.yum
+  rsync -Oarvz --delete USER@weewx.com:/var/www/html/yum-test/ ~/.yum
 
 synchronize local yum changes with published yum repo:
-  rsync -arv ~/.yum/ USER@weewx.com:/var/www/html/yum-test
+  rsync -Oarvz --delete ~/.yum/ USER@weewx.com:/var/www/html/yum-test
 
 switch from testing to production (this is done at weewx.com):
-  rsync -arv /var/www/html/yum-test/ /var/www/html/yum
+  rsync -Oarvz --delete /var/www/html/yum-test/ /var/www/html/yum
 
 
 notes -------------------------------------------------------------------------
@@ -368,6 +380,19 @@ then dried dpkg-buildpackage (uses debian dir and is higher level) but misses
 the config and templates.  ended up using dpkg-buildpackage with some manual
 (scripted) file manipulation.
 
+prefer to use expressive but no overly verbose output in scriptlets and
+maintainer scripts.  many redhat scriptlets seem to be silent, perhaps only
+emitting messages when there is a failure.  unfortunately, most of our failures
+have been due to things that we never even predicted, let alone created error
+traps for.  so having output from each step helps us figure out where a
+failure came from.  apparently redhat will add better logging/capture from
+scriptlets in redhat 10 - the anaconda installer already does a pretty good
+job of capturing and isolating output from scriptlets, but redhat plans to add
+similar functionality to dnf in redhat 10.
+
+
+shebang -----------------------------------------------------------------------
+
 both debian and redhat deprecate the use of '/usr/bin/env python' as the
 shebang - they want a very tight binding to the operating system python as the
 shebang.  in fact, since late 2019 redhat build tools see any shebang other
@@ -386,29 +411,21 @@ mangling and sets entry points that are appropriate for its configuration.
 for everything else, using the env in shebang and making the entry points
 executable enables either 'python foo.py' or 'foo.py' invocation.
 
+
+defaults ----------------------------------------------------------------------
+
 the /etc/default/weewx plus shell stubs in /usr/bin/wee* is used in deb/rpm
-and non-linux installations to provide python flexibility, so that users can
-use a single weewx installation to experiment with different python versions.
-this is particularly helpful when running weewx directly from source in a git
-clone, it also works in the deb/rpm installs where the python is managed
-separately from the system's python, as well as the non-linux, non-pip
-installations.
+installations to provide python flexibility, so that users can use a single
+weewx installation to experiment with different python versions. this is
+particularly helpful when running weewx directly from source in a git clone,
+it also works in the deb/rpm installs where the python is managed separately
+from the system's python, as well as the non-linux, non-pip installations.
 
 unfortunately, this can cause problems during an installation.  if the pre/post
 install scripts invoke /usr/bin/weectl instead of the python code directly,
 they can end up getting python2 or a python3 that does not have the right
 modules installed.  so maintainer scripts and scriptlets must ensure that they
 use a known-working python.
-
-prefer to use expressive but no overly verbose output in scriptlets and
-maintainer scripts.  many redhat scriptlets seem to be silent, perhaps only
-emitting messages when there is a failure.  unfortunately, most of our failures
-have been due to things that we never even predicted, let alone created error
-traps for.  so having output from each step helps us figure out where a
-failure came from.  apparently redhat will add better logging/capture from
-scriptlets in redhat 10 - the anaconda installer already does a pretty good
-job of capturing and isolating output from scriptlets, but redhat plans to add
-similar functionality to dnf in redhat 10.
 
 
 signing packages --------------------------------------------------------------
