@@ -56,6 +56,7 @@ checklist for doing a release:
 14. If minor version changes, update doc links in the website repository
      1. change URL= in docs/*.html
      2. change version in docs/weedocs.js
+     3. change symlink docs/latest
 15. Announce the release to the weewx user's group.
 
 
