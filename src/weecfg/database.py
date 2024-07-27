@@ -482,7 +482,9 @@ class CalcMissing(DatabaseFix):
             # it's a dry run so say the rebuild was skipped
             print("This is a dry run, recalculation of daily summaries was skipped")
         tdiff = time.time() - t1
-        # we are done so log and inform the user
+        # we are done, first, shut down the engine
+        engine.shutDown()
+        # then finally, log and inform the user
         _day_processed_str = "day" if days_processed == 1 else "days"
         _day_updated_str = "day" if days_updated == 1 else "days"
         if not self.dry_run:
