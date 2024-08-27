@@ -5,16 +5,20 @@
 #
 set -e
 
-HOMEDIR=$HOME
-if [ "$SUDO_USER" != "" ]; then
-    HOMEDIR=$(getent passwd $SUDO_USER | cut -d: -f6)
-fi
-UTIL_ROOT=$HOMEDIR/weewx-data/util
-
 if [ "$(id -u)" != "0" ]; then
   echo "This script requires admin privileges.  Use 'sudo' or run as root."
   exit 1
 fi
+
+HOMEDIR=$HOME
+if [ "$SUDO_USER" != "" ]; then
+    if [ -d /Users/$SUDO_USER ]; then
+        HOMEDIR=/Users/$SUDO_USER
+    else
+        HOMEDIR=$(getent passwd $SUDO_USER | cut -d: -f6)
+    fi
+fi
+UTIL_ROOT=$HOMEDIR/weewx-data/util
 
 ts=`date +"%Y%m%d%H%M%S"`
 
