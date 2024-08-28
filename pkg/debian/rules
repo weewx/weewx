@@ -16,7 +16,7 @@ DST_CFGDIR=$(DST)/etc/weewx
 DST_DOCDIR=$(DST)/usr/share/doc/weewx
 
 # these are the entry points
-ENTRIES=weewxd weectl
+ENTRIES=weewxd weectl wee_database wee_debug wee_device wee_extension wee_import wee_reports wee_config
 
 %:
 	dh $@ --with python3
