@@ -1,6 +1,11 @@
 WeeWX change history
 --------------------
 
+### 5.x xx/xx/xxxx
+
+Fix LOGNAME bug in the weewx-multi sysV script.  Thanks to Glenn McKechnie.
+
+
 ### 5.1.0 07/04/2024
 
 If option `lang` is a valid locale, then it will be used to change locale as
