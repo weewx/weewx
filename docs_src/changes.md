@@ -1,6 +1,12 @@
 WeeWX change history
 --------------------
 
+### 5.2.0 MM/DD/YYYY
+
+Fix typo that causes phantom values of `soilMoist3` to appear with VantageVue
+stations.
+
+
 ### 5.1.0 07/04/2024
 
 If option `lang` is a valid locale, then it will be used to change locale as

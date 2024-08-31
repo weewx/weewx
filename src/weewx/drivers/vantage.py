@@ -23,7 +23,7 @@ from weewx.crc16 import crc16
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.6.2'
+DRIVER_VERSION = '3.6.3'
 
 int2byte = struct.Struct(">B").pack
 
@@ -1790,7 +1790,7 @@ extra_sensors = {
     'leafTemp1', 'leafTemp2', 'leafWet1', 'leafWet2',
     'soilTemp1', 'soilTemp2', 'soilTemp3', 'soilTemp4',
     'extraHumid1', 'extraHumid2', 'extraTemp1', 'extraTemp2', 'extraTemp3',
-    'soilMoist1', 'soilMoist2', 'soildMoist3', 'soilMoist4'
+    'soilMoist1', 'soilMoist2', 'soilMoist3', 'soilMoist4'
 }
 
 
