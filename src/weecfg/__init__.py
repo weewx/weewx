@@ -173,9 +173,10 @@ def read_config(option_path, args=None, locations=DEFAULT_LOCATIONS,
 
     # If the result of all that is not an absolute path, join it with the location of the config
     # file, which will make it into an absolute path.
-    if not os.path.abspath(config_dict['WEEWX_ROOT']):
-        config_dict['WEEWX_ROOT'] = os.path.normpath(os.path.join(os.path.dirname(config_path),
-                                                                  config_dict['WEEWX_ROOT']))
+    if not os.path.isabs(config_dict['WEEWX_ROOT']):
+        config_dict['WEEWX_ROOT'] = os.path.normpath(
+            os.path.join(os.path.dirname(config_dict['config_path']), config_dict['WEEWX_ROOT'])
+        )
 
     return config_path, config_dict
 

@@ -1,9 +1,17 @@
 WeeWX change history
 --------------------
 
-### 5.x xx/xx/xxxx
+### 5.2.0 MM/DD/YYYY
 
 Fix LOGNAME bug in the weewx-multi sysV script.  Thanks to Glenn McKechnie.
+
+
+### 5.1.X MM/DD/YYYY
+
+Fix typo that causes phantom values of `soilMoist3` to appear with VantageVue
+stations.
+
+Fix bug that prevented relative paths to the config file from working.
 
 
 ### 5.1.0 07/04/2024
