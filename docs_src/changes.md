@@ -8,6 +8,8 @@ stations.
 
 Fix bug that prevented relative paths to the config file from working.
 
+Allow simple Python objects to be used as an argument to `$jsonize()`.
+
 
 ### 5.1.0 07/04/2024
 

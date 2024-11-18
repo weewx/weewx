@@ -643,13 +643,16 @@ class JSONHelpers(SearchList):
         Format my argument as JSON
 
         Args:
-            arg (iterable): An iterable, such as a list, or zip structure
+            arg (iterable|object): Python object, or an iterable
 
         Returns:
             str: The argument formatted as JSON.
         """
-        val = list(arg)
-        return json.dumps(val, cls=weewx.units.ComplexEncoder)
+        try:
+            result = json.dumps(arg, cls=weewx.units.ComplexEncoder)
+        except TypeError:
+            result = json.dumps(list(arg), cls=weewx.units.ComplexEncoder)
+        return result
 
     @staticmethod
     def rnd(arg, ndigits):

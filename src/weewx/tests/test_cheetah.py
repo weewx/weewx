@@ -82,6 +82,10 @@ class TestHelpers(unittest.TestCase):
                          '[[0, 1], [null, 3], [4, 5]]')
         self.assertEqual(weewx.cheetahgenerator.JSONHelpers.jsonize([complex(1,2), complex(3,4)]),
                          '[[1.0, 2.0], [3.0, 4.0]]')
+        self.assertEqual(weewx.cheetahgenerator.JSONHelpers.jsonize([1,2,3]),
+                         '[1, 2, 3]')
+        self.assertEqual(weewx.cheetahgenerator.JSONHelpers.jsonize({'a': 1, 'b': 2}),
+                         '{"a": 1, "b": 2}')
 
     def test_rnd(self):
         self.assertEqual(weewx.cheetahgenerator.JSONHelpers.rnd(1.2345, 2), 1.23)
