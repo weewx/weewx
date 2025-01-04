@@ -300,6 +300,7 @@ class Almanac:
         return almanac
 
     def separation(self, body1, body2):
+        """ calculate angular distance of 2 heavenly bodies """
         for almanac in almanacs:
             try:
                 return almanac.separation(body1, body2)
@@ -351,8 +352,22 @@ class AlmanacType:
         raise weewx.UnknownType
     
     def separation(self, body1, body2):
-        """ calculate distance """
-        raise weewx.UnknownType
+        """ calculate distance 
+        
+            Args:
+                body1, body2: either a body (in which case right ascension 
+                    and declination are to be used) or a tuple of spherical 
+                    longitude and spherical latitude, for example right 
+                    ascension and declination, heliocentric longitude and 
+                    latitude, azimuth and altitude, geographic longitude and 
+                    latitude; all values in radians
+            
+            Returns:
+                angle of separation in radians
+                
+            formula according to Jean Meeus 17.1
+        """
+        return math.acos(math.sin(body1[1])*math.sin(body2[1])+math.cos(body1[1])*math.cos(body2[1])*math.cos(body2[0]-body1[0]))
 
 
 class PyEphemAlmanacType(AlmanacType):
@@ -364,7 +379,7 @@ class PyEphemAlmanacType(AlmanacType):
         return True
 
     def get_almanac_data(self, almanac_obj, attr):
-        """ calculate """
+        """ calculate attribute """
         if attr=='sunrise':
             return almanac_obj.sun.rise
         elif attr=='sunset':
@@ -391,7 +406,7 @@ class PyEphemAlmanacType(AlmanacType):
         # Check to see if the attribute is a sidereal angle
         elif attr == 'sidereal_time' or attr == 'sidereal_angle':
             # sidereal time is obtained from an ephem Observer object...
-            observer = _get_observer(almanac_obj, self.time_djd)
+            observer = _get_observer(almanac_obj, almanac_obj.time_djd)
             # ... then get the angle in degrees ...
             val = math.degrees(observer.sidereal_time())
             # ... finally, depending on the attribute name, pick the proper return type:
@@ -410,7 +425,21 @@ class PyEphemAlmanacType(AlmanacType):
             return AlmanacBinder(almanac_obj, attr)
 
     def separation(self, body1, body2):
-        """ calculate distance """
+        """ calculate distance
+        
+            Args:
+                body1, body2: either a body (in which case right ascension 
+                    and declination are used) or a tuple of spherical longitude 
+                    and spherical latitude, for example right ascension and 
+                    declination, heliocentric longitude and latitude, 
+                    azimuth and altitude, geographic longitude and latitude
+            
+            Returns:
+                ephem.Angle: angle of separation in radians
+            
+            https://rhodesmill.org/pyephem/quick.html#other-functions
+            https://rhodesmill.org/pyephem/tutorial.html#first-steps
+        """
         return ephem.separation(body1, body2)
 
 
