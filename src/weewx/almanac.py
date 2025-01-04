@@ -23,6 +23,8 @@ try:
 except ImportError:
     import weeutil.Sun
 
+# A list of almanacs. Each entry should be a subclass of AlmanacType.
+almanacs = []
 
 # NB: Have Almanac inherit from 'object'. However, this will cause
 # an 'autocall' bug in Cheetah versions before 2.1.
@@ -248,12 +250,12 @@ class Almanac:
         self.moon_phase = self.moon_phases[self.moon_index]
         self.time_djd = timestamp_to_djd(self.time_ts)
 
-        # Check to see whether the user has module 'ephem'. 
-        if 'ephem' in sys.modules:
-
-            self.hasExtras = True
-
-        else:
+        # Check to see whether there is a module that provides more than
+        # just sunrise, sunset and moon phase
+        self.hasExtras = any(almanac.hasExtras for almanac in almanacs)
+        
+        # Check to see whether weeutil formulae are in use
+        if any(isinstance(almanac,WeeutilAlmanacType) for almanac in almanacs):
 
             # No ephem package. Use the weeutil algorithms, which supply a minimum of functionality
             (y, m, d) = time.localtime(self.time_ts)[0:3]
@@ -270,20 +272,6 @@ class Almanac:
                 context="ephem_day",
                 formatter=self.formatter,
                 converter=self.converter)
-            self.hasExtras = False
-
-    # Shortcuts, used for backwards compatibility
-    @property
-    def sunrise(self):
-        return self.sun.rise if self.hasExtras else self._sunrise
-
-    @property
-    def sunset(self):
-        return self.sun.set if self.hasExtras else self._sunset
-
-    @property
-    def moon_fullness(self):
-        return int(self.moon.moon_fullness + 0.5) if self.hasExtras else self._moon_fullness
 
     def __call__(self, **kwargs):
         """Call an almanac object as a functor. This allows overriding the values
@@ -312,19 +300,77 @@ class Almanac:
         return almanac
 
     def separation(self, body1, body2):
-        return ephem.separation(body1, body2)
+        for almanac in almanacs:
+            try:
+                return almanac.separation(body1, body2)
+            except weewx.UnknownType:
+                pass
+        raise ValueError('no module supporting separation calculation found')
 
     def __getattr__(self, attr):
         # This is to get around bugs in the Python version of Cheetah's namemapper:
         if attr.startswith('__') or attr == 'has_key':
             raise AttributeError(attr)
 
-        if not self.hasExtras:
-            # If the Almanac does not have extended capabilities, we can't
-            # do any of the following. Raise an exception.
-            raise AttributeError("Unknown attribute %s" % attr)
+        # Try almanacs in order
+        for almanac in almanacs:
+            try:
+                # get a ValueHelper or a binder class
+                return almanac.get_almanac_data(self, attr)
+            except weewx.UnknownType:
+                # This almanac did not support the required attribute. Try
+                # the next one.
+                pass
+        
+        # If the Almanac does not have extended capabilities, we can't
+        # do anything. Raise an exception.
+        raise AttributeError("Unknown attribute %s" % attr)
 
-        # We do have extended capability. Check to see if the attribute is a calendar event:
+
+class AlmanacType:
+    """ Base class for almanac extensions """
+
+    @property
+    def hasExtras(self):
+        """ Does this module provide more than just sunrise, sunset, and moon 
+            phase? This function can return a constant or perform some checks
+            before.
+        """
+        return False
+    
+    def get_almanac_data(self, almanac_obj, attr):
+        """ calculate attribute and return ValueHelper or binder class 
+        
+            Args:
+                almanac_obj (Almanac): instance of class Almanac
+                attr (str): attribute to calculate
+            
+            Returns:
+                ValueHelper or binder class
+        """
+        raise weewx.UnknownType
+    
+    def separation(self, body1, body2):
+        """ calculate distance """
+        raise weewx.UnknownType
+
+
+class PyEphemAlmanacType(AlmanacType):
+    """ Use PyEphem for almanac computations """
+
+    @property
+    def hasExtras(self):
+        """ PyEphem provides extras. """
+        return True
+
+    def get_almanac_data(self, almanac_obj, attr):
+        """ calculate """
+        if attr=='sunrise':
+            return almanac_obj.sun.rise
+        elif attr=='sunset':
+            return almanac_obj.sun.set
+        elif attr=='moon_fullness':
+            return int(almanac_obj.moon.moon_fullness + 0.5)
         elif attr in {'previous_equinox', 'next_equinox',
                       'previous_solstice', 'next_solstice',
                       'previous_autumnal_equinox', 'next_autumnal_equinox',
@@ -337,15 +383,15 @@ class Almanac:
                       'previous_last_quarter_moon', 'next_last_quarter_moon'}:
             # This is how you call a function on an instance when all you have
             # is the function's name as a string
-            djd = getattr(ephem, attr)(self.time_djd)
+            djd = getattr(ephem, attr)(almanac_obj.time_djd)
             return weewx.units.ValueHelper(ValueTuple(djd, "dublin_jd", "group_time"),
                                            context="ephem_year",
-                                           formatter=self.formatter,
-                                           converter=self.converter)
+                                           formatter=almanac_obj.formatter,
+                                           converter=almanac_obj.converter)
         # Check to see if the attribute is a sidereal angle
         elif attr == 'sidereal_time' or attr == 'sidereal_angle':
             # sidereal time is obtained from an ephem Observer object...
-            observer = _get_observer(self, self.time_djd)
+            observer = _get_observer(almanac_obj, self.time_djd)
             # ... then get the angle in degrees ...
             val = math.degrees(observer.sidereal_time())
             # ... finally, depending on the attribute name, pick the proper return type:
@@ -355,13 +401,30 @@ class Almanac:
                 vt = ValueTuple(val, 'degree_compass', 'group_direction')
                 return weewx.units.ValueHelper(vt,
                                                context = 'ephem_day',
-                                               formatter=self.formatter,
-                                               converter=self.converter)
+                                               formatter=almanac_obj.formatter,
+                                               converter=almanac_obj.converter)
         else:
             # The attribute must be a heavenly body (such as 'sun', or 'jupiter').
             # Bind the almanac and the heavenly body together and return as an
             # AlmanacBinder
-            return AlmanacBinder(self, attr)
+            return AlmanacBinder(almanac_obj, attr)
+
+    def separation(self, body1, body2):
+        """ calculate distance """
+        return ephem.separation(body1, body2)
+
+
+class WeeutilAlmanacType(AlmanacType):
+    """ Use weeutil formulae for almanac computations """
+    
+    def get_almanac_data(self, almanac_obj, attr):
+        if attr=='sunrise':
+            return almanac_obj._sunrise
+        elif attr=='sunset':
+            return almanac_obj._sunset
+        elif attr=='moon_fullness':
+            return almanac_obj._moon_fullness
+        raise weewx.UnknownType('$almanac.%s not known. Try using PyEphem or another almanac extension' % attr)
 
 
 fn_map = {'rise': 'next_rising',
@@ -566,6 +629,18 @@ def djd_to_timestamp(djd):
     """Convert from number of days since 12/31/1899 12:00 UTC ("Dublin Julian Days") to
     unix time stamp"""
     return (djd - 25567.5) * 86400.0
+
+
+# Check whether PyEphem is imported. If so, use it. Otherwise use weeutil
+# functions.
+# NB: 'ephem' was already imported in engine.py to check for its existence.
+#     Although it is deleted after the check, it remains in sys.modules.
+#     Therefore `'ephem' in sys.modules` is `True` here, whether 'ephem'
+#     is imported or not.
+if 'ephem' in globals():
+    almanacs.append(PyEphemAlmanacType())
+else:
+    almanacs.append(WeeutilAlmanacType())
 
 
 if __name__ == '__main__':
