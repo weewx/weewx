@@ -83,7 +83,7 @@ do_start() {
     PROCNAME=$(get_procname $INSTANCE)
     PIDFILE=$WEEWX_RUNDIR/$PROCNAME.pid
     CFGFILE=$WEEWX_CFGDIR/$INSTANCE.conf
-    DAEMON_ARGS="--daemon --log-label=$LOGNAME --pidfile=$PIDFILE $CFGFILE"
+    DAEMON_ARGS="--daemon --log-label=$INSTANCE --pidfile=$PIDFILE $CFGFILE"
 
     if [ ! -f "$CFGFILE" ]; then
         echo "The instance $INSTANCE does not have a config at $CFGFILE"
