@@ -242,36 +242,9 @@ class Almanac:
         self.moon_phases = moon_phases
         self.formatter = formatter or weewx.units.Formatter()
         self.converter = converter or weewx.units.Converter()
-        self._precalc()
-
-    def _precalc(self):
-        """Precalculate local variables."""
-        self.moon_index, self._moon_fullness = weeutil.Moon.moon_phase_ts(self.time_ts)
-        self.moon_phase = self.moon_phases[self.moon_index]
-        self.time_djd = timestamp_to_djd(self.time_ts)
-
         # Check to see whether there is a module that provides more than
         # just sunrise, sunset and moon phase
         self.hasExtras = any(almanac.hasExtras for almanac in almanacs)
-        
-        # Check to see whether weeutil formulae are in use
-        if any(isinstance(almanac,WeeutilAlmanacType) for almanac in almanacs):
-
-            # No ephem package. Use the weeutil algorithms, which supply a minimum of functionality
-            (y, m, d) = time.localtime(self.time_ts)[0:3]
-            (sunrise_utc_h, sunset_utc_h) = weeutil.Sun.sunRiseSet(y, m, d, self.lon, self.lat)
-            sunrise_ts = weeutil.weeutil.utc_to_ts(y, m, d, sunrise_utc_h)
-            sunset_ts = weeutil.weeutil.utc_to_ts(y, m, d, sunset_utc_h)
-            self._sunrise = weewx.units.ValueHelper(
-                ValueTuple(sunrise_ts, "unix_epoch", "group_time"),
-                context="ephem_day",
-                formatter=self.formatter,
-                converter=self.converter)
-            self._sunset = weewx.units.ValueHelper(
-                ValueTuple(sunset_ts, "unix_epoch", "group_time"),
-                context="ephem_day",
-                formatter=self.formatter,
-                converter=self.converter)
 
     def __call__(self, **kwargs):
         """Call an almanac object as a functor. This allows overriding the values
@@ -295,7 +268,9 @@ class Almanac:
                 almanac.time_ts = kwargs['almanac_time']
             else:
                 setattr(almanac, key, kwargs[key])
-        almanac._precalc()
+        # Check to see whether there is a module that provides more than
+        # just sunrise, sunset and moon phase
+        self.hasExtras = any(almanac.hasExtras for almanac in almanacs)
 
         return almanac
 
@@ -380,12 +355,20 @@ class PyEphemAlmanacType(AlmanacType):
 
     def get_almanac_data(self, almanac_obj, attr):
         """ calculate attribute """
+        time_djd = timestamp_to_djd(almanac_obj.time_ts)
         if attr=='sunrise':
             return almanac_obj.sun.rise
         elif attr=='sunset':
             return almanac_obj.sun.set
         elif attr=='moon_fullness':
             return int(almanac_obj.moon.moon_fullness + 0.5)
+        elif attr in ('moon_phase','moon_index'):
+            djd1 = ephem.previous_new_moon(time_djd)
+            djd2 = ephem.next_new_moon(time_djd)
+            position = (time_djd-djd1)/(djd2-djd1)
+            moon_index = int((position * 8) + 0.5) & 7
+            if attr=='moon_index': return moon_index
+            return almanac_obj.moon_phases[moon_index]
         elif attr in {'previous_equinox', 'next_equinox',
                       'previous_solstice', 'next_solstice',
                       'previous_autumnal_equinox', 'next_autumnal_equinox',
@@ -398,7 +381,7 @@ class PyEphemAlmanacType(AlmanacType):
                       'previous_last_quarter_moon', 'next_last_quarter_moon'}:
             # This is how you call a function on an instance when all you have
             # is the function's name as a string
-            djd = getattr(ephem, attr)(almanac_obj.time_djd)
+            djd = getattr(ephem, attr)(time_djd)
             return weewx.units.ValueHelper(ValueTuple(djd, "dublin_jd", "group_time"),
                                            context="ephem_year",
                                            formatter=almanac_obj.formatter,
@@ -406,7 +389,7 @@ class PyEphemAlmanacType(AlmanacType):
         # Check to see if the attribute is a sidereal angle
         elif attr == 'sidereal_time' or attr == 'sidereal_angle':
             # sidereal time is obtained from an ephem Observer object...
-            observer = _get_observer(almanac_obj, almanac_obj.time_djd)
+            observer = _get_observer(almanac_obj, time_djd)
             # ... then get the angle in degrees ...
             val = math.degrees(observer.sidereal_time())
             # ... finally, depending on the attribute name, pick the proper return type:
@@ -447,12 +430,30 @@ class WeeutilAlmanacType(AlmanacType):
     """ Use weeutil formulae for almanac computations """
     
     def get_almanac_data(self, almanac_obj, attr):
-        if attr=='sunrise':
-            return almanac_obj._sunrise
-        elif attr=='sunset':
-            return almanac_obj._sunset
-        elif attr=='moon_fullness':
-            return almanac_obj._moon_fullness
+        if attr in ('sunrise','sunset'):
+            (y, m, d) = time.localtime(almanac_obj.time_ts)[0:3]
+            (sunrise_utc_h, sunset_utc_h) = weeutil.Sun.sunRiseSet(y, m, d, almanac_obj.lon, almanac_obj.lat)
+            if attr=='sunrise':
+                sunrise_ts = weeutil.weeutil.utc_to_ts(y, m, d, sunrise_utc_h)
+                return weewx.units.ValueHelper(
+                    ValueTuple(sunrise_ts, "unix_epoch", "group_time"),
+                    context="ephem_day",
+                    formatter=almanac_obj.formatter,
+                    converter=almanac_obj.converter)
+            sunset_ts = weeutil.weeutil.utc_to_ts(y, m, d, sunset_utc_h)
+            return weewx.units.ValueHelper(
+                ValueTuple(sunset_ts, "unix_epoch", "group_time"),
+                context="ephem_day",
+                formatter=almanac_obj.formatter,
+                converter=almanac_obj.converter)
+        elif attr in ('moon_fullness','moon_index','moon_phase'):
+            moon_index, moon_fullness = weeutil.Moon.moon_phase_ts(almanac_obj.time_ts)
+            if attr=='moon_phase':
+                return almanac_obj.moon_phases[moon_index]
+            if attr=='moon_index':
+                return moon_index
+            if attr=='moon_fullness':
+                return moon_fullness
         raise weewx.UnknownType('$almanac.%s not known. Try using PyEphem or another almanac extension' % attr)
 
 
@@ -557,7 +558,8 @@ class AlmanacBinder:
                       'previous_rising', 'previous_setting', 'previous_transit',
                       'previous_antitransit'}:
             # These functions require the time of the observation
-            observer = _get_observer(self.almanac, self.almanac.time_djd)
+            time_djd = timestamp_to_djd(self.almanac.time_ts)
+            observer = _get_observer(self.almanac, time_djd)
             # Call the function. Be prepared to catch an exception if the body is always up.
             try:
                 if attr in ['next_rising', 'next_setting', 'previous_rising', 'previous_setting']:
@@ -573,7 +575,8 @@ class AlmanacBinder:
 
         else:
             # These functions need the current time in Dublin Julian Days
-            observer = _get_observer(self.almanac, self.almanac.time_djd)
+            time_djd = timestamp_to_djd(self.almanac.time_ts)
+            observer = _get_observer(self.almanac, time_djd)
             ephem_body.compute(observer)
             # V5.0 changed the name of some attributes, so they could be returned as
             # a ValueHelper, instead of a floating point number. This would break existing skins,
