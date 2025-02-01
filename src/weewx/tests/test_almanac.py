@@ -46,7 +46,7 @@ class AlmanacTest(unittest.TestCase):
 
     def test_moon(self):
         # Test backwards compatiblity with the attribute _moon_fullness
-        self.assertAlmostEqual(self.almanac._moon_fullness, 3, 2)
+        self.assertAlmostEqual(self.almanac.moon_fullness, 3, 2)
         self.assertEqual(self.almanac.moon_phase, 'new (totally dark)')
 
     @unittest.skipIf(not pyephem_installed, "Skipping test_moon_extended: no pyephem")
