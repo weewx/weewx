@@ -489,7 +489,7 @@ conversionDict = {
 
 
 # These used to hold default values for formats and labels, but that has since been moved
-# to units.defaults. However, they are still used by modules that extend the unit system
+# to weewx.defaults. However, they are still used by modules that extend the unit system
 # programmatically.
 default_unit_format_dict = {}
 default_unit_label_dict = {}
