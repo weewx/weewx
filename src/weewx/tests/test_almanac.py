@@ -44,6 +44,7 @@ class AlmanacTest(unittest.TestCase):
         # Test back conversion
         self.assertAlmostEqual(djd_to_timestamp(t_djd), self.ts_ue, 5)
 
+    @unittest.skipIf(pyephem_installed, "Skipping test_moon: using extended test instead")
     def test_moon(self):
         # Test backwards compatiblity with the attribute _moon_fullness
         self.assertAlmostEqual(self.almanac.moon_fullness, 3, 2)
