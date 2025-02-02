@@ -268,9 +268,6 @@ class Almanac:
                 almanac.time_ts = kwargs['almanac_time']
             else:
                 setattr(almanac, key, kwargs[key])
-        # Check to see whether there is a module that provides more than
-        # just sunrise, sunset and moon phase
-        self.hasExtras = any(almanac.hasExtras for almanac in almanacs)
 
         return almanac
 
@@ -446,7 +443,7 @@ class WeeutilAlmanacType(AlmanacType):
                 context="ephem_day",
                 formatter=almanac_obj.formatter,
                 converter=almanac_obj.converter)
-        elif attr in ('moon_fullness','moon_index','moon_phase'):
+        elif attr.startswith('moon_'):
             moon_index, moon_fullness = weeutil.Moon.moon_phase_ts(almanac_obj.time_ts)
             if attr=='moon_phase':
                 return almanac_obj.moon_phases[moon_index]
