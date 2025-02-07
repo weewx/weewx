@@ -5,6 +5,10 @@ WeeWX change history
 
 Fix LOGNAME bug in the weewx-multi sysV script.  Thanks to Glenn McKechnie.
 
+Added `illuminance` to the `wview_extended` schema. See [Issue
+#992](https://github.com/weewx/weewx/issues/991) and [PR
+#992](https://github.com/weewx/weewx/pull/992/files). Thanks to user Jeremy!
+
 
 ### 5.1.X MM/DD/YYYY
 

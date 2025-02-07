@@ -42,6 +42,24 @@ upgrade the configuration file `/etc/weewx/other.conf`:
 sudo weectl station upgrade --config=/etc/weewx/other.conf
 ```
 
+## Upgrading to V5.2
+
+### Luminosity and Illuminance
+
+Previously, the `wview_extended` schema included a type `luminosity` (typically
+measured in `lumens`), which is a measure of the perceived light emitted from a
+source, a quantity that probably is not of interest to the weather community.
+
+What the community really needs is `illuminance`, which is a measure of 
+perceived light that falls on a surface area. It is typically measured in `lux`.
+
+To affect this change, a new type `illuminance` has been added to the
+`wview_extended` schema. The unit `lux` already exists. 
+
+Extension writers who have been using `luminosity` should consider using
+`illuminance`.
+
+
 ## Upgrading to V5.0
 
 There have been many changes with Version 5, but only a handful are likely to
