@@ -3,6 +3,12 @@ WeeWX change history
 
 ### 5.2.0 MM/DD/YYYY
 
+The WeeWX Almanac is now extensible, allowing other astronomy packages to be
+used besides `pyephem`. In particular, a WeeWX extension that uses the
+[Skyfield](https://rhodesmill.org/skyfield/) package is available and can be
+installed. See [Issue #981](https://github.com/weewx/weewx/issues/981) and [PR
+#988](https://github.com/weewx/weewx/pull/988). Thanks to user Johanna!
+
 Fix LOGNAME bug in the weewx-multi sysV script.  Thanks to Glenn McKechnie.
 
 Added `illuminance` to the `wview_extended` schema. See [Issue
