@@ -10,6 +10,9 @@ Fix bug that prevented relative paths to the config file from working.
 
 Allow simple Python objects to be used as an argument to `$jsonize()`.
 
+Adjust exclusion of top-level files in wheel creation to meet poetry
+norms and to be consistent across poetry-core versions.  Fixes issue
+[#993](https://github.com/weewx/weewx/issues/993), in part.
 
 ### 5.1.0 07/04/2024
 
