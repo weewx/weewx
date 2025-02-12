@@ -1629,7 +1629,8 @@ for each context. For example, the Thai language file would include:
 
 ## Almanac
 
-If module [`ephem`](https://rhodesmill.org/pyephem) has been installed, then
+If module [`ephem`](https://rhodesmill.org/pyephem) or an appropriate
+almanac extension has been installed, then
 WeeWX can generate extensive almanac information for the Sun, Moon, Venus,
 Mars, Jupiter, and other heavenly bodies, including their rise, transit and
 set times, as well as their azimuth and altitude. Other information is also
@@ -1651,7 +1652,7 @@ Current time is $current.dateTime
 #end if
 ```
 
-If `ephem` is installed this would result in:
+If an almanac module like `ephem` is installed this would result in:
 
 <div class="example_output">
 Current time is 03-Sep-2010 11:00
@@ -1983,7 +1984,12 @@ The separation between Venus and Mars is 55:55:31.8
 ### Adding new bodies
 
 It is possible to extend the WeeWX almanac, adding new bodies that it was not
-previously aware of. For example, say we wanted to add
+previously aware of. The following description explains how to do it for 
+PyEphem, which is supported by core WeeWX. If you use an alternative almanac 
+extension, refer to the documentation of that extension for how to add new 
+bodies.
+
+For example, say we wanted to add
 [*433 Eros*](https://en.wikipedia.org/wiki/433_Eros), the first asteroid
 visited by a spacecraft. Here is the process:
 
@@ -2005,6 +2011,44 @@ visited by a spacecraft. Here is the process:
     ``` tty
     $almanac.eros.rise
     ```
+
+### Almanac extensions
+
+You can install almanac extensions that add new events and/or attributes to 
+the almanac or replace PyEphem by another astronomic computation module. 
+See the [utilities guide](../utilities/weectl-extension.md) 
+for how to install extensions.
+
+WeeWX provides one such installable almanac extension. It uses Skyfield for 
+the almanac computations instead of PyEphem.
+
+* Why should I use another almanac module than PyEphem?
+
+  PyEphem is supported by core WeeWX. There is no need to use something
+  different unless you encounter problems.
+
+  But PyEphem is deprecated. Its database is outdated and will not be
+  updated any more. It ends in 2018. Dates after that year are calculated by
+  extrapolation. The differences are small by now, but if you look for more
+  precision or your Linux distribution does not include PyEphem any
+  more you may want to move to another almanac module.
+
+* What are the advantages of Skyfield?
+
+  Skyfield uses more modern and more precise formulae, actual ephemeris
+  provided by NASA's JPL, and can use actual timescale data provided
+  by IERS. It is the successor of PyEphem, and it is devoloped by the
+  same author, Brandon Rhodes.
+
+  You can update ephemeris and timescales yourself. There is no need to
+  wait for the next release to get actual data.
+
+  There are additional observation types available like hour angle
+  and distance to the heavenly body, which PyEphem does not provide.
+
+* What are the disadvantages of Skyfield?
+
+  Skyfield depends on NumPy while PyEphem does not.
 
 ## Wind
 
