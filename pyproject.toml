@@ -44,8 +44,8 @@ packages = [
 ]
 
 include = [
-    { path = "LICENSE.txt" },
-    { path = "README.md"},
+    { path = "LICENSE.txt", format = "sdist" },
+    { path = "README.md", format = "sdist" },
 ]
 
 exclude = [
