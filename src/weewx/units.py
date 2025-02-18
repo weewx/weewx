@@ -368,7 +368,7 @@ conversionDict = {
                           'degree_K'         : FtoK},
     'degree_F_day'     : {'degree_C_day'     : lambda x : x * (5.0/9.0)},
     'degree_K'         : {'degree_C'         : KtoC,
-                          'degreeF'          : KtoF},
+                          'degree_F'         : KtoF},
     'dublin_jd'        : {'unix_epoch'       : lambda x : (x-25567.5) * SECS_PER_DAY,
                           'unix_epoch_ms'    : lambda x : (x-25567.5) * SECS_PER_DAY * 1000,
                           'unix_epoch_ns'    : lambda x : (x-25567.5) * SECS_PER_DAY * 1e06},
