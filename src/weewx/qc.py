@@ -54,19 +54,28 @@ class QC:
 
         for obs_type in self.mm_dict:
             if obs_type in data_dict and data_dict[obs_type] is not None:
-                # Extract the minimum and maximum acceptable values
-                min_v, max_v = self.mm_dict[obs_type][0:2]
-                # If a unit has been specified, convert the min, max acceptable value to the same
-                # unit system as the incoming record:
-                if len(self.mm_dict[obs_type]) == 3:
-                    min_max_unit = self.mm_dict[obs_type][2]
-                    group = weewx.units.getUnitGroup(obs_type)
-                    min_v = converter.convert((min_v, min_max_unit, group))[0]
-                    max_v = converter.convert((max_v, min_max_unit, group))[0]
+                try:
+                    # Extract the minimum and maximum acceptable values
+                    min_v, max_v = self.mm_dict[obs_type][0:2]
+                    # If a unit has been specified, convert the min, max acceptable value to the same
+                    # unit system as the incoming record:
+                    if len(self.mm_dict[obs_type]) == 3:
+                        min_max_unit = self.mm_dict[obs_type][2]
+                        group = weewx.units.getUnitGroup(obs_type)
+                        min_v = converter.convert((min_v, min_max_unit, group))[0]
+                        max_v = converter.convert((max_v, min_max_unit, group))[0]
 
-                if not min_v <= data_dict[obs_type] <= max_v:
-                    if self.log_failure:
-                        log.warning("%s %s value '%s' %s outside limits (%s, %s)",
-                                    weeutil.weeutil.timestamp_to_string(data_dict['dateTime']),
-                                    data_type, obs_type, data_dict[obs_type], min_v, max_v)
-                    data_dict[obs_type] = None
+                    if not min_v <= data_dict[obs_type] <= max_v:
+                        if self.log_failure:
+                            log.warning("%s %s value '%s' %s outside limits (%s, %s)",
+                                        weeutil.weeutil.timestamp_to_string(data_dict['dateTime']),
+                                        data_type, obs_type, data_dict[obs_type], min_v, max_v)
+                        data_dict[obs_type] = None
+                except TypeError as e:
+                    # Ocasionally we might get very bad data which maled Python comparisations 
+                    # throw an exception we try to cover that there, at the risk of hiding other
+                    # errors within the code
+                    log.error("%s %s value '%s' %s results in crash %s",
+                                weeutil.weeutil.timestamp_to_string(data_dict['dateTime']),
+                                data_type, obs_type, data_dict[obs_type], e)
+                
