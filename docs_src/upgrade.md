@@ -44,6 +44,31 @@ sudo weectl station upgrade --config=/etc/weewx/other.conf
 
 ## Upgrading to V5.2
 
+### Module `schema` has been relocated
+
+Module `schema` has been relocated such that it is now part of module `weewx`.
+For example, schema `schema.wview_extended` can now be found at
+`weewx.schema.wview_extended`. A shim has been included for backwards
+compatibility for old configuration files that might still use the `schema`
+namespace.
+
+However, if you directly import a schema, then you will have to change it. For
+example:
+
+<div class="wide-table">
+  <table>
+    <tr class="first_row">
+      <td style='width:50%'>V5.1 and earlier</td>
+      <td>V5.2 and later</td>
+    </tr>
+    <tr class="tty">
+      <td>import schema.wview_extended</td>
+      <td>import <span class="added">weewx.</span>schema.wview_extended</td>
+    </tr>
+  </table>
+</div>
+
+
 ### Luminosity and Illuminance
 
 Previously, the `wview_extended` schema included a type `luminosity` (typically

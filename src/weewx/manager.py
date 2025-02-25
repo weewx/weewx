@@ -35,7 +35,7 @@ Note the entry 'manager':
         manager = weewx.manager.DaySummaryManager
         # The schema defines the structure of the database.
         # It is *only* used when the database is created.
-        schema = schemas.wview_extended.schema
+        schema = weewx.schemas.wview_extended.schema
 
 To avoid making the user dig into the configuration dictionary to figure out which type of
 database manager to open, there is a convenience function for doing so:
@@ -706,8 +706,8 @@ def reconfig(old_db_dict, new_db_dict, new_unit_system=None, new_schema=None, dr
 
     with Manager.open(old_db_dict) as old_archive:
         if new_schema is None:
-            import schemas.wview_extended
-            new_schema = schemas.wview_extended.schema
+            import weewx.schemas.wview_extended
+            new_schema = weewx.schemas.wview_extended.schema
         with Manager.open_with_create(new_db_dict, schema=new_schema) as new_archive:
             # Wrap the input generator in a unit converter.
             record_generator = weewx.units.GenWithConvert(old_archive.genBatchRecords(),
@@ -799,7 +799,7 @@ class DBBinder:
 default_binding_dict = {'database': 'archive_sqlite',
                         'table_name': 'archive',
                         'manager': 'weewx.manager.DaySummaryManager',
-                        'schema': 'schemas.wview_extended.schema'}
+                        'schema': 'weewx.schemas.wview_extended.schema'}
 
 
 def get_database_dict_from_config(config_dict, database):
@@ -903,7 +903,13 @@ def get_manager_dict_from_config(config_dict, data_binding,
                                   manager_dict['schema']]
     else:
         # Schema is a string, with the name of the schema object
-        manager_dict['schema'] = weeutil.weeutil.get_object(schema_name)
+        try:
+            manager_dict['schema'] = weeutil.weeutil.get_object(schema_name)
+        except (ModuleNotFoundError, ImportError) as e:
+            log.debug("Could not load schema '%s'", schema_name)
+            log.debug("**** Reason: %s", e)
+            log.debug("**** Trying '%s'", 'weewx.' + schema_name)
+            manager_dict['schema'] = weeutil.weeutil.get_object('weewx.' + schema_name)
 
     return manager_dict
 

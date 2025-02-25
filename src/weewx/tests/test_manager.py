@@ -22,7 +22,7 @@ import time
 import unittest
 
 import gen_fake_data
-import schemas.wview_small
+import weewx.schemas.wview_small
 import weedb
 import weeutil.logger
 import weewx.manager
@@ -34,7 +34,7 @@ os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
 
 # Things go *much* faster if we use an abbreviated schema
-schema = schemas.wview_small.schema
+schema = weewx.schemas.wview_small.schema
 
 # Archive interval of one hour
 interval_secs = 3600

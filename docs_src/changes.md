@@ -3,6 +3,9 @@ WeeWX change history
 
 ### 5.2.0 MM/DD/YYYY
 
+Module `schema` is now under module `weewx. This lessens pollution of the Python
+namespace. Addresses [Issue #993](https://github.com/weewx/weewx/issues/993).
+
 The WeeWX Almanac is now extensible, allowing other astronomy packages to be
 used besides `pyephem`. In particular, a WeeWX extension that uses the
 [Skyfield](https://rhodesmill.org/skyfield/) package is available and can be
