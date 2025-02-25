@@ -198,6 +198,54 @@ set for almanac times The first, `ephem_day`, is used for almanac times within
 the day, such as sunrise or sunset. The second, `ephem_year`, is used for
 almanac times within the year, such as the next equinox or full moon.
 
+##[[DeltaTimeFormats]]
+
+Section `[[DeltaTimeFormats]]` is used to control the formatting of the
+`long_form()` suffix, which is used when expressing _delta times_, that
+is, elapsed time since some event occurred. For example
+
+    $station.uptime.long_form
+
+will show how long WeeWX has been up:
+
+    9 days, 3 hours, 53 minutes
+
+Because delta times can vary in length from something measured in hours (time
+since sunrise), to time measured in days (uptime), each delta time comes with a
+_time context_. For example, the context used for time since sunrise is `hour`,
+while the context used by station uptime is `month`. 
+
+The default section looks like this:
+
+``` ini
+    [[DeltaTimeFormats]]
+        current = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"
+        hour    = "%(minute)d%(minute_label)s, %(second)d%(second_label)s"
+        day     = "%(hour)d%(hour_label)s, %(minute)d%(minute_label)s, %(second)d%(second_label)s"
+        week    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"
+        month   = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"
+        year    = "%(day)d%(day_label)s, %(hour)d%(hour_label)s, %(minute)d%(minute_label)s"
+```
+
+The section is keyed by the time context (_e.g._, `current`, `hour`, _etc._).
+
+The parameter `minute` will be replaced by how many minutes, `second` by how
+many seconds, and so on. 
+
+The parameter `minute_label` is the label that will be used for minutes. It is
+obtained from section [`[Unit]/[[Labels]]`](#labels).
+
+The formatting can be overridden by supplying an argument to `long_form`. For
+example, with the example above, the tag
+
+    $station.uptime.long_form("%(day)d%(day_label)s, %(hour)d%(hour_label)s, and %(minute)d%(minute_label)s")
+
+would give
+
+    9 days, 3 hours, and 53 minutes
+
+Note the addition of the conjuction "and".
+
 ## [[Ordinates]]
 
 #### directions
