@@ -24,21 +24,21 @@ modify it to fit your needs before creating the database.
 WeeWX gives you a choice of three different schemas to choose from when
 creating a new database:
 
-|  Name  | Number of<br/>observation types | Comment                                                  |
-|------------------|---------------|----------------------------------------------------------|
-| `schemas.wview.schema`| 49            | The original schema that came with wview.                |
-| `schemas.wview_extended.schema` | 111  | A version of the wview schema,<br/>which has been extended with<br/>many new types.<br/>This is the default version. |
-| `schemas.wview_small.schema` | 20            | A minimalist version of the wview schema.                |
+| Name                                  | Number of<br/>observation types | Comment                                                  |
+|---------------------------------------|---------------------------------|----------------------------------------------------------|
+| `weewx.schemas.wview.schema`          | 49                              | The original schema that came with wview.                |
+| `weewx.schemas.wview_extended.schema` | 111                             | A version of the wview schema,<br/>which has been extended with<br/>many new types.<br/>This is the default version. |
+| `weewx.schemas.wview_small.schema`    | 20                              | A minimalist version of the wview schema.                |
   
 
 For most users, the default database schema,
-`schemas.wview_extended.schema`, will work just fine.
+`weewx.schemas.wview_extended.schema`, will work just fine.
 
 To specify which schema to use when creating a database, modify option
 `schema` in section `[DataBindings]` in
 `weewx.conf`. For example, suppose you wanted to use the classic
-(and smaller) schema `schemas.wview.schema` instead of the
-default `schemas.wview_extended.schema`. Then the section
+(and smaller) schema `weewx.schemas.wview.schema` instead of the
+default `weewx.schemas.wview_extended.schema`. Then the section
 `[DataBindings]` would look like:
 
 ``` ini hl_lines="6"
@@ -47,7 +47,7 @@ default `schemas.wview_extended.schema`. Then the section
         database = archive_sqlite
         table_name = archive
         manager = weewx.manager.DaySummaryManager
-        schema = schemas.wview.schema
+        schema = weewx.schemas.wview.schema
 ```
 
 Now, when you start WeeWX, it will use this new choice instead of the
@@ -64,7 +64,7 @@ If none of the three starting schemas that come with WeeWX suits your purposes,
 you can easily create your own. Just pick one of the three schemas as a
 starting point, then modify it. Put the results in the `user` subdirectory,
 where it will be safe from upgrades. For example, suppose you like the
-`schemas.wview_small` schema, but you need to store the type `electricity`
+`weewx.schemas.wview_small` schema, but you need to store the type `electricity`
 from the example
 [*Adding a second data source*](service-engine.md#add-data-source). The type
 `electricity` does not appear in the schema, so you'll have to add it before
@@ -191,7 +191,7 @@ daily summaries.
 #### Removing a type {#remove-archive-type}
 
 In a similar manner, the tool can remove any unneeded types from an existing
-database. For example, suppose you are using the `schemas.wview` schema, but
+database. For example, suppose you are using the `weewx.schemas.wview` schema, but
 you're pretty sure you're not going to need to store soil moisture. You can
 drop the unnecessary types this way:
 

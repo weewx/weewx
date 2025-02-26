@@ -15,7 +15,7 @@ section looks something like this:
     database = archive_sqlite
     table_name = archive
     manager = weewx.manager.DaySummaryManager
-    schema = schemas.wview_extended.schema
+    schema = weewx.schemas.wview_extended.schema
 ```
 
 What follows is more detailed information about each of the binding options.
@@ -50,5 +50,5 @@ changed.
 A Python structure holding the schema to be used to initialize the database.
 After initialization, it is not used.
 
-Optional. Default is `schemas.wview_extended.schema`, which is a superset of
+Optional. Default is `weewx.schemas.wview_extended.schema`, which is a superset of
 the schema used by the _wview_ weather system.

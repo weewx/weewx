@@ -24,8 +24,8 @@ would look on the Dell:
         table_name = archive
         # The class to manage the database
         manager = weewx.manager.DaySummaryManager
-        # The schema defines to structure of the database contents
-        schema = schemas.wview_extended.schema
+        # The schema defines the structure of the database contents
+        schema = weewx.schemas.wview_extended.schema
 
     [[wmr100_binding]]
         # Binding for my WMR100 on the RPi
@@ -35,7 +35,7 @@ would look on the Dell:
         # The class to manage the database
         manager = weewx.manager.DaySummaryManager
         # The schema defines to structure of the database contents
-        schema = schemas.wview_extended.schema
+        schema = weewx.schemas.wview_extended.schema
 
 [Databases]
     # This section binds to the actual database to be used

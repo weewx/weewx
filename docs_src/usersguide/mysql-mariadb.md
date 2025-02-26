@@ -61,8 +61,8 @@ After the change, it will look something like this (change ==Highlighted== ):
         # The class to manage the database
         manager = weewx.manager.DaySummaryManager
 
-        # The schema defines to structure of the database contents
-        schema = schemas.wview_extended.schema
+        # The schema defines the structure of the database contents
+        schema = weewx.schemas.wview_extended.schema
 ```
 
 ### 3. Configure the MySQL host and credentials
