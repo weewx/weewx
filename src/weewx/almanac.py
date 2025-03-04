@@ -79,7 +79,7 @@ class Almanac:
     >>> almanac = Almanac(t, 46.0, -122.0, formatter=weewx.units.get_default_formatter())
     
     Test backwards compatibility with attribute 'moon_fullness':
-    >>> print("Fullness of the moon (rounded) is %.2f%% [%s]" % (almanac._moon_fullness, almanac.moon_phase))
+    >>> print("Fullness of the moon (rounded) is %.2f%% [%s]" % (almanac.moon_fullness,almanac.moon_phase))
     Fullness of the moon (rounded) is 3.00% [new (totally dark)]
 
     Now get a more precise result for fullness of the moon:
@@ -207,7 +207,7 @@ class Almanac:
                  temperature=None,
                  pressure=None,
                  horizon=None,
-                 moon_phases=weeutil.Moon.moon_phases,
+                 texts=dict(),
                  formatter=None,
                  converter=None):
         """Initialize an instance of Almanac
@@ -225,7 +225,8 @@ class Almanac:
             pressure (float|None): Observer's atmospheric pressure in **mBars**.
                 [Optional. Default is 1010]
             horizon (float|None): Angle of the horizon in degrees [Optional. Default is zero]
-            moon_phases (list): An array of 8 strings with descriptions of the moon
+            texts (dict): a dictionary of language dependent texts, basicly an entry
+                'moon_phases' which holds an array of 8 strings with descriptions of the moon
                 phase. [optional. If not given, then weeutil.Moon.moon_phases will be used]
             formatter (weewx.units.Formatter|None): An instance of weewx.units.Formatter
                 with the formatting information to be used.
@@ -239,7 +240,8 @@ class Almanac:
         self.temperature = temperature if temperature is not None else 15.0
         self.pressure = pressure if pressure is not None else 1010.0
         self.horizon = horizon if horizon is not None else 0.0
-        self.moon_phases = moon_phases
+        self.texts = texts
+        self.moon_phases = texts.get('moon_phases',weeutil.Moon.moon_phases)
         self.formatter = formatter or weewx.units.Formatter()
         self.converter = converter or weewx.units.Converter()
         # Check to see whether there is a module that provides more than
