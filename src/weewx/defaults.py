@@ -76,6 +76,7 @@ log_failure = False
     [[StringFormats]]
 
         amp                = %.1f
+        astronomical_unit  = %.2f
         bit                = %.0f
         boolean            = %d
         byte               = %.0f
@@ -147,6 +148,7 @@ log_failure = False
     [[Labels]]
 
         amp               = " A"
+        astronomical_unit = " AU"
         bit               = " b"
         boolean           = ""
         byte              = " B"
