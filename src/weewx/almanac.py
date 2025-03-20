@@ -526,6 +526,12 @@ class AlmanacBinder:
                                        formatter=self.almanac.formatter,
                                        converter=self.almanac.converter)
 
+    def __str__(self):
+        """ AlmanacBinder cannot be printed itself. It always needs an 
+            attribute.
+        """
+        raise AttributeError(self.heavenly_body)
+    
     def __getattr__(self, attr):
         """Get the requested observation, such as when the body will rise."""
 
