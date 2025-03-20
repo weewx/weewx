@@ -79,7 +79,7 @@ class Almanac:
     >>> almanac = Almanac(t, 46.0, -122.0, formatter=weewx.units.get_default_formatter())
     
     Test backwards compatibility with attribute 'moon_fullness':
-    >>> print("Fullness of the moon (rounded) is %.2f%% [%s]" % (almanac.moon_fullness,almanac.moon_phase))
+    >>> print("Fullness of the moon (rounded) is %.2f%% [%s]" % (almanac.moon_fullness, almanac.moon_phase))
     Fullness of the moon (rounded) is 3.00% [new (totally dark)]
 
     Now get a more precise result for fullness of the moon:
@@ -400,6 +400,10 @@ class PyEphemAlmanacType(AlmanacType):
                                                context = 'ephem_day',
                                                formatter=almanac_obj.formatter,
                                                converter=almanac_obj.converter)
+        elif attr.startswith('previous_') or attr.startswith('next_'):
+            # Prevent availability checks from being misinterpreted as
+            # heavenly bodies.
+            raise AttributeError(attr)
         else:
             # The attribute must be a heavenly body (such as 'sun', or 'jupiter').
             # Bind the almanac and the heavenly body together and return as an
