@@ -649,7 +649,10 @@ def _get_ephem_body(heavenly_body):
     except AttributeError:
         # That didn't work. Try a star. If this doesn't work either,
         # then a KeyError exception will be raised.
-        ephem_body = ephem.star(cap_name)
+        try:
+            ephem_body = ephem.star(cap_name)
+        except KeyError:
+            raise AttributeError(heavenly_body)
     except TypeError:
         # Heavenly bodies added by a ephem.readdb() statement are not functions.
         # So, just return the attribute, without calling it:
