@@ -900,8 +900,8 @@ class Source:
                                 # or secondary inter-cardinal direction that we
                                 # can convert to degrees
 
-                                if _value is None and hasattr(self, 'wind_dir_map') and \
-                                        self.map[_field]['unit'] == 'degree_compass':
+                                if (_value is None and hasattr(self, 'wind_dir_map') and
+                                        self.map[_field].get('unit') == 'degree_compass'):
                                     # we have a csv import and we are mapping
                                     # to a direction field, so try a cardinal
                                     # conversion
