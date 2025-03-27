@@ -268,6 +268,7 @@ USUnits = ListOfDicts({
     "group_illuminance" : "lux",
     "group_interval"    : "minute",
     "group_length"      : "inch",
+    "group_localtime"   : "local_djd",
     "group_moisture"    : "centibar",
     "group_percent"     : "percent",
     "group_power"       : "watt",
@@ -308,6 +309,7 @@ MetricUnits = ListOfDicts({
     "group_illuminance" : "lux",
     "group_interval"    : "minute",
     "group_length"      : "cm",
+    "group_localtime"   : "local_djd",
     "group_moisture"    : "centibar",
     "group_percent"     : "percent",
     "group_power"       : "watt",
@@ -344,6 +346,9 @@ std_groups = {
 
 # Conversion functions to go from one unit type to another.
 conversionDict = {
+    'astronomical_unit': {'meter'            : lambda x : x * 149597870700,
+                          'km'               : lambda x : x * 149597870.7,
+                          'mile'             : lambda x : x * 92955807.23752087},
     'bit'              : {'byte'             : lambda x : x / 8},
     'byte'             : {'bit'              : lambda x : x * 8},
     'cm'               : {'inch'             : lambda x : x / CM_PER_INCH,
@@ -404,7 +409,8 @@ conversionDict = {
                           'watt_second'      : lambda x : x * 3.6e6,
                           'watt_hour'        : lambda x : x * 1000.0},
     'km'               : {'meter'            : lambda x : x * 1000.0,
-                          'mile'             : lambda x : x * 0.621371192},
+                          'mile'             : lambda x : x * 0.621371192,
+                          'astronomical_unit': lambda x : x / 149597870.7 },
     'km_per_hour'      : {'mile_per_hour'    : kph_to_mph,
                           'knot'             : kph_to_knot,
                           'meter_per_second' : lambda x : x * 0.277777778},
@@ -436,14 +442,16 @@ conversionDict = {
                           'watt_hour'        : lambda x : x * 1000000 / 3600,
                           'watt_second'      : lambda x : x * 1000000},
     'meter'            : {'foot'             : lambda x : x / METER_PER_FOOT,
-                          'km'               : lambda x : x / 1000.0},
+                          'km'               : lambda x : x / 1000.0,
+                          'astronomical_unit': lambda x : x / 149597870700},
     'meter_per_second' : {'mile_per_hour'    : mps_to_mph,
                           'knot'             : mps_to_knot,
                           'km_per_hour'      : lambda x : x * 3.6},
     'meter_per_second2': {'mile_per_hour2'   : lambda x : x * 2.23693629,
                           'knot2'            : lambda x : x * 1.94384449,
                           'km_per_hour2'     : lambda x : x * 3.6},
-    'mile'             : {'km'               : lambda x : x * 1.609344},
+    'mile'             : {'km'               : lambda x : x * 1.609344,
+                          'astronomical_unit': lambda x : x / 92955807.23752087},
     'mile_per_hour'    : {'km_per_hour'      : lambda x : x * 1.609344,
                           'knot'             : mph_to_knot,
                           'meter_per_second' : lambda x : x * 0.44704},
@@ -770,6 +778,14 @@ class Formatter:
                                         time.localtime(t))
             else:
                 val_str = time.strftime(useThisFormat, time.localtime(t))
+            addLabel = False
+        elif val_t[1]=='local_djd':
+            ti = time.gmtime((val_t[0]-25567.5)*SECS_PER_DAY)
+            if useThisFormat is None:
+                val_str = time.strftime(self.time_format_dict.get(context, "%d-%b-%Y %H:%M"),
+                                        ti)
+            else:
+                val_str = time.strftime(useThisFormat, ti)
             addLabel = False
         else:
             # It's not a time. It's a regular value. Get a suitable format string:

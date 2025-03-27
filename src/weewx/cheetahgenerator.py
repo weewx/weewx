@@ -542,7 +542,7 @@ class Almanac(SearchList):
                     if 'barometer' in rec:
                         pressure_mbar = weewx.units.convert(weewx.units.as_value_tuple(rec, 'barometer'), "mbar")[0]
 
-        self.moonphases = generator.skin_dict.get('Almanac', {}).get('moon_phases', weeutil.Moon.moon_phases)
+        self.texts = generator.skin_dict.get('Almanac', {})
 
         altitude_vt = weewx.units.convert(generator.stn_info.altitude_vt, "meter")
 
@@ -552,7 +552,7 @@ class Almanac(SearchList):
                                              altitude=altitude_vt[0],
                                              temperature=temperature_C,
                                              pressure=pressure_mbar,
-                                             moon_phases=self.moonphases,
+                                             texts=self.texts,
                                              formatter=generator.formatter,
                                              converter=generator.converter)
 
