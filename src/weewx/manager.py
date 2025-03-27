@@ -417,10 +417,8 @@ class Manager:
 
         # Update the cached timestamps. This has to sit outside the transaction context,
         # in case an exception occurs.
-        if self.first_timestamp is not None:
-            self.first_timestamp = min(min_ts, self.first_timestamp)
-        if self.last_timestamp is not None:
-            self.last_timestamp = max(max_ts, self.last_timestamp)
+        self.first_timestamp = min_ts if self.first_timestamp is None else min(min_ts, self.first_timestamp)
+        self.last_timestamp = max_ts if self.last_timestamp is None else max(max_ts, self.last_timestamp)
 
         return N
 

@@ -14,6 +14,11 @@ Adjust exclusion of top-level files in wheel creation to meet poetry
 norms and to be consistent across poetry-core versions.  Fixes issue
 [#993](https://github.com/weewx/weewx/issues/993), in part.
 
+Fix problem that prevented cached values of first and last timestamp from
+being set. [PR #999](https://github.com/weewx/weewx/pull/999). Thanks to user
+Rich Bell!
+
+
 ### 5.1.0 07/04/2024
 
 If option `lang` is a valid locale, then it will be used to change locale as
