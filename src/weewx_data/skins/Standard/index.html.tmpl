@@ -21,10 +21,12 @@
       }
       function openNoaaFile(date)
       {
-        var url = "NOAA/NOAA-";
-        url = url + date;
-        url = url + ".txt";
-        window.location=url;
+        if ( date != "none" ) {
+          var url = "NOAA/NOAA-";
+          url = url + date;
+          url = url + ".txt";
+          window.location=url;
+        }
       }
     </script>
     ## If a Google Analytics GA4 code has been specified, include it.
@@ -504,7 +506,7 @@
         #for $monthYear in $SummaryByMonth
             <option value="$monthYear">$monthYear</option>
         #end for
-        <option selected>-$gettext("Select month")-</option>
+        <option value="none" selected>-$gettext("Select month")-</option>
         </select>
         <br/>
         $gettext("Yearly summary"):&nbsp;
@@ -512,7 +514,7 @@
         #for $yr in $SummaryByYear
             <option value="$yr">$yr</option>
         #end for
-        <option selected>-$gettext("Select year")-</option>
+        <option value="none" selected>-$gettext("Select year")-</option>
         </select>
         </p>
       </div>
