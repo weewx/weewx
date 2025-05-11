@@ -63,6 +63,7 @@ PyMySQL = "^1.0"
 pyserial = "^3.4"
 pyusb = "^1.0.2"
 importlib-resources = {version = ">=3.3", python = "3.6"}
+influxdb-client = "<1.30.0"
 
 [tool.poetry.scripts]
 weectl = 'weectl:main'
