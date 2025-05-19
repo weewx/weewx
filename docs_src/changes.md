@@ -18,6 +18,10 @@ Fix problem that prevented cached values of first and last timestamp from
 being set. [PR #999](https://github.com/weewx/weewx/pull/999). Thanks to user
 Rich Bell!
 
+Fix problem in `Standard` skin if `Select Month` was literally selected in drop
+down list. [PR #1002](https://github.com/weewx/weewx/pull/1002). Thanks to user
+Ben Cotton!
+
 
 ### 5.1.0 07/04/2024
 
