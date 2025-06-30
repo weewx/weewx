@@ -22,6 +22,12 @@ Fix problem in `Standard` skin if `Select Month` was literally selected in drop
 down list. [PR #1002](https://github.com/weewx/weewx/pull/1002). Thanks to user
 Ben Cotton!
 
+In the Cumulus import code, the prefix `cur_` is used to signify a current value
+for most observation types. However, there was one exception: `curr_in_temp`.
+The utility and documentation have been changed to use `cur_in_temp` (one
+'`r`'), making all types consistent. Fixes [Issue
+#1006](https://github.com/weewx/weewx/issues/1006).
+
 
 ### 5.1.0 07/04/2024
 

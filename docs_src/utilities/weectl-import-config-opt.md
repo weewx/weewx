@@ -910,7 +910,7 @@ every Cumulus field need to be included in a mapping.
         <td>Current inside humidity</td>
     </tr>
     <tr>
-        <td class="first_col code">curr_in_temp</td>
+        <td class="first_col code">cur_in_temp</td>
         <td>Current inside temperature</td>
     </tr>
     <tr>

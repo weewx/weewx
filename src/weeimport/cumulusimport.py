@@ -56,13 +56,13 @@ class CumulusSource(weeimport.Source):
     _field_list = ['datetime', 'cur_out_temp', 'cur_out_hum',
                    'cur_dewpoint', 'avg_wind_speed', 'gust_wind_speed',
                    'avg_wind_bearing', 'cur_rain_rate', 'day_rain', 'cur_slp',
-                   'rain_counter', 'curr_in_temp', 'cur_in_hum',
+                   'rain_counter', 'cur_in_temp', 'cur_in_hum',
                    'latest_wind_gust', 'cur_windchill', 'cur_heatindex',
                    'cur_uv', 'cur_solar', 'cur_et', 'annual_et',
                    'cur_app_temp', 'cur_tmax_solar', 'day_sunshine_hours',
                    'cur_wind_bearing', 'day_rain_rg11', 'midnight_rain']
     # tuple of fields using 'temperature' units
-    _temperature_fields = ('cur_out_temp', 'cur_dewpoint', 'curr_in_temp',
+    _temperature_fields = ('cur_out_temp', 'cur_dewpoint', 'cur_in_temp',
                            'cur_windchill', 'cur_heatindex','cur_app_temp')
     # tuple of fields using 'pressure' units
     _pressure_fields = ('cur_slp', )
