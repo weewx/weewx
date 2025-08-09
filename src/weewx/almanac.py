@@ -415,17 +415,17 @@ class AlmanacBinder:
 
     def visible_change(self, days_ago=1):
         """Change in visibility of the heavenly body compared to 'days_ago'."""
-        # Visibility for today:
+        # Visibility for today, as a ValueTuple
         today_visible = self.visible
         # The time to compare to
         then_time = self.almanac.time_ts - days_ago * 86400
         # Get a new almanac, set up for the time back then
         then_almanac = self.almanac(almanac_time=then_time)
-        # Find the visibility back then
+        # Find the visibility back then as a ValueTuple
         then_visible = getattr(then_almanac, self.heavenly_body).visible
-        # Take the difference
-        diff = today_visible.raw - then_visible.raw
-        return weewx.units.ValueHelper(ValueTuple(diff, "second", "group_deltatime"),
+        # Take the difference, which will also be a ValueTuple
+        diff_vt = today_visible.value_t - then_visible.value_t
+        return weewx.units.ValueHelper(diff_vt,
                                        context="hour",
                                        formatter=self.almanac.formatter,
                                        converter=self.almanac.converter)

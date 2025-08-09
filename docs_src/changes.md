@@ -28,6 +28,9 @@ The utility and documentation have been changed to use `cur_in_temp` (one
 '`r`'), making all types consistent. Fixes [Issue
 #1006](https://github.com/weewx/weewx/issues/1006).
 
+Fix a problem caused by an assumption that delta times are always in seconds.
+Fixes issue [Issue #1009](https://github.com/weewx/weewx/issues/1009).
+
 
 ### 5.1.0 07/04/2024
 
