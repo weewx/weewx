@@ -31,6 +31,10 @@ The utility and documentation have been changed to use `cur_in_temp` (one
 Fix a problem caused by an assumption that delta times are always in seconds.
 Fixes issue [Issue #1009](https://github.com/weewx/weewx/issues/1009).
 
+Fix bug that prevented arbitrary types from being used with `weectl database
+add-column`. Fixes issue [Issue
+#1007](https://github.com/weewx/weewx/issues/1007).
+
 
 ### 5.1.0 07/04/2024
 
