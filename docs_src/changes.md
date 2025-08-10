@@ -32,6 +32,28 @@ Adjust exclusion of top-level files in wheel creation to meet poetry
 norms and to be consistent across poetry-core versions.  Fixes issue
 [#993](https://github.com/weewx/weewx/issues/993), in part.
 
+Fix problem that prevented cached values of first and last timestamp from
+being set. [PR #999](https://github.com/weewx/weewx/pull/999). Thanks to user
+Rich Bell!
+
+Fix problem in `Standard` skin if `Select Month` was literally selected in drop
+down list. [PR #1002](https://github.com/weewx/weewx/pull/1002). Thanks to user
+Ben Cotton!
+
+In the Cumulus import code, the prefix `cur_` is used to signify a current value
+for most observation types. However, there was one exception: `curr_in_temp`.
+The utility and documentation have been changed to use `cur_in_temp` (one
+'`r`'), making all types consistent. Fixes [Issue
+#1006](https://github.com/weewx/weewx/issues/1006).
+
+Fix a problem caused by an assumption that delta times are always in seconds.
+Fixes issue [Issue #1009](https://github.com/weewx/weewx/issues/1009).
+
+Fix bug that prevented arbitrary types from being used with `weectl database
+add-column`. Fixes issue [Issue
+#1007](https://github.com/weewx/weewx/issues/1007).
+
+
 ### 5.1.0 07/04/2024
 
 If option `lang` is a valid locale, then it will be used to change locale as

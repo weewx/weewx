@@ -156,7 +156,6 @@ def add_subparser(subparsers):
                                    metavar='NAME',
                                    help="Add new column NAME to database.")
     add_column_parser.add_argument('--type',
-                                   choices=['REAL', 'INTEGER', 'real', 'integer', 'int'],
                                    default='REAL',
                                    metavar='COLUMN-DEF',
                                    dest='column_type',

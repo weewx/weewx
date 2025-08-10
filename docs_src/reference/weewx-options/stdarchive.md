@@ -35,6 +35,13 @@ When performing hardware record generation, this option will attempt to
 augment the record with any additional observation types that it can extract
 out of the LOOP packets. Default is `true`.
 
+#### no_catchup
+
+Many weather stations have internal memory that can continue to record weather
+data even when WeeWX is not running. Normally, when WeeWX starts up, it will
+download this data and archive it. However, if you set this option to `true`,
+then WeeWX will not attempt to catch up. Default is `false`.
+
 #### loop_hilo
 
 Set to `true` to have LOOP data and archive data to be used for high / low
