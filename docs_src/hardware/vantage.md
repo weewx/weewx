@@ -324,6 +324,11 @@ look at [Installing Repeater Networks for Vantage
 Pro2](https://support.davisinstruments.com/article/t9nvrc8c1u-app-notes-installing-repeater-networks-for-vantage-pro-2)
 for how to set them up.
 
+!!! Note
+    There is a possible bug in the Davis firmware that can prevent changing the
+    channel of the ISS. See the Wiki section [_Changing the ISS
+    channel_](https://github.com/weewx/weewx/wiki/Troubleshooting-the-Davis-Vantage-station#iss-channel-workaround).
+
 ### `--set-retransmit` {id=vantage_retransmit}
 
 Use this command to tell your console whether to act as a retransmitter of ISS
