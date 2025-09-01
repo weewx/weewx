@@ -392,3 +392,29 @@ remove the data directory:
 ```{ .shell .copy }
 rm -r ~/weewx-data
 ```
+
+## After a major OS upgrade
+
+After a major OS upgrade, the version of Python that comes with the OS may
+change. For example, after upgrading from Debian 12 to Debian 13, the Python
+version changes from Python 3.11 to 3.13.
+
+This means that the WeeWX virtual environment will be expecting Python 3.11, but
+it and its libraries will no longer exist.
+
+The solution is to rebuild your virtual environment and reinstall the WeeWX
+executables.
+
+```shell
+# Move the old virtual environment out of the way
+mv ~/weewx-venv ~/weewx-venv.old
+# Create a new virtual environment
+python3 -m venv ~/weewx-venv
+# Activate the new WeeWX virtual environment
+source ~/weewx-venv/bin/activate
+# Install WeeWX into the new virtual environment
+python3 -m pip install weewx
+```
+
+The station data under `~/weewx-data`, and any WeeWX extensions contained
+within, are left alone.
