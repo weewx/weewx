@@ -1109,7 +1109,7 @@ class StdWOW(StdRESTful):
     """Upload using the UK Met Office's WOW protocol.
 
     For details of the WOW upload protocol, see
-    http://wow.metoffice.gov.uk/support/dataformats#dataFileUpload
+    https://wow.metoffice.gov.uk/support/dataformats#dataFileUpload
     """
 
     # The URL used by WOW:
