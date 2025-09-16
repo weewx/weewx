@@ -1150,7 +1150,7 @@ class StdWOWBE(StdWOW):
     """
 
     # The URL used by WOW:
-    archive_url = "https://wow.meteo.be/docs/api/#/operations/send.wow"
+    archive_url = "http://wow.meteo.be/api/v2/send"
     protocol_name = "WOWBE"
     Thread = WOWBEThread
 
