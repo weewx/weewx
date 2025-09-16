@@ -23,16 +23,17 @@ import weewx.drivers
 from weewx.units import ValueTuple,convert
 
 DRIVER_NAME = 'Gill'
+DRIVER_VERSION = '1.3'
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
-if not logger.hasHandlers():
+if not log.hasHandlers():
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     ch.setFormatter(formatter)
-    logger.addHandler(ch)
+    log.addHandler(ch)
 
 #This dictionary controls the format wwewx extracts data from the
 #config file.
@@ -56,10 +57,6 @@ weewx_gill_mapping = {
             'gustdir':[
                 'CGDIR',
                 'GDIR',
-            ],
-            'vecdir':[
-                'AVGCDIR',
-                'AVGDIR'
             ],
             'windDir':[
                 'DIR',
