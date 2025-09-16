@@ -1129,15 +1129,15 @@ class StdWOW(StdRESTful):
         _manager_dict = weewx.manager.get_manager_dict_from_config(
             config_dict, 'wx_binding')
 
-        _ambient_dict.setdefault('server_url', StdWOW.archive_url)
+        _ambient_dict.setdefault('server_url', self.archive_url)
         self.archive_queue = queue.Queue()
         self.archive_thread = self.Thread(self.archive_queue, _manager_dict,
                                         protocol_name=self.protocol_name,
                                         **_ambient_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        log.info("%s: Data for station %s will be posted",
-                 self.protocol_name, _ambient_dict['station'])
+        log.info("%s: Data for station %s will be posted to %s",
+                 self.protocol_name, _ambient_dict['station'], self.archive_url)
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
