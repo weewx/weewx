@@ -613,17 +613,18 @@ class StdWunderground(StdRESTful):
     rf_url = "https://rtupdate.wunderground.com/weatherstation/updateweatherstation.php"
     # the personal weather station URL:
     pws_url = "https://weatherstation.wunderground.com/weatherstation/updateweatherstation.php"
+    protocol_name = "Wunderground"
 
     def __init__(self, engine, config_dict):
 
         super().__init__(engine, config_dict)
 
         _ambient_dict = get_site_dict(
-            config_dict, 'Wunderground', 'station', 'password')
+            config_dict, self.protocol_name, 'station', 'password')
         if _ambient_dict is None:
             return
 
-        _essentials_dict = search_up(config_dict['StdRESTful']['Wunderground'], 'Essentials', {})
+        _essentials_dict = search_up(config_dict['StdRESTful'][self.protocol_name], 'Essentials', {})
 
         log.debug("WU essentials: %s", _essentials_dict)
 
@@ -643,13 +644,13 @@ class StdWunderground(StdRESTful):
             self.archive_thread = AmbientThread(
                 self.archive_queue,
                 _manager_dict,
-                protocol_name="Wunderground-PWS",
+                protocol_name=self.protocol_name + "-PWS",
                 essentials=_essentials_dict,
                 **_ambient_dict)
             self.archive_thread.start()
             self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-            log.info("Wunderground-PWS: Data for station %s will be posted",
-                     _ambient_dict['station'])
+            log.info("%s-PWS: Data for station %s will be posted",
+                     self.protocol_name, _ambient_dict['station'])
 
         if do_rapidfire_post:
             _ambient_dict.setdefault('server_url', StdWunderground.rf_url)
@@ -663,13 +664,13 @@ class StdWunderground(StdRESTful):
             self.loop_thread = AmbientLoopThread(
                 self.loop_queue,
                 _manager_dict,
-                protocol_name="Wunderground-RF",
+                protocol_name=self.protocol_name + "-RF",
                 essentials=_essentials_dict,
                 **_ambient_dict)
             self.loop_thread.start()
             self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
-            log.info("Wunderground-RF: Data for station %s will be posted",
-                     _ambient_dict['station'])
+            log.info("%s-RF: Data for station %s will be posted",
+                     self.protocol_name, _ambient_dict['station'])
 
     def new_loop_packet(self, event):
         """Puts new LOOP packets in the loop queue"""
@@ -737,12 +738,13 @@ class StdPWSWeather(StdRESTful):
 
     # The URL used by PWSWeather:
     archive_url = "https://www.pwsweather.com/pwsupdate/pwsupdate.php"
+    protocol_name = "PWSweather"
 
     def __init__(self, engine, config_dict):
         super().__init__(engine, config_dict)
 
         _ambient_dict = get_site_dict(
-            config_dict, 'PWSweather', 'station', 'password')
+            config_dict, self.protocol_name, 'station', 'password')
         if _ambient_dict is None:
             return
 
@@ -753,11 +755,12 @@ class StdPWSWeather(StdRESTful):
         _ambient_dict.setdefault('server_url', StdPWSWeather.archive_url)
         self.archive_queue = queue.Queue()
         self.archive_thread = AmbientThread(self.archive_queue, _manager_dict,
-                                            protocol_name="PWSWeather",
+                                            protocol_name=self.protocol_name,
                                             **_ambient_dict)
         self.archive_thread.start()
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        log.info("PWSWeather: Data for station %s will be posted", _ambient_dict['station'])
+        log.info("%s: Data for station %s will be posted",
+                 self.protocol_name, _ambient_dict['station'])
 
     def new_archive_record(self, event):
         self.archive_queue.put(event.record)
@@ -766,46 +769,12 @@ class StdPWSWeather(StdRESTful):
 # For backwards compatibility with early alpha versions:
 StdPWSweather = StdPWSWeather
 
-
-class StdWOW(StdRESTful):
-    """Upload using the UK Met Office's WOW protocol.
-    
-    For details of the WOW upload protocol, see 
-    http://wow.metoffice.gov.uk/support/dataformats#dataFileUpload
-    """
-
-    # The URL used by WOW:
-    archive_url = "https://wow.metoffice.gov.uk/automaticreading"
-
-    def __init__(self, engine, config_dict):
-        super().__init__(engine, config_dict)
-
-        _ambient_dict = get_site_dict(
-            config_dict, 'WOW', 'station', 'password')
-        if _ambient_dict is None:
-            return
-
-        # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict_from_config(
-            config_dict, 'wx_binding')
-
-        _ambient_dict.setdefault('server_url', StdWOW.archive_url)
-        self.archive_queue = queue.Queue()
-        self.archive_thread = WOWThread(self.archive_queue, _manager_dict,
-                                        protocol_name="WOW",
-                                        **_ambient_dict)
-        self.archive_thread.start()
-        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        log.info("WOW: Data for station %s will be posted", _ambient_dict['station'])
-
-    def new_archive_record(self, event):
-        self.archive_queue.put(event.record)
-
-
 class AmbientThread(RESTThread):
     """Concrete class for threads posting from the archive queue,
        using the Ambient PWS protocol.
        """
+
+    protocol_name = "Unknown-Ambient"
 
     def __init__(self,
                  q,
@@ -955,7 +924,8 @@ class AmbientThread(RESTThread):
         _url = "%s?%s" % (self.server_url, _urlquery)
         # show the url in the logs for debug, but mask any password
         if weewx.debug >= 2:
-            log.debug("Ambient: url: %s", re.sub(r"PASSWORD=[^\&]*", "PASSWORD=XXX", _url))
+            log.debug("%s: url: %s", self.protocol_name,
+                                     re.sub(r"PASSWORD=[^\&]*", "PASSWORD=XXX", _url))
         return _url
 
     def check_response(self, response):
@@ -1079,7 +1049,7 @@ class WOWThread(AmbientThread):
 
         # Go through each of the supported types, formatting it, then adding
         # to _liststr:
-        for _key in WOWThread._FORMATS:
+        for _key in self._FORMATS:
             _v = record.get(_key)
             # Check to make sure the type is not null
             if _v is not None:
@@ -1090,14 +1060,15 @@ class WOWThread(AmbientThread):
                     # like '2020-10-19%2021%3A43%3A18'
                     _v = urllib.parse.quote(_dt.strftime("%Y-%m-%d %H:%M:%S"))
                 # Format the value, and accumulate in _liststr:
-                _liststr.append(WOWThread._FORMATS[_key] % _v)
+                _liststr.append(self._FORMATS[_key] % _v)
         # Now stick all the pieces together with an ampersand between them:
         _urlquery = '&'.join(_liststr)
         # This will be the complete URL for the HTTP GET:
         _url = "%s?%s" % (self.server_url, _urlquery)
         # show the url in the logs for debug, but mask any password
         if weewx.debug >= 2:
-            log.debug("WOW: url: %s", re.sub(r"siteAuthenticationKey=[^\&]*",
+            log.debug("%s: url: %s", self.protocol_name,
+                                     re.sub(r"siteAuthenticationKey=[^\&]*",
                                              "siteAuthenticationKey=XXX", _url))
         return _url
 
@@ -1117,6 +1088,71 @@ class WOWThread(AmbientThread):
         else:
             return _response
 
+class WOWBEThread(WOWThread):
+    """Class for posting to RMI's WOW variant of the WOW protocol."""
+
+    # Types and formats of the data to be published:
+    _FORMATS = {'dateTime': 'dateutc=%s',
+                'barometer': 'absbaromin=%.3f',
+                'radiation': 'solarradiation=%.2f',
+                'outTemp': 'tempf=%.1f',
+                'outHumidity': 'humidity=%.0f',
+                'windSpeed': 'windspeedmph=%.0f',
+                'windDir': 'winddir=%.0f',
+                'windGust': 'windgustmph=%.0f',
+                'windGustDir': 'windgustdir=%.0f',
+                'dewpoint': 'dewptf=%.1f',
+                'hourRain': 'rainin=%.2f',
+                'dayRain': 'dailyrainin=%.3f'}
+
+class StdWOW(StdRESTful):
+    """Upload using the UK Met Office's WOW protocol.
+
+    For details of the WOW upload protocol, see
+    https://wow.metoffice.gov.uk/support/dataformats#dataFileUpload
+    """
+
+    # The URL used by WOW:
+    archive_url = "https://wow.metoffice.gov.uk/automaticreading"
+    protocol_name = "WOW"
+    Thread = WOWThread
+
+    def __init__(self, engine, config_dict):
+        super().__init__(engine, config_dict)
+
+        _ambient_dict = get_site_dict(
+            config_dict, self.protocol_name, 'station', 'password')
+        if _ambient_dict is None:
+            return
+
+        # Get the manager dictionary:
+        _manager_dict = weewx.manager.get_manager_dict_from_config(
+            config_dict, 'wx_binding')
+
+        _ambient_dict.setdefault('server_url', self.archive_url)
+        self.archive_queue = queue.Queue()
+        self.archive_thread = self.Thread(self.archive_queue, _manager_dict,
+                                        protocol_name=self.protocol_name,
+                                        **_ambient_dict)
+        self.archive_thread.start()
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+        log.info("%s: Data for station %s will be posted to %s",
+                 self.protocol_name, _ambient_dict['station'], self.archive_url)
+
+    def new_archive_record(self, event):
+        self.archive_queue.put(event.record)
+
+class StdWOWBE(StdWOW):
+    """Upload using the RMI's WOW protocol.
+
+    For details of the WOW upload protocol, see
+    https://wow.meteo.be/docs/api/#/operations/send.wow
+    """
+
+    # The URL used by WOW:
+    archive_url = "https://wow.meteo.be/api/v2/send"
+    protocol_name = "WOWBE"
+    Thread = WOWBEThread
 
 # ==============================================================================
 #                    CWOP
@@ -1164,6 +1200,8 @@ class CWOPThread(RESTThread):
     """Concrete class for threads posting from the archive queue, using the CWOP protocol. For
     details on the protocol, see http://www.wxqa.com/faq.html."""
 
+    protocol_name = "CWOP"
+
     def __init__(self, q, manager_dict,
                  station, passcode, latitude, longitude, station_type,
                  server_list=StdCWOP.default_servers,
@@ -1200,7 +1238,7 @@ class CWOPThread(RESTThread):
         """
         # Initialize my superclass
         super().__init__(q,
-                         protocol_name="CWOP",
+                         protocol_name=self.protocol_name,
                          manager_dict=manager_dict,
                          post_interval=post_interval,
                          max_backlog=max_backlog,
@@ -1474,6 +1512,8 @@ class StdStationRegistry(StdRESTful):
 class StationRegistryThread(RESTThread):
     """Concrete threaded class for posting to the weewx station registry."""
 
+    protocol_name = 'StationRegistry'
+
     def __init__(self,
                  q,
                  station_url,
@@ -1518,7 +1558,7 @@ class StationRegistryThread(RESTThread):
 
         super().__init__(
             q,
-            protocol_name='StationRegistry',
+            protocol_name=self.protocol_name,
             post_interval=post_interval,
             timeout=timeout,
             **kwargs)
@@ -1699,6 +1739,8 @@ class AWEKASThread(RESTThread):
                 'UV': '%.2f',
                 'rainRate': '%.2f'}
 
+    protocol_name = 'AWEKAS'
+
     def __init__(self, q, username, password, latitude, longitude,
                  manager_dict,
                  language='de', server_url=_SERVER_URL,
@@ -1738,7 +1780,7 @@ class AWEKASThread(RESTThread):
         """
         import hashlib
         super().__init__(q,
-                         protocol_name='AWEKAS',
+                         protocol_name=self.protocol_name,
                          manager_dict=manager_dict,
                          post_interval=post_interval,
                          max_backlog=max_backlog,
