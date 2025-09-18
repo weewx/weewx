@@ -1,6 +1,13 @@
 WeeWX change history
 --------------------
 
+### 5.2.0 MM/DD/YYYY
+
+Added support for WOW-BE. PR [#1014](https://github.com/weewx/weewx/pull/1014).
+Fixes issue [#1013](https://github.com/weewx/weewx/issues/1013). Thanks to user
+John!
+
+
 ### 5.1.X MM/DD/YYYY
 
 Fix typo that causes phantom values of `soilMoist3` to appear with VantageVue
