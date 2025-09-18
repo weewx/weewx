@@ -766,42 +766,6 @@ class StdPWSWeather(StdRESTful):
 # For backwards compatibility with early alpha versions:
 StdPWSweather = StdPWSWeather
 
-
-class StdWOW(StdRESTful):
-    """Upload using the UK Met Office's WOW protocol.
-    
-    For details of the WOW upload protocol, see 
-    http://wow.metoffice.gov.uk/support/dataformats#dataFileUpload
-    """
-
-    # The URL used by WOW:
-    archive_url = "https://wow.metoffice.gov.uk/automaticreading"
-
-    def __init__(self, engine, config_dict):
-        super().__init__(engine, config_dict)
-
-        _ambient_dict = get_site_dict(
-            config_dict, 'WOW', 'station', 'password')
-        if _ambient_dict is None:
-            return
-
-        # Get the manager dictionary:
-        _manager_dict = weewx.manager.get_manager_dict_from_config(
-            config_dict, 'wx_binding')
-
-        _ambient_dict.setdefault('server_url', StdWOW.archive_url)
-        self.archive_queue = queue.Queue()
-        self.archive_thread = WOWThread(self.archive_queue, _manager_dict,
-                                        protocol_name="WOW",
-                                        **_ambient_dict)
-        self.archive_thread.start()
-        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
-        log.info("WOW: Data for station %s will be posted", _ambient_dict['station'])
-
-    def new_archive_record(self, event):
-        self.archive_queue.put(event.record)
-
-
 class AmbientThread(RESTThread):
     """Concrete class for threads posting from the archive queue,
        using the Ambient PWS protocol.
@@ -1079,7 +1043,7 @@ class WOWThread(AmbientThread):
 
         # Go through each of the supported types, formatting it, then adding
         # to _liststr:
-        for _key in WOWThread._FORMATS:
+        for _key in self._FORMATS:
             _v = record.get(_key)
             # Check to make sure the type is not null
             if _v is not None:
@@ -1090,14 +1054,15 @@ class WOWThread(AmbientThread):
                     # like '2020-10-19%2021%3A43%3A18'
                     _v = urllib.parse.quote(_dt.strftime("%Y-%m-%d %H:%M:%S"))
                 # Format the value, and accumulate in _liststr:
-                _liststr.append(WOWThread._FORMATS[_key] % _v)
+                _liststr.append(self._FORMATS[_key] % _v)
         # Now stick all the pieces together with an ampersand between them:
         _urlquery = '&'.join(_liststr)
         # This will be the complete URL for the HTTP GET:
         _url = "%s?%s" % (self.server_url, _urlquery)
         # show the url in the logs for debug, but mask any password
         if weewx.debug >= 2:
-            log.debug("WOW: url: %s", re.sub(r"siteAuthenticationKey=[^\&]*",
+            log.debug("%s: url: %s", self.protocol_name,
+                                     re.sub(r"siteAuthenticationKey=[^\&]*",
                                              "siteAuthenticationKey=XXX", _url))
         return _url
 
@@ -1117,6 +1082,71 @@ class WOWThread(AmbientThread):
         else:
             return _response
 
+class WOWBEThread(WOWThread):
+    """Class for posting to RMI's WOW variant of the WOW protocol."""
+
+    # Types and formats of the data to be published:
+    _FORMATS = {'dateTime': 'dateutc=%s',
+                'barometer': 'absbaromin=%.3f',
+                'radiation': 'solarradiation=%.2f',
+                'outTemp': 'tempf=%.1f',
+                'outHumidity': 'humidity=%.0f',
+                'windSpeed': 'windspeedmph=%.0f',
+                'windDir': 'winddir=%.0f',
+                'windGust': 'windgustmph=%.0f',
+                'windGustDir': 'windgustdir=%.0f',
+                'dewpoint': 'dewptf=%.1f',
+                'hourRain': 'rainin=%.2f',
+                'dayRain': 'dailyrainin=%.3f'}
+
+class StdWOW(StdRESTful):
+    """Upload using the UK Met Office's WOW protocol.
+
+    For details of the WOW upload protocol, see
+    https://wow.metoffice.gov.uk/support/dataformats#dataFileUpload
+    """
+
+    # The URL used by WOW:
+    archive_url = "https://wow.metoffice.gov.uk/automaticreading"
+    protocol_name = "WOW"
+    Thread = WOWThread
+
+    def __init__(self, engine, config_dict):
+        super().__init__(engine, config_dict)
+
+        _ambient_dict = get_site_dict(
+            config_dict, self.protocol_name, 'station', 'password')
+        if _ambient_dict is None:
+            return
+
+        # Get the manager dictionary:
+        _manager_dict = weewx.manager.get_manager_dict_from_config(
+            config_dict, 'wx_binding')
+
+        _ambient_dict.setdefault('server_url', self.archive_url)
+        self.archive_queue = queue.Queue()
+        self.archive_thread = self.Thread(self.archive_queue, _manager_dict,
+                                        protocol_name=self.protocol_name,
+                                        **_ambient_dict)
+        self.archive_thread.start()
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+        log.info("%s: Data for station %s will be posted to %s",
+                 self.protocol_name, _ambient_dict['station'], self.archive_url)
+
+    def new_archive_record(self, event):
+        self.archive_queue.put(event.record)
+
+class StdWOWBE(StdWOW):
+    """Upload using the RMI's WOW protocol.
+
+    For details of the WOW upload protocol, see
+    https://wow.meteo.be/docs/api/#/operations/send.wow
+    """
+
+    # The URL used by WOW:
+    archive_url = "https://wow.meteo.be/api/v2/send"
+    protocol_name = "WOW-BE"
+    Thread = WOWBEThread
 
 # ==============================================================================
 #                    CWOP

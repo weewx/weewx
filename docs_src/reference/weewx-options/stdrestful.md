@@ -8,6 +8,7 @@ services such as:
 * [PWSweather.com](https://www.pwsweather.com/)
 * [CWOP](http://www.wxqa.com/)
 * [British Weather Observations Website (WOW)](https://wow.metoffice.gov.uk/)
+* [WOW-BE](https://wow.meteo.be)
 * [Automatisches Wetterkarten System (AWEKAS)](https://www.awekas.at/)
 
 
@@ -273,6 +274,57 @@ Set to your WOW station ID (e.g., `12345678` for Pre June 1996 sites, or
 
 Set to your WOW Authentication Key. Required. This is not the same as your
 WOW user password. It is a 6 digit numerical PIN, unique for your station.
+
+#### log_success
+
+If you set a value here, it will apply only to logging for WOW.
+
+#### log_failure
+
+If you set a value here, it will apply only to logging for WOW.
+
+#### retry_login
+
+How long to wait in seconds before retrying a bad login. Default is `3600`
+(one hour).
+
+#### post_interval
+
+The interval in seconds between posts. Setting this value to zero will cause
+every archive record to be posted. Optional. Default is zero.
+
+
+## [[WOW-BE]] 
+
+WeeWX can send your current data to [WOW-BE](https://wow.meteo.be), a
+service very similar to WOW, but operated by the Royal Meteorological Institute
+of Belgium. If you wish to do this, set the option `enable` to `true`, then set
+options `station` and `password` appropriately. See [*WOW-BE ready
+station*](https://wow.meteo.be/en/connect-your-station/wow-be-ready-station/)
+for instructions on how to connect your station to WOW-BE. When you are done, it
+will look something like this:
+
+``` ini
+[StdRestful]
+    [[WOW-BE]]
+        enable = true
+        station = 6a571450-df53-e611-9401-0003ff5987fd
+        password = XXX
+```
+
+#### enable
+
+Set to `true` to enable posting to WOW-BE. Optional. Default is `false`.
+
+#### station
+
+Set to your WOW-BE station ID (e.g., `6a571450-df53-e611-9401-0003ff5987fd`).
+Required.
+
+#### password
+
+Set to your WOW-BE Authentication Key. Required. This is not the same as your
+WOW-BE user password. It is a 6 digit numerical PIN, unique for your station.
 
 #### log_success
 

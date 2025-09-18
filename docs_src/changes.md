@@ -3,6 +3,10 @@ WeeWX change history
 
 ### 5.2.0 MM/DD/YYYY
 
+Added support for WOW-BE. PR [#1014](https://github.com/weewx/weewx/pull/1014).
+Fixes issue [#1013](https://github.com/weewx/weewx/issues/1013). Thanks to user
+John!
+
 Module `schema` is now under module `weewx. This lessens pollution of the Python
 namespace. Addresses [Issue #993](https://github.com/weewx/weewx/issues/993).
 
