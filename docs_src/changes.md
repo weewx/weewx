@@ -53,6 +53,9 @@ Fix bug that prevented arbitrary types from being used with `weectl database
 add-column`. Fixes issue [Issue
 #1007](https://github.com/weewx/weewx/issues/1007).
 
+Fix bug that prevented MySQL and MariaDB versions greater than 10.0 from
+working. Fixes issue [Issue #1010](https://github.com/weewx/weewx/issues/1010).
+
 
 ### 5.1.0 07/04/2024
 

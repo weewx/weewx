@@ -1744,6 +1744,17 @@ def natural_sort_keys(source_dict):
     return keys_list
 
 
+def natural_compare(a, b):
+    """Return -1 if a<b, 0 if a==b, 1 if a>b using natural sort."""
+
+    def natural_key(s):
+        return [int(text) if text.isdigit() else text.lower()
+                for text in re.split(r'(\d+)', s)]
+
+    ak, bk = natural_key(a), natural_key(b)
+    return (ak > bk) - (ak < bk)
+
+
 def to_sorted_string(rec, simple_sort=False):
     """Return a string representation of a dict sorted by key.
 
@@ -1832,7 +1843,7 @@ class bcolors:
 
 
 def version_compare(v1, v2):
-    """Compare two version numbers
+    """Compare two version numbers, using a natural compare
 
     Args:
         v1(str): The first version number as a string. Can be something like '4.5.1a1'
@@ -1847,10 +1858,9 @@ def version_compare(v1, v2):
     mash = itertools.zip_longest(v1.split('.'), v2.split('.'), fillvalue='0')
 
     for x1, x2 in mash:
-        if x1 > x2:
-            return 1
-        if x1 < x2:
-            return -1
+        cmp = natural_compare(x1, x2)
+        if cmp:
+            return cmp
     return 0
 
 

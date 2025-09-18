@@ -19,7 +19,7 @@ else:
     except ImportError:
         from _mysql_exceptions import DatabaseError as MySQLDatabaseError
 
-from weeutil.weeutil import to_bool
+from weeutil.weeutil import to_bool, natural_compare
 import weedb
 
 DEFAULT_ENGINE = 'INNODB'
@@ -310,7 +310,7 @@ def set_engine(connect, engine):
     # Try to normalize:
     if isinstance(server_version, (tuple, list)):
         server_version = '%s.%s' % server_version[:2]
-    if server_version >= '5.5':
+    if natural_compare(server_version, '5.5') >= 0:
         connect.query("SET default_storage_engine=%s" % engine)
     else:
         connect.query("SET storage_engine=%s;" % engine)

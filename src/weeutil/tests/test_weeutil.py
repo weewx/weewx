@@ -1072,7 +1072,24 @@ class WeeutilTest(unittest.TestCase):
         self.assertEqual(version_compare('1.2.2', '1.2.3'), -1)
         self.assertEqual(version_compare('1.3', '1.2.2'), 1)
         self.assertEqual(version_compare('1.3.0a1', '1.3.0a2'), -1)
+        self.assertEqual(version_compare('10.3.0', '2.3.0'), 1)
+        self.assertEqual(version_compare('10.3.0', '10.10.0'), -1)
+        self.assertEqual(version_compare('2.3.0', '10.3.0'), -1)
+        self.assertEqual(version_compare('12.0.2-MariaDB-ubu2404', '5.5'), 1)
 
+
+    def test_natural_sort_keys(self):
+        from weeutil.weeutil import natural_sort_keys
+        a = {'5foo':'a', '6foo': 'b', '10foo': 'c', '1foo': 'd', '01foo':'e'}
+        self.assertEqual(natural_sort_keys(a), ['1foo', '01foo', '5foo', '6foo', '10foo'])
+
+    def test_natural_compare(self):
+        from weeutil.weeutil import natural_compare
+        self.assertEqual(natural_compare('5foo', '10foo'), -1)
+        self.assertEqual(natural_compare('10foo', '5foo'), 1)
+        self.assertEqual(natural_compare('10foo', '1foo'), 1)
+        self.assertEqual(natural_compare('10foo', '10foo'), 0)
+        self.assertEqual(natural_compare('10foo', '11foo'), -1)
 
 if __name__ == '__main__':
     unittest.main()
