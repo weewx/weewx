@@ -296,10 +296,13 @@ every archive record to be posted. Optional. Default is zero.
 
 ## [[WOW-BE]] 
 
-WeeWX can send your current data to [WOW-BE](https://wow.meteo.be), a
-service very similar to WOW, but operated by the Royal Meteorological Institute
-of Belgium. If you wish to do this, set the option `enable` to `true`, then set
-options `station` and `password` appropriately. See [*WOW-BE ready
+WeeWX can send your current data to [WOW-BE](https://wow.meteo.be), a service
+similar to that of the [British Weather Observations Website (WOW)](https://wow.metoffice.gov.uk/),
+but operated by the Royal Meteorological Institute of Belgium. While
+they are specifically interested in data from weather stations in Belgium,
+they are also happy for weather stations globally to upload as well. If you
+wish to do this, set the option `enable` to `true`, then set options `station`
+and `password` appropriately. See [*WOW-BE ready
 station*](https://wow.meteo.be/en/connect-your-station/wow-be-ready-station/)
 for instructions on how to connect your station to WOW-BE. When you are done, it
 will look something like this:
@@ -323,8 +326,9 @@ Required.
 
 #### password
 
-Set to your WOW-BE Authentication Key. Required. This is not the same as your
-WOW-BE user password. It is a 6 digit numerical PIN, unique for your station.
+Set to your WOW-BE station password. Required. This is not the same as your
+WOW-BE website password. While it can be a 6 digit numerical PIN,
+it's highly recommended you set a more complex password instead.
 
 #### log_success
 
