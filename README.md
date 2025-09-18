@@ -37,6 +37,7 @@ Support for many online weather services, including:
 * CWOP
 * PWSweather
 * WOW
+* WOW-BE
 * AWEKAS
 * Windy
 * Open Weathermap
