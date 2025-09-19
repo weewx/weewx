@@ -30,7 +30,6 @@ classifiers = [
     'Topic :: Scientific/Engineering :: Physics'
 ]
 packages = [
-    { include = "schemas", from = "src" },
     { include = "weecfg", from = "src" },
     { include = "weectllib", from = "src" },
     { include = "weedb", from = "src" },
