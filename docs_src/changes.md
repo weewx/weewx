@@ -3,6 +3,8 @@ WeeWX change history
 
 ### 5.2.0 MM/DD/YYYY
 
+Now require Python 3.7 or greater.
+
 Added support for WOW-BE. PR [#1014](https://github.com/weewx/weewx/pull/1014).
 Fixes issue [#1013](https://github.com/weewx/weewx/issues/1013). Thanks to user
 John!

@@ -29,7 +29,7 @@ stations using WeeWX.
 * Extensive almanac information
 * Uploads to your website via FTP, FTPS, or rsync
 * Uploads to online weather services
-* Requires Python 3.6 or greater
+* Requires Python 3.7 or greater
 
 Support for many online weather services, including:
 

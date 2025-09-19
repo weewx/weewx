@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "weewx"
-version = "5.1.0"
+version = "5.2.0"
 description = "The WeeWX weather software system."
 authors = [
     "Tom Keffer <tkeffer@gmail.com>",
@@ -20,13 +20,13 @@ classifiers = [
     'Operating System :: Unix',
     'Operating System :: MacOS',
     'Programming Language :: Python',
-    'Programming Language :: Python :: 3.6',
     'Programming Language :: Python :: 3.7',
     'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
     'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
     'Topic :: Scientific/Engineering :: Physics'
 ]
 packages = [
@@ -52,7 +52,7 @@ exclude = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 configobj = "^5.0"
 # This is the renamed "Cheetah" package:
 CT3 = "^3.1"
@@ -61,7 +61,6 @@ ephem = "^4.1"
 PyMySQL = "^1.0"
 pyserial = "^3.4"
 pyusb = "^1.0.2"
-importlib-resources = {version = ">=3.3", python = "3.6"}
 
 [tool.poetry.scripts]
 weectl = 'weectl:main'
@@ -69,6 +68,6 @@ weewxd = 'weewxd:main'
 
 [build-system]
 # Minimum requirements for the build system to execute.
-requires = ["poetry>=0.12"]
+requires = ["poetry>1.5.1"]
 build-backend = "poetry.masonry.api"
 

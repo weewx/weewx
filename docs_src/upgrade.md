@@ -44,6 +44,11 @@ sudo weectl station upgrade --config=/etc/weewx/other.conf
 
 ## Upgrading to V5.2
 
+### Python 3.7 or later is now required
+
+It has been 4 years since Python 3.6 reached end-of-life.
+
+
 ### Module `schema` has been relocated
 
 Module `schema` has been relocated such that it is now part of module `weewx`.
