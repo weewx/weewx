@@ -1087,7 +1087,8 @@ class WOWBEThread(WOWThread):
 
     # Types and formats of the data to be published:
     _FORMATS = {'dateTime': 'dateutc=%s',
-                'barometer': 'absbaromin=%.3f',
+                'pressure': 'absbaromin=%.3f',
+                'barometer': 'baromin=%.3f',
                 'radiation': 'solarradiation=%.2f',
                 'outTemp': 'tempf=%.1f',
                 'outHumidity': 'humidity=%.0f',
