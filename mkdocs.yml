@@ -1,5 +1,5 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
-site_name: 'WeeWX 5.1'
+site_name: 'WeeWX 5.2'
 site_url: 'https://www.weewx.com'
 site_author: "Tom Keffer <tkeffer@gmail.com>"
 # do not display GitHub info since it is always obscured anyway
