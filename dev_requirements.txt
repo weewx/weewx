@@ -76,4 +76,4 @@ urllib3==1.26.20
 virtualenv==20.26.6
 watchdog==3.0.0
 webencodings==0.5.1
-zipp==3.15.0
+zipp==3.19.1
