@@ -2,8 +2,9 @@
 # this makefile controls the build and packaging of weewx
 # Copyright 2013-2024 Matthew Wall
 
-# if you do not want to sign the packages, set SIGN to 0
-SIGN=1
+# if you are going to do an official release, then you must sign the packages.
+# we default to *not* signing to make testing and development easier.
+SIGN=0
 
 # the WeeWX WWW server
 WEEWX_COM:=weewx.com
@@ -539,24 +540,50 @@ critic:
 code-summary:
 	cloc --force-lang="HTML",tmpl --force-lang="INI",conf --force-lang="INI",inc src docs_src
 
-vagrant-debian:
-	mkdir -p build/weewx-debian12
-	cp vagrant/Vagrantfile-debian12-dev build/weewx-debian12/Vagrantfile
-	(cd build/weewx-debian12; vagrant up; vagrant ssh-config > ssh-config)
-	scp -F build/weewx-debian12/ssh-config vagrant@default:/home/vagrant/weewx/dist/$(DEB3_PKG) dist
-	(cd build/weewx-debian12; vagrant destroy -f)
+# use the following targets to build the platform packages in virtual machines
+# using vagrant.  this requires that vagrant and a suitable virtual machine
+# framework such as virtualbox is installed.
 
-vagrant-redhat:
-	mkdir -p build/weewx-rocky8
-	cp vagrant/Vagrantfile-rocky8-dev build/weewx-rocky8/Vagrantfile
-	(cd build/weewx-rocky8; vagrant up; vagrant ssh-config > ssh-config)
-	scp -F build/weewx-rocky8/ssh-config vagrant@default:/home/vagrant/weewx/dist/$(RHEL8_PKG) dist
-	scp -F build/weewx-rocky8/ssh-config vagrant@default:/home/vagrant/weewx/dist/$(RHEL9_PKG) dist
-	(cd build/weewx-rocky8; vagrant destroy -f)
+VM_URL=vagrant@default:/home/vagrant/weewx
+VM_DIR=build/vm
+VM_CFG=
+VM_TGT=nothing
+VM_PKG=weewx.pkg
+vagrant-setup:
+	mkdir -p $(VM_DIR)
+	cp vagrant/Vagrantfile$(VM_CFG) $(VM_DIR)/Vagrantfile
+	(cd $(VM_DIR); vagrant up; vagrant ssh-config > ssh-config)
 
-vagrant-suse:
-	mkdir -p build/weewx-suse15
-	cp vagrant/Vagrantfile-suse15-dev weewx-suse15/Vagrantfile
-	(cd build/weewx-suse15; vagrant up; vagrant ssh-config > ssh-config)
-	scp -F build/weewx-suse15/ssh-config vagrant@default:/home/vagrant/weewx/dist/$(SUSE15_PKG) dist
-	(cd build/weewx-suse15; vagrant destroy -f)
+vagrant-sync:
+	rsync -ar -e "ssh -F $(VM_DIR)/ssh-config" --exclude build --exclude dist --exclude vm ./ $(VM_URL)
+
+vagrant-build:
+	ssh -F $(VM_DIR)/ssh-config vagrant@default "cd weewx; make $(VM_TGT)"
+
+vagrant-copy:
+	scp -F $(VM_DIR)/ssh-config "$(VM_URL)/dist/$(VM_PKG)" dist
+
+vagrant-teardown:
+	(cd $(VM_DIR); vagrant destroy -f)
+
+debian-via-vagrant:
+	make vagrant-setup VM_DIR=build/vm-debian12 VM_CFG=-debian12-dev
+	make vagrant-sync VM_DIR=build/vm-debian12
+	make vagrant-build VM_DIR=build/vm-debian12 VM_TGT=debian-package
+	make vagrant-copy VM_DIR=build/vm-debian12 VM_PKG=$(DEB3_PKG)
+	make vagrant-teardown VM_DIR=build/vm-debian12
+
+redhat-via-vagrant:
+	make vagrant-setup VM_DIR=build/vm-rocky8 VM_CFG=-rocky8-dev
+	make vagrant-sync VM_DIR=build/vm-rocky8
+	make vagrant-build VM_DIR=build/vm-rocky8 VM_TGT=redhat-package
+	make vagrant-copy VM_DIR=build/vm-rocky8 VM_PKG=$(RHEL8_PKG)
+	make vagrant-copy VM_DIR=build/vm-rocky8 VM_PKG=$(RHEL9_PKG)
+	make vagrant-teardown VM_DIR=build/vm-rocky8
+
+suse-via-vagrant:
+	make vagrant-setup VM_DIR=build/vm-suse15 VM_CFG=-suse15-dev
+	make vagrant-sync VM_DIR=build/vm-suse15
+	make vagrant-build VM_DIR=build/vm-suse15 VM_TGT=suse-package
+	make vagrant-copy VM_DIR=build/vm-suse15 VM_PKG=$(SUSE15_PKG)
+	make vagrant-teardown VM_DIR=build/vm-suse15
