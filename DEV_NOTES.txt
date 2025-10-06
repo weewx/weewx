@@ -198,6 +198,15 @@ delete keys known by rpm:
   rpm -e gpg-pubkey-XXXXX
 
 
+build environment -----------------------------------------------------------
+
+The build for each package must be done in the appropriate operating system,
+and we do not support cross-platform building.  For example, to build the
+debian package you must build on a debian system.  There are vagrant files
+in the weewx source tree to automate the setup of build environments for
+creating weewx packages.
+
+
 howto: build the documents --------------------------------------------------
 
 Prerequisites:

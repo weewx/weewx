@@ -538,3 +538,25 @@ critic:
 
 code-summary:
 	cloc --force-lang="HTML",tmpl --force-lang="INI",conf --force-lang="INI",inc src docs_src
+
+vagrant-debian:
+	mkdir -p build/weewx-debian12
+	cp vagrant/Vagrantfile-debian12-dev build/weewx-debian12/Vagrantfile
+	(cd build/weewx-debian12; vagrant up; vagrant ssh-config > ssh-config)
+	scp -F build/weewx-debian12/ssh-config vagrant@default:/home/vagrant/weewx/dist/$(DEB3_PKG) dist
+	(cd build/weewx-debian12; vagrant destroy -f)
+
+vagrant-redhat:
+	mkdir -p build/weewx-rocky8
+	cp vagrant/Vagrantfile-rocky8-dev build/weewx-rocky8/Vagrantfile
+	(cd build/weewx-rocky8; vagrant up; vagrant ssh-config > ssh-config)
+	scp -F build/weewx-rocky8/ssh-config vagrant@default:/home/vagrant/weewx/dist/$(RHEL8_PKG) dist
+	scp -F build/weewx-rocky8/ssh-config vagrant@default:/home/vagrant/weewx/dist/$(RHEL9_PKG) dist
+	(cd build/weewx-rocky8; vagrant destroy -f)
+
+vagrant-suse:
+	mkdir -p build/weewx-suse15
+	cp vagrant/Vagrantfile-suse15-dev weewx-suse15/Vagrantfile
+	(cd build/weewx-suse15; vagrant up; vagrant ssh-config > ssh-config)
+	scp -F build/weewx-suse15/ssh-config vagrant@default:/home/vagrant/weewx/dist/$(SUSE15_PKG) dist
+	(cd build/weewx-suse15; vagrant destroy -f)
