@@ -116,6 +116,7 @@ clean:
 
 ###############################################################################
 # update the version in all relevant places
+
 VCONFIGS=src/weewx_data/weewx.conf src/weecfg/tests/expected/weewx43_user_expected.conf
 VSKINS=Ftp/skin.conf Mobile/skin.conf Rsync/skin.conf Seasons/skin.conf Smartphone/skin.conf Standard/skin.conf
 version:
@@ -173,6 +174,18 @@ drop database test_scratch;\n"
 test-clean:
 	rm -rf $(TESTDIR)
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
+
+
+###############################################################################
+## release management targets
+
+# shortcuts to upload everything.  assumes that the assets have been staged
+# to the local 'dist' directory.
+upload-all: upload-docs upload-pkgs
+
+# shortcut to release everything.  assumes that all of the assets have been
+# staged to the development area on the distribution server.
+release-all: release release-apt-repo release-yum-repo release-suse-repo
 
 
 ###############################################################################
@@ -522,13 +535,9 @@ push-suse-repo:
 release-suse-repo:
 	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz --delete /var/www/html/suse-test/ /var/www/html/suse"
 
-# shortcuts to upload everything.  assumes that the assets have been staged
-# to the local 'dist' directory.
-upload-all: upload-docs upload-pkgs
 
-# shortcut to release everything.  assumes that all of the assets have been
-# staged to the development area on the distribution server.
-release-all: release release-apt-repo release-yum-repo release-suse-repo
+###############################################################################
+## miscellaneous
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]
@@ -539,6 +548,10 @@ critic:
 
 code-summary:
 	cloc --force-lang="HTML",tmpl --force-lang="INI",conf --force-lang="INI",inc src docs_src
+
+
+###############################################################################
+## virtual machine targets
 
 # use the following targets to build the platform packages in virtual machines
 # using vagrant.  this requires that vagrant and a suitable virtual machine
