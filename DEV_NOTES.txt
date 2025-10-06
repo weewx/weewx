@@ -8,7 +8,7 @@ checklist for doing a release:
 3. Make sure all changes have been logged
      1. doc_src/changes.md
      2. doc_src/upgrade.md
-     3. make deb-changelog
+     3. make debian-changelog
      4. make redhat-changelog
      5. make suse-changelog
 4. Build the documentation
