@@ -6,7 +6,7 @@
 """Package weewx, containing modules specific to the weewx runtime engine."""
 import time
 
-__version__ = "5.1.0"
+__version__ = "5.2.0"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
