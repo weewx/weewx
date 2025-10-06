@@ -1,3 +1,5 @@
+* Sun Oct 05 2025 Matthew Wall <mwall.weewx@gmail.com> - 5.2.0-1
+- new upstream release
 * Thu Jul 04 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.1.0-2
 - ensure weewxd runs after install
 * Thu Jul 04 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.1.0-1
