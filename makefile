@@ -3,7 +3,7 @@
 # Copyright 2013-2024 Matthew Wall
 
 # if you do not want to sign the packages, set SIGN to 0
-SIGN=1
+SIGN ?= 1
 
 # the WeeWX WWW server
 WEEWX_COM:=weewx.com
@@ -229,7 +229,12 @@ DEBVER=$(VERSION)-$(DEBREVISION)
 # add a skeleton entry to deb changelog
 debian-changelog:
 	if [ "`grep '($(DEBVER))' pkg/debian/changelog`" = "" ]; then \
-  pkg/mkchangelog.pl --action stub --format debian --release-version $(DEBVER) > pkg/debian/changelog.new; \
+  set --; \
+  if [ -n "$(USER)" ]; then set -- "$$@" --user "$(USER)"; fi; \
+  if [ -n "$(EMAIL)" ]; then set -- "$$@" --email "$(EMAIL)"; fi; \
+  if [ "$(SIGN)" = "0" ]; then set -- "$$@" --skip-gpg; fi; \
+  pkg/mkchangelog.pl "$$@" --action stub --format debian \
+  --release-version $(DEBVER) > pkg/debian/changelog.new; \
   cat pkg/debian/changelog >> pkg/debian/changelog.new; \
   mv pkg/debian/changelog.new pkg/debian/changelog; \
 fi

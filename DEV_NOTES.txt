@@ -8,7 +8,7 @@ checklist for doing a release:
 3. Make sure all changes have been logged
      1. doc_src/changes.md
      2. doc_src/upgrade.md
-     3. make deb-changelog
+     3. make debian-changelog
      4. make redhat-changelog
      5. make suse-changelog
 4. Build the documentation
@@ -113,7 +113,7 @@ how to build wheel and source tarball:
   make pypi-package
 
 how to build debian package:
-  make deb-changelog
+  make debian-changelog
   emacs pkg/debian/changelog    # add package-specific changes, if any
   git commit -m "update deb changelog" pkg/debian/changelog
   make debian-package
@@ -371,7 +371,7 @@ that it finds.  that might not be what you want.
 
 the debian changelog *must* have a version number that matches the app version.
 the redhat package will build if the version numbers do not match.  use the
-rpm-changelog and deb-changelog targets to ensure that changelog versions match
+rpm-changelog and debian-changelog targets to ensure that changelog versions match
 the application version for a release.
 
 there are many ways to build a debian package.  first tried dpkg (uses DEBIAN
