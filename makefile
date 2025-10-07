@@ -229,7 +229,11 @@ DEBVER=$(VERSION)-$(DEBREVISION)
 # add a skeleton entry to deb changelog
 debian-changelog:
 	if [ "`grep '($(DEBVER))' pkg/debian/changelog`" = "" ]; then \
-  pkg/mkchangelog.pl --action stub --format debian --release-version $(DEBVER) > pkg/debian/changelog.new; \
+  set --; \
+  if [ -n "$(USER)" ]; then set -- "$$@" --user "$(USER)"; fi; \
+  if [ -n "$(EMAIL)" ]; then set -- "$$@" --email "$(EMAIL)"; fi; \
+  pkg/mkchangelog.pl "$$@" --action stub --format debian \
+  --release-version $(DEBVER) > pkg/debian/changelog.new; \
   cat pkg/debian/changelog >> pkg/debian/changelog.new; \
   mv pkg/debian/changelog.new pkg/debian/changelog; \
 fi
