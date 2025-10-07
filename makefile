@@ -246,7 +246,7 @@ DEBARCH=all
 DEBBLDDIR=$(BLDDIR)/weewx-$(VERSION)
 DEBPKG=weewx_$(DEBVER)_$(DEBARCH).deb
 ifneq ("$(SIGN)","1")
-DPKG_OPT=-us -uc --no-sign
+DPKG_OPT=-us -uc
 endif
 debian-package: deb-package-prep
 	cp pkg/debian/control $(DEBBLDDIR)/debian/control
