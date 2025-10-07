@@ -3,7 +3,7 @@
 # Copyright 2013-2024 Matthew Wall
 
 # if you do not want to sign the packages, set SIGN to 0
-SIGN=1
+SIGN ?= 0
 
 # the WeeWX WWW server
 WEEWX_COM:=weewx.com
@@ -232,6 +232,7 @@ debian-changelog:
   set --; \
   if [ -n "$(USER)" ]; then set -- "$$@" --user "$(USER)"; fi; \
   if [ -n "$(EMAIL)" ]; then set -- "$$@" --email "$(EMAIL)"; fi; \
+  if [ "$(SIGN)" = "0" ]; then set -- "$$@" --skip-gpg; fi; \
   pkg/mkchangelog.pl "$$@" --action stub --format debian \
   --release-version $(DEBVER) > pkg/debian/changelog.new; \
   cat pkg/debian/changelog >> pkg/debian/changelog.new; \
@@ -245,7 +246,7 @@ DEBARCH=all
 DEBBLDDIR=$(BLDDIR)/weewx-$(VERSION)
 DEBPKG=weewx_$(DEBVER)_$(DEBARCH).deb
 ifneq ("$(SIGN)","1")
-DPKG_OPT=-us -uc
+DPKG_OPT=-us -uc --no-sign
 endif
 debian-package: deb-package-prep
 	cp pkg/debian/control $(DEBBLDDIR)/debian/control
