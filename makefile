@@ -573,8 +573,9 @@ vagrant-sync:
 vagrant-build:
 	ssh -F $(VM_DIR)/ssh-config vagrant@default "cd weewx; make $(VM_TGT)"
 
-vagrant-copy:
-	scp -F $(VM_DIR)/ssh-config "$(VM_URL)/dist/$(VM_PKG)" dist
+vagrant-copy: $(DSTDIR)
+	mkdir -p $(DSTDIR)
+	scp -F $(VM_DIR)/ssh-config "$(VM_URL)/dist/$(VM_PKG)" $(DSTDIR)
 
 vagrant-teardown:
 	(cd $(VM_DIR); vagrant destroy -f)
