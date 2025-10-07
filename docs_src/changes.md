@@ -24,9 +24,6 @@ Added `illuminance` to the `wview_extended` schema. See [Issue
 #992](https://github.com/weewx/weewx/issues/991) and [PR
 #992](https://github.com/weewx/weewx/pull/992/files). Thanks to user Jeremy!
 
-
-### 5.1.X MM/DD/YYYY
-
 Fix typo that causes phantom values of `soilMoist3` to appear with VantageVue
 stations.
 

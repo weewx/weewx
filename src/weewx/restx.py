@@ -1038,7 +1038,7 @@ class WOWThread(AmbientThread):
 
         _liststr = ["action=updateraw",
                     "siteid=%s" % self.station,
-                    "siteAuthenticationKey=%s" % self.password,
+                    "siteAuthenticationKey=%s" % urllib.parse.quote(self.password),
                     "softwaretype=weewx-%s" % weewx.__version__]
 
         # Go through each of the supported types, formatting it, then adding
@@ -1087,7 +1087,8 @@ class WOWBEThread(WOWThread):
 
     # Types and formats of the data to be published:
     _FORMATS = {'dateTime': 'dateutc=%s',
-                'barometer': 'absbaromin=%.3f',
+                'pressure': 'absbaromin=%.3f',
+                'altimeter': 'baromin=%.3f',
                 'radiation': 'solarradiation=%.2f',
                 'outTemp': 'tempf=%.1f',
                 'outHumidity': 'humidity=%.0f',
