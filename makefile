@@ -3,7 +3,7 @@
 # Copyright 2013-2024 Matthew Wall
 
 # if you do not want to sign the packages, set SIGN to 0
-SIGN ?= 0
+SIGN ?= 1
 
 # the WeeWX WWW server
 WEEWX_COM:=weewx.com
