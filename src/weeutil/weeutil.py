@@ -1768,7 +1768,7 @@ def to_sorted_string(rec, simple_sort=False):
         return ", ".join(["%s: %s" % (k, rec.get(k)) for k in sorted(rec, key=locale.strxfrm)])
     else:
         # first obtain a list of key:value pairs sorted naturally by key
-        sorted_dict = ["'%s': '%s'" % (k, rec[k]) for k in natural_sort_keys(rec)]
+        sorted_dict = ["%s: %s" % (k, rec[k]) for k in natural_sort_keys(rec)]
         # return as a string of comma separated key:value pairs in braces
         return ", ".join(sorted_dict)
 
