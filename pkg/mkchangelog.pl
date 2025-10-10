@@ -64,11 +64,10 @@ my $release = q();                # release version
 my $action = 'app';               # what to do, can be app or stub
 my $fmt = '80col';                # format can be 80col, debian, or redhat
 my $rc = 0;
+my $ignore_gpg = 0;
 my $MAXCOL = 75;
 my %MONTHS = ('jan',1,'feb',2,'mar',3,'apr',4,'may',5,'jun',6,
               'jul',7,'aug',8,'sep',9,'oct',10,'nov',11,'dec',12,);
-
-($user,$email) = guessuser($user,$email);
 
 while ($ARGV[0]) {
     my $arg = shift;
@@ -92,7 +91,13 @@ while ($ARGV[0]) {
             print {*STDERR} "mkchangelog: unrecognized format $fmt\n";
             $rc = 1;
         }
+    } elsif ($arg eq '--ignore-gpg') {
+        $ignore_gpg = 1;
     }
+}
+
+if (! $ignore_gpg) {
+    ($user,$email) = guessuser($user,$email);
 }
 
 if ($action eq 'stub' && $release eq q()) {
