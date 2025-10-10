@@ -59,6 +59,9 @@ add-column`. Fixes issue [Issue
 Fix bug that prevented MySQL and MariaDB versions greater than 10.0 from
 working. Fixes issue [Issue #1010](https://github.com/weewx/weewx/issues/1010).
 
+Wind direction plots in the Standard skin now use discrete marks, rather than
+continuous lines.
+
 
 ### 5.1.0 07/04/2024
 
