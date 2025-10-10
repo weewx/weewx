@@ -1,0 +1,20 @@
+# -*- mode: ruby -*-
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/opensuse-leap-15"
+  config.vm.box_check_update = false
+  config.vm.network "public_network"
+  config.vm.network :forwarded_port, guest: 22, host: 4004, id: "ssh"
+  config.vm.synced_folder "/var/tmp/repo-suse", "/var/tmp/repo-suse"
+  config.vm.provider "virtualbox" do |vb|
+    vb.gui = false
+    vb.memory = "2048"
+  end
+  config.vm.provision "shell", inline: <<-SHELL
+    zypper install -y git
+    zypper install -y rsync
+    zypper install -y rpm-build
+    zypper install -y rpmlint
+    zypper install -y createrepo_c
+  SHELL
+end

@@ -1,7 +1,7 @@
 WeeWX change history
 --------------------
 
-### 5.2.0 MM/DD/YYYY
+### 5.2.0 10/05/2025
 
 Now require Python 3.7 or greater.
 

@@ -1,3 +1,6 @@
+weewx (5.2.0-1) unstable; urgency=low
+  * new upstream release
+ -- Matthew Wall <mwall.weewx@gmail.com>  Sun, 05 Oct 2025 21:16:05 -0400
 weewx (5.1.0-4) unstable; urgency=low
   * use process counting that will not break
  -- Matthew Wall <mwall.weewx@gmail.com>  Thu, 04 Jul 2024 16:40:00 -0400

@@ -4,7 +4,7 @@ version = "5.2.0"
 description = "The WeeWX weather software system."
 authors = [
     "Tom Keffer <tkeffer@gmail.com>",
-    "Matthew Wall <mwall@users.sourceforge.net>"
+    "Matthew Wall <mwall.weewx@gmail.com>"
 ]
 license = "GPL3"
 readme = 'README.md'
@@ -53,6 +53,8 @@ exclude = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
+# versions of configobj earlier than 5.0.9 suffer from CVE-2023-26112, ReDoS attack,
+# but we don't care because we don't use validation.
 configobj = "^5.0"
 # This is the renamed "Cheetah" package:
 CT3 = "^3.1"
@@ -68,6 +70,6 @@ weewxd = 'weewxd:main'
 
 [build-system]
 # Minimum requirements for the build system to execute.
-requires = ["poetry>1.5.1"]
+requires = ["poetry>=1.5.1"]
 build-backend = "poetry.masonry.api"
 

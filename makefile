@@ -2,8 +2,9 @@
 # this makefile controls the build and packaging of weewx
 # Copyright 2013-2024 Matthew Wall
 
-# if you do not want to sign the packages, set SIGN to 0
-SIGN=1
+# if you are going to do an official release, then you must sign the packages.
+# we default to *not* signing to make testing and development easier.
+SIGN ?= 1
 
 # the WeeWX WWW server
 WEEWX_COM:=weewx.com
@@ -115,6 +116,7 @@ clean:
 
 ###############################################################################
 # update the version in all relevant places
+
 VCONFIGS=src/weewx_data/weewx.conf src/weecfg/tests/expected/weewx43_user_expected.conf
 VSKINS=Ftp/skin.conf Mobile/skin.conf Rsync/skin.conf Seasons/skin.conf Smartphone/skin.conf Standard/skin.conf
 version:
@@ -175,6 +177,18 @@ test-clean:
 
 
 ###############################################################################
+## release management targets
+
+# shortcuts to upload everything.  assumes that the assets have been staged
+# to the local 'dist' directory.
+upload-all: upload-docs upload-pkgs
+
+# shortcut to release everything.  assumes that all of the assets have been
+# staged to the development area on the distribution server.
+release-all: release release-apt-repo release-yum-repo release-suse-repo
+
+
+###############################################################################
 ## documentation targets
 
 # Build the documentation:
@@ -229,6 +243,10 @@ DEBVER=$(VERSION)-$(DEBREVISION)
 # add a skeleton entry to deb changelog
 debian-changelog:
 	if [ "`grep '($(DEBVER))' pkg/debian/changelog`" = "" ]; then \
+  set --; \
+  if [ -n "$(USER)" ]; then set -- "$$@" --user "$(USER)"; fi; \
+  if [ -n "$(EMAIL)" ]; then set -- "$$@" --email "$(EMAIL)"; fi; \
+  if [ "$(SIGN)" = "0" ]; then set -- "$$@" --ignore-gpg; fi; \
   pkg/mkchangelog.pl --action stub --format debian --release-version $(DEBVER) > pkg/debian/changelog.new; \
   cat pkg/debian/changelog >> pkg/debian/changelog.new; \
   mv pkg/debian/changelog.new pkg/debian/changelog; \
@@ -292,6 +310,10 @@ RPMVER=$(VERSION)-$(RPMREVISION)
 # add a skeleton entry to rpm changelog
 rpm-changelog:
 	if [ "`grep '\- $(RPMVER)' pkg/changelog.$(RPMOS)`" = "" ]; then \
+  set --; \
+  if [ -n "$(USER)" ]; then set -- "$$@" --user "$(USER)"; fi; \
+  if [ -n "$(EMAIL)" ]; then set -- "$$@" --email "$(EMAIL)"; fi; \
+  if [ "$(SIGN)" = "0" ]; then set -- "$$@" --ignore-gpg; fi; \
   pkg/mkchangelog.pl --action stub --format redhat --release-version $(RPMVER) > pkg/changelog.$(RPMOS).new; \
   cat pkg/changelog.$(RPMOS) >> pkg/changelog.$(RPMOS).new; \
   mv pkg/changelog.$(RPMOS).new pkg/changelog.$(RPMOS); \
@@ -410,38 +432,39 @@ upload-repo-index:
 # 'apt-repo' is only used when creating a new apt repository from scratch
 # the .html and .list files are not part of an official apt repository.  they
 # are included to make the repository self-documenting.
+APTLY_DIR=/var/tmp/repo-apt
 apt-repo:
-	aptly repo create -distribution=squeeze -component=main -architectures=all python2-weewx
-	aptly repo create -distribution=buster -component=main -architectures=all python3-weewx
-	mkdir -p ~/.aptly/public
-	cp -p pkg/index-apt.html ~/.aptly/public/index.html
-	cp -p pkg/weewx-python2.list ~/.aptly/public
-	cp -p pkg/weewx-python3.list ~/.aptly/public
+	aptly -config=pkg/aptly.conf repo create -distribution=squeeze -component=main -architectures=all python2-weewx
+	aptly -config=pkg/aptly.conf repo create -distribution=buster -component=main -architectures=all python3-weewx
+	mkdir -p $(APTLY_DIR)/public
+	cp -p pkg/index-apt.html $(APTLY_DIR)/public/index.html
+	cp -p pkg/weewx-python2.list $(APTLY_DIR)/public
+	cp -p pkg/weewx-python3.list $(APTLY_DIR)/public
 # this is for backward-compatibility when there was not python2/3 distinction
-	cp -p pkg/weewx-python2.list ~/.aptly/public/weewx.list
+	cp -p pkg/weewx-python2.list $(APTLY_DIR)/public/weewx.list
 # these are for backward-compatibility for users that do not have python2 or
 # python3 in the paths in their .list file - default to python2
-	ln -s python2/dists ~/.aptly/public
-	ln -s python2/pool ~/.aptly/public
+	ln -s python2/dists $(APTLY_DIR)/public
+	ln -s python2/pool $(APTLY_DIR)/public
 
 # make local copy of the published apt repository
 pull-apt-repo:
-	mkdir -p ~/.aptly
-	rsync -Oarvz --delete $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/ ~/.aptly
+	mkdir -p $(APTLY_DIR)
+	rsync -Oarvz --delete $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/ $(APTLY_DIR)
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
-	aptly repo add python3-weewx $(DSTDIR)/python3-$(DEBPKG)
-	aptly snapshot create python3-weewx-$(DEBVER) from repo python3-weewx
-	aptly publish drop buster python3
-	aptly publish -architectures=all snapshot python3-weewx-$(DEBVER) python3
-#	aptly publish switch buster python3 python3-weewx-$(DEBVER)
+	aptly -config=pkg/aptly.conf repo add python3-weewx $(DSTDIR)/python3-$(DEBPKG)
+	aptly -config=pkg/aptly.conf snapshot create python3-weewx-$(DEBVER) from repo python3-weewx
+	aptly -config=pkg/aptly.conf publish drop buster python3
+	aptly -config=pkg/aptly.conf publish -architectures=all snapshot python3-weewx-$(DEBVER) python3
+#	aptly -config=pkg/aptly.conf publish switch buster python3 python3-weewx-$(DEBVER)
 
 # publish apt repo changes to the public weewx apt repo
 push-apt-repo:
-	find ~/.aptly -type f -exec chmod 664 {} \;
-	find ~/.aptly -type d -exec chmod 2775 {} \;
-	rsync -Ortlvz --delete ~/.aptly/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
+	find $(APTLY_DIR) -type f -exec chmod 664 {} \;
+	find $(APTLY_DIR) -type d -exec chmod 2775 {} \;
+	rsync -Ortlvz --delete $(APTLY_DIR)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
 
 # copy the testing repository onto the production repository
 release-apt-repo:
@@ -450,18 +473,19 @@ release-apt-repo:
 # 'yum-repo' is only used when creating a new yum repository from scratch
 # the index.html is not part of an official rpm repository.  it is included
 # to make the repository self-documenting.
-YUM_REPO=~/.yum/weewx
+YUM_DIR=build/repo-yum
+YUM_REPO=$(YUM_DIR)/weewx
 yum-repo:
 	mkdir -p $(YUM_REPO)/{el7,el8,el9}/RPMS
-	cp -p pkg/index-yum.html ~/.yum/index.html
-	cp -p pkg/weewx-el.repo ~/.yum/weewx.repo
-	cp -p pkg/weewx-el7.repo ~/.yum
-	cp -p pkg/weewx-el8.repo ~/.yum
-	cp -p pkg/weewx-el9.repo ~/.yum
+	cp -p pkg/index-yum.html $(YUM_DIR)/index.html
+	cp -p pkg/weewx-el.repo $(YUM_DIR)/weewx.repo
+	cp -p pkg/weewx-el7.repo $(YUM_DIR)
+	cp -p pkg/weewx-el8.repo $(YUM_DIR)
+	cp -p pkg/weewx-el9.repo $(YUM_DIR)
 
 pull-yum-repo:
 	mkdir -p $(YUM_REPO)
-	rsync -Oarvz --delete $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ ~/.yum
+	rsync -Oarvz --delete $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ $(YUM_DIR)
 
 update-yum-repo:
 	mkdir -p $(YUM_REPO)/el8/RPMS
@@ -479,9 +503,9 @@ done
 endif
 
 push-yum-repo:
-	find ~/.yum -type f -exec chmod 664 {} \;
-	find ~/.yum -type d -exec chmod 2775 {} \;
-	rsync -Ortlvz --delete ~/.yum/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
+	find $(YUM_DIR) -type f -exec chmod 664 {} \;
+	find $(YUM_DIR) -type d -exec chmod 2775 {} \;
+	rsync -Ortlvz --delete $(YUM_DIR)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
 
 # copy the testing repository onto the production repository
 release-yum-repo:
@@ -490,17 +514,18 @@ release-yum-repo:
 # 'suse-repo' is only used when creating a new suse repository from scratch
 # the index.html is not part of an official rpm repository.  it is included
 # to make the repository self-documenting.
-SUSE_REPO=~/.suse/weewx
+SUSE_DIR=build/repo-suse
+SUSE_REPO=$(SUSE_DIR)/weewx
 suse-repo:
 	mkdir -p $(SUSE_REPO)/{suse12,suse15}/RPMS
-	cp -p pkg/index-suse.html ~/.suse/index.html
-	cp -p pkg/weewx-suse.repo ~/.suse/weewx.repo
-	cp -p pkg/weewx-suse12.repo ~/.suse
-	cp -p pkg/weewx-suse15.repo ~/.suse
+	cp -p pkg/index-suse.html $(SUSE_DIR)/index.html
+	cp -p pkg/weewx-suse.repo $(SUSE_DIR)/weewx.repo
+	cp -p pkg/weewx-suse12.repo $(SUSE_DIR)
+	cp -p pkg/weewx-suse15.repo $(SUSE_DIR)
 
 pull-suse-repo:
 	mkdir -p $(SUSE_REPO)
-	rsync -Oarvz --delete $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/ ~/.suse
+	rsync -Oarvz --delete $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/ $(SUSE_DIR)
 
 update-suse-repo:
 	mkdir -p $(SUSE_REPO)/suse15/RPMS
@@ -513,21 +538,17 @@ ifeq ("$(SIGN)","1")
 endif
 
 push-suse-repo:
-	find ~/.suse -type f -exec chmod 664 {} \;
-	find ~/.suse -type d -exec chmod 2775 {} \;
-	rsync -Ortlvz --delete ~/.suse/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse-test
+	find $(SUSE_DIR) -type f -exec chmod 664 {} \;
+	find $(SUSE_DIR) -type d -exec chmod 2775 {} \;
+	rsync -Ortlvz --delete $(SUSE_DIR)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse-test
 
 # copy the testing repository onto the production repository
 release-suse-repo:
 	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz --delete /var/www/html/suse-test/ /var/www/html/suse"
 
-# shortcuts to upload everything.  assumes that the assets have been staged
-# to the local 'dist' directory.
-upload-all: upload-docs upload-pkgs
 
-# shortcut to release everything.  assumes that all of the assets have been
-# staged to the development area on the distribution server.
-release-all: release release-apt-repo release-yum-repo release-suse-repo
+###############################################################################
+## miscellaneous
 
 # run perlcritic to ensure clean perl code.  put these in ~/.perlcriticrc:
 # [-CodeLayout::RequireTidyCode]
@@ -538,3 +559,102 @@ critic:
 
 code-summary:
 	cloc --force-lang="HTML",tmpl --force-lang="INI",conf --force-lang="INI",inc src docs_src
+
+
+###############################################################################
+## virtual machine targets
+
+# use the following targets to build the platform packages in virtual machines
+# using vagrant.  this requires that vagrant and a suitable virtual machine
+# framework such as virtualbox is installed.
+
+DEB_VM=vm-debian12
+RHEL_VM=vm-rocky8
+SUSE_VM=vm-suse15
+
+VM_URL=vagrant@default:/home/vagrant/weewx
+VM_DIR=build/vm
+VM_CFG=
+VM_TGT=nothing
+VM_PKG=weewx.pkg
+vagrant-setup:
+	mkdir -p $(VM_DIR)
+	cp vagrant/Vagrantfile$(VM_CFG) $(VM_DIR)/Vagrantfile
+	(cd $(VM_DIR); vagrant up; vagrant ssh-config > ssh-config)
+
+vagrant-sync-src:
+	rsync -ar -e "ssh -F $(VM_DIR)/ssh-config" --exclude build --exclude dist --exclude vm ./ $(VM_URL)
+
+vagrant-build:
+	ssh -F $(VM_DIR)/ssh-config vagrant@default "cd weewx; make $(VM_TGT)"
+
+vagrant-pull-pkg:
+	mkdir -p $(DSTDIR)
+	scp -F $(VM_DIR)/ssh-config "$(VM_URL)/dist/$(VM_PKG)" $(DSTDIR)
+
+vagrant-push-pkg:
+	ssh -F $(VM_DIR)/ssh-config vagrant@default "mkdir -p /home/vagrant/weewx/dist"
+	scp -F $(VM_DIR)/ssh-config $(DSTDIR)/$(VM_PKG) "$(VM_URL)/dist"
+
+vagrant-update-repo:
+	ssh -F $(VM_DIR)/ssh-config vagrant@default "cd weewx; make $(VM_REPO_TGT)"
+
+vagrant-teardown:
+	(cd $(VM_DIR); vagrant destroy -f)
+
+debian-via-vagrant:
+	make vagrant-setup VM_DIR=build/$(DEB_VM) VM_CFG=-debian12-dev
+	make vagrant-sync-src VM_DIR=build/$(DEB_VM)
+	make vagrant-build VM_DIR=build/$(DEB_VM) VM_TGT=debian-package
+	make vagrant-pull-pkg VM_DIR=build/$(DEB_VM) VM_PKG=$(DEB3_PKG)
+	make vagrant-teardown VM_DIR=build/$(DEB_VM)
+
+redhat-via-vagrant:
+	make vagrant-setup VM_DIR=build/$(RHEL_VM) VM_CFG=-rocky8-dev
+	make vagrant-sync-src VM_DIR=build/$(RHEL_VM)
+	make vagrant-build VM_DIR=build/$(RHEL_VM) VM_TGT=redhat-package
+	make vagrant-pull-pkg VM_DIR=build/$(RHEL_VM) VM_PKG=$(RHEL8_PKG)
+	make vagrant-pull-pkg VM_DIR=build/$(RHEL_VM) VM_PKG=$(RHEL9_PKG)
+	make vagrant-teardown VM_DIR=build/$(RHEL_VM)
+
+suse-via-vagrant:
+	make vagrant-setup VM_DIR=build/$(SUSE_VM) VM_CFG=-suse15-dev
+	make vagrant-sync-src VM_DIR=build/$(SUSE_VM)
+	make vagrant-build VM_DIR=build/$(SUSE_VM) VM_TGT=suse-package
+	make vagrant-pull-pkg VM_DIR=build/$(SUSE_VM) VM_PKG=$(SUSE15_PKG)
+	make vagrant-teardown VM_DIR=build/$(SUSE_VM)
+
+# The package repositories must be updated using tools on their respective
+# operating systems.  So for each repository, we first pull the canonical repo
+# from weewx.con to the host, then we do the update on the guest operating
+# system, then we sync those changes to the host, then we push the result to
+# the testing repository on weewx.com.  This requires that the repository
+# directory is hosted on the host and visible to the guest, a configuration
+# option that is specified in the vagrant file for each guest.
+
+apt-repo-via-vagrant:
+#	make pull-apt-repo
+#	make vagrant-setup VM_DIR=build/$(DEB_VM) VM_CFG=-debian12-dev
+#	make vagrant-sync-src VM_DIR=build/$(DEB_VM)
+#	make vagrant-push-pkg VM_DIR=build/$(DEB_VM) VM_PKG=$(DEB3_PKG)
+	make vagrant-update-repo VM_DIR=build/$(DEB_VM) VM_REPO_TGT=update-apt-repo
+#	make push-apt-repo
+#	make vagrant-teardown VM_DIR=build/$(DEB_VM)
+
+yum-repo-via-vagrant:
+	make pull-yum-repo
+	make vagrant-setup VM_DIR=build/$(RHEL_VM) VM_CFG=-rocky8-dev
+	make vagrant-sync-src VM_DIR=build/$(RHEL_VM)
+	make vagrant-push-pkg VM_DIR=build/$(RHEL_VM) VM_PKG=$(DEB3_PKG)
+	make vagrant-update-repo VM_DIR=build/$(RHEL_VM) VM_REPO_TGT=update-yum-repo
+	make push-yum-repo
+	make vagrant-teardown VM_DIR=build/$(DEB_VM)
+
+suse-repo-via-vagrant:
+	make pull-suse-repo
+	make vagrant-setup VM_DIR=build/$(SUSE_VM) VM_CFG=-suse15-dev
+	make vagrant-sync-src VM_DIR=build/$(SUSE_VM)
+	make vagrant-push-pkg VM_DIR=build/$(SUSE_VM) VM_PKG=$(DEB3_PKG)
+	make vagrant-update-repo VM_DIR=build/$(SUSE_VM) VM_REPO_TGT=update-suse-repo
+	make push-suse-repo
+	make vagrant-teardown VM_DIR=build/$(DEB_VM)

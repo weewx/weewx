@@ -1,0 +1,11 @@
+# -*- mode: ruby -*-
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "opensuse/Tumbleweed.x86_64"
+  config.vm.box_check_update = false
+  config.vm.network "public_network"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "2048"
+  end
+end
