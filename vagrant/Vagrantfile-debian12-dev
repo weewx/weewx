@@ -18,5 +18,6 @@ Vagrant.configure("2") do |config|
     apt-get install -y gpg
     apt-get install -y debhelper
     apt-get install -y lintian
+    apt-get install -y aptly
   SHELL
 end
