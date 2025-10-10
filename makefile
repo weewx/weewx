@@ -625,10 +625,12 @@ suse-via-vagrant:
 	make vagrant-teardown VM_DIR=build/$(SUSE_VM)
 
 # The package repositories must be updated using tools on their respective
-# operating systems.  So for each repository, we first pull on the host,
-# then we do the update on the guest operating system, then we push those
-# changes on the host.  This requires that the repository directory is
-# hosted on the host and visible to the guest.
+# operating systems.  So for each repository, we first pull the canonical repo
+# from weewx.con to the host, then we do the update on the guest operating
+# system, then we sync those changes to the host, then we push the result to
+# the testing repository on weewx.com.  This requires that the repository
+# directory is hosted on the host and visible to the guest, a configuration
+# option that is specified in the vagrant file for each guest.
 
 apt-repo-via-vagrant:
 #	make pull-apt-repo
