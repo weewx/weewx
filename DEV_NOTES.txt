@@ -113,7 +113,7 @@ how to build wheel and source tarball:
   make pypi-package
 
 how to build debian package:
-  make deb-changelog
+  make debian-changelog
   emacs pkg/debian/changelog    # add package-specific changes, if any
   git commit -m "update deb changelog" pkg/debian/changelog
   make debian-package
@@ -380,8 +380,8 @@ that it finds.  that might not be what you want.
 
 the debian changelog *must* have a version number that matches the app version.
 the redhat package will build if the version numbers do not match.  use the
-rpm-changelog and deb-changelog targets to ensure that changelog versions match
-the application version for a release.
+redhat-changelog and debian-changelog targets to ensure that changelog versions
+match the application version for a release.
 
 there are many ways to build a debian package.  first tried dpkg (uses DEBIAN
 dir and is fairly low-level) but that does not create changes and source diffs.
