@@ -5,8 +5,9 @@ Vagrant.configure("2") do |config|
   config.vm.box_check_update = false
   config.vm.network "public_network"
   config.vm.network :forwarded_port, guest: 22, host: 4002, id: "ssh"
-  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.synced_folder "/var/tmp/repo-yum", "/var/tmp/repo-yum"
   config.vm.provider "virtualbox" do |vb|
+    vb.gui = false
     vb.memory = "2048"
   end
   config.vm.provision "shell", inline: <<-SHELL
