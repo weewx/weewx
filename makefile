@@ -537,7 +537,7 @@ update-suse-repo:
 	createrepo $(SUSE_REPO)/suse15
 ifeq ("$(SIGN)","1")
 	gpg --export --armor > $(SUSE_REPO)/suse15/repodata/repomd.xml.key
-	gpg -abs -o $(SUSE_REPO)/suse15/repodata/repomd.xml.asc $(SUSE_REPO)/suse15/repodata/repomd.xml
+	gpg -abs -o $(SUSE_REPO)/suse15/repodata/repomd.xml.asc.new $(SUSE_REPO)/suse15/repodata/repomd.xml
 	mv $(SUSE_REPO)/suse15/repodata/repomd.xml.asc.new $(SUSE_REPO)/suse15/repodata/repomd.xml.asc
 endif
 
