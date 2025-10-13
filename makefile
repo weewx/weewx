@@ -54,7 +54,6 @@ help: info
 	@echo "    test-clean  remove test databases"
 	@echo ""
 	@echo "    build-docs  build the docs using mkdocs"
-	@echo "    check-docs  run weblint on the docs"
 	@echo ""
 	@echo " debian-changelog  prepend stub changelog entry for debian"
 	@echo " redhat-changelog  prepend stub changelog entry for redhat"
@@ -198,19 +197,16 @@ release-all: release release-apt-repo release-yum-repo release-suse-repo
 ## documentation targets
 
 # Build the documentation:
-build-docs: $(DOC_BUILT)
+build-docs: $(DOC_BUILT)/index.html
 
-$(DOC_BUILT): $(shell find $(DOC_SRC) -type f)
+$(DOC_BUILT)/index.html: $(shell find $(DOC_SRC) -type f)
 	@rm -rf $(DOC_BUILT)
 	@mkdir -p $(DOC_BUILT)
 	@echo "Building documents"
 	$(PYTHON) -m mkdocs --quiet build --site-dir=$(DOC_BUILT)
 
-check-docs:
-	weblint $(DOC_BUILT)/*.htm
-
 # upload docs to the web site
-upload-docs: $(DOC_BUILT)
+upload-docs: $(DOC_BUILT)/index.html
 	rsync -Orv --delete --exclude *~ --exclude "#*" $(DOC_BUILT)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/docs/$(MMVERSION)
 
 
