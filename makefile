@@ -54,7 +54,6 @@ help: info
 	@echo "    test-clean  remove test databases"
 	@echo ""
 	@echo "    build-docs  build the docs using mkdocs"
-	@echo "   upload-docs  upload docs to $(WEEWX_COM)"
 	@echo "    check-docs  run weblint on the docs"
 	@echo ""
 	@echo " debian-changelog  prepend stub changelog entry for debian"
@@ -69,6 +68,10 @@ help: info
 	@echo "  check-debian  check the debian package"
 	@echo "  check-redhat  check the redhat package"
 	@echo "    check-suse  check the suse package"
+	@echo ""
+
+help-release: info
+	@echo "release options include:"
 	@echo ""
 	@echo "    upload-src  upload the src package to $(WEEWX_COM)"
 	@echo "   upload-pypi  upload wheel and src package to pypi.org"
@@ -651,7 +654,7 @@ vagrant-update-repo:
 vagrant-teardown:
 	(cd $(VM_DIR); vagrant destroy -f)
 
-debian-via-vagrant:
+debian-package-via-vagrant:
 	make vagrant-setup VM_GUEST=$(DEB_VM)
 	make vagrant-sync-gpg VM_GUEST=$(DEB_VM)
 	make vagrant-sync-src VM_GUEST=$(DEB_VM)
@@ -659,7 +662,7 @@ debian-via-vagrant:
 	make vagrant-pull-pkg VM_GUEST=$(DEB_VM) VM_PKG=$(DEB3_PKG)
 	make vagrant-teardown VM_GUEST=$(DEB_VM)
 
-redhat-via-vagrant:
+redhat-package-via-vagrant:
 	make vagrant-setup VM_GUEST=$(RHEL_VM)
 	make vagrant-sync-gpg VM_GUEST=$(RHEL_VM)
 	make vagrant-sync-src VM_GUEST=$(RHEL_VM)
@@ -668,7 +671,7 @@ redhat-via-vagrant:
 	make vagrant-pull-pkg VM_GUEST=$(RHEL_VM) VM_PKG=$(RHEL9_PKG)
 	make vagrant-teardown VM_GUEST=$(RHEL_VM)
 
-suse-via-vagrant:
+suse-package-via-vagrant:
 	make vagrant-setup VM_GUEST=$(SUSE_VM)
 	make vagrant-sync-gpg VM_GUEST=$(SUSE_VM)
 	make vagrant-sync-src VM_GUEST=$(SUSE_VM)
