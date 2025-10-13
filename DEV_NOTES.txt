@@ -8,17 +8,20 @@ checklist for doing a release:
 3. Make sure all changes have been logged
      1. doc_src/changes.md
      2. doc_src/upgrade.md
-     3. make debian-changelog
-     4. make redhat-changelog
-     5. make suse-changelog
 4. Build the documentation
      1. make build-docs
 5. Create the packages
      1. make pypi-package
-     2. make debian-package
-     3. make redhat-package
-     4. make suse-package
-6. Check of each installation method
+     2. make debian-changelog
+     3. make debian-package-via-vagrant GPG_KEYID=xxx
+     1. make apt-repo-via-vagrant GPG_KEYID=xxx
+     4. make redhat-changelog
+     5. make redhat-package-via-vagrant GPG_KEYID=xxx
+     2. make yum-repo-via-vagrant GPG_KEYID=xxx
+     6. make suse-changelog
+     7. make suse-package-via-vagrant GPG_KEYID=xxx
+     3. make suse-repo-via-vagrant GPG_KEYID=xxx
+6. Check each installation method
      1. do a git install + upgrade
      2. do a pip install + upgrade
      3. do a debian install + upgrade
@@ -36,28 +39,19 @@ checklist for doing a release:
      3. make upload-debian
      4. make upload-redhat
      5. make upload-suse
-10. Update the deb repository
-     1. make pull-apt-repo
-     2. make update-apt-repo
-     3. make push-apt-repo
-11. Update the redhat repository
-     1. make pull-yum-repo
-     2. make update-yum-repo
-     3. make push-yum-repo
-12. Update the suse repository
-     1. make pull-suse-repo
-     2. make update-suse-repo
-     3. make push-suse-repo
-13. Reshuffle files on the server
+     6. make push-apt-repo
+     7. make push-yum-repo
+     8. make push-suse-repo
+10. Move files on the server from staging to production
      1. make release
      2. make release-apt-repo
      3. make release-yum-repo
      4. make release-suse-repo
-14. If minor version changes, update doc links in the website repository
+11. If minor version changes, update doc links in the website repository
      1. change URL= in docs/*.html
      2. change version in docs/weedocs.js
      3. change symlink docs/latest
-15. Announce the release to the weewx user's group.
+12. Announce the release to the weewx user's group.
 
 
 pre-requisites ----------------------------------------------------------------
