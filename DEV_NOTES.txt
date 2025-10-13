@@ -63,7 +63,7 @@ checklist for doing a release:
 pre-requisites ----------------------------------------------------------------
 
 Building the documentation requires mkdocs, which is installed using pip.
-Signing packages requires gpg and local copy of authorized private+public keys.
+Signing packages requires gpg and local copy of private+public keys.
 Verifying the packages requires rpmlint/lintian.
 The debian repo management requires aptly.
 The redhat repo management requires createrepo.
@@ -82,6 +82,7 @@ To build debian package install the following (use 'apt install'):
   gpg
   debhelper
   lintian
+  aptly           only needed if you will create and update repositories
 
 To build redhat package install the following (use 'yum install'):
   git
@@ -91,13 +92,14 @@ To build redhat package install the following (use 'yum install'):
   rpm-sign
   rpmlint
   rpmdevtools
+  createrepo_c    only needed if you will create and update repositories
 
 To build suse package install the following (use 'zypper install'):
   git
   rsync
   rpm-build
   rpmlint
-  createrepo_c
+  createrepo_c    only needed if you will create and update repositories
 
 
 howto -------------------------------------------------------------------------
@@ -372,12 +374,6 @@ there are multiple changelogs:
   pkg/changelog.el - changes to the redhat packaging
   pkg/changelog.suse - changes to the suse packaging
 
-when signing RPMs, gpg info must match the name and email in the latest package
-changelog entry.
-
-when signing apt Release using aptly, beware that aptly uses the first gpg key
-that it finds.  that might not be what you want.
-
 the debian changelog *must* have a version number that matches the app version.
 the redhat package will build if the version numbers do not match.  use the
 redhat-changelog and debian-changelog targets to ensure that changelog versions
@@ -439,11 +435,19 @@ use a known-working python.
 
 signing packages --------------------------------------------------------------
 
-gpg is used to sign the deb repository and rpm packages.  SHA1 is no longer
-acceptable for signing, so be sure that your gpg keys and the signing command
-use SHA256 instead.  this should be the default when building on redhat9 and
-later.  if it is not the default, then it can be forced with a change to the
-signing macro in .rpmmacros - add the line --digest-algo sha256
+gpg is used to sign the deb repository and rpm packages.
+
+When signing RPMs, gpg info must match the name and email in the latest package
+changelog entry.
+
+When signing apt Release using aptly, beware that aptly uses the first gpg key
+that it finds.  that might not be what you want.
+
+SHA1 is no longer acceptable for signing, so be sure that your gpg keys and
+the signing command use SHA256 instead.  This should be the default when
+building on redhat9 and later.  If it is not the default, then it can be forced
+with a change to the signing macro in .rpmmacros - add the line
+--digest-algo sha256
 
 %__gpg_sign_cmd			%{__gpg} \
 	gpg --no-verbose --no-armor \
