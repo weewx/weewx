@@ -74,6 +74,57 @@ example:
 </div>
 
 
+### Support for WOW-BE
+Support for [WOW-BE](https://wow.meteo.be/en/) has been added. To use it 
+requires a change in older `weewx.conf` configuration files. Look through
+your `weewx.conf` for the stanza `[[WOW]]`, then add one for `[[WOW-BE]]`
+directly underneath. When you're done, it should look something like this:
+
+
+<div class="wide-table">
+  <table>
+    <tr class="first_row">
+      <td style='width:50%'>V5.1 and earlier</td>
+      <td>V5.2 and later</td>
+    </tr>
+    <tr class="tty">
+      <td>    
+    [[WOW]]
+        # This section is for configuring posts to WOW (wow.metoffice.gov.uk).
+
+        # If you wish to post to WOW, set the option 'enable' to true, then
+        # specify a station and password.
+        # Use quotes around the password to guard against parsing errors.
+        enable = false
+        station = replace_me
+        password = replace_me
+</td>
+      <td>
+    [[WOW]]
+        # This section is for configuring posts to WOW (wow.metoffice.gov.uk).
+
+        # If you wish to post to WOW, set the option 'enable' to true, then
+        # specify a station and password.
+        # Use quotes around the password to guard against parsing errors.
+        enable = false
+        station = replace_me
+        password = replace_me
+    
+    [[WOW-BE]]
+        # This section is for configuring WeeWX to upload to WOW-BE (wow.meteo.be)
+
+        # If you wish to post to WOW-BE, set the option 'enable' to true, then
+        # specify a station and password.
+        # Use quotes around the password to guard against parsing errors.
+        enable = false
+        station = replace_me
+        password = replace_me
+</td>
+    </tr>
+  </table>
+</div>
+
+
 ### Luminosity and Illuminance
 
 Previously, the `wview_extended` schema included a type `luminosity` (typically
