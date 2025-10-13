@@ -11,16 +11,17 @@ checklist for doing a release:
 4. Build the documentation
      1. make build-docs
 5. Create the packages
-     1. make pypi-package
-     2. make debian-changelog
-     3. make debian-package-via-vagrant GPG_KEYID=xxx
-     1. make apt-repo-via-vagrant GPG_KEYID=xxx
-     4. make redhat-changelog
-     5. make redhat-package-via-vagrant GPG_KEYID=xxx
-     2. make yum-repo-via-vagrant GPG_KEYID=xxx
-     6. make suse-changelog
-     7. make suse-package-via-vagrant GPG_KEYID=xxx
-     3. make suse-repo-via-vagrant GPG_KEYID=xxx
+     1. make src-tarball
+     2. make pypi-package
+     3a. make debian-changelog
+     3b. make debian-package-via-vagrant GPG_KEYID=xxx
+     3c. make apt-repo-via-vagrant GPG_KEYID=xxx
+     4a. make redhat-changelog
+     4b. make redhat-package-via-vagrant GPG_KEYID=xxx
+     4c. make yum-repo-via-vagrant GPG_KEYID=xxx
+     5a. make suse-changelog
+     5b. make suse-package-via-vagrant GPG_KEYID=xxx
+     5c. make suse-repo-via-vagrant GPG_KEYID=xxx
 6. Check each installation method
      1. do a git install + upgrade
      2. do a pip install + upgrade
@@ -35,13 +36,7 @@ checklist for doing a release:
      1. make upload-pypi
 9. Upload to weewx.com
      1. make upload-docs
-     2. make upload-src
-     3. make upload-debian
-     4. make upload-redhat
-     5. make upload-suse
-     6. make push-apt-repo
-     7. make push-yum-repo
-     8. make push-suse-repo
+     2. make upload-all
 10. Move files on the server from staging to production
      1. make release
      2. make release-apt-repo
