@@ -70,34 +70,38 @@ help: info
 	@echo ""
 
 help-release: info
-	@echo "release options include:"
+	@echo "options to stage and release include:"
 	@echo ""
-	@echo "    upload-src  upload the src package to $(WEEWX_COM)"
-	@echo "   upload-pypi  upload wheel and src package to pypi.org"
-	@echo " upload-debian  upload the debian deb package"
-	@echo " upload-redhat  upload the redhat rpm packages"
-	@echo "   upload-suse  upload the suse rpm packages"
+	@echo "     stage-all  upload packages and repos to staging"
+	@echo "    upload-src  upload src package to staging"
+	@echo " upload-debian  upload debian package to staging"
+	@echo " upload-redhat  upload redhat package to staging"
+	@echo "   upload-suse  upload suse package to staging"
 	@echo ""
-	@echo "       release  promote staged files on the download server"
+	@echo "   release-all  promote packages and repos to production"
+	@echo "  release-pkgs  promote packages to production"
+	@echo "  release-pypi  upload wheel and src package to pypi.org"
 	@echo ""
 	@echo " apt repository management"
-	@echo "    pull-apt-repo"
-	@echo "  update-apt-repo"
-	@echo "    push-apt-repo"
-	@echo " release-apt-repo"
+	@echo "     pull-apt-repo  synchronize local repo to weewx.com"
+	@echo "   update-apt-repo  update local repo using local package"
+	@echo "     push-apt-repo  synchronize weewx.com testing to local repo"
+	@echo "  release-apt-repo  move testing to production"
 	@echo ""
 	@echo " yum repository management"
-	@echo "    pull-yum-repo"
-	@echo "  update-yum-repo"
-	@echo "    push-yum-repo"
-	@echo " release-yum-repo"
+	@echo "     pull-yum-repo  synchronize local repo to weewx.com"
+	@echo "   update-yum-repo  update local repo using local package"
+	@echo "     push-yum-repo  synchronize weewx.com testing to local repo"
+	@echo "  release-yum-repo  move testing to production"
 	@echo ""
 	@echo " suse repository management"
-	@echo "    pull-suse-repo"
-	@echo "  update-suse-repo"
-	@echo "    push-suse-repo"
-	@echo " release-suse-repo"
+	@echo "    pull-suse-repo  synchronize local repo to weewx.com"
+	@echo "  update-suse-repo  update local repo using local package"
+	@echo "    push-suse-repo  synchronize weewx.com testing to local repo"
+	@echo " release-suse-repo  move testing to production"
 	@echo ""
+
+
 
 info:
 	@echo "       VERSION: $(VERSION)"
@@ -186,11 +190,11 @@ test-clean:
 
 # shortcuts to upload everything.  assumes that the assets have been staged
 # to the local 'dist' directory.
-upload-all: upload-src upload-pkgs push-apt-repo push-yum-repo push-suse-repo
+stage-all: upload-src upload-pkgs push-apt-repo push-yum-repo push-suse-repo
 
 # shortcut to release everything.  assumes that all of the assets have been
 # staged to the development area on the distribution server.
-release-all: release release-apt-repo release-yum-repo release-suse-repo
+release-all: release-pkgs release-apt-repo release-yum-repo release-suse-repo
 
 
 ###############################################################################
@@ -233,7 +237,7 @@ pypi-package $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL): pyproject.toml
 	poetry build
 
 # Upload wheel and src package to pypi.org
-upload-pypi: $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL)
+release-pypi upload-pypi: $(DSTDIR)/$(WHEELSRC) $(DSTDIR)/$(WHEEL)
 	poetry publish
 
 
@@ -412,7 +416,7 @@ upload-pkgs:
 DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
 RELDIR=$(WEEWX_DOWNLOADS)/released_versions
 ARTIFACTS=$(DEB3_PKG) $(RHEL8_PKG) $(RHEL9_PKG) $(SUSE15_PKG) $(SRCPKG)
-release:
+release-pkgs:
 	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
 	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
 	ssh $(USER)@$(WEEWX_COM) "if [ -f $(RELDIR)/$(SRCPKG) ]; then ln -s released_versions/$(SRCPKG) $(WEEWX_DOWNLOADS); fi"
@@ -608,14 +612,16 @@ ifneq ("$(GPG_KEYID)","")
   if [ -f "$(HOME)/.gnupg/passphrase" ]; then \
     gpg -a --export $(GPG_KEYID) > /tmp/gpg-pubkeys.asc; \
     gpg -a --pinentry-mode=loopback --passphrase-file $(HOME)/.gnupg/passphrase --export-secret-key $(GPG_KEYID) > /tmp/gpg-prikeys.asc; \
+    gpg_name=`gpg --list-secret-keys | grep uid | awk '{$$1=$$2=""; print $$0}'`; sed "s/GPG_NAME/$${gpg_name}/" vagrant/rpmmacros > /tmp/gpg-macros; \
     ssh -F $(VM_DIR)/ssh-config vagrant@default "mkdir -p .gnupg; chmod 700 .gnupg"; \
     scp -F $(VM_DIR)/ssh-config vagrant/gpg.conf $(VM_URL)/.gnupg; \
+    scp -F $(VM_DIR)/ssh-config /tmp/gpg-macros $(VM_URL)/.rpmmacros; \
     scp -F $(VM_DIR)/ssh-config $(HOME)/.gnupg/passphrase $(VM_URL)/.gnupg; \
     scp -F $(VM_DIR)/ssh-config /tmp/gpg-pubkeys.asc $(VM_URL)/.gnupg; \
     scp -F $(VM_DIR)/ssh-config /tmp/gpg-prikeys.asc $(VM_URL)/.gnupg; \
     ssh -F $(VM_DIR)/ssh-config vagrant@default "gpg --import .gnupg/gpg-pubkeys.asc"; \
     ssh -F $(VM_DIR)/ssh-config vagrant@default "gpg --import .gnupg/gpg-prikeys.asc"; \
-    rm -f /tmp/gpg-pubkeys.asc /tmp/gpg-prikeys.asc; \
+    rm -f /tmp/gpg-pubkeys.asc /tmp/gpg-prikeys.asc /tmp/gpg-macros; \
   else \
     echo "to sign pkgs and repos, you must save passphrase in ~/.gnupg/passphrase"; \
   fi \
@@ -628,7 +634,7 @@ vagrant-sync-src:
 	rsync -ar -e "ssh -F $(VM_DIR)/ssh-config" --exclude build --exclude dist --exclude vm ./ $(VM_URL)/weewx
 
 vagrant-build:
-	ssh -F $(VM_DIR)/ssh-config vagrant@default "cd weewx; make $(VM_TGT)"
+	ssh -F $(VM_DIR)/ssh-config vagrant@default "cd weewx; make $(VM_TGT) GPG_KEYID=$(GPG_KEYID)"
 
 vagrant-pull-repo:
 	rsync -ar -e "ssh -F $(VM_DIR)/ssh-config" vagrant@default:$(REPO_DIR)/ $(REPO_DIR)
@@ -645,7 +651,7 @@ vagrant-push-pkg:
 	scp -F $(VM_DIR)/ssh-config $(DSTDIR)/$(VM_PKG) "$(VM_URL)/weewx/dist"
 
 vagrant-update-repo:
-	ssh -F $(VM_DIR)/ssh-config vagrant@default "cd weewx; make $(VM_REPO_TGT)"
+	ssh -F $(VM_DIR)/ssh-config vagrant@default "cd weewx; make $(VM_REPO_TGT) GPG_KEYID=$(GPG_KEYID)"
 
 vagrant-teardown:
 	(cd $(VM_DIR); vagrant destroy -f)
