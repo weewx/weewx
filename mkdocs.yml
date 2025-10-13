@@ -7,7 +7,7 @@ site_author: "Tom Keffer <tkeffer@gmail.com>"
 #repo_name: WeeWX GitHub Repository
 # Shut off the "edit on GitHub" feature:
 edit_uri: ''
-copyright: Copyright © 2009-2024 Thomas Keffer, Matthew Wall, and Gary Roderick, all rights reserved
+copyright: Copyright © 2009-2025 Thomas Keffer, Matthew Wall, and Gary Roderick, all rights reserved
 theme:
   name: 'material'
   logo: 'images/logo-weewx.png'

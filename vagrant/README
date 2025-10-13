@@ -1,0 +1,9 @@
+port allocations for guests
+
+4001 debian12-dev
+4002 rocky8-dev
+4003 rocky9-dev
+4004 suse15-dev
+4005 debian10
+4006 freebsd14
+4007 rocky10

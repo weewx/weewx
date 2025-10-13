@@ -1,0 +1,7 @@
+%_signature gpg
+%_gpg_name GPG_NAME
+%__gpg_sign_cmd %{__gpg} \
+  gpg --no-verbose --no-armor --no-secmem-warning --digest-algo sha256 \
+  %{?_gpg_digest_algo:--digest-algo %{_gpg_digest_algo}} \
+  %{?_gpg_sign_cmd_extra_args:%{_gpg_sign_cmd_extra_args}} \
+  -u "%{_gpg_name}" -sbo %{__signature_filename} %{__plaintext_filename}

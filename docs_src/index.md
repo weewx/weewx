@@ -98,5 +98,5 @@ discussions about developing drivers, extensions, or working on the core code.
 
 WeeWX is licensed under the GNU Public License v3.
 
-© [Copyright](copyright.md) 2009-2024 Thomas Keffer, Matthew Wall, and Gary
+© [Copyright](copyright.md) 2009-2025 Thomas Keffer, Matthew Wall, and Gary
 Roderick

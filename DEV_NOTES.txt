@@ -32,17 +32,15 @@ checklist for doing a release:
      2. git push
      3. git tag vX.Y.Z
      4. git push --tags
+     5. create a release at github.com
 8. Upload wheel to pypi.org
-     1. make upload-pypi
+     1. make release-pypi
 9. Upload to weewx.com
      1. make upload-docs
-     2. make upload-all
+     2. make stage-all
 10. Move files on the server from staging to production
-     1. make release
-     2. make release-apt-repo
-     3. make release-yum-repo
-     4. make release-suse-repo
-11. If minor version changes, update doc links in the website repository
+     1. make release-all
+11. If the minor version changes, update doc links in the website repository
      1. change URL= in docs/*.html
      2. change version in docs/weedocs.js
      3. change symlink docs/latest
