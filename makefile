@@ -186,7 +186,7 @@ test-clean:
 
 # shortcuts to upload everything.  assumes that the assets have been staged
 # to the local 'dist' directory.
-upload-all: upload-docs upload-pkgs
+upload-all: upload-src upload-pkgs push-apt-repo push-yum-repo push-suse-repo
 
 # shortcut to release everything.  assumes that all of the assets have been
 # staged to the development area on the distribution server.
@@ -547,7 +547,7 @@ ifneq ("$(GPG_KEYID)","")
 endif
 
 push-suse-repo:
-	make push-repo 
+	make push-repo REPO_NAME=suse REPO_DIR=$(SUSE_DIR)
 
 release-suse-repo:
 	make release-repo REPO_NAME=suse REPO_DIR=$(SUSE_DIR)
