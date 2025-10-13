@@ -1,10 +1,12 @@
 # -*- makefile -*-
 # this makefile controls the build and packaging of weewx
-# Copyright 2013-2024 Matthew Wall
+# Copyright 2013-2025 Matthew Wall
 
-# if you are going to do an official release, then you must sign the packages.
-# we default to *not* signing to make testing and development easier.
-SIGN ?= 1
+# We default to *not* signing - this makes testing and development easier.
+# If you are going to do an official release, then you must sign. Indicate this
+# by specifying the identifier of the GPG key you want to use. To see your GPG
+# key identifiers, invoke 'gpg --list-secret-keys'
+GPG_KEYID?=
 
 # the WeeWX WWW server
 WEEWX_COM:=weewx.com
@@ -52,8 +54,6 @@ help: info
 	@echo "    test-clean  remove test databases"
 	@echo ""
 	@echo "    build-docs  build the docs using mkdocs"
-	@echo "   upload-docs  upload docs to $(WEEWX_COM)"
-	@echo "    check-docs  run weblint on the docs"
 	@echo ""
 	@echo " debian-changelog  prepend stub changelog entry for debian"
 	@echo " redhat-changelog  prepend stub changelog entry for redhat"
@@ -67,6 +67,10 @@ help: info
 	@echo "  check-debian  check the debian package"
 	@echo "  check-redhat  check the redhat package"
 	@echo "    check-suse  check the suse package"
+	@echo ""
+
+help-release: info
+	@echo "release options include:"
 	@echo ""
 	@echo "    upload-src  upload the src package to $(WEEWX_COM)"
 	@echo "   upload-pypi  upload wheel and src package to pypi.org"
@@ -101,6 +105,7 @@ info:
 	@echo "        PYTHON: $(PYTHON)"
 	@echo "           CWD: $(CWD)"
 	@echo "          USER: $(USER)"
+	@echo "     GPG_KEYID: $(GPG_KEYID)"
 	@echo "     WEEWX_COM: $(WEEWX_COM)"
 	@echo " WEEWX_STAGING: $(WEEWX_STAGING)"
 	@echo "       DOC_SRC: $(DOC_SRC)"
@@ -181,7 +186,7 @@ test-clean:
 
 # shortcuts to upload everything.  assumes that the assets have been staged
 # to the local 'dist' directory.
-upload-all: upload-docs upload-pkgs
+upload-all: upload-src upload-pkgs push-apt-repo push-yum-repo push-suse-repo
 
 # shortcut to release everything.  assumes that all of the assets have been
 # staged to the development area on the distribution server.
@@ -192,19 +197,16 @@ release-all: release release-apt-repo release-yum-repo release-suse-repo
 ## documentation targets
 
 # Build the documentation:
-build-docs: $(DOC_BUILT)
+build-docs: $(DOC_BUILT)/index.html
 
-$(DOC_BUILT): $(shell find $(DOC_SRC) -type f)
+$(DOC_BUILT)/index.html: $(shell find $(DOC_SRC) -type f)
 	@rm -rf $(DOC_BUILT)
 	@mkdir -p $(DOC_BUILT)
 	@echo "Building documents"
 	$(PYTHON) -m mkdocs --quiet build --site-dir=$(DOC_BUILT)
 
-check-docs:
-	weblint $(DOC_BUILT)/*.htm
-
 # upload docs to the web site
-upload-docs: $(DOC_BUILT)
+upload-docs: $(DOC_BUILT)/index.html
 	rsync -Orv --delete --exclude *~ --exclude "#*" $(DOC_BUILT)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/docs/$(MMVERSION)
 
 
@@ -246,20 +248,20 @@ debian-changelog:
   set --; \
   if [ -n "$(USER)" ]; then set -- "$$@" --user "$(USER)"; fi; \
   if [ -n "$(EMAIL)" ]; then set -- "$$@" --email "$(EMAIL)"; fi; \
-  if [ "$(SIGN)" = "0" ]; then set -- "$$@" --ignore-gpg; fi; \
+  if [ "$(GPG_KEYID)" = "" ]; then set -- "$$@" --ignore-gpg; fi; \
   pkg/mkchangelog.pl --action stub --format debian --release-version $(DEBVER) > pkg/debian/changelog.new; \
   cat pkg/debian/changelog >> pkg/debian/changelog.new; \
   mv pkg/debian/changelog.new pkg/debian/changelog; \
 fi
 
 # use dpkg-buildpackage to create the debian package
-# -us -uc - skip gpg signature on .dsc, .buildinfo, and .changes
+# -us -ui -uc - skip gpg signature on .dsc, .buildinfo, and .changes
 # the latest version in the debian changelog must match the packaging version
 DEBARCH=all
 DEBBLDDIR=$(BLDDIR)/weewx-$(VERSION)
 DEBPKG=weewx_$(DEBVER)_$(DEBARCH).deb
-ifneq ("$(SIGN)","1")
-DPKG_OPT=-us -uc
+ifeq ("$(GPG_KEYID)","")
+DPKG_OPT=--no-sign
 endif
 debian-package: deb-package-prep
 	cp pkg/debian/control $(DEBBLDDIR)/debian/control
@@ -288,6 +290,7 @@ deb-package-prep: $(DSTDIR)/$(SRCPKG)
 	cp pkg/debian/weewx.lintian-overrides $(DEBBLDDIR)/debian
 	sed -e 's%WEEWX_VERSION%$(VERSION)%' \
   pkg/debian/rules > $(DEBBLDDIR)/debian/rules
+	chmod 755 $(DEBBLDDIR)/debian/rules
 
 # run lintian on the deb package
 check-debian:
@@ -313,7 +316,7 @@ rpm-changelog:
   set --; \
   if [ -n "$(USER)" ]; then set -- "$$@" --user "$(USER)"; fi; \
   if [ -n "$(EMAIL)" ]; then set -- "$$@" --email "$(EMAIL)"; fi; \
-  if [ "$(SIGN)" = "0" ]; then set -- "$$@" --ignore-gpg; fi; \
+  if [ "$(GPG_KEYID)" = "" ]; then set -- "$$@" --ignore-gpg; fi; \
   pkg/mkchangelog.pl --action stub --format redhat --release-version $(RPMVER) > pkg/changelog.$(RPMOS).new; \
   cat pkg/changelog.$(RPMOS) >> pkg/changelog.$(RPMOS).new; \
   mv pkg/changelog.$(RPMOS).new pkg/changelog.$(RPMOS); \
@@ -343,7 +346,7 @@ rpm-package: $(DSTDIR)/$(SRCPKG)
 	mkdir -p $(DSTDIR)
 	mv $(RPMBLDDIR)/RPMS/$(RPMARCH)/$(RPMPKG) $(DSTDIR)
 #	mv $(RPMBLDDIR)/SRPMS/weewx-$(RPMVER).$(RPMOS)$(OSREL).src.rpm $(DSTDIR)
-ifeq ("$(SIGN)","1")
+ifneq ("$(GPG_KEYID)","")
 	rpm --addsign $(DSTDIR)/$(RPMPKG)
 #	rpm --addsign $(DSTDIR)/weewx-$(RPMVER).$(RPMOS)$(OSREL).src.rpm
 endif
@@ -419,6 +422,20 @@ release:
 ###############################################################################
 ## repository management targets
 
+REPO_DIR=/var/tmp/repo
+REPO_NAME=repo
+pull-repo:
+	mkdir -p $(REPO_DIR)
+	rsync -Ortlogvz --delete $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/$(REPO_NAME)/ $(REPO_DIR)
+
+push-repo:
+	find $(REPO_DIR) -type f -exec chmod 664 {} \;
+	find $(REPO_DIR) -type d -exec chmod 2775 {} \;
+	rsync -Ortlvz --delete $(REPO_DIR)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/$(REPO_NAME)-test
+
+release-repo:
+	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz --delete /var/www/html/$(REPO_NAME)-test/ /var/www/html/$(REPO_NAME)"
+
 # update the repository html index files, without touching the contents of the
 # repositories.  this is rarely necessary, since the index files are included
 # in the pull/push cycle of repository maintenance.  it is needed when the
@@ -449,8 +466,7 @@ apt-repo:
 
 # make local copy of the published apt repository
 pull-apt-repo:
-	mkdir -p $(APTLY_DIR)
-	rsync -Oarvz --delete $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/ $(APTLY_DIR)
+	make pull-repo REPO_NAME=aptly REPO_DIR=$(APTLY_DIR)
 
 # add the latest version to the local apt repo using aptly
 update-apt-repo:
@@ -462,18 +478,16 @@ update-apt-repo:
 
 # publish apt repo changes to the public weewx apt repo
 push-apt-repo:
-	find $(APTLY_DIR) -type f -exec chmod 664 {} \;
-	find $(APTLY_DIR) -type d -exec chmod 2775 {} \;
-	rsync -Ortlvz --delete $(APTLY_DIR)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly-test
+	make push-repo REPO_NAME=aptly REPO_DIR=$(APTLY_DIR)
 
 # copy the testing repository onto the production repository
 release-apt-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz --delete /var/www/html/aptly-test/ /var/www/html/aptly"
+	make release-repo REPO_NAME=aptly REPO_DIR=$(APTLY_DIR)
 
 # 'yum-repo' is only used when creating a new yum repository from scratch
 # the index.html is not part of an official rpm repository.  it is included
 # to make the repository self-documenting.
-YUM_DIR=build/repo-yum
+YUM_DIR=/var/tmp/repo-yum
 YUM_REPO=$(YUM_DIR)/weewx
 yum-repo:
 	mkdir -p $(YUM_REPO)/{el7,el8,el9}/RPMS
@@ -484,8 +498,7 @@ yum-repo:
 	cp -p pkg/weewx-el9.repo $(YUM_DIR)
 
 pull-yum-repo:
-	mkdir -p $(YUM_REPO)
-	rsync -Oarvz --delete $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/ $(YUM_DIR)
+	make pull-repo REPO_NAME=yum REPO_DIR=$(YUM_DIR)
 
 update-yum-repo:
 	mkdir -p $(YUM_REPO)/el8/RPMS
@@ -494,7 +507,7 @@ update-yum-repo:
 	mkdir -p $(YUM_REPO)/el9/RPMS
 	cp -p $(DSTDIR)/weewx-$(RPMVER).el9.$(RPMARCH).rpm $(YUM_REPO)/el9/RPMS
 	createrepo $(YUM_REPO)/el9
-ifeq ("$(SIGN)","1")
+ifneq ("$(GPG_KEYID)","")
 	for os in el8 el9; do \
   gpg --export --armor > $(YUM_REPO)/$$os/repodata/repomd.xml.key; \
   gpg -abs -o $(YUM_REPO)/$$os/repodata/repomd.xml.asc.new $(YUM_REPO)/$$os/repodata/repomd.xml; \
@@ -503,18 +516,15 @@ done
 endif
 
 push-yum-repo:
-	find $(YUM_DIR) -type f -exec chmod 664 {} \;
-	find $(YUM_DIR) -type d -exec chmod 2775 {} \;
-	rsync -Ortlvz --delete $(YUM_DIR)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum-test
+	make push-repo REPO_NAME=yum REPO_DIR=$(YUM_DIR)
 
-# copy the testing repository onto the production repository
 release-yum-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz --delete /var/www/html/yum-test/ /var/www/html/yum"
+	make release-repo REPO_NAME=yum REPO_DIR=$(YUM_DIR)
 
 # 'suse-repo' is only used when creating a new suse repository from scratch
 # the index.html is not part of an official rpm repository.  it is included
 # to make the repository self-documenting.
-SUSE_DIR=build/repo-suse
+SUSE_DIR=/var/tmp/repo-suse
 SUSE_REPO=$(SUSE_DIR)/weewx
 suse-repo:
 	mkdir -p $(SUSE_REPO)/{suse12,suse15}/RPMS
@@ -524,27 +534,23 @@ suse-repo:
 	cp -p pkg/weewx-suse15.repo $(SUSE_DIR)
 
 pull-suse-repo:
-	mkdir -p $(SUSE_REPO)
-	rsync -Oarvz --delete $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/ $(SUSE_DIR)
+	make pull-repo REPO_NAME=suse REPO_DIR=$(SUSE_DIR)
 
 update-suse-repo:
 	mkdir -p $(SUSE_REPO)/suse15/RPMS
 	cp -p $(DSTDIR)/weewx-$(RPMVER).suse15.$(RPMARCH).rpm $(SUSE_REPO)/suse15/RPMS
 	createrepo $(SUSE_REPO)/suse15
-ifeq ("$(SIGN)","1")
+ifneq ("$(GPG_KEYID)","")
 	gpg --export --armor > $(SUSE_REPO)/suse15/repodata/repomd.xml.key
-	gpg -abs -o $(SUSE_REPO)/suse15/repodata/repomd.xml.asc $(SUSE_REPO)/suse15/repodata/repomd.xml
+	gpg -abs -o $(SUSE_REPO)/suse15/repodata/repomd.xml.asc.new $(SUSE_REPO)/suse15/repodata/repomd.xml
 	mv $(SUSE_REPO)/suse15/repodata/repomd.xml.asc.new $(SUSE_REPO)/suse15/repodata/repomd.xml.asc
 endif
 
 push-suse-repo:
-	find $(SUSE_DIR) -type f -exec chmod 664 {} \;
-	find $(SUSE_DIR) -type d -exec chmod 2775 {} \;
-	rsync -Ortlvz --delete $(SUSE_DIR)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse-test
+	make push-repo REPO_NAME=suse REPO_DIR=$(SUSE_DIR)
 
-# copy the testing repository onto the production repository
 release-suse-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz --delete /var/www/html/suse-test/ /var/www/html/suse"
+	make release-repo REPO_NAME=suse REPO_DIR=$(SUSE_DIR)
 
 
 ###############################################################################
@@ -567,34 +573,76 @@ code-summary:
 # use the following targets to build the platform packages in virtual machines
 # using vagrant.  this requires that vagrant and a suitable virtual machine
 # framework such as virtualbox is installed.
+#
+# we would like to use a shared directory for the repo, but that does not work.
+# the guest os fails with 'operation not permitted' when it tries to manipulate
+# files/links in the shared directory.
+#
+# we would like to do all of the builds in the guests, then do the signing in
+# the host.  unfortunately its not that easy.  debian packages are typically
+# not signed (unless you distribute them individually), but debian repos are.
+# redhat and suse want you to sign the packages as well as the repository.
+# since only rpmsign can be used to sign redhat/suse artifacts, we must do the
+# signing in the guests.  so we have to get the gpg credentials into the guest
+# with export/import, and that requires a passphrase, so we stash it in a file.
 
-DEB_VM=vm-debian12
-RHEL_VM=vm-rocky8
-SUSE_VM=vm-suse15
+DEB_VM=debian12
+RHEL_VM=rocky8
+SUSE_VM=suse15
 
-VM_URL=vagrant@default:/home/vagrant/weewx
-VM_DIR=build/vm
-VM_CFG=
-VM_TGT=nothing
+VM_GUEST=undefined
+VM_URL=vagrant@default:/home/vagrant
+VM_DIR=build/vm-$(VM_GUEST)
+VM_CFG=vagrant/Vagrantfile-$(VM_GUEST)-dev
+VM_TGT=weewx-package
 VM_PKG=weewx.pkg
 vagrant-setup:
 	mkdir -p $(VM_DIR)
-	cp vagrant/Vagrantfile$(VM_CFG) $(VM_DIR)/Vagrantfile
+	cp $(VM_CFG) $(VM_DIR)/Vagrantfile
 	(cd $(VM_DIR); vagrant up; vagrant ssh-config > ssh-config)
 
+# export gpg keys then import, in case the guest gpg is way behind the host
+vagrant-sync-gpg:
+ifneq ("$(GPG_KEYID)","")
+	@if [ -d "$(HOME)/.gnupg" ]; then \
+  if [ -f "$(HOME)/.gnupg/passphrase" ]; then \
+    gpg -a --export $(GPG_KEYID) > /tmp/gpg-pubkeys.asc; \
+    gpg -a --pinentry-mode=loopback --passphrase-file $(HOME)/.gnupg/passphrase --export-secret-key $(GPG_KEYID) > /tmp/gpg-prikeys.asc; \
+    ssh -F $(VM_DIR)/ssh-config vagrant@default "mkdir -p .gnupg; chmod 700 .gnupg"; \
+    scp -F $(VM_DIR)/ssh-config vagrant/gpg.conf $(VM_URL)/.gnupg; \
+    scp -F $(VM_DIR)/ssh-config $(HOME)/.gnupg/passphrase $(VM_URL)/.gnupg; \
+    scp -F $(VM_DIR)/ssh-config /tmp/gpg-pubkeys.asc $(VM_URL)/.gnupg; \
+    scp -F $(VM_DIR)/ssh-config /tmp/gpg-prikeys.asc $(VM_URL)/.gnupg; \
+    ssh -F $(VM_DIR)/ssh-config vagrant@default "gpg --import .gnupg/gpg-pubkeys.asc"; \
+    ssh -F $(VM_DIR)/ssh-config vagrant@default "gpg --import .gnupg/gpg-prikeys.asc"; \
+    rm -f /tmp/gpg-pubkeys.asc /tmp/gpg-prikeys.asc; \
+  else \
+    echo "to sign pkgs and repos, you must save passphrase in ~/.gnupg/passphrase"; \
+  fi \
+else \
+  echo "signing requested, but no key info found at $(HOME)/.gnupg"; \
+fi
+endif
+
 vagrant-sync-src:
-	rsync -ar -e "ssh -F $(VM_DIR)/ssh-config" --exclude build --exclude dist --exclude vm ./ $(VM_URL)
+	rsync -ar -e "ssh -F $(VM_DIR)/ssh-config" --exclude build --exclude dist --exclude vm ./ $(VM_URL)/weewx
 
 vagrant-build:
 	ssh -F $(VM_DIR)/ssh-config vagrant@default "cd weewx; make $(VM_TGT)"
 
+vagrant-pull-repo:
+	rsync -ar -e "ssh -F $(VM_DIR)/ssh-config" vagrant@default:$(REPO_DIR)/ $(REPO_DIR)
+
+vagrant-push-repo:
+	rsync -ar -e "ssh -F $(VM_DIR)/ssh-config" $(REPO_DIR)/ vagrant@default:$(REPO_DIR)
+
 vagrant-pull-pkg:
 	mkdir -p $(DSTDIR)
-	scp -F $(VM_DIR)/ssh-config "$(VM_URL)/dist/$(VM_PKG)" $(DSTDIR)
+	scp -F $(VM_DIR)/ssh-config "$(VM_URL)/weewx/dist/$(VM_PKG)" $(DSTDIR)
 
 vagrant-push-pkg:
 	ssh -F $(VM_DIR)/ssh-config vagrant@default "mkdir -p /home/vagrant/weewx/dist"
-	scp -F $(VM_DIR)/ssh-config $(DSTDIR)/$(VM_PKG) "$(VM_URL)/dist"
+	scp -F $(VM_DIR)/ssh-config $(DSTDIR)/$(VM_PKG) "$(VM_URL)/weewx/dist"
 
 vagrant-update-repo:
 	ssh -F $(VM_DIR)/ssh-config vagrant@default "cd weewx; make $(VM_REPO_TGT)"
@@ -602,27 +650,30 @@ vagrant-update-repo:
 vagrant-teardown:
 	(cd $(VM_DIR); vagrant destroy -f)
 
-debian-via-vagrant:
-	make vagrant-setup VM_DIR=build/$(DEB_VM) VM_CFG=-debian12-dev
-	make vagrant-sync-src VM_DIR=build/$(DEB_VM)
-	make vagrant-build VM_DIR=build/$(DEB_VM) VM_TGT=debian-package
-	make vagrant-pull-pkg VM_DIR=build/$(DEB_VM) VM_PKG=$(DEB3_PKG)
-	make vagrant-teardown VM_DIR=build/$(DEB_VM)
+debian-package-via-vagrant:
+	make vagrant-setup VM_GUEST=$(DEB_VM)
+	make vagrant-sync-gpg VM_GUEST=$(DEB_VM)
+	make vagrant-sync-src VM_GUEST=$(DEB_VM)
+	make vagrant-build VM_GUEST=$(DEB_VM) VM_TGT=debian-package GPG_KEYID=$(GPG_KEYID)
+	make vagrant-pull-pkg VM_GUEST=$(DEB_VM) VM_PKG=$(DEB3_PKG)
+	make vagrant-teardown VM_GUEST=$(DEB_VM)
 
-redhat-via-vagrant:
-	make vagrant-setup VM_DIR=build/$(RHEL_VM) VM_CFG=-rocky8-dev
-	make vagrant-sync-src VM_DIR=build/$(RHEL_VM)
-	make vagrant-build VM_DIR=build/$(RHEL_VM) VM_TGT=redhat-package
-	make vagrant-pull-pkg VM_DIR=build/$(RHEL_VM) VM_PKG=$(RHEL8_PKG)
-	make vagrant-pull-pkg VM_DIR=build/$(RHEL_VM) VM_PKG=$(RHEL9_PKG)
-	make vagrant-teardown VM_DIR=build/$(RHEL_VM)
+redhat-package-via-vagrant:
+	make vagrant-setup VM_GUEST=$(RHEL_VM)
+	make vagrant-sync-gpg VM_GUEST=$(RHEL_VM)
+	make vagrant-sync-src VM_GUEST=$(RHEL_VM)
+	make vagrant-build VM_GUEST=$(RHEL_VM) VM_TGT=redhat-package GPG_KEYID=$(GPG_KEYID)
+	make vagrant-pull-pkg VM_GUEST=$(RHEL_VM) VM_PKG=$(RHEL8_PKG)
+	make vagrant-pull-pkg VM_GUEST=$(RHEL_VM) VM_PKG=$(RHEL9_PKG)
+	make vagrant-teardown VM_GUEST=$(RHEL_VM)
 
-suse-via-vagrant:
-	make vagrant-setup VM_DIR=build/$(SUSE_VM) VM_CFG=-suse15-dev
-	make vagrant-sync-src VM_DIR=build/$(SUSE_VM)
-	make vagrant-build VM_DIR=build/$(SUSE_VM) VM_TGT=suse-package
-	make vagrant-pull-pkg VM_DIR=build/$(SUSE_VM) VM_PKG=$(SUSE15_PKG)
-	make vagrant-teardown VM_DIR=build/$(SUSE_VM)
+suse-package-via-vagrant:
+	make vagrant-setup VM_GUEST=$(SUSE_VM)
+	make vagrant-sync-gpg VM_GUEST=$(SUSE_VM)
+	make vagrant-sync-src VM_GUEST=$(SUSE_VM)
+	make vagrant-build VM_GUEST=$(SUSE_VM) VM_TGT=suse-package GPG_KEYID=$(GPG_KEYID)
+	make vagrant-pull-pkg VM_GUEST=$(SUSE_VM) VM_PKG=$(SUSE15_PKG)
+	make vagrant-teardown VM_GUEST=$(SUSE_VM)
 
 # The package repositories must be updated using tools on their respective
 # operating systems.  So for each repository, we first pull the canonical repo
@@ -633,28 +684,35 @@ suse-via-vagrant:
 # option that is specified in the vagrant file for each guest.
 
 apt-repo-via-vagrant:
-#	make pull-apt-repo
-#	make vagrant-setup VM_DIR=build/$(DEB_VM) VM_CFG=-debian12-dev
-#	make vagrant-sync-src VM_DIR=build/$(DEB_VM)
-#	make vagrant-push-pkg VM_DIR=build/$(DEB_VM) VM_PKG=$(DEB3_PKG)
-	make vagrant-update-repo VM_DIR=build/$(DEB_VM) VM_REPO_TGT=update-apt-repo
-#	make push-apt-repo
-#	make vagrant-teardown VM_DIR=build/$(DEB_VM)
+	make pull-repo REPO_NAME=aptly REPO_DIR=$(APTLY_DIR)
+	make vagrant-setup VM_GUEST=$(DEB_VM)
+	make vagrant-sync-gpg VM_GUEST=$(DEB_VM)
+	make vagrant-sync-src VM_GUEST=$(DEB_VM)
+	make vagrant-push-pkg VM_GUEST=$(DEB_VM) VM_PKG=$(DEB3_PKG)
+	make vagrant-push-repo VM_GUEST=$(DEB_VM) REPO_DIR=$(APTLY_DIR)
+	make vagrant-update-repo VM_GUEST=$(DEB_VM) VM_REPO_TGT=update-apt-repo GPG_KEYID=$(GPG_KEYID)
+	make vagrant-pull-repo VM_GUEST=$(DEB_VM) REPO_DIR=$(APTLY_DIR)
+	make vagrant-teardown VM_GUEST=$(DEB_VM)
 
 yum-repo-via-vagrant:
-	make pull-yum-repo
-	make vagrant-setup VM_DIR=build/$(RHEL_VM) VM_CFG=-rocky8-dev
-	make vagrant-sync-src VM_DIR=build/$(RHEL_VM)
-	make vagrant-push-pkg VM_DIR=build/$(RHEL_VM) VM_PKG=$(DEB3_PKG)
-	make vagrant-update-repo VM_DIR=build/$(RHEL_VM) VM_REPO_TGT=update-yum-repo
-	make push-yum-repo
-	make vagrant-teardown VM_DIR=build/$(DEB_VM)
+	make pull-repo REPO_NAME=yum REPO_DIR=$(YUM_DIR)
+	make vagrant-setup VM_GUEST=$(RHEL_VM)
+	make vagrant-sync-gpg VM_GUEST=$(RHEL_VM)
+	make vagrant-sync-src VM_GUEST=$(RHEL_VM)
+	make vagrant-push-pkg VM_GUEST=$(RHEL_VM) VM_PKG=$(RHEL8_PKG)
+	make vagrant-push-pkg VM_GUEST=$(RHEL_VM) VM_PKG=$(RHEL9_PKG)
+	make vagrant-push-repo VM_GUEST=$(RHEL_VM) REPO_DIR=$(YUM_DIR)
+	make vagrant-update-repo VM_GUEST=$(RHEL_VM) VM_REPO_TGT=update-yum-repo GPG_KEYID=$(GPG_KEYID)
+	make vagrant-pull-repo VM_GUEST=$(RHEL_VM) REPO_DIR=$(YUM_DIR)
+	make vagrant-teardown VM_GUEST=$(RHEL_VM)
 
 suse-repo-via-vagrant:
-	make pull-suse-repo
-	make vagrant-setup VM_DIR=build/$(SUSE_VM) VM_CFG=-suse15-dev
-	make vagrant-sync-src VM_DIR=build/$(SUSE_VM)
-	make vagrant-push-pkg VM_DIR=build/$(SUSE_VM) VM_PKG=$(DEB3_PKG)
-	make vagrant-update-repo VM_DIR=build/$(SUSE_VM) VM_REPO_TGT=update-suse-repo
-	make push-suse-repo
-	make vagrant-teardown VM_DIR=build/$(DEB_VM)
+	make pull-repo REPO_NAME=suse REPO_DIR=$(SUSE_DIR)
+	make vagrant-setup VM_GUEST=$(SUSE_VM)
+	make vagrant-sync-gpg VM_GUEST=$(SUSE_VM)
+	make vagrant-sync-src VM_GUEST=$(SUSE_VM)
+	make vagrant-push-pkg VM_GUEST=$(SUSE_VM) VM_PKG=$(SUSE15_PKG)
+	make vagrant-push-repo VM_GUEST=$(SUSE_VM) REPO_DIR=$(SUSE_DIR)
+	make vagrant-update-repo VM_GUEST=$(SUSE_VM) VM_REPO_TGT=update-suse-repo GPG_KEYID=$(GPG_KEYID)
+	make vagrant-pull-repo VM_GUEST=$(SUSE_VM) REPO_DIR=$(SUSE_DIR)
+	make vagrant-teardown VM_GUEST=$(SUSE_VM)

@@ -8,17 +8,21 @@ checklist for doing a release:
 3. Make sure all changes have been logged
      1. doc_src/changes.md
      2. doc_src/upgrade.md
-     3. make debian-changelog
-     4. make redhat-changelog
-     5. make suse-changelog
 4. Build the documentation
      1. make build-docs
 5. Create the packages
-     1. make pypi-package
-     2. make debian-package
-     3. make redhat-package
-     4. make suse-package
-6. Check of each installation method
+     1. make src-tarball
+     2. make pypi-package
+     3a. make debian-changelog
+     3b. make debian-package-via-vagrant GPG_KEYID=xxx
+     3c. make apt-repo-via-vagrant GPG_KEYID=xxx
+     4a. make redhat-changelog
+     4b. make redhat-package-via-vagrant GPG_KEYID=xxx
+     4c. make yum-repo-via-vagrant GPG_KEYID=xxx
+     5a. make suse-changelog
+     5b. make suse-package-via-vagrant GPG_KEYID=xxx
+     5c. make suse-repo-via-vagrant GPG_KEYID=xxx
+6. Check each installation method
      1. do a git install + upgrade
      2. do a pip install + upgrade
      3. do a debian install + upgrade
@@ -32,38 +36,23 @@ checklist for doing a release:
      1. make upload-pypi
 9. Upload to weewx.com
      1. make upload-docs
-     2. make upload-src
-     3. make upload-debian
-     4. make upload-redhat
-     5. make upload-suse
-10. Update the deb repository
-     1. make pull-apt-repo
-     2. make update-apt-repo
-     3. make push-apt-repo
-11. Update the redhat repository
-     1. make pull-yum-repo
-     2. make update-yum-repo
-     3. make push-yum-repo
-12. Update the suse repository
-     1. make pull-suse-repo
-     2. make update-suse-repo
-     3. make push-suse-repo
-13. Reshuffle files on the server
+     2. make upload-all
+10. Move files on the server from staging to production
      1. make release
      2. make release-apt-repo
      3. make release-yum-repo
      4. make release-suse-repo
-14. If minor version changes, update doc links in the website repository
+11. If minor version changes, update doc links in the website repository
      1. change URL= in docs/*.html
      2. change version in docs/weedocs.js
      3. change symlink docs/latest
-15. Announce the release to the weewx user's group.
+12. Announce the release to the weewx user's group.
 
 
 pre-requisites ----------------------------------------------------------------
 
 Building the documentation requires mkdocs, which is installed using pip.
-Signing packages requires gpg and local copy of authorized private+public keys.
+Signing packages requires gpg and local copy of private+public keys.
 Verifying the packages requires rpmlint/lintian.
 The debian repo management requires aptly.
 The redhat repo management requires createrepo.
@@ -82,6 +71,7 @@ To build debian package install the following (use 'apt install'):
   gpg
   debhelper
   lintian
+  aptly           only needed if you will create and update repositories
 
 To build redhat package install the following (use 'yum install'):
   git
@@ -91,13 +81,14 @@ To build redhat package install the following (use 'yum install'):
   rpm-sign
   rpmlint
   rpmdevtools
+  createrepo_c    only needed if you will create and update repositories
 
 To build suse package install the following (use 'zypper install'):
   git
   rsync
   rpm-build
   rpmlint
-  createrepo_c
+  createrepo_c    only needed if you will create and update repositories
 
 
 howto -------------------------------------------------------------------------
@@ -372,12 +363,6 @@ there are multiple changelogs:
   pkg/changelog.el - changes to the redhat packaging
   pkg/changelog.suse - changes to the suse packaging
 
-when signing RPMs, gpg info must match the name and email in the latest package
-changelog entry.
-
-when signing apt Release using aptly, beware that aptly uses the first gpg key
-that it finds.  that might not be what you want.
-
 the debian changelog *must* have a version number that matches the app version.
 the redhat package will build if the version numbers do not match.  use the
 redhat-changelog and debian-changelog targets to ensure that changelog versions
@@ -439,11 +424,19 @@ use a known-working python.
 
 signing packages --------------------------------------------------------------
 
-gpg is used to sign the deb repository and rpm packages.  SHA1 is no longer
-acceptable for signing, so be sure that your gpg keys and the signing command
-use SHA256 instead.  this should be the default when building on redhat9 and
-later.  if it is not the default, then it can be forced with a change to the
-signing macro in .rpmmacros - add the line --digest-algo sha256
+gpg is used to sign the deb repository and rpm packages.
+
+When signing RPMs, gpg info must match the name and email in the latest package
+changelog entry.
+
+When signing apt Release using aptly, beware that aptly uses the first gpg key
+that it finds.  that might not be what you want.
+
+SHA1 is no longer acceptable for signing, so be sure that your gpg keys and
+the signing command use SHA256 instead.  This should be the default when
+building on redhat9 and later.  If it is not the default, then it can be forced
+with a change to the signing macro in .rpmmacros - add the line
+--digest-algo sha256
 
 %__gpg_sign_cmd			%{__gpg} \
 	gpg --no-verbose --no-armor \

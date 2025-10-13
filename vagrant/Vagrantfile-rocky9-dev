@@ -5,8 +5,8 @@ Vagrant.configure("2") do |config|
   config.vm.box_check_update = false
   config.vm.network "public_network"
   config.vm.network :forwarded_port, guest: 22, host: 4003, id: "ssh"
-  config.vm.synced_folder ".", "/vagrant", disabled: true
   config.vm.provider "virtualbox" do |vb|
+    vb.gui = false
     vb.memory = "2048"
   end
   config.vm.provision "shell", inline: <<-SHELL
@@ -17,5 +17,6 @@ Vagrant.configure("2") do |config|
     yum install -y rpm-sign
     yum install -y rpmlint
     yum install -y rpmdevtools
+    yum install -y createrepo_c
   SHELL
 end
