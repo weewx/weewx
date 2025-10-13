@@ -423,12 +423,15 @@ REPO_DIR=/var/tmp/repo
 REPO_NAME=repo
 pull-repo:
 	mkdir -p $(REPO_DIR)
-	rsync -Oarvz --delete $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/$(REPO_NAME)/ $(REPO_DIR)
+	rsync -Ortlogvz --delete $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/$(REPO_NAME)/ $(REPO_DIR)
 
 push-repo:
 	find $(REPO_DIR) -type f -exec chmod 664 {} \;
 	find $(REPO_DIR) -type d -exec chmod 2775 {} \;
 	rsync -Ortlvz --delete $(REPO_DIR)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/$(REPO_NAME)-test
+
+release-repo:
+	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz --delete /var/www/html/$(REPO_NAME)-test/ /var/www/html/$(REPO_NAME)"
 
 # update the repository html index files, without touching the contents of the
 # repositories.  this is rarely necessary, since the index files are included
@@ -476,7 +479,7 @@ push-apt-repo:
 
 # copy the testing repository onto the production repository
 release-apt-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz --delete /var/www/html/aptly-test/ /var/www/html/aptly"
+	make release-repo REPO_NAME=aptly REPO_DIR=$(APTLY_DIR)
 
 # 'yum-repo' is only used when creating a new yum repository from scratch
 # the index.html is not part of an official rpm repository.  it is included
@@ -512,9 +515,8 @@ endif
 push-yum-repo:
 	make push-repo REPO_NAME=yum REPO_DIR=$(YUM_DIR)
 
-# copy the testing repository onto the production repository
 release-yum-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz --delete /var/www/html/yum-test/ /var/www/html/yum"
+	make release-repo REPO_NAME=yum REPO_DIR=$(YUM_DIR)
 
 # 'suse-repo' is only used when creating a new suse repository from scratch
 # the index.html is not part of an official rpm repository.  it is included
@@ -542,11 +544,10 @@ ifeq ("$(SIGN)","1")
 endif
 
 push-suse-repo:
-	make push-repo REPO_NAME=suse REPO_DIR=$(SUSE_DIR)
+	make push-repo 
 
-# copy the testing repository onto the production repository
 release-suse-repo:
-	ssh $(USER)@$(WEEWX_COM) "rsync -Ologrvz --delete /var/www/html/suse-test/ /var/www/html/suse"
+	make release-repo REPO_NAME=suse REPO_DIR=$(SUSE_DIR)
 
 
 ###############################################################################
