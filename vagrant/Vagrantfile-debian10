@@ -11,12 +11,8 @@ Vagrant.configure("2") do |config|
   end
   config.vm.provision "shell", inline: <<-SHELL
     apt-get update
-    apt-get install -y build-essential
     apt-get install -y git
     apt-get install -y rsync
     apt-get install -y gpg
-    apt-get install -y debhelper
-    apt-get install -y lintian
-    apt-get install -y aptly
   SHELL
 end
