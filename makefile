@@ -652,7 +652,7 @@ debian-via-vagrant:
 
 redhat-via-vagrant:
 	make vagrant-setup VM_DIR=build/$(RHEL_VM) VM_CFG=-rocky8-dev
-	make vagrant-sync-gpg VM_DIR=build/$(DEB_VM)
+	make vagrant-sync-gpg VM_DIR=build/$(RHEL_VM)
 	make vagrant-sync-src VM_DIR=build/$(RHEL_VM)
 	make vagrant-build VM_DIR=build/$(RHEL_VM) VM_TGT=redhat-package
 	make vagrant-pull-pkg VM_DIR=build/$(RHEL_VM) VM_PKG=$(RHEL8_PKG)
@@ -661,7 +661,7 @@ redhat-via-vagrant:
 
 suse-via-vagrant:
 	make vagrant-setup VM_DIR=build/$(SUSE_VM) VM_CFG=-suse15-dev
-	make vagrant-sync-gpg VM_DIR=build/$(DEB_VM)
+	make vagrant-sync-gpg VM_DIR=build/$(SUSE_VM)
 	make vagrant-sync-src VM_DIR=build/$(SUSE_VM)
 	make vagrant-build VM_DIR=build/$(SUSE_VM) VM_TGT=suse-package
 	make vagrant-pull-pkg VM_DIR=build/$(SUSE_VM) VM_PKG=$(SUSE15_PKG)
