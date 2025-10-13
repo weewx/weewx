@@ -1,6 +1,6 @@
 # spec for building a weewx rpm for redhat or suse systems
 # License: GPLv3
-# Author: (c) 2013-2024 Matthew Wall
+# Author: (c) 2013-2025 Matthew Wall
 
 # the operating system release number is specified externaly, so that we can
 # do cross-release (but not cross-platform) packaging.
