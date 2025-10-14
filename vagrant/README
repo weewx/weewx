@@ -1,4 +1,8 @@
-port allocations for guests
+This directory contains vagrant configuration files for virtual machine guests.
+The -dev extension indicates that the configuration includes packages that are
+used for building weewx.
+
+These are the port allocations for guests (so you can run them concurrently):
 
 4001 debian12-dev
 4002 rocky8-dev
@@ -7,3 +11,4 @@ port allocations for guests
 4005 debian10
 4006 freebsd14
 4007 rocky10
+4008 debian13
