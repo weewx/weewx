@@ -358,13 +358,16 @@ endif
 redhat-changelog:
 	make rpm-changelog RPMOS=el
 
-redhat-package: rpm-package-rh8 rpm-package-rh9
+redhat-package: rpm-package-rh8 rpm-package-rh9 rpm-package-rh10
 
 rpm-package-rh8:
 	make rpm-package RPMOS=el OSREL=8
 
 rpm-package-rh9:
 	make rpm-package RPMOS=el OSREL=9
+
+rpm-package-rh10:
+	make rpm-package RPMOS=el OSREL=10
 
 suse-changelog:
 	make rpm-changelog RPMOS=suse
@@ -378,7 +381,7 @@ rpm-package-suse15:
 check-rpm:
 	rpmlint -f pkg/rpmlint.$(RPMOS) $(DSTDIR)/$(RPMPKG)
 
-check-redhat: check-rh8 check-rh9
+check-redhat: check-rh8 check-rh9 check-rh10
 
 check-rh8:
 	make check-rpm RPMOS=el OSREL=8
@@ -386,19 +389,25 @@ check-rh8:
 check-rh9:
 	make check-rpm RPMOS=el OSREL=9
 
+check-rh10:
+	make check-rpm RPMOS=el OSREL=10
+
 check-suse:
 	make check-rpm RPMOS=suse OSREL=15
 
 upload-rpm:
 	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
-upload-redhat: upload-rh8 upload-rh9
+upload-redhat: upload-rh8 upload-rh9 upload-rh10
 
 upload-rh8:
 	make upload-rpm RPMOS=el OSREL=8
 
 upload-rh9:
 	make upload-rpm RPMOS=el OSREL=9
+
+upload-rh10:
+	make upload-rpm RPMOS=el OSREL=10
 
 upload-suse:
 	make upload-rpm RPMOS=suse OSREL=15
@@ -407,15 +416,22 @@ upload-suse:
 DEB3_PKG=python3-weewx_$(DEBVER)_$(DEBARCH).deb
 RHEL8_PKG=weewx-$(RPMVER).el8.$(RPMARCH).rpm
 RHEL9_PKG=weewx-$(RPMVER).el9.$(RPMARCH).rpm
+RHEL10_PKG=weewx-$(RPMVER).el10.$(RPMARCH).rpm
 SUSE15_PKG=weewx-$(RPMVER).suse15.$(RPMARCH).rpm
 upload-pkgs:
-	scp $(DSTDIR)/$(SRCPKG) $(DSTDIR)/$(DEB3_PKG) $(DSTDIR)/$(RHEL8_PKG) $(DSTDIR)/$(RHEL9_PKG) $(DSTDIR)/$(SUSE15_PKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
+	scp $(DSTDIR)/$(SRCPKG) \
+ $(DSTDIR)/$(DEB3_PKG) \
+ $(DSTDIR)/$(RHEL8_PKG) \
+ $(DSTDIR)/$(RHEL9_PKG) \
+ $(DSTDIR)/$(RHEL10_PKG) \
+ $(DSTDIR)/$(SUSE15_PKG) \
+ $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # move files from the upload directory to the release directory and set up the
 # symlinks to them from the download root directory
 DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
 RELDIR=$(WEEWX_DOWNLOADS)/released_versions
-ARTIFACTS=$(DEB3_PKG) $(RHEL8_PKG) $(RHEL9_PKG) $(SUSE15_PKG) $(SRCPKG)
+ARTIFACTS=$(DEB3_PKG) $(RHEL8_PKG) $(RHEL9_PKG) $(RHEL10_PKG) $(SUSE15_PKG) $(SRCPKG)
 release-pkgs:
 	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
 	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
@@ -494,25 +510,25 @@ release-apt-repo:
 YUM_DIR=/var/tmp/repo-yum
 YUM_REPO=$(YUM_DIR)/weewx
 yum-repo:
-	mkdir -p $(YUM_REPO)/{el7,el8,el9}/RPMS
+	mkdir -p $(YUM_REPO)/{el7,el8,el9,el10}/RPMS
 	cp -p pkg/index-yum.html $(YUM_DIR)/index.html
 	cp -p pkg/weewx-el.repo $(YUM_DIR)/weewx.repo
 	cp -p pkg/weewx-el7.repo $(YUM_DIR)
 	cp -p pkg/weewx-el8.repo $(YUM_DIR)
 	cp -p pkg/weewx-el9.repo $(YUM_DIR)
+	cp -p pkg/weewx-el10.repo $(YUM_DIR)
 
 pull-yum-repo:
 	make pull-repo REPO_NAME=yum REPO_DIR=$(YUM_DIR)
 
 update-yum-repo:
-	mkdir -p $(YUM_REPO)/el8/RPMS
-	cp -p $(DSTDIR)/weewx-$(RPMVER).el8.$(RPMARCH).rpm $(YUM_REPO)/el8/RPMS
-	createrepo $(YUM_REPO)/el8
-	mkdir -p $(YUM_REPO)/el9/RPMS
-	cp -p $(DSTDIR)/weewx-$(RPMVER).el9.$(RPMARCH).rpm $(YUM_REPO)/el9/RPMS
-	createrepo $(YUM_REPO)/el9
+	for os in el8 el9 el10; do \
+  mkdir -p $(YUM_REPO)/$$os/RPMS; \
+  cp -p $(DSTDIR)/weewx-$(RPMVER).$$os.$(RPMARCH).rpm $(YUM_REPO)/$$os/RPMS; \
+  createrepo $(YUM_REPO)/$$os; \
+done
 ifneq ("$(GPG_KEYID)","")
-	for os in el8 el9; do \
+	for os in el8 el9 el10; do \
   gpg --export --armor > $(YUM_REPO)/$$os/repodata/repomd.xml.key; \
   gpg -abs -o $(YUM_REPO)/$$os/repodata/repomd.xml.asc.new $(YUM_REPO)/$$os/repodata/repomd.xml; \
   mv $(YUM_REPO)/$$os/repodata/repomd.xml.asc.new $(YUM_REPO)/$$os/repodata/repomd.xml.asc; \
@@ -671,6 +687,7 @@ redhat-package-via-vagrant:
 	make vagrant-build VM_GUEST=$(RHEL_VM) VM_TGT=redhat-package GPG_KEYID=$(GPG_KEYID)
 	make vagrant-pull-pkg VM_GUEST=$(RHEL_VM) VM_PKG=$(RHEL8_PKG)
 	make vagrant-pull-pkg VM_GUEST=$(RHEL_VM) VM_PKG=$(RHEL9_PKG)
+	make vagrant-pull-pkg VM_GUEST=$(RHEL_VM) VM_PKG=$(RHEL10_PKG)
 	make vagrant-teardown VM_GUEST=$(RHEL_VM)
 
 suse-package-via-vagrant:
@@ -707,6 +724,7 @@ yum-repo-via-vagrant:
 	make vagrant-sync-src VM_GUEST=$(RHEL_VM)
 	make vagrant-push-pkg VM_GUEST=$(RHEL_VM) VM_PKG=$(RHEL8_PKG)
 	make vagrant-push-pkg VM_GUEST=$(RHEL_VM) VM_PKG=$(RHEL9_PKG)
+	make vagrant-push-pkg VM_GUEST=$(RHEL_VM) VM_PKG=$(RHEL10_PKG)
 	make vagrant-push-repo VM_GUEST=$(RHEL_VM) REPO_DIR=$(YUM_DIR)
 	make vagrant-update-repo VM_GUEST=$(RHEL_VM) VM_REPO_TGT=update-yum-repo GPG_KEYID=$(GPG_KEYID)
 	make vagrant-pull-repo VM_GUEST=$(RHEL_VM) REPO_DIR=$(YUM_DIR)

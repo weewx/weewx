@@ -41,6 +41,14 @@
 %define deps python3, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
 %define python python3
 %endif
+%if "%{os_target}" == "10"
+%define relos .el10
+# rh10 ships with python 3.12, which has pre-built modules required by weewx.
+# python3-cheetah, python3-pillow are in epel
+# ephem is not available for redhat10
+%define deps python3, python3-configobj, python3-cheetah, python3-pillow, python3-pyserial, python3-pyusb
+%define python python3
+%endif
 %endif
 
 %global release %{relnum}%{?relos:%{relos}}
