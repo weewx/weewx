@@ -461,8 +461,8 @@ class Manager:
         except weedb.IntegrityError:
             if not update:
                 raise
-            set_stmt = ', '.join(["%s=?" % k for k in key_list])
-            where_stmt = ' AND '.join(["%s IS ?" % k for k in key_list])
+            set_stmt = ', '.join(["`%s`=?" % k for k in key_list])
+            where_stmt = ' AND '.join(["`%s` <=> ?" % k for k in key_list])
             sql_update_stmt = "UPDATE %s SET %s WHERE dateTime = ? AND NOT (%s)" % (self.table_name, set_stmt, where_stmt)
             cursor.execute(sql_update_stmt, value_list + [record['dateTime'],] + value_list)
             if log_success:
@@ -577,7 +577,7 @@ class Manager:
             new_value (float | str): The updated value
         """
 
-        self.connection.execute("UPDATE %s SET %s=? WHERE dateTime=?" %
+        self.connection.execute("UPDATE %s SET `%s`=? WHERE dateTime=?" %
                                 (self.table_name, obs_type), (new_value, timestamp))
 
     def getSql(self, sql, sqlargs=(), cursor=None):
