@@ -248,6 +248,11 @@ class Cursor(weedb.Cursor):
 
         return self
 
+    @property
+    def rowcount(self):
+        """Return the number of rows affected by the last execute() call."""
+        return self.cursor.rowcount
+
     def fetchone(self):
         # Get a result from the MySQL cursor, then run it through the _massage
         # filter below
