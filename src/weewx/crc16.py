@@ -44,10 +44,32 @@ _table = [
 
 
 def crc16(byte_buf, crc_start=0):
-    """ Calculate CRC16 sum"""
+    """
+    Compute the CRC-16 checksum using a predefined table. It supports both strings and
+    bytes-like objects as input.
 
-    return reduce(lambda crc_sum, ch: (_table[(crc_sum >> 8) ^ ch] ^ (crc_sum << 8)) & 0xffff,
-                  byte_buf, crc_start)
+    Parameters:
+    byte_buf : bytes, str
+        The input data for which the CRC-16 checksum is calculated. Can be either
+        a bytes-like object or a string.
+    crc_start : int, optional
+        The starting CRC value to initialize the calculation. Defaults to 0.
+
+    Returns:
+    int
+        The computed CRC-16 checksum as a 16-bit integer.
+    """
+
+    try:
+        # For backwards compatibility in case byte_buf is actually a string.
+        byte_iter = [ord(x) for x in byte_buf]
+    except TypeError:
+        byte_iter = byte_buf
+
+    crc_sum = reduce(lambda crc, ch: (_table[(crc >> 8) ^ ch] ^ (crc << 8)) & 0xffff, byte_iter,
+                     crc_start)
+
+    return crc_sum
 
 
 if __name__ == '__main__':
