@@ -172,7 +172,7 @@ class AlmanacTest(unittest.TestCase):
     @unittest.skipIf(not pyephem_installed, "Skipping test_exceptions_pyephem: no pyephem")
     def test_exceptions_pyephem(self):
         # Try a nonsense body
-        with self.assertRaises(KeyError):
+        with self.assertRaises(AttributeError):
             self.almanac.bar.rise
         # Try a nonsense tag
         with self.assertRaises(AttributeError):
