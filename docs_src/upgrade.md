@@ -124,6 +124,8 @@ directly underneath. When you're done, it should look something like this:
   </table>
 </div>
 
+Finally, `weewx.restx.StdWOWBE` should be added into `restful_services`.
+
 
 ### Luminosity and Illuminance
 
