@@ -8,6 +8,9 @@ After=time-sync.target
 Wants=network-online.target
 After=network-online.target
 
+After=mariadb.service mysqld.service
+Wants=mariadb.service mysqld.service
+
 [Service]
 ExecStart=weewxd /etc/weewx/weewx.conf
 StandardOutput=null
