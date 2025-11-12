@@ -91,3 +91,14 @@ again assuming user `weewx` with password `weewx`. Adjust as necessary.
 CREATE USER 'weewx'@'localhost' IDENTIFIED BY 'weewx';
 GRANT select, update, create, delete, insert, alter, drop ON weewx.* TO weewx@localhost;
 ```
+
+### 5. Make sure MySQL/MariaDB starts before WeeWX
+
+You may want to add the following to your `weewx.service` file (generally 
+located in `/etc/systemd/system/weewx.service`), under the `[Unit]` section:
+
+```ini
+After=mariadb.service mysqld.service
+Wants=mariadb.service mysqld.service
+```
+This will ensure that MySQL/MariaDB starts before WeeWX.

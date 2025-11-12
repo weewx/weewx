@@ -8,6 +8,14 @@ After=time-sync.target
 Wants=network-online.target
 After=network-online.target
 
+# If you are using MySQL uncomment the following lines:
+# After=mysqld.service
+# Wants=mysqld.service
+
+# If you are using MariaDB uncomment the following lines:
+# After=mariadb.service
+# Wants=mariadb.service
+
 [Service]
 ExecStart=WEEWX_PYTHON WEEWXD WEEWX_CFGDIR/weewx.conf
 StandardOutput=null
