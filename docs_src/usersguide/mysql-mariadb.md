@@ -94,8 +94,9 @@ GRANT select, update, create, delete, insert, alter, drop ON weewx.* TO weewx@lo
 
 ### 5. Make sure MySQL/MariaDB starts before WeeWX
 
-You may want to add the following to your `weewx.service` file (generally 
-located in `/etc/systemd/system/weewx.service`), under the `[Unit]` section:
+Locate your WeeWX service file. Depending on your installation method, it will
+located at either `/lib/systemd/system/weewx.service` or `/etc/systemd/system/weewx.service`).
+Under the `[Unit]` section, add the following lines:
 
 ```ini
 After=mariadb.service mysqld.service
