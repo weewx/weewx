@@ -3,6 +3,10 @@ WeeWX change history
 
 ### 5.2.1 MM/DD/YYYY
 
+Remove unnecessary `UNIQUE` index on `PRIMARY KEY` columns in SQLite, achieving
+size reduction of ~10%.  Existing database schemas are not modified.  Users
+desiring size reduction are advised to consider manually migrating.
+
 Fix problem that prevented `weectl database reconfigure` from working in cases
 where a schema was specified.
 

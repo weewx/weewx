@@ -150,7 +150,7 @@ class TestMySQL(unittest.TestCase):
         with Cursor(user='weewx1', password='weewx1') as cursor:
             cursor.execute("CREATE DATABASE test_weewx1")
             cursor.execute("CREATE TABLE test_weewx1.test1 "
-                           "( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, col1 int, col2 int)")
+                           "( dateTime INTEGER NOT NULL PRIMARY KEY, col1 int, col2 int)")
             cursor.execute("INSERT INTO test_weewx1.test1 "
                            "(dateTime, col1, col2) VALUES (1, 10, 20)")
             with self.assertRaises(IntegrityError) as e:
