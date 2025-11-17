@@ -268,7 +268,7 @@ class Cursor(sqlite3.Cursor, weedb.Cursor):
             if obs_name in column_names:
                 continue
             no_null_str = " NOT NULL" if no_null else ""
-            pk_str = " UNIQUE PRIMARY KEY" if pk else ""
+            pk_str = " PRIMARY KEY" if pk else ""
             default_str = " DEFAULT %s" % default if default is not None else ""
             create_list.append("`%s` %s%s%s%s" % (obs_name, obs_type, no_null_str,
                                                   pk_str, default_str))

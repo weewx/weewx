@@ -3,7 +3,7 @@
 #
 #      See the file LICENSE.txt for your full rights.
 #
-table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
+table = [('dateTime',             'INTEGER NOT NULL PRIMARY KEY'),
          ('usUnits',              'INTEGER NOT NULL'),
          ('interval',             'INTEGER NOT NULL'),
          ('altimeter',            'REAL'),

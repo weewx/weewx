@@ -21,7 +21,7 @@
 # with V4, a new style was added, which allows schema for the daily summaries
 # to be expressed explicitly.
 # =============================================================================
-schema = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
+schema = [('dateTime',             'INTEGER NOT NULL PRIMARY KEY'),
           ('usUnits',              'INTEGER NOT NULL'),
           ('interval',             'INTEGER NOT NULL'),
           ('barometer',            'REAL'),

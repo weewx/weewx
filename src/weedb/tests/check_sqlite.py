@@ -100,7 +100,7 @@ class TestSqlite3(unittest.TestCase):
 
     def test_duplicate_key(self):
         with Cursor(sqdb1) as cursor:
-            cursor.execute("CREATE TABLE test1 ( dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, col1 int, col2 int)")
+            cursor.execute("CREATE TABLE test1 ( dateTime INTEGER NOT NULL PRIMARY KEY, col1 int, col2 int)")
             cursor.execute("INSERT INTO test1 (dateTime, col1, col2) VALUES (1, 10, 20)")
             with self.assertRaises(IntegrityError) as e:
                 cursor.execute("INSERT INTO test1 (dateTime, col1, col2) VALUES (1, 30, 40)")

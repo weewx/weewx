@@ -13,7 +13,7 @@
 # =============================================================================
 # NB: This schema is specified using the WeeWX V4 "new-style" schema.
 # =============================================================================
-table = [('dateTime',             'INTEGER NOT NULL UNIQUE PRIMARY KEY'),
+table = [('dateTime',             'INTEGER NOT NULL PRIMARY KEY'),
          ('usUnits',              'INTEGER NOT NULL'),
          ('interval',             'INTEGER NOT NULL'),
          ('altimeter',            'REAL'),

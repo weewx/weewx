@@ -48,10 +48,10 @@ class Common(unittest.TestCase):
             weedb.create(self.db_dict)
         with weedb.connect(self.db_dict) as _connect:
             with weedb.Transaction(_connect) as _cursor:
-                _cursor.execute("CREATE TABLE test1 (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY,"
+                _cursor.execute("CREATE TABLE test1 (dateTime INTEGER NOT NULL PRIMARY KEY,"
                                 " min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL,"
                                 " count INTEGER, descript CHAR(20));")
-                _cursor.execute("CREATE TABLE test2 (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY,"
+                _cursor.execute("CREATE TABLE test2 (dateTime INTEGER NOT NULL PRIMARY KEY,"
                                 " min REAL, mintime INTEGER, max REAL, maxtime INTEGER, sum REAL, "
                                 "count INTEGER, descript CHAR(20));")
                 for irec in range(20):
@@ -151,7 +151,7 @@ class Common(unittest.TestCase):
         with weedb.connect(self.db_dict) as _connect:
             with _connect.cursor() as _cursor:
                 _cursor.execute(
-                    "CREATE TABLE test1 (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, x REAL )")
+                    "CREATE TABLE test1 (dateTime INTEGER NOT NULL PRIMARY KEY, x REAL )")
 
                 # Now start the transaction
                 _connect.begin()
@@ -176,7 +176,7 @@ class Common(unittest.TestCase):
             # create the table outside the transaction. We're not as concerned about a
             # transaction failing when creating a table, because it only happens the first time
             # weewx starts up.
-            _connect.execute("CREATE TABLE test1 (dateTime INTEGER NOT NULL UNIQUE PRIMARY KEY, "
+            _connect.execute("CREATE TABLE test1 (dateTime INTEGER NOT NULL PRIMARY KEY, "
                              "x REAL );")
 
             # We're going to trigger the rollback by raising a bogus exception.
