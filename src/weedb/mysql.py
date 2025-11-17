@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2025 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -8,16 +8,19 @@
 import decimal
 
 try:
+    # Typically supplied by the "mysqlclient" package.
     import MySQLdb
 except ImportError:
-    # Maybe the user has "pymysql", a pure-Python version?
+    # Typically supplied by the "pymysql" package, a pure-Python version.
     import pymysql as MySQLdb
-    from pymysql import DatabaseError as MySQLDatabaseError
+    from pymysql import (DatabaseError as MySQLDatabaseError,
+                         InterfaceError as MySQLInterfaceError)
 else:
     try:
         from MySQLdb import DatabaseError as MySQLDatabaseError
     except ImportError:
-        from _mysql_exceptions import DatabaseError as MySQLDatabaseError
+        from _mysql_exceptions import (DatabaseError as MySQLDatabaseError,
+                                       InterfaceError as MySQLInterfaceError)
 
 from weeutil.weeutil import to_bool, natural_compare
 import weedb
@@ -60,6 +63,8 @@ def guard(fn):
             # Default exception is weedb.DatabaseError
             klass = exception_map.get(errno, weedb.DatabaseError)
             raise klass(e)
+        except MySQLInterfaceError as e:
+            raise weedb.DisconnectError(e)
 
     return guarded_fn
 
