@@ -11,7 +11,7 @@ Fix problem that prevented `weectl database reconfigure` from working in cases
 where a schema was specified.
 
 Fix problem when importing data into a MySQL database. PR
-#[1025](https://github.com/weewx/weewx/pull/1025). Thanks to user Robert!
+[#1025](https://github.com/weewx/weewx/pull/1025). Thanks to user Robert!
 
 Fix problem that prevented `weewxd` from restarting reliably if a MySQL
 connection was lost. Fixes [Issue #1036](https://github.com/weewx/weewx/pull/1036).
@@ -31,14 +31,13 @@ namespace. Addresses [Issue #993](https://github.com/weewx/weewx/issues/993).
 The WeeWX Almanac is now extensible, allowing other astronomy packages to be
 used besides `pyephem`. In particular, a WeeWX extension that uses the
 [Skyfield](https://rhodesmill.org/skyfield/) package is available and can be
-installed. See [Issue #981](https://github.com/weewx/weewx/issues/981) and [PR
-#988](https://github.com/weewx/weewx/pull/988). Thanks to user Johanna!
+installed. See [Issue #981](https://github.com/weewx/weewx/issues/981) 
+and [PR #988](https://github.com/weewx/weewx/pull/988). Thanks to user Johanna!
 
 Fix LOGNAME bug in the weewx-multi sysV script.  Thanks to Glenn McKechnie.
 
-Added `illuminance` to the `wview_extended` schema. See [Issue
-#992](https://github.com/weewx/weewx/issues/991) and [PR
-#992](https://github.com/weewx/weewx/pull/992/files). Thanks to user Jeremy!
+Added `illuminance` to the `wview_extended` schema. See [Issue #992](https://github.com/weewx/weewx/issues/991) 
+and [PR #992](https://github.com/weewx/weewx/pull/992/files). Thanks to user Jeremy!
 
 Fix typo that causes phantom values of `soilMoist3` to appear with VantageVue
 stations.
@@ -62,15 +61,13 @@ Ben Cotton!
 In the Cumulus import code, the prefix `cur_` is used to signify a current value
 for most observation types. However, there was one exception: `curr_in_temp`.
 The utility and documentation have been changed to use `cur_in_temp` (one
-'`r`'), making all types consistent. Fixes [Issue
-#1006](https://github.com/weewx/weewx/issues/1006).
+'`r`'), making all types consistent. Fixes [Issue #1006](https://github.com/weewx/weewx/issues/1006).
 
 Fix a problem caused by an assumption that delta times are always in seconds.
 Fixes issue [Issue #1009](https://github.com/weewx/weewx/issues/1009).
 
 Fix bug that prevented arbitrary types from being used with `weectl database
-add-column`. Fixes issue [Issue
-#1007](https://github.com/weewx/weewx/issues/1007).
+add-column`. Fixes issue [Issue #1007](https://github.com/weewx/weewx/issues/1007).
 
 Fix bug that prevented MySQL and MariaDB versions greater than 10.0 from
 working. Fixes issue [Issue #1010](https://github.com/weewx/weewx/issues/1010).
