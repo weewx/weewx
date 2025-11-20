@@ -27,6 +27,7 @@ from weeutil.weeutil import timestamp_to_string, TimeSpan, bcolors
 OBFUSCATE_MAP = {
     "obfuscate": [
         "apiKey", "api_key", "app_key", "archive_security_key", "id", "key",
+        "forecast_api_id", "forecast_api_secret",
         "oauth_token", "password", "raw_security_key", "token", "user",
         "server_url", "station", "passcode", "server"],
     "do_not_obfuscate": [
