@@ -1245,7 +1245,8 @@ class DaySummaryManager(Manager):
                 every 1000 records.
             trans_days (int): Number of days of archive data to be used for each daily summaries
                 database transaction. [Optional. Default is 5.]
-            key_set (set|None): If not None, only the observation types in this set will be written.
+            key_set (set|None): If not None, only the observation types in this set
+                will be calculated.
 
         Returns:
              tuple[int,int]: A 2-way tuple (nrecs, ndays) where
