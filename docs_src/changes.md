@@ -6,6 +6,9 @@ WeeWX change history
 Allow extra command line options to be passed to extension installer.
 Addresses issue #[1041](https://github.com/weewx/weewx/issues/1041).
 
+Added Astronomical Units as a unit of length. Added `local_djd` as a unit of _local_ time.
+[PR #998](https://github.com/weewx/weewx/pull/998). Thanks to user Karen!
+
 
 ### 5.2.1 MM/DD/YYYY
 
@@ -20,7 +23,7 @@ Fix problem when importing data into a MySQL database. PR
 [#1025](https://github.com/weewx/weewx/pull/1025). Thanks to user Robert!
 
 Fix problem that prevented `weewxd` from restarting reliably if a MySQL
-connection was lost. Fixes [Issue #1036](https://github.com/weewx/weewx/pull/1036).
+connection was lost. Fixes [Issue #1036](https://github.com/weewx/weewx/issues/1036).
 
 Add support for kwargs when using `.series()` tags. PR
 [#1042](https://github.com/weewx/weewx/pull/1042). 

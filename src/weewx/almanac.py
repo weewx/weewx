@@ -79,7 +79,7 @@ class Almanac:
     >>> almanac = Almanac(t, 46.0, -122.0, formatter=weewx.units.get_default_formatter())
     
     Test backwards compatibility with attribute 'moon_fullness':
-    >>> print("Fullness of the moon (rounded) is %.2f%% [%s]" % (almanac._moon_fullness, almanac.moon_phase))
+    >>> print("Fullness of the moon (rounded) is %.2f%% [%s]" % (almanac.moon_fullness, almanac.moon_phase))
     Fullness of the moon (rounded) is 3.00% [new (totally dark)]
 
     Now get a more precise result for fullness of the moon:
@@ -207,7 +207,7 @@ class Almanac:
                  temperature=None,
                  pressure=None,
                  horizon=None,
-                 moon_phases=weeutil.Moon.moon_phases,
+                 texts=None,
                  formatter=None,
                  converter=None):
         """Initialize an instance of Almanac
@@ -225,13 +225,16 @@ class Almanac:
             pressure (float|None): Observer's atmospheric pressure in **mBars**.
                 [Optional. Default is 1010]
             horizon (float|None): Angle of the horizon in degrees [Optional. Default is zero]
-            moon_phases (list): An array of 8 strings with descriptions of the moon
+            texts (dict|None): a dictionary of language dependent texts, basicly an entry
+                'moon_phases' which holds an array of 8 strings with descriptions of the moon
                 phase. [optional. If not given, then weeutil.Moon.moon_phases will be used]
             formatter (weewx.units.Formatter|None): An instance of weewx.units.Formatter
                 with the formatting information to be used.
             converter (weewx.units.Converter|None): An instance of weewx.units.Converter
                 with the conversion information to be used.
         """
+        if texts is None:
+            texts = dict()
         self.time_ts = time_ts if time_ts else time.time()
         self.lat = lat
         self.lon = lon
@@ -239,7 +242,8 @@ class Almanac:
         self.temperature = temperature if temperature is not None else 15.0
         self.pressure = pressure if pressure is not None else 1010.0
         self.horizon = horizon if horizon is not None else 0.0
-        self.moon_phases = moon_phases
+        self.texts = texts
+        self.moon_phases = texts.get('moon_phases',weeutil.Moon.moon_phases)
         self.formatter = formatter or weewx.units.Formatter()
         self.converter = converter or weewx.units.Converter()
         # Check to see whether there is a module that provides more than
@@ -398,6 +402,10 @@ class PyEphemAlmanacType(AlmanacType):
                                                context = 'ephem_day',
                                                formatter=almanac_obj.formatter,
                                                converter=almanac_obj.converter)
+        elif attr.startswith('previous_') or attr.startswith('next_'):
+            # Prevent anything starting with 'previous_' or 'next_' from being misinterpreted as a
+            # heavenly body.
+            raise AttributeError(attr)
         else:
             # The attribute must be a heavenly body (such as 'sun', or 'jupiter').
             # Bind the almanac and the heavenly body together and return as an
@@ -520,6 +528,12 @@ class AlmanacBinder:
                                        formatter=self.almanac.formatter,
                                        converter=self.almanac.converter)
 
+    def __str__(self):
+        """ AlmanacBinder cannot be printed itself. It always needs an 
+            attribute.
+        """
+        raise AttributeError(self.heavenly_body)
+    
     def __getattr__(self, attr):
         """Get the requested observation, such as when the body will rise."""
 
@@ -637,7 +651,10 @@ def _get_ephem_body(heavenly_body):
     except AttributeError:
         # That didn't work. Try a star. If this doesn't work either,
         # then a KeyError exception will be raised.
-        ephem_body = ephem.star(cap_name)
+        try:
+            ephem_body = ephem.star(cap_name)
+        except KeyError:
+            raise AttributeError(heavenly_body)
     except TypeError:
         # Heavenly bodies added by a ephem.readdb() statement are not functions.
         # So, just return the attribute, without calling it:

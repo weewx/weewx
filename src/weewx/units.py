@@ -79,6 +79,12 @@ def kph_to_knot(x):
 def mps_to_knot(x):
     return x * 1.94384449
 
+def dublin_to_epoch(x):
+    return (x - 25567.5) * SECS_PER_DAY
+
+def epoch_to_dublin(x):
+    return x / SECS_PER_DAY + 25567.5
+
 unit_constants = {
     'US'       : weewx.US,
     'METRIC'   : weewx.METRIC,
@@ -268,6 +274,7 @@ USUnits = ListOfDicts({
     "group_illuminance" : "lux",
     "group_interval"    : "minute",
     "group_length"      : "inch",
+    "group_localtime"   : "local_djd",
     "group_moisture"    : "centibar",
     "group_percent"     : "percent",
     "group_power"       : "watt",
@@ -308,6 +315,7 @@ MetricUnits = ListOfDicts({
     "group_illuminance" : "lux",
     "group_interval"    : "minute",
     "group_length"      : "cm",
+    "group_localtime"   : "local_djd",
     "group_moisture"    : "centibar",
     "group_percent"     : "percent",
     "group_power"       : "watt",
@@ -344,6 +352,9 @@ std_groups = {
 
 # Conversion functions to go from one unit type to another.
 conversionDict = {
+    'astronomical_unit': {'meter'            : lambda x : x * 149597870700,
+                          'km'               : lambda x : x * 149597870.7,
+                          'mile'             : lambda x : x * 92955807.23752087},
     'bit'              : {'byte'             : lambda x : x / 8},
     'byte'             : {'bit'              : lambda x : x * 8},
     'cm'               : {'inch'             : lambda x : x / CM_PER_INCH,
@@ -369,9 +380,9 @@ conversionDict = {
     'degree_F_day'     : {'degree_C_day'     : lambda x : x * (5.0/9.0)},
     'degree_K'         : {'degree_C'         : KtoC,
                           'degree_F'         : KtoF},
-    'dublin_jd'        : {'unix_epoch'       : lambda x : (x-25567.5) * SECS_PER_DAY,
-                          'unix_epoch_ms'    : lambda x : (x-25567.5) * SECS_PER_DAY * 1000,
-                          'unix_epoch_ns'    : lambda x : (x-25567.5) * SECS_PER_DAY * 1e06},
+    'dublin_jd'        : {'unix_epoch'       : dublin_to_epoch,
+                          'unix_epoch_ms'    : lambda x : dublin_to_epoch(x) * 1000,
+                          'unix_epoch_ns'    : lambda x : dublin_to_epoch(x) * 1e06},
     'foot'             : {'meter'            : lambda x : x * METER_PER_FOOT},
     'gallon'           : {'liter'            : lambda x : x * 3.78541,
                           'litre'            : lambda x : x * 3.78541,
@@ -404,7 +415,8 @@ conversionDict = {
                           'watt_second'      : lambda x : x * 3.6e6,
                           'watt_hour'        : lambda x : x * 1000.0},
     'km'               : {'meter'            : lambda x : x * 1000.0,
-                          'mile'             : lambda x : x * 0.621371192},
+                          'mile'             : lambda x : x * 0.621371192,
+                          'astronomical_unit': lambda x : x / 149597870.7 },
     'km_per_hour'      : {'mile_per_hour'    : kph_to_mph,
                           'knot'             : kph_to_knot,
                           'meter_per_second' : lambda x : x * 0.277777778},
@@ -436,14 +448,16 @@ conversionDict = {
                           'watt_hour'        : lambda x : x * 1000000 / 3600,
                           'watt_second'      : lambda x : x * 1000000},
     'meter'            : {'foot'             : lambda x : x / METER_PER_FOOT,
-                          'km'               : lambda x : x / 1000.0},
+                          'km'               : lambda x : x / 1000.0,
+                          'astronomical_unit': lambda x : x / 149597870700},
     'meter_per_second' : {'mile_per_hour'    : mps_to_mph,
                           'knot'             : mps_to_knot,
                           'km_per_hour'      : lambda x : x * 3.6},
     'meter_per_second2': {'mile_per_hour2'   : lambda x : x * 2.23693629,
                           'knot2'            : lambda x : x * 1.94384449,
                           'km_per_hour2'     : lambda x : x * 3.6},
-    'mile'             : {'km'               : lambda x : x * 1.609344},
+    'mile'             : {'km'               : lambda x : x * 1.609344,
+                          'astronomical_unit': lambda x : x / 92955807.23752087},
     'mile_per_hour'    : {'km_per_hour'      : lambda x : x * 1.609344,
                           'knot'             : mph_to_knot,
                           'meter_per_second' : lambda x : x * 0.44704},
@@ -469,13 +483,13 @@ conversionDict = {
     'second'           : {'hour'             : lambda x : x/3600.0,
                           'minute'           : lambda x : x/60.0,
                           'day'              : lambda x : x / SECS_PER_DAY},
-    'unix_epoch'       : {'dublin_jd'        : lambda x: x / SECS_PER_DAY + 25567.5,
+    'unix_epoch'       : {'dublin_jd'        : epoch_to_dublin,
                           'unix_epoch_ms'    : lambda x : x * 1000,
                           'unix_epoch_ns'    : lambda x : x * 1000000},
-    'unix_epoch_ms'    : {'dublin_jd'        : lambda x: x / (SECS_PER_DAY * 1000) + 25567.5,
+    'unix_epoch_ms'    : {'dublin_jd'        : lambda x: epoch_to_dublin(x / 1000.0),
                           'unix_epoch'       : lambda x : x / 1000,
                           'unix_epoch_ns'    : lambda x : x * 1000},
-    'unix_epoch_ns'    : {'dublin_jd'        : lambda x: x / (SECS_PER_DAY * 1e06) + 25567.5,
+    'unix_epoch_ns'    : {'dublin_jd'        : lambda x: epoch_to_dublin(x / 1e6),
                           'unix_epoch'       : lambda x : x / 1e06,
                           'unix_epoch_ms'    : lambda x : x / 1000},
     'watt'             : {'kilowatt'         : lambda x : x / 1000.0},
@@ -770,6 +784,13 @@ class Formatter:
                                         time.localtime(t))
             else:
                 val_str = time.strftime(useThisFormat, time.localtime(t))
+            addLabel = False
+        elif val_t[1]=='local_djd':
+            ti = time.gmtime(dublin_to_epoch(val_t[0]))
+            if useThisFormat is None:
+                val_str = time.strftime(self.time_format_dict.get(context, "%d-%b-%Y %H:%M"), ti)
+            else:
+                val_str = time.strftime(useThisFormat, ti)
             addLabel = False
         else:
             # It's not a time. It's a regular value. Get a suitable format string:
