@@ -81,7 +81,7 @@ Website (WOW) which is being decommissioned beginning in January
 2026.
 
 ### WOW-BE
-Posts your weather data to the [WOW-BE service][https://wow.meteo.be].
+Posts your weather data to the [WOW-BE service](https://wow.meteo.be).
 
 This is a relaunched more open data and open software update of the
 WOW service that is being decommissioned beginning early 2026.
