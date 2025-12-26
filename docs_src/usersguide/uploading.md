@@ -22,10 +22,10 @@ These are located in the `[StdRESTful]` section of `weewx.conf`.
 Adds your system to the public weewx map of registered sites at
 [https://weewx.com/stations.html](https://weewx.com/stations.html).
 
-If enabled, the station will periodically (re)register with the
+If enabled, the station will periodically register with the
 weewx station registry to keep its registration active.  Stale
 registrations are automatically removed from the registry and map
-after 
+eventually if they are not reregistered.
 
 This is disabled by default.
 
@@ -116,7 +116,7 @@ Posts your weather data to the [WOW-BE service](https://wow.meteo.be).
 
 This is a relaunched variant of the legacy WOW service above, with a
 stated goal to have more open software and data according to their
-web site..
+web site.
 
 This is disabled by default.
 
