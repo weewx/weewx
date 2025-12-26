@@ -7,18 +7,13 @@ sites.
 A long list of third-party uploaders is available in the 
 [wiki](https://github.com/weewx/weewx/wiki#uploaders).
 
-The built-in uploaders are briefly discussed here. Each is 'disabled'
-by default and may be optionally enabled by editing weewx.conf to
-set 'enable=true' and setting any required parameters for the
-uploader.
+The built-in uploaders are briefly discussed here. 
 
 <!---------------------------->
 
 ## RESTful Services
 
-These are located in the [StdRESTful] section of weewx.conf with more
-details in the WeeWX [Reference](../reference/weewx-options/stdrestful/)
-documentation.
+These are located in the `[StdRESTful]` section of `weewx.conf`.
 
 <!---------------------------->
 
@@ -27,12 +22,16 @@ documentation.
 Adds your system to the public weewx map of registered sites at
 [https://weewx.com/stations.html](https://weewx.com/stations.html).
 
-Individual weather stations periodically contact the registry. Each
-station provides a unique URL to identify itself, plus other
-information such as the station type and WeeWX version. No personal
-information, nor any meteorological data, is sent.
+If enabled, the station will periodically (re)register with the
+weewx station registry to keep its registration active.  Stale
+registrations are automatically removed from the registry and map
+after 
 
 This is disabled by default.
+
+For configuration details consult the StationRegistry setting in the
+WeeWX [Reference](../../reference/weewx-options/stdrestful/#stationregistry)
+documentation.
 
 ### AWEKAS
 
@@ -45,6 +44,12 @@ _AWEKAS is an abbrevation for “Automatic WEather map (german: KArten)
 System”. It is a system that processes indicated values of private
 weather stations graphically, generates weather maps and evaluates
 the data._
+
+This is disabled by default.
+
+For configuration details consult the AWEKAS section in the WeeWX 
+[Reference](../../reference/weewx-options/stdrestful/#awekas)
+documentation.
 
 ### CWOP
 
@@ -61,6 +66,12 @@ contributors so they have the tools to check and improve their data
 quality. In fact, the web address, wxqa.com, stands for weather
 quality assurance._
 
+This is disabled by default.
+
+For configuration details consult the CWOP section in the
+WeeWX [Reference](../../reference/weewx-options/stdrestful/#cwop)
+documentation.
+
 ### PWSWeather
 
 Posts your weather data to the [PWSweather service](https://www.pwsweather.com).
@@ -73,6 +84,12 @@ dashboard to monitor, manage, and archive their data. Each contributor's
 data is also made available in AerisWeather's API via the PWSweather
 Contributor Plan._
 
+This is disabled by default.
+
+For configuration details consult the PWSWeather section in the
+WeeWX [Reference](../../reference/weewx-options/stdrestful/#pwsweather)
+documentation.
+
 ### WOW 
 Posts your weather data to the [WOW service](https://wow.metoffice.gov.uk).
 
@@ -80,12 +97,32 @@ This legacy uploader supports the Met Office Weather Observations
 Website (WOW) which is being decommissioned beginning in January
 2026.
 
+From their web site:
+
+_After more than a decade of supporting crowd-sourced weather observations
+and citizen science, the Met Office will begin retiring the Weather
+Observations Website (WOW) from January, with full decommissioning
+planned for late 2026.....there will be no direct replacement for WOW
+ in the UK._
+
+This is disabled by default.
+
+For configuration details consult the WOW section in the
+WeeWX [Reference](../../reference/weewx-options/stdrestful/#wow)
+documentation.
+
 ### WOW-BE
 Posts your weather data to the [WOW-BE service](https://wow.meteo.be).
 
 This is a relaunched variant of the legacy WOW service above, with a
-goal to have more open software and data.
+stated goal to have more open software and data according to their
+web site..
 
+This is disabled by default.
+
+For configuration details consult the WOW-BE section in the
+WeeWX [Reference](../../reference/weewx-options/stdrestful/#wow-be)
+documentation.
 
 ### Wunderground
 Posts your weather data to the 
@@ -95,13 +132,16 @@ uploader supports both regular and rapidfire posting.
 Weather Underground claims to be the "Internet's 1st weather service"
 dating back to 1993.
 
+This is disabled by default.
+
+For configuration details consult the Weather Underground section in 
+the WeeWX [Reference](../../reference/weewx-options/stdrestful/#wunderground)
+documentation.
+
 <!---------------------------->
 ## StdReport Services
 
-These are located in the [StdReport] section of weewx.conf with more
-details in the WeeWX [Reference](../reference/weewx-options/stdreport/)
-documentation.
-
+These are located in the `[StdReport]` section of `weewx.conf`.
 
 <!---------------------------->
 
@@ -110,6 +150,12 @@ documentation.
 Uploads selected pieces of your output data via FTP protocol to a
 remote system.
 
+This is disabled by default.
+
+For configuration detauls, see the FTP section in the 
+ WeeWX [Reference](../../reference/weewx-options/stdreport/#ftp)
+documentation.
+
 ### RSYNC
 
 Uploads selected pieces of your output data via RSYNC protocol over
@@ -117,5 +163,10 @@ a SSH transport layer to a remote system.  The RSYNC uploader is
 generally considered to be faster and more stable than the FTP
 uploader, although it does require some one-time setup by the user.
 
+This is disabled by default.
+
+For configuration detauls, see the RSYNC ection in the 
+ WeeWX [Reference](../../reference/weewx-options/stdreport/#rsync)
+documentation.
 
 
