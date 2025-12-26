@@ -77,6 +77,7 @@ def rebuild_daily(config_dict,
                   date=None,
                   from_date=None,
                   to_date=None,
+                  key_set=None,
                   db_binding='wx_binding',
                   dry_run=False,
                   no_confirm=False):
@@ -99,9 +100,16 @@ def rebuild_daily(config_dict,
         msg = f"Daily summary for {from_d} will be rebuilt."
     else:
         msg = f"Daily summaries from {from_d} through {to_d}, inclusive, will be rebuilt."
-
     log.info(msg)
     print(msg)
+
+    if key_set:
+        msg = f"Daily summaries will be rebuilt for the following types: {key_set}"
+    else:
+        msg = "Daily summaries will be rebuilt for all types."
+    log.info(msg)
+    print(msg)
+
     ans = y_or_n(f"Rebuild the daily summaries in the database '{database_name}' (y/n)? ",
                  noprompt=no_confirm)
     if ans == 'n':
@@ -138,7 +146,8 @@ def rebuild_daily(config_dict,
             # Do the actual rebuild
             nrecs, ndays = dbm.backfill_day_summary(start_d=from_d,
                                                     stop_d=to_d,
-                                                    trans_days=20)
+                                                    trans_days=20,
+                                                    key_set=key_set)
     tdiff = time.time() - t1
     # advise the user/log what we did
     log.info(f"Rebuild of daily summaries in database '{database_name}' complete.")

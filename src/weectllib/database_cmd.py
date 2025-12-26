@@ -18,7 +18,7 @@ create_usage = f"""{bcolors.BOLD}weectl database create
 drop_daily_usage = f"""{bcolors.BOLD}weectl database drop-daily
             [--config=FILENAME] [--binding=BINDING-NAME]
             [--dry-run] [-y]{bcolors.ENDC}"""
-rebuild_usage = f"""{bcolors.BOLD}weectl database rebuild-daily
+rebuild_usage = f"""{bcolors.BOLD}weectl database rebuild-daily [NAME...]
             [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
             [--config=FILENAME] [--binding=BINDING-NAME] 
             [--dry-run] [-y]{bcolors.ENDC}"""
@@ -123,12 +123,18 @@ def add_subparser(subparsers):
 
     # ---------- Action 'rebuild-daily' ----------
     rebuild_parser = action_parser.add_parser('rebuild-daily',
-                                              description="Rebuild the daily summary in "
+                                              description="Rebuild the daily summaries in "
                                                           "a WeeWX database",
                                               usage=rebuild_usage,
                                               help="Rebuild the daily summary in "
                                                    "a WeeWX database.",
                                               epilog=epilog)
+    rebuild_parser.add_argument('column_names',
+                                nargs='*',
+                                metavar='NAME',
+                                help="Observation type(s) to be rebuilt in the daily summary. "
+                                     "If not specified, all types will be rebuilt. "
+                                     "More than one NAME can be specified.")
     rebuild_parser.add_argument("--date",
                                 metavar="YYYY-mm-dd",
                                 help="Rebuild for this date only.")
@@ -329,6 +335,7 @@ def rebuild_daily(config_dict, namespace):
                                              date=namespace.date,
                                              from_date=namespace.from_date,
                                              to_date=namespace.to_date,
+                                             key_set=namespace.column_names,
                                              db_binding=namespace.binding,
                                              dry_run=namespace.dry_run,
                                              no_confirm=namespace.yes)

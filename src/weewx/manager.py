@@ -1218,7 +1218,7 @@ class DaySummaryManager(Manager):
         self._set_day_summary(_stats_dict, accumulator.timespan.stop, cursor)
 
     def backfill_day_summary(self, start_d=None, stop_d=None,
-                             progress_fn=show_progress, trans_days=5):
+                             progress_fn=show_progress, trans_days=5, key_set=None):
 
         """Fill the daily summaries from an archive database.
 
@@ -1241,6 +1241,8 @@ class DaySummaryManager(Manager):
                 every 1000 records.
             trans_days (int): Number of days of archive data to be used for each daily summaries
                 database transaction. [Optional. Default is 5.]
+            key_set (set|None): If not None, only the observation types in this set
+                will be calculated.
 
         Returns:
              tuple[int,int]: A 2-way tuple (nrecs, ndays) where
@@ -1294,7 +1296,7 @@ class DaySummaryManager(Manager):
                 first_d = datetime.date.fromtimestamp(last_daily_ts)
             else:
                 # Daily summaries exist, and they are complete.
-                if not start_d and not stop_d:
+                if not key_set and not start_d and not stop_d:
                     # The daily summaries are complete, yet the user has not specified anything.
                     # Guess we're done.
                     log.info("Daily summaries up to date")
@@ -1344,7 +1346,7 @@ class DaySummaryManager(Manager):
                     except weewx.accum.OutOfSpan:
                         # The record is out of the time span.
                         # Save the old accumulator:
-                        self._set_day_summary(day_accum, None, cursor)
+                        self._set_day_summary(day_accum, None, cursor, key_set=key_set)
                         ndays += 1
                         # Get a new accumulator:
                         timespan = weeutil.weeutil.archiveDaySpan(rec['dateTime'])
@@ -1363,7 +1365,7 @@ class DaySummaryManager(Manager):
                 # We're done with this transaction. Unless it is empty, save the daily summary for
                 # the last day
                 if day_accum and not day_accum.isEmpty:
-                    self._set_day_summary(day_accum, None, cursor)
+                    self._set_day_summary(day_accum, None, cursor, key_set=key_set)
                     ndays += 1
                 # Patch lastUpdate:
                 if last_daily_ts:
@@ -1606,7 +1608,7 @@ class DaySummaryManager(Manager):
             if not cursor:
                 _cursor.close()
 
-    def _set_day_summary(self, day_accum, lastUpdate, cursor):
+    def _set_day_summary(self, day_accum, lastUpdate, cursor, key_set=None):
         """Write all statistics for a day to the database in a single transaction.
 
         Args:
@@ -1615,6 +1617,7 @@ class DaySummaryManager(Manager):
                 None. Normally, this is the timestamp of the last archive record added to the
                 instance day_accum.
             cursor (Cursor): An open cursor.
+            key_set (set|None): If not None, only the observation types in this set will be written.
             """
 
         # Make sure the new data uses the same unit system as the database.
@@ -1624,8 +1627,11 @@ class DaySummaryManager(Manager):
 
         # For each daily summary type...
         for _summary_type in day_accum:
-            # Don't try an update for types not in the database:
+            # Don't update types not in the database:
             if _summary_type not in self.daykeys:
+                continue
+            # If requested, only update the specified keys:
+            if key_set and _summary_type not in key_set:
                 continue
             # ... get the stats tuple to be written to the database...
             _write_tuple = (_sod,) + day_accum[_summary_type].getStatsTuple()

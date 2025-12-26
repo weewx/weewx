@@ -41,7 +41,7 @@ Use the `--help` option to see how to use this action:
 
 ## Rebuild the daily summaries
 
-    weectl database rebuild-daily
+    weectl database rebuild-daily [NAME...]
         [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
         [--config=FILENAME] [--binding=BINDING-NAME] 
         [--dry-run] [-y]
@@ -56,6 +56,9 @@ be useful if bogus data has been removed from the archive covering a single
 day or a period of few days. The daily summaries can then be rebuilt for this
 period only, resulting in a faster rebuild and detailed low/high values and
 the associated times being retained for unaffected days.
+
+If one or more `NAME` is given, then the daily summaries will only be rebuilt
+for the named observation types. Otherwise, all summaries will be rebuilt.
 
 ### Rebuild a specific date
 
@@ -74,6 +77,19 @@ for `--from` is from the first day in the database. The default value for
 !!! Note
 
     The period defined by `--to` and `--from` is inclusive.
+
+### Rebuild only named observation types
+
+    weectl database rebuild-daily NAME ...
+
+If one or more values for `NAME` is given, then only the summaries for those
+types will get rebuilt. For example, the following will rebuild only the
+`dewpoint` daily summaries:
+
+    weectl database rebuild dewpoint
+
+This can be useful after using `weectl database calc-missing` to avoid 
+rebuilding summaries for types that were not touched.
 
 
 ## Add a new observation type to the database

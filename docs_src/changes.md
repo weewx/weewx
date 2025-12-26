@@ -18,6 +18,9 @@ user Karen!
 Moved database-specific code into the `weedb` module. For example, backticks are
 used to escape the reserved word `interval` only in the MySQL code.
 
+New action `weectl database rebuild-daily NAME` was added to allow the selective 
+rebuilding of the daily summaries. Addresses [Issue #1035](https://github.com/weewx/weewx/issues/1035).
+
 
 ### 5.2.1 MM/DD/YYYY
 
