@@ -83,8 +83,8 @@ Website (WOW) which is being decommissioned beginning in January
 ### WOW-BE
 Posts your weather data to the [WOW-BE service](https://wow.meteo.be).
 
-This is a relaunched more open data and open software update of the
-WOW service that is being decommissioned beginning early 2026.
+This is a relaunched variant of the legacy WOW service above, with a
+goal to have more open software and data.
 
 
 ### Wunderground
