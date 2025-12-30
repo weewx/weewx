@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -9,12 +9,11 @@ import logging
 import os.path
 import sys
 import time
-import unittest
 
 import configobj
+import pytest
 
 import weedb
-import weeutil.config
 import weeutil.weeutil
 import weewx.drivers.simulator
 import weewx.engine
@@ -34,6 +33,7 @@ TEST_TYPES = ['outTemp', 'inTemp', 'barometer', 'windSpeed']
 # Find the configuration file. It's assumed to be in the same directory as me:
 config_path = os.path.join(os.path.dirname(__file__), "simgen.conf")
 
+# Read it in
 try:
     config_dict = configobj.ConfigObj(config_path, file_error=True, encoding='utf-8')
 except IOError:
@@ -47,42 +47,37 @@ except configobj.ConfigObjError:
 weeutil.logger.setup('weetest_engine', config_dict)
 
 
-class TestEngine(unittest.TestCase):
-    """Test the engine and accumulators using the simulator."""
+@pytest.fixture(scope="module", autouse=True)
+def set_up():
+    first_ts, last_ts = _get_first_last(config_dict)
 
-    def setUp(self):
-        global config_dict
-        self.config_dict = weeutil.config.deep_copy(config_dict)
+    try:
+        with weewx.manager.open_manager_with_config(config_dict,
+                                                    'wx_binding') as dbmanager:
+            if dbmanager.firstGoodStamp() == first_ts and dbmanager.lastGoodStamp() == last_ts:
+                print("\nDatabase does not need to be provisioned")
+                return
+    except weedb.OperationalError:
+        pass
 
-        first_ts, last_ts = _get_first_last(self.config_dict)
+    engine = weewx.engine.StdEngine(config_dict)
+    try:
+        # This will generate the simulator data:
+        engine.run()
+    except weewx.StopNow:
+        pass
 
-        try:
-            with weewx.manager.open_manager_with_config(self.config_dict,
-                                                        'wx_binding') as dbmanager:
-                if dbmanager.firstGoodStamp() == first_ts and dbmanager.lastGoodStamp() == last_ts:
-                    print("\nSimulator need not be run")
-                    return
-        except weedb.OperationalError:
-            pass
 
-        engine = weewx.engine.StdEngine(self.config_dict)
-        try:
-            # This will generate the simulator data:
-            engine.run()
-        except weewx.StopNow:
-            pass
-
-    def test_archive_data(self):
-
-        global TEST_TYPES
-        archive_interval = self.config_dict['StdArchive'].as_int('archive_interval')
-        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as archive:
-            for record in archive.genBatchRecords():
-                start_ts = record['dateTime'] - archive_interval
-                # Calculate the average (throw away min and max):
-                _, _, obs_avg = calc_stats(self.config_dict, start_ts, record['dateTime'])
-                for obs_type in TEST_TYPES:
-                    self.assertAlmostEqual(obs_avg[obs_type], record[obs_type], 2)
+def test_archive_data():
+    global TEST_TYPES
+    archive_interval = config_dict['StdArchive'].as_int('archive_interval')
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as archive:
+        for record in archive.genBatchRecords():
+            start_ts = record['dateTime'] - archive_interval
+            # Calculate the average (throw away min and max):
+            _, _, obs_avg = calc_stats(start_ts, record['dateTime'])
+            for obs_type in TEST_TYPES:
+                assert obs_avg[obs_type] == pytest.approx(record[obs_type])
 
 
 def _get_first_last(config_dict):
@@ -95,8 +90,8 @@ def _get_first_last(config_dict):
     return first_ts, last_ts
 
 
-def calc_stats(config_dict, start_ts, stop_ts):
-    """Calculate the statistics directly from the simulator output."""
+def calc_stats(start_ts, stop_ts):
+    """Calculate the statistics directly from the simulator LOOP packet output."""
     global TEST_TYPES
 
     sim_start_tt = time.strptime(config_dict['Simulator']['start'], "%Y-%m-%dT%H:%M")
@@ -129,7 +124,3 @@ def calc_stats(config_dict, start_ts, stop_ts):
         obs_avg[obs_type] = obs_sum[obs_type] / count
 
     return obs_min, obs_max, obs_avg
-
-
-if __name__ == '__main__':
-    unittest.main()
