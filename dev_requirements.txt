@@ -9,4 +9,5 @@ Pillow>=5.2
 poetry
 PyMySQL
 pyserial>=3.4
+pytest
 pyusb>=1.0.2
