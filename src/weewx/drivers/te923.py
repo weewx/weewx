@@ -1192,7 +1192,7 @@ class TE923Driver(weewx.drivers.AbstractDevice):
                     cnt += 1
                     yield packet
                 else:
-                    log.info("skip packet with duplidate timestamp: %s" % packet)
+                    log.info("skip packet with duplicate timestamp: %s" % packet)
             self._last_ts = packet['dateTime']
             if cnt % 50 == 0:
                 log.info("read %s records from logger" % cnt)
