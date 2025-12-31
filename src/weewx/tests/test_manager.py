@@ -19,7 +19,7 @@ import datetime
 import logging
 import os
 import time
-import unittest
+import pytest
 
 import gen_fake_data
 import weewx.schemas.wview_small
@@ -88,36 +88,36 @@ class CommonWeightTests:
             archive_key = key if key != 'wind' else 'windSpeed'
             result1 = self.db_manager.getSql("SELECT COUNT(%s) FROM archive" % archive_key)
             result2 = self.db_manager.getSql("SELECT SUM(count) FROM archive_day_%s;" % key)
-            self.assertEqual(result1, result2)
+            assert result1 == result2
             result3 = self.db_manager.getSql("SELECT COUNT(%s) * %d FROM archive"
                                              % (archive_key, interval_secs))
             result4 = self.db_manager.getSql("SELECT SUM(sumtime) FROM archive_day_%s" % key)
-            self.assertEqual(result3, result4)
+            assert result3 == result4
 
             result5 = self.db_manager.getSql("SELECT SUM(%s * `interval` * 60) FROM archive"
                                              % archive_key)
             result6 = self.db_manager.getSql("SELECT SUM(wsum) FROM archive_day_%s" % key)
             if result5[0] is None:
-                self.assertEqual(result6[0], 0.0)
+                assert result6[0] == 0.0
             else:
-                self.assertAlmostEqual(result5[0], result6[0], 3)
+                assert result5[0] == pytest.approx(result6[0], abs=1e-3)
         # check weights for vector types, for now that is just type wind
         result7 = self.db_manager.getSql("SELECT SUM(xsum), SUM(ysum), SUM(dirsumtime) FROM archive_day_wind")
-        self.assertAlmostEqual(result7[0], 5032317.021, 3)
-        self.assertAlmostEqual(result7[1], -2600.126, 3)
-        self.assertEqual(result7[2], 1040400)
+        assert result7[0] == pytest.approx(5159022.5365, abs=1e-3)
+        assert result7[1] == pytest.approx(393601.3162, abs=1e-3)
+        assert result7[2] == 1040400
 
 
-class TestSqliteWeights(CommonWeightTests, unittest.TestCase):
+class TestSqliteWeights(CommonWeightTests):
     """Test using the SQLite database"""
 
-    def setUp(self):
+    def setup_method(self):
         self.db_manager = setup_database(db_dict_sqlite)
 
     # The patch test is done with sqlite only, because it is so much faster
     def test_patch(self):
         # Sanity check that the original database is at V4.0
-        self.assertEqual(self.db_manager.version, weewx.manager.DaySummaryManager.version)
+        assert self.db_manager.version == weewx.manager.DaySummaryManager.version
 
         # Bugger up roughly half the database
         with weedb.Transaction(self.db_manager.connection) as cursor:
@@ -133,20 +133,20 @@ class TestSqliteWeights(CommonWeightTests, unittest.TestCase):
         self.check_weights()
 
         # Make sure the version was set to V4.0 after the patch
-        self.assertEqual(self.db_manager.version, weewx.manager.DaySummaryManager.version)
+        assert self.db_manager.version == weewx.manager.DaySummaryManager.version
 
 
-class TestMySQLWeights(CommonWeightTests, unittest.TestCase):
+class TestMySQLWeights(CommonWeightTests):
     """Test using the MySQL database"""
 
-    def setUp(self):
+    def setup_method(self):
         try:
             import MySQLdb
         except ImportError:
             try:
                 import pymysql as MySQLdb
             except ImportError as e:
-                raise unittest.case.SkipTest(e)
+                pytest.skip(str(e))
 
         self.db_manager = setup_database(db_dict_mysql)
 
@@ -162,10 +162,7 @@ def setup_database(db_dict):
     db_manager = weewx.manager.DaySummaryManager.open_with_create(db_dict, schema=schema)
 
     # Populate the database. By passing in a generator, it is all done as one transaction.
-    db_manager.addRecord(gen_fake_data.genFakeRecords(start_ts, stop_ts, interval=interval_secs))
+    db_manager.addRecord(gen_fake_data.gen_fake_records(start_ts, stop_ts, interval=interval_secs,
+                                                        day_phase_offset=0.0))
 
     return db_manager
-
-
-if __name__ == '__main__':
-    unittest.main()
