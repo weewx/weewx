@@ -13,9 +13,9 @@ import logging
 import math
 import time
 
-import weewx.manager
-import weedb
 import weecfg.database
+import weedb
+import weewx.manager
 
 log = logging.getLogger(__name__)
 

@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2019 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2019-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -9,9 +9,10 @@ import http.client
 import os
 import queue
 import time
-import unittest
 import urllib.parse
 from unittest import mock
+
+import pytest
 
 import weewx
 import weewx.restx
@@ -63,7 +64,7 @@ def get_record():
     return record
 
 
-class TestAmbient(unittest.TestCase):
+class TestAmbient:
     """Test the Ambient RESTful protocol"""
 
     # These don't really matter. We'll be testing that the URL we end up with is
@@ -73,7 +74,15 @@ class TestAmbient(unittest.TestCase):
     server_url = 'http://www.testserver.com/testapi'
     protocol_name = 'Test-Ambient'
 
-    def get_openurl_patcher(self, code=200, response_body=[], side_effect=None):
+    @pytest.fixture(autouse=True)
+    def setup_method(self):
+        self.patchers = []
+
+    def teardown_method(self):
+        for patcher in self.patchers:
+            patcher.stop()
+
+    def get_openurl_patcher(self, code=200, response_body=None, side_effect=None):
         """Get a patch object for a post to urllib.request.urlopen
 
         code: The response code that should be returned by the mock urlopen().
@@ -84,6 +93,8 @@ class TestAmbient(unittest.TestCase):
         side_effect: Any side effect to be done. Set to an exception class to have
         an exception raised by the mock urlopen().
         """
+        if response_body is None:
+            response_body = []
         # Mock up the urlopen
         patcher = mock.patch('weewx.restx.urllib.request.urlopen')
         mock_urlopen = patcher.start()
@@ -96,7 +107,7 @@ class TestAmbient(unittest.TestCase):
         if side_effect:
             mock_urlopen.side_effect = side_effect
         # This will insure that patcher.stop() method will get called after a test
-        self.addCleanup(patcher.stop)
+        self.patchers.append(patcher)
         return mock_urlopen
 
     def test_request(self):
@@ -245,7 +256,3 @@ class TestAmbient(unittest.TestCase):
             url += "&indoortempf=70.0"
         matcher = MatchRequest(url, 'weewx/%s' % weewx.__version__)
         return matcher
-
-
-if __name__ == '__main__':
-    unittest.main()
