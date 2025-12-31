@@ -29,6 +29,7 @@ STATION_URL = 'https://weewx.com'
 
 @pytest.fixture
 def config_dict():
+    """Return a copy of the configuration dictionary."""
     return weeutil.config.deep_copy(CONFIG_DICT)
 
 
