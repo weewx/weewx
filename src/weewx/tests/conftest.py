@@ -25,7 +25,7 @@ weeutil.logger.setup('conftest')
 @pytest.fixture(scope="session",
                 params=[
                     'sqlite',
-                    # 'mysql',
+                    'mysql',
                 ])
 def build_config(request):
     """Generate a config file set to use a particular database type
