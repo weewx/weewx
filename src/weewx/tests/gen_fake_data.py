@@ -146,10 +146,12 @@ def gen_fake_records(start_ts, stop_ts, interval=1800,
     year_start = year_start or start_ts
 
     for ts in range(start_ts, stop_ts + interval, interval):
-        daily_phase = ((ts - year_start) * 2.0 * math.pi) / (3600 * 24.0) + day_phase_offset
-        annual_phase = ((ts - year_start) * 2.0 * math.pi) / (
-                    3600 * 24.0 * 365.0) + annual_phase_offset
-        weather_phase = ((ts - year_start) * 2.0 * math.pi) / weather_cycle + weather_phase_offset
+        daily_phase = ((ts - year_start) * 2.0 * math.pi) \
+                      / (3600 * 24.0) + day_phase_offset
+        annual_phase = ((ts - year_start) * 2.0 * math.pi) \
+                       / (3600 * 24.0 * 365.0) + annual_phase_offset
+        weather_phase = ((ts - year_start) * 2.0 * math.pi) \
+                        / weather_cycle + weather_phase_offset
         record = {
             'dateTime': ts,
             'usUnits': weewx.US,
