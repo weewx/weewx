@@ -3,7 +3,10 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Test functions in cheetahgenerator"""
+"""Test functions in cheetahgenerator
+
+Use pytest to run the tests.
+"""
 
 import logging
 

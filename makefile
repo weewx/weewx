@@ -39,6 +39,7 @@ WHEELSRC=weewx-$(VERSION).tar.gz
 WHEEL=weewx-$(VERSION)-py3-none-any.whl
 
 PYTHON?=python3
+PYTEST?=pytest
 
 TMPDIR?=/var/tmp
 
@@ -145,8 +146,8 @@ done
 ###############################################################################
 ## testing targets
 
-# if no suite is specified, find all test suites in the source tree
-SUITE?=`find src -name "test_*.py"`
+# if no suite is specified, find all the pytest files in the source tree
+SUITE?=`grep -rl --include="*.py" "pytest" src`
 test: src/weewx_data/
 	@rm -f $(BLDDIR)/test-results
 	@mkdir -p $(BLDDIR)
@@ -158,13 +159,12 @@ test: src/weewx_data/
 	@for f in $(SUITE); do \
   echo running $$f; \
   echo $$f >> $(BLDDIR)/test-results; \
-  PYTHONPATH="src:src/weewx_data/examples:src/weewx/tests" $(PYTHON) $$f >> $(BLDDIR)/test-results 2>&1; \
+  PYTHONPATH="src:src/weewx_data/examples:src/weewx/tests" $(PYTEST) $$f >> $(BLDDIR)/test-results 2>&1; \
   echo >> $(BLDDIR)/test-results; \
 done
-	@grep "ERROR:\|FAIL:" $(BLDDIR)/test-results || echo "no failures"
-	@grep "skipped=" $(BLDDIR)/test-results || echo "no tests were skipped"
+	@grep "ERROR:\|FAIL:\|FAILURES" $(BLDDIR)/test-results || echo "no failures"
 	@echo "see $(BLDDIR)/test-results for output from the tests"
-	@grep -q "ERROR:\|FAIL:" $(BLDDIR)/test-results && exit 1 || true
+	@grep -q "ERROR:\|FAIL:\|FAILURES" $(BLDDIR)/test-results && exit 1 || true
 
 test-setup:
 	src/weedb/tests/setup_mysql.sh

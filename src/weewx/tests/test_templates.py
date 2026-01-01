@@ -3,7 +3,10 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Test tag notation for template generation."""
+"""Test tag notation for template generation.
+
+Use pytest to run the tests.
+"""
 
 import locale
 import logging
