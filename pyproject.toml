@@ -44,6 +44,16 @@ Homepage = "https://weewx.com"
 Repository = "https://github.com/weewx/weewx"
 Documentation = "https://weewx.com/docs"
 
+[dependency-groups]
+dev = [
+    "cryptography",
+    "mkdocs",
+    "mkdocs-material",
+    "mkdocs-material-extensions",
+    "poetry",
+    "pytest",
+]
+
 [project.scripts]
 weectl = "weectl:main"
 weewxd = "weewxd:main"
