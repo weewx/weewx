@@ -23,6 +23,7 @@ jobs:
           mariadb-server \
           rsync
         sudo locale-gen de_DE.UTF-8
+        sudo locale-gen en_US.UTF-8
         sudo update-locale
 
     - uses: actions/checkout@v4
