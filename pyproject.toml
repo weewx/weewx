@@ -1,34 +1,54 @@
-[tool.poetry]
+[project]
 name = "weewx"
-version = "5.2.0"
+version = "5.3.0"
 description = "The WeeWX weather software system."
 authors = [
-    "Tom Keffer <tkeffer@gmail.com>",
-    "Matthew Wall <mwall.weewx@gmail.com>"
+    {name = "Tom Keffer", email = "tkeffer@gmail.com"},
+    {name = "Matthew Wall", email = "mwall.weewx@gmail.com"}
 ]
-license = "GPL3"
-readme = 'README.md'
-repository = "https://github.com/weewx/weewx"
-homepage = "https://weewx.com"
-documentation = "https://weewx.com/docs"
+license = "GPL-3.0-only"
+readme = "README.md"
+requires-python = ">=3.7"
 classifiers = [
-    'Development Status :: 5 - Production/Stable',
-    'Intended Audience :: End Users/Desktop',
-    'Intended Audience :: Science/Research',
-    'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-    'Operating System :: POSIX :: Linux',
-    'Operating System :: Unix',
-    'Operating System :: MacOS',
-    'Programming Language :: Python',
-    'Programming Language :: Python :: 3.7',
-    'Programming Language :: Python :: 3.8',
-    'Programming Language :: Python :: 3.9',
-    'Programming Language :: Python :: 3.10',
-    'Programming Language :: Python :: 3.11',
-    'Programming Language :: Python :: 3.12',
-    'Programming Language :: Python :: 3.13',
-    'Topic :: Scientific/Engineering :: Physics'
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Science/Research",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Physics"
 ]
+dependencies = [
+    # versions of configobj earlier than 5.0.9 suffer from CVE-2023-26112, ReDoS attack,
+    # but we don't care because we don't use validation.
+    "configobj>=5.0",
+    # This is the renamed "Cheetah" package:
+    "CT3>=3.1",
+    "Pillow>=5.2",
+    "ephem>=4.1",
+    "PyMySQL>=1.0",
+    "pyserial>=3.4",
+    "pyusb>=1.0.2",
+]
+
+[project.urls]
+Homepage = "https://weewx.com"
+Repository = "https://github.com/weewx/weewx"
+Documentation = "https://weewx.com/docs"
+
+[project.scripts]
+weectl = "weectl:main"
+weewxd = "weewxd:main"
+
+[tool.poetry]
 packages = [
     { include = "weecfg", from = "src" },
     { include = "weectllib", from = "src" },
@@ -48,28 +68,10 @@ include = [
 ]
 
 exclude = [
-    './src/**/tests/**/*',
+    "./src/**/tests/**/*",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.7"
-# versions of configobj earlier than 5.0.9 suffer from CVE-2023-26112, ReDoS attack,
-# but we don't care because we don't use validation.
-configobj = "^5.0"
-# This is the renamed "Cheetah" package:
-CT3 = "^3.1"
-Pillow = ">=5.2"
-ephem = "^4.1"
-PyMySQL = "^1.0"
-pyserial = "^3.4"
-pyusb = "^1.0.2"
-
-[tool.poetry.scripts]
-weectl = 'weectl:main'
-weewxd = 'weewxd:main'
-
 [build-system]
-# Minimum requirements for the build system to execute.
-requires = ["poetry>=1.5.1"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core>=2.0.0"]
+build-backend = "poetry.core.masonry.api"
 
