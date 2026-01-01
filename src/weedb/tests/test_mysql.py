@@ -50,6 +50,9 @@ class Cursor:
         except ProgrammingError:
             pass
 
+with MySQLdb.connect(host='localhost', user='weewx1', password='weewx1') as connection:
+    server_info = connection.get_server_info()
+    using_maria_db = "MariaDB" in server_info
 
 class TestMySQL:
 
@@ -121,9 +124,18 @@ class TestMySQL:
 
     def test_select_nonexistent_database(self):
         with Cursor(user='weewx1', password='weewx1') as cursor:
-            with pytest.raises(OperationalError) as e:
-                cursor.execute("SELECT foo from test_weewx1.bar")
-            assert get_error(e) == 1049
+            # MariaDB reacts differently from MySQL when presented by a non-existent table
+            # in a non-existent database.
+            #   MariaDB: raises ProgrammigError and returns 1146
+            #   MySQL: raises OperationalError and returns 1049
+            if using_maria_db:
+                with pytest.raises(ProgrammingError) as e:
+                    cursor.execute("SELECT foo from test_weewx1.bar")
+                assert get_error(e) == 1146
+            else:
+                with pytest.raises(OperationalError) as e:
+                    cursor.execute("SELECT foo from test_weewx1.bar")
+                assert get_error(e) == 1049
 
     def test_select_nonexistent_table(self):
         with Cursor(user='weewx1', password='weewx1') as cursor:
