@@ -267,13 +267,14 @@ def test_get_aggregate_expression(config_dict):
             value = weewx.xtypes.get_aggregate('rain-foo', TimeSpan(start_ts, stop_ts),
                                                'sum', db_manager)
 
-        # A valid function
-        value = weewx.xtypes.get_aggregate('max(rain-ET, 0)', TimeSpan(start_ts, stop_ts),
+        # I don't know why someone would want the square root of rain minus ET, but it is
+        # a valid function.
+        value = weewx.xtypes.get_aggregate('SQRT(rain-ET)', TimeSpan(start_ts, stop_ts),
                                            'sum', db_manager)
-        assert value[0] == pytest.approx(9.57, abs=0.01)
+        assert value[0] == pytest.approx(36.67, abs=0.01)
 
         # This one uses a nonsense function
-        with pytest.raises(weedb.OperationalError):
+        with pytest.raises(weedb.DatabaseError):
             value = weewx.xtypes.get_aggregate('foo(rain-ET)', TimeSpan(start_ts, stop_ts),
                                                'sum', db_manager)
 
