@@ -21,13 +21,6 @@ FALL_TIMESTAMP   = 1254078000  # 2009-09-27 12:00:00 PDT
 
 default_formatter = weewx.units.get_default_formatter()
 
-try:
-    import ephem
-except ImportError:
-    pyephem_installed = False
-else:
-    pyephem_installed = True
-
 @pytest.fixture(scope="module", autouse=True)
 def set_tz():
     os.environ['TZ'] = 'America/Los_Angeles'
@@ -51,13 +44,6 @@ class TestAlmanac:
         # Test back conversion
         assert djd_to_timestamp(t_djd) == pytest.approx(self.ts_ue, abs=1e-5)
 
-    @pytest.mark.skipif(pyephem_installed, reason="Skipping test_moon: using extended test instead")
-    def test_moon(self):
-        # Test backwards compatiblity with the attribute _moon_fullness
-        assert self.almanac.moon_fullness == pytest.approx(3, abs=1e-2)
-        assert self.almanac.moon_phase == 'new (totally dark)'
-
-    @pytest.mark.skipif(not pyephem_installed, reason="Skipping test_moon_extended: no pyephem")
     def test_moon_extended(self):
         # Now test a more precise result for fullness of the moon:
         assert self.almanac.moon.moon_fullness == pytest.approx(1.70, abs=1e-2)
@@ -73,13 +59,6 @@ class TestAlmanac:
         assert str(self.almanac.next_new_moon) == "04/24/09 20:22:33"
         assert str(self.almanac.next_first_quarter_moon) == "04/02/09 07:33:42"
 
-    @pytest.mark.skipif(pyephem_installed, reason="Skipping test_sun: using extended test instead")
-    def test_sun(self):
-        # Test backwards compatibility
-        assert str(self.almanac.sunrise) == "06:55:59"
-        assert str(self.almanac.sunset) == "19:30:22"
-
-    @pytest.mark.skipif(not pyephem_installed, reason="Skipping test_sun_extended: no pyephem")
     def test_sun_extended(self):
         # Test backwards compatibility
         assert str(self.almanac.sunrise) == "06:56:36"
@@ -109,14 +88,12 @@ class TestAlmanac:
         almanac = Almanac(FALL_TIMESTAMP, LATITUDE, LONGITUDE, formatter=default_formatter)
         assert str(almanac.sun.visible_change().long_form()) == "3 minutes, 13 seconds"
 
-    @pytest.mark.skipif(not pyephem_installed, reason="Skipping test_mars: no pyephem")
     def test_mars(self):
         assert str(self.almanac.mars.rise) == "06:08:57"
         assert str(self.almanac.mars.transit) == "11:34:13"
         assert str(self.almanac.mars.set) == "17:00:04"
         assert self.almanac.mars.sun_distance == pytest.approx(1.3857, abs=1e-4)
 
-    @pytest.mark.skipif(not pyephem_installed, reason="Skipping test_jupiter: no pyephem")
     def test_jupiter(self):
         # Specialized attribute for Jupiter:
         assert str(self.almanac.jupiter.cmlI) == "310:55:32.7"
@@ -124,23 +101,14 @@ class TestAlmanac:
         with pytest.raises(AttributeError):
             self.almanac.venus.cmlI
 
-    @pytest.mark.skipif(not pyephem_installed, reason="Skipping test_star: no pyephem")
     def test_star(self):
         assert self.almanac.castor.rise.raw == pytest.approx(1238178997, abs=0.5)
         assert self.almanac.castor.transit.raw == pytest.approx(1238210429, abs=0.5)
         assert self.almanac.castor.set.raw == pytest.approx(1238155697, abs=0.5)
 
-    @pytest.mark.skipif(not pyephem_installed, reason="Skipping test_sidereal: no pyephem")
     def test_sidereal(self):
         assert self.almanac.sidereal_time == pytest.approx(348.3400, abs=1e-4)
 
-    @pytest.mark.skipif(pyephem_installed, reason="Skipping test_exceptions: using pyephem version instead")
-    def test_exceptions(self):
-        # Try a nonsense tag
-        with pytest.raises(AttributeError):
-            self.almanac.sun.foo
-
-    @pytest.mark.skipif(not pyephem_installed, reason="Skipping test_exceptions_pyephem: no pyephem")
     def test_exceptions_pyephem(self):
         # Try a nonsense body
         with pytest.raises(AttributeError):
@@ -149,7 +117,6 @@ class TestAlmanac:
         with pytest.raises(AttributeError):
             self.almanac.sun.foo
 
-@pytest.mark.skipif(not pyephem_installed, reason="Skipping test_always_up: no pyephem")
 def test_always_up():
     # Time and location where the sun is always up
     t = 1371044003  # 2013-06-12 06:33:23 PDT (1371044003)
@@ -168,7 +135,6 @@ def test_always_up():
     assert almanac(horizon=-6).sun(use_center=1).visible.long_form() == \
                      "0 hours, 0 minutes, 0 seconds"
 
-@pytest.mark.skipif(not pyephem_installed, reason="Skipping test_naval_observatory: no pyephem")
 def test_naval_observatory():
     #
     # pyephem "Naval Observatory" example.
