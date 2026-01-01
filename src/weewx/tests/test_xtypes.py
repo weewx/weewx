@@ -7,7 +7,6 @@
 import locale
 import logging
 import os.path
-import sys
 import time
 
 import pytest
@@ -31,9 +30,8 @@ time.tzset()
 
 # This will use the locale specified by the environment variable 'LANG'
 # Other options are possible. See:
-# http://docs.python.org/2/library/locale.html#locale.setlocale
+# https://docs.python.org/3/library/locale.html#locale.setlocale
 locale.setlocale(locale.LC_ALL, '')
-
 
 # Month of September 2010:
 month_timespan = weeutil.weeutil.TimeSpan(1283324400, 1285916400)
@@ -58,6 +56,7 @@ def test_daily_scalar(config_dict):
     assert vt_avg[0] == pytest.approx(57.128, abs=1e-3)
     assert vt_mintime[0] == 1283511600
 
+
 def test_daily_vecdir(config_dict):
     with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
         vt = weewx.xtypes.DailySummaries.get_aggregate('wind',
@@ -67,6 +66,7 @@ def test_daily_vecdir(config_dict):
     assert vt[0] == pytest.approx(60.52375, abs=1e-5)
     assert vt[1] == 'degree_compass'
     assert vt[2] == 'group_direction'
+
 
 def test_daily_vecavg(config_dict):
     with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
@@ -78,6 +78,7 @@ def test_daily_vecavg(config_dict):
     assert vt[1] == 'mile_per_hour'
     assert vt[2] == 'group_speed'
 
+
 def test_archive_table_vecdir(config_dict):
     with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
         vt = weewx.xtypes.ArchiveTable.get_aggregate('wind',
@@ -87,6 +88,7 @@ def test_archive_table_vecdir(config_dict):
     assert vt[0] == pytest.approx(60.52375, abs=1e-5)
     assert vt[1] == 'degree_compass'
     assert vt[2] == 'group_direction'
+
 
 def test_archive_table_vecavg(config_dict):
     with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
@@ -98,6 +100,7 @@ def test_archive_table_vecavg(config_dict):
     assert vt[1] == 'mile_per_hour'
     assert vt[2] == 'group_speed'
 
+
 def test_archive_table_long_vecdir(config_dict):
     with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
         vt = weewx.xtypes.ArchiveTable.get_wind_aggregate_long('wind',
@@ -107,6 +110,7 @@ def test_archive_table_long_vecdir(config_dict):
     assert vt[0] == pytest.approx(60.52375, abs=1e-5)
     assert vt[1] == 'degree_compass'
     assert vt[2] == 'group_direction'
+
 
 def test_archive_table_long_vecavg(config_dict):
     with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
@@ -118,11 +122,13 @@ def test_archive_table_long_vecavg(config_dict):
     assert vt[1] == 'mile_per_hour'
     assert vt[2] == 'group_speed'
 
+
 def test_has_data_true(config_dict):
     """Test has_data() with a type known to have data"""
     with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
         result = weewx.xtypes.has_data('testTemp', month_timespan, db_manager)
         assert result
+
 
 def test_has_data_false(config_dict):
     """Test has_dataconfig_dict) with a type that is known, but cannot be calculated"""
@@ -130,11 +136,13 @@ def test_has_data_false(config_dict):
         result = weewx.xtypes.has_data('fooTemp', month_timespan, db_manager)
         assert not result
 
+
 def test_has_data_unknown(config_dict):
     """Test has_data() with a type that is not known"""
     with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
         result = weewx.xtypes.has_data('otherTemp', month_timespan, db_manager)
         assert not result
+
 
 def test_get_aggregate_none(config_dict):
     """Test get_aggregate() with a type that is known, but cannot be calculated"""

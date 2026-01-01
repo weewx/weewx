@@ -21,6 +21,8 @@ used to escape the reserved word `interval` only in the MySQL code.
 New action `weectl database rebuild-daily NAME` was added to allow the selective 
 rebuilding of the daily summaries. Addresses [Issue #1035](https://github.com/weewx/weewx/issues/1035).
 
+Converted test suites to use [pytest](https://pytest.org).
+
 
 ### 5.2.1 MM/DD/YYYY
 
