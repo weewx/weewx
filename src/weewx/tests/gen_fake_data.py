@@ -82,8 +82,8 @@ def provision_binding(config_dict, binding, synthetic_dict):
         archive.addRecord(filter(make_nulls_filter, gen_fake_records(**synthetic_dict)))
         t2 = time.time()
         delta = t2 - t1
-        print("\nTime to create synthetic database '%s' = %6.2fs"
-              % (config_dict['DataBindings'][binding]['database'], delta))
+        print("\nTime to create binding '%s' for synthetic database '%s' = %6.2fs"
+              % (binding, config_dict['DataBindings'][binding]['database'], delta))
 
         # Restore the logging
         logging.disable(logging.NOTSET)

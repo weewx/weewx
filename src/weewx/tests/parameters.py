@@ -20,7 +20,7 @@ stop_tt = (2010, 9, 3, 11, 0, 0, 0, 0, -1)  # 2010-09-03 11:00
 alt_start_tt = (2010, 8, 30, 0, 0, 0, 0, 0, -1)
 start_ts = int(time.mktime(start_tt))
 stop_ts = int(time.mktime(stop_tt))
-alt_start = int(time.mktime(alt_start_tt))
+alt_start_ts = int(time.mktime(alt_start_tt))
 interval = 1800
 
 synthetic_dict = {
@@ -28,5 +28,9 @@ synthetic_dict = {
     'stop_ts': stop_ts,
     'interval': interval,
 }
-alt_dict = dict(synthetic_dict)
-alt_dict['amplitude'] = 0.5
+alt_dict = {
+    'start_ts': alt_start_ts,
+    'stop_ts': stop_ts,
+    'interval': interval,
+    'amplitude' : 0.5,
+}
