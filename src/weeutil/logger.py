@@ -26,7 +26,7 @@ LOGGING_STR = """[Logging]
     # Root logger
     [[root]]
       level = {log_level}
-      handlers = syslog, console
+      handlers = syslog,
 
     # Additional loggers would go in the following section. This is useful for 
     # tailoring logging for individual modules.
