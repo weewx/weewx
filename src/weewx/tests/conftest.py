@@ -26,6 +26,7 @@ weeutil.logger.setup('conftest')
                 params=[
                     'sqlite',
                     'mysql',
+                    # 'postgresql',
                 ])
 def build_config(request):
     """Generate a config file set to use a particular database type

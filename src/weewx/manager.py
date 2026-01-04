@@ -359,7 +359,7 @@ class Manager:
                   progress_fn=None,
                   log_success=True,
                   log_failure=True,
-                  update = False):
+                  update=False):
         """
         Commit a single record or a collection of records to the archive.
 
@@ -413,8 +413,10 @@ class Manager:
 
         # Update the cached timestamps. This has to sit outside the transaction context,
         # in case an exception occurs.
-        self.first_timestamp = min_ts if self.first_timestamp is None else min(min_ts, self.first_timestamp)
-        self.last_timestamp = max_ts if self.last_timestamp is None else max(max_ts, self.last_timestamp)
+        self.first_timestamp = min_ts if self.first_timestamp is None else min(min_ts,
+                                                                               self.first_timestamp)
+        self.last_timestamp = max_ts if self.last_timestamp is None else max(max_ts,
+                                                                             self.last_timestamp)
 
         return N
 
@@ -458,7 +460,8 @@ class Manager:
                 raise
             set_stmt = ', '.join(["%s=?" % k for k in key_list])
             where_stmt = ' AND '.join(["%s <=> ?" % k for k in key_list])
-            sql_update_stmt = "UPDATE %s SET %s WHERE dateTime = ? AND NOT (%s)" % (self.table_name, set_stmt, where_stmt)
+            sql_update_stmt = "UPDATE %s SET %s WHERE dateTime = ? AND NOT (%s)" \
+                              % (self.table_name, set_stmt, where_stmt)
             cursor.execute(sql_update_stmt, value_list + [record['dateTime'],] + value_list)
             if log_success:
                 if cursor.rowcount > 0:
@@ -1041,8 +1044,6 @@ class DaySummaryManager(Manager):
     }
 
     # SQL statements used by the metadata in the daily summaries.
-    meta_create_str = "CREATE TABLE %s_day__metadata (name CHAR(20) NOT NULL " \
-                      "PRIMARY KEY, value TEXT);"
     meta_delete_str = "DELETE FROM %s_day__metadata WHERE name = ?;"
     meta_insert_str = "INSERT INTO %s_day__metadata VALUES(?, ?)"
     meta_select_str = "SELECT value FROM %s_day__metadata WHERE name=?"
@@ -1132,7 +1133,9 @@ class DaySummaryManager(Manager):
                 self._initialize_day_table(obs[0], obs[1].lower(), cursor)
 
             # Now create the meta table...
-            cursor.execute(DaySummaryManager.meta_create_str % self.table_name)
+            cursor.create_table(f'{self.table_name}_day__metadata',
+                                [('name', 'CHAR(20) NOT NULL PRIMARY KEY'),
+                                ('value', 'TEXT')])
             # ... then put the version number in it:
             self._write_metadata('Version', DaySummaryManager.version, cursor)
 
@@ -1147,12 +1150,7 @@ class DaySummaryManager(Manager):
             day_schema_type (str): The schema to be used. Either 'scalar', or 'vector'
             cursor (weedb.Cursor): An open cursor
         """
-        s = ', '.join(
-            ["%s %s" % column_type
-             for column_type in DaySummaryManager.day_schemas[day_schema_type]])
-
-        sql_create_str = "CREATE TABLE %s_day_%s (%s);" % (self.table_name, obs_type, s)
-        cursor.execute(sql_create_str)
+        cursor.create_table(f"{self.table_name}_day_{obs_type}", DaySummaryManager.day_schemas[day_schema_type])
 
     def _add_column(self, column_name, column_type, cursor):
         # First call my superclass's version...

@@ -52,8 +52,8 @@ def temperfunc(i):
 
 def expected_record(irec):
     record = {'dateTime': timefunc(irec), 'interval': int(interval / 60), 'usUnits': 1,
-               'outTemp': temperfunc(irec), 'barometer': barfunc(irec),
-               'inTemp': 70.0 + 0.1 * irec}
+              'outTemp': temperfunc(irec), 'barometer': barfunc(irec),
+              'inTemp': 70.0 + 0.1 * irec}
     return record
 
 
