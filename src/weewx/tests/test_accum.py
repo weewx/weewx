@@ -8,7 +8,6 @@ import math
 import time
 import pytest
 
-import gen_fake_data
 import weewx.accum
 from gen_fake_data import gen_fake_records
 from weeutil.weeutil import TimeSpan

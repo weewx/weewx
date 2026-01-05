@@ -258,20 +258,20 @@ def test_get_aggregate_expression(config_dict):
         stop_ts = time.mktime(month_stop_tt)
 
         # This one is a valid expression:
-        value = weewx.xtypes.get_aggregate('rain-ET', TimeSpan(start_ts, stop_ts),
+        value = weewx.xtypes.get_aggregate('CASE WHEN rain > ET THEN rain-ET ELSE 0 END', TimeSpan(start_ts, stop_ts),
                                            'sum', db_manager)
-        assert value[0] == pytest.approx(2.94, abs=0.01)
+        assert value[0] == pytest.approx(9.565, abs=0.01)
 
         # This one uses a nonsense variable:
         with pytest.raises(weewx.UnknownAggregation):
             value = weewx.xtypes.get_aggregate('rain-foo', TimeSpan(start_ts, stop_ts),
                                                'sum', db_manager)
 
-        # I don't know why someone would want the square root of rain minus ET, but it is
-        # a valid function.
-        value = weewx.xtypes.get_aggregate('SQRT(rain-ET)', TimeSpan(start_ts, stop_ts),
+        # Seek aggregate of a valid function.
+        value = weewx.xtypes.get_aggregate('CASE WHEN rain > ET THEN rain-ET ELSE 0 END',
+                                           TimeSpan(start_ts, stop_ts),
                                            'sum', db_manager)
-        assert value[0] == pytest.approx(36.67, abs=0.01)
+        assert value[0] == pytest.approx(9.565, abs=0.01)
 
         # This one uses a nonsense function
         with pytest.raises(weedb.DatabaseError):
