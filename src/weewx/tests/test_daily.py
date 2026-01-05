@@ -188,7 +188,7 @@ def testTags(config_dict):
     global skin_dict
     db_binder = weewx.manager.DBBinder(config_dict)
     db_lookup = db_binder.bind_default()
-    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as manager:
+    with (weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as manager):
 
         spans = {'day': weeutil.weeutil.TimeSpan(time.mktime((2010, 3, 15, 0, 0, 0, 0, 0, -1)),
                                                  time.mktime((2010, 3, 16, 0, 0, 0, 0, 0, -1))),
@@ -229,12 +229,14 @@ def testTags(config_dict):
                         res2 = manager.getSql(
                             f"SELECT dateTime FROM archive "
                             f"WHERE {stats_type} = ? "
-                            f"AND dateTime>? AND dateTime <=?",
+                            f"AND dateTime>? AND dateTime <=? "
+                            f"ORDER BY dateTime ASC",
                             (archive_result, start_ts, stop_ts))
                         stats_value_helper = getattr(
                             getattr(getattr(tagStats, span)(), stats_type),
                             aggregate + 'time')
-                        assert stats_value_helper.raw == res2[0]
+                        assert stats_value_helper.raw == res2[0], \
+                            f"stats_type: {stats_type}, aggregate: {aggregate}, span: {span}"
 
         # Do the tests for a report time of midnight, 1-Apr-2010
         tagStats = weewx.tags.TimeBinder(db_lookup, spans['month'].stop,
