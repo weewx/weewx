@@ -93,8 +93,8 @@ def set_locale(name):
         try:
             yield locale.setlocale(locale.LC_ALL, name)
         except locale.Error as e:
-            log.debug("Unable to set locale '%s': %s. Using default.", name, e)
-            yield locale.setlocale(locale.LC_ALL, '')
+            log.debug("Unable to set locale '%s': %s. Using 'C' locale instead.", name, e)
+            yield locale.setlocale(locale.LC_ALL, 'C')
         finally:
             locale.setlocale(locale.LC_ALL, saved_locale)
 
