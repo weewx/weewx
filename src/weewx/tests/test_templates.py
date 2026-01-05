@@ -35,8 +35,6 @@ import misc
 weewx.debug = 1
 
 log = logging.getLogger(__name__)
-# Set up logging using the defaults.
-weeutil.logger.setup('weetest_templates')
 
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
@@ -93,6 +91,8 @@ weewx.units.default_unit_label_dict["amp"] = " A"
 
 
 def test_report_engine(config_dict):
+    # Set up logging:
+    weeutil.logger.setup('weetest_templates', config_dict)
     # Remove the old directory:
     try:
         test_html_dir = os.path.join(config_dict['WEEWX_ROOT'],
