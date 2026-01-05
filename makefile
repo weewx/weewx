@@ -147,7 +147,7 @@ done
 ## testing targets
 
 # if no suite is specified, find all the pytest files in the source tree
-SUITE?=`grep -rl --include="*.py" "pytest" src`
+SUITE?=`find src -name "test_*.py"`
 test: src/weewx_data/
 	@rm -f $(BLDDIR)/test-results
 	@mkdir -p $(BLDDIR)
@@ -164,7 +164,7 @@ test: src/weewx_data/
 done
 	@grep "ERROR:\|FAIL:\|FAILURES" $(BLDDIR)/test-results || echo "no failures"
 	@echo "see $(BLDDIR)/test-results for output from the tests"
-	@grep -q "ERROR:\|FAIL:\|FAILURES" $(BLDDIR)/test-results && exit 1 || true
+	@grep -q "ERROR:\|FAIL:\|FAILURES\|ERRORS" $(BLDDIR)/test-results && exit 1 || true
 
 test-setup:
 	src/weedb/tests/setup_mysql.sh
