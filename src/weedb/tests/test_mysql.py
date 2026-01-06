@@ -50,9 +50,12 @@ class Cursor:
         except ProgrammingError:
             pass
 
-with MySQLdb.connect(host='localhost', user='weewx1', password='weewx1') as connection:
+try:
+    connection = MySQLdb.connect(host='localhost', user='weewx1', password='weewx1')
     server_info = connection.get_server_info()
     using_maria_db = "MariaDB" in server_info
+finally:
+    connection.close()
 
 class TestMySQL:
 

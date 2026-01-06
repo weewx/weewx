@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -511,6 +511,7 @@ default_unit_label_dict = {}
 DEFAULT_DELTATIME_FORMAT = "%(day)d%(day_label)s, " \
                            "%(hour)d%(hour_label)s, " \
                            "%(minute)d%(minute_label)s"
+DEFAULT_TIME_FORMAT = "%d-%b-%Y %H:%M"
 
 # Default mapping from compass degrees to ordinals
 DEFAULT_ORDINATE_NAMES = [
@@ -780,7 +781,7 @@ class Formatter:
             elif val_t[1] == "unix_epoch_ns":
                 t /= 1000000.0
             if useThisFormat is None:
-                val_str = time.strftime(self.time_format_dict.get(context, "%d-%b-%Y %H:%M"),
+                val_str = time.strftime(self.time_format_dict.get(context, DEFAULT_TIME_FORMAT),
                                         time.localtime(t))
             else:
                 val_str = time.strftime(useThisFormat, time.localtime(t))
@@ -788,7 +789,7 @@ class Formatter:
         elif val_t[1]=='local_djd':
             ti = time.gmtime(dublin_to_epoch(val_t[0]))
             if useThisFormat is None:
-                val_str = time.strftime(self.time_format_dict.get(context, "%d-%b-%Y %H:%M"), ti)
+                val_str = time.strftime(self.time_format_dict.get(context, DEFAULT_TIME_FORMAT), ti)
             else:
                 val_str = time.strftime(useThisFormat, ti)
             addLabel = False
