@@ -41,7 +41,7 @@ jobs:
 
     - name: Launch tests
       run: |
-        export LANG=us_US.utf8
+        export LANG=us_US.UTF-8
         make test
 
     - name: Archive test-results

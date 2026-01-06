@@ -40,7 +40,7 @@ os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
 
 # Explicitly set LANG to the US locale. Some of the tests require it.
-os.environ['LANG'] = "us_US.utf8"
+os.environ['LANG'] = "us_US.UTF-8"
 locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
 # These tests also test the examples in the 'example' subdirectory.
