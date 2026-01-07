@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -640,8 +640,7 @@ class Manager:
 
     def _add_column(self, column_name, column_type, cursor):
         """Add a column to the main archive table"""
-        cursor.execute("ALTER TABLE %s ADD COLUMN %s %s"
-                       % (self.table_name, column_name, column_type))
+        cursor.add_column(self.table_name, column_name, column_type)
 
     def rename_column(self, old_column_name, new_column_name):
         """Rename an existing column
@@ -655,8 +654,7 @@ class Manager:
 
     def _rename_column(self, old_column_name, new_column_name, cursor):
         """Rename a column in the main archive table."""
-        cursor.execute("ALTER TABLE %s RENAME COLUMN %s TO %s"
-                       % (self.table_name, old_column_name, new_column_name))
+        cursor.rename_column(self.table_name, old_column_name, new_column_name)
 
     def drop_columns(self, column_names):
         """Drop a list of columns from the database
@@ -1154,20 +1152,20 @@ class DaySummaryManager(Manager):
 
     def _add_column(self, column_name, column_type, cursor):
         # First call my superclass's version...
-        Manager._add_column(self, column_name, column_type, cursor)
+        super()._add_column(column_name, column_type, cursor)
         # ... then do mine
         self._initialize_day_table(column_name, 'scalar', cursor)
 
     def _rename_column(self, old_column_name, new_column_name, cursor):
         # First call my superclass's version...
-        Manager._rename_column(self, old_column_name, new_column_name, cursor)
+        super()._rename_column(old_column_name, new_column_name, cursor)
         # ... then do mine
-        cursor.execute("ALTER TABLE %s_day_%s RENAME TO %s_day_%s;"
-                       % (self.table_name, old_column_name, self.table_name, new_column_name))
+        cursor.rename_table(f"{self.table_name}_day_{old_column_name}",
+                            f"{self.table_name}_day_{new_column_name}")
 
     def _drop_columns(self, column_names, cursor):
         # First call my superclass's version...
-        Manager._drop_columns(self, column_names, cursor)
+        super()._drop_columns(column_names, cursor)
         # ... then do mine
         for column_name in column_names:
             cursor.execute("DROP TABLE IF EXISTS %s_day_%s;" % (self.table_name, column_name))
