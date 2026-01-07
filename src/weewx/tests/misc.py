@@ -1,10 +1,9 @@
 #
-#      Copyright (c) 2019-2024 Tom Keffer <tkeffer@gmail.com>
+#      Copyright (c) 2019-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #      See the file LICENSE.txt for your full rights.
 #
 """Miscellaneous classes used by the test routines."""
-import math
 
 import weewx.xtypes
 from weewx.units import ValueTuple

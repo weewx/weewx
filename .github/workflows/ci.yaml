@@ -22,7 +22,8 @@ jobs:
           mariadb-client \
           mariadb-server \
           rsync
-        sudo locale-gen de_DE.utf8
+        sudo locale-gen de_DE.UTF-8
+        sudo locale-gen en_US.UTF-8
         sudo update-locale
 
     - uses: actions/checkout@v4
@@ -32,6 +33,7 @@ jobs:
         python3 -m pip install --user "Pillow>=9.2"
         python3 -m pip install --user mkdocs
         python3 -m pip install --user mkdocs-material
+        python3 -m pip install --user pytest
 
     - name: Setup tests
       run: |
@@ -39,6 +41,7 @@ jobs:
 
     - name: Launch tests
       run: |
+        export LANG=en_US.UTF-8
         make test
 
     - name: Archive test-results
@@ -46,4 +49,6 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: test-results
-        path: build/test-results
+        path: |
+          build/test-results
+          /var/tmp/weewx-test/weewx-ci.log

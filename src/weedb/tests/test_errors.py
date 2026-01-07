@@ -1,7 +1,12 @@
+#
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
 """Test the weedb exception hierarchy"""
 import os.path
 import sys
-import unittest
+import pytest
 
 import weedb
 
@@ -36,9 +41,10 @@ else:
              "Change the permissions and try again." % sqdb2_dict['database_name'])
 
 
-class Common(unittest.TestCase):
+class TestErrors:
 
-    def setUp(self):
+    @pytest.fixture(autouse=True)
+    def setup(self):
         """Drop the old databases, in preparation for running a test."""
         try:
             import MySQLdb
@@ -46,7 +52,7 @@ class Common(unittest.TestCase):
             try:
                 import pymysql as MySQLdb
             except ImportError as e:
-                raise unittest.case.SkipTest(e)
+                pytest.skip(str(e))
         try:
             weedb.drop(mysql1_dict)
         except weedb.NoDatabase:
@@ -59,49 +65,49 @@ class Common(unittest.TestCase):
     def test_bad_host(self):
         mysql_dict = dict(mysql1_dict)
         mysql_dict['host'] = 'foohost'
-        with self.assertRaises(weedb.CannotConnectError):
+        with pytest.raises(weedb.CannotConnectError):
             weedb.connect(mysql_dict)
 
     def test_bad_password(self):
         mysql_dict = dict(mysql1_dict)
         mysql_dict['password'] = 'badpw'
-        with self.assertRaises(weedb.BadPasswordError):
+        with pytest.raises(weedb.BadPasswordError):
             weedb.connect(mysql_dict)
 
     def test_drop_nonexistent_database(self):
-        with self.assertRaises(weedb.NoDatabase):
+        with pytest.raises(weedb.NoDatabase):
             weedb.drop(mysql1_dict)
-        with self.assertRaises(weedb.NoDatabase):
+        with pytest.raises(weedb.NoDatabase):
             weedb.drop(sqdb1_dict)
 
     def test_drop_nopermission(self):
         weedb.create(mysql1_dict)
-        with self.assertRaises(weedb.PermissionError):
+        with pytest.raises(weedb.PermissionError):
             weedb.drop(mysql2_dict)
         weedb.create(sqdb1_dict)
         # Can't really test this one without setting up a file where
         # we have no write permission
-        with self.assertRaises(weedb.NoDatabaseError):
+        with pytest.raises(weedb.NoDatabaseError):
             weedb.drop(sqdb2_dict)
 
     def test_create_nopermission(self):
-        with self.assertRaises(weedb.PermissionError):
+        with pytest.raises(weedb.PermissionError):
             weedb.create(mysql2_dict)
-        with self.assertRaises(weedb.PermissionError):
+        with pytest.raises(weedb.PermissionError):
             weedb.create(sqdb2_dict)
 
     def test_double_db_create(self):
         weedb.create(mysql1_dict)
-        with self.assertRaises(weedb.DatabaseExists):
+        with pytest.raises(weedb.DatabaseExists):
             weedb.create(mysql1_dict)
         weedb.create(sqdb1_dict)
-        with self.assertRaises(weedb.DatabaseExists):
+        with pytest.raises(weedb.DatabaseExists):
             weedb.create(sqdb1_dict)
 
     def test_open_nonexistent_database(self):
-        with self.assertRaises(weedb.OperationalError):
+        with pytest.raises(weedb.OperationalError):
             connect = weedb.connect(mysql1_dict)
-        with self.assertRaises(weedb.OperationalError):
+        with pytest.raises(weedb.OperationalError):
             connect = weedb.connect(sqdb1_dict)
 
     def test_select_nonexistent_database(self):
@@ -110,7 +116,7 @@ class Common(unittest.TestCase):
         connect = weedb.connect(mysql_dict)
         cursor = connect.cursor()
         # Earlier versions of MySQL would raise error number 1146, "Table doesn't exist".
-        with self.assertRaises((weedb.NoDatabaseError, weedb.NoTableError)):
+        with pytest.raises((weedb.NoDatabaseError, weedb.NoTableError)):
             cursor.execute("SELECT foo from test_weewx1.bar")
         cursor.close()
         connect.close()
@@ -124,7 +130,7 @@ class Common(unittest.TestCase):
             connect = weedb.connect(db_dict)
             cursor = connect.cursor()
             cursor.execute("CREATE TABLE bar (col1 int, col2 int)")
-            with self.assertRaises(weedb.NoTableError) as e:
+            with pytest.raises(weedb.NoTableError):
                 cursor.execute("SELECT foo from fubar")
             cursor.close()
             connect.close()
@@ -138,7 +144,7 @@ class Common(unittest.TestCase):
             connect = weedb.connect(db_dict)
             cursor = connect.cursor()
             cursor.execute("CREATE TABLE bar (col1 int, col2 int)")
-            with self.assertRaises(weedb.TableExistsError) as e:
+            with pytest.raises(weedb.TableExistsError):
                 cursor.execute("CREATE TABLE bar (col1 int, col2 int)")
             cursor.close()
             connect.close()
@@ -152,7 +158,7 @@ class Common(unittest.TestCase):
             connect = weedb.connect(db_dict)
             cursor = connect.cursor()
             cursor.execute("CREATE TABLE bar (col1 int, col2 int)")
-            with self.assertRaises(weedb.NoColumnError) as e:
+            with pytest.raises(weedb.NoColumnError):
                 cursor.execute("SELECT foo from bar")
             cursor.close()
             connect.close()
@@ -167,7 +173,7 @@ class Common(unittest.TestCase):
             cursor = connect.cursor()
             cursor.execute("CREATE TABLE test1 ( dateTime INTEGER NOT NULL PRIMARY KEY, col1 int, col2 int)")
             cursor.execute("INSERT INTO test1 (dateTime, col1, col2) VALUES (1, 10, 20)")
-            with self.assertRaises(weedb.IntegrityError) as e:
+            with pytest.raises(weedb.IntegrityError):
                 cursor.execute("INSERT INTO test1 (dateTime, col1, col2) VALUES (1, 30, 40)")
             cursor.close()
             connect.close()
@@ -175,6 +181,3 @@ class Common(unittest.TestCase):
         test(mysql1_dict)
         test(sqdb1_dict)
 
-
-if __name__ == '__main__':
-    unittest.main()

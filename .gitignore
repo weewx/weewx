@@ -1,6 +1,9 @@
 *~
 \#*
 
+# Don't commit sensitive stuff
+.env
+
 # Python compile stuff
 __pycache__
 *.pyc

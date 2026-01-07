@@ -3,6 +3,7 @@
 #
 #      See the file LICENSE.txt for your full rights.
 #
+"""Schema used for testing"""
 table = [('dateTime',             'INTEGER NOT NULL PRIMARY KEY'),
          ('usUnits',              'INTEGER NOT NULL'),
          ('interval',             'INTEGER NOT NULL'),

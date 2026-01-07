@@ -89,12 +89,15 @@ def set_locale(name):
     with LOCALE_LOCK:
         # Save the old locale
         saved_locale = locale.setlocale(locale.LC_ALL)
-        # Set a new one. If the locale is invalid, use a default.
+        # Set a new one. Be prepared for an exception if the locale is invalid.
         try:
             yield locale.setlocale(locale.LC_ALL, name)
         except locale.Error as e:
-            log.debug("Unable to set locale '%s': %s. Using default.", name, e)
-            yield locale.setlocale(locale.LC_ALL, '')
+            # That didn't work. Set to the default locale.
+            loc = locale.setlocale(locale.LC_ALL, '')
+            log.debug("Unable to set locale '%s': %s. Using default locale instead ('%s').",
+                      name, e, loc)
+            yield loc
         finally:
             locale.setlocale(locale.LC_ALL, saved_locale)
 

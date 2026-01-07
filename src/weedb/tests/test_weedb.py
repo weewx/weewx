@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -9,7 +9,7 @@ For this test to work, MySQL user 'weewx' must have full access to database 'tes
     mysql> grant select, update, create, delete, drop, insert on test.* to weewx@localhost;
 """
 
-import unittest
+import pytest
 
 import weedb
 import weedb.sqlite
@@ -31,20 +31,23 @@ schema = [(0, 'dateTime', 'INTEGER', False, None, True),
           (7, 'descript', 'STR',     True,  None, False)]
 
 
-class Common(unittest.TestCase):
+class Common:
 
-    def setUp(self):
-        self.tearDown()
-
-    def tearDown(self):
+    def setup_method(self):
         try:
             weedb.drop(self.db_dict)
-        except:
+        except Exception:
+            pass
+
+    def teardown_method(self):
+        try:
+            weedb.drop(self.db_dict)
+        except Exception:
             pass
 
     def populate_db(self):
         weedb.create(self.db_dict)
-        with self.assertRaises(weedb.DatabaseExists):
+        with pytest.raises(weedb.DatabaseExists):
             weedb.create(self.db_dict)
         with weedb.connect(self.db_dict) as _connect:
             with weedb.Transaction(_connect) as _cursor:
@@ -59,48 +62,48 @@ class Common(unittest.TestCase):
                                     (irec, 10 * irec, irec))
 
     def test_drop(self):
-        with self.assertRaises(weedb.NoDatabase):
+        with pytest.raises(weedb.NoDatabase):
             weedb.drop(self.db_dict)
 
     def test_double_create(self):
         weedb.create(self.db_dict)
-        with self.assertRaises(weedb.DatabaseExists):
+        with pytest.raises(weedb.DatabaseExists):
             weedb.create(self.db_dict)
 
     def test_no_db(self):
-        with self.assertRaises(weedb.NoDatabaseError):
+        with pytest.raises(weedb.NoDatabaseError):
             weedb.connect(self.db_dict)
 
     def test_no_tables(self):
         weedb.create(self.db_dict)
         with weedb.connect(self.db_dict) as _connect:
-            self.assertEqual(_connect.tables(), [])
-            with self.assertRaises(weedb.ProgrammingError):
+            assert _connect.tables() == []
+            with pytest.raises(weedb.ProgrammingError):
                 _connect.columnsOf('test1')
-            with self.assertRaises(weedb.ProgrammingError):
+            with pytest.raises(weedb.ProgrammingError):
                 _connect.columnsOf('foo')
 
     def test_create(self):
         self.populate_db()
         with weedb.connect(self.db_dict) as _connect:
-            self.assertEqual(sorted(_connect.tables()), ['test1', 'test2'])
-            self.assertEqual(_connect.columnsOf('test1'), ['dateTime', 'min', 'mintime', 'max',
-                                                           'maxtime', 'sum', 'count', 'descript'])
-            self.assertEqual(_connect.columnsOf('test2'), ['dateTime', 'min', 'mintime', 'max',
-                                                           'maxtime', 'sum', 'count', 'descript'])
+            assert sorted(_connect.tables()) == ['test1', 'test2']
+            assert _connect.columnsOf('test1') == ['dateTime', 'min', 'mintime', 'max',
+                                                   'maxtime', 'sum', 'count', 'descript']
+            assert _connect.columnsOf('test2') == ['dateTime', 'min', 'mintime', 'max',
+                                                   'maxtime', 'sum', 'count', 'descript']
             for icol, col in enumerate(_connect.genSchemaOf('test1')):
-                self.assertEqual(schema[icol], col)
+                assert schema[icol] == col
             for icol, col in enumerate(_connect.genSchemaOf('test2')):
-                self.assertEqual(schema[icol], col)
+                assert schema[icol] == col
             # Make sure an IntegrityError gets raised in the case of a duplicate key:
             with weedb.Transaction(_connect) as _cursor:
-                with self.assertRaises(weedb.IntegrityError):
+                with pytest.raises(weedb.IntegrityError):
                     _cursor.execute("INSERT INTO test1 (dateTime, min, mintime) VALUES (0, 10, 0)")
 
     def test_bad_table(self):
         self.populate_db()
         with weedb.connect(self.db_dict) as _connect:
-            with self.assertRaises(weedb.ProgrammingError):
+            with pytest.raises(weedb.ProgrammingError):
                 _connect.columnsOf('foo')
 
     def test_select(self):
@@ -109,40 +112,40 @@ class Common(unittest.TestCase):
             with _connect.cursor() as _cursor:
                 _cursor.execute("SELECT dateTime, min FROM test1")
                 for i, _row in enumerate(_cursor):
-                    self.assertEqual(_row[0], i)
+                    assert _row[0] == i
 
                 # SELECT with wild card, using a result set
                 _result = _cursor.execute("SELECT * from test1")
                 for i, _row in enumerate(_result):
-                    self.assertEqual(_row[0], i)
+                    assert _row[0] == i
 
                 # Find a matching result set
                 _cursor.execute("SELECT dateTime, min FROM test1 WHERE dateTime = 5")
                 _row = _cursor.fetchone()
-                self.assertEqual(_row[0], 5)
-                self.assertEqual(_row[1], 50)
+                assert _row[0] == 5
+                assert _row[1] == 50
 
                 # Now test where there is no matching result:
                 _cursor.execute("SELECT dateTime, min FROM test1 WHERE dateTime = -1")
                 _row = _cursor.fetchone()
-                self.assertIsNone(_row)
+                assert _row is None
 
                 # Same, but using an aggregate:
                 _cursor.execute("SELECT MAX(min) FROM test1 WHERE dateTime = -1")
                 _row = _cursor.fetchone()
-                self.assertIsNotNone(_row)
-                self.assertIsNone(_row[0])
+                assert _row is not None
+                assert _row[0] is None
 
     def test_bad_select(self):
         self.populate_db()
         with weedb.connect(self.db_dict) as _connect:
             with _connect.cursor() as _cursor:
                 # Test SELECT on a bad table name
-                with self.assertRaises(weedb.ProgrammingError):
+                with pytest.raises(weedb.ProgrammingError):
                     _cursor.execute("SELECT dateTime, min FROM foo")
 
                 # Test SELECT on a bad column name
-                with self.assertRaises(weedb.OperationalError):
+                with pytest.raises(weedb.OperationalError):
                     _cursor.execute("SELECT dateTime, foo FROM test1")
 
     def test_rollback(self):
@@ -165,7 +168,7 @@ class Common(unittest.TestCase):
             with _connect.cursor() as _cursor:
                 _cursor.execute("SELECT dateTime, x from test1")
                 _row = _cursor.fetchone()
-        self.assertIsNone(_row)
+        assert _row is None
 
     def test_transaction(self):
         # Create the database and schema
@@ -196,14 +199,14 @@ class Common(unittest.TestCase):
             with _connect.cursor() as _cursor:
                 _cursor.execute("SELECT dateTime, x from test1")
                 _row = _cursor.fetchone()
-        self.assertIsNone(_row)
+        assert _row is None
 
 
 class TestSqlite(Common):
 
-    def __init__(self, *args, **kwargs):
+    def setup_method(self):
         self.db_dict = sqlite_db_dict
-        super().__init__(*args, **kwargs)
+        super().setup_method()
 
     def test_variable(self):
         import sqlite3
@@ -213,43 +216,28 @@ class TestSqlite(Common):
             # Not sure exactly when it started, but I know that v3.4.2 did not have it.
             if version_compare(sqlite3.sqlite_version, '3.4.2') > 0:
                 _v = _connect.get_variable('journal_mode')
-                self.assertEqual(_v[1].lower(), 'delete')
+                assert _v[1].lower() == 'delete'
             _v = _connect.get_variable('foo')
-            self.assertIsNone(_v)
-        _connect.close()
+            assert _v is None
 
 
 class TestMySQL(Common):
 
-    def setUp(self):
+    def setup_method(self):
         try:
             import MySQLdb
         except ImportError:
             try:
                 import pymysql as MySQLdb
             except ImportError as e:
-                raise unittest.case.SkipTest(e)
-        super().setUp()
-
-    def __init__(self, *args, **kwargs):
+                pytest.skip(str(e))
         self.db_dict = mysql_db_dict
-        super().__init__(*args, **kwargs)
+        super().setup_method()
 
     def test_variable(self):
         weedb.create(self.db_dict)
         with weedb.connect(self.db_dict) as _connect:
             _v = _connect.get_variable('lower_case_table_names')
-            self.assertTrue(_v[1] in ['0', '1', '2'], "Unknown lower_case_table_names value")
+            assert _v[1] in ['0', '1', '2']
             _v = _connect.get_variable('foo')
-            self.assertEqual(_v, None)
-
-
-def suite():
-    tests = ['test_drop', 'test_double_create', 'test_no_db', 'test_no_tables',
-             'test_create', 'test_bad_table', 'test_select', 'test_bad_select',
-             'test_rollback', 'test_transaction', 'test_variable']
-    return unittest.TestSuite(list(map(TestSqlite, tests)) + list(map(TestMySQL, tests)))
-
-
-if __name__ == '__main__':
-    unittest.TextTestRunner(verbosity=2).run(suite())
+            assert _v is None

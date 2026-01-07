@@ -466,9 +466,9 @@ class DailySummaries(XType):
     agg_sql_dict = {
         'avg': "SELECT SUM(wsum),SUM(sumtime) FROM %(table_name)s_day_%(obs_key)s "
                "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'avg_ge': "SELECT SUM((wsum/sumtime) >= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
+        'avg_ge': "SELECT SUM(CASE WHEN (wsum/sumtime) >= %(val)s THEN 1 ELSE 0 END) FROM %(table_name)s_day_%(obs_key)s "
                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s and sumtime <> 0",
-        'avg_le': "SELECT SUM((wsum/sumtime) <= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
+        'avg_le': "SELECT SUM(CASE WHEN (wsum/sumtime) <= %(val)s THEN 1 ELSE 0 END) FROM %(table_name)s_day_%(obs_key)s "
                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s and sumtime <> 0",
         'count': "SELECT SUM(count) FROM %(table_name)s_day_%(obs_key)s "
                  "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
@@ -477,9 +477,9 @@ class DailySummaries(XType):
                    "ORDER BY max DESC, maxtime ASC LIMIT 1",
         'max': "SELECT MAX(max) FROM %(table_name)s_day_%(obs_key)s "
                "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'max_ge': "SELECT SUM(max >= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
+        'max_ge': "SELECT SUM(CASE WHEN max >= %(val)s THEN 1 ELSE 0 END) FROM %(table_name)s_day_%(obs_key)s "
                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'max_le': "SELECT SUM(max <= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
+        'max_le': "SELECT SUM(CASE WHEN max <= %(val)s THEN 1 ELSE 0 END) FROM %(table_name)s_day_%(obs_key)s "
                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'maxmin': "SELECT MAX(min) FROM %(table_name)s_day_%(obs_key)s "
                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
@@ -502,9 +502,9 @@ class DailySummaries(XType):
                    "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'min': "SELECT MIN(min) FROM %(table_name)s_day_%(obs_key)s "
                "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'min_ge': "SELECT SUM(min >= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
+        'min_ge': "SELECT SUM(CASE WHEN min >= %(val)s THEN 1 ELSE 0 END) FROM %(table_name)s_day_%(obs_key)s "
                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
-        'min_le': "SELECT SUM(min <= %(val)s) FROM %(table_name)s_day_%(obs_key)s "
+        'min_le': "SELECT SUM(CASE WHEN min <= %(val)s THEN 1 ELSE 0 END) FROM %(table_name)s_day_%(obs_key)s "
                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",
         'minmax': "SELECT MIN(max) FROM %(table_name)s_day_%(obs_key)s "
                   "WHERE dateTime >= %(start)s AND dateTime < %(stop)s",

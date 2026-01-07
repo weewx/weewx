@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -11,7 +11,7 @@
 # It uses two MySQL users, weewx1 and weewx2. The companion
 # script "setup_mysql.sh" will set them up with the necessary permissions.
 #
-import unittest
+import pytest
 
 try:
     import MySQLdb
@@ -29,7 +29,7 @@ else:
 
 
 def get_error(e):
-    return e.exception.args[0]
+    return e.value.args[0]
 
 
 class Cursor:
@@ -50,13 +50,22 @@ class Cursor:
         except ProgrammingError:
             pass
 
+try:
+    connection = MySQLdb.connect(host='localhost', user='weewx1', password='weewx1')
+    server_info = connection.get_server_info()
+    using_maria_db = "MariaDB" in server_info
+finally:
+    connection.close()
 
-class TestMySQL(unittest.TestCase):
+class TestMySQL:
 
-    def setUp(self):
-        self.tearDown()
+    @pytest.fixture(autouse=True)
+    def setup_teardown(self):
+        self.tear_down()
+        yield
+        self.tear_down()
 
-    def tearDown(self):
+    def tear_down(self):
         """Remove any databases we created."""
         with Cursor(user='weewx1', password='weewx1') as cursor:
             try:
@@ -69,82 +78,91 @@ class TestMySQL(unittest.TestCase):
                 pass
 
     def test_bad_host(self):
-        with self.assertRaises(OperationalError) as e:
-            with Cursor(host='foohost', user='weewx1', password='weewx1') as e:
+        with pytest.raises(OperationalError) as e:
+            with Cursor(host='foohost', user='weewx1', password='weewx1'):
                 pass
         if has_MySQLdb:
-            self.assertEqual(get_error(e), 2005)
+            assert get_error(e) == 2005
         else:
-            self.assertEqual(get_error(e), 2003)
+            assert get_error(e) == 2003
 
     def test_bad_password(self):
-        with self.assertRaises(OperationalError) as e:
-            with Cursor(user='weewx1', password='badpw') as e:
+        with pytest.raises(OperationalError) as e:
+            with Cursor(user='weewx1', password='badpw'):
                 pass
-        self.assertEqual(get_error(e), 1045)
+        assert get_error(e) == 1045
 
     def test_drop_nonexistent_database(self):
         with Cursor(user='weewx1', password='weewx1') as cursor:
-            with self.assertRaises(OperationalError) as e:
+            with pytest.raises(OperationalError) as e:
                 cursor.execute("DROP DATABASE test_weewx1")
-            self.assertEqual(get_error(e), 1008)
+            assert get_error(e) == 1008
 
     def test_drop_nopermission(self):
         with Cursor(user='weewx1', password='weewx1') as cursor1:
             cursor1.execute("CREATE DATABASE test_weewx1")
             with Cursor(user='weewx2', password='weewx2') as cursor2:
-                with self.assertRaises(OperationalError) as e:
+                with pytest.raises(OperationalError) as e:
                     cursor2.execute("DROP DATABASE test_weewx1")
-                self.assertEqual(get_error(e), 1044)
+                assert get_error(e) == 1044
 
     def test_create_nopermission(self):
         with Cursor(user='weewx2', password='weewx2') as cursor:
-            with self.assertRaises(OperationalError) as e:
+            with pytest.raises(OperationalError) as e:
                 cursor.execute("CREATE DATABASE test_weewx1")
-            self.assertEqual(get_error(e), 1044)
+            assert get_error(e) == 1044
 
     def test_double_db_create(self):
         with Cursor(user='weewx1', password='weewx1') as cursor:
             cursor.execute("CREATE DATABASE test_weewx1")
-            with self.assertRaises(ProgrammingError) as e:
+            with pytest.raises(ProgrammingError) as e:
                 cursor.execute("CREATE DATABASE test_weewx1")
-            self.assertEqual(get_error(e), 1007)
+            assert get_error(e) == 1007
 
     def test_open_nonexistent_database(self):
-        with self.assertRaises(OperationalError) as e:
-            with Cursor(user='weewx1', password='weewx1', database='test_weewx1') as cursor:
+        with pytest.raises(OperationalError) as e:
+            with Cursor(user='weewx1', password='weewx1', database='test_weewx1'):
                 pass
-        self.assertEqual(get_error(e), 1049)
+        assert get_error(e) == 1049
 
     def test_select_nonexistent_database(self):
         with Cursor(user='weewx1', password='weewx1') as cursor:
-            with self.assertRaises(OperationalError) as e:
-                cursor.execute("SELECT foo from test_weewx1.bar")
-            self.assertEqual(get_error(e), 1049)
+            # MariaDB reacts differently from MySQL when presented by a non-existent table
+            # in a non-existent database.
+            #   MariaDB: raises ProgrammigError and returns 1146
+            #   MySQL: raises OperationalError and returns 1049
+            if using_maria_db:
+                with pytest.raises(ProgrammingError) as e:
+                    cursor.execute("SELECT foo from test_weewx1.bar")
+                assert get_error(e) == 1146
+            else:
+                with pytest.raises(OperationalError) as e:
+                    cursor.execute("SELECT foo from test_weewx1.bar")
+                assert get_error(e) == 1049
 
     def test_select_nonexistent_table(self):
         with Cursor(user='weewx1', password='weewx1') as cursor:
             cursor.execute("CREATE DATABASE test_weewx1")
             cursor.execute("CREATE TABLE test_weewx1.bar (col1 int, col2 int)")
-            with self.assertRaises(ProgrammingError) as e:
+            with pytest.raises(ProgrammingError) as e:
                 cursor.execute("SELECT foo from test_weewx1.fubar")
-            self.assertEqual(get_error(e), 1146)
+            assert get_error(e) == 1146
 
     def test_double_table_create(self):
         with Cursor(user='weewx1', password='weewx1') as cursor:
             cursor.execute("CREATE DATABASE test_weewx1")
             cursor.execute("CREATE TABLE test_weewx1.bar (col1 int, col2 int)")
-            with self.assertRaises(OperationalError) as e:
+            with pytest.raises(OperationalError) as e:
                 cursor.execute("CREATE TABLE test_weewx1.bar (col1 int, col2 int)")
-            self.assertEqual(get_error(e), 1050)
+            assert get_error(e) == 1050
 
     def test_select_nonexistent_column(self):
         with Cursor(user='weewx1', password='weewx1') as cursor:
             cursor.execute("CREATE DATABASE test_weewx1")
             cursor.execute("CREATE TABLE test_weewx1.bar (col1 int, col2 int)")
-            with self.assertRaises(OperationalError) as e:
+            with pytest.raises(OperationalError) as e:
                 cursor.execute("SELECT foo from test_weewx1.bar")
-            self.assertEqual(get_error(e), 1054)
+            assert get_error(e) == 1054
 
     def test_duplicate_key(self):
         with Cursor(user='weewx1', password='weewx1') as cursor:
@@ -153,11 +171,7 @@ class TestMySQL(unittest.TestCase):
                            "( dateTime INTEGER NOT NULL PRIMARY KEY, col1 int, col2 int)")
             cursor.execute("INSERT INTO test_weewx1.test1 "
                            "(dateTime, col1, col2) VALUES (1, 10, 20)")
-            with self.assertRaises(IntegrityError) as e:
+            with pytest.raises(IntegrityError) as e:
                 cursor.execute("INSERT INTO test_weewx1.test1 (dateTime, col1, col2) "
                                "VALUES (1, 30, 40)")
-            self.assertEqual(get_error(e), 1062)
-
-
-if __name__ == '__main__':
-    unittest.main()
+            assert get_error(e) == 1062

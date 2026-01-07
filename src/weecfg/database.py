@@ -536,10 +536,8 @@ class CalcMissing(DatabaseFix):
             # Construct the SQL update statement. First construct the 'SET'
             # argument, we want a string of comma separated `field_name`=?
             # entries. Each ? will be replaced by a value from update value list
-            # when the SQL statement is executed. We should not see any field
-            # names that are SQLite/MySQL reserved words (e.g., interval) but just
-            # in case enclose field names in backquotes.
-            set_str = ','.join(["`%s`=?" % k for k in key_list])
+            # when the SQL statement is executed.
+            set_str = ','.join(["%s=?" % k for k in key_list])
             # form the SQL update statement
             sql_update_stmt = "UPDATE %s SET %s WHERE dateTime=%s" % (self.dbm.table_name,
                                                                       set_str,

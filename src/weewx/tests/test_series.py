@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2018-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2018-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -9,306 +9,255 @@ import functools
 import os.path
 import sys
 import time
-import unittest
 
-import configobj
+import pytest
 
-import gen_fake_data
 import weewx
 import weewx.units
 import weewx.wxformulas
 import weewx.xtypes
+from parameters import start_ts, stop_ts, interval
 from weeutil.weeutil import TimeSpan
 
-# We will be using the VaporPressure example, so include it in the path
+month_start_tt = (2010, 3, 1, 0, 0, 0, 0, 0, -1)
+month_stop_tt = (2010, 4, 1, 0, 0, 0, 0, 0, -1)
+month_start_ts = time.mktime(month_start_tt)
+month_stop_ts = time.mktime(month_stop_tt)
+
+# We will be using the VaporPressure example, so include it in the path.
 import weewx_data
-example_dir = os.path.normpath(os.path.join(os.path.dirname(weewx_data.__file__),
-                                            './examples'))
+example_dir = os.path.normpath(os.path.join(os.path.dirname(weewx_data.__file__), './examples'))
 sys.path.append(example_dir)
 # Now we can import it
 import vaporpressure
+
 # Register an instance of VaporPressure with the XTypes system:
 weewx.xtypes.xtypes.insert(0, vaporpressure.VaporPressure())
 
-weewx.debug = 1
+# These are the expected results for March 2010
+expected_daily_rain_sum = [0.00, 0.68, 0.60, 0.00, 0.00, 0.68, 0.60, 0.00, 0.00, 0.68, 0.60,
+                           0.00, 0.00, 0.52, 0.76, 0.00, 0.00, 0.52, 0.76, 0.00, 0.00, 0.52,
+                           0.76, 0.00, 0.00, 0.52, 0.76, 0.00, 0.00, 0.52, 0.76]
 
-# Find the configuration file. It's assumed to be in the same directory as me:
-config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")
-cwd = None
+expected_daily_wind_avg = [(-1.39, 3.25), (11.50, 9.43), (11.07, -9.64), (-1.39, -3.03),
+                           (-1.34, 3.29), (11.66, 9.37), (11.13, -9.76), (-1.35, -3.11),
+                           (-1.38, 3.35), (11.68, 9.48), (11.14, -9.60), (-1.37, -3.09),
+                           (-1.34, 3.24), (11.21, 9.78), (12.08, -9.24), (-1.37, -3.57),
+                           (-1.35, 2.91), (10.70, 9.93), (12.07, -9.13), (-1.33, -3.50),
+                           (-1.38, 2.84), (10.65, 9.82), (11.89, -9.21), (-1.38, -3.47),
+                           (-1.34, 2.88), (10.83, 9.77), (11.97, -9.31), (-1.35, -3.54),
+                           (-1.37, 2.93), (10.82, 9.88), (11.97, -9.16)]
 
-os.environ['TZ'] = 'America/Los_Angeles'
-time.tzset()
-month_start_tt = (2010, 3, 1, 0, 0, 0, 0, 0, -1)
-month_stop_tt = (2010, 4, 1, 0, 0, 0, 0, 0, -1)
-start_ts = time.mktime(month_start_tt)
-stop_ts = time.mktime(month_stop_tt)
+expected_daily_wind_last = [(0.00, 10.00), (20.00, 0.00), (0.00, -10.00), (0.00, 0.00),
+                            (0.00, 10.00), (20.00, 0.00), (0.00, -10.00), (0.00, 0.00),
+                            (0.00, 10.00), (20.00, 0.00), (0.00, -10.00), (0.00, 0.00),
+                            (0.00, 10.00), (19.94, 1.31), (0.70, -10.63), (-0.02, 0.00),
+                            (-0.61, 9.33), (19.94, 1.31), (0.70, -10.63), (-0.02, 0.00),
+                            (-0.61, 9.33), (19.94, 1.31), (0.70, -10.63), (-0.02, 0.00),
+                            (-0.61, 9.33), (19.94, 1.31), (0.70, -10.63), (-0.02, 0.00),
+                            (-0.61, 9.33), (19.94, 1.31), (0.70, -10.63)]
 
+expected_vapor_pressures = [0.0520073, 0.0516470, None, 0.0532668, 0.0552850, 0.05816286]
 
-
-class Common:
-    # These are the expected results for March 2010
-    expected_daily_rain_sum = [0.00, 0.68, 0.60, 0.00, 0.00, 0.68, 0.60, 0.00, 0.00, 0.68, 0.60,
-                               0.00, 0.00, 0.52, 0.76, 0.00, 0.00, 0.52, 0.76, 0.00, 0.00, 0.52,
-                               0.76, 0.00, 0.00, 0.52, 0.76, 0.00, 0.00, 0.52, 0.76]
-
-    expected_daily_wind_avg = [(-1.39, 3.25), (11.50, 9.43), (11.07, -9.64), (-1.39, -3.03),
-                               (-1.34, 3.29), (11.66, 9.37), (11.13, -9.76), (-1.35, -3.11),
-                               (-1.38, 3.35), (11.68, 9.48), (11.14, -9.60), (-1.37, -3.09),
-                               (-1.34, 3.24), (11.21, 9.78), (12.08, -9.24), (-1.37, -3.57),
-                               (-1.35, 2.91), (10.70, 9.93), (12.07, -9.13), (-1.33, -3.50),
-                               (-1.38, 2.84), (10.65, 9.82), (11.89, -9.21), (-1.38, -3.47),
-                               (-1.34, 2.88), (10.83, 9.77), (11.97, -9.31), (-1.35, -3.54),
-                               (-1.37, 2.93), (10.82, 9.88), (11.97, -9.16)]
-
-    expected_daily_wind_last = [(0.00, 10.00), (20.00, 0.00), (0.00, -10.00), (0.00, 0.00),
-                                (0.00, 10.00), (20.00, 0.00), (0.00, -10.00), (0.00, 0.00),
-                                (0.00, 10.00), (20.00, 0.00), (0.00, -10.00), (0.00, 0.00),
-                                (0.00, 10.00), (19.94, 1.31), (0.70, -10.63), (-0.02, 0.00),
-                                (-0.61, 9.33), (19.94, 1.31), (0.70, -10.63), (-0.02, 0.00),
-                                (-0.61, 9.33), (19.94, 1.31), (0.70, -10.63), (-0.02, 0.00),
-                                (-0.61, 9.33), (19.94, 1.31), (0.70, -10.63), (-0.02, 0.00),
-                                (-0.61, 9.33), (19.94, 1.31), (0.70, -10.63)]
-
-    expected_vapor_pressures = [0.052, 0.052, None, 0.053, 0.055, 0.058]
-    expected_aggregate_vapor_pressures = [0.055, 0.130, 0.238, 0.119, 0.057, 0.133, 0.243, 0.122,
-                                          0.058, 0.136, 0.247, 0.125, 0.060, 0.139, 0.254, 0.128,
-                                          0.062, 0.143, 0.260, 0.131, 0.063, 0.146, 0.265, 0.135,
-                                          0.064, 0.150, 0.272, 0.138, 0.066, 0.153, 0.279, 0.141,
-                                          0.068, 0.157, 0.286, 0.145, 0.070, 0.161, 0.292, 0.149,
-                                          0.071, 0.165, 0.299, 0.152, 0.074, 0.161, 0.306, 0.156,
-                                          0.076, 0.173, 0.313, 0.166, 0.076, 0.148, 0.317, 0.196,
-                                          0.081, 0.143, 0.325, 0.201, 0.083, 0.156, 0.333, 0.213,
-                                          0.086, 0.160, 0.341, 0.211, 0.088, 0.159, 0.349, 0.217,
-                                          0.091, 0.168, 0.357, 0.227, 0.093, 0.173, 0.366, 0.228,
-                                          0.096, 0.176, 0.375, 0.234, 0.098, 0.182, 0.384, 0.241,
-                                          0.101, 0.187, 0.393, 0.246, 0.104, 0.193, 0.403, 0.252,
-                                          0.107, 0.197, 0.413, 0.256, 0.110, 0.202, 0.423, 0.265,
-                                          0.113, 0.212, 0.433, 0.272, 0.116, 0.212, 0.444, 0.271,
-                                          0.120, 0.218, 0.454, 0.286, 0.123, 0.231, 0.465, 0.293,
-                                          0.126, 0.229, 0.477, 0.287]
-
-    def setUp(self):
-        global config_path
-        global cwd
-
-        # Save and set the current working directory in case some service changes it.
-        if cwd:
-            os.chdir(cwd)
-        else:
-            cwd = os.getcwd()
-
-        try:
-            self.config_dict = configobj.ConfigObj(config_path, file_error=True, encoding='utf-8')
-        except IOError:
-            sys.stderr.write("Unable to open configuration file %s" % config_path)
-            # Reraise the exception (this will eventually cause the program to exit)
-            raise
-        except configobj.ConfigObjError:
-            sys.stderr.write("Error while parsing configuration file %s" % config_path)
-            raise
-
-        # This will generate the test databases if necessary:
-        gen_fake_data.configDatabases(self.config_dict, database_type=self.database_type)
-
-    def tearDown(self):
-        pass
-
-    def test_get_series_archive_outTemp(self):
-        """Test a series of outTemp with no aggregation, run against the archive table."""
-        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
-            start_vec, stop_vec, data_vec \
-                = weewx.xtypes.ArchiveTable.get_series('outTemp',
-                                                       TimeSpan(start_ts, stop_ts),
-                                                       db_manager)
-        self.assertEqual(len(start_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval)
-        self.assertEqual(len(stop_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval)
-        self.assertEqual(len(data_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval)
-
-    def test_get_series_daily_agg_rain_sum(self):
-        """Test a series of daily aggregated rain totals, run against the daily summaries"""
-        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
-            # Calculate the total daily rain
-            start_vec, stop_vec, data_vec \
-                = weewx.xtypes.DailySummaries.get_series('rain',
-                                                         TimeSpan(start_ts, stop_ts),
-                                                         db_manager,
-                                                         'sum',
-                                                         'day')
-        # March has 30 days.
-        self.assertEqual(len(start_vec[0]), 30 + 1)
-        self.assertEqual(len(stop_vec[0]), 30 + 1)
-        self.assertEqual((["%.2f" % d for d in data_vec[0]], data_vec[1], data_vec[2]),
-                         (["%.2f" % d for d in Common.expected_daily_rain_sum], 'inch',
-                          'group_rain'))
-
-    def test_get_series_archive_agg_rain_sum(self):
-        """Test a series of daily aggregated rain totals, run against the main archive table"""
-        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
-            # Calculate the total daily rain
-            start_vec, stop_vec, data_vec \
-                = weewx.xtypes.ArchiveTable.get_series('rain',
-                                                       TimeSpan(start_ts, stop_ts),
-                                                       db_manager,
-                                                       'sum',
-                                                       'day')
-        # March has 30 days.
-        self.assertEqual(len(start_vec[0]), 30 + 1)
-        self.assertEqual(len(stop_vec[0]), 30 + 1)
-        self.assertEqual((["%.2f" % d for d in data_vec[0]], data_vec[1], data_vec[2]),
-                         (["%.2f" % d for d in Common.expected_daily_rain_sum], 'inch',
-                          'group_rain'))
-
-    def test_get_series_archive_agg_rain_cum(self):
-        """Test a series of daily cumulative rain totals, run against the main archive table."""
-        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
-            # Calculate the cumulative total daily rain
-            start_vec, stop_vec, data_vec \
-                = weewx.xtypes.ArchiveTable.get_series('rain',
-                                                       TimeSpan(start_ts, stop_ts),
-                                                       db_manager,
-                                                       'cumulative',
-                                                       24 * 3600)
-        # March has 30 days.
-        self.assertEqual(len(start_vec[0]), 30 + 1)
-        self.assertEqual(len(stop_vec[0]), 30 + 1)
-        right_answer = functools.reduce(lambda v, x: v + [v[-1] + x],
-                                        Common.expected_daily_rain_sum, [0])[1:]
-        self.assertEqual((["%.2f" % d for d in data_vec[0]], data_vec[1], data_vec[2]),
-                         (["%.2f" % d for d in right_answer], 'inch', 'group_rain'))
-
-    def test_get_series_archive_windvec(self):
-        """Test a series of 'windvec', with no aggregation, run against the main archive table"""
-        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
-            # Get a series of wind values
-            start_vec, stop_vec, data_vec \
-                = weewx.xtypes.WindVec.get_series('windvec',
-                                                  TimeSpan(start_ts, stop_ts),
-                                                  db_manager)
-        self.assertEqual(len(start_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval + 1)
-        self.assertEqual(len(stop_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval + 1)
-        self.assertEqual(len(data_vec[0]), (stop_ts - start_ts) / gen_fake_data.interval + 1)
-
-    def test_get_series_archive_agg_windvec_avg(self):
-        """Test a series of 'windvec', with 'avg' aggregation. This will exercise
-        WindVec.get_series(0), which, in turn, will call WindVecDaily.get_aggregate() to get each
-        individual aggregate value."""
-        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
-            # Get a series of wind values
-            start_vec, stop_vec, data_vec \
-                = weewx.xtypes.WindVec.get_series('windvec',
-                                                  TimeSpan(start_ts, stop_ts),
-                                                  db_manager,
-                                                  'avg',
-                                                  24 * 3600)
-        # March has 30 days.
-        self.assertEqual(len(start_vec[0]), 30 + 1)
-        self.assertEqual(len(stop_vec[0]), 30 + 1)
-        self.assertEqual((["(%.2f, %.2f)" % (x.real, x.imag) for x in data_vec[0]]),
-                         (["(%.2f, %.2f)" % (x[0], x[1]) for x in Common.expected_daily_wind_avg]))
-
-    def test_get_series_archive_agg_windvec_last(self):
-        """Test a series of 'windvec', with 'last' aggregation. This will exercise
-        WindVec.get_series(), which, in turn, will call WindVec.get_aggregate() to get each
-        individual aggregate value."""
-        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
-            # Get a series of wind values
-            start_vec, stop_vec, data_vec = weewx.xtypes.get_series('windvec',
-                                                                    TimeSpan(start_ts, stop_ts),
-                                                                    db_manager,
-                                                                    'last',
-                                                                    24 * 3600)
-        # March has 30 days.
-        self.assertEqual(len(start_vec[0]), 30 + 1)
-        self.assertEqual(len(stop_vec[0]), 30 + 1)
-        # The round(x, 2) + 0 is necessary to avoid 0.00 comparing different from -0.00.
-        self.assertEqual(
-            (["(%.2f, %.2f)" % (round(x.real, 2) + 0, round(x.imag, 2) + 0) for x in data_vec[0]]),
-            (["(%.2f, %.2f)" % (x[0], x[1]) for x in Common.expected_daily_wind_last]))
-
-    def test_get_aggregate_windvec_last(self):
-        """Test getting a windvec aggregation over a period that does not fall on midnight
-        boundaries."""
-        # This time span was chosen because it includes a null value.
-        start_tt = (2010, 3, 2, 12, 0, 0, 0, 0, -1)
-        start = time.mktime(start_tt)  # = 1267560000
-        stop = start + 6 * 3600
-        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
-            # Get a simple 'avg' aggregation over this period
-            val_t = weewx.xtypes.WindVec.get_aggregate('windvec',
-                                                       TimeSpan(start, stop),
-                                                       'avg',
-                                                       db_manager)
-            self.assertEqual(type(val_t[0]), complex)
-            self.assertAlmostEqual(val_t[0].real, 15.37441, 5)
-            self.assertAlmostEqual(val_t[0].imag, 9.79138, 5)
-            self.assertEqual(val_t[1], 'mile_per_hour')
-            self.assertEqual(val_t[2], 'group_speed')
-
-    def test_get_series_on_the_fly(self):
-        """Test a series of a user-defined type with no aggregation,
-        run against the archive table."""
-        # This time span was chosen because it includes a null for outTemp at 0330
-        start_tt = (2010, 3, 2, 2, 0, 0, 0, 0, -1)
-        stop_tt = (2010, 3, 2, 5, 0, 0, 0, 0, -1)
-        start = time.mktime(start_tt)
-        stop = time.mktime(stop_tt)
-
-        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
-            start_vec, stop_vec, data_vec \
-                = weewx.xtypes.get_series('vapor_p',
-                                          TimeSpan(start, stop),
-                                          db_manager)
-
-            for actual, expected in zip(data_vec[0], Common.expected_vapor_pressures):
-                self.assertAlmostEqual(actual, expected, 3)
-            self.assertEqual(data_vec[1], 'inHg')
-            self.assertEqual(data_vec[2], 'group_pressure')
-
-    def test_get_aggregate_series_on_the_fly(self):
-        """Test a series of a user-defined type with aggregation, run against the archive table."""
-
-        start_tt = (2010, 3, 1, 0, 0, 0, 0, 0, -1)
-        stop_tt = (2010, 4, 1, 0, 0, 0, 0, 0, -1)
-        start = time.mktime(start_tt)
-        stop = time.mktime(stop_tt)
-
-        with weewx.manager.open_manager_with_config(self.config_dict, 'wx_binding') as db_manager:
-            start_vec, stop_vec, data_vec \
-                = weewx.xtypes.get_series('vapor_p',
-                                          TimeSpan(start, stop),
-                                          db_manager,
-                                          aggregate_type='avg',
-                                          aggregate_interval=6 * 3600)
-
-            for actual, expected in zip(data_vec[0], Common.expected_aggregate_vapor_pressures):
-                self.assertAlmostEqual(actual, expected, 3)
-            self.assertEqual(data_vec[1], 'inHg')
-            self.assertEqual(data_vec[2], 'group_pressure')
+expected_aggregate_vapor_pressures = [0.055149, 0.129672, 0.237951,
+0.119360, 0.056989, 0.132742, 0.243272, 0.122225, 0.058057,
+0.135910, 0.247049, 0.125180, 0.059585, 0.139177, 0.254400,
+0.128229, 0.061610, 0.142546, 0.260214, 0.131372, 0.062795,
+0.146019, 0.265056, 0.134614, 0.064481, 0.149599, 0.272360,
+0.137955, 0.066375, 0.153287, 0.278700, 0.141398, 0.068018,
+0.157087, 0.285946, 0.144946, 0.069872, 0.161000, 0.291929,
+0.148600, 0.071219, 0.165029, 0.298826, 0.152363, 0.073761,
+0.160523, 0.305915, 0.156237, 0.075798, 0.173446, 0.313201,
+0.165839, 0.075824, 0.147956, 0.317273, 0.196129, 0.081152,
+0.143451, 0.324886, 0.201073, 0.083410, 0.155730, 0.332704,
+0.213269, 0.085737, 0.159784, 0.340730, 0.211378, 0.088133,
+0.158981, 0.348968, 0.216745, 0.090601, 0.168239, 0.357420,
+0.227137, 0.093142, 0.172644, 0.366089, 0.227917, 0.095758,
+0.175668, 0.374980, 0.233727, 0.098449, 0.181817, 0.384094,
+0.241287, 0.101217, 0.186589, 0.393435, 0.245808, 0.104063,
+0.193312, 0.403006, 0.252083, 0.106989, 0.196515, 0.412808,
+0.255773, 0.109996, 0.201672, 0.422845, 0.265111, 0.113085,
+0.211803, 0.433119, 0.271868, 0.116258, 0.212382, 0.443632,
+0.270881, 0.119515, 0.217938, 0.454387, 0.285878, 0.122858,
+0.231103, 0.465384, 0.293134, 0.126288, 0.229461, 0.476626,
+0.287182]
 
 
-class TestSqlite(Common, unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        self.database_type = "sqlite"
-        super().__init__(*args, **kwargs)
-
-
-class TestMySQL(Common, unittest.TestCase):
-
-    def __init__(self, *args, **kwargs):
-        self.database_type = "mysql"
-        super().__init__(*args, **kwargs)
-
-    def setUp(self):
-        try:
-            import MySQLdb
-        except ImportError:
-            try:
-                import pymysql as MySQLdb
-            except ImportError as e:
-                raise unittest.case.SkipTest(e)
-        super().setUp()
+def test_get_series_archive_outTemp(config_dict):
+    """Test a series of outTemp with no aggregation, run against the archive table."""
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        start_vec, stop_vec, data_vec \
+            = weewx.xtypes.ArchiveTable.get_series('outTemp',
+                                                   TimeSpan(start_ts, stop_ts),
+                                                   db_manager)
+        assert len(start_vec[0]) == (stop_ts - start_ts) / interval
+        assert len(stop_vec[0]) == (stop_ts - start_ts) / interval
+        assert len(data_vec[0]) == (stop_ts - start_ts) / interval
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_get_series_daily_agg_rain_sum(config_dict):
+    """Test a series of daily aggregated rain totals, run against the daily summaries"""
+    # Calculate the total daily rain
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        start_vec, stop_vec, data_vec \
+            = weewx.xtypes.DailySummaries.get_series('rain',
+                                                     TimeSpan(month_start_ts, month_stop_ts),
+                                                     db_manager,
+                                                     'sum',
+                                                     'day')
+    # March has 30 days.
+    assert len(start_vec[0]) == 30 + 1
+    assert len(stop_vec[0]) == 30 + 1
+    assert (["%.2f" % d for d in data_vec[0]], data_vec[1], data_vec[2]) \
+           == (["%.2f" % d for d in expected_daily_rain_sum], 'inch', 'group_rain')
+
+def test_get_series_archive_agg_rain_sum(config_dict):
+    """Test a series of daily aggregated rain totals, run against the main archive table"""
+    # Calculate the total daily rain
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        start_vec, stop_vec, data_vec \
+            = weewx.xtypes.ArchiveTable.get_series('rain',
+                                                   TimeSpan(month_start_ts, month_stop_ts),
+                                                   db_manager,
+                                                   'sum',
+                                                   'day')
+    # March has 30 days.
+    assert len(start_vec[0]) == 30 + 1
+    assert len(stop_vec[0]) == 30 + 1
+    assert (["%.2f" % d for d in data_vec[0]], data_vec[1], data_vec[2]) \
+                     == (["%.2f" % d for d in expected_daily_rain_sum], 'inch', 'group_rain')
+
+def test_get_series_archive_agg_rain_cum(config_dict):
+    """Test a series of daily cumulative rain totals, run against the main archive table."""
+    # Calculate the cumulative total daily rain
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        start_vec, stop_vec, data_vec \
+            = weewx.xtypes.ArchiveTable.get_series('rain',
+                                                   TimeSpan(month_start_ts, month_stop_ts),
+                                                   db_manager,
+                                                   'cumulative',
+                                                   24 * 3600)
+    # March has 30 days.
+    assert len(start_vec[0]) == 30 + 1
+    assert len(stop_vec[0]) == 30 + 1
+    right_answer = functools.reduce(lambda v, x: v + [v[-1] + x], expected_daily_rain_sum, [0])[1:]
+    assert (["%.2f" % d for d in data_vec[0]], data_vec[1], data_vec[2]) \
+           ==   (["%.2f" % d for d in right_answer], 'inch', 'group_rain')
+
+def test_get_series_archive_windvec(config_dict):
+    """Test a series of 'windvec', with no aggregation, run against the main archive table"""
+    # Get a series of wind values
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        start_vec, stop_vec, data_vec \
+            = weewx.xtypes.WindVec.get_series('windvec',
+                                              TimeSpan(start_ts, stop_ts),
+                                              db_manager)
+    assert len(start_vec[0]) == (stop_ts - start_ts) / interval + 1
+    assert len(stop_vec[0]) == (stop_ts - start_ts) / interval + 1
+    assert len(data_vec[0]) == (stop_ts - start_ts) / interval + 1
+
+def test_get_series_archive_agg_windvec_avg(config_dict):
+    """Test a series of 'windvec', with 'avg' aggregation. This will exercise
+    WindVec.get_series(0), which, in turn, will call WindVecDaily.get_aggregate() to get each
+    individual aggregate value."""
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        # Get a series of wind values
+        start_vec, stop_vec, data_vec \
+            = weewx.xtypes.WindVec.get_series('windvec',
+                                              TimeSpan(month_start_ts, month_stop_ts),
+                                              db_manager,
+                                              'avg',
+                                              24 * 3600)
+    # March has 30 days.
+    assert len(start_vec[0]) == 30 + 1
+    assert len(stop_vec[0]) == 30 + 1
+    assert (["(%.2f, %.2f)" % (x.real, x.imag) for x in data_vec[0]]) \
+           == (["(%.2f, %.2f)" % (x[0], x[1]) for x in expected_daily_wind_avg])
+
+def test_get_series_archive_agg_windvec_last(config_dict):
+    """Test a series of 'windvec', with 'last' aggregation. This will exercise
+    WindVec.get_series(), which, in turn, will call WindVec.get_aggregate() to get each
+    individual aggregate value."""
+    # Get a series of wind values
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        start_vec, stop_vec, data_vec \
+            = weewx.xtypes.get_series('windvec',
+                                      TimeSpan(month_start_ts, month_stop_ts),
+                                      db_manager,
+                                      'last',
+                                      24 * 3600)
+    # March has 30 days.
+    assert len(start_vec[0]) == 30 + 1
+    assert len(stop_vec[0]) == 30 + 1
+    # The round(x, 2) + 0 is necessary to avoid 0.00 comparing different from -0.00.
+    assert ["(%.2f, %.2f)" % (round(x.real, 2) + 0, round(x.imag, 2) + 0) for x in data_vec[0]] \
+        == ["(%.2f, %.2f)" % (x[0], x[1]) for x in expected_daily_wind_last]
+
+def test_get_aggregate_windvec_last(config_dict):
+    """Test getting a windvec aggregation over a period that does not fall on midnight
+    boundaries."""
+
+    # This time span was chosen because it includes a null value.
+    start_tt = (2010, 3, 2, 12, 0, 0, 0, 0, -1)
+    start = time.mktime(start_tt)  # = 1267560000
+    stop = start + 6 * 3600
+
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        # Double check that the null value is in there
+        assert db_manager.getRecord(1267570800)['windSpeed'] is None
+
+        # Get a simple 'avg' aggregation over this period
+        val_t = weewx.xtypes.WindVec.get_aggregate('windvec',
+                                                   TimeSpan(start, stop),
+                                                   'avg',
+                                                   db_manager)
+    assert type(val_t[0]) is complex
+    assert val_t[0].real == pytest.approx(15.37441)
+    assert val_t[0].imag == pytest.approx(9.79138)
+    assert val_t[1] == 'mile_per_hour'
+    assert val_t[2] == 'group_speed'
+
+def test_get_series_on_the_fly(config_dict):
+    """Test a series of a user-defined type with no aggregation,
+    run against the archive table."""
+
+    # This time span was chosen because it includes a null for outTemp at 0330
+    start_tt = (2010, 3, 2, 2, 0, 0, 0, 0, -1)
+    stop_tt = (2010, 3, 2, 5, 0, 0, 0, 0, -1)
+    start = time.mktime(start_tt) # == 1267524000
+    stop = time.mktime(stop_tt)   # == 1267534800
+
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        # Make sure the null outTemp is in there
+        assert db_manager.getRecord(1267529400)['outTemp'] is None
+
+        start_vec, stop_vec, data_vec \
+            = weewx.xtypes.get_series('vapor_p',
+                                      TimeSpan(start, stop),
+                                      db_manager)
+
+    for actual, expected in zip(data_vec[0], expected_vapor_pressures):
+        assert actual == pytest.approx(expected)
+    assert data_vec[1] == 'inHg'
+    assert data_vec[2] == 'group_pressure'
+
+def test_get_aggregate_series_on_the_fly(config_dict):
+    """Test a series of a user-defined type with aggregation, run against the archive table."""
+
+    start_tt = (2010, 3, 1, 0, 0, 0, 0, 0, -1)
+    stop_tt = (2010, 4, 1, 0, 0, 0, 0, 0, -1)
+    start = time.mktime(start_tt)
+    stop = time.mktime(stop_tt)
+
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        start_vec, stop_vec, data_vec \
+            = weewx.xtypes.get_series('vapor_p',
+                                      TimeSpan(start, stop),
+                                      db_manager,
+                                      aggregate_type='avg',
+                                      aggregate_interval=6 * 3600)
+
+    for actual, expected in zip(data_vec[0], expected_aggregate_vapor_pressures):
+        assert actual == pytest.approx(expected, abs=1e-6)
+    assert data_vec[1] == 'inHg'
+    assert data_vec[2] == 'group_pressure'
