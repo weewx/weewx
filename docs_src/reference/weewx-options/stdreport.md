@@ -251,6 +251,7 @@ that have changed, saving the outgoing bandwidth of your Internet connection.
 If you wish to use rsync, you must configure passwordless ssh using
 public/private key authentication from the user account that WeeWX runs, to
 the user account on the remote machine where the files will be copied.
+For details on how to do so, see the [wiki](https://github.com/weewx/weewx/wiki/rsync-setup).
 
 #### enable
 
@@ -264,7 +265,7 @@ file. Required. No default
 #### user
 
 Set to the ssh username you use for your rsync connection to your web server.
-The local user that WeeWX runs as must have [passwordless ssh](https://www.tecmint.com/ssh-passwordless-login-using-ssh-keygen-in-5-easy-steps/)
+The local user that WeeWX runs as must have passwordless ssh
 configured for _user@server_. Required. No default.
 
 #### path
