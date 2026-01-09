@@ -49,12 +49,12 @@ sudo weectl station upgrade --config=/etc/weewx/other.conf
 It has been 4 years since Python 3.6 reached end-of-life.
 
 
-### Module `schema` has been relocated
+### Module `schemas` has been relocated
 
-Module `schema` has been relocated such that it is now part of module `weewx`.
-For example, schema `schema.wview_extended` can now be found at
-`weewx.schema.wview_extended`. A shim has been included for backwards
-compatibility for old configuration files that might still use the `schema`
+Module `schemas` has been relocated such that it is now part of module `weewx`.
+For example, schema `schemas.wview_extended` can now be found at
+`weewx.schemas.wview_extended`. A shim has been included for backwards
+compatibility for old configuration files that might still use the `schemas`
 namespace.
 
 However, if you directly import a schema, then you will have to change it. For
@@ -67,8 +67,8 @@ example:
       <td>V5.2 and later</td>
     </tr>
     <tr class="tty">
-      <td>import schema.wview_extended</td>
-      <td>import <span class="added">weewx.</span>schema.wview_extended</td>
+      <td>import schemas.wview_extended</td>
+      <td>import <span class="added">weewx.</span>schemas.wview_extended</td>
     </tr>
   </table>
 </div>
@@ -110,7 +110,7 @@ directly underneath. When you're done, it should look something like this:
         station = replace_me
         password = replace_me
     
-    [[WOW-BE]]
+<span class="added">    [[WOW-BE]]
         # This section is for configuring WeeWX to upload to WOW-BE (wow.meteo.be)
 
         # If you wish to post to WOW-BE, set the option 'enable' to true, then
@@ -118,7 +118,7 @@ directly underneath. When you're done, it should look something like this:
         # Use quotes around the password to guard against parsing errors.
         enable = false
         station = replace_me
-        password = replace_me
+        password = replace_me</span>
 </td>
     </tr>
   </table>
