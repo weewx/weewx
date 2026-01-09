@@ -215,6 +215,10 @@ class Cursor:
         sqltypestr = ', '.join(["%s %s" % _type for _type in table_schema])
         self.execute(f"CREATE TABLE {table_name} ({sqltypestr});")
 
+    def drop_table(self, table_name):
+        """Drop an existing table."""
+        self.execute(f"DROP TABLE IF EXISTS {table_name}")
+
     def add_column(self, table_name, column_name, column_type):
         """Add a single new column to an existing table."""
         self.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_type}")

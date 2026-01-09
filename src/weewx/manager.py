@@ -1168,7 +1168,7 @@ class DaySummaryManager(Manager):
         super()._drop_columns(column_names, cursor)
         # ... then do mine
         for column_name in column_names:
-            cursor.execute("DROP TABLE IF EXISTS %s_day_%s;" % (self.table_name, column_name))
+            cursor.drop_table(f"{self.table_name}_day_{column_name}")
 
     def _addSingleRecord(self, record, cursor, log_success=True, log_failure=True, update=False):
         """Specialized version that updates the daily summaries, as well as the main archive
