@@ -15,8 +15,8 @@ Added Astronomical Units as a unit of length. Added `local_djd` as a unit of
 _local_ time. [PR #998](https://github.com/weewx/weewx/pull/998). Thanks to
 user Karen!
 
-Moved database-specific code into the `weedb` module. For example, backticks are
-used to escape the reserved word `interval` only in the MySQL code.
+Moved database-specific code into the `weedb` module. This is in anticipation
+of allowing new databases to be installed as an extension. 
 
 New action `weectl database rebuild-daily NAME` was added to allow the selective 
 rebuilding of the daily summaries. Addresses [Issue #1035](https://github.com/weewx/weewx/issues/1035).
