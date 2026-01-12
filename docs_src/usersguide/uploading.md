@@ -1,6 +1,6 @@
 # Uploading to other sites
 
-WeeWX comes with a number of 'uploaders' which can be enabled in
+WeeWX comes with a number of 'uploaders', which can be enabled in
 order to periodically upload your web pages and/or data to other
 sites.
 
@@ -13,7 +13,8 @@ The built-in uploaders are briefly discussed here.
 
 ## RESTful Services
 
-These are located in the `[StdRESTful]` section of `weewx.conf`.
+These are located in the [`[StdRESTful]`](../../reference/weewx-options/stdrestful/) 
+section of `weewx.conf`.
 
 <!---------------------------->
 
@@ -29,9 +30,9 @@ eventually if they are not reregistered.
 
 This is disabled by default.
 
-For configuration details consult the StationRegistry setting in the
-WeeWX [Reference](../../reference/weewx-options/stdrestful/#stationregistry)
-documentation.
+For configuration details consult the 
+[`[[StationRegistry]]`](../../reference/weewx-options/stdrestful/#stationregistry)
+section of the Reference Guide.
 
 ### AWEKAS
 
@@ -43,18 +44,18 @@ From their web site:
 _AWEKAS is an abbrevation for “Automatic WEather map (german: KArten)
 System”. It is a system that processes indicated values of private
 weather stations graphically, generates weather maps and evaluates
-the data._
+the data.
 
 This is disabled by default.
 
-For configuration details consult the AWEKAS section in the WeeWX 
-[Reference](../../reference/weewx-options/stdrestful/#awekas)
-documentation.
+For configuration details consult the
+[`[[AWEKAS]]`](../../reference/weewx-options/stdrestful/#awekas) section of the
+Reference Guide.
 
 ### CWOP
 
 Posts your weather data to the 
-[Citizen Weather Observer Program (CWOP)](cwop.aprs.net).
+[Citizen Weather Observer Program (CWOP)](http://wxqa.com/).
 
 From their web site:
 
@@ -68,9 +69,9 @@ quality assurance._
 
 This is disabled by default.
 
-For configuration details consult the CWOP section in the
-WeeWX [Reference](../../reference/weewx-options/stdrestful/#cwop)
-documentation.
+For configuration details consult the
+[`[[CWOP]]`](../../reference/weewx-options/stdrestful/#cwop) section of the
+Reference Guide.
 
 ### PWSWeather
 
@@ -86,15 +87,15 @@ Contributor Plan._
 
 This is disabled by default.
 
-For configuration details consult the PWSWeather section in the
-WeeWX [Reference](../../reference/weewx-options/stdrestful/#pwsweather)
-documentation.
+For configuration details consult the
+[`[[PWSweather]]`](../../reference/weewx-options/stdrestful/#pwsweather)
+section of the Reference Guide.
 
 ### WOW 
 Posts your weather data to the [WOW service](https://wow.metoffice.gov.uk).
 
 This legacy uploader supports the Met Office Weather Observations
-Website (WOW) which is being decommissioned beginning in January
+Website (WOW), which is being decommissioned beginning in January
 2026.
 
 From their web site:
@@ -107,9 +108,9 @@ planned for late 2026.....there will be no direct replacement for WOW
 
 This is disabled by default.
 
-For configuration details consult the WOW section in the
-WeeWX [Reference](../../reference/weewx-options/stdrestful/#wow)
-documentation.
+For configuration details consult the
+[`[[WOW]]`](../../reference/weewx-options/stdrestful/#wow)
+section of the Reference Guide.
 
 ### WOW-BE
 Posts your weather data to the [WOW-BE service](https://wow.meteo.be).
@@ -120,9 +121,9 @@ web site.
 
 This is disabled by default.
 
-For configuration details consult the WOW-BE section in the
-WeeWX [Reference](../../reference/weewx-options/stdrestful/#wow-be)
-documentation.
+For configuration details consult the
+[`[[WOW-BE]]`](../../reference/weewx-options/stdrestful/#wow-be)
+section of the Reference Guide.
 
 ### Wunderground
 Posts your weather data to the 
@@ -134,14 +135,14 @@ dating back to 1993.
 
 This is disabled by default.
 
-For configuration details consult the Weather Underground section in 
-the WeeWX [Reference](../../reference/weewx-options/stdrestful/#wunderground)
-documentation.
+For configuration details consult the 
+[`[[Wunderground]]`](../../reference/weewx-options/stdrestful/#wunderground)
+section of the Reference Guide.
 
 <!---------------------------->
 ## StdReport Services
 
-These are located in the `[StdReport]` section of `weewx.conf`.
+These are located in the [`[StdReport]`](../../reference/weewx-options/stdreport/) section of `weewx.conf`.
 
 <!---------------------------->
 
@@ -152,9 +153,9 @@ remote system.
 
 This is disabled by default.
 
-For configuration detauls, see the FTP section in the 
- WeeWX [Reference](../../reference/weewx-options/stdreport/#ftp)
-documentation.
+For configuration details, see the
+  [`[[FTP]]`](../../reference/weewx-options/stdreport/#ftp)
+section of the Reference Guide.
 
 ### RSYNC
 
@@ -165,8 +166,8 @@ uploader, although it does require some one-time setup by the user.
 
 This is disabled by default.
 
-For configuration detauls, see the RSYNC ection in the 
- WeeWX [Reference](../../reference/weewx-options/stdreport/#rsync)
-documentation.
+For configuration details, consult the 
+[`[[RSYNC]]`](../../reference/weewx-options/stdreport/#rsync)
+section of the Reference Guide.
 
 
