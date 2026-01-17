@@ -1,3 +1,5 @@
+* Mon Jan 12 2026 Thomas Keffer (Author of weewx) <tkeffer@gmail.com> - 5.3.0b1-1
+- new upstream release
 * Sun Oct 05 2025 Matthew Wall <mwall.weewx@gmail.com> - 5.2.0-1
 - new upstream release
 * Thu Jul 04 2024 Matthew Wall <mwall.weewx@gmail.com> - 5.1.0-2

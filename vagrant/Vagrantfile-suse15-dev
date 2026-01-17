@@ -1,5 +1,22 @@
 # -*- mode: ruby -*-
 
+# This patch is from https://gist.github.com/AW-Britt/4d412ec308f5890c9bd68756f13bfef4
+
+# Place this blurb at the top of your Vagrantfile to allow the unpatched
+# version of the Vagrant vagrant-vbguest plugin to properly execute
+# in newer Ruby environments where File.exists is no longer supported
+#
+# Extend the Ruby File class to restore the deprecated exists method by
+# calling File.exist instead
+unless File.respond_to?(:exists?)
+  class << File
+    def exists?(path)
+      warn "File.exists? is deprecated; use File.exist? instead." unless ENV['SUPPRESS_FILE_EXISTS_WARNING']
+      exist?(path)
+    end
+  end
+end
+
 Vagrant.configure("2") do |config|
   config.vm.box = "bento/opensuse-leap-15"
   config.vm.box_check_update = false
