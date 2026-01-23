@@ -21,6 +21,8 @@ station_create_usage = f"""{bcolors.BOLD}weectl station create [WEEWX-ROOT]
             [--register=(y,n) [--station-url=URL]]
             [--units=(us|metricwx|metric)]
             [--debug=DEBUG_LEVEL]
+            [--log_success=LOG_SUCCESS]
+            [--log_failure=LOG_FAILURE]
             [--skin-root=DIRECTORY]
             [--sqlite-root=DIRECTORY]
             [--html-root=DIRECTORY]
@@ -39,6 +41,8 @@ station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure
             [--register=(y,n) [--station-url=URL]]
             [--units=(us|metricwx|metric)]
             [--debug=DEBUG_LEVEL]
+            [--log_success=LOG_SUCCESS]
+            [--log_failure=LOG_FAILURE]
             [--skin-root=DIRECTORY]
             [--sqlite-root=DIRECTORY]
             [--html-root=DIRECTORY]
@@ -123,6 +127,12 @@ def add_subparser(subparsers):
                                dest='debug',
                                help='Set weewx debug level [0-n]. '
                                     'Default is "0".')
+    create_parser.add_argument('--log_success', choices=['y', 'n'],
+                               help='Log successful operations? Default is "n" '
+                                    '(do not log).')
+    create_parser.add_argument('--log_failure', choices=['y', 'n'],
+                               help='Log unsuccessful operations? Default is "n" '
+                                    '(do not log).')
     create_parser.add_argument('--skin-root',
                                metavar='DIRECTORY',
                                help='Where to put the skins, relatve to WEEWX_ROOT. '
@@ -201,6 +211,12 @@ def add_subparser(subparsers):
                                     dest='debug',
                                     help='Set weewx debug level [0-n]. '
                                          'Default is "0".')
+    reconfigure_parser.add_argument('--log_success', choices=['y', 'n'],
+                               help='Log successful operations? Default is "n" '
+                                    '(do not log).')
+    reconfigure_parser.add_argument('--log_failure', choices=['y', 'n'],
+                               help='Log unsuccessful operations? Default is "n" '
+                                    '(do not log).')
     reconfigure_parser.add_argument('--skin-root',
                                     metavar='DIRECTORY',
                                     help='New location where to find the skins, relatve '
@@ -302,6 +318,8 @@ def create_station(namespace):
             longitude=namespace.longitude,
             register=namespace.register,
             debug=namespace.debug,
+            log_success=namespace.log_success,
+            log_failure=namespace.log_failure,
             station_url=namespace.station_url,
             unit_system=namespace.unit_system,
             skin_root=namespace.skin_root,
@@ -323,6 +341,8 @@ def reconfigure_station(config_dict, namespace):
                                                       driver=namespace.driver,
                                                       location=namespace.location,
                                                       debug=namespace.debug,
+                                                      log_success=namespace.log_success,
+                                                      log_failure=namespace.log_failure,
                                                       altitude=namespace.altitude,
                                                       latitude=namespace.latitude,
                                                       longitude=namespace.longitude,

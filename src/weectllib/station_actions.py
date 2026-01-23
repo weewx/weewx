@@ -40,6 +40,9 @@ def station_create(weewx_root=None,
                    altitude=None,
                    latitude=None, longitude=None,
                    register=None, station_url=None,
+                   debug=None,
+                   log_success=None,
+                   log_failure=None,
                    unit_system=None,
                    skin_root=None,
                    sqlite_root=None,
@@ -89,6 +92,8 @@ def station_create(weewx_root=None,
                   register=register, station_url=station_url,
                   unit_system=unit_system,
                   debug=debug,
+                  log_success=log_success,
+                  log_failure=log_failure,
                   skin_root=skin_root,
                   sqlite_root=sqlite_root,
                   html_root=html_root,
@@ -148,6 +153,8 @@ def station_reconfigure(config_dict,
                         latitude=None, longitude=None,
                         register=None, station_url=None,
                         debug=None,
+                        log_success=None,
+                        log_failure=None,
                         unit_system=None,
                         weewx_root=None,
                         skin_root=None,
@@ -171,6 +178,8 @@ def station_reconfigure(config_dict,
                   latitude=latitude, longitude=longitude,
                   register=register, station_url=station_url,
                   debug=debug,
+                  log_success=log_success,
+                  log_failure=log_failure,
                   unit_system=unit_system,
                   skin_root=skin_root,
                   sqlite_root=sqlite_root,
@@ -196,6 +205,8 @@ def config_config(config_dict,
                   latitude=None, longitude=None,
                   register=None, station_url=None,
                   debug=None,
+                  log_success=None,
+                  log_failure=None,
                   unit_system=None,
                   skin_root=None,
                   sqlite_root=None,
@@ -207,6 +218,8 @@ def config_config(config_dict,
     config_location(config_dict, location=location, no_prompt=no_prompt)
     config_altitude(config_dict, altitude=altitude, no_prompt=no_prompt)
     config_debug(config_dict, debug=debug, no_prompt=no_prompt)
+    config_log_success(config_dict, log_success=log_success, no_prompt=no_prompt)
+    config_log_failure(config_dict, log_failure=log_failure, no_prompt=no_prompt)
     config_latlon(config_dict, latitude=latitude, longitude=longitude, no_prompt=no_prompt)
     config_units(config_dict, unit_system=unit_system, no_prompt=no_prompt)
     config_driver(config_dict, driver=driver, no_prompt=no_prompt)
@@ -494,6 +507,64 @@ def config_driver(config_dict, driver=None, no_prompt=False):
         # One final chance for the driver to modify other parts of the configuration
         driver_editor.modify_config(config_dict)
 
+#--- vds ---
+
+def config_log_success(config_dict, log_success=None, no_prompt=False):
+    """Configure whether to log successful operations"""
+
+    try:
+        config_dict['log_success']
+    except KeyError:
+        config_dict.set('log_success') == "False"
+
+    default_log_success = to_bool(
+        config_dict.get('log_success', False))
+
+    print("default log_success =", default_log_success) #DELETEME
+
+    if log_success is not None:
+        final_log_success = to_bool(log_success)
+    elif not no_prompt:
+        print("\nDo you want to log successful operations by default?")
+        default_prompt = 'n' if default_log_success else 'y'
+        ans = weeutil.weeutil.y_or_n(f"log_success (y/n)? "
+                                     f"[{default_prompt}] ",
+                                     default=default_log_success)
+        final_log_success = to_bool(ans)
+    else:
+        # --no-prompt is active. Just use the defaults.
+        final_log_success = default_log_success
+
+    config_dict['log_success'] = final_log_success
+
+
+def config_log_failure(config_dict, log_failure=None, no_prompt=False):
+    """Configure whether to log unsuccessful operations"""
+
+    try:
+        config_dict['log_failure']
+    except KeyError:
+        config_dict.set('log_failure') == "False"
+
+    default_log_failure = to_bool(
+        config_dict.get('log_failure', False))
+
+    if log_failure is not None:
+        final_log_failure = to_bool(log_failure)
+    elif not no_prompt:
+        print("\nDo you want to log unsuccesful operations by default?")
+        default_prompt = 'n' if default_log_failure else 'y'
+        ans = weeutil.weeutil.y_or_n(f"log_failure (y/n)? "
+                                     f"[{default_prompt}] ",
+                                     default=default_log_failure)
+        final_log_failure = to_bool(ans)
+    else:
+        # --no-prompt is active. Just use the defaults.
+        final_log_failure = default_log_failure
+
+    config_dict['log_failure'] = final_log_failure
+
+#--- vds ---
 
 def config_registry(config_dict, register=None, station_url=None, no_prompt=False):
     """Configure whether to include the station in the weewx.com registry."""
