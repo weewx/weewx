@@ -88,6 +88,7 @@ def station_create(weewx_root=None,
                   latitude=latitude, longitude=longitude,
                   register=register, station_url=station_url,
                   unit_system=unit_system,
+                  debug=debug,
                   skin_root=skin_root,
                   sqlite_root=sqlite_root,
                   html_root=html_root,
@@ -146,6 +147,7 @@ def station_reconfigure(config_dict,
                         altitude=None,
                         latitude=None, longitude=None,
                         register=None, station_url=None,
+                        debug=None,
                         unit_system=None,
                         weewx_root=None,
                         skin_root=None,
@@ -168,6 +170,7 @@ def station_reconfigure(config_dict,
                   altitude=altitude,
                   latitude=latitude, longitude=longitude,
                   register=register, station_url=station_url,
+                  debug=debug,
                   unit_system=unit_system,
                   skin_root=skin_root,
                   sqlite_root=sqlite_root,
@@ -192,6 +195,7 @@ def config_config(config_dict,
                   altitude=None,
                   latitude=None, longitude=None,
                   register=None, station_url=None,
+                  debug=None,
                   unit_system=None,
                   skin_root=None,
                   sqlite_root=None,
@@ -202,6 +206,7 @@ def config_config(config_dict,
     print(f"Processing configuration file {config_path}")
     config_location(config_dict, location=location, no_prompt=no_prompt)
     config_altitude(config_dict, altitude=altitude, no_prompt=no_prompt)
+    config_debug(config_dict, debug=debug, no_prompt=no_prompt)
     config_latlon(config_dict, latitude=latitude, longitude=longitude, no_prompt=no_prompt)
     config_units(config_dict, unit_system=unit_system, no_prompt=no_prompt)
     config_driver(config_dict, driver=driver, no_prompt=no_prompt)
@@ -226,6 +231,24 @@ def config_location(config_dict, location=None, no_prompt=False):
     else:
         final_location = default_location
     config_dict['Station']['location'] = final_location
+
+
+def config_debug(config_dict, debug=None, no_prompt=False):
+    """Set the debug option. """
+    if 'debug' not in config_dict:
+        return
+
+    default_debug = config_dict.get('debug', "0")
+
+    if debug is not None:
+        final_debug = debug
+    elif not no_prompt:
+        print("\nSpecify the desired weewx debug level.")
+        ans = input(f"description [{default_debug}]: ").strip()
+        final_debug = ans if ans else default_debug
+    else:
+        final_debug = default_debug
+    config_dict['debug'] = final_debug
 
 
 def config_altitude(config_dict, altitude=None, no_prompt=False):

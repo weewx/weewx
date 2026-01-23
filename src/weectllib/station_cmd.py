@@ -20,6 +20,7 @@ station_create_usage = f"""{bcolors.BOLD}weectl station create [WEEWX-ROOT]
             [--latitude=LATITUDE] [--longitude=LONGITUDE]
             [--register=(y,n) [--station-url=URL]]
             [--units=(us|metricwx|metric)]
+            [--debug=DEBUG_LEVEL]
             [--skin-root=DIRECTORY]
             [--sqlite-root=DIRECTORY]
             [--html-root=DIRECTORY]
@@ -37,6 +38,7 @@ station_reconfigure_usage = f"""{bcolors.BOLD}weectl station reconfigure
             [--latitude=LATITUDE] [--longitude=LONGITUDE]
             [--register=(y,n) [--station-url=URL]]
             [--units=(us|metricwx|metric)]
+            [--debug=DEBUG_LEVEL]
             [--skin-root=DIRECTORY]
             [--sqlite-root=DIRECTORY]
             [--html-root=DIRECTORY]
@@ -117,6 +119,10 @@ def add_subparser(subparsers):
                                dest='unit_system',
                                help='Set display units to us, metricwx, or metric. '
                                     'Default is "us".')
+    create_parser.add_argument('--debug',
+                               dest='debug',
+                               help='Set weewx debug level [0-n]. '
+                                    'Default is "0".')
     create_parser.add_argument('--skin-root',
                                metavar='DIRECTORY',
                                help='Where to put the skins, relatve to WEEWX_ROOT. '
@@ -191,6 +197,10 @@ def add_subparser(subparsers):
                                     dest='unit_system',
                                     help='New display units. Set to to us, metricwx, or metric. '
                                          'Default is the old unit system.')
+    reconfigure_parser.add_argument('--debug',
+                                    dest='debug',
+                                    help='Set weewx debug level [0-n]. '
+                                         'Default is "0".')
     reconfigure_parser.add_argument('--skin-root',
                                     metavar='DIRECTORY',
                                     help='New location where to find the skins, relatve '
@@ -291,6 +301,7 @@ def create_station(namespace):
             latitude=namespace.latitude,
             longitude=namespace.longitude,
             register=namespace.register,
+            debug=namespace.debug,
             station_url=namespace.station_url,
             unit_system=namespace.unit_system,
             skin_root=namespace.skin_root,
@@ -311,6 +322,7 @@ def reconfigure_station(config_dict, namespace):
         weectllib.station_actions.station_reconfigure(config_dict=config_dict,
                                                       driver=namespace.driver,
                                                       location=namespace.location,
+                                                      debug=namespace.debug,
                                                       altitude=namespace.altitude,
                                                       latitude=namespace.latitude,
                                                       longitude=namespace.longitude,
