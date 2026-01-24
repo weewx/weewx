@@ -128,11 +128,9 @@ def add_subparser(subparsers):
                                help='Set weewx debug level [0-n]. '
                                     'Default is "0".')
     create_parser.add_argument('--log_success', choices=['y', 'n'],
-                               help='Log successful operations? Default is "n" '
-                                    '(do not log).')
+                               help='Log successful operations? Default is "n" ')
     create_parser.add_argument('--log_failure', choices=['y', 'n'],
-                               help='Log unsuccessful operations? Default is "n" '
-                                    '(do not log).')
+                               help='Log unsuccessful operations? Default is "n" ')
     create_parser.add_argument('--skin-root',
                                metavar='DIRECTORY',
                                help='Where to put the skins, relatve to WEEWX_ROOT. '

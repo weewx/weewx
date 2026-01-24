@@ -507,8 +507,6 @@ def config_driver(config_dict, driver=None, no_prompt=False):
         # One final chance for the driver to modify other parts of the configuration
         driver_editor.modify_config(config_dict)
 
-#--- vds ---
-
 def config_log_success(config_dict, log_success=None, no_prompt=False):
     """Configure whether to log successful operations"""
 
@@ -563,8 +561,6 @@ def config_log_failure(config_dict, log_failure=None, no_prompt=False):
         final_log_failure = default_log_failure
 
     config_dict['log_failure'] = final_log_failure
-
-#--- vds ---
 
 def config_registry(config_dict, register=None, station_url=None, no_prompt=False):
     """Configure whether to include the station in the weewx.com registry."""
