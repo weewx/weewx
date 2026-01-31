@@ -16,6 +16,7 @@ trust weewx.com, and know where to find the WeeWX releases.
 1. Tell your system to trust weewx.com.
 
     ```{.shell .copy}
+    sudo apt update
     sudo apt install -y wget gnupg
     wget -qO - https://weewx.com/keys.html | \
         sudo gpg --dearmor --output /etc/apt/trusted.gpg.d/weewx.gpg
