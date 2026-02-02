@@ -12,3 +12,4 @@ These are the port allocations for guests (so you can run them concurrently):
 4006 freebsd14
 4007 rocky10
 4008 debian13
+4009 suse16-dev
