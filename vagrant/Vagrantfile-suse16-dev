@@ -1,17 +1,19 @@
 # -*- mode: ruby -*-
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "bento/rockylinux-10"
+  config.vm.box = "bento/opensuse-leap-16.0"
   config.vm.box_check_update = false
   config.vm.network "public_network"
-  config.vm.network :forwarded_port, guest: 22, host: 4007, id: "ssh"
+  config.vm.network :forwarded_port, guest: 22, host: 4004, id: "ssh"
   config.vm.provider "virtualbox" do |vb|
     vb.gui = false
     vb.memory = "2048"
   end
   config.vm.provision "shell", inline: <<-SHELL
-    yum install -y git
-    yum install -y rsync
-    yum install -y gnupg
+    zypper install -y git
+    zypper install -y rsync
+    zypper install -y rpm-build
+    zypper install -y rpmlint
+    zypper install -y createrepo_c
   SHELL
 end
