@@ -30,9 +30,6 @@ Converted test suites to use [pytest](https://pytest.org).
 New Finish translation for the Seasons skin. Thanks to user 
 iiseppi! [PR #1059](https://github.com/weewx/weewx/pull/1059).
 
-
-### 5.2.1 MM/DD/YYYY
-
 Remove unnecessary `UNIQUE` index on `PRIMARY KEY` columns in SQLite, achieving
 size reduction of ~10%.  Existing database schemas are not modified.  Users
 desiring size reduction are advised to consider manually migrating.
