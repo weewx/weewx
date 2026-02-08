@@ -373,13 +373,14 @@ def merge_unit_system(report_units_base, skin_dict):
     skin_dict['Units']['Groups'].update(units_dict)
 
 
-def get_lang_dict(lang_spec, config_dict, report):
-    """Given a language specification, return its corresponding locale dictionary.
+def get_lang_dict(lang_spec, lang_spec_dir, report):
+    """Given a language specification, and a directory with language files, return the
+     corresponding locale dictionary.
 
     Args:
         lang_spec (str|None): Language specification string.
             Can be of the form 'en', 'en_AU', or 'en_AU.utf8.
-        config_dict (dict): Configuration dictionary.
+        lang_spec_dir (Path): Path to the directory containing language spec files.
         report (str): The name of the report for which the locale dicationary will be returned.
     Returns:
         dict: The locale dictionary as a ConfigObj
@@ -388,31 +389,32 @@ def get_lang_dict(lang_spec, config_dict, report):
     """
     # The results will be merged into this empty dictionary:
     lang_dict = configobj.ConfigObj({}, encoding='utf-8', interpolation=False)
-    if not lang_spec:
-        # If no language spec has been specified, return the empty dictionary
+
+    # Make sure we have a valid directory. If not, return the default.
+    if not lang_spec or not lang_spec_dir.is_dir():
+        # If no language spec has been specified, or, if this is not a valid language directory,
+        # return the empty dictionary
         return lang_dict
 
-    # Strip off any possible coding. For example, 'en_AU.utf8' will result in 'en_AU'.
+    # We allow specs such as 'en_AU'. First look for 'en.conf', then
+    # 'en_AU.conf'. The latter adds any specialized Australian spellings.
+    # First strip off any coding. For example, 'en_AU.utf8' becomes 'en_AU'.
     lang_country = lang_spec.split('.')[0]
-    # Split the language from the country
+    # Then split the language from the country
     codes = lang_country.split('_')
     if len(codes) == 1:
-        # Just a language spec
+        # Just a language spec. This results in something like ['en'].
         code_list = [codes[0]]
     else:
-        # A language spec and a country code
+        # A language spec and a country code. This results in ['en', 'en_AU'].
         code_list = [codes[0], lang_country]
 
+    # now read them in order.
     for code in code_list:
-        # The language's corresponding text file will be found in subdirectory 'lang', with
-        # a suffix '.conf'. Find the path to it:.
-        lang_config_path = Path(config_dict['WEEWX_ROOT'],
-                                config_dict['StdReport']['SKIN_ROOT'],
-                                config_dict['StdReport'][report].get('skin', ''),
-                                'lang',
-                                code + '.conf')
+        # Path to the file
+        lang_config_path = lang_spec_dir / (code + '.conf')
 
-        # Retrieve the language dictionary for the skin and requested language. Wrap it in a
+        # Retrieve the language dictionary for the requested language. Wrap it in a
         # try block in case we fail.  It is ok if there is no file - everything for a skin
         # might be defined in the weewx configuration.
         try:
@@ -435,11 +437,24 @@ def get_lang_dict(lang_spec, config_dict, report):
 
         lang_dict.merge(merge_dict)
 
+    # We allow additional specs to be added by extensions. They sit in subdirectories below this one.
+    # Recursively search for them:
+    for entry in lang_spec_dir.iterdir():
+        if entry.is_dir() and entry.name.startswith('lang'):
+            # Found a directory with a name that starts with 'lang'. This is a language extension.
+            lang_dict.merge(get_lang_dict(lang_spec, entry, report))
+
     return lang_dict
 
 
 def merge_lang(lang_spec, config_dict, report, skin_dict):
-    lang_dict = get_lang_dict(lang_spec, config_dict, report)
+    # Path to the directory holding the language spec files.
+    lang_spec_dir = Path(config_dict['WEEWX_ROOT'],
+                         config_dict['StdReport']['SKIN_ROOT'],
+                         config_dict['StdReport'][report].get('skin', ''),
+                         'lang')
+    # Search it for the given language spec.
+    lang_dict = get_lang_dict(lang_spec, lang_spec_dir, report)
     # There may or may not be a unit system specified. If so, honor it.
     if 'unit_system' in lang_dict:
         merge_unit_system(lang_dict['unit_system'], skin_dict)
