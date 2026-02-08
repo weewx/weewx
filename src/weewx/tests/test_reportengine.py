@@ -6,7 +6,7 @@
 """Test algorithms in the Report Engine"""
 
 import logging
-import os.path
+from pathlib import Path
 
 import pytest
 
@@ -36,7 +36,7 @@ WEEWX_ROOT = '../../..'
 """
 # Find WEEWX_ROOT by working up from this file's location:
 CONFIG_DICT = weeutil.config.config_from_str(CONFIG_DICT_INI)
-CONFIG_DICT['WEEWX_ROOT'] = os.path.normpath(os.path.join(os.path.dirname(__file__), '../../..'))
+CONFIG_DICT['WEEWX_ROOT'] = str(Path(__file__).resolve().parents[3])
 
 weeutil.logger.setup('weetest_reportengine', CONFIG_DICT)
 
