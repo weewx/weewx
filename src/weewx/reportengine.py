@@ -633,8 +633,8 @@ class CopyGenerator(ReportGenerator):
             # Glob this pattern; then go through each resultant path:
             for path in Path().glob(pattern):
                 ncopy += weeutil.weeutil.deep_copy_path(path, html_dest_dir)
-        if log_success:
-            log.info("Copied %d files to %s", ncopy, html_dest_dir)
+        if log_success and ncopy:
+            log.debug("Copied %d files to %s", ncopy, html_dest_dir)
 
 
 # ===============================================================================
