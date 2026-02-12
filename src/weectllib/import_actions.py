@@ -25,11 +25,12 @@ log = logging.getLogger(__name__)
 # minimum WeeWX version required for this version of wee_import
 REQUIRED_WEEWX = "5.0.0"
 
-def obs_import(config_dict, import_config, **kwargs):
+def obs_import(config_dict, import_config_path, **kwargs):
     """Generate information about the user's WeeWX environment
 
     Args:
         config_dict (dict): The configuration dictionary
+        import_config_path (str): Path to the import configuration file. Required.
         output (str|None): Path to where the output will be put. Default is stdout.
     """
 
@@ -40,7 +41,7 @@ def obs_import(config_dict, import_config, **kwargs):
         exit(1)
 
     # to do anything we need an import config file, check if one was provided
-    if import_config:
+    if import_config_path:
         # we have something so try to start
 
         # advise the user we are starting up
@@ -53,7 +54,7 @@ def obs_import(config_dict, import_config, **kwargs):
         try:
             source_obj = weeimport.weeimport.Source.source_factory(config_dict['config_path'],
                                                                    config_dict,
-                                                                   import_config,
+                                                                   import_config_path,
                                                                    **kwargs)
             source_obj.run()
         except weeimport.weeimport.WeeImportOptionError as e:
@@ -107,7 +108,7 @@ def obs_import(config_dict, import_config, **kwargs):
             print(f"{bcolors.BOLD}**** Unable to load config file.{bcolors.ENDC}")
             log.info("**** Unable to load config file.")
             print(f"{bcolors.BOLD}**** {e}{bcolors.ENDC}")
-            log.info(f"**** " % e)
+            log.info(f"**** {e}")
             print("**** Nothing done, exiting.")
             log.info("**** Nothing done.")
             exit(1)

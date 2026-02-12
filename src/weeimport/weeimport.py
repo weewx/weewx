@@ -32,7 +32,14 @@ from weewx.units import unit_constants, unit_nicknames, convertStd, to_std_syste
 log = logging.getLogger(__name__)
 
 # List of sources we support
-SUPPORTED_SOURCES = ['CSV', 'WU', 'Cumulus', 'WD', 'WeatherCat', 'Ecowitt']
+SUPPORTED_SOURCES = {
+    'CSV': 'weeimport.csvimport.CSVSource',
+    'WU': 'weeimport.wuimport.WUSource',
+    'Cumulus': 'weeimport.cumulusimport.CumulusSource',
+    'WD': 'weeimport.wdimport.WDSource',
+    'WeatherCat': 'weeimport.weathercatimport.WeatherCatSource',
+    'Ecowitt': 'weeimport.ecowittimport.EcowittSource',
+}
 
 
 # ============================================================================
@@ -283,7 +290,7 @@ class Source:
         self.period_duplicates = set()
 
     @staticmethod
-    def source_factory(config_path, config_dict, import_config, **kwargs):
+    def source_factory(config_path, config_dict, import_config_path, **kwargs):
         """Factory to produce a Source object.
 
         Returns an appropriate object depending on the source type. Raises a
@@ -291,34 +298,36 @@ class Source:
         """
 
         # get wee_import config dict if it exists
-        import_config_path, import_config_dict = weecfg.read_config(None,
-                                                                    None,
-                                                                    file_name=import_config)
+        _, import_config_dict = weecfg.read_config(None, None, file_name=import_config_path)
         # we should have a source parameter at the root of out import config
         # file, try to get it but be prepared to catch the error.
         try:
             source = import_config_dict['source']
         except KeyError:
-            # we have no source parameter so check if we have a single source
-            # config stanza, if we do then proceed using that
-            _source_keys = [s for s in SUPPORTED_SOURCES if s in import_config_dict.keys]
-            if len(_source_keys) == 1:
-                # we have a single source config stanza so use that
-                source = _source_keys[0]
+            # We have no source parameter. See if there is a single stanza with the same name as
+            # one of our supported sources. If so, use that.
+            if len(import_config_dict.sections) == 1:
+                source = import_config_dict.sections[0]
             else:
                 # there is no source parameter and we do not have a single
                 # source config stanza so raise an error
                 _msg = "Invalid 'source' parameter or no 'source' parameter specified in %s" % import_config_path
                 raise weewx.UnsupportedFeature(_msg)
+        # We need an importer. See if the import config dict specifies one. If so, use that.
+        # Otherwise, use the default importer for the source type.
+        importer = import_config_dict.get('importer')
+        if not importer:
+            if source not in SUPPORTED_SOURCES:
+                raise weewx.UnsupportedFeature(f"Unsupported source type '{source}' "
+                                               f"specified in {import_config_path}.")
+            importer = SUPPORTED_SOURCES[source]
         # if we made it this far we have all we need to create an object
-        module_class = '.'.join(['weeimport',
-                                 source.lower() + 'import',
-                                 source + 'Source'])
-        return get_object(module_class)(config_path,
-                                        config_dict,
-                                        import_config_path,
-                                        import_config_dict.get(source, {}),
-                                        **kwargs)
+        klass = get_object(importer)
+        return klass(config_path,
+                     config_dict,
+                     import_config_path,
+                     import_config_dict.get(source, {}),
+                     **kwargs)
 
     def run(self):
         """Main entry point for importing from an external source.

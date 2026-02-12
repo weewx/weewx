@@ -43,7 +43,8 @@ def add_subparser(subparsers):
                                     f'Default is "{weecfg.default_config_path}".')
     import_parser.add_argument('--import-config',
                                metavar='IMPORT_CONFIG_FILE',
-                               dest='import_config',
+                               dest='import_config_path',
+                               required=True,
                                help=f'Path to import configuration file.')
     import_parser.add_argument('--dry-run',
                                action='store_true',
@@ -83,7 +84,7 @@ def add_subparser(subparsers):
 
 def import_func(config_dict, namespace):
     weectllib.import_actions.obs_import(config_dict,
-                                        namespace.import_config,
+                                        namespace.import_config_path,
                                         dry_run=namespace.dry_run,
                                         date=namespace.date,
                                         from_datetime=namespace.from_datetime,
