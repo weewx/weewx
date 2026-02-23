@@ -9,7 +9,7 @@ Added rsyslog config example for making logs visible to weewx group without
 having to use any privilege escalation.
 
 Allow extra command line options to be passed to extension installer.
-Addresses issue #[1041](https://github.com/weewx/weewx/issues/1041).
+Addresses [Issue #1041](https://github.com/weewx/weewx/issues/1041).
 
 Added Astronomical Units as a unit of length. Added `local_djd` as a unit of
 _local_ time. [PR #998](https://github.com/weewx/weewx/pull/998). Thanks to
@@ -94,13 +94,13 @@ The utility and documentation have been changed to use `cur_in_temp` (one
 '`r`'), making all types consistent. Fixes [Issue #1006](https://github.com/weewx/weewx/issues/1006).
 
 Fix a problem caused by an assumption that delta times are always in seconds.
-Fixes issue [Issue #1009](https://github.com/weewx/weewx/issues/1009).
+Fixes [Issue #1009](https://github.com/weewx/weewx/issues/1009).
 
 Fix bug that prevented arbitrary types from being used with `weectl database
-add-column`. Fixes issue [Issue #1007](https://github.com/weewx/weewx/issues/1007).
+add-column`. Fixes [Issue #1007](https://github.com/weewx/weewx/issues/1007).
 
 Fix bug that prevented MySQL and MariaDB versions greater than 10.0 from
-working. Fixes issue [Issue #1010](https://github.com/weewx/weewx/issues/1010).
+working. Fixes [Issue #1010](https://github.com/weewx/weewx/issues/1010).
 
 Wind direction plots in the Standard skin now use discrete marks, rather than
 continuous lines.
@@ -221,7 +221,7 @@ When using `weectl database` with action `calc-missing`, the tranche size can
 now be set.
 
 Documentation now uses [MkDocs](https://www.mkdocs.org/). It is no longer
-included in the distribution, but can always be accessed online at
+included in the distribution but can always be accessed online at
 https://weewx.com/docs.
 
 Package installs now use `systemd` instead of the old System V `/etc/init.d`.
@@ -347,8 +347,8 @@ The process name for weewxd is now 'weewxd'.  In V4 it was 'weewx'.
 The rc script and configuration for FreeBSD/OpenBSD has been updated and now
 uses standard BSD conventions.
 
-The DEB/RPM packaging now detect whether systemd is running, so on systems that
-use SysV, the rc scripts will be installed, and on systems such as docker that
+The DEB/RPM packaging can now detect whether systemd is running, so on systems that
+use SysV the rc scripts will be installed, and on systems such as docker that
 do not use systemd, no systemd dependencies will be introduced.
 
 
@@ -375,7 +375,7 @@ exception. Instead, it shows the tag in the results. Related to PR #817.
 ### 4.10.1 01/30/2023
 
 Logging handler `rotate` has been removed. Its need to access privileged
-location `/var/log/weewx.log` on start up would cause crashes, even if it was
+location `/var/log/weewx.log` on startup would cause crashes, even if it was
 never used.
 
 
@@ -407,7 +407,8 @@ Fixes issue #833
 Fix bug that prevents `group_deltatime` from being used by timespans. Users
 Add suffix `.length` to class TimespanBinder. This allows expressions such as
 
-Option `line_gap_fraction` can now be used with bar plots. Fixes issue #818.
+Option `line_gap_fraction` can now be used with bar plots. Fixes
+[Issue #818](https://github.com/weewx/weewx/issues/818).
 
 
 ### 4.9.1 10/25/2022
@@ -417,7 +418,7 @@ Fix problem with `wind` for older versions of sqlite.
 
 ### 4.9.0 10/24/2022
 
-Fix problem that create 'ghost' values for VantageVue stations.
+Fix problem that creates 'ghost' values for VantageVue stations.
 Fix problem that causes `leafWet3` and `leafWet4` to be emitted in VP2
 stations that do not have the necessary sensors.
 Fixes issue #771.
@@ -665,7 +666,7 @@ Added i18n-report utility to help check skins for translated strings.
 
 Reverted the wview schema back to the V3 style.
 
-Fixed problem where setup.py would fail if the station description used UTF-8
+Fixed problem where `setup.py` would fail if the station description used UTF-8
 characters.
 
 Fixed problem where unit labels would not render correctly under Python 2.7 if
@@ -696,7 +697,7 @@ multiples of a day.
 Changed NOAA reports to use the `normalized_ascii` encoding instead of `utf8`
 (which did not display correctly for most browsers). Fixes issue #646.
 
-Plots longer than 2 years use a 6 month time increment.
+Plots longer than 2 years use a 6-month time increment.
 
 Uploads to PWSWeather and WOW now use HTTPS. Fixes issue #650.
 
@@ -916,28 +917,28 @@ issue #428. Alternative to PR #561.
 ### 4.1.0 05/25/2020
 
 Archive records emitted by the Vantage driver now include the number of wind
-samples per archive interval in field wind_samples.
+samples per archive interval in field `wind_samples`.
 
-wee_import can now import WeatherCat monthly .cat files.
+Utility `wee_import` can now import WeatherCat monthly `.cat` files.
 
 Changed the logging configuration dictionary to match the Python documents.
 Thanks to user Graham for figuring this out!
 
 Fixed problem that prevented ws1 driver from working under Python 3. PR #556.
 
-Eliminate use of logging in wee_config, allowing it to be used for installs
+Eliminate use of logging in `wee_config`, allowing it to be used for installs
 without syslog.
 
 Allow expressions to be used as a datatype when plotting.
 
-Added option 'reuse_ssl' to FTP. This activates a workaround for a bug in the
+Added option `reuse_ssl` to FTP. This activates a workaround for a bug in the
 Python ftp library that causes long-lived connections to get closed
 prematurely. Works only with Python 3.6 and greater.
 
 The cc3000 driver will automatically reboot the hardware if it stops sending
 observations. PR #549.
 
-Install using setup.py forgot to set WEEWX_ROOT when installing in non-standard
+Install using `setup.py` forgot to set `WEEWX_ROOT` when installing in non-standard
 places. Fixes issue #546.
 
 Fixed bug in ws28xx driver that prevented it from running under Python 3.
@@ -954,12 +955,12 @@ Python 3.
 Added a logging handler for rotating files. See https://bit.ly/2StYSHb for how
 to use it. It is the default for macOS.
 
-More information if an exception is raised while querying for vantage hardware
+More information if an exception is raised while querying for Vantage hardware
 type.
 
 wunderfixer: fixed problem under Python 3 where response was not converted to
-str before attempting to parse the JSON. Option --simulate now requires api_key
-and password, so it can hit the WU.
+`str` before attempting to parse the JSON. Option `--simulate` now requires `api_key`
+and `password`, so it can hit the WU.
 
 Fixed problem in te923 driver under Python 3 that caused it to crash.
 
@@ -975,16 +976,16 @@ https://github.com/weewx/weewx/wiki/WeeWX-V4-user-defined-types
 WeeWX now uses the Python 'logging' facility. This means log, formats, and
 other things can now be customized. Fixes issue #353.
 
-Strings appearing in the data stream no longer cause a TypeError if they can be
+Strings appearing in the data stream no longer cause a `TypeError` if they can be
 converted to a number.
 
 Strings can now be accumulated and extracted in the accumulators, making it
 possible to include them in the database schemas.
 
-The utility wee_reports now loads services, allowing it to use user-supplied
+The utility `wee_reports` now loads services, allowing it to use user-supplied
 extensions. Fixes issue #95.
 
-New default schema ("wview_extended") that offers many new types. The old
+New default schema (`wview_extended`) that offers many new types. The old
 schema is still supported. Fixes issue #115.
 
 Optional, more flexible, way of specifying schemas for the daily summaries. The
@@ -992,35 +993,35 @@ old way is still supported.
 
 The install process now offers to register a user's station with weewx.com.
 
-The package MySQL-python, which we used previously, is not always available on
-Python 3. Ported the MySQL code to use the package mysqlclient as an
+The package `MySQL-python`, which we used previously, is not always available on
+Python 3. Ported the MySQL code to use the package `mysqlclient` as an
 alternative.
 
 The default for WOW no longer throttles posting frequency (the default used to
 be no more than once every 15 minutes).
 
-Added new aggregate types minsum, minsumtime, sum_le. PR #382.
+Added new aggregate types `minsum`, `minsumtime`, `sum_le`. PR #382.
 
-Unit group group_distance is now a first-class group.
+Unit group `group_distance` is now a first-class group.
 
-Added new tag $python_version.
+Added new tag `$python_version`.
 
 Ported to Python2-PyMySQL package on OpenSUSE.
 
-Added new aggregation types 'first' (similar to 'last'), 'diff' (the difference
-between last and first value in the aggregation interval), and 'tderiv' (the
+Added new aggregation types `first` (similar to `last`), `diff` (the difference
+between last and first value in the aggregation interval), and `tderiv` (the
 difference divided by the time difference).
 
-Created new unit group 'group_energy2', defined as watt-seconds. Useful for
+Created new unit group `group_energy2`, defined as watt-seconds. Useful for
 high resolution energy monitors.
 
 An observation type known to the system, but not in a record, will now return a
-proper ValueTuple, rather than UnknownType.
+proper `ValueTuple`, rather than `UnknownType`.
 
-Type "stormStart" was added to the unit system. Fixes issue #380.
+Type `stormStart` was added to the unit system. Fixes issue #380.
 
-Added new aggregation type 'growdeg'. Similar to 'heatdeg', or 'cooldeg', it
-measures growing degree-days. Basically, cooldeg, but with a different base.
+Added new aggregation type `growdeg`. Similar to `heatdeg`, or `cooldeg`, it
+measures growing degree-days. Basically, `cooldeg`, but with a different base.
 Fixes issue #367. Thanks to user Clay Jackson for guidance!
 
 Ported OS uptime to OpenBSD. Fixes issue #428. Thanks to user Jeff Ross!
@@ -1028,21 +1029,21 @@ Ported OS uptime to OpenBSD. Fixes issue #428. Thanks to user Jeff Ross!
 Catch SSL certificate errors in uploaders. Retry after an hour. Fixes issue #413.
 
 Wunderfixer has been ported to the new WU API. This API requires an API key,
-which you can get from WU. Put it in weewx.conf. Added option --upload-only.
+which you can get from WU. Put it in `weewx.conf`. Added option `--upload-only`.
 Thanks to user Leon Shaner! Fixes issues #414 and #445.
 
-Wee_import can now import Weather Display monthly log files.
+The utility `wee_import` can now import Weather Display monthly log files.
 
-Fixed problem where sub-sections DegreeDays and Trend were located under the
-wrong weewx.conf section. Fixes issue #432. Thanks to user mph for spotting
+Fixed problem where sub-sections `DegreeDays` and `Trend` were located under the
+wrong `weewx.conf` section. Fixes issue #432. Thanks to user mph for spotting
 this!
 
 Added new parameters to the Weather Underground uploader. Fixes issue #435.
 
-Added new air quality types pm1_0, pm2_5, and pm10_0 to the unit system. Added
-new unit microgram_per_meter_cubed. Added new unit group, group_concentration.
+Added new air quality types `pm1_0`, `pm2_5`, and `pm10_0` to the unit system. Added
+new unit `microgram_per_meter_cubed`. Added new unit group `group_concentration`.
 
-Plist for the Mac launcher now includes a log file for stderr.
+Plist for the Mac launcher now includes a log file for `stderr`.
 
 Night-day transition in plots now uses shortest travel distance around color
 wheel to minimize extra colors. Fixes issue #457. Thanks to user Alex Edwards!
@@ -1052,10 +1053,10 @@ Fixed bug that causes plots to fail when both min and max are zero. Fixes issue 
 Fixed problem with sqlite driver that can lead to memory growth. See PR #467.
 Thanks to user Rich Bell!
 
-Fixed bug that caused windrun to be calculated wrongly under METRICWX unit
+Fixed bug that caused `windrun` to be calculated wrongly under `METRICWX` unit
 system. Fixes issue #452.
 
-If a bad value of 'interval' is encountered in a record, the program will
+If a bad value of `interval` is encountered in a record, the program will
 simply ignore it, rather than stopping. Address issue #375.
 
 Change in how the archive timespan is calculated in the engine. This allows
@@ -1063,45 +1064,45 @@ oddball archive intervals. Fixes issue #469.
 
 NOAA reports are now more tolerant of missing data. Fixes issue #300.
 
-Use of strftime() date and time format codes in template file names is now
-supported as an alternative to the legacy 'YYYY', 'MM' and 'DD'. The legacy
+Use of `strftime()` date and time format codes in template file names is now
+supported as an alternative to the legacy `YYYY`, `MM` and `DD`. The legacy
 codes continue to be supported for backwards compatibility. Fixes issue #415.
 
-New --calc-missing action added to wee_database to calculate and store derived
+New `--calc-missing` action added to `wee_database` to calculate and store derived
 observations.
 
-wee_import now calculates missing derived observations once all imported data
+`wee_import` now calculates missing derived observations once all imported data
 has been saved to archive. Fixes issue #443.
 
-wee_import now tolerates periods that contain no source data. Fixes issue #499.
+`wee_import` now tolerates periods that contain no source data. Fixes issue #499.
 
-wee_import now accepts strings representing cardinal, intercardinal and
+`wee_import` now accepts strings representing cardinal, intercardinal and
 secondary intercardinal directions in CSV imports. Partially fixes issue #238.
 
-The field delimiter character may now be defined for wee_import CSV imports.
+The field delimiter character may now be defined for `wee_import` CSV imports.
 
 Ignore historical records if the timestamp is in the future.
 
 Can now recover from MariaDB-specific database connection error 1927.
 
-Changed the name of the unit "litre" to "liter", making its spelling more
-consistent with "meter". The spelling "litre" is still accepted.
+Changed the name of the unit `litre` to `liter`, making its spelling more
+consistent with `meter`. The spelling `litre` is still accepted.
 
-Systemd type changed from "simple" to "forking". Thanks to user Jaap de Munck
+Systemd type changed from `simple` to `forking`. Thanks to user Jaap de Munck
 for figuring this one out!
 
 The configuration file is now an optional argument. This means most users will
-be able to use the simple command line 'sudo weewxd'.
+be able to use the simple command line `sudo weewxd`.
 
 Use correct log path for netbsd and openbsd in logger setup.
 
-StdWXCalculate no longer calculates anything by default. Instead, types to be
+`StdWXCalculate` no longer calculates anything by default. Instead, types to be
 calculated must be listed in weewx.conf. See the Upgrade Guide.
 
-setup.py install no longer saves the old 'bin' subdirectory. Instead, it simply
+setup.py install no longer saves the old `bin` subdirectory. Instead, it simply
 overwrites it.
 
-Support for the vantage LOOP2 packet format. Fixes issue #374.
+Support for the Vantage LOOP2 packet format. Fixes issue #374.
 
 The vantage driver now allows 3 retries per read, rather than per
 archive interval.
@@ -1200,7 +1201,7 @@ attempted. Fixes issue #368.
 ### 3.9.0 02/05/2019
 
 New skin called Seasons. For new users, it will be installed and enabled.
-For old users, it will be installed, but not enabled. Fixes issue #75.
+For old users, it will be installed but not enabled. Fixes issue #75.
 
 There are also two new skins for mobile phones: Mobile and Smartphone.
 These are installed, but not enabled, for all users.
@@ -3405,8 +3406,8 @@ allows PASSIVE mode. This was necessary to support Microsoft FTP servers.
 
 ### 0.6.2 08/01/09
 
-Exception handling in weewx/ftpdata.py used socket.error but failed to
-declare it. Added 'import socket' to fix.
+Exception handling in `weewx/ftpdata.py` used `socket.error` but failed to
+declare it. Added `import socket` to fix.
 
 Added more complete check for unused pages in weewx/VantagePro.py. Now the
 entire record must be filled with 0xff, not just the time field. This fixes
