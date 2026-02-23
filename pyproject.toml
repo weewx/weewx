@@ -54,6 +54,9 @@ dependencies = [
 Homepage = "https://weewx.com"
 Repository = "https://github.com/weewx/weewx"
 Documentation = "https://weewx.com/docs"
+Issues = "https://github.com/weewx/weewx/issues"
+Wiki = "https://github.com/weewx/weewx/wiki"
+Support = "https://groups.google.com/g/weewx-user"
 
 [dependency-groups]
 dev = [
