@@ -97,9 +97,13 @@ For current and previous releases:
 
 [https://weewx.com/downloads](https://weewx.com/downloads)
 
-For the latest source code:
+## Code
+
+The code lives in a git repository:
 
 [https://github.com/weewx/weewx](https://github.com/weewx/weewx)
+
+The `master` branch is stable, the `development` branch contains changes that will appear in the next release.  See the file [CONTRIBUTING.txt](CONTRIBUTING.txt) for details about branching, and the file [PACKAGING.txt](PACKAGING.txt) for details about the process of creating a release.
 
 ## Documentation and Support
 
