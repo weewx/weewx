@@ -6,17 +6,16 @@ they can be installed and distributed as a functional group.
 
 Customizations typically fall into one of these categories:
 
-* search list extension
-* template
+* driver
 * skin
+* search list extension
 * service
 * generator
-* driver
 
 Take a look at the [WeeWX wiki](https://github.com/weewx/weewx/wiki) for a
 sampling of some of the extensions that are available.
 
-## Creating an extension
+## Guidelines
 
 Now that you have made some customizations, you might want to share those
 changes with other WeeWX users. Put your customizations into an extension to
@@ -53,7 +52,8 @@ Each extension should also include:
 
 * `changelog` - an enumeration of changes in each release
 
-* `install.py` - python code used by the WeeWX `ExtensionInstaller`
+* install.py` - python code used by the WeeWX `ExtensionInstaller`. More details
+  below.
 
 For example, here is the structure of an extension called `basic`, which
 installs a skin called `Basic`. You can find it in the `examples` subdirectory.
@@ -122,5 +122,136 @@ the configuration that will obviously require modification. The *username* might
 default to *REPLACE_ME*. Also be sure to add a log entry that indicates the
 feature is disabled until the value has been specified.
 
-In the case of drivers, use the configuration editor to prompt for this type of
-required value.
+## Writing an installer
+
+The installer is a python script called `install.py` that must be included in
+your extension. It is used to specify the various parts of the extension, where
+they should be put, and how they might be customized. To illustrate, let's take
+a look at the `install.py` script for the `basic` skin. Here it is:
+
+```python
+def loader():                                                                # 1
+    return BasicInstaller()
+
+
+# By creating the configuration dictionary from a StringIO, we can preserve any comments
+                                                                             # 2
+BASIC_CONFIG = """
+[StdReport]
+
+    [[BasicReport]]
+        skin = Basic
+        enable = True
+        # Language to use:
+        lang = en
+        # Unit system to use:
+        unit_system = US
+        # Where to put the results:
+        HTML_ROOT = basic
+"""
+
+basic_dict = configobj.ConfigObj(StringIO(BASIC_CONFIG))                     # 3
+
+
+class BasicInstaller(ExtensionInstaller):                                    # 4
+    def __init__(self):
+        super(BasicInstaller, self).__init__(                                # 5
+            version="0.5",
+            name='basic',
+            description='Very basic skin for WeeWX.',
+            author="Matthew Wall",
+            author_email="mwall@users.sourceforge.net",
+            config=basic_dict,                                               # 6
+            files=[                                                          # 7
+                ('skins/Basic',
+                 ['skins/Basic/basic.css',
+                  'skins/Basic/current.inc',
+                  'skins/Basic/favicon.ico',
+                  'skins/Basic/hilo.inc',
+                  'skins/Basic/index.html.tmpl',
+                  'skins/Basic/skin.conf',
+                  'skins/Basic/lang/en.conf',
+                  'skins/Basic/lang/fr.conf',
+                  ]),
+            ]
+        )
+
+    def configure(self, engine):                                             # 8
+        """Customized configuration that sets a language code"""
+        my_skin_path = os.path.join(os.path.dirname(__file__), 'skins/Basic')
+        code = engine.get_lang_code(my_skin_path, 'en')
+        self['config']['StdReport']['BasicReport']['lang'] = code
+        return True
+```
+
+Going through this script line by line:
+
+1. Every installer must define a `loader()` function that returns an instance of
+   the installer class.
+
+2. While you could specify the configuration dictionary as a Python structure,
+   here we prefer to do it by creating and parsing a `StringIO` object. This has
+   the advantage of preserving any comments in the configuration file.
+
+3. Parse the configuration dictionary from the `StringIO` object.
+
+4. Every installer must include an installer class that is a subclass of
+   `ExtensionInstaller`. Here our class is called `BasicInstaller`.
+
+5. The initializer for the installer class must call the initializer for the
+   superclass, then initialize itself. This is where the various parts of the
+   extension are specified. 
+
+6. On this line, we set the configuration dictionary for our extension. Whatever
+   appears in this dictionary will override and augment the configuration file
+   `weewx.conf`. In this example, in the `[StdReport]` stanza, a new
+   `[[BasicReport]]` stanza will be created. If there is already a `[[BasicReport]]`
+   stanza, perhaps because we are upgrading, it will be overwritten.
+
+7. The `files` attribute of the installer class is a list of tuples that specify
+   the files to be installed. The first element of the tuple is the destination
+   directory, and the second element is a list of files to be installed in that
+   directory. In this case, the destination directory is `skins/Basic`.
+
+8. The `configure()` method is called by the extension installer to allow any
+   custom configuration to be performed. In this case, we use it to ask the user
+   which language s/he wants, then set a language code appropriately. If the custom
+   configuration is successful, the function should return `True`, otherwise
+   `False`.
+
+### Passing arguments on to your installer
+
+It is possible to pass on additional command line arguments to your installer.
+To do this, declare a method `process_args(self,args)` in your installer class.
+Any arguments not recognized by `weectl extension install` will be passed on to
+it.
+
+For example, let's modify the `Basic` skin example above so that if a `--lang`
+option is specified on the command line when installing the extension, the user
+is not asked which language to use.
+
+```python
+import argparse
+
+class BasicInstaller(ExtensionInstaller):
+    def __init__(self):
+        super().__init__(
+            version="0.5",
+            # ... as before ...
+
+    def process_args(self, args):
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--lang')
+        namespace = parser.parse_args(args)
+        # Set the language code or NONE, if no code was specified.
+        self.lang = namespace.lang
+
+    def configure(self, engine):
+        """Customized configuration that sets a language code"""
+        # If no language was specified on the command line, ask the user
+        if not self.lang:
+            my_skin_path = os.path.join(os.path.dirname(__file__), 'skins/Basic')
+            self.lang = engine.get_lang_code(my_skin_path, 'en')
+        self['config']['StdReport']['BasicReport']['lang'] = self.lang
+        return True
+```

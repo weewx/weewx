@@ -369,12 +369,12 @@ class Manager:
                 SQL types and the values are the values to be stored in the database.
             accumulator (weewx.accum.Accum): An optional accumulator. If given, the record
                 will be added to the accumulator.
-            update (bool): Update database if timestamp is already present
             progress_fn (function): This function will be called every 1000 insertions. It should
                 have the signature fn(time, N) where time is the unix epoch time, and N is the
                 insertion count.
             log_success (bool): Set to True to have successful insertions logged.
             log_failure (bool): Set to True to have unsuccessful insertions logged
+            update (bool): Update database if timestamp is already present
 
         Returns:
             int: The number of successful insertions.
