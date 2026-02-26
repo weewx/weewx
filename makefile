@@ -130,7 +130,7 @@ clean:
 VCONFIGS=src/weewx_data/weewx.conf src/weecfg/tests/expected/weewx43_user_expected.conf
 VSKINS=Ftp/skin.conf Mobile/skin.conf Rsync/skin.conf Seasons/skin.conf Smartphone/skin.conf Standard/skin.conf
 version:
-	sed -e "s/^site_name.*/site_name: \'WeeWX $(MMVERSION)\'/" mkdocs.yml > mkdocs.yml.tmp; mv mkdocs.yml.tmp mkdocs.yml
+	sed -e "s/^site_name.*/site_name = \'WeeWX $(MMVERSION)\'/" zensical.toml > zensical.toml.tmp; mv zensical.toml.tmp zensical.toml
 	for f in $(VCONFIGS); do \
   sed -e 's/version = [0-9].*/version = $(VERSION)/' $$f > $$f.tmp; \
   mv $$f.tmp $$f; \
