@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+# yaml-language-server: $schema=https://zensical.org/schema.json
 site_name: 'WeeWX 5.3'
 site_url: 'https://www.weewx.com'
 site_author: "Tom Keffer <tkeffer@gmail.com>"
@@ -7,9 +7,10 @@ site_author: "Tom Keffer <tkeffer@gmail.com>"
 #repo_name: WeeWX GitHub Repository
 # Shut off the "edit on GitHub" feature:
 edit_uri: ''
-copyright: Copyright © 2009-2025 Thomas Keffer, Matthew Wall, and Gary Roderick, all rights reserved
+copyright: Copyright © 2009-2026 Thomas Keffer, Matthew Wall, and Gary Roderick, all rights reserved
 theme:
-  name: 'material'
+  name: 'zensical'
+  variant: classic
   logo: 'images/logo-weewx.png'
   favicon: 'images/favicon.png'
   features:
@@ -172,13 +173,13 @@ plugins:
 markdown_extensions:
 
   # Code highlighting in ``` ``` blocks
-  # https://squidfunk.github.io/mkdocs-material/setup/extensions/python-markdown-extensions/#highlight
+  # https://zensical.org/docs/reference/markdown/#highlight
   - pymdownx.highlight
   - pymdownx.inlinehilite
 
   - pymdownx.superfences
 
-  # https://squidfunk.github.io/mkdocs-material/setup/extensions/python-markdown-extensions/#details
+  # https://zensical.org/docs/reference/markdown/#details
   - pymdownx.details
 
   # linkifies URL and email links without having to wrap them in Markdown syntax. Also, allows shortens repository issue, pull request, and commit links.
@@ -191,13 +192,13 @@ markdown_extensions:
   - pymdownx.tilde
 
   # Tabbed provides a syntax to easily add tabbed Markdown content.
-  # https://facelessuser.github.io/pymdown-extensions/extensions/tabbed/
+  # https://zensical.org/docs/reference/markdown/#tabbed
   - pymdownx.tabbed:
       alternate_style: true
 
   - pymdownx.snippets:
       # auto_append abbreviations.md to every file
-      # https://squidfunk.github.io/mkdocs-material/reference/tooltips/#adding-a-glossary
+      # https://zensical.org/docs/reference/tooltips/#glossary
       auto_append:
         - docs/abbreviations.md
 
@@ -207,16 +208,16 @@ markdown_extensions:
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
 
-  # Adds the ability to define abbreviations (https://squidfunk.github.io/mkdocs-material/reference/tooltips/)
+  # Adds the ability to define abbreviations (https://zensical.org/docs/reference/tooltips/)
   - abbr
 
   # block-styled side content
-  # https://squidfunk.github.io/mkdocs-material/reference/admonitions/
+  # https://zensical.org/docs/reference/admonitions/
   - admonition
 
   - attr_list
 
-  # Adds syntax for defining footnotes in Markdown documents (https://squidfunk.github.io/mkdocs-material/reference/footnotes/)
+  # Adds syntax for defining footnotes in Markdown documents (https://zensical.org/docs/reference/footnotes/)
   - footnotes
 
   - md_in_html

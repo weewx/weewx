@@ -61,9 +61,7 @@ Support = "https://groups.google.com/g/weewx-user"
 [dependency-groups]
 dev = [
     "cryptography",
-    "mkdocs",
-    "mkdocs-material",
-    "mkdocs-material-extensions",
+    "zensical",
     "poetry",
     "pytest",
 ]

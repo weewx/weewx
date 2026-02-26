@@ -80,7 +80,7 @@ creating platform-specific weewx packages.
 
 pre-requisites ----------------------------------------------------------------
 
-Building the documentation requires mkdocs, which is installed using pip.
+Building the documentation requires zensical, which is installed using pip.
 Signing packages requires gpg and local copy of private+public keys.
 Verifying the packages requires rpmlint/lintian.
 The debian repo management requires aptly.
@@ -88,8 +88,7 @@ The redhat repo management requires createrepo.
 The suse repo management requires createrepo.
 
 To build the docs:
-  pip3 install --user mkdocs
-  pip3 install --user mkdocs-material
+  pip3 install --user zensical
 
 To build pypi package install the following (see the pypi section):
   pip3 install --user poetry
@@ -218,11 +217,9 @@ delete keys known by rpm:
 howto: build the documents --------------------------------------------------
 
 Prerequisites:
-    - Python 3.7 or greater, with pip installed
-    - Install mkdocs:
-        python3 -m pip install mkdocs
-    - Install the theme "material" for mkdocs:
-        python3 -m pip install mkdocs-material
+    - Python 3.10 or greater, with pip installed
+    - Install zensical:
+        python3 -m pip install zensical
 
 Steps:
     - make build-docs

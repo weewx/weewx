@@ -54,7 +54,7 @@ help: info
 	@echo "                SUITE=path/to/foo.py to run only foo tests"
 	@echo "    test-clean  remove test databases"
 	@echo ""
-	@echo "    build-docs  build the docs using mkdocs"
+	@echo "    build-docs  build the docs using zensical"
 	@echo ""
 	@echo " debian-changelog  prepend stub changelog entry for debian"
 	@echo " redhat-changelog  prepend stub changelog entry for redhat"
@@ -207,7 +207,7 @@ $(DOC_BUILT)/index.html: $(shell find $(DOC_SRC) -type f)
 	@rm -rf $(DOC_BUILT)
 	@mkdir -p $(DOC_BUILT)
 	@echo "Building documents"
-	$(PYTHON) -m mkdocs --quiet build --site-dir=$(DOC_BUILT)
+	$(PYTHON) -m zensical build
 
 # upload docs to the web site
 upload-docs: $(DOC_BUILT)/index.html

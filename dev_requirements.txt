@@ -2,9 +2,7 @@ configobj>=5.0
 cryptography
 CT3>=3.1
 ephem>=4.1
-mkdocs
-mkdocs-material
-mkdocs-material-extensions
+zensical
 Pillow>=5.2
 poetry
 PyMySQL

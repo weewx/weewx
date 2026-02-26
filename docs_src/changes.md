@@ -49,6 +49,9 @@ connection was lost. Fixes [Issue #1036](https://github.com/weewx/weewx/issues/1
 Add support for kwargs when using `.series()` tags. PR
 [#1042](https://github.com/weewx/weewx/pull/1042). 
 
+Documentation now uses [Zensical](https://zensical.org/).
+
+
 
 ### 5.2.0 10/05/2025
 
