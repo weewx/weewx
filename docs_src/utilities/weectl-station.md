@@ -148,6 +148,14 @@ weectl station upgrade --what skins
 See the details below for [option `--what`](#what-option).
 
 
+## List drivers
+
+    weectl station list-drivers
+        [--config=FILENAME] 
+
+List all of the available device drivers.
+
+
 ## Positional argument
 
 ### WEEWX-ROOT

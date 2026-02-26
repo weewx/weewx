@@ -876,3 +876,13 @@ def _get_existing_skins(skin_dir):
         existing_skins = {os.path.basename(d.path) for d in existing_contents if d.is_dir()}
 
     return existing_skins
+
+
+def station_list_drivers():
+    """List the available drivers."""
+    infos = weecfg.get_all_driver_infos()
+    keys = sorted(infos)
+    for i, d in enumerate(keys):
+        print(" %s%2d%s) %-15s %-25s %s" % (bcolors.BOLD, i, bcolors.ENDC,
+                                            infos[d].get('driver_name', '?'),
+                                            "(%s)" % d, infos[d].get('status', '')))

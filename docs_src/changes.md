@@ -21,6 +21,9 @@ of allowing new databases to be installed as an extension.
 New action `weectl database rebuild-daily NAME` was added to allow the selective 
 rebuilding of the daily summaries. Addresses [Issue #1035](https://github.com/weewx/weewx/issues/1035).
 
+New action `weectl station list-drivers` was added to allow the listing of all
+available device drivers. Fixes [Issue #1050](https://github.com/weewx/weewx/issues/1060).
+
 Language subdirectory `lang` is now recursively searched for additional
 translation files. This allows extensions to add any translations they might
 need.

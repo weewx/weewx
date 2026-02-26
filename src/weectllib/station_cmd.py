@@ -4,7 +4,6 @@
 #    See the file LICENSE.txt for your rights.
 #
 """Entry point for the "station" subcommand."""
-import os.path
 import sys
 
 import weecfg
@@ -57,9 +56,11 @@ station_upgrade_usage = f"""{bcolors.BOLD}weectl station upgrade
             [--dist-config=FILENAME]]
             [--dry-run]{bcolors.ENDC}
 """
+station_list_driver_usage = f"""{bcolors.BOLD}weectl station list-drivers
+            [--config=FILENAME]{bcolors.ENDC}"""
 
 station_usage = '\n       '.join((station_create_usage, station_reconfigure_usage,
-                                  station_upgrade_usage))
+                                  station_upgrade_usage, station_list_driver_usage))
 
 CREATE_DESCRIPTION = f"""Create a new station data area at the location WEEWX-ROOT. If WEEWX-ROOT 
 is not provided, the location {weecfg.default_weewx_root} will be used."""
@@ -73,6 +74,8 @@ UPGRADE_DESCRIPTION = f"""Upgrade an existing station data area managed by the c
 given by the --config option. If the option is not provided, the location 
 {weecfg.default_config_path} will be used. Any combination of the examples, utility files, 
 configuration file, and skins can be upgraded, """
+
+LIST_DRIVERS_DESCRIPTION = f"""List all of the available device drivers."""
 
 
 def add_subparser(subparsers):
@@ -274,6 +277,20 @@ def add_subparser(subparsers):
     station_upgrade_parser.set_defaults(action_func=upgrade_station)
 
 
+    # ---------- Action 'list-drivers' ----------
+    station_list_drivers_parser = \
+        action_parser.add_parser('list-drivers',
+                                 usage=station_list_driver_usage,
+                                 description=LIST_DRIVERS_DESCRIPTION,
+                                 help='List all of the available device drivers.')
+    station_list_drivers_parser.add_argument('--config',
+                                    metavar='FILENAME',
+                                    help=f'Path to configuration file. '
+                                         f'Default is "{weecfg.default_config_path}"')
+    station_list_drivers_parser.set_defaults(func=weectllib.dispatch)
+    station_list_drivers_parser.set_defaults(action_func=list_drivers)
+
+
 # ==============================================================================
 #                        Action invocations
 # ==============================================================================
@@ -282,7 +299,7 @@ def add_subparser(subparsers):
 def create_station(namespace):
     """Map 'namespace' to a call to station_create()"""
     try:
-        config_dict = weectllib.station_actions.station_create(
+        _config_dict = weectllib.station_actions.station_create(
             weewx_root=namespace.weewx_root,
             rel_config_path=namespace.config,
             driver=namespace.driver,
@@ -338,3 +355,6 @@ def upgrade_station(config_dict, namespace):
                                               no_confirm=namespace.yes,
                                               no_backup=namespace.no_backup,
                                               dry_run=namespace.dry_run)
+
+def list_drivers(_config_dict, _namespace):
+    weectllib.station_actions.station_list_drivers()
