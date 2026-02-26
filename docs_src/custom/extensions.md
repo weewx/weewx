@@ -23,7 +23,7 @@ make installation, removal, and distribution easier.
 
 Here are a few guidelines for creating extensions:
 
-* Extensions should not modify or depend upon existing skins. An extension
+* Extensions should not modify or depend on existing skins. An extension
   should include its own, standalone skin to illustrate any templates, search
   list extension, or generator features.
 
@@ -31,11 +31,18 @@ Here are a few guidelines for creating extensions:
   data not found in the default databases, an extension should provide its own
   database and schema.
 
-Although one extension might use another extension, take care to write the
-dependent extension so that it fails gracefully. For example, a skin might use
-data from the forecast extension, but what happens if the forecast extension is
-not installed? Make the skin display a message about "forecast not installed"
-but otherwise continue to function.
+* Extensions that require some measure of configuration for them to work should
+  not be enabled by default. Otherwise, they will crash the system on startup.
+
+* Extensions should generally have their own stanza in `weewx.conf`. Be sure to
+  list all possible options in it, albeit commented out. This way the user will
+  know what is available.
+
+* Although one extension might use another extension, take care to write the
+  dependent extension so that it fails gracefully. For example, a skin might use
+  data from the forecast extension, but what happens if the forecast extension is
+  not installed? Make the skin display a message about "forecast not installed"
+  but otherwise continue to function.
 
 ## Packaging an extension
 
@@ -52,7 +59,7 @@ Each extension should also include:
 
 * `changelog` - an enumeration of changes in each release
 
-* install.py` - python code used by the WeeWX `ExtensionInstaller`. More details
+* `install.py` - python code used by the WeeWX `ExtensionInstaller`. More details
   below.
 
 For example, here is the structure of an extension called `basic`, which
