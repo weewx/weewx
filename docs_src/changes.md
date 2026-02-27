@@ -8,7 +8,7 @@ Set log-label in sysV init script to 'weewxd-XXX' instead of just 'XXX'
 Added rsyslog config example for making logs visible to weewx group without
 having to use any privilege escalation.
 
-Allow extra command line options to be passed to extension installer.
+Allow extra command line options to be passed to an extension installer.
 Addresses [Issue #1041](https://github.com/weewx/weewx/issues/1041).
 
 Added Astronomical Units as a unit of length. Added `local_djd` as a unit of
@@ -50,6 +50,9 @@ Add support for kwargs when using `.series()` tags. PR
 [#1042](https://github.com/weewx/weewx/pull/1042). 
 
 Documentation now uses [Zensical](https://zensical.org/).
+
+Fix problem that caused expanded substitutions to be saved when using
+`weectl station reconfigure`. Fixes [Issue #1068](https://github.com/weewx/weewx/issues/1068).
 
 
 

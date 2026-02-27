@@ -12,6 +12,7 @@ from io import StringIO
 
 import configobj
 
+import weeutil.config
 import weewx
 
 # The logging defaults. Note that two kinds of placeholders are used:
@@ -104,7 +105,7 @@ def setup(process_name, config_dict=None):
 
     # Merge in the user additions / changes:
     if config_dict:
-        log_config.merge(config_dict)
+        log_config.merge(weeutil.config.deep_copy(config_dict))
         weewx_root = config_dict.get("WEEWX_ROOT")
         # Set weewx.debug as necessary:
         weewx.debug = int(config_dict.get('debug', 0))
