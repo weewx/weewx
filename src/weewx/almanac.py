@@ -208,6 +208,7 @@ class Almanac:
                  pressure=None,
                  horizon=None,
                  texts=None,
+                 moon_phases=None,
                  formatter=None,
                  converter=None):
         """Initialize an instance of Almanac
@@ -243,7 +244,10 @@ class Almanac:
         self.pressure = pressure if pressure is not None else 1010.0
         self.horizon = horizon if horizon is not None else 0.0
         self.texts = texts
-        self.moon_phases = texts.get('moon_phases',weeutil.Moon.moon_phases)
+        if moon_phases is None:
+            self.moon_phases = texts.get('moon_phases',weeutil.Moon.moon_phases)
+        else:
+            self.moon_phases = moon_phases
         self.formatter = formatter or weewx.units.Formatter()
         self.converter = converter or weewx.units.Converter()
         # Check to see whether there is a module that provides more than
