@@ -9,6 +9,7 @@ import os
 
 import pytest
 
+import weeutil.Moon
 from weewx.almanac import *
 
 locale.setlocale(locale.LC_ALL, 'C')
@@ -152,3 +153,15 @@ def test_naval_observatory():
     assert atlanta.sun.previous_rising.raw == pytest.approx(1252235697, abs=0.5)
 
 
+def test_moon_phases():
+    """Regression test for PR #1069"""
+    # First, test the defaults:
+    test_default = Almanac(SPRING_TIMESTAMP, LATITUDE, LONGITUDE,
+                           formatter=default_formatter)
+    assert test_default.moon_phase == 'new (totally dark)'
+
+    # Now override the moon phase descriptions:
+    test_override = Almanac(SPRING_TIMESTAMP, LATITUDE, LONGITUDE,
+                           moon_phases = ['pitch black'] + weeutil.Moon.moon_phases[1:],
+                           formatter=default_formatter)
+    assert test_override.moon_phase == 'pitch black'

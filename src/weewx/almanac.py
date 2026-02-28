@@ -229,6 +229,8 @@ class Almanac:
             texts (dict|None): a dictionary of language dependent texts, basicly an entry
                 'moon_phases' which holds an array of 8 strings with descriptions of the moon
                 phase. [optional. If not given, then weeutil.Moon.moon_phases will be used]
+            moon_phases (list): An array of 8 strings with descriptions of the moon
+                phase. [optional. If not given, then weeutil.Moon.moon_phases will be used]
             formatter (weewx.units.Formatter|None): An instance of weewx.units.Formatter
                 with the formatting information to be used.
             converter (weewx.units.Converter|None): An instance of weewx.units.Converter
