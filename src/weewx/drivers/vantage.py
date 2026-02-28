@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -1431,8 +1430,10 @@ class Vantage(weewx.drivers.AbstractDevice):
             except weewx.WeeWxIOError as e:
                 log.error("_determine_hardware; retry #%d: '%s'", count, e)
 
-        log.error("Unable to read hardware type; raise WeeWxIOError")
-        raise weewx.WeeWxIOError("Unable to read hardware type")
+        msg = ("Unable to read hardware type. Check for 2nd instance of weewx. "
+               "Also, try power cycling. ")
+        log.error(msg)
+        raise weewx.WeeWxIOError(msg)
 
     def _setup(self):
         """Retrieve the EEPROM data block from a VP2 and use it to set various properties"""
