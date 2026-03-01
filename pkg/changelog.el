@@ -1,3 +1,5 @@
+* Sun Mar 01 2026 Tom Keffer (Author of WeeWX) <tkeffer@gmail.com> - 5.3.0-1
+- new upstream release
 * Mon Feb 23 2026 Tom Keffer (Author of WeeWX) <tkeffer@gmail.com> - 5.3.0b2-1
 - new upstream release
 * Mon Jan 12 2026 Thomas Keffer (Author of weewx) <tkeffer@gmail.com> - 5.3.0b1-1

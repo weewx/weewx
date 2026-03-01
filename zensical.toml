@@ -1,4 +1,4 @@
-site_name = "WeeWX 5.3"
+site_name = 'WeeWX 5.3'
 site_url = "https://www.weewx.com"
 site_author = "Tom Keffer <tkeffer@gmail.com>"
 # Shut off the "edit on GitHub" feature:

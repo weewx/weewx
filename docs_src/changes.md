@@ -1,12 +1,12 @@
 WeeWX change history
 --------------------
 
-### 5.3.0 MM/DD/YYYY
+### 5.3.0 03/01/2026
 
 Set log-label in sysV init script to 'weewxd-XXX' instead of just 'XXX'
 
-Added rsyslog config example for making logs visible to weewx group without
-having to use any privilege escalation.
+Added rsyslog config example for making logs visible to the group `weewx`
+without having to use any privilege escalation.
 
 Allow extra command line options to be passed to an extension installer.
 Addresses [Issue #1041](https://github.com/weewx/weewx/issues/1041).
