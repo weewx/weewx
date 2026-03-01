@@ -628,7 +628,7 @@ ifneq ("$(GPG_KEYID)","")
   if [ -f "$(HOME)/.gnupg/passphrase" ]; then \
     gpg -a --export $(GPG_KEYID) > /tmp/gpg-pubkeys.asc; \
     gpg -a --pinentry-mode=loopback --passphrase-file $(HOME)/.gnupg/passphrase --export-secret-key $(GPG_KEYID) > /tmp/gpg-prikeys.asc; \
-    gpg_name=`gpg --list-secret-keys | grep uid | awk '{$$1=$$2=""; print $$0}'`; sed "s/GPG_NAME/$${gpg_name}/" vagrant/rpmmacros > /tmp/gpg-macros; \
+    gpg_name=`gpg --list-secret-keys $(GPG_KEYID) | grep uid | awk '{$$1=$$2=""; print $$0}'`; sed "s/GPG_NAME/$${gpg_name}/" vagrant/rpmmacros > /tmp/gpg-macros; \
     ssh -F $(VM_DIR)/ssh-config vagrant@default "mkdir -p .gnupg; chmod 700 .gnupg"; \
     scp -F $(VM_DIR)/ssh-config vagrant/gpg.conf $(VM_URL)/.gnupg; \
     scp -F $(VM_DIR)/ssh-config /tmp/gpg-macros $(VM_URL)/.rpmmacros; \
