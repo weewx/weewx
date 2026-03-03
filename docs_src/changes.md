@@ -1,6 +1,12 @@
 WeeWX change history
 --------------------
 
+### 5.3.1 03/03/2026
+
+Get rid of parenthesized context expressions. They prevented the test suites
+from running under Python 3.8 and earlier.
+
+
 ### 5.3.0 03/01/2026
 
 Set log-label in sysV init script to 'weewxd-XXX' instead of just 'XXX'
