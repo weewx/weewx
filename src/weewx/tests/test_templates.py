@@ -157,8 +157,12 @@ def run_engine(config_dict, stn_info, record, testtime_ts):
             # Use that to figure out where the actual results ended up
             actual_filename_abs = os.path.join(test_html_dir, filename_rel)
 
-            with (open(actual_filename_abs, 'r') as actual, open(expected_filename_abs, 'r') as expected):
+            # Read in the actual lines...
+            with open(actual_filename_abs, 'r') as actual:
                 actual_lines = actual.readlines()
+            # ... then the expected lines...
+            with open(expected_filename_abs, 'r') as expected:
                 expected_lines = expected.readlines()
-                assert actual_lines == expected_lines, \
-                    f"File mismatch: {actual_filename_abs} vs {expected_filename_abs}"
+            # ... then compare them.
+            assert actual_lines == expected_lines, \
+                f"File mismatch: {actual_filename_abs} vs {expected_filename_abs}"

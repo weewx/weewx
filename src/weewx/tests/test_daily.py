@@ -188,7 +188,7 @@ def testTags(config_dict):
     global skin_dict
     db_binder = weewx.manager.DBBinder(config_dict)
     db_lookup = db_binder.bind_default()
-    with (weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as manager):
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as manager:
 
         spans = {'day': weeutil.weeutil.TimeSpan(time.mktime((2010, 3, 15, 0, 0, 0, 0, 0, -1)),
                                                  time.mktime((2010, 3, 16, 0, 0, 0, 0, 0, -1))),
