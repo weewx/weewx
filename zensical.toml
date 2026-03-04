@@ -1,3 +1,4 @@
+[project]
 site_name = 'WeeWX 5.3'
 site_url = "https://www.weewx.com"
 site_author = "Tom Keffer <tkeffer@gmail.com>"
@@ -6,8 +7,13 @@ edit_uri = ""
 copyright = "Copyright © 2009-2026 Thomas Keffer, Matthew Wall, and Gary Roderick, all rights reserved"
 docs_dir = "docs_src"
 site_dir = "build/docs"
+extra_css = ["css/weewx_docs.css", ]
 
-[theme]
+[project.extra.analytics]
+provider = "google"
+property = "G-D146BWZK54"
+
+[project.theme]
 name = "zensical"
 variant = "classic"
 logo = "images/logo-weewx.png"
@@ -24,11 +30,11 @@ features = [
     "content.tabs.link",
 ]
 
-[theme.font]
+[project.theme.font]
 text = "Noto Sans"
 code = "Inconsolata Mono"
 
-[[theme.palette]]
+[[project.theme.palette]]
 scheme = "default"
 primary = "teal"
 accent = "white"
@@ -36,20 +42,9 @@ accent = "white"
 icon = "material/toggle-switch-off-outline"
 name = "Switch to dark mode"
 
-[[theme.palette]]
-scheme = "slate"
-primary = "white"
-accent = "teal"
-[theme.palette.toggle]
-icon = "material/toggle-switch"
-name = "Switch to light mode"
-
-[extra]
+[project.extra]
 generator = false
 
-extra_css = [
-    "css/weewx_docs.css",
-]
 
 plugins = [
     "search",
