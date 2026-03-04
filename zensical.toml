@@ -1,5 +1,5 @@
 [project]
-site_name = 'WeeWX 5.3'
+site_name = "WeeWX 5.3"
 site_url = "https://www.weewx.com"
 site_author = "Tom Keffer <tkeffer@gmail.com>"
 # Shut off the "edit on GitHub" feature:
@@ -7,11 +7,9 @@ edit_uri = ""
 copyright = "Copyright © 2009-2026 Thomas Keffer, Matthew Wall, and Gary Roderick, all rights reserved"
 docs_dir = "docs_src"
 site_dir = "build/docs"
-extra_css = ["css/weewx_docs.css", ]
-
-[project.extra.analytics]
-provider = "google"
-property = "G-D146BWZK54"
+extra_css = ["css/weewx_docs.css"]
+extra = { analytics = { provider = "google", property = "G-D146BWZK54" }, generator = false }
+plugins = ["search"]
 
 [project.theme]
 name = "zensical"
@@ -29,190 +27,149 @@ features = [
     "search.suggest",
     "content.tabs.link",
 ]
-
-[project.theme.font]
-text = "Noto Sans"
-code = "Inconsolata Mono"
-
-[[project.theme.palette]]
-scheme = "default"
-primary = "teal"
-accent = "white"
-[theme.palette.toggle]
-icon = "material/toggle-switch-off-outline"
-name = "Switch to dark mode"
-
-[project.extra]
-generator = false
-
-
-plugins = [
-    "search",
+font = { text = "Noto Sans", code = "Inconsolata Mono" }
+palette = [
+    { scheme = "default", primary = "teal", accent = "white", toggle = { icon = "material/toggle-switch-off-outline", name = "Switch to dark mode" } },
 ]
 
 [markdown]
+[markdown.extensions.pymdownx]
+highlight = {}
+inlinehilite = {}
+details = {}
+magiclink = {}
+mark = {}
+tilde = {}
+superfences = { custom_fences = [
+    { name = "mermaid", class = "mermaid", format = "python/name:pymdownx.superfences.fence_code_format" },
+] }
+tabbed = { alternate_style = true }
+snippets = { auto_append = ["docs/abbreviations.md"] }
+
 [markdown.extensions]
-pymdownx.highlight = {}
-pymdownx.inlinehilite = {}
-pymdownx.details = {}
-pymdownx.magiclink = {}
-pymdownx.mark = {}
-pymdownx.tilde = {}
 abbr = {}
 admonition = {}
 attr_list = {}
 footnotes = {}
 md_in_html = {}
 tables = {}
+toc = { permalink = true }
 
-[markdown.extensions.pymdownx.superfences]
-custom_fences = [
-    { name = "mermaid", class = "mermaid", format = "python/name:pymdownx.superfences.fence_code_format" }
+nav = [
+    { Overview = "index.md" },
+    { "Quick start" = [
+        { Debian = "quickstarts/debian.md" },
+        { RedHat = "quickstarts/redhat.md" },
+        { SuSE = "quickstarts/suse.md" },
+        { pip = "quickstarts/pip.md" },
+        { git = "quickstarts/git.md" },
+    ] },
+    { "User's guide" = [
+        { Introduction = "usersguide/introduction.md" },
+        { "Installing WeeWX" = "usersguide/installing.md" },
+        { "Where to find things" = "usersguide/where.md" },
+        { "Running WeeWX" = "usersguide/running.md" },
+        { "Monitoring WeeWX" = "usersguide/monitoring.md" },
+        { "Web server integration" = "usersguide/webserver.md" },
+        { "Uploading to other sites" = "usersguide/uploading.md" },
+        { "Backup & restore" = "usersguide/backup.md" },
+        { "MySQL/MariaDB" = "usersguide/mysql-mariadb.md" },
+        { Troubleshooting = [
+            { "What to do" = "usersguide/troubleshooting/what-to-do.md" },
+            { "Hardware problems" = "usersguide/troubleshooting/hardware.md" },
+            { "Software problems" = "usersguide/troubleshooting/software.md" },
+            { "Meteorological problems" = "usersguide/troubleshooting/meteo.md" },
+        ] },
+    ] },
+    { "Customization guide" = [
+        { Introduction = "custom/introduction.md" },
+        { "Customizing reports" = "custom/custom-reports.md" },
+        { "Scheduling reports" = "custom/report-scheduling.md" },
+        { "The Cheetah generator" = "custom/cheetah-generator.md" },
+        { "The Image generator" = "custom/image-generator.md" },
+        { Localization = "custom/localization.md" },
+        { "Customizing the database" = "custom/database.md" },
+        { "Customizing units" = "custom/units.md" },
+        { "Multiple data bindings" = "custom/multiple-bindings.md" },
+        { "Search lists" = "custom/sle.md" },
+        { Services = "custom/service-engine.md" },
+        { "Derived types" = "custom/derived.md" },
+        { Drivers = "custom/drivers.md" },
+        { Extensions = "custom/extensions.md" },
+    ] },
+    { "Utilities guide" = [
+        { weewxd = "utilities/weewxd.md" },
+        { weectl = "utilities/weectl-about.md" },
+        { "weectl database" = "utilities/weectl-database.md" },
+        { "weectl debug" = "utilities/weectl-debug.md" },
+        { "weectl device" = "utilities/weectl-device.md" },
+        { "weectl extension" = "utilities/weectl-extension.md" },
+        { "weectl import" = [
+            { Introduction = "utilities/weectl-import-about.md" },
+            { "Common options" = "utilities/weectl-import-common-opt.md" },
+            { "Configuration options" = "utilities/weectl-import-config-opt.md" },
+            { CSV = "utilities/weectl-import-csv.md" },
+            { "Weather Underground" = "utilities/weectl-import-wu.md" },
+            { Cumulus = "utilities/weectl-import-cumulus.md" },
+            { "Weather Display" = "utilities/weectl-import-wd.md" },
+            { WeatherCat = "utilities/weectl-import-weathercat.md" },
+            { Troubleshooting = "utilities/weectl-import-troubleshoot.md" },
+        ] },
+        { "weectl report" = "utilities/weectl-report.md" },
+        { "weectl station" = "utilities/weectl-station.md" },
+    ] },
+    { "Hardware guide" = [
+        { Drivers = "hardware/drivers.md" },
+        { AcuRite = "hardware/acurite.md" },
+        { CC3000 = "hardware/cc3000.md" },
+        { FineOffset = "hardware/fousb.md" },
+        { TE923 = "hardware/te923.md" },
+        { Ultimeter = "hardware/ultimeter.md" },
+        { Vantage = "hardware/vantage.md" },
+        { WMR100 = "hardware/wmr100.md" },
+        { WMR300 = "hardware/wmr300.md" },
+        { WMR9x8 = "hardware/wmr9x8.md" },
+        { WS1 = "hardware/ws1.md" },
+        { WS23xx = "hardware/ws23xx.md" },
+        { WS28xx = "hardware/ws28xx.md" },
+    ] },
+    { "Upgrade guide" = "upgrade.md" },
+    { Reference = [
+        { "Application options" = [
+            { Introduction = "reference/weewx-options/introduction.md" },
+            { "General options" = "reference/weewx-options/general.md" },
+            { "[Station]" = "reference/weewx-options/stations.md" },
+            { "[StdRESTful]" = "reference/weewx-options/stdrestful.md" },
+            { "[StdReport]" = "reference/weewx-options/stdreport.md" },
+            { "[StdConvert]" = "reference/weewx-options/stdconvert.md" },
+            { "[StdCalibrate]" = "reference/weewx-options/stdcalibrate.md" },
+            { "[StdQC]" = "reference/weewx-options/stdqc.md" },
+            { "[StdWXCalculate]" = "reference/weewx-options/stdwxcalculate.md" },
+            { "[StdArchive]" = "reference/weewx-options/stdarchive.md" },
+            { "[StdTimeSynch]" = "reference/weewx-options/stdtimesynch.md" },
+            { "[DataBindings]" = "reference/weewx-options/data-bindings.md" },
+            { "[Databases]" = "reference/weewx-options/databases.md" },
+            { "[DatabaseTypes]" = "reference/weewx-options/database-types.md" },
+            { "[Engine]" = "reference/weewx-options/engine.md" },
+        ] },
+        { "Skin options" = [
+            { Introduction = "reference/skin-options/introduction.md" },
+            { "[Extras]" = "reference/skin-options/extras.md" },
+            { "[Labels]" = "reference/skin-options/labels.md" },
+            { "[Almanac]" = "reference/skin-options/almanac.md" },
+            { "[Units]" = "reference/skin-options/units.md" },
+            { "[Texts]" = "reference/skin-options/texts.md" },
+            { "[CheetahGenerator]" = "reference/skin-options/cheetahgenerator.md" },
+            { "[ImageGenerator]" = "reference/skin-options/imagegenerator.md" },
+            { "[CopyGenerator]" = "reference/skin-options/copygenerator.md" },
+            { "[Generators]" = "reference/skin-options/generators.md" },
+        ] },
+        { "Aggregation types" = "reference/aggtypes.md" },
+        { Durations = "reference/durations.md" },
+        { Units = "reference/units.md" },
+        { ValueTuple = "reference/valuetuple.md" },
+        { ValueHelper = "reference/valuehelper.md" },
+    ] },
+    { "Notes for developers" = "devnotes.md" },
+    { "Change log" = "changes.md" },
 ]
-
-[markdown.extensions.pymdownx.tabbed]
-alternate_style = true
-
-[markdown.extensions.pymdownx.snippets]
-auto_append = [
-    "docs/abbreviations.md",
-]
-
-[markdown.extensions.toc]
-permalink = true
-
-[[nav]]
-Overview = "index.md"
-
-[[nav]]
-"Quick start" = [
-    { Debian = "quickstarts/debian.md" },
-    { RedHat = "quickstarts/redhat.md" },
-    { SuSE = "quickstarts/suse.md" },
-    { pip = "quickstarts/pip.md" },
-    { git = "quickstarts/git.md" },
-]
-
-[[nav]]
-"User's guide" = [
-    { Introduction = "usersguide/introduction.md" },
-    { "Installing WeeWX" = "usersguide/installing.md" },
-    { "Where to find things" = "usersguide/where.md" },
-    { "Running WeeWX" = "usersguide/running.md" },
-    { "Monitoring WeeWX" = "usersguide/monitoring.md" },
-    { "Web server integration" = "usersguide/webserver.md" },
-    { "Uploading to other sites" = "usersguide/uploading.md" },
-    { "Backup & restore" = "usersguide/backup.md" },
-    { "MySQL/MariaDB" = "usersguide/mysql-mariadb.md" },
-    { Troubleshooting = [
-        { "What to do" = "usersguide/troubleshooting/what-to-do.md" },
-        { "Hardware problems" = "usersguide/troubleshooting/hardware.md" },
-        { "Software problems" = "usersguide/troubleshooting/software.md" },
-        { "Meteorological problems" = "usersguide/troubleshooting/meteo.md" },
-    ]},
-]
-
-[[nav]]
-"Customization guide" = [
-    { Introduction = "custom/introduction.md" },
-    { "Customizing reports" = "custom/custom-reports.md" },
-    { "Scheduling reports" = "custom/report-scheduling.md" },
-    { "The Cheetah generator" = "custom/cheetah-generator.md" },
-    { "The Image generator" = "custom/image-generator.md" },
-    { Localization = "custom/localization.md" },
-    { "Customizing the database" = "custom/database.md" },
-    { "Customizing units" = "custom/units.md" },
-    { "Multiple data bindings" = "custom/multiple-bindings.md" },
-    { "Search lists" = "custom/sle.md" },
-    { Services = "custom/service-engine.md" },
-    { "Derived types" = "custom/derived.md" },
-    { Drivers = "custom/drivers.md" },
-    { Extensions = "custom/extensions.md" },
-]
-
-[[nav]]
-"Utilities guide" = [
-    { weewxd = "utilities/weewxd.md" },
-    { weectl = "utilities/weectl-about.md" },
-    { "weectl database" = "utilities/weectl-database.md" },
-    { "weectl debug" = "utilities/weectl-debug.md" },
-    { "weectl device" = "utilities/weectl-device.md" },
-    { "weectl extension" = "utilities/weectl-extension.md" },
-    { "weectl import" = [
-        { Introduction = "utilities/weectl-import-about.md" },
-        { "Common options" = "utilities/weectl-import-common-opt.md" },
-        { "Configuration options" = "utilities/weectl-import-config-opt.md" },
-        { CSV = "utilities/weectl-import-csv.md" },
-        { "Weather Underground" = "utilities/weectl-import-wu.md" },
-        { Cumulus = "utilities/weectl-import-cumulus.md" },
-        { "Weather Display" = "utilities/weectl-import-wd.md" },
-        { WeatherCat = "utilities/weectl-import-weathercat.md" },
-        { Troubleshooting = "utilities/weectl-import-troubleshoot.md" },
-    ]},
-    { "weectl report" = "utilities/weectl-report.md" },
-    { "weectl station" = "utilities/weectl-station.md" },
-]
-
-[[nav]]
-"Hardware guide" = [
-    { Drivers = "hardware/drivers.md" },
-    { AcuRite = "hardware/acurite.md" },
-    { CC3000 = "hardware/cc3000.md" },
-    { FineOffset = "hardware/fousb.md" },
-    { TE923 = "hardware/te923.md" },
-    { Ultimeter = "hardware/ultimeter.md" },
-    { Vantage = "hardware/vantage.md" },
-    { WMR100 = "hardware/wmr100.md" },
-    { WMR300 = "hardware/wmr300.md" },
-    { WMR9x8 = "hardware/wmr9x8.md" },
-    { WS1 = "hardware/ws1.md" },
-    { WS23xx = "hardware/ws23xx.md" },
-    { WS28xx = "hardware/ws28xx.md" },
-]
-
-[[nav]]
-"Upgrade guide" = "upgrade.md"
-
-[[nav]]
-Reference = [
-    { "Application options" = [
-        { Introduction = "reference/weewx-options/introduction.md" },
-        { "General options" = "reference/weewx-options/general.md" },
-        { "[Station]" = "reference/weewx-options/stations.md" },
-        { "[StdRESTful]" = "reference/weewx-options/stdrestful.md" },
-        { "[StdReport]" = "reference/weewx-options/stdreport.md" },
-        { "[StdConvert]" = "reference/weewx-options/stdconvert.md" },
-        { "[StdCalibrate]" = "reference/weewx-options/stdcalibrate.md" },
-        { "[StdQC]" = "reference/weewx-options/stdqc.md" },
-        { "[StdWXCalculate]" = "reference/weewx-options/stdwxcalculate.md" },
-        { "[StdArchive]" = "reference/weewx-options/stdarchive.md" },
-        { "[StdTimeSynch]" = "reference/weewx-options/stdtimesynch.md" },
-        { "[DataBindings]" = "reference/weewx-options/data-bindings.md" },
-        { "[Databases]" = "reference/weewx-options/databases.md" },
-        { "[DatabaseTypes]" = "reference/weewx-options/database-types.md" },
-        { "[Engine]" = "reference/weewx-options/engine.md" },
-    ]},
-    { "Skin options" = [
-        { Introduction = "reference/skin-options/introduction.md" },
-        { "[Extras]" = "reference/skin-options/extras.md" },
-        { "[Labels]" = "reference/skin-options/labels.md" },
-        { "[Almanac]" = "reference/skin-options/almanac.md" },
-        { "[Units]" = "reference/skin-options/units.md" },
-        { "[Texts]" = "reference/skin-options/texts.md" },
-        { "[CheetahGenerator]" = "reference/skin-options/cheetahgenerator.md" },
-        { "[ImageGenerator]" = "reference/skin-options/imagegenerator.md" },
-        { "[CopyGenerator]" = "reference/skin-options/copygenerator.md" },
-        { "[Generators]" = "reference/skin-options/generators.md" },
-    ]},
-    { "Aggregation types" = "reference/aggtypes.md" },
-    { Durations = "reference/durations.md" },
-    { Units = "reference/units.md" },
-    { ValueTuple = "reference/valuetuple.md" },
-    { ValueHelper = "reference/valuehelper.md" },
-]
-
-[[nav]]
-"Notes for developers" = "devnotes.md"
-
-[[nav]]
-"Change log" = "changes.md"
