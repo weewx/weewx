@@ -1,6 +1,11 @@
 WeeWX change history
 --------------------
 
+### 5.4.0 MM/DD/YYYY
+
+Initialize the widgets in the Seasons skin as soon as the DOM is ready.
+
+
 ### 5.3.1 03/03/2026
 
 Get rid of parenthesized context expressions. They prevented the test suites
