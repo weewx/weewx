@@ -103,7 +103,10 @@ The code lives in a git repository:
 
 [https://github.com/weewx/weewx](https://github.com/weewx/weewx)
 
-The `master` branch is stable, the `development` branch contains changes that will appear in the next release.  See the file [CONTRIBUTING.txt](CONTRIBUTING.txt) for details about branching, and the file [PACKAGING.txt](PACKAGING.txt) for details about the process of creating a release.
+See [Notes for WeeWX developers](https://weewx.com/docs/latest/devnotes/) to 
+learn about how to contribute to WeeWX. See the file 
+[PACKAGING.txt](PACKAGING.txt) for details about the process of creating a 
+release.
 
 ## Documentation and Support
 
