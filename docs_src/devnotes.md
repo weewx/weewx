@@ -562,12 +562,28 @@ The code that exercises the code is located in a directory called `tests` in
 each of the component directories.
 
 Prerequisites for running the core tests include:
-  - python 3.7
-  - python-usb
-  - pyephem
 
-Unit tests should put transient files in `/var/tmp/weewx_test` - do not write
-to the source tree.
+    MySQL >= 8.0
+    Python >= 3.7
+    configobj>=5.0
+    cryptography
+    CT3>=3.1
+    ephem>=4.1
+    Pillow>=5.2
+    PyMySQL
+    pyserial>=3.4
+    pytest
+    pyusb>=1.0.2
+
+When using a pip virtual environment, these can easily be installed into the
+environment by using the file `dev_requirements.txt` located in the repository:
+
+    pip install -r dev_requirements.txt
+
+MySQL must be set up with specific users with specific permissions.  This can be
+done by a `make` target:
+
+    make test-setup
 
 To run all unit tests (do not run this as root!):
 ```
@@ -579,10 +595,8 @@ To clean up after running tests:
 make test-clean
 ```
 
-To set up a MySQL server with the correct users and permissions for testing:
-```
-make test-setup
-```
+If you add additional unit tests, they should put any transient files in
+`/var/tmp/weewx_test` &mdash; do not write to the source tree.
 
 
 ## Git work flow
@@ -601,12 +615,12 @@ model](http://nvie.com/posts/a-successful-git-branching-model/). Ignore
 the complicated diagram at the beginning of the article and focus
 on the text. In this model, there are two key branches:
 
-- 'master'. Fixes go into this branch. We tend to use fewer
+- `master`. Fixes go into this branch. We tend to use fewer
   *hot fix* branches and, instead, just incorporate any fixes
   directly into the branch. Releases are tagged relative to this
   branch.
 
-- 'development' (called `develop` in Vince's article).
+- `development` (called `develop` in Vince's article).
   This is where new features go. Before a release, they will be merged
   into the `master` branch.
 
