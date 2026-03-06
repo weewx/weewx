@@ -659,6 +659,32 @@ For JavaScript, [JetBrain's
 WebStorm](http://www.jetbrains.com/webstorm/) is excellent, particularly
 if you are using a framework such as Node.js or Express.js.
 
+## Directory Structure
+- `src/weewx/`: The core WeeWX engine and services.
+- `src/weewx/drivers/`: Drivers for various weather station hardware.
+- `src/weecfg/`: Utilities for working with `configobj` configuration files.
+- `src/weeutil/`: General-purpose utility modules used across the project.
+- `src/weedb/`: Database abstraction layer.
+- `src/weeplot/`: Plotting and image generation code.
+- `docs_src/`: Source documentation in Markdown or other formats.
+
+## Testing Framework
+- **Pytest**: The project uses `pytest` as its primary testing framework.
+
+### Test Location
+- Tests are located in `tests/` subdirectories within each package:
+  - `src/weewx/tests/`
+  - `src/weeutil/tests/`
+  - `src/weecfg/tests/`
+  - `src/weewx/drivers/tests/`
+
+### Testing Approach
+- **Unit Tests**: Most tests are unit tests targeting specific modules (e.g., `test_accum.py`, `test_units.py`).
+- **Data Driven**: Tests often use generated fake data (e.g., `gen_fake_data.py`) to simulate weather station records.
+- **Execution**: Tests can be run using `pytest` or via the `makefile` (e.g., `make test`).
+- **Regression**: The codebase includes regression tests to ensure bug fixes remain effective over time.
+
+
 ## Glossary
 
 This is a glossary of terminology used throughout the code.
