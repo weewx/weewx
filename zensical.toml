@@ -2,6 +2,7 @@
 site_name = "WeeWX 5.3"
 site_url = "https://www.weewx.com"
 site_author = "Tom Keffer <tkeffer@gmail.com>"
+repo_url = "https://github.com/weewx/weewx"
 # Shut off the "edit on GitHub" feature:
 edit_uri = ""
 copyright = "Copyright © 2009-2026 Thomas Keffer, Matthew Wall, and Gary Roderick, all rights reserved"
@@ -31,6 +32,9 @@ font = { text = "Noto Sans", code = "Inconsolata Mono" }
 palette = [
     { scheme = "default", primary = "teal", accent = "white", toggle = { icon = "material/toggle-switch-off-outline", name = "Switch to dark mode" } },
 ]
+
+[project.theme.icon]
+repo = "fontawesome/brands/github"
 
 [markdown]
 [markdown.extensions.pymdownx]
