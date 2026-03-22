@@ -22,6 +22,9 @@ __pycache__
 # Exclude all of the JetBrains .idea directory
 .idea
 
+# Exclude JetBrains AI directory
+.junie
+
 # Ignore artifacts produced during build/packaging
 MANIFEST
 build
