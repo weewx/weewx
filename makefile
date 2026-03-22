@@ -201,16 +201,17 @@ release-all: release-pkgs release-apt-repo release-yum-repo release-suse-repo
 ## documentation targets
 
 # Build the documentation:
-build-docs: $(DOC_BUILT)/index.html
+build-docs: $(DOC_BUILT)/.stamp
 
-$(DOC_BUILT)/index.html: $(shell find $(DOC_SRC) -type f)
+$(DOC_BUILT)/.stamp: $(shell find $(DOC_SRC) -type f)
 	@rm -rf $(DOC_BUILT)
 	@mkdir -p $(DOC_BUILT)
 	@echo "Building documents"
 	$(PYTHON) -m zensical build
+	@touch $@
 
 # upload docs to the web site
-upload-docs: $(DOC_BUILT)/index.html
+upload-docs: $(DOC_BUILT)/.stamp
 	rsync -Orv --delete --exclude *~ --exclude "#*" $(DOC_BUILT)/ $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/docs/$(MMVERSION)
 
 
