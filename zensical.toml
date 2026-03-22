@@ -12,53 +12,6 @@ extra_css = ["css/weewx_docs.css"]
 extra = { analytics = { provider = "google", property = "G-D146BWZK54" }, generator = false }
 plugins = ["search"]
 
-[project.theme]
-name = "zensical"
-variant = "classic"
-logo = "images/logo-weewx.png"
-favicon = "images/favicon.png"
-features = [
-    "navigation.instant",
-    "navigation.tracking",
-    "navigation.indexes",
-    "navigation.top",
-    "toc.follow",
-    "search.highlight",
-    "search.share",
-    "search.suggest",
-    "content.tabs.link",
-]
-font = { text = "Noto Sans", code = "Inconsolata Mono" }
-palette = [
-    { scheme = "default", primary = "teal", accent = "white", toggle = { icon = "material/toggle-switch-off-outline", name = "Switch to dark mode" } },
-]
-
-[project.theme.icon]
-repo = "fontawesome/brands/github"
-
-[markdown]
-[markdown.extensions.pymdownx]
-highlight = {}
-inlinehilite = {}
-details = {}
-magiclink = {}
-mark = {}
-tilde = {}
-superfences = { custom_fences = [
-    { name = "mermaid", class = "mermaid", format = "python/name:pymdownx.superfences.fence_code_format" },
-] }
-tabbed = { alternate_style = true }
-snippets = { auto_append = ["docs/abbreviations.md"] }
-
-[markdown.extensions]
-abbr = {}
-admonition = {}
-attr_list = {}
-footnotes = {}
-md_in_html = {}
-tables = {}
-toc = { permalink = true }
-
 nav = [
     { Overview = "index.md" },
     { "Quick start" = [
@@ -137,7 +90,6 @@ nav = [
         { WS23xx = "hardware/ws23xx.md" },
         { WS28xx = "hardware/ws28xx.md" },
     ] },
-    { "Upgrade guide" = "upgrade.md" },
     { Reference = [
         { "Application options" = [
             { Introduction = "reference/weewx-options/introduction.md" },
@@ -174,6 +126,55 @@ nav = [
         { ValueTuple = "reference/valuetuple.md" },
         { ValueHelper = "reference/valuehelper.md" },
     ] },
+    { "Upgrade guide" = "upgrade.md" },
     { "Notes for developers" = "devnotes.md" },
     { "Change log" = "changes.md" },
 ]
+
+[project.theme]
+name = "zensical"
+variant = "classic"
+logo = "images/logo-weewx.png"
+favicon = "images/favicon.png"
+features = [
+    "navigation.instant",
+    "navigation.tracking",
+    "navigation.indexes",
+    "navigation.top",
+    "toc.follow",
+    "search.highlight",
+    "search.share",
+    "search.suggest",
+    "content.tabs.link",
+]
+font = { text = "Noto Sans", code = "Inconsolata Mono" }
+palette = [
+    { scheme = "default", primary = "teal", accent = "white", toggle = { icon = "material/toggle-switch-off-outline", name = "Switch to dark mode" } },
+]
+
+[project.theme.icon]
+repo = "fontawesome/brands/github"
+
+[markdown]
+[markdown.extensions.pymdownx]
+highlight = {}
+inlinehilite = {}
+details = {}
+magiclink = {}
+mark = {}
+tilde = {}
+superfences = { custom_fences = [
+    { name = "mermaid", class = "mermaid", format = "python/name:pymdownx.superfences.fence_code_format" },
+] }
+tabbed = { alternate_style = true }
+snippets = { auto_append = ["docs/abbreviations.md"] }
+
+[markdown.extensions]
+abbr = {}
+admonition = {}
+attr_list = {}
+footnotes = {}
+md_in_html = {}
+tables = {}
+toc = { permalink = true }
+
