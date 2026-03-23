@@ -106,7 +106,7 @@ class ExtendedStatistics(SearchList):
         stop_ts = time.mktime((year, month, 1, 0, 0, 0, 0, 0, 0)) - 1
         last_month_stats = TimespanBinder(TimeSpan(start_ts, stop_ts),
                                           db_lookup,
-                                          context='last_year_todate',
+                                          context='last_month_todate',
                                           formatter=self.generator.formatter,
                                           converter=self.generator.converter)
 
