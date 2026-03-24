@@ -899,10 +899,18 @@ def get_manager_dict_from_config(config_dict, data_binding,
         try:
             manager_dict['schema'] = weeutil.weeutil.get_object(schema_name)
         except (ModuleNotFoundError, ImportError) as e:
+            # The following is for backwards compatibility. With V5.1 and earlier, the schemas
+            # were located in module 'schemas'. Now they are in module 'weewx.schemas'.' Try
+            # to find the new location. However, if the module name does not start with
+            # 'schemas.', then we don't know anything about it.
+            if not schema_name.startswith('schemas.'):
+                raise
+            # Try the new location.
             log.debug("Could not load schema '%s'", schema_name)
             log.debug("**** Reason: %s", e)
             log.debug("**** Trying '%s'", 'weewx.' + schema_name)
             manager_dict['schema'] = weeutil.weeutil.get_object('weewx.' + schema_name)
+            log.debug("**** Succeeded.")
 
     return manager_dict
 
