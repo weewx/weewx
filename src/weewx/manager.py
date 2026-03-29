@@ -380,9 +380,9 @@ class Manager:
             int: The number of successful insertions.
         """
 
-        # Determine if record_obj is just a single dictionary instance (in which case it will have
-        # method 'keys'). If so, wrap it in something iterable (a list):
-        record_list = [record_obj] if hasattr(record_obj, 'keys') else record_obj
+        # Determine if record_obj is just a single dictionary instance. If so, wrap it in
+        # something iterable (a list):
+        record_list = [record_obj] if isinstance(record_obj, dict) else record_obj
 
         min_ts = float('inf')  # A "big number"
         max_ts = 0
@@ -393,7 +393,7 @@ class Manager:
                 try:
                     # If the accumulator time matches the record we are working with,
                     # use it to update the highs and lows.
-                    if accumulator and record_obj['dateTime'] == accumulator.timespan.stop:
+                    if accumulator and record['dateTime'] == accumulator.timespan.stop:
                         self._updateHiLo(accumulator, cursor)
 
                     # Then add the record to the archives:
