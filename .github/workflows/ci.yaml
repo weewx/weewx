@@ -26,7 +26,7 @@ jobs:
         sudo locale-gen en_US.UTF-8
         sudo update-locale
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: pip install
       run: |
@@ -46,7 +46,7 @@ jobs:
 
     - name: Archive test-results
       if: success() || failure()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: test-results
         path: |
