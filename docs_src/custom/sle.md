@@ -1,6 +1,8 @@
 # Writing search list extensions
 
-The intention of this document is to help you write new Search List
+The [Cheetah generator](./cheetah-generator/) makes extensive use of *Search
+Lists*. They are the means by which tags, such as `$day.outTemp.max`, are
+evaluated. The intention of this document is to help you write new Search List
 Extensions (SLE). Here's the plan:
 
 * We start by explaining how SLEs work.
