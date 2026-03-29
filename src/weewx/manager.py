@@ -459,7 +459,9 @@ class Manager:
             if not update:
                 raise
             set_stmt = ', '.join(["%s=?" % k for k in key_list])
-            where_stmt = ' AND '.join(["%s <=> ?" % k for k in key_list])
+            # Use the appropriate NULL-safe equality operator
+            eq = "<=>" if self.connection.dbtype == "mysql" else "IS"
+            where_stmt = ' AND '.join(["%s %s ?" % (k, eq) for k in key_list])
             sql_update_stmt = "UPDATE %s SET %s WHERE dateTime = ? AND NOT (%s)" \
                               % (self.table_name, set_stmt, where_stmt)
             cursor.execute(sql_update_stmt, value_list + [record['dateTime'],] + value_list)
@@ -489,32 +491,21 @@ class Manager:
         Yields:
             list: Each iteration yields a single data row as a list.
         """
+        _sql = f"SELECT * FROM {self.table_name}"
+        conditions = []
+        _sqlargs = []
+        if startstamp is not None:
+            conditions.append("dateTime > ?")
+            _sqlargs.append(startstamp)
+        if stopstamp is not None:
+            conditions.append("dateTime <= ?")
+            _sqlargs.append(stopstamp)
+        if conditions:
+            _sql += " WHERE " + " AND ".join(conditions)
+        _sql += " ORDER BY dateTime ASC"
 
-        with self.connection.cursor() as cursor:
-
-            if startstamp is None:
-                if stopstamp is None:
-                    gen = cursor.execute("SELECT * FROM %s "
-                                         "ORDER BY dateTime ASC" % self.table_name)
-                else:
-                    gen = cursor.execute("SELECT * FROM %s "
-                                         "WHERE dateTime <= ? "
-                                         "ORDER BY dateTime ASC" % self.table_name,
-                                         (stopstamp,))
-            else:
-                if stopstamp is None:
-                    gen = cursor.execute("SELECT * FROM %s "
-                                         "WHERE dateTime > ? "
-                                         "ORDER BY dateTime ASC" % self.table_name,
-                                         (startstamp,))
-                else:
-                    gen = cursor.execute("SELECT * FROM %s "
-                                         "WHERE dateTime > ? AND dateTime <= ? "
-                                         "ORDER BY dateTime ASC" % self.table_name,
-                                         (startstamp, stopstamp))
-
-            for row in gen:
-                yield row
+        # Return the generator itself
+        return self.genSql(_sql, _sqlargs)
 
     def genBatchRecords(self, startstamp=None, stopstamp=None):
         """Generator function that yields records with timestamps within an interval.
@@ -890,27 +881,21 @@ def get_manager_dict_from_config(config_dict, data_binding,
     if schema_name is None:
         manager_dict['schema'] = None
     elif isinstance(schema_name, dict):
-        # Schema is a ConfigObj section (that is, a dictionary). Retrieve the
-        # elements of the schema in order:
-        manager_dict['schema'] = [(col_name, manager_dict['schema'][col_name]) for col_name in
-                                  manager_dict['schema']]
+        # Schema is a ConfigObj section (that is, a dictionary). Retrieve the elements in order:
+        manager_dict['schema'] = list(schema_name.items())
     else:
         # Schema is a string, with the name of the schema object
         try:
             manager_dict['schema'] = weeutil.weeutil.get_object(schema_name)
         except (ModuleNotFoundError, ImportError) as e:
-            # The following is for backwards compatibility. With V5.1 and earlier, the schemas
-            # were located in module 'schemas'. Now they are in module 'weewx.schemas'.' Try
-            # to find the new location. However, if the module name does not start with
-            # 'schemas.', then we don't know anything about it.
-            if not schema_name.startswith('schemas.'):
+            # Backwards compatibility: V5.1 and earlier used 'schemas.X', now 'weewx.schemas.X'
+            if schema_name.startswith('schemas.'):
+                log.debug("Could not load schema '%s': %s. Trying 'weewx.%s'",
+                          schema_name, e, schema_name)
+                manager_dict['schema'] = weeutil.weeutil.get_object('weewx.' + schema_name)
+                log.debug("Succeeded.")
+            else:
                 raise
-            # Try the new location.
-            log.debug("Could not load schema '%s'", schema_name)
-            log.debug("**** Reason: %s", e)
-            log.debug("**** Trying '%s'", 'weewx.' + schema_name)
-            manager_dict['schema'] = weeutil.weeutil.get_object('weewx.' + schema_name)
-            log.debug("**** Succeeded.")
 
     return manager_dict
 
@@ -1221,12 +1206,67 @@ class DaySummaryManager(Manager):
         # Then save the results:
         self._set_day_summary(_stats_dict, accumulator.timespan.stop, cursor)
 
-    def backfill_day_summary(self, start_d=None, stop_d=None,
-                             progress_fn=show_progress, trans_days=5, key_set=None):
+    def _get_backfill_range(self, last_daily_ts, start_d, stop_d, key_set):
+        """
+        Determines the range of dates to backfill data, considering various factors such
+        as existing summaries, specified date ranges, and aborted builds.
 
-        """Fill the daily summaries from an archive database.
+        Parameters:
+            last_daily_ts (float): Timestamp of the last daily summary. Used to determine the
+                starting point if summaries are incomplete or an aborted build occurred.
+            start_d (datetime.date|None): Optional starting date specified by the user.
+                If provided, the range will be trimmed to start from this date.
+            stop_d (datetime.date|None): Optional stopping date specified by the user.
+                If provided, the range will be trimmed to end at this date.
+            key_set (set|None): A set of keys that determine specific items to be rebuilt.
+                If not provided, the backfill considers full summaries.
 
-        Normally, the daily summaries get filled by LOOP packets (to get maximum time resolution),
+        Returns:
+            Tuple[datetime.date, datetime.date | None]: A tuple containing the inclusive
+            starting date of the backfill range and the exclusive stopping date (one day
+            after the last date to process) if there is data to backfill. Returns (None, None)
+            if there is nothing to backfill.
+
+        Raises:
+            weewx.ViolatedPrecondition: Raised if daily summaries are not complete and
+            specific from/to dates are specified (start_d or stop_d).
+        """
+
+        # Check preconditions. Cannot specify start_d or stop_d unless the summaries are complete.
+        if last_daily_ts != self.last_timestamp and (start_d or stop_d):
+            raise weewx.ViolatedPrecondition("Daily summaries are not complete. "
+                                             "Try again without from/to dates.")
+
+        # Default start and stop dates based on archive data
+        first_d = datetime.date.fromtimestamp(weeutil.weeutil.startOfArchiveDay(
+            self.first_timestamp))
+        last_d = datetime.date.fromtimestamp(weeutil.weeutil.startOfArchiveDay(
+            self.last_timestamp))
+
+        # Handle existing summaries and aborted builds
+        if last_daily_ts:
+            if last_daily_ts < self.last_timestamp:
+                # Aborted build. Pick up from where we left off.
+                first_d = datetime.date.fromtimestamp(last_daily_ts)
+            else:
+                # Summaries are complete. Check if there's anything specifically to rebuild.
+                if not key_set and not start_d and not stop_d:
+                    return None, None  # Nothing to do
+
+                # Trim rebuild to what the user has specified
+                if start_d:
+                    first_d = max(first_d, start_d)
+                if stop_d:
+                    last_d = min(last_d, stop_d)
+
+        # Return range [first_d, last_d + 1) for inclusive processing of last_d.
+        return first_d, last_d + datetime.timedelta(days=1)
+
+    def backfill_day_summary(self, start_d=None, stop_d=None, progress_fn=show_progress,
+                             trans_days=5, key_set=None):
+        """Backfill the daily summaries from the archive data.
+
+        Usually, the daily summaries are automatically updated as archive data is added,
         but if the database gets corrupted, or if a new user is starting up with imported wview
         data, it's necessary to recreate it from straight archive data. The Hi/Lows will all be
         there, but the times won't be any more accurate than the archive period.
@@ -1253,111 +1293,53 @@ class DaySummaryManager(Manager):
                   nrecs is the number of records backfilled;
                   ndays is the number of days
         """
-        # Definition:
-        #   last_daily_ts: Timestamp of the last record that was incorporated into the
-        #                  daily summary. Usually it is equal to last_record, but it can be less
-        #                  if a backfill was aborted.
 
         log.info("Starting backfill of daily summaries")
 
         if self.first_timestamp is None:
-            # Nothing in the archive database, so there's nothing to do.
             log.info("Empty database")
             return 0, 0
 
-        # Convert tranch size to a timedelta object, so we can perform arithmetic with it.
-        tranche_days = datetime.timedelta(days=trans_days)
-
-        t1 = time.time()
-
         last_daily_ts = to_int(self._read_metadata('lastUpdate'))
+        first_d, last_d = self._get_backfill_range(last_daily_ts, start_d, stop_d, key_set)
 
-        # The goal here is to figure out:
-        #  first_d:   A datetime.date object, representing the first date to be rebuilt.
-        #  last_d:    A datetime.date object, representing the date after the last date
-        #             to be rebuilt.
-
-        # Check preconditions. Cannot specify start_d or stop_d unless the summaries are complete.
-        if last_daily_ts != self.last_timestamp and (start_d or stop_d):
-            raise weewx.ViolatedPrecondition("Daily summaries are not complete. "
-                                             "Try again without from/to dates.")
-
-        # If we were doing a complete rebuild, these would be the first and
-        # last dates to be processed:
-        first_d = datetime.date.fromtimestamp(weeutil.weeutil.startOfArchiveDay(
-            self.first_timestamp))
-        last_d = datetime.date.fromtimestamp(weeutil.weeutil.startOfArchiveDay(
-            self.last_timestamp))
-
-        # Are there existing daily summaries?
-        if last_daily_ts:
-            # Yes. Is it an aborted rebuild?
-            if last_daily_ts < self.last_timestamp:
-                # We are restarting from an aborted build. Pick up from where we left off.
-                # Because last_daily_ts always sits on the boundary of a day, this will include the
-                # following day to be included, but not the actual record with
-                # timestamp last_daily_ts.
-                first_d = datetime.date.fromtimestamp(last_daily_ts)
-            else:
-                # Daily summaries exist, and they are complete.
-                if not key_set and not start_d and not stop_d:
-                    # The daily summaries are complete, yet the user has not specified anything.
-                    # Guess we're done.
-                    log.info("Daily summaries up to date")
-                    return 0, 0
-                # Trim what we rebuild to what the user has specified
-                if start_d:
-                    first_d = max(first_d, start_d)
-                if stop_d:
-                    last_d = min(last_d, stop_d)
-
-        # For what follows, last_d needs to point to the day *after* the last desired day
-        last_d += datetime.timedelta(days=1)
+        if first_d is None:
+            log.info("Daily summaries up to date")
+            return 0, 0
 
         nrecs = 0
         ndays = 0
-
+        t1 = time.time()
+        tranche_days = datetime.timedelta(days=trans_days)
         mark_d = first_d
 
         while mark_d < last_d:
-            # Calculate the last date included in this transaction
+            # Each iteration is a transaction. Calculate its last date
             stop_transaction = min(mark_d + tranche_days, last_d)
+            start_batch_ts = time.mktime(mark_d.timetuple())
+            stop_batch_ts = time.mktime(stop_transaction.timetuple())
             day_accum = None
 
             with weedb.Transaction(self.connection) as cursor:
-                # Go through all the archive records in the time span, adding them to the
-                # daily summaries
-                start_batch_ts = time.mktime(mark_d.timetuple())
-                stop_batch_ts = time.mktime(stop_transaction.timetuple())
                 for rec in self.genBatchRecords(start_batch_ts, stop_batch_ts):
-                    # If this is the very first record, fetch a new accumulator
-                    if not day_accum:
-                        # Get a TimeSpan that includes the record's timestamp:
+                    # Manage day accumulators. Start a new one if necessary.
+                    if not day_accum or not day_accum.timespan.includesArchiveTime(rec['dateTime']):
+                        if day_accum:
+                            self._set_day_summary(day_accum, None, cursor, key_set=key_set)
+                            ndays += 1
                         timespan = weeutil.weeutil.archiveDaySpan(rec['dateTime'])
-                        # Get an empty day accumulator:
                         day_accum = weewx.accum.Accum(timespan)
+
                     try:
                         weight = self._calc_weight(rec)
+                        day_accum.addRecord(rec, weight=weight)
                     except IntervalError as e:
                         # Ignore records with bad values for 'interval'
                         log.info(e)
                         log.info('***  ignored.')
                         continue
-                    # Try updating. If the time is out of the accumulator's time span, an
-                    # exception will get raised.
-                    try:
-                        day_accum.addRecord(rec, weight=weight)
-                    except weewx.accum.OutOfSpan:
-                        # The record is out of the time span.
-                        # Save the old accumulator:
-                        self._set_day_summary(day_accum, None, cursor, key_set=key_set)
-                        ndays += 1
-                        # Get a new accumulator:
-                        timespan = weeutil.weeutil.archiveDaySpan(rec['dateTime'])
-                        day_accum = weewx.accum.Accum(timespan)
-                        # try again
-                        day_accum.addRecord(rec, weight=weight)
 
+                    # Track last daily timestamp
                     if last_daily_ts is None:
                         last_daily_ts = rec['dateTime']
                     else:
@@ -1617,7 +1599,7 @@ class DaySummaryManager(Manager):
 
         Args:
             day_accum (weewx.accum.Accum): an accumulator with the daily summary. See weewx.accum
-            lastUpdate (float|int): the time of the last update will be set to this unless it is
+            lastUpdate (float|int|None): the time of the last update will be set to this unless it is
                 None. Normally, this is the timestamp of the last archive record added to the
                 instance day_accum.
             cursor (Cursor): An open cursor.
