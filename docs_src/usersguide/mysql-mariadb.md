@@ -11,7 +11,12 @@ depends on your operating system and how you installed WeeWX.
 
 === "Debian"
     ``` {.shell .copy}
+    # Install the MySQL client libraries. Try the metapackage first:
+    sudo apt install default-mysql-client
+    # If that doesn't work, try this:
     sudo apt install mysql-client
+
+    # Then install the Python client library:
     sudo apt install python3-mysqldb
     ```
 === "Redhat"
