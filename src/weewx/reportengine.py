@@ -58,7 +58,7 @@ NICKNAME_MAP = {
     "@monthly": "0 0 1 * *",
     "@weekly": "0 0 * * 0",
     "@daily": "0 0 * * *",
-    "@hourly": "0 * * * *"
+    "@hourly": "0 * * * *",
 }
 # list of valid spans for CRON like fields
 SPANS = (MINUTES, HOURS, DOM, MONTHS, DOW)
@@ -101,6 +101,22 @@ def set_locale(name):
         finally:
             locale.setlocale(locale.LC_ALL, saved_locale)
 
+def dict_search(d, key_search):
+
+    results = []
+
+    if d is None or key_search is None or key_search.strip() == "":
+        return results
+
+    for key, value in d.items():
+
+        if key == key_search:
+            results.append(value)
+
+        elif isinstance(value, dict):
+            results.extend(dict_search(value, key_search))
+
+    return results
 
 # =============================================================================
 #                    Class StdReportEngine
@@ -194,7 +210,7 @@ class StdReportEngine(threading.Thread):
                 timing_line = skin_dict.get('report_timing')
                 if timing_line:
                     # Get a ReportTiming object.
-                    timing = ReportTiming(timing_line)
+                    timing = ReportTiming(timing_line, skin_dict)
                     if timing.is_valid:
                         # Get timestamp and interval, so we can check if the
                         # report timing is triggered.
@@ -668,6 +684,9 @@ class ReportTiming:
         @weekly   : Run once a week,  ie "0 0 * * 0"
         @daily    : Run once a day,   ie "0 0 * * *"
         @hourly   : Run once an hour, ie "0 * * * *"
+    - if the timing is given with CreateIfMissing appended eg @yearlyCreateIfMissing
+      the report generation is allowed to occur if files that the report would
+      generate doesn't exist even if the report_timing would normally fail
 
     Useful ReportTiming class attributes:
 
@@ -679,7 +698,7 @@ class ReportTiming:
                       replaced with numeric equivalents.
     """
 
-    def __init__(self, raw_line):
+    def __init__(self, raw_line, skin_dict):
         """Initialises a ReportTiming object.
 
         Processes raw line to produce 5 field line suitable for further
@@ -691,6 +710,9 @@ class ReportTiming:
         # initialise some properties
         self.is_valid = None
         self.validation_error = None
+        self.create_if_missing = False
+        self.skin_dict = skin_dict
+
         # To simplify error reporting keep a copy of the raw line passed to us
         # as a string. The raw line could be a list if it included any commas.
         # Assume a string but catch the error if it is a list and join the list
@@ -707,6 +729,11 @@ class ReportTiming:
                 self.validation_error = "Unsupported character '%s' in '%s'." % (unsupported_char,
                                                                                  self.raw_line)
                 return
+
+        if line_str.endswith("CreateIfMissing"):
+            self.create_if_missing = True
+            self.raw_line = line_str = line_str[:-15]
+
         # Six special time definition 'nicknames' are supported which replace
         # the line elements with pre-determined values. These nicknames start
         # with the @ character. Check for any of these nicknames and substitute
@@ -874,6 +901,21 @@ class ReportTiming:
                 checked for triggering. May be omitted in which case only
                 ts_hi is checked.
         """
+
+        if self.is_valid and self.create_if_missing:
+            # check for missing files
+
+            html_dest_dir = self.skin_dict["HTML_ROOT"]
+
+            templates = dict_search(self.skin_dict.get("CheetahGenerator", None), "template")
+            for template in templates:
+                if not template.endswith(".tmpl"):
+                    continue
+
+                filename = os.path.join(html_dest_dir, template[:-5])
+                if not os.path.exists(filename):
+                    log.debug(f"{filename} should exist but doesn't, allowing report generation")
+                    return True
 
         if self.is_valid and ts_hi is not None:
             # setup ts range to iterate over
