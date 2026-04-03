@@ -276,6 +276,31 @@ parameters in the report_timing option. The nicknames supported are:
 </tr>
 </table>
 
+### @createIfMissing option
+
+report_timing supports the @createIfMissing option that allows reports
+to run if files that would have been created during report generation
+are missing or if the modified times on report files are older than
+template files in the skin directory.
+
+<table>
+<tr>
+<td>report_timing</td>
+<td>When the report will be run</td>
+</tr>
+<tr>
+<td>0 * 1 * 0,3</td>
+<td>On the hour on the first of the month and on the hour every Sunday and Wednesday unless the report files are missing or the template files are newer.</td>
+</tr>
+<tr>
+<td>@monthly, @createIfMissing</td>
+<td>On the first day of every month unless the report files are missing or the template files are newer.</td>
+</tr>
+<tr>
+<td>@yearly, @createIfMissing</td>
+<td>On the first day of the year unless the report files are missing or the template files are newer.</td>
+</tr>
+</table>
 
 ### Examples of report_timing
 

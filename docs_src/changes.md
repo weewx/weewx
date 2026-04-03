@@ -12,6 +12,7 @@ Example `xstats.py` had nonsensical time context values. Fixed in
 [PR #1072](https://github.com/weewx/weewx/pull/1072). Thanks to user 
 evilbunny2008. 
 
+<<<<<<< HEAD
 Prevent `AttributeError` when the `weectl` command is run without a subcommand.
 
 Guard against an empty string being passed to the copy generator.
@@ -28,6 +29,12 @@ Allow duration notation to be used with option `x_interval`.
 Enhance cheetah logging in debug mode, showing generation execution time per 
 report to identify bottlenecks. 
 [PR #1091](https://github.com/weewx/weewx/pull/1091)
+
+Added @createIfMissing option for report_timing handling so that report
+generation will be allowed if there are missing report files or if the
+modified times of templates are newer than generated files.
+Added in [PR #XXXX](https://github.com/weewx/weewx/pull/XXXX). Thanks
+to user evilbunny2008.
 
 
 ### 5.3.1 03/03/2026
