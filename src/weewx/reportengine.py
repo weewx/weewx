@@ -27,7 +27,7 @@ import weeutil.weeutil
 import weewx.defaults
 import weewx.manager
 import weewx.units
-from weeutil.weeutil import to_bool, to_int
+from weeutil.weeutil import to_bool, to_int, dict_search
 
 log = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ NICKNAME_MAP = {
     "@monthly": "0 0 1 * *",
     "@weekly": "0 0 * * 0",
     "@daily": "0 0 * * *",
-    "@hourly": "0 * * * *",
+    "@hourly": "0 * * * *"
 }
 # list of valid spans for CRON like fields
 SPANS = (MINUTES, HOURS, DOM, MONTHS, DOW)
@@ -100,23 +100,6 @@ def set_locale(name):
             yield loc
         finally:
             locale.setlocale(locale.LC_ALL, saved_locale)
-
-def dict_search(d, key_search):
-
-    results = []
-
-    if d is None or key_search is None or key_search.strip() == "":
-        return results
-
-    for key, value in d.items():
-
-        if key == key_search:
-            results.append(value)
-
-        elif isinstance(value, dict):
-            results.extend(dict_search(value, key_search))
-
-    return results
 
 # =============================================================================
 #                    Class StdReportEngine
@@ -684,9 +667,10 @@ class ReportTiming:
         @weekly   : Run once a week,  ie "0 0 * * 0"
         @daily    : Run once a day,   ie "0 0 * * *"
         @hourly   : Run once an hour, ie "0 * * * *"
-    - if the timing is given with CreateIfMissing appended eg @yearlyCreateIfMissing
-      the report generation is allowed to occur if files that the report would
-      generate doesn't exist even if the report_timing would normally fail
+    - if the timing is given with @createIfMissing the report generation is
+      allowed to occur if files that the report would generate doesn't exist
+      or if the extension has been updated and the modified file times in the
+      skin directory are newer even if the report_timing would normally fail
 
     Useful ReportTiming class attributes:
 
@@ -730,9 +714,9 @@ class ReportTiming:
                                                                                  self.raw_line)
                 return
 
-        if line_str.endswith("CreateIfMissing"):
+        if "@createIfMissing" in line_str:
             self.create_if_missing = True
-            self.raw_line = line_str = line_str[:-15]
+            self.raw_line = line_str = line_str.replace(",@createIfMissing", "")
 
         # Six special time definition 'nicknames' are supported which replace
         # the line elements with pre-determined values. These nicknames start
@@ -905,16 +889,33 @@ class ReportTiming:
         if self.is_valid and self.create_if_missing:
             # check for missing files
 
+            skin_dir = self.skin_dict["SKIN_ROOT"]
+            skin_dir = os.path.join(skin_dir, self.skin_dict["skin"])
             html_dest_dir = self.skin_dict["HTML_ROOT"]
 
-            templates = dict_search(self.skin_dict.get("CheetahGenerator", None), "template")
-            for template in templates:
-                if not template.endswith(".tmpl"):
-                    continue
+            if os.path.exists(skin_dir):
+                if os.path.exists(html_dest_dir):
+                    templates = dict_search(self.skin_dict.get("CheetahGenerator", None), "template")
+                    for template in templates:
+                        if not template.endswith(".tmpl"):
+                            continue
 
-                filename = os.path.join(html_dest_dir, template[:-5])
-                if not os.path.exists(filename):
-                    log.debug(f"{filename} should exist but doesn't, allowing report generation")
+                        template_filename = os.path.join(skin_dir, template)
+                        if os.path.exists(template_filename):
+                            output_filename = os.path.join(html_dest_dir, template[:-5])
+                            if not os.path.exists(output_filename):
+                                log.debug(f"{output_filename} should exist but doesn't, allowing report generation")
+                                return True
+
+                            template_mtime = os.path.getmtime(template_filename)
+                            output_mtime = os.path.getmtime(output_filename)
+
+                            if template_mtime > output_mtime:
+                                log.debug(f"{output_filename} exists but is older than {template_filename}, allowing report generation")
+                                return True
+
+                else:
+                    log.debug(f"{html_dest_dir} should exist but doesn't, allowing report generation")
                     return True
 
         if self.is_valid and ts_hi is not None:
@@ -979,3 +980,4 @@ class ReportTiming:
             # Our line is not valid, or we do not have a timestamp to use,
             # return None
             return None
+

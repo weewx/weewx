@@ -155,7 +155,6 @@ def _ord_to_ts(ord_date):
     t = int(time.mktime(d.timetuple()))
     return t
 
-
 # ===============================================================================
 # What follows is a bunch of "time span" routines. Generally, time spans
 # are used when start and stop times fall on calendar boundaries
@@ -1610,6 +1609,17 @@ def dirN(c):
         value = (450 - math.degrees(cmath.phase(c))) % 360.0
     return value
 
+def dict_search(d, key_search):
+    """ Recursively searches for a key in a dict and builds a list of the results """
+    results = []
+    if d is None or key_search is None or key_search.strip() == "":
+        return results
+    for key, value in d.items():
+        if key == key_search:
+            results.append(value)
+        elif isinstance(value, dict):
+            results.extend(dict_search(value, key_search))
+    return results
 
 class Polar:
     """Polar notation, except the direction is a compass heading."""
