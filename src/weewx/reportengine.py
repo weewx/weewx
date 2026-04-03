@@ -101,6 +101,7 @@ def set_locale(name):
         finally:
             locale.setlocale(locale.LC_ALL, saved_locale)
 
+
 # =============================================================================
 #                    Class StdReportEngine
 # =============================================================================
@@ -980,4 +981,3 @@ class ReportTiming:
             # Our line is not valid, or we do not have a timestamp to use,
             # return None
             return None
-

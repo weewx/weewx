@@ -155,6 +155,7 @@ def _ord_to_ts(ord_date):
     t = int(time.mktime(d.timetuple()))
     return t
 
+
 # ===============================================================================
 # What follows is a bunch of "time span" routines. Generally, time spans
 # are used when start and stop times fall on calendar boundaries
