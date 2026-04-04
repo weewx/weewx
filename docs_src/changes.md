@@ -15,6 +15,10 @@ modified times of templates are newer than generated files.
 Added in [PR #1076](https://github.com/weewx/weewx/pull/1076). Thanks
 to user evilbunny2008.
 
+The getFileName function in the CheetahGenerator class was needed for
+[PR #1076](https://github.com/weewx/weewx/pull/1076) to convert template
+file names with date formatting to filenames, shifted to weeutil.py
+
 
 ### 5.3.1 03/03/2026
 

@@ -76,7 +76,7 @@ import weewx.station
 import weewx.tags
 import weewx.units
 from weeutil.config import search_up, accumulateLeaves, deep_copy
-from weeutil.weeutil import to_bool, to_int, timestamp_to_string
+from weeutil.weeutil import getFileName, to_bool, to_int, timestamp_to_string
 
 log = logging.getLogger(__name__)
 
@@ -278,11 +278,11 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                 if date_str not in self.outputted_dict[summarize_by]:
                     self.outputted_dict[summarize_by].append(date_str)
                 # For these "SummaryBy" generations, the file name comes from the start of the timespan:
-                _filename = self._getFileName(template, start_tt)
+                _filename = getFileName(template, time.mktime(start_tt))
             else:
                 # This is a "ToDate" generation. File name comes 
                 # from the stop (i.e., present) time:
-                _filename = self._getFileName(template, stop_tt)
+                _filename = getFileName(template, time.mktime(stop_tt))
 
             # Get the absolute path for the target of this template
             _fullname = os.path.join(dest_dir, _filename)
@@ -401,38 +401,6 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             search_list += obj.get_extension_list(timespan, db_lookup)
 
         return search_list
-
-    def _getFileName(self, template, ref_tt):
-        """Calculate a destination filename given a template filename.
-
-        For backwards compatibility replace 'YYYY' with the year, 'MM' with the
-        month, 'DD' with the day. Also observe any strftime format strings in
-        the filename. Finally, strip off any trailing .tmpl."""
-
-        _filename = os.path.basename(template).replace('.tmpl', '')
-
-        # If the filename contains YYYY, MM, DD or WW, then do the replacement
-        if 'YYYY' in _filename or 'MM' in _filename or 'DD' in _filename or 'WW' in _filename:
-            # Get strings representing year, month, and day
-            _yr_str = "%4d" % ref_tt[0]
-            _mo_str = "%02d" % ref_tt[1]
-            _day_str = "%02d" % ref_tt[2]
-            _week_str = "%02d" % datetime.date(ref_tt[0], ref_tt[1], ref_tt[2]).isocalendar()[1];
-            # Replace any instances of 'YYYY' with the year string
-            _filename = _filename.replace('YYYY', _yr_str)
-            # Do the same thing with the month...
-            _filename = _filename.replace('MM', _mo_str)
-            # ... the week ...
-            _filename = _filename.replace('WW', _week_str)
-            # ... and the day
-            _filename = _filename.replace('DD', _day_str)
-        # observe any strftime format strings in the base file name
-        # first obtain a datetime object from our timetuple
-        ref_dt = datetime.datetime.fromtimestamp(time.mktime(ref_tt))
-        # then apply any strftime formatting
-        _filename = ref_dt.strftime(_filename)
-
-        return _filename
 
     def _prepGen(self, report_dict):
         """Get the template, destination directory, encoding, and default

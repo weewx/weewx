@@ -27,7 +27,7 @@ import weeutil.weeutil
 import weewx.defaults
 import weewx.manager
 import weewx.units
-from weeutil.weeutil import to_bool, to_int, dict_search
+from weeutil.weeutil import getFileName, to_bool, to_int, dict_search
 
 log = logging.getLogger(__name__)
 
@@ -194,7 +194,7 @@ class StdReportEngine(threading.Thread):
                 timing_line = skin_dict.get('report_timing')
                 if timing_line:
                     # Get a ReportTiming object.
-                    timing = ReportTiming(timing_line, skin_dict)
+                    timing = ReportTiming(timing_line, skin_dict, self.record['dateTime'])
                     if timing.is_valid:
                         # Get timestamp and interval, so we can check if the
                         # report timing is triggered.
@@ -683,7 +683,7 @@ class ReportTiming:
                       replaced with numeric equivalents.
     """
 
-    def __init__(self, raw_line, skin_dict):
+    def __init__(self, raw_line, skin_dict, dateTime):
         """Initialises a ReportTiming object.
 
         Processes raw line to produce 5 field line suitable for further
@@ -697,6 +697,7 @@ class ReportTiming:
         self.validation_error = None
         self.create_if_missing = False
         self.skin_dict = skin_dict
+        self.dateTime = dateTime
 
         # To simplify error reporting keep a copy of the raw line passed to us
         # as a string. The raw line could be a list if it included any commas.
@@ -903,7 +904,7 @@ class ReportTiming:
 
                         template_filename = os.path.join(skin_dir, template)
                         if os.path.exists(template_filename):
-                            output_filename = os.path.join(html_dest_dir, template[:-5])
+                            output_filename = os.path.join(html_dest_dir, getFileName(template, self.dateTime))
                             if not os.path.exists(output_filename):
                                 log.debug(f"{output_filename} should exist but doesn't, allowing report generation")
                                 return True

@@ -14,6 +14,7 @@ import calendar
 import cmath
 import datetime
 import importlib
+import logging
 import math
 import os
 import re
@@ -30,6 +31,7 @@ except:
 # For backwards compatibility:
 from weeutil.config import accumulateLeaves, search_up
 
+log = logging.getLogger(__name__)
 
 def convertToFloat(seq):
     """Convert a sequence with strings to floats, honoring 'Nones'
@@ -1621,6 +1623,38 @@ def dict_search(d, key_search):
         elif isinstance(value, dict):
             results.extend(dict_search(value, key_search))
     return results
+
+def getFileName(template, timestamp):
+    """Calculate a destination filename given a template filename.
+
+    For backwards compatibility replace 'YYYY' with the year, 'MM' with the
+    month, 'DD' with the day. Also observe any strftime format strings in
+    the filename. Finally, strip off any trailing .tmpl."""
+
+    log.info(f"timestamp: {timestamp}")
+
+    report_time = datetime.datetime.fromtimestamp(timestamp)
+    filename = os.path.basename(template).replace('.tmpl', '')
+
+    # If the filename contains YYYY, MM, DD or WW, then do the replacement
+    if 'YYYY' in filename or 'MM' in filename or 'DD' in filename or 'WW' in filename:
+        # Get strings representing year, month, and day
+        yr_str = "%4d" % report_time.year
+        mo_str = "%02d" % report_time.month
+        day_str = "%02d" % report_time.day
+        week_str = "%02d" % report_time.isocalendar()[1];
+        # Replace any instances of 'YYYY' with the year string
+        filename = filename.replace('YYYY', yr_str)
+        # Do the same thing with the month...
+        filename = filename.replace('MM', mo_str)
+        # ... the week ...
+        filename = filename.replace('WW', week_str)
+        # ... and the day
+        filename = filename.replace('DD', day_str)
+    # then apply any strftime formatting
+    filename = report_time.strftime(filename)
+
+    return filename
 
 class Polar:
     """Polar notation, except the direction is a compass heading."""
