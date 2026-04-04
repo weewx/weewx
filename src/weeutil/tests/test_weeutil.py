@@ -979,6 +979,12 @@ def test_dict_search():
     assert dict_search(test_dict, "templates") == []
     assert dict_search(test_dict, "template") == ["filename.html.tmpl"]
 
+def test_getFileName():
+    # build a dict with dicts to test recursive searches
+    assert getFileName("test.txt.tmpl", 1775267792) == "test.txt"
+    assert getFileName("test-%Y-%m.html.tmpl", 1775267792) == "test-2026-04.html"
+    assert getFileName("test-YYYY-MM.html.tmpl", 1775267792) == "test-2026-04.html"
+
 def test_ListOfDicts():
     # Try an empty dictionary:
     lod = ListOfDicts()
