@@ -14,7 +14,6 @@ import calendar
 import cmath
 import datetime
 import importlib
-import logging
 import math
 import os
 import re
@@ -30,8 +29,6 @@ except:
 
 # For backwards compatibility:
 from weeutil.config import accumulateLeaves, search_up
-
-log = logging.getLogger(__name__)
 
 def convertToFloat(seq):
     """Convert a sequence with strings to floats, honoring 'Nones'
@@ -1630,8 +1627,6 @@ def getFileName(template, timestamp):
     For backwards compatibility replace 'YYYY' with the year, 'MM' with the
     month, 'DD' with the day. Also observe any strftime format strings in
     the filename. Finally, strip off any trailing .tmpl."""
-
-    log.info(f"timestamp: {timestamp}")
 
     report_time = datetime.datetime.fromtimestamp(timestamp)
     filename = os.path.basename(template).replace('.tmpl', '')
