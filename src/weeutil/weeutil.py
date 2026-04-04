@@ -1610,6 +1610,47 @@ def dirN(c):
         value = (450 - math.degrees(cmath.phase(c))) % 360.0
     return value
 
+def dict_search(d, key_search):
+    """ Recursively searches for a key in a dict and builds a list of the results """
+    results = []
+    if d is None or key_search is None or key_search.strip() == "":
+        return results
+    for key, value in d.items():
+        if key == key_search:
+            results.append(value)
+        elif isinstance(value, dict):
+            results.extend(dict_search(value, key_search))
+    return results
+
+def getFileName(template, timestamp):
+    """Calculate a destination filename given a template filename.
+
+    For backwards compatibility replace 'YYYY' with the year, 'MM' with the
+    month, 'DD' with the day. Also observe any strftime format strings in
+    the filename. Finally, strip off any trailing .tmpl."""
+
+    report_time = datetime.datetime.fromtimestamp(timestamp)
+    filename = os.path.basename(template).replace('.tmpl', '')
+
+    # If the filename contains YYYY, MM, DD or WW, then do the replacement
+    if 'YYYY' in filename or 'MM' in filename or 'DD' in filename or 'WW' in filename:
+        # Get strings representing year, month, and day
+        yr_str = "%4d" % report_time.year
+        mo_str = "%02d" % report_time.month
+        day_str = "%02d" % report_time.day
+        week_str = "%02d" % report_time.isocalendar()[1];
+        # Replace any instances of 'YYYY' with the year string
+        filename = filename.replace('YYYY', yr_str)
+        # Do the same thing with the month...
+        filename = filename.replace('MM', mo_str)
+        # ... the week ...
+        filename = filename.replace('WW', week_str)
+        # ... and the day
+        filename = filename.replace('DD', day_str)
+    # then apply any strftime formatting
+    filename = report_time.strftime(filename)
+
+    return filename
 
 class Polar:
     """Polar notation, except the direction is a compass heading."""
