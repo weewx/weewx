@@ -9,6 +9,8 @@ Example `xstats.py` had nonsensical time context values. Fixed in
 [PR #1072](https://github.com/weewx/weewx/pull/1072). Thanks to user 
 evilbunny2008. 
 
+Prevent `AttributeError` when the `weectl` command is run without a subcommand.
+
 
 ### 5.3.1 03/03/2026
 

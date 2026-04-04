@@ -62,6 +62,9 @@ def main():
 
     # Parse what we can. This gives us access to the namespace.
     namespace, extra_args = parser.parse_known_args()
+    # Guard against there being no subcommand at all. In this case, display the help message.
+    if namespace.subcommand is None:
+        namespace = parser.parse_args(['-h'])
     # Now take a look at the signature of the dispatch function and see how many arguments it has.
     sig = inspect.signature(namespace.func)
     if len(sig.parameters) == 1:
