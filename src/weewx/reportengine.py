@@ -608,20 +608,12 @@ class CopyGenerator(ReportGenerator):
         copy_list = []
 
         if self.first_run:
-            # Get the list of files to be copied only once, at the first
-            # invocation of the generator. Wrap in a try block in case the
-            # list does not exist.
-            try:
-                copy_list += weeutil.weeutil.option_as_list(copy_dict['copy_once'])
-            except KeyError:
-                pass
+            # Get the list of files to be copied only at the first
+            # invocation of the generator.
+            copy_list += weeutil.weeutil.option_as_list(copy_dict.get('copy_once', []))
 
-        # Get the list of files to be copied everytime. Again, wrap in a
-        # try block.
-        try:
-            copy_list += weeutil.weeutil.option_as_list(copy_dict['copy_always'])
-        except KeyError:
-            pass
+        # Get the list of files to be copied everytime.
+        copy_list += weeutil.weeutil.option_as_list(copy_dict.get('copy_always', []))
 
         # Figure out the destination of the files
         html_dest_dir = Path(self.config_dict['WEEWX_ROOT'], self.skin_dict['HTML_ROOT'])
@@ -630,6 +622,9 @@ class CopyGenerator(ReportGenerator):
         # list globbing any character expansions
         ncopy = 0
         for pattern in copy_list:
+            # Guard against an empty pattern
+            if not pattern:
+                continue
             # Glob this pattern; then go through each resultant path:
             for path in Path().glob(pattern):
                 ncopy += weeutil.weeutil.deep_copy_path(path, html_dest_dir)

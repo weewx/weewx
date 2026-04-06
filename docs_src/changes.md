@@ -11,6 +11,8 @@ evilbunny2008.
 
 Prevent `AttributeError` when the `weectl` command is run without a subcommand.
 
+Guard against an empty string being passed to the copy generator.
+
 
 ### 5.3.1 03/03/2026
 
