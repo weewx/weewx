@@ -118,13 +118,13 @@ def _os_uptime():
     strategies may have to be tried:"""
 
     try:
-        # For Python 3.7 and later, most systems
-        return time.clock_gettime(time.CLOCK_UPTIME)
+        # For Python 3.7 and later, Linux 2.6.39 or greater. No MacOS.
+        return time.clock_gettime(time.CLOCK_BOOTTIME)
     except AttributeError:
         pass
 
     try:
-        # For Python 3.3 and later, most systems
+        # For most Linux and MacOS, Python 3.3 and later
         return time.clock_gettime(time.CLOCK_MONOTONIC)
     except AttributeError:
         pass
