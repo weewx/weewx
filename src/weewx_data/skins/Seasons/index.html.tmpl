@@ -19,10 +19,21 @@
     <link rel="canonical" href="$station.station_url/$filename" />
     #end if
     <script src="seasons.js"></script>
+    <script>
+    /* Initialize as soon as the DOM is ready (does not wait for slow images/iframes). */
+    (function initWhenDomReady() {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => setup(), {once: true});
+        } else {
+            setup();
+        }
+    })();
+    </script>
+
     #include "analytics.inc"
   </head>
 
-  <body onload="setup();">
+  <body>
     #include "titlebar.inc"
     
     <div id="contents">

@@ -33,19 +33,6 @@ function setup(widgets) {
     }
 }
 
-/**
- * Initialize as soon as the DOM is ready (does not wait for slow images/iframes).
- * This allows the graphics on the top to display immediately.
- */
-(function initWhenDomReady() {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => setup(), {once: true});
-    } else {
-        setup();
-    }
-})();
-
-
 function choose_history(id) {
     choose_div('history', id, ['day', 'week', 'month', 'year']);
     choose_col('hilo', id, ['week', 'month', 'year', 'rainyear']);

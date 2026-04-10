@@ -15,6 +15,9 @@ Guard against an empty string being passed to the copy generator.
 
 Use better measure of system uptime.
 
+Fix problem that prevented table headers from appearing in the Seasons's 
+statistics page.
+
 
 ### 5.3.1 03/03/2026
 
