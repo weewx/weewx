@@ -144,7 +144,7 @@ function get_cookie(name, default_value) {
     if (i < 0) return default_value;
     let j = cookie.indexOf(";", i + 1);
     if (j < 0) j = cookie.length;
-    return unescape(cookie.substring(i + name.length + 2, j));
+    return decodeURI(cookie.substring(i + name.length + 2, j));
 }
 
 function get_parameter(name) {
