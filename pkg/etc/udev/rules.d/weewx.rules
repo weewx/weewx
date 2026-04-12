@@ -2,6 +2,8 @@
 
 # acurite
 SUBSYSTEM=="usb",ATTRS{idVendor}=="24c0",ATTRS{idProduct}=="0003",MODE="0664",GROUP="weewx"
+# Workaround to unbind the hid-generic driver so it doesn't "lock" the station on newer kernels
+SUBSYSTEM=="usb",ATTRS{idVendor}=="24c0",ATTRS{idProduct}=="0003",ACTION=="add",RUN+="/bin/sh -c 'sleep 1; echo $kernel > /sys/bus/usb/drivers/usbhid/unbind || true'"
 
 # fine offset usb
 SUBSYSTEM=="usb",ATTRS{idVendor}=="1941",ATTRS{idProduct}=="8021",MODE="0664",GROUP="weewx"
