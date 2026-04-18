@@ -508,7 +508,7 @@ class FtpGenerator(ReportGenerator):
         try:
             local_root = Path(self.config_dict['WEEWX_ROOT'],
                               self.skin_dict.get('HTML_ROOT',
-                                                 self.config_dict['StdReport']['HTML_ROOT']))
+                                                 self.config_dict['StdReport'].get('HTML_ROOT', 'public_html')))
             ftp_data = weeutil.ftpupload.FtpUpload(
                 server=self.skin_dict['server'],
                 user=self.skin_dict['user'],
@@ -566,7 +566,7 @@ class RsyncGenerator(ReportGenerator):
         try:
             local_root = Path(self.config_dict['WEEWX_ROOT'],
                               self.skin_dict.get('HTML_ROOT',
-                                                 self.config_dict['StdReport']['HTML_ROOT']))
+                                                 self.config_dict['StdReport'].get('HTML_ROOT', 'public_html')))
             rsync_data = weeutil.rsyncupload.RsyncUpload(
                 local_root=local_root,
                 remote_root=self.skin_dict['path'],
@@ -616,7 +616,7 @@ class CopyGenerator(ReportGenerator):
         copy_list += weeutil.weeutil.option_as_list(copy_dict.get('copy_always', []))
 
         # Figure out the destination of the files
-        html_dest_dir = Path(self.config_dict['WEEWX_ROOT'], self.skin_dict['HTML_ROOT'])
+        html_dest_dir = Path(self.config_dict['WEEWX_ROOT'], self.skin_dict.get('HTML_ROOT', 'public_html'))
 
         # The copy list can contain wildcard characters. Go through the
         # list globbing any character expansions
