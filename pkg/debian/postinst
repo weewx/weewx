@@ -433,11 +433,24 @@ setup_database_dir() {
     chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HOME
 }
 
+# get HTML_ROOT from the configuration file
+get_html_root() {
+    if [ -f $cfgfile ]; then
+        hr=$(sed -n 's/^HTML_ROOT[[:space:]]*=[[:space:]]*//p' $cfgfile | head -1)
+        if [ -n "$hr" ]; then
+            echo "$hr"
+            return
+        fi
+    fi
+    echo "$WEEWX_HTMLDIR"
+}
+
 # create the reporting directory
 setup_reporting_dir() {
-    echo "Configuring reporting directory $WEEWX_HTMLDIR"
-    mkdir -p $WEEWX_HTMLDIR
-    set_permissions $WEEWX_USER $WEEWX_GROUP $WEEWX_HTMLDIR
+    html_root=$(get_html_root)
+    echo "Configuring reporting directory $html_root"
+    mkdir -p "$html_root"
+    set_permissions $WEEWX_USER $WEEWX_GROUP "$html_root"
 }
 
 # set the permissions on the configuration, skins, and extensions
