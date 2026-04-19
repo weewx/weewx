@@ -299,6 +299,13 @@ create_user() {
                 --disabled-password weewx || true
         echo "done"
     fi
+    # add the weewx user to the dialout group for serial port access
+    if getent group dialout > /dev/null 2>&1; then
+        if ! id -nG "$WEEWX_USER" | grep -qw dialout; then
+            echo "Adding user $WEEWX_USER to group dialout"
+            usermod -aG dialout "$WEEWX_USER"
+        fi
+    fi
 }
 
 # add the user who is installing into the weewx group, if appropriate
