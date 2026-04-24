@@ -561,8 +561,10 @@ class RsyncGenerator(ReportGenerator):
         log_success = to_bool(weeutil.config.search_up(self.skin_dict, 'log_success', True))
         log_failure = to_bool(weeutil.config.search_up(self.skin_dict, 'log_failure', True))
 
-        # We don't try to collect performance statistics about rsync, because
-        # rsync will report them for us.  Check the debug log messages.
+        # Optionally record upload statistics (file count, bytes, duration) to
+        # the archive database. Set record_stats = true in the [[RSYNC]] section
+        # of weewx.conf to enable. Requires RsyncMetricsService to be loaded as
+        # a data_service. When False (the default), behavior is unchanged.
         try:
             local_root = Path(self.config_dict['WEEWX_ROOT'],
                               self.skin_dict.get('HTML_ROOT',
@@ -578,7 +580,8 @@ class RsyncGenerator(ReportGenerator):
                 compress=to_bool(self.skin_dict.get('compress', False)),
                 delete=to_bool(self.skin_dict.get('delete', False)),
                 log_success=log_success,
-                log_failure=log_failure
+                log_failure=log_failure,
+                record_stats=to_bool(self.skin_dict.get('record_stats', False))
             )
         except KeyError:
             log.debug("rsyncgenerator: Rsync upload not requested. Skipped.")

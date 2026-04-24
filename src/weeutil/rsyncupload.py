@@ -4,10 +4,11 @@
 #
 #    3-Jan-2021. Refactored by tk
 #    3-Apr-2024. Added option rsync_options.
+#    17-Apr-2026. Added option record_stats to capture upload metrics.
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""For uploading files to a remove server via Rsync"""
+"""For uploading files to a remote server via Rsync"""
 
 import errno
 import logging
@@ -15,10 +16,43 @@ import os
 import subprocess
 import sys
 import time
+import threading
 
 from weeutil.weeutil import option_as_list
 
 log = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Module-level store for rsync stats, shared with RsyncMetricsService.
+# Protected by a lock since RsyncUpload runs in the StdReport thread and
+# RsyncMetricsService.new_archive_record() runs in the main weewx thread.
+# ---------------------------------------------------------------------------
+
+_stats_lock = threading.Lock()
+_stats = {}
+
+
+def get_rsync_stats():
+    """Return a copy of the most recently recorded rsync stats, or {}."""
+    with _stats_lock:
+        return dict(_stats)
+
+
+def _set_rsync_stats(files, nbytes, duration):
+    """Store rsync stats. Called internally after a successful upload."""
+    with _stats_lock:
+        _stats.update({
+            'rsyncFiles':    files,
+            'rsyncBytes':    nbytes,
+            'rsyncDuration': duration,
+            'timestamp':     time.time(),
+        })
+
+
+def _clear_rsync_stats():
+    """Clear stats after a failed upload so stale values are not injected."""
+    with _stats_lock:
+        _stats.clear()
 
 
 class RsyncUpload:
@@ -31,7 +65,8 @@ class RsyncUpload:
                  ssh_options=None, rsync_options=None,
                  compress=False,
                  log_success=True, log_failure=True,
-                 timeout=None):
+                 timeout=None,
+                 record_stats=False):
         """Initialize an instance of RsyncUpload.
         
         After initializing, call method run() to perform the upload.
@@ -49,6 +84,11 @@ class RsyncUpload:
             log_success (bool): True to log any successful transfers.
             log_failure (bool): True to log any unsuccessful transfers
             timeout (int|none): How long to wait for giving up on a transfer.
+            record_stats (bool): True to record transfer statistics (file count, bytes,
+                duration) in the module-level store for use by RsyncMetricsService.
+                When True, stats are available via get_rsync_stats() after each
+                successful upload and are cleared on failure so stale values are
+                never injected into archive records. Default is False.
         """
         self.local_root = os.path.normpath(local_root)
         self.remote_root = os.path.normpath(remote_root)
@@ -62,6 +102,7 @@ class RsyncUpload:
         self.log_success = log_success
         self.log_failure = log_failure
         self.timeout = timeout
+        self.record_stats = record_stats
 
     def run(self):
         """Perform the actual upload."""
@@ -124,6 +165,8 @@ class RsyncUpload:
             if e.errno == errno.ENOENT:
                 log.error("rsync does not appear to be installed on "
                           "this system. (errno %d, '%s')" % (e.errno, e.strerror))
+            if self.record_stats:
+                _clear_rsync_stats()
             raise
 
         t2 = time.time()
@@ -146,9 +189,38 @@ class RsyncUpload:
                              Nbytes.strip(), t2 - t1)
                 else:
                     log.info("rsync executed in %0.2f seconds", t2 - t1)
+
+            # Record stats if requested. We reuse the already-parsed rsyncinfo
+            # dict if available, otherwise re-parse from stroutput.
+            if self.record_stats:
+                try:
+                    if 'rsyncinfo' not in dir():
+                        kv_list = [line.split(':', 1) for line in stroutput.splitlines() if ':' in line]
+                        rsyncinfo = {k.strip(): v.strip() for k, v in kv_list}
+                    N = rsyncinfo.get('Number of regular files transferred',
+                                      rsyncinfo.get('Number of files transferred'))
+                    Nbytes = rsyncinfo.get('Total transferred file size')
+                    if N is not None and Nbytes is not None:
+                        # Strip any trailing annotations e.g. "28 (reg: 27, dir: 1)"
+                        files = int(N.split()[0].replace(',', ''))
+                        nbytes = int(Nbytes.split()[0].replace(',', ''))
+                        _set_rsync_stats(files, nbytes, t2 - t1)
+                        log.debug("rsyncupload: recorded stats: files=%d bytes=%d duration=%.2fs",
+                                  files, nbytes, t2 - t1)
+                    else:
+                        log.debug("rsyncupload: record_stats=True but could not parse "
+                                  "file count or byte count from rsync output")
+                        _clear_rsync_stats()
+                except (ValueError, AttributeError) as e:
+                    log.warning("rsyncupload: record_stats parse error: %s", e)
+                    _clear_rsync_stats()
         else:
             # rsync error message found. If requested, log it
             if self.log_failure:
                 log.error("rsync reported errors. Original command: %s", cmd)
                 for line in stroutput.splitlines():
                     log.error("**** %s", line)
+            # Clear stats so a previous successful run's values are not
+            # injected into the archive record as if this run succeeded.
+            if self.record_stats:
+                _clear_rsync_stats()
