@@ -172,7 +172,7 @@ Min/Max bounds. See the section
 [`[StdQC]`](../../reference/weewx-options/stdqc.md) for details.
 
 To remove bad data from the database, see the Wiki article [_Cleaning up old 
-"bad" data_](https://github.com/weewx/weewx/wiki/Cleaning-up-old-'bad'-data).
+"bad" data_](https://github.com/weewx/weewx/wiki/Cleaning-up-old-bad-data).
 
 
 ## 'Database is locked' error
