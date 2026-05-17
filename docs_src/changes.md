@@ -25,6 +25,10 @@ Fix problem with Acurite usb failures in newer kernels. [PR #1080](https://githu
 
 Allow duration notation to be used with option `x_interval`.
 
+Enhance cheetah logging in debug mode, showing generation execution time per 
+report to identify bottlenecks. 
+[PR #1091](https://github.com/weewx/weewx/pull/1091)
+
 
 ### 5.3.1 03/03/2026
 
