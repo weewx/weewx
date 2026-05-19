@@ -313,6 +313,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                                                _filename))
 
             # First, compile the template
+            t1 = time.time()
             try:
                 # TODO: Look into caching the compiled template.
                 compiled_template = Cheetah.Template.Template(
@@ -378,6 +379,9 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     os.unlink(tmpname)
                 except OSError:
                     pass
+
+            if weewx.debug >= 2:
+                log.debug("%s took %.2f s" % (template, time.time()-t1))
 
         return ngen
 
