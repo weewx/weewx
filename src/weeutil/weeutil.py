@@ -215,6 +215,7 @@ nominal_intervals = {
     'day': 86400,
     'week': 7 * 86400,
     'month': int(365.25 / 12 * 86400),
+    'season': int(365.25 / 4 * 86400),
     'year': int(365.25 * 86400),
 }
 duration_synonyms = {
