@@ -100,9 +100,9 @@ class TimeBinder:
             **self.option_dict)
 
     def season(self, data_binding=None, seasons_ago=0, years_ago=0, lat=None, lon=None, season_type='m'):
+        years_ago, seasons_ago = seasons_ago//4+years_ago, seasons_ago%4
         if season_type[0].lower()=='m':
             # meteorological season
-            years_ago, seasons_ago = seasons_ago//4+years_ago, seasons_ago%4
             time_dt = time.localtime(self.report_time)
             start_year = time_dt.tm_year - years_ago
             start_month = int(time_dt.tm_mon//3-seasons_ago)*3
@@ -120,9 +120,16 @@ class TimeBinder:
             # astronomical season
             if lat is None: lat = self.option_dict.get('lat',0.0)
             if lon is None: lon = self.option_dict.get('lon',0.0)
-            alm = weewx.almanac.Almanac(self.report_time, lat, lon)
-            equinox = alm.previous_equinox.unix_epoch.raw
-            solstice = alm.previous_solstice.unix_epoch.raw
+            time_ts = self.report_time
+            if years_ago:
+                time_td = time.localtime(time_ts)
+                time_ts = time.mktime((time_td.tm_year-years_ago, time_td.tm_mon, time_td.tm_mday, time_td.tm_hour, time_td.tm_min, time_td.tm_sec, 0, 0, time_td.tm_isdst))
+            for i in range(seasons_ago,-1,-1):
+                alm = weewx.almanac.Almanac(time_ts, lat, lon)
+                equinox = alm.previous_equinox.unix_epoch.raw
+                solstice = alm.previous_solstice.unix_epoch.raw
+                if not i: break
+                time_ts = (equinox if equinox>solstice else solstice)-90000
             if equinox>solstice:
                 # spring or autumn
                 start_of_season = weeutil.weeutil.startOfDay(equinox)
@@ -179,7 +186,11 @@ class TimeBinder:
             end_of_seasons_year = int(time.mktime((year+1, seasons_start_month, 1, 0, 0, 0, 0, 0, -1)))
         elif season_type[0].lower()=='a':
             # astronomical seasons
-            alm = weewx.almanac.Almanac(self.report_time, lat, lon)
+            time_ts = self.report_time
+            if years_ago:
+                time_td = time.localtime(time_ts)
+                time_ts = time.mktime((time_td.tm_year-years_ago, time_td.tm_mon, time_td.tm_mday, time_td.tm_hour, time_td.tm_min, time_td.tm_sec, 0, 0, time_td.tm_isdst))
+            alm = weewx.almanac.Almanac(time_ts, lat, lon)
             if lat<0.0:
                 start_of_seasons_year = weeutil.weeutil.startOfDay(alm.previous_autumnal_equinox.unix_epoch.raw)
                 end_of_seasons_year = weeutil.weeutil.startOfDay(alm.next_autumnal_equinox.unix_epoch.raw)
@@ -308,6 +319,7 @@ class TimespanBinder:
                                             self.db_lookup, self.data_binding,
                                             'year', self.formatter, self.converter,
                                             **self.option_dict)
+
     # Iterate over seasons in the time period:
     def seasons(self):
         season_type = self.option_dict.get('season_type','m')[0].lower()
