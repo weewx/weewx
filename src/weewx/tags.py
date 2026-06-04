@@ -5,9 +5,11 @@
 #
 """Classes for implementing the weewx tag 'code' codes."""
 
+import time
 import weeutil.weeutil
 import weewx.units
 import weewx.xtypes
+import weewx.almanac
 from weeutil.weeutil import to_int
 from weewx.units import ValueTuple
 
@@ -97,6 +99,47 @@ class TimeBinder:
             context='month', formatter=self.formatter, converter=self.converter,
             **self.option_dict)
 
+    def season(self, data_binding=None, seasons_ago=0, years_ago=0, lat=None, lon=None, season_type='m'):
+        if season_type[0].lower()=='m':
+            # meteorological season
+            years_ago, seasons_ago = seasons_ago//4+years_ago, seasons_ago%4
+            time_dt = time.localtime(self.report_time)
+            start_year = time_dt.tm_year - years_ago
+            start_month = int(time_dt.tm_mon//3-seasons_ago)*3
+            while start_month<=0:
+                start_month += 12
+                start_year -= 1
+            end_year = start_year
+            end_month = start_month + 3
+            if end_month>12:
+                end_month -= 12
+                end_year += 1
+            start_of_season = int(time.mktime((start_year, start_month, 1, 0, 0, 0, 0, 0, -1)))
+            end_of_season = int(time.mktime((end_year, end_month, 1, 0, 0, 0, 0, 0, -1)))
+        elif season_type[0].lower()=='a':
+            # astronomical season
+            if lat is None: lat = self.option_dict.get('lat',0.0)
+            if lon is None: lon = self.option_dict.get('lon',0.0)
+            alm = weewx.almanac.Almanac(self.report_time, lat, lon)
+            equinox = alm.previous_equinox.unix_epoch.raw
+            solstice = alm.previous_solstice.unix_epoch.raw
+            if equinox>solstice:
+                # spring or autumn
+                start_of_season = weeutil.weeutil.startOfDay(equinox)
+                end_of_season = weeutil.weeutil.startOfDay(alm.next_solstice.unix_epoch.raw)
+            else:
+                # summer or winter
+                start_of_season = weeutil.weeutil.startOfDay(solstice)
+                end_of_season = weeutil.weeutil.startOfDay(alm.next_equinox.unix_epoch.raw)
+        else:
+            raise ValueError("season type can be 'meteorological' or 'astronomical'")
+        return TimespanBinder(
+            weeutil.weeutil.TimeSpan(start_of_season,end_of_season),
+            self.db_lookup, data_binding=data_binding,
+            context='season', formatter=self.formatter, converter=self.converter,
+            season_type=season_type,
+            **self.option_dict)
+    
     def year(self, data_binding=None, years_ago=0):
         return TimespanBinder(
             weeutil.weeutil.archiveYearSpan(self.report_time, years_ago=years_ago),
@@ -121,6 +164,35 @@ class TimeBinder:
             weeutil.weeutil.archiveRainYearSpan(self.report_time, rain_year_start),
             self.db_lookup, data_binding=data_binding,
             context='rainyear', formatter=self.formatter, converter=self.converter,
+            **self.option_dict)
+
+    def seasonsyear(self, data_binding=None, years_ago=0, lat=None, lon=None, season_type='m'):
+        """ meteorological or astronomical seasons year """
+        if lat is None: lat = self.option_dict.get('lat')
+        if lon is None: lon = self.option_dict.get('lon')
+        if season_type[0].lower()=='m':
+            # meteorological seasons
+            seasons_start_month = 9 if lat<0.0 else 3
+            time_dt = time.localtime(self.report_time)
+            year = (time_dt.tm_year if time_dt.tm_mon>=seasons_start_month else time_dt.tm_year-1) - years_ago
+            start_of_seasons_year = int(time.mktime((year, seasons_start_month, 1, 0, 0, 0, 0, 0, -1)))
+            end_of_seasons_year = int(time.mktime((year+1, seasons_start_month, 1, 0, 0, 0, 0, 0, -1)))
+        elif season_type[0].lower()=='a':
+            # astronomical seasons
+            alm = weewx.almanac.Almanac(self.report_time, lat, lon)
+            if lat<0.0:
+                start_of_seasons_year = weeutil.weeutil.startOfDay(alm.previous_autumnal_equinox.unix_epoch.raw)
+                end_of_seasons_year = weeutil.weeutil.startOfDay(alm.next_autumnal_equinox.unix_epoch.raw)
+            else:
+                start_of_seasons_year = weeutil.weeutil.startOfDay(alm.previous_vernal_equinox.unix_epoch.raw)
+                end_of_seasons_year = weeutil.weeutil.startOfDay(alm.next_vernal_equinox.unix_epoch.raw)
+        else:
+            raise ValueError("season type can be 'meteorological' or 'astronomical'")
+        return TimespanBinder(
+            weeutil.weeutil.TimeSpan(start_of_seasons_year,end_of_seasons_year),
+            self.db_lookup, data_binding=data_binding,
+            context='seasonsyear', formatter=self.formatter, converter=self.converter,
+            season_type=season_type,
             **self.option_dict)
 
     def span(self, data_binding=None, time_delta=0, hour_delta=0, day_delta=0, week_delta=0,
@@ -236,7 +308,41 @@ class TimespanBinder:
                                             self.db_lookup, self.data_binding,
                                             'year', self.formatter, self.converter,
                                             **self.option_dict)
-
+    # Iterate over seasons in the time period:
+    def seasons(self):
+        season_type = self.option_dict.get('season_type','m')[0].lower()
+        if season_type=='m':
+            # meteorological season
+            def genSeasonSpans(start, stop):
+                while start<stop:
+                    start_dt = time.localtime(start)
+                    end_year = start_dt.tm_year
+                    end_month = (start_dt.tm_mon//3+1)*3
+                    if end_month>12:
+                        end_year +=1
+                        end_month -= 12
+                    end = int(time.mktime((end_year, end_month, 1, 0, 0, 0, 0, 0, -1)))
+                    yield weeutil.weeutil.TimeSpan(start, end)
+                    start = end
+        elif season_type=='a':
+            # astronomical season
+            lat = self.option_dict.get('lat',0.0)
+            lon = self.option_dict.get('lon',0.0)
+            def genSeasonSpans(start, stop):
+                while start<stop:
+                    alm = weewx.almanac.Almanac(start+90000, lat, lon)
+                    equinox = weeutil.weeutil.startOfDay(alm.next_equinox.unix_epoch.raw)
+                    solstice = weeutil.weeutil.startOfDay(alm.next_solstice.unix_epoch.raw)
+                    end = equinox if equinox<solstice else solstice
+                    yield weeutil.weeutil.TimeSpan(start, end)
+                    start = end
+        else:
+            raise ValueError("season type can be 'meteorological' or 'astronomical'")
+        return TimespanBinder._seqGenerator(genSeasonSpans, self.timespan,
+                                            self.db_lookup, self.data_binding,
+                                            'season', self.formatter, self.converter,
+                                            **self.option_dict)
+        
     # Static method used to implement the iteration:
     @staticmethod
     def _seqGenerator(genSpanFunc, timespan, *args, **option_dict):

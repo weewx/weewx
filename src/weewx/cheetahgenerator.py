@@ -596,6 +596,8 @@ class Stats(SearchList):
             converter=self.generator.converter,
             week_start=self.generator.stn_info.week_start,
             rain_year_start=self.generator.stn_info.rain_year_start,
+            lat = self.generator.stn_info.latitude_f,
+            lon = self.generator.stn_info.longitude_f,
             trend=trend_dict,
             skin_dict=self.generator.skin_dict)
 
