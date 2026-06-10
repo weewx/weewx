@@ -131,7 +131,7 @@ includes a line plot of both outside temperature and dewpoint:
 
 ![Monthly temperature and dewpoint](../images/sample_monthtempdew.png)
 
-### Including a type more than once in a plot {#inclue-same-sql-type-2x}
+### Including a type more than once in a plot {#include-same-sql-type-2x}
 
 Another example. Suppose that you want a plot of the day's temperature,
 overlaid with hourly averages. Here, you are using the same data type
@@ -242,7 +242,7 @@ for details.
 
 However, supposed you'd like to offer both Metric and US Customary
 versions of the same plot? You can do this by using option
-[`unit`](../reference/skin-options/imagegenerator.md/#unit)
+[`unit`](../reference/skin-options/imagegenerator/#unit)
 to override the unit used for individual plots:
 
 ``` ini hl_lines="4 9"
@@ -266,7 +266,7 @@ degrees Celsius.
 ## Line gaps {#line-gaps}
 
 If there is a time gap in the data, the option
-[`line_gap_fraction`](../reference/skin-options/imagegenerator.md/#line_gap_fraction) controls how line plots will be drawn.
+[`line_gap_fraction`](../reference/skin-options/imagegenerator/#line_gap_fraction) controls how line plots will be drawn.
 Here's what a plot looks like without and with this option being specified:
 
 <figure markdown>

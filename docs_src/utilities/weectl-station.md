@@ -5,7 +5,7 @@ station, including its configuration file.
 
 Specify `--help` to see the actions and options.
 
-See the section [_Options_](#options) below for details of the various options.
+See the section [_Optional arguments_](#optional-arguments) below for details of the various options.
 
 ## Create a new station data directory
 

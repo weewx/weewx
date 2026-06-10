@@ -146,9 +146,8 @@ name of the file containing the CSV formatted data to be imported.
     * [raw_datetime_format](weectl-import-config-opt.md#csv_raw_datetime_format).
     The format of the imported date time field.
 
-    * [rain](weectl-import-config-opt.md#csv_rain). Determines how the 
-     WeeWX rain 
-    field is derived.
+    * [rain](weectl-import-config-opt#csv_rain). Determines how the 
+    WeeWX rain field is derived.
        
     * [wind_direction](weectl-import-config-opt.md#csv_wind_direction). 
     Determines how imported wind direction fields are interpreted.

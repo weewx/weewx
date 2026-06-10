@@ -240,7 +240,7 @@ Here is the general strategy to do this.
 3.  Make sure you have the necessary permissions to create the new database.
 
 4.  Use the action
-    [`weectl database reconfigure`](../utilities/weectl-database.md/#reconfigure-a-database)
+    [`weectl database reconfigure`](../utilities/weectl-database/#reconfigure-a-database)
     to create the new database and populate it with data from the old
     database.
 
@@ -314,7 +314,7 @@ Here are the details:
     rebuilding the daily summaries inside the new database. This will be
     done automatically by `weewxd` at the next startup. Alternatively, it
     can be done manually using the
-    [`weectl database rebuild-daily`](../utilities/weectl-database.md/) action:
+    [`weectl database rebuild-daily`](../utilities/weectl-database/) action:
 
     ``` shell
     weectl database rebuild-daily
@@ -325,7 +325,7 @@ Here are the details:
 Normally, data are stored in the databases using US Customary units, and you
 shouldn't care; it is an "implementation detail". Data can always be displayed
 using any set of units you want &mdash; the section [*Changing unit
-systems*](custom-reports.md#changing-unit-systems) explains how to change
+systems*](custom-reports#changing-unit-systems) explains how to change
 the reporting units. Nevertheless, there may be special situations where you
 wish to store the data in Metric units. For example, you may need to allow
 direct programmatic access to the database from another piece of software that
@@ -334,7 +334,7 @@ expects metric units.
 You should not change the database unit system midstream. That is, do
 not start with one unit system then, some time later, switch to another.
 WeeWX cannot handle databases with mixed unit systems &mdash; see the
-section [`[StdConvert]`](../reference/weewx-options/stdconvert.md) in the
+section [`[StdConvert]`](../reference/weewx-options/stdconvert) in the
 WeeWX User's Guide. However, you can reconfigure the database by
 copying it to a new database, performing the unit conversion along the
 way. You then use this new database.
@@ -344,7 +344,7 @@ The general strategy is identical to the strategy outlined above in the section
 only difference is that instead of specifying a new starting schema, you specify
 a different database unit system. This means that instead of steps 1 and 2
 above, you edit the configuration file and change option `target_unit` in
-section [`[StdConvert]`](../reference/weewx-options/stdconvert.md) to reflect
+section [`[StdConvert]`](../reference/weewx-options/stdconvert) to reflect
 your choice. For example, if you are switching to metric units, the option will
 look like:
 

@@ -1756,7 +1756,7 @@ temperature to WeeWX field `outTemp`, outside humidity to WeeWX field
 !!! Note
     Any WeeWX archive fields that are derived (e.g., `dewpoint`) and for 
     which there is no field mapping may be calculated during import by use of 
-    the [`calc_missing`](#wc_calc_missing) option in the `[WeatherCat]` 
+    the [`calc_missing`](#calc_missing_4) option in the `[WeatherCat]` 
     section of the import configuration file.
 
 !!! Note

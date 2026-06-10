@@ -301,7 +301,7 @@ Default is to use the color in [`chart_line_colors`](#chart_line_colors).
 
 The SQL data type to be used for this plot line. For more information,
 see the section *[Including a type more than once in a
-plot](../../custom/image-generator.md#include-same-sql-type-2x)*.
+plot](../../custom/image-generator#include-same-sql-type-2x)*.
 Optional. The default is to use the section name.
 
 #### fill_color

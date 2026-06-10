@@ -131,6 +131,10 @@ nav = [
     { "Change log" = "changes.md" },
 ]
 
+# Do not report things like `[StdReport]` as a missing link!
+[project.validation]
+unresolved_references = false
+
 [project.theme]
 name = "zensical"
 variant = "classic"
