@@ -12,6 +12,10 @@ Example `xstats.py` had nonsensical time context values. Fixed in
 [PR #1072](https://github.com/weewx/weewx/pull/1072). Thanks to user 
 evilbunny2008. 
 
+Cheetahgenerator seasons timespans `$season`, `$seasonsyear`, seasons
+iterator `.seasons`. [PR #1095](https://github.com/weewx/weewx/pull/1095).
+Thanks to user roe-dl.
+
 Prevent `AttributeError` when the `weectl` command is run without a subcommand.
 
 Guard against an empty string being passed to the copy generator.
