@@ -73,7 +73,7 @@ The following sections show how to view WeeWX log messages on systems that use
 [*How to view the log*](https://github.com/weewx/weewx/wiki/view-logs) for more
 details.
 
-See the wiki article [*How to configure
+See the wiki article [*How to customize
 logging*](https://github.com/weewx/weewx/wiki/logging) for information and
 examples about how to configure WeeWX logging.
 

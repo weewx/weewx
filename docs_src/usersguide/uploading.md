@@ -13,7 +13,7 @@ The built-in uploaders are briefly discussed here.
 
 ## RESTful Services
 
-These are located in the [`[StdRESTful]`](../../reference/weewx-options/stdrestful/) 
+These are located in the [`[StdRESTful]`](../reference/weewx-options/stdrestful/) 
 section of `weewx.conf`.
 
 <!---------------------------->
@@ -44,7 +44,7 @@ From their web site:
 _AWEKAS is an abbrevation for “Automatic WEather map (german: KArten)
 System”. It is a system that processes indicated values of private
 weather stations graphically, generates weather maps and evaluates
-the data.
+the data._
 
 This is disabled by default.
 

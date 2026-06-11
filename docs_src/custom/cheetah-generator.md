@@ -434,7 +434,7 @@ There are several _aggregation periods_ that can be used:
     </tr>
     <tr>
         <td class="first_col code">$week</td>
-        <td>This week. The start of the week is set by option <a href="../../reference/weewx-options/stations/#week_start"><span
+        <td>This week. The start of the week is set by option <a href="../reference/weewx-options/stations/#week_start"><span
             class="code">week_start</span></a>.
         </td>
         <td class="code">$week.outTemp.max</td>
@@ -455,7 +455,7 @@ There are several _aggregation periods_ that can be used:
     <tr>
         <td class="first_col code">$rainyear</td>
         <td>This rain year. The start of the rain year is set by option <a
-            href="../../reference/weewx-options/stations/#rain_year_start"><span class="code">rain_year_start</span></a>.
+            href="../reference/weewx-options/stations/#rain_year_start"><span class="code">rain_year_start</span></a>.
         </td>
         <td class="code">$rainyear.rain.sum</td>
         <td>The total rainfall for this rain year. </td>
@@ -605,7 +605,7 @@ This table summarizes the options:
         <td class="code text_highlight">.ordinal_compass</td>
         <td>Format the value as a compass ordinals (<i>e.g.</i>, "SW"), useful
 	for wind directions. The ordinal abbreviations are set by option
-	<a href="../../reference/skin-options/units/#directions"><span class="code">directions</span></a>
+	<a href="../reference/skin-options/units/#directions"><span class="code">directions</span></a>
 	in the skin configuration file.
         </td>
     </tr>
@@ -2203,6 +2203,6 @@ But, what if you wish to introduce a more dynamic tag, one that requires some
 calculation, or perhaps uses the database? Simply putting it in the `[Extras]`
 section won't do, because then it cannot change.
 
-The answer is to write a *search list extension*. Complete directioins on how
+The answer is to write a *search list extension*. Complete directions on how
 to do this are in the document
 [*Writing search list extensions*](sle.md).

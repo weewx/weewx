@@ -781,7 +781,7 @@ class Colorize(SearchList):                                               # 1
 7.  Convert the incoming value, so it uses the same units as the color
     table.
 
-8.  We must always be vigilant for values of Python None! The expression
+8.  We must always be vigilant for values of Python `None`! The expression
 
     ``` python
     self.color_tables[unit_group].get('none') or self.color_tables[unit_group].get('None', "#00000000")

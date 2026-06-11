@@ -518,7 +518,7 @@ be null.
         <td class="first_col code">usUnits</td>
         <td>
 The unit system the record is in. It cannot be null. See the
-<em><a href="../../reference/units">Units</a></em> for how these systems are
+<em><a href="../reference/units">Units</a></em> for how these systems are
 encoded.
         </td>
     </tr>
