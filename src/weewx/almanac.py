@@ -215,7 +215,7 @@ class Almanac:
 
         Args:
 
-            time_ts (int): A unix epoch timestamp with the time of the almanac. If None, the
+            time_ts (int|float): A unix epoch timestamp with the time of the almanac. If None, the
                 present time will be used.
             lat (float): Observer's latitude in degrees.
             lon (float): Observer's longitude in degrees.
