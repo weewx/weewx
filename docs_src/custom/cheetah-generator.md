@@ -447,6 +447,12 @@ There are several _aggregation periods_ that can be used:
         <td>The minimum temperature this month.</td>
     </tr>
     <tr>
+        <td class="first_col code">$season</td>
+        <td>This season</td>
+        <td class="code">$season.outTemp.avg</td>
+        <td>The average temparature this season so far</td>
+    </tr>
+    <tr>
         <td class="first_col code">$year</td>
         <td>This year (since 1-Jan).</td>
         <td class="code">$year.outTemp.max</td>
@@ -459,6 +465,13 @@ There are several _aggregation periods_ that can be used:
         </td>
         <td class="code">$rainyear.rain.sum</td>
         <td>The total rainfall for this rain year. </td>
+    </tr>
+    <tr>
+        <td class="first_col code">$seasonsyear</td>
+        <td>From the beginning of the last spring to the beginning of the
+            next spring, observing hemisphere</td>
+        <td class="code">$seasonsyear.outTemp.min</td>
+        <td>The minimum temperature during that time</td>
     </tr>
     <tr>
         <td class="first_col code">$alltime</td>
@@ -510,13 +523,36 @@ Here are some examples:
         <td>The maximum temperature last month.</td>
     </tr>
     <tr>
+        <td class="first_col code">$season(seasons_ago=<em>s</em>)</td>
+        <td class="code">$season(seasons_ago=1).outTemp.min</td>
+        <td>The minimum temperature of the previous season</td>
+    </tr>
+    <tr>
+        <td class="first_col code">$season(years_ago=<em>y</em>)</td>
+        <td class="code">$season(years_ago=1).outTemp.min</td>
+        <td>The minimum temperature of the same season in the previous year</td>
+    </tr>
+    <tr>
         <td class="first_col code">$year(years_ago=<em>y</em>)
         </td>
         <td class="code">$year(years_ago=1).outTemp.max</td>
         <td>The maximum temperature last year.</td>
     </tr>
+    <tr>
+        <td class="first_col code"$seasonsyear(years_ago=<em>y</em></td>
+        <td class="code">$seasonsyear(years_ago=1).outTemp.max</td>
+        <td>The maximum temperature of the previous seasons year</td>
+    </tr>
     </tbody>
 </table>
+
+There are two kinds of seasons: meterological and astronomical. The
+meteorological season always starts at the 1st of March, June, September,
+and December. The astronomical season starts at equinox or solstice.
+There is an optional parameter `season_type` for `$season` and `$seasonsyear`
+to specify, which one of them is to be used. Set it to `meteorological`
+(the default if not provided) or `astronomical`. Both words can be
+abbreviated.
 
 ### Unit conversion options
 
@@ -1232,6 +1268,11 @@ It is possible to iterate over the following:
     <tr>
         <td class="code first_col">.months</td>
         <td>Iterate by months</td>
+    </tr>
+    <tr>
+        <td class="code first_col">.seasons</td>
+        <td>Iterate by seasons. Depending on the parameter `season_type` of
+        `$seasonsyear`, meteorological or astronomical seasons are returned.</td>
     </tr>
     <tr>
         <td class="code first_col">.years</td>
