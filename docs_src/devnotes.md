@@ -596,7 +596,7 @@ make test-clean
 ```
 
 If you add additional unit tests, they should put any transient files in
-`/var/tmp/weewx_test` &mdash; do not write to the source tree.
+`/var/tmp/weewx-test` &mdash; do not write to the source tree.
 
 
 ## Git work flow
