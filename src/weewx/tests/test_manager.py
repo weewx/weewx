@@ -57,7 +57,7 @@ db_dict_sqlite = {
     # Use an in-memory database:
     'database_name': ':memory:',
     # Can be useful for testing:
-    # 'SQLITE_ROOT': '/var/tmp/weewx_test',
+    # 'SQLITE_ROOT': '/var/tmp/weewx-test',
     # 'database_name': 'testmgr.sdb',
 }
 
