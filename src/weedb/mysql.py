@@ -66,8 +66,6 @@ def guard(fn):
             raise klass(e)
         except MySQLInterfaceError as e:
             raise weedb.DisconnectError(e)
-        except MySQLOperationalError as e:
-            raise weedb.DatabaseError("test")
 
     return guarded_fn
 
