@@ -18,7 +18,7 @@ except ImportError:
                          InterfaceError as MySQLInterfaceError)
 else:
     try:
-        from MySQLdb import DatabaseError as MySQLDatabaseError
+        from MySQLdb._exceptions import DatabaseError as MySQLDatabaseError
     except ImportError:
         from _mysql_exceptions import (DatabaseError as MySQLDatabaseError,
                                        InterfaceError as MySQLInterfaceError)
