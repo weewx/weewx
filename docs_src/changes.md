@@ -32,7 +32,7 @@ report to identify bottlenecks.
 Added @createIfMissing option for report_timing handling so that report
 generation will be allowed if there are missing report files or if the
 modified times of templates are newer than generated files.
-Added in [PR #XXXX](https://github.com/weewx/weewx/pull/XXXX). Thanks
+Added in [PR #1097](https://github.com/weewx/weewx/pull/1097). Thanks
 to user evilbunny2008.
 
 
