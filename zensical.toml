@@ -73,6 +73,7 @@ nav = [
             { Troubleshooting = "utilities/weectl-import-troubleshoot.md" },
         ] },
         { "weectl report" = "utilities/weectl-report.md" },
+        { "weectl rest" = "utilities/weectl-rest.md" },
         { "weectl station" = "utilities/weectl-station.md" },
     ] },
     { "Hardware guide" = [

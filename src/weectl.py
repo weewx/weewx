@@ -27,7 +27,7 @@ description = """%(prog)s is the master utility used by WeeWX. It can invoke sev
 subcommands, listed below. You can explore what each subcommand does by using the --help option.
 For example, to find out what the 'database' subcommand can do, use '%(prog)s database --help'."""
 
-SUBCOMMANDS = ['database', 'debug', 'device', 'extension', 'import', 'report', 'station', ]
+SUBCOMMANDS = ['database', 'debug', 'device', 'extension', 'import', 'report', 'rest', 'station', ]
 
 
 # ===============================================================================
