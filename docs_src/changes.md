@@ -29,6 +29,12 @@ Enhance cheetah logging in debug mode, showing generation execution time per
 report to identify bottlenecks. 
 [PR #1091](https://github.com/weewx/weewx/pull/1091)
 
+Added @createIfMissing option for report_timing handling so that report
+generation will be allowed if there are missing report files or if the
+modified times of templates are newer than generated files.
+Added in [PR #1097](https://github.com/weewx/weewx/pull/1097). Thanks
+to user evilbunny2008.
+
 
 ### 5.3.1 03/03/2026
 
