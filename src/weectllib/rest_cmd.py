@@ -34,7 +34,8 @@ def add_subparser(subparsers):
     # See Python issue https://bugs.python.org/issue42297
     action_parser = rest_parser.add_subparsers(dest='action',
                                                prog='weectl rest',
-                                               title="Which action to take")
+                                               title="Which action to take",
+                                               required=True)
 
     # ---------- Action 'list' ----------
     list_rest_parser = action_parser.add_parser('list',
