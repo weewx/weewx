@@ -29,6 +29,9 @@ Enhance cheetah logging in debug mode, showing generation execution time per
 report to identify bottlenecks. 
 [PR #1091](https://github.com/weewx/weewx/pull/1091)
 
+Fix problem where errors raising exception `MySQLdb.InterfaceError` are not 
+caught. [Issue #1101](https://github.com/weewx/weewx/issues/1101).
+
 
 ### 5.3.1 03/03/2026
 
