@@ -3,6 +3,10 @@ WeeWX change history
 
 ### 5.4.0 MM/DD/YYYY
 
+Added utility `weectl rest`, which allows selective uploading to RESTful
+services. [PR #1100](https://github.com/weewx/weewx/pull/1100). Thanks to
+user Jari!
+
 Added Catalan translation. [PR #1087](https://github.com/weewx/weewx/pull/1087).
 Thanks to user Ferran!
 

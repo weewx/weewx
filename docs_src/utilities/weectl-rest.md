@@ -17,9 +17,11 @@ Specify `--help` to see the actions and options.
 
 The `list` action lists all the RESTful services configured in
 `restful_services` (under `[Engine] / [[Services]]`), along with whether each
-one is enabled. A service counts as _enabled_ if it has been configured with
+one is enabled. A service is considered _enabled_ if it has been configured with
 everything it needs to run (for example, the Weather Underground requires a
-`station` and `password`). For example:
+`station` and `password`). 
+
+For example:
 
 ```
 $ weectl rest list
@@ -61,8 +63,8 @@ If no names are given, then all _enabled_ services will be run:
     # Upload to all enabled services:
     weectl rest run
 
-Only enabled services are uploaded to. If you name a service that is not
-enabled, it will be skipped with a notice.
+Uploading will only be done to enabled services. If you name a service that is 
+not enabled, it will be skipped with a notice.
 
 ## Options
 
