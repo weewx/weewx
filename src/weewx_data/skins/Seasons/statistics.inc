@@ -4,7 +4,8 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-#set $time_tags = [$day, $week, $month, $year, $rainyear]
+#set $season_type = $DisplayOptions.get('season_type','meteorological')
+#set $time_tags = [$day, $week, $month, $season(season_type=$season_type), $year, $rainyear]
 
 ## Get the list of observations from the configuration file, otherwise fallback
 ## to a very rudimentary set of observations.
@@ -29,6 +30,7 @@
           <th>$gettext("Today")</th>
           <th class="hilo_week">$gettext("Week")</th>
           <th class="hilo_month">$gettext("Month")</th>
+          <th class="hilo_season">$gettext("Season")</th>
           <th class="hilo_year">$gettext("Year")</th>
           <th class="hilo_rainyear">$gettext("Rain Year")</th>
         </tr>
