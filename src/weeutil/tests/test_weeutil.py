@@ -973,6 +973,17 @@ def test_max_with_none():
     assert max_with_none([1, 2, None, 4]) == 4
     assert max_with_none([-1, -2, None, -4]) == -1
 
+def test_dict_search():
+    # build a dict with dicts to test recursive searches
+    test_dict = {"CheetahGenerator": {"encoding": "utf8", "search_list_extensions": "user.xstats.ExtendedStatistics", "Data": {"template": "filename.html.tmpl"}}, "Generators": {"generator_list": "weewx.cheetahgenerator.CheetahGenerator"}}
+    assert dict_search(test_dict, "templates") == []
+    assert dict_search(test_dict, "template") == ["filename.html.tmpl"]
+
+def test_getFileName():
+    # build a dict with dicts to test recursive searches
+    assert getFileName("test.txt.tmpl", 1775267792) == "test.txt"
+    assert getFileName("test-%Y-%m.html.tmpl", 1775267792) == "test-2026-04.html"
+    assert getFileName("test-YYYY-MM.html.tmpl", 1775267792) == "test-2026-04.html"
 
 def test_ListOfDicts():
     # Try an empty dictionary:

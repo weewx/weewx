@@ -28,7 +28,7 @@ your customizations worked.
     interval, then you could run `weectl report run` separately, or consider
     uploading data to a real-time reporting solution such as MQTT.
 
-## The stale_age option
+## The `stale_age` option
 
 The `stale_age` option applies to each file in a report. When `stale_age`
 is specified, the file will be (re)generaed only when it is older than the
@@ -37,11 +37,11 @@ indicated age. The age is specified in seconds.
 Details for the `stale_age` option are in the
 [`[CheetahGenerator]`](../reference/skin-options/cheetahgenerator.md#stale_age) reference.
 
-## The report_timing option
+## The `report_timing` option
 
 The `report_timing` option applies to each report. It uses a CRON-like
 format to control when a report is to be run. While a CRON-like format is used,
-the control of WeeWX report generation using the report_timing option is
+the control of WeeWX report generation using the `report_timing` option is
 confined completely to WeeWX and has no interraction with the system CRON
 service.
 
@@ -55,24 +55,24 @@ report_timing = minutes hours day_of_month months day_of_week
 The parameters are summarised in the following table:
 
 <table>
-<tr><th>Parameter</th><th>Function</th><th>Allowable values</th></tr>
+<tr class="first_row"><th>Parameter</th><th>Function</th><th>Allowable values</th></tr>
 <tr>
-<td>minutes</td>
+<td><span class="code">minutes</span></td>
 <td>Specifies the minutes of the hour when the report will be run</td>
 <td>*, or numbers in the range 0..59 inclusive</td>
 </tr>
 <tr>
-<td>hours</td>
+<td><span class="code">hours</span></td>
 <td>Specifies the hours of the day when the report will be run</td>
 <td>*, or numbers in the range 0..23 inclusive</td>
 </tr>
 <tr>
-<td>day_of_month</td>
+<td><span class="code">day_of_month</span></td>
 <td>Specifies the days of the month when the report will be run</td>
 <td>*, or numbers in the range 1..31 inclusive</td>
 </tr>
 <tr>
-<td>months</td>
+<td><span class="code">months</span></td>
 <td>Specifies the months of the year when the report will be run</td>
 <td>
 *, or numbers in the range 1..12 inclusive, or  
@@ -80,7 +80,7 @@ abbreviated names in the range jan..dec inclusive
 </td>
 </tr>
 <tr>
-<td>day_of_week</td>
+<td><span class="code">day_of_week</span></td>
 <td>Specifies the days of the week when the report will be run</td>
 <td>
 *, or
@@ -114,13 +114,13 @@ In this case, the report `AReport` would be run under control of the
 `0 * * * *` setting (on the hour) and the report `AnotherReport` would be
 run under control of the `*/10 * * * *` setting (every 10 minutes).
 
-### How report_timing controls reporting
+### How `report_timing` controls reporting
 
-The syntax and interpretation of the report_timing parameters are largely the
+The syntax and interpretation of the `report_timing` parameters are largely the
 same as those of the CRON service in many Unix and Unix-like operating systems.
 The syntax and interpretation are outlined below.
 
-When the report_timing option is in use WeeWX will run a report when the
+When the `report_timing` option is in use WeeWX will run a report when the
 minute, hour and month of year parameters match the report time, and at least
 one of the two-day parameters (day of month or day of week) match the report
 time. This means that non-existent times, such as "missing hours" during
@@ -149,56 +149,56 @@ reports to be run more than once.
     would cause the report to be run at 4:30am on the 1st and 15th of each
     month as well as 4:30am every Friday.
 
-### The relationship between report_timing and archive period
+### The relationship between `report_timing` and archive period
 
 A traditional CRON service has a resolution of one minute, meaning that the
 CRON service checks each minute whether to execute any commands. On the
 other hand, the WeeWX report system checks which reports are to be run once
 per archive period, where the archive period may be one minute, five minutes,
-or some other user defined period. Consequently, the report_timing option may
+or some other user defined period. Consequently, the `report_timing` option may
 specify a report to be run at some time that does not align with the WeeWX
-archive period. In such cases the report_timing option does not cause a report
+archive period. In such cases the `report_timing` option does not cause a report
 to be run outside the normal WeeWX report cycle, rather it will cause the
 report to be run during the next report cycle. At the start of each report
-cycle, and provided a report_timing option is set, WeeWX will check each
+cycle, and provided a `report_timing` option is set, WeeWX will check each
 minute boundary from the current report time back until the report time of
 the previous report cycle. If a match is found on **any** of these one minute
 boundaries the report will be run during the report cycle. This may be best
 described through some examples:
 
 <table>
-<tr>
-<td>report_timing</td>
-<td>Archive period</tD>
+<tr class="first_row">
+<td><span class="code">report_timing</span></td>
+<td>Archive period</td>
 <td>When the report will be run</td>
 </tr>
 <tr>
-<td>0 * * * *</td>
+<td class="code">0 * * * *</td>
 <td>5 minutes</tD>
 <td>The report will be run only during the report cycle commencing on the hour.</td>
 </tr>
 <tr>
-<td>5 * * * *</td>
+<td class="code">5 * * * *</td>
 <td>5 minutes</td>
 <td>The report will be run only during the report cycle commencing at 5 minutes past the hour.</td>
 </tr>
 <tr>
-<td>3 * * * *</td>
+<td class="code">3 * * * *</td>
 <td>5 minutes</td>
 <td>The report will be run only during the report cycle commencing at 5 minutes past the hour.</td>
 </tr>
 <tr>
-<td>10 * * * *</td>
+<td class="code">10 * * * *</td>
 <td>15 minutes</td>
 <td>The report will be run only during the report cycle commencing at 15 minutes past the hour</td>
 </tr>
 <tr>
-<td>10,40 * * * *</td>
+<td class="code">10,40 * * * *</td>
 <td>15 minutes</td>
 <td>The report will be run only during the report cycles commencing at 15 minutes past the hour and 45 minutes past the hour.</td>
 </tr>
 <tr>
-<td>5,10 * * * *</td>
+<td class="code">5,10 * * * *</td>
 <td>15 minutes</td>
 <td>The report will be run once only during the report cycle commencing at 15 minutes past the hour.</td>
 </tr>
@@ -207,14 +207,14 @@ described through some examples:
 
 ### Lists, ranges and steps
 
-The report_timing option supports lists, ranges, and steps for all parameters.
+The `report_timing` option supports lists, ranges, and steps for all parameters.
 Lists, ranges, and steps may be used as follows:
 
 * _Lists_. A list is a set of numbers (or ranges) separated by commas, for
   example `1, 2, 5, 9` or `0-4, 8-12`. A match with any of the elements of the
   list will result in a match for that particular parameter. If the examples
   were applied to the minutes parameter, and subject to other parameters in
-  the report_timing option, the report would be run at minutes 1, 2, 5, and
+  the `report_timing` option, the report would be run at minutes 1, 2, 5, and
   9 and 0, 1, 2, 3, 4, 8, 9, 10, 11, and 12 respectively. Abbreviated month
   and day names cannot be used in a list.
 
@@ -222,7 +222,7 @@ Lists, ranges, and steps may be used as follows:
   The specified range is inclusive. A match with any of the values included
   in the range will result in a match for that particular parameter. If the
   example was applied to the hours parameter, and subject to other parameters
-  in the report_timing option, the report would be run at hours 8, 9, 10, and
+  in the `report_timing` option, the report would be run at hours 8, 9, 10, and
   11. A range may be included as an element of a list. Abbreviated month and
   day names cannot be used in a range.
 
@@ -230,131 +230,157 @@ Lists, ranges, and steps may be used as follows:
   denoted by a '/' followed by a number. Following a range with a step
   specifies skips of the step number's value through the range. For example,
   `0-12/2` used in the hours parameter would, subject to other parameter in the
-  report_timing option, run the report at hours 0, 2, 4, 6, 8, and 12. Steps
+  `report_timing` option, run the report at hours 0, 2, 4, 6, 8, and 12. Steps
   are also permitted after an asterisk in which case the skips of the step
   number's value occur through the all possible values of the parameter. For
   example, `*/3` can be used in the hours parameter to, subject to other
-  parameter in the report_timing option, run the report at hours 0, 3, 6,
+  parameter in the `report_timing` option, run the report at hours 0, 3, 6,
   9, 12, 15, 18, and 21.
 
 ### Nicknames
 
-The report_timing option supports a number of time specification 'nicknames'.
+The `report_timing` option supports a number of time specification 'nicknames'.
 These nicknames are prefixed by the '@' character and replace the five
-parameters in the report_timing option. The nicknames supported are:
+parameters in the `report_timing` option. The nicknames supported are:
 
 <table>
-<tr>
+<tr class="first_row">
 <td>Nickname</td>
 <td>Equivalent setting</td>
 <td>When the report will be run</td>
 </tr>
 <tr>
-<td>@yearly<br/>@annually</td>
-<td>0 0 1 1 *</td>
+<td class="code">@yearly<br/>@annually</td>
+<td class="code">0 0 1 1 *</td>
 <td>Once per year at midnight on 1 January.</td>
 </tr>
 <tr>
-<td>@monthly</td>
-<td>0 0 1 * *</td>
+<td class="code">@monthly</td>
+<td class="code">0 0 1 * *</td>
 <td>Monthly at midnight on the 1st of the month.</td>
 </tr>
 <tr>
-<td>@weekly</td>
-<td>0 0 * * 0</td>
+<td class="code">@weekly</td>
+<td class="code">0 0 * * 0</td>
 <td>Every week at midnight on Sunday.</td>
 </tr>
 <tr>
-<td>@daily</td>
-<td>0 0 * * *</td>
+<td class="code">@daily</td>
+<td class="code">0 0 * * *</td>
 <td>Every day at midnight.</td>
 </tr>
 <tr>
-<td>@hourly</td>
-<td>0 * * * *</td>
+<td class="code">@hourly</td>
+<td class="code">0 * * * *</td>
 <td>Every hour on the hour.</td>
 </tr>
 </table>
 
+### `@createIfMissing` option
 
-### Examples of report_timing
-
-Numeric settings for report_timing can be at times difficult to understand due
-to the complex combinations of parameters. The following table shows a number
-of example report_timing options and the corresponding times when the report
-would be run.
+`report_timing` supports the `@createIfMissing` option that allows reports
+to run if files that would have been created during report generation
+are missing, or if the modified times on report files are older than
+template files in the skin directory.
 
 <table>
-<tr>
-<td>report_timing</td>
+<tr class="first_row">
+<td><span class="code">report_timing</span></td>
 <td>When the report will be run</td>
 </tr>
 <tr>
-<td>* * * * *</td>
+<td class="code">0 * 1 * 0,3</td>
+<td>On the hour on the first of the month and on the hour every Sunday and Wednesday unless the report files are missing or the template files are newer.</td>
+</tr>
+<tr>
+<td class="code">@monthly, @createIfMissing</td>
+<td>On the first day of every month unless the report files are missing or the template files are newer.</td>
+</tr>
+<tr>
+<td class="code">@yearly, @createIfMissing</td>
+<td>On the first day of the year unless the report files are missing or the template files are newer.</td>
+</tr>
+</table>
+
+### Examples of `report_timing`
+
+Numeric settings for `report_timing` can be at times difficult to understand due
+to the complex combinations of parameters. The following table shows a number
+of example `report_timing` options and the corresponding times when the report
+would be run.
+
+<table>
+<tr class="first_row">
+<td><span class="code">report_timing</span></td>
+<td>When the report will be run</td>
+</tr>
+<tr>
+<td class="code">* * * * *</td>
 <td>Every archive period. This setting is effectively the default WeeWX method of operation.</td>
 </tr>
 <tr>
-<td>25 * * * *</td>
+<td class="code">25 * * * *</td>
 <td>25 minutes past every hour.</td>
 </tr>
 <tr>
-<td>0 * * * *</td>
+<td class="code">0 * * * *</td>
 <td>Every hour on the hour.</td>
 </tr>
 <tr>
-<td>5 0 * * *</td>
+<td class="code">5 0 * * *</td>
 <td>00:05 daily.</td>
 </tr>
 <tr>
-<td>25 16 * * *</td>
+<td class="code">25 16 * * *</td>
 <td>16:25 daily.</td>
 </tr>
 <tr>
-<td>25 16 1 * *</td>
+<td class="code">25 16 1 * *</td>
 <td>16:25 on the 1st of each month.</td>
 </tr>
 <tr>
-<td>25 16 1 2 *</td>
+<td class="code">25 16 1 2 *</td>
 <td>16:25 on the 1st of February.</td>
 </tr>
 <tr>
-<td>25 16 * * 0</td>
+<td class="code">25 16 * * 0</td>
 <td>1:25 each Sunday.</td>
 </tr>
 <tr>
-<td>*/10 * * * *</td>
+<td class="code">*/10 * * * *</td>
 <td>On the hour and 10, 20, 30, 40 and 50 mnutes past the hour.</td>
 </tr>
 <tr>
-<td>*/9 * * * *</td>
+<td class="code">*/9 * * * *</td>
 <td>On the hour and 9, 18, 27, 36, 45 and 54 minutes past the hour.</td>
 </tr>
 <tr>
-<td>*/10 */2 * * *</td>
+<td class="code">*/10 */2 * * *</td>
 <td>0, 10, 20, 30, 40 and 50 minutes after the even hour.</td>
 </tr>
 <tr>
-<td>* 6-17 * * *</td>
+<td class="code">* 6-17 * * *</td>
 <td>Every archive period from 06:00 (inclusive) up until, but excluding, 18:00.</td>
 </tr>
 <tr>
-<td>* 1,4,14 * * *</td>
-<td>Every archive period in the hour starting 01:00 to 01:59, 04:00 to 04:59 amd 14:00 to 14:59 (Note excludes report times at 02:00, 05:00 and 15:00).</td>
+<td class="code">* 1,4,14 * * *</td>
+<td>Every archive period in the hour starting 01:00 to 01:59, 04:00 to 04:59, 
+and 14:00 to 14:59 (Note excludes report times at 02:00, 05:00 and 15:00).</td>
 </tr>
 <tr>
-<td>0 * 1 * 0,3</td>
+<td class="code">0 * 1 * 0,3</td>
 <td>On the hour on the first of the month and on the hour every Sunday and Wednesday.</td>
 </tr>
 <tr>
-<td>* * 21,1-10/3 6 *</td>
+<td class="code">* * 21,1-10/3 6 *</td>
 <td>Every archive period on the 1st, 4th, 7th, 10th and 21st of June.</td>
 </tr>
 <tr>
-<td>@monthly</td>
+<td class="code">@monthly</td>
 <td>Midnight on the 1st of the month.</td>
 </tr>
 </table>
 
-### The `weectl report run` utility and the report_timing option
+### The `weectl report run` utility and the `report_timing` option
 
 The `report_timing` option is ignored when using the `weectl report run` utility.

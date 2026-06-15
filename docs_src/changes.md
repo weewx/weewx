@@ -7,6 +7,11 @@ Added utility `weectl rest`, which allows selective uploading to RESTful
 services. [PR #1100](https://github.com/weewx/weewx/pull/1100). Thanks to
 user Jari!
 
+Added `@createIfMissing` option for `report_timing` handling so that report
+generation will be allowed if there are missing report files or if the modified
+times of templates are newer than generated files. [PR
+#1097](https://github.com/weewx/weewx/pull/1097). Thanks to user evilbunny2008.
+
 Added Catalan translation. [PR #1087](https://github.com/weewx/weewx/pull/1087).
 Thanks to user Ferran!
 
