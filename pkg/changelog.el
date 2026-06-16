@@ -1,3 +1,5 @@
+* Tue Jun 16 2026 Tom Keffer (Author of WeeWX) <tkeffer@gmail.com> - 5.4.0-1
+- new upstream release
 * Tue Mar 03 2026 Tom Keffer (Author of WeeWX) <tkeffer@gmail.com> - 5.3.1-1
 - Support Python 3.6, 3.7, 3.8,
 * Sun Mar 01 2026 Tom Keffer (Author of WeeWX) <tkeffer@gmail.com> - 5.3.0-1

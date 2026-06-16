@@ -1,7 +1,7 @@
 WeeWX change history
 --------------------
 
-### 5.4.0 MM/DD/YYYY
+### 5.4.0 06/16/2026
 
 Added utility `weectl rest`, which allows selective uploading to RESTful
 services. [PR #1100](https://github.com/weewx/weewx/pull/1100). Thanks to
@@ -10,7 +10,7 @@ user Jari!
 Added `@createIfMissing` option for `report_timing` handling so that report
 generation will be allowed if there are missing report files or if the modified
 times of templates are newer than generated files. [PR
-#1097](https://github.com/weewx/weewx/pull/1097). Thanks to user evilbunny2008.
+#1097](https://github.com/weewx/weewx/pull/1097). Thanks to user evilbunny2008!
 
 Added Catalan translation. [PR #1087](https://github.com/weewx/weewx/pull/1087).
 Thanks to user Ferran!
@@ -19,11 +19,11 @@ Initialize the widgets in the Seasons skin as soon as the DOM is ready.
 
 Example `xstats.py` had nonsensical time context values. Fixed in 
 [PR #1072](https://github.com/weewx/weewx/pull/1072). Thanks to user 
-evilbunny2008. 
+evilbunny2008!
 
 Added Cheetah generator seasons timespans `$season`, `$seasonsyear`, and seasons
 iterator `.seasons`. [PR #1095](https://github.com/weewx/weewx/pull/1095).
-Thanks to user roe-dl.
+Thanks to user roe-dl!
 
 Prevent `AttributeError` when the `weectl` command is run without a subcommand.
 
@@ -34,7 +34,8 @@ Use better measure of system uptime.
 Fix problem that prevented table headers from appearing in the Seasons's 
 statistics page.
 
-Fix problem with Acurite usb failures in newer kernels. [PR #1080](https://github.com/weewx/weewx/pull/1080)
+Fix problem with Acurite usb failures in newer kernels.
+[PR #1080](https://github.com/weewx/weewx/pull/1080)
 
 Allow duration notation to be used with option `x_interval`.
 

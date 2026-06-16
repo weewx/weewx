@@ -1,5 +1,5 @@
 [project]
-site_name = "WeeWX 5.3"
+site_name = 'WeeWX 5.4'
 site_url = "https://www.weewx.com"
 site_author = "Tom Keffer <tkeffer@gmail.com>"
 repo_url = "https://github.com/weewx/weewx"
