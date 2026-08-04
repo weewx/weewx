@@ -142,6 +142,10 @@ class POST_LOOP:
     into this to access the console for things other than generating LOOP
     packet."""
 
+class SHUTDOWN:
+    """Event issued right as the engine shut downs, prior to the services shutDown method invocation. 
+    The event contains attribute 'error', a dictionary. If this shut down is due to an exception,
+    it contains the keys 'exception' and 'stacktrace', otherwise it is empty. """
 
 # =============================================================================
 #                       Service groups.
