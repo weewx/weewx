@@ -1,6 +1,14 @@
 WeeWX change history
 --------------------
 
+### 5.5.0 MM/DD/YYYY
+
+Added the ability for services to bind to a `SHUTDOWN` event. This allows
+services to be notified when `weewxd` is being shutdown. 
+[PR #1106](https://github.com/weewx/weewx/issues/1106). Thanks to user
+Rich Bell!
+
+
 ### 5.4.1 MM/DD/YYYY
 
 Fix problem where `[StdReport]` does not include `HTML_ROOT`. Fixes 

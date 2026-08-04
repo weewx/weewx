@@ -217,8 +217,8 @@ class StdEngine:
                     # Send out an event saying the packet LOOP is done:
                     self.dispatchEvent(weewx.Event(weewx.POST_LOOP))
 
-        # We are catching BaseException so that we can capture the exception and pass it services via the SHUTDOWN event
-        # We will then reraise it so that weewxd can handle it.
+        # We are catching BaseException so that we can capture the exception and pass it services
+        # via the SHUTDOWN event. We will then reraise it so that weewxd can handle it.
         # Although not the same as a finally block, this is the only way to capture the exception.
         except BaseException as exception:
             # The main loop has exited. Shut the engine down.
