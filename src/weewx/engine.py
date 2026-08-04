@@ -245,10 +245,12 @@ class StdEngine:
                 # Call the function with the event as an argument:
                 callback(event)
 
-    def shutDown(self, exception):
+    def shutDown(self, exception=None):
         """Run when an engine shutdown is requested."""
 
-        stacktrace = traceback.format_exc()
+        stacktrace = None
+        if exception:
+            stacktrace = traceback.format_exc()
         
         # Shut down all the services
         while self.service_obj:
