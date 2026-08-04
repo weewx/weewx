@@ -248,10 +248,18 @@ class StdEngine:
     def shutDown(self, exception=None):
         """Run when an engine shutdown is requested."""
 
-        stacktrace = None
+        # Send out an event saying the engine is shutting down.
+        error = {}
         if exception:
-            stacktrace = traceback.format_exc()
-        
+            error = {
+                "exception": exception,
+                "stacktrace": traceback.format_exc()
+            }
+        try:
+            self.dispatchEvent(weewx.Event(weewx.SHUTDOWN, error=error))
+        except:
+            pass
+
         # Shut down all the services
         while self.service_obj:
             # Wrap each individual service shutdown, in case of a problem.
