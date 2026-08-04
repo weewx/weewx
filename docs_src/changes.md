@@ -111,14 +111,14 @@ desiring size reduction are advised to consider manually migrating.
 Fix problem that prevented `weectl database reconfigure` from working in cases
 where a schema was specified.
 
-Fix problem when importing data into a MySQL database. PR
-[#1025](https://github.com/weewx/weewx/pull/1025). Thanks to user Robert!
+Fix problem when importing data into a MySQL database.
+[PR #1025](https://github.com/weewx/weewx/pull/1025). Thanks to user Robert!
 
 Fix problem that prevented `weewxd` from restarting reliably if a MySQL
 connection was lost. Fixes [Issue #1036](https://github.com/weewx/weewx/issues/1036).
 
-Add support for kwargs when using `.series()` tags. PR
-[#1042](https://github.com/weewx/weewx/pull/1042). 
+Add support for kwargs when using `.series()` tags.
+[PR #1042](https://github.com/weewx/weewx/pull/1042). 
 
 Documentation now uses [Zensical](https://zensical.org/).
 
@@ -131,8 +131,8 @@ Fix problem that caused expanded substitutions to be saved when using
 
 Now require Python 3.7 or greater.
 
-Added support for WOW-BE. PR [#1014](https://github.com/weewx/weewx/pull/1014).
-Fixes issue [#1013](https://github.com/weewx/weewx/issues/1013). Thanks to user
+Added support for WOW-BE. [PR #1014](https://github.com/weewx/weewx/pull/1014).
+Fixes [Issue #1013](https://github.com/weewx/weewx/issues/1013). Thanks to user
 John!
 
 Module `schema` is now under module `weewx. This lessens pollution of the Python
@@ -157,8 +157,8 @@ Fix bug that prevented relative paths to the config file from working.
 Allow simple Python objects to be used as an argument to `$jsonize()`.
 
 Adjust exclusion of top-level files in wheel creation to meet poetry
-norms and to be consistent across poetry-core versions.  Fixes issue
-[#993](https://github.com/weewx/weewx/issues/993), in part.
+norms and to be consistent across poetry-core versions.  Fixes
+[Issue #993](https://github.com/weewx/weewx/issues/993), in part.
 
 Fix problem that prevented cached values of first and last timestamp from
 being set. [PR #999](https://github.com/weewx/weewx/pull/999). Thanks to user
@@ -192,7 +192,7 @@ If option `lang` is a valid locale, then it will be used to change locale as
 well as language. If it is not a valid locale, then the user's default locale
 will be used. For example, if `lang=de_DE.utf8`, then the German locale will be
 used. This allows locales to be set on a report-by-report basis. Addresses
-issue [#867](https://github.com/weewx/weewx/issues/867).
+[Issue #867](https://github.com/weewx/weewx/issues/867).
 
 Allow country codes to be used in addition to a language code. For example,
 `zh_CN` would specify Chinese language, mainland China (Simplified Chinese),
@@ -202,26 +202,26 @@ Added translation file for Simplified Chinese (`zh_CN.conf`). Thanks to user
 Kranz!
 
 Allow the utility `weectl import` to update old records in addition to
-importing new records. PR [#930](https://github.com/weewx/weewx/issues/930).
+importing new records. [PR #930](https://github.com/weewx/weewx/issues/930).
 
-Include the effective user and group to the log. PR
-[#934](https://github.com/weewx/weewx/issues/934).
+Include the effective user and group to the log.
+[PR #934](https://github.com/weewx/weewx/issues/934).
 
-Allow extra command line options to be passed on to `rsync`. Fixes issue
-[#951](https://github.com/weewx/weewx/issues/951).
+Allow extra command line options to be passed on to `rsync`. Fixes
+[Issue #951](https://github.com/weewx/weewx/issues/951).
 
 Return `False` from XTypes function `has_data()` if the type cannot be
-calculated. Thanks to Rich Bell! PR
-[#929](https://github.com/weewx/weewx/issues/929).
+calculated. Thanks to Rich Bell!
+[PR #929](https://github.com/weewx/weewx/issues/929).
 
 Allow calculation of xtype aggregate with missing constituents.
-Related to PR [#929](https://github.com/weewx/weewx/issues/929).
+Related to [PR #929](https://github.com/weewx/weewx/issues/929).
 
 Fix bug in tag `$tag.obstype` where `obstype` is an XType that cannot be
-calculated. Related to PR [#929](https://github.com/weewx/weewx/issues/929).
+calculated. Related to [PR #929](https://github.com/weewx/weewx/issues/929).
 
 Fix bug that caused the `loop_on_init` setting in `weewx.conf` to be ignored.
-PR [#935](https://github.com/weewx/weewx/issues/935).
+[PR #935](https://github.com/weewx/weewx/issues/935).
 
 Reinstate file `weeutil/timediff.py`. It's not used in WeeWX, but it is used
 by some extensions.
@@ -229,14 +229,14 @@ by some extensions.
 Fixed bug in station config where `config_units()` would fail if there was no
 `[[Defaults]]` section specified in `[StdReport]`.
 
-Use lower-case for the product and vendor codes in udev rules. Fixes issue 
-[#949](https://github.com/weewx/weewx/issues/949).
+Use lower-case for the product and vendor codes in udev rules. Fixes 
+[Issue #949](https://github.com/weewx/weewx/issues/949).
 
 Do not make group changes if identity of user doing the install cannot be
-determined. PR [#952](https://github.com/weewx/weewx/issues/952).
+determined. [PR #952](https://github.com/weewx/weewx/issues/952).
 
 For deb/rpm installs, set permissions on the configuration file to be not
-world-readable. PR [#948](https://github.com/weewx/weewx/issues/948).
+world-readable. [PR #948](https://github.com/weewx/weewx/issues/948).
 
 
 ### 5.0.2 02/10/2024
@@ -253,7 +253,7 @@ Fix problem with installing extensions into installations that used V4 config
 files that were installed by a package installer.
 
 Fix problem with `weectl device` when using drivers that were installed 
-using the extension installer. Fixes issue [#918](https://github.com/weewx/weewx/issues/918).
+using the extension installer. Fixes [Issue #918](https://github.com/weewx/weewx/issues/918).
 
 Fix problem that prevented daily summaries from being rebuilt if they had been
 modified by using `weectl database drop-columns`.
@@ -265,8 +265,8 @@ Fix problem that prevented debug statements from being logged.
 Minor corrections to the Norwegian translations. Thanks to user Aslak!
 PR #919.
 
-Change Chinese language code to `zh`. Fixes issue
-[#912](https://github.com/weewx/weewx/issues/).
+Change Chinese language code to `zh`. Fixes
+[Issue #912](https://github.com/weewx/weewx/issues/).
 
 Fix bug in redhat/suse scriptlet that incorrectly substituted `{weewx}`
 instead of `weewx` in the udev rules file.
@@ -307,7 +307,7 @@ https://weewx.com/docs.
 Package installs now use `systemd` instead of the old System V `/etc/init.d`.
 
 Allow `StdCalibrate` to operate only on LOOP packets, or only on archive
-records. Addresses issue [#895](https://github.com/weewx/weewx/issues/895).
+records. Addresses [Issue #895](https://github.com/weewx/weewx/issues/895).
 
 Removed all references to the deprecated package `distutils`, which is due to
 be removed in Python v3.12.
@@ -317,11 +317,11 @@ allows posting past-dated records.
 
 Method `ImageDraw.textsize()` and constants `ImageFont.LAYOUT_BASIC`, and
 `Image.ANTIALIAS` were deprecated in Pillow 9.2 (1-Jul-2022), then removed in
-Pillow 10.0 (1-Jul-2023). V5.0 replaces them with alternatives. Fixes
-issue [#884](https://github.com/weewx/weewx/issues/884).
+Pillow 10.0 (1-Jul-2023). V5.0 replaces them with alternatives. Fixes 
+[Issue #884](https://github.com/weewx/weewx/issues/884).
 
-Fix bug when using Pillow v9.5.0. Fixes issue 
-[#862](https://github.com/weewx/weewx/issues/862).
+Fix bug when using Pillow v9.5.0. Fixes 
+[Issue #862](https://github.com/weewx/weewx/issues/862).
 
 The *Standard* skin now uses the font `DejaVuSansMono-Bold` and includes a
 copy. Before, it had to rely on hardwired font paths, which were less reliable.
@@ -337,14 +337,14 @@ Station registration is delayed by a random length of time to avoid everyone
 hitting the server at the same time.
 
 Fix problem where aggregation of null wind directions returns 90° instead of
-null. Fixes issue [#849](https://github.com/weewx/weewx/issues/849).
+null. Fixes [Issue #849](https://github.com/weewx/weewx/issues/849).
 
 Fix wrong station type for Vantage `weectl device --info` query.
 
 Add retransmit information for Vantage `weectl device --info` query.
 
-Fix problem when setting Vantage repeater. Fixes issue 
-[#863](https://github.com/weewx/weewx/issues/863).
+Fix problem when setting Vantage repeater. Fixes 
+[Issue #863](https://github.com/weewx/weewx/issues/863).
 
 Detect "dash" values for rain-related measurements on Vantage stations.
 
@@ -352,13 +352,13 @@ Change aggregations `minsumtime` and `maxsumtime` to return start-of-day,
 rather than the time of max rainfall during the day.
 
 Relax requirement that column `dateTime` be the first column in the database.
-Fixes issue [#855](https://github.com/weewx/weewx/issues/855).
+Fixes [Issue #855](https://github.com/weewx/weewx/issues/855).
 
 Allow aggregation of xtypes that are not in the database schema.
-Fixes issue [#864](https://github.com/weewx/weewx/issues/864).
+Fixes [Issue #864](https://github.com/weewx/weewx/issues/864).
 
-Tag suffix `has_data()` now works for xtypes. Fixes issue 
-[#877](https://github.com/weewx/weewx/issues/877).
+Tag suffix `has_data()` now works for xtypes. Fixes 
+[Issue #877](https://github.com/weewx/weewx/issues/877).
 
 Additional shorthand notations for aggregation and trend intervals. For
 example, `3h` for three hours.
@@ -367,7 +367,7 @@ Accumulator `firstlast` no longer coerces values to a string. Thanks to user
 "Karen" for spotting this!
 
 Fix problem that caused crashes with `firstlast` accumulator type.
-Fixes issue [#876](https://github.com/weewx/weewx/issues/876).
+Fixes [Issue #876](https://github.com/weewx/weewx/issues/876).
 
 Fixed problem that prevented the astrometric heliocentric longitude of a body
 from being calculated properly.
@@ -381,18 +381,18 @@ avoid breaking old skins, these properties now have new names. For example,
 use `$almanac.venus.altitude` instead of `$almanac.venus.alt`. 
 
 Fix problem that prevented database from getting hit when calculating 
-`pressure`. Fixes issue [#875](https://github.com/weewx/weewx/issues/875).
+`pressure`. Fixes [Issue #875](https://github.com/weewx/weewx/issues/875).
 
 Fix problem that prevented option
 [`stale_age`](reference/skin-options/imagegenerator.md#stale_age) from being
 honored in image generation. Thanks to user Ian for
-PR [#879](https://github.com/weewx/weewx/pull/879)!
+[PR #879](https://github.com/weewx/weewx/pull/879)!
 
 Fix problem that prevented complex aggregates such as `max_ge` from being used
-in plots. Fixes issue [#881](https://github.com/weewx/weewx/issues/881).
+in plots. Fixes [Issue #881](https://github.com/weewx/weewx/issues/881).
 
-Updated humidex formula and reference. Fixes issue 
-[#883](https://github.com/weewx/weewx/issues/883).
+Updated humidex formula and reference. Fixes 
+[Issue #883](https://github.com/weewx/weewx/issues/883).
 
 Fix bugs in the "basic" skin example.
 
@@ -400,15 +400,15 @@ Fix bug that prevented calculating `$trend` when one of the two records is
 missing.
 
 Fix bug that caused the extension installer to crash if one of the service
-groups was missing in the configuration file. Fixes issue 
-[#886](https://github.com/weewx/weewx/issues/886).
+groups was missing in the configuration file. Fixes 
+[Issue #886](https://github.com/weewx/weewx/issues/886).
 
 New option [`retry_wait`](reference/weewx-options/general.md#retry_wait). If
 `weewxd` encounters a critical error, it will sleep this long before doing a
 restart.
 
 Change from old Google Analytics UA code to the GA4 tag system in the Standard
-and Seasons skins. Fixes issue [#892](https://github.com/weewx/weewx/issues/892).
+and Seasons skins. Fixes [Issue #892](https://github.com/weewx/weewx/issues/892).
 
 All `weectl import` sources now include support for a field map meaning any 
 source field can be imported to any WeeWX archive field.
