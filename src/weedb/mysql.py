@@ -40,6 +40,8 @@ exception_map = {
     1091: weedb.NoColumnError,
     1062: weedb.IntegrityError,
     1146: weedb.NoTableError,
+    1205: weedb.DatabaseLockedError,
+    1213: weedb.DatabaseLockedError,
     1927: weedb.CannotConnectError,
     2002: weedb.CannotConnectError,
     2003: weedb.CannotConnectError,

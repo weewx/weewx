@@ -380,16 +380,55 @@ class Manager:
             int: The number of successful insertions.
         """
 
-        # Determine if record_obj is just a single dictionary instance. If so, wrap it in
-        # something iterable (a list):
-        record_list = [record_obj] if isinstance(record_obj, dict) else record_obj
+        overall_min_ts = float('inf')  # A "big number"
+        overall_max_ts = 0
+        total_n = 0
 
-        min_ts = float('inf')  # A "big number"
+        for chunk in _gen_chunks(record_obj, 200):
+            n, min_ts, max_ts = self._add_with_retry(chunk, accumulator, progress_fn,
+                                                     log_success, log_failure, update, total_n)
+            total_n += n
+            overall_min_ts = min(overall_min_ts, min_ts)
+            overall_max_ts = max(overall_max_ts, max_ts)
+
+        # Update the cached timestamps. This has to sit outside the transaction context,
+        # in case an exception occurs.
+        if total_n > 0:
+            self.first_timestamp = overall_min_ts if self.first_timestamp is None \
+                else min(overall_min_ts, self.first_timestamp)
+            self.last_timestamp = overall_max_ts if self.last_timestamp is None \
+                else max(overall_max_ts, self.last_timestamp)
+
+        return total_n
+
+    def _add_with_retry(self, chunk, accumulator=None, progress_fn=None,
+                        log_success=True, log_failure=True, update=False, count=0):
+        """Add a chunk of records, retrying if a transient error occurs."""
+        max_attempts = 5
+        retry_wait = 0.5
+        for attempt in range(max_attempts):
+            try:
+                return self._add_chunk(chunk, accumulator, progress_fn,
+                                       log_success, log_failure, update, count)
+            except weedb.OperationalError as e:
+                if is_transient_error(e) and attempt < max_attempts - 1:
+                    # Retry with exponential backoff.
+                    delay = retry_wait * 2 ** attempt
+                    log.warning("Database is locked (attempt %d/%d). Retrying in %.2f seconds...",
+                                attempt + 1, max_attempts, delay)
+                    time.sleep(delay)
+                    continue
+                raise
+        raise RuntimeError("Retry loop exited unexpectedly")
+
+    def _add_chunk(self, chunk, accumulator=None, progress_fn=None,
+                   log_success=True, log_failure=True, update=False, count=0):
+        """Add a chunk of records in a single transaction."""
+        n = 0
+        min_ts = float('inf')
         max_ts = 0
-        N = 0
         with weedb.Transaction(self.connection) as cursor:
-
-            for record in record_list:
+            for record in chunk:
                 try:
                     # If the accumulator time matches the record we are working with,
                     # use it to update the highs and lows.
@@ -399,26 +438,18 @@ class Manager:
                     # Then add the record to the archives:
                     self._addSingleRecord(record, cursor, log_success, log_failure, update)
 
-                    N += 1
-                    if progress_fn and N % 1000 == 0:
-                        progress_fn(record['dateTime'], N)
+                    n += 1
+                    if progress_fn and (count + n) % 1000 == 0:
+                        progress_fn(record['dateTime'], count + n)
 
                     min_ts = min(min_ts, record['dateTime'])
                     max_ts = max(max_ts, record['dateTime'])
-                except (weedb.IntegrityError, weedb.OperationalError) as e:
+                except weedb.IntegrityError as e:
                     if log_failure:
                         log.error("Unable to add record %s to database '%s': %s",
                                   timestamp_to_string(record['dateTime']),
                                   self.database_name, e)
-
-        # Update the cached timestamps. This has to sit outside the transaction context,
-        # in case an exception occurs.
-        self.first_timestamp = min_ts if self.first_timestamp is None else min(min_ts,
-                                                                               self.first_timestamp)
-        self.last_timestamp = max_ts if self.last_timestamp is None else max(max_ts,
-                                                                             self.last_timestamp)
-
-        return N
+        return n, min_ts, max_ts
 
     def _addSingleRecord(self, record, cursor, log_success=True, log_failure=True, update=False):
         """Internal function for adding a single record to the main archive table."""
@@ -1682,6 +1713,33 @@ class DaySummaryManager(Manager):
         finally:
             if cursor is None:
                 _cursor.close()
+
+
+def is_transient_error(e):
+    """Return True if the exception is a transient error that can be retried."""
+    # We may come up with other transient errors in the future, but for now
+    # signal a database locked error.
+    return isinstance(e, weedb.DatabaseLockedError)
+
+
+def _gen_chunks(iterable, size):
+    """Generator that yields chunks of size 'size' from an iterable."""
+    # Check to make sure it isn't just a simple record.
+    # If so, wrap it in a list. That's your chunk.
+    if isinstance(iterable, dict):
+        yield [iterable]
+    elif isinstance(iterable, (list, tuple)):
+        for i in range(0, len(iterable), size):
+            yield iterable[i:i + size]
+    else:
+        chunk = []
+        for item in iterable:
+            chunk.append(item)
+            if len(chunk) >= size:
+                yield chunk
+                chunk = []
+        if chunk:
+            yield chunk
 
 
 if __name__ == '__main__':

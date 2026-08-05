@@ -8,6 +8,9 @@ services to be notified when `weewxd` is being shutdown.
 [PR #1106](https://github.com/weewx/weewx/issues/1106). Thanks to user
 Rich Bell!
 
+Added retry logic in case the database is locked. See `weewx-user` thread
+https://groups.google.com/g/weewx-user/c/9AIS1DRHl00.
+
 
 ### 5.4.1 MM/DD/YYYY
 

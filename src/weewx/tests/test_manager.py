@@ -18,10 +18,12 @@ It also tests the V4.3 and v4.4 patches.
 import datetime
 import logging
 import os
+import threading
 import time
 import pytest
 
 import gen_fake_data
+import weewx
 import weewx.schemas.wview_small
 import weedb
 import weeutil.logger
@@ -149,6 +151,62 @@ class TestMySQLWeights(CommonWeightTests):
                 pytest.skip(str(e))
 
         self.db_manager = setup_database(db_dict_mysql)
+
+
+class TestRetry:
+    def test_locked_retry(self, tmp_path):
+        # Create a file-based database
+        db_path = str(tmp_path / "test_retry.sdb")
+        db_dict = {
+            'driver': 'weedb.sqlite',
+            'database_name': db_path,
+        }
+
+        # Setup the database
+        setup_database(db_dict)
+
+        # Lock release event
+        lock_released = threading.Event()
+
+        def lock_db():
+            # Open a direct connection to lock the database inside the thread
+            conn_lock = weedb.connect(db_dict)
+            # Use BEGIN IMMEDIATE to get a reserved lock immediately.
+            cursor = conn_lock.cursor()
+            cursor.execute("BEGIN IMMEDIATE")
+            cursor.execute("INSERT INTO archive (dateTime, usUnits, `interval`) VALUES (?, ?, ?)",
+                           (stop_ts + interval_secs, weewx.US, 5))
+            # Wait for 2 seconds before finishing the transaction (releasing the lock)
+            time.sleep(2)
+            conn_lock.commit()
+            cursor.close()
+            conn_lock.close()
+            lock_released.set()
+
+        # Start the locker thread
+        locker_thread = threading.Thread(target=lock_db)
+        locker_thread.start()
+
+        # Give the locker thread a head start to ensure it has the lock
+        time.sleep(0.5)
+
+        # Now try to add a record using the manager.
+        # We'll use a db_dict with timeout=0 to ensure we trigger the manager's retry logic
+        # rather than sqlite's internal retry.
+        db_dict_no_timeout = db_dict.copy()
+        db_dict_no_timeout['timeout'] = 0
+        db_manager_retry = weewx.manager.DaySummaryManager.open(db_dict_no_timeout)
+
+        record = {'dateTime': stop_ts + 2 * interval_secs, 'usUnits': weewx.US, 'interval': 5}
+        # This should trigger the retry logic, wait, and eventually succeed.
+        db_manager_retry.addRecord(record)
+
+        locker_thread.join()
+        assert lock_released.is_set()
+
+        # Verify the record was added
+        result = db_manager_retry.getSql("SELECT COUNT(*) FROM archive WHERE dateTime = ?", (record['dateTime'],))
+        assert result[0] == 1
 
 
 def setup_database(db_dict):

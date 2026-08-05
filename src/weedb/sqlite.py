@@ -48,6 +48,8 @@ def guard(fn):
                 raise weedb.TableExistsError(e)
             elif msg.startswith("no such column"):
                 raise weedb.NoColumnError(e)
+            elif "database is locked" in msg:
+                raise weedb.DatabaseLockedError(e)
             else:
                 raise weedb.OperationalError(e)
         except sqlite3.ProgrammingError as e:
