@@ -268,6 +268,9 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         # Use the generator function
         for timespan in _spangen(start_ts, stop_ts):
+            if self.stop_event and self.stop_event.is_set():
+                log.debug("Stop event set. Stopping template '%s'", template)
+                return ngen
             start_tt = time.localtime(timespan.start)
             stop_tt = time.localtime(timespan.stop)
 

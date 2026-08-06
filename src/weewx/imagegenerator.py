@@ -76,6 +76,10 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
             # Now, loop over all plot names in this time span class:
             for plotname in self.image_dict[timespan].sections:
 
+                if self.stop_event and self.stop_event.is_set():
+                    log.debug("Stop event set. Stopping plot '%s'", plotname)
+                    return
+
                 # Accumulate all options from parent nodes:
                 plot_options = accumulateLeaves(self.image_dict[timespan][plotname])
 

@@ -11,6 +11,9 @@ Rich Bell!
 Added retry logic in case the database is locked. See `weewx-user` thread
 https://groups.google.com/g/weewx-user/c/9AIS1DRHl00.
 
+Pass a terminate event flag to the thread running StdReport. Generators look to
+this flag and finish immediately if it is set.
+
 
 ### 5.4.1 MM/DD/YYYY
 

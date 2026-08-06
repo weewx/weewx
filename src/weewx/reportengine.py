@@ -122,7 +122,13 @@ class StdReportEngine(threading.Thread):
     See below for examples of generators.
     """
 
-    def __init__(self, config_dict, stn_info, record=None, gen_ts=None, first_run=True):
+    def __init__(self,
+                 config_dict,
+                 stn_info,
+                 record=None,
+                 gen_ts=None,
+                 first_run=True,
+                 stop_event = None):
         """Initializer for the report engine.
 
         Args:
@@ -134,6 +140,7 @@ class StdReportEngine(threading.Thread):
                 [Optional; default is the last time in the database]
             first_run(bool): True if this is the first time the report engine has been
                 run.  If this is the case, then any 'one time' events should be done.
+            stop_event(threading.Event): When set, stop the reporting thread.
         """
         threading.Thread.__init__(self, name="ReportThread")
 
@@ -142,6 +149,7 @@ class StdReportEngine(threading.Thread):
         self.record = record
         self.gen_ts = gen_ts
         self.first_run = first_run
+        self.stop_event = stop_event
 
     def run(self, reports=None):
         """This is where the actual work gets done.
@@ -229,7 +237,10 @@ class StdReportEngine(threading.Thread):
                 if 'Generators' in skin_dict and 'generator_list' in skin_dict['Generators']:
                     for generator in weeutil.weeutil.option_as_list(
                             skin_dict['Generators']['generator_list']):
-
+                        # Return if we have been told to stop the thread.
+                        if self.stop_event and self.stop_event.is_set():
+                            log.debug("Stop event is set. Stopping generator '%s'", generator)
+                            return
                         try:
                             # Instantiate an instance of the class.
                             obj = weeutil.weeutil.get_object(generator)(
@@ -238,7 +249,8 @@ class StdReportEngine(threading.Thread):
                                 self.gen_ts,
                                 self.first_run,
                                 self.stn_info,
-                                self.record)
+                                self.record,
+                                self.stop_event)
                         except Exception as e:
                             log.error("Unable to instantiate generator '%s'", generator)
                             log.error("        ****  %s", e)
@@ -469,13 +481,33 @@ def merge_lang(lang_spec, config_dict, report, skin_dict):
 class ReportGenerator:
     """Base class for all report generators."""
 
-    def __init__(self, config_dict, skin_dict, gen_ts, first_run, stn_info, record=None):
+    def __init__(self, config_dict,
+                 skin_dict,
+                 gen_ts,
+                 first_run,
+                 stn_info,
+                 record=None,
+                 stop_event=None):
+        """
+        Parameters:
+            config_dict(dict): The configuration dictionary.
+            skin_dict (dict): The skin dictionary with detailed information about
+                skins to be applied.
+            gen_ts (int): The generation timestamp in seconds since the epoch.
+            first_run (bool): Indicates whether this is the first run of the instance.
+            stn_info(StationInfo): An instance of weewx.station.StationInfo, with static
+                  station information.
+            record(dict|None): The current archive record [Optional; default is None]
+            stop_event (threading.Event|None): An optional threading event. If set, the
+             report generator should exit as soon as possible. Default is None.
+        """
         self.config_dict = config_dict
         self.skin_dict = skin_dict
         self.gen_ts = gen_ts
         self.first_run = first_run
         self.stn_info = stn_info
         self.record = record
+        self.stop_event = stop_event
         self.db_binder = weewx.manager.DBBinder(self.config_dict)
 
     def start(self):

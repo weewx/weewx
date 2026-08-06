@@ -865,6 +865,7 @@ class StdReport(StdService):
         self.thread = None
         self.launch_time = None
         self.record = None
+        self.stop_event = threading.Event()
 
         # check if pyephem is installed and make a suitable log entry
         try:
@@ -900,7 +901,8 @@ class StdReport(StdService):
             self.thread = weewx.reportengine.StdReportEngine(self.config_dict,
                                                              self.engine.stn_info,
                                                              self.record,
-                                                             first_run=not self.launch_time)
+                                                             first_run=not self.launch_time,
+                                                             stop_event=self.stop_event)
             self.thread.start()
             self.launch_time = time.time()
         except threading.ThreadError:
@@ -910,6 +912,9 @@ class StdReport(StdService):
     def shutDown(self):
         if self.thread:
             log.info("Shutting down StdReport thread")
+            # Ask the thread to stop
+            self.stop_event.set()
+            # Wait up to 20 seconds, clean up, then return
             self.thread.join(20.0)
             if self.thread.is_alive():
                 log.error("Unable to shut down StdReport thread")
@@ -917,3 +922,4 @@ class StdReport(StdService):
                 log.debug("StdReport thread has been terminated")
         self.thread = None
         self.launch_time = None
+        self.stop_event = None
