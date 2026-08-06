@@ -1,7 +1,7 @@
 WeeWX change history
 --------------------
 
-### 5.5.0 MM/DD/YYYY
+### 5.5.0 6-Aug-2026
 
 Added the ability for services to bind to a `SHUTDOWN` event. This allows
 services to be notified when `weewxd` is being shutdown. 
@@ -13,9 +13,6 @@ https://groups.google.com/g/weewx-user/c/9AIS1DRHl00.
 
 Pass a terminate event flag to the thread running StdReport. Generators look to
 this flag and finish immediately if it is set.
-
-
-### 5.4.1 MM/DD/YYYY
 
 Fix problem where `[StdReport]` does not include `HTML_ROOT`. Fixes 
 [Issue #1082](https://github.com/weewx/weewx/issues/1082).

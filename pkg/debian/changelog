@@ -1,3 +1,6 @@
+weewx (5.5.0-1) unstable; urgency=low
+  * new upstream release
+ -- Tom Keffer (Author of WeeWX) <tkeffer@gmail.com>  Thu, 06 Aug 2026 12:20:49 -0700
 weewx (5.4.0-1) unstable; urgency=low
   * new upstream release
  -- Tom Keffer (Author of WeeWX) <tkeffer@gmail.com>  Tue, 16 Jun 2026 04:56:35 -0700
