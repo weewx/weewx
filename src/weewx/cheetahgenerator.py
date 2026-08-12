@@ -66,6 +66,8 @@ import unicodedata
 
 import Cheetah.Filters
 import Cheetah.Template
+import Cheetah.NameMapper
+import Cheetah.Parser
 
 import weedb
 import weeutil.logger
@@ -367,10 +369,10 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             else:
                 byte_string = unicode_string.encode(encoding)
 
-            # Finally, write the byte string to the target file
+            # Finally, write the byte string to the target file, by writing it to a temporary
+            # file first, then moving it over.
+            tmpname = _fullname + '.tmp'
             try:
-                # Write to a temporary file first
-                tmpname = _fullname + '.tmp'
                 # Open it in binary mode. We are writing a byte-string, not a string
                 with open(tmpname, mode='wb') as fd:
                     fd.write(byte_string)
@@ -384,7 +386,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     pass
 
             if weewx.debug >= 2:
-                log.debug("%s took %.2f s" % (template, time.time()-t1))
+                log.debug("%s took %.2f s", template, time.time()-t1)
 
         return ngen
 
