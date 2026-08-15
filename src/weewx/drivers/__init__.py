@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -15,34 +15,49 @@ class AbstractDevice:
 
     @property
     def hardware_name(self):
+        """Return an appropriate name for the hardware. This property function must be implemented
+        by the driver."""
         raise NotImplementedError("Property 'hardware_name' not implemented")
 
     @property
     def archive_interval(self):
+        """If the device supports hardware record generation, the driver should return the archive
+         interval in seconds. Otherwise, it should leave the function unimplemented."""
         raise NotImplementedError("Property 'archive_interval' not implemented")
 
+    def genArchiveRecords(self, lastgood_ts):
+        """If the device supports hardware record generation, the driver should implement a
+         generator function that returns all the archive records since a given time. Otherwise,
+         it should leave the function unimplemented."""
+        raise NotImplementedError("Method 'genArchiveRecords' not implemented")
+
     def genStartupRecords(self, last_ts):
+        """Similar to genArchiveRecords(), but used only on startup."""
         return self.genArchiveRecords(last_ts)
 
     def genLoopPackets(self):
+        """A required generator function that returns loop packets. They can either contain a full
+        set of observations, or just a subset."""
         raise NotImplementedError("Method 'genLoopPackets' not implemented")
 
-    def genArchiveRecords(self, lastgood_ts):
-        raise NotImplementedError("Method 'genArchiveRecords' not implemented")
-
     def getTime(self):
+        """If the hardware has an onboard clock, the driver should return its time in seconds
+         since the epoch. Otherwise, it should leave the function unimplemented."""
         raise NotImplementedError("Method 'getTime' not implemented")
 
     def setTime(self):
+        """If the hardware supports setting the time, the driver should set it to the current
+        time. Otherwise, it should leave the function unimplemented."""
         raise NotImplementedError("Method 'setTime' not implemented")
 
     def closePort(self):
+        """Close whatever connection exists between the driver and the hardware."""
         pass
 
 
 class AbstractConfigurator:
     """The configurator class defines an interface for configuring devices.
-    Inherit from this class to provide a comman-line interface for setting
+    Inherit from this class to provide a command-line interface for setting
     up a device, querying device status, and other setup/maintenance
     operations.
 
