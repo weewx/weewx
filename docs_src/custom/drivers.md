@@ -51,11 +51,11 @@ It should return a string with a short nickname for the hardware, such as
 #### genLoopPackets ()
 
 This should be a
-Python [generator function](https://wiki.python.org/moin/Generators) that yields
-loop packets, one after another. Don't worry about stopping it: the engine will
-do this when an archive record is due. A "loop packet" is a dictionary. At the
-very minimum it must contain keys for the observation time and for the units
-used within the packet.
+Python [generator function](https://docs.python.org/3/reference/expressions.html#yieldexpr)
+that yields loop packets, one after another. Don't worry about stopping it: the
+engine will do this when an archive record is due. A "loop packet" is a
+dictionary. At the very minimum it must contain keys for the observation time
+and for the units used within the packet.
 
 <table>
     <caption>Required keys</caption>
@@ -70,7 +70,7 @@ used within the packet.
 The unit system used. <span class="code">weewx.US</span> for US customary,
 <span class="code">weewx.METRICWX</span>, or
 <span class="code">weewx.METRIC</span> for metric. See the
-<a href="../../reference/units"><em>Units</em></a> for their exact definitions.
+<a href="../reference/units"><em>Units</em></a> for their exact definitions.
 The dictionaries <span class="code">USUnits</span>,
 <span class="code">MetricWXUnits</span>, and
 <span class="code">MetricUnits</span> in file
