@@ -1915,7 +1915,7 @@ def get_resource_path(package, resource):
         return importlib_resources.path(package, resource)
     else:
         # For later versions...
-        return importlib_resources.as_file(importlib_resources.files(package).joinpath(resource))
+        return importlib_resources.as_file(importlib_resources.files(package).joinpath(resource)) # novermin
 
 
 def get_resource_fd(package, resource):
@@ -1927,7 +1927,7 @@ def get_resource_fd(package, resource):
         return importlib_resources.open_text(package, resource)
     else:
         # For later versions...
-        return importlib_resources.files(package).joinpath(resource).open('r')
+        return importlib_resources.files(package).joinpath(resource).open('r') # novermin
 
 
 if __name__ == '__main__':

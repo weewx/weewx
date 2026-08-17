@@ -47,6 +47,7 @@ all: help
 
 help: info
 	@echo "options include:"
+	@echo "  help-release  display targets for release process"
 	@echo "          info  display values of variables we care about"
 	@echo "       version  get version from pyproject.toml and insert elsewhere"
 	@echo ""
@@ -184,6 +185,13 @@ test-clean:
 	rm -rf $(TESTDIR)
 	echo $(MYSQLCLEAN) | mysql --user=weewx --password=weewx --force >/dev/null 2>&1
 
+
+###############################################################################
+## Lint targets
+
+# Determine Python compatibility. Requires installation of vermin. "pip install vermin"
+vermin:
+	vermin --target=3.7 --backport argparse --backport importlib -vvv --violations src
 
 ###############################################################################
 ## release management targets
