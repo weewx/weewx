@@ -1279,7 +1279,11 @@ class CWOPThread(RESTThread):
 
         # Time:
         _time_tt = time.gmtime(record['dateTime'])
-        _time_str = time.strftime("@%d%H%Mz", _time_tt)
+        # Data Type Identifier '/' = position with timestamp, no APRS
+        # messaging. An unattended weather station cannot answer APRS
+        # messages, so it should not advertise itself as messaging-capable
+        # by using '@' (position with timestamp, WITH messaging).
+        _time_str = time.strftime("/%d%H%Mz", _time_tt)
 
         # Position:
         _lat_str = weeutil.weeutil.latlon_string(self.latitude,

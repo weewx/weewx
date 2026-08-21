@@ -1,6 +1,11 @@
 WeeWX change history
 --------------------
 
+### 5.5.n n-Month-2026
+
+Removed the APRS "messaging-capable" packet flag from `restx.py`.
+[PR #1108](https://github.com/weewx/weewx/pull/1108), by `W0CHP`.
+
 ### 5.5.0 6-Aug-2026
 
 Added the ability for services to bind to a `SHUTDOWN` event. This allows
