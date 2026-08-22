@@ -65,6 +65,8 @@ install:
 	cp $(SRC)/pkg/etc/systemd/system/weewx@.service $(DST_CFGDIR)/systemd
 	mkdir $(DST_CFGDIR)/udev
 	cp $(SRC)/pkg/etc/udev/rules.d/weewx.rules $(DST_CFGDIR)/udev
+	mkdir $(DST_CFGDIR)/bash_completion.d
+	cp $(SRC)/pkg/etc/bash_completion.d/weectl $(DST_CFGDIR)/bash_completion.d
 
 # create the configuration file
 	sed \

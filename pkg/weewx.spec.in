@@ -133,6 +133,8 @@ cp pkg/etc/systemd/system/weewx.service %{buildroot}%{dst_cfg_dir}/systemd
 cp pkg/etc/systemd/system/weewx@.service %{buildroot}%{dst_cfg_dir}/systemd
 mkdir %{buildroot}%{dst_cfg_dir}/udev
 cp pkg/etc/udev/rules.d/weewx.rules %{buildroot}%{dst_cfg_dir}/udev
+mkdir %{buildroot}%{dst_cfg_dir}/bash_completion.d
+cp pkg/etc/bash_completion.d/weectl %{buildroot}%{dst_cfg_dir}/bash_completion.d
 
 # create the weewx configuration
 sed \
@@ -493,6 +495,10 @@ if [ "$1" = "0" ]; then
   # remove udev rules
   if [ -f %{udev_dir}/60-weewx.rules ]; then
       rm -f %{udev_dir}/60-weewx.rules
+  fi
+  # remove weectl bash completion
+  if [ -f /etc/bash_completion.d/weectl ]; then
+      rm -f /etc/bash_completion.d/weectl
   fi
   # remove any bytecompiled code
   find /usr/share/weewx -name '*.pyc' -delete

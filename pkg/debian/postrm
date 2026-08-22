@@ -55,6 +55,10 @@ remove)
         echo "Removing udev rules"
         rm -f $dst/60-weewx.rules
     fi
+    if [ -f /etc/bash_completion.d/weectl ]; then
+        echo "Removing bash completion"
+        rm -f /etc/bash_completion.d/weectl
+    fi
     ;;
 
 purge)
