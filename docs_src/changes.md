@@ -7,7 +7,7 @@ Removed the APRS "messaging-capable" packet flag from `restx.py`.
 [PR #1108](https://github.com/weewx/weewx/pull/1108), by `W0CHP`.
 
 Added a bash completion script for weectl.
-[PR #XXXX](https://github.com/weewx/weewx/pull/XXXX), by `evilbunny2008`.
+[PR #1110](https://github.com/weewx/weewx/pull/1110), by `evilbunny2008`.
 
 ### 5.5.0 6-Aug-2026
 
