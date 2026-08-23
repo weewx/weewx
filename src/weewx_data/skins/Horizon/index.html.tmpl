@@ -1,0 +1,177 @@
+## Copyright (c) 2026 the WeeWX contributors
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+#encoding UTF-8
+
+#set $periods = $to_list($DisplayOptions.get('periods', ['day', 'week', 'month', 'year']))
+#set $plot_groups = $to_list($DisplayOptions.get('plot_groups', ['tempdew', 'wind', 'rain']))
+#set $refresh = $to_int($DisplayOptions.get('refresh_interval', 60))
+
+<!DOCTYPE html>
+<html lang="$lang">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>$station.location</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="stylesheet" href="uplot.min.css">
+    <link rel="stylesheet" href="horizon.css">
+    #include "theme.inc"
+    #if $station.station_url
+    <link rel="canonical" href="$station.station_url/$filename">
+    #end if
+    <script>
+      /* Apply the saved theme before first paint, so the page never flashes. */
+      (function () {
+        try {
+          var t = localStorage.getItem('weewx.horizon.theme');
+          if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
+    #include "analytics.inc"
+  </head>
+
+  <body>
+    <div class="wrap">
+
+      <header class="masthead">
+        <div>
+          <h1>$station.location</h1>
+          <p class="updated">
+            <span class="visually-hidden">$gettext("Last update")</span>
+            <span data-live="dateTime" data-raw="$current.dateTime.raw">$current.dateTime</span>
+          </p>
+        </div>
+
+        <div class="masthead-tools">
+#set $languages = $DisplayOptions.get('Languages', {})
+#if len($languages) > 1
+## Paths in [[Languages]] are relative to the station's top directory. 'lang_root'
+## says how this particular rendering gets back up there, so a page in a
+## subdirectory links correctly in both directions.
+#set $lang_root = $DisplayOptions.get('lang_root', '.')
+          <label class="visually-hidden" for="lang-picker">$gettext("Language")</label>
+          <select id="lang-picker" class="lang-select"
+                  onchange="if(this.value) window.location = this.value;">
+  #for $code in $languages
+    #set $entry = $languages[$code]
+    #set $path = $entry.get('path', $code)
+    #set $parts = [$p for $p in [$lang_root, $path] if $p not in ('.', '')]
+    #set $target = '/'.join($parts + ['index.html'])
+            <option value="$target"#if $code == $lang or $lang.startswith($code + '_') then ' selected' else ''#>$entry.get('label', $code)</option>
+  #end for
+          </select>
+#end if
+#if $to_bool($DisplayOptions.get('show_reports', True))
+          <a class="masthead-link" href="reports.html">$gettext("Reports")</a>
+#end if
+          <a class="masthead-link" href="telemetry.html">$gettext("Telemetry")</a>
+#if $to_bool($DisplayOptions.get('show_rss', True))
+          <a class="masthead-link" href="rss.xml">$gettext("RSS")</a>
+#end if
+          <button type="button" id="theme-toggle" class="icon-button" aria-label="$gettext('Switch theme')">
+            <svg class="glyph-light" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.5 1.5m11.2 11.2l1.5 1.5M19.1 4.9l-1.5 1.5M6.4 17.6l-1.5 1.5"/></svg>
+            <svg class="glyph-dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></svg>
+          </button>
+        </div>
+      </header>
+
+      #include "headline.inc"
+
+      <div class="columns">
+
+        <div class="stack">
+          <section class="panel">
+            <div class="panel-head">
+              <h2>$gettext("History")</h2>
+              <div class="tabs" id="period-tabs" role="tablist" aria-label="$gettext('Time span')">
+#for $period in $periods
+                <button type="button" role="tab" data-period="$period"
+                        aria-selected="#if $period == $periods[0] then 'true' else 'false'#"
+                        aria-controls="charts">$gettext($period.capitalize())</button>
+#end for
+              </div>
+            </div>
+            <div class="range-bar">
+              <div class="range-nav">
+                <button type="button" id="range-back" class="range-button"
+                        aria-label="$gettext('Earlier')">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+                </button>
+                <span id="range-label" class="range-label">$gettext("Now")</span>
+                <button type="button" id="range-fwd" class="range-button"
+                        aria-label="$gettext('Later')" disabled>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+              <div class="range-extra">
+                <button type="button" id="range-now" class="range-now" hidden>$gettext("Now")</button>
+                <button type="button" id="range-share" class="range-now"
+                        title="$gettext('Link to this view')">$gettext("Share")</button>
+              </div>
+            </div>
+
+            <div class="panel-body flush">
+              <div id="charts" class="charts" role="tabpanel" tabindex="-1"
+                   aria-live="polite" aria-busy="true">
+                <p class="chart-empty">$gettext("Loading charts")&hellip;</p>
+              </div>
+              <noscript>
+                <p class="chart-empty">$gettext("Charts need JavaScript. The statistics below work without it.")</p>
+              </noscript>
+            </div>
+          </section>
+
+          #include "hilo.inc"
+        </div>
+
+        <div class="stack">
+## Which panels appear beside the charts, and in what order. Each name is an .inc
+## file in the skin directory, so your own panel is a file plus a name in this list --
+## no need to edit this template.
+#set $panels = $to_list($DisplayOptions.get('panels', ['current', 'sunmoon', 'imagery', 'sensors', 'about']))
+#for $panel in $panels
+          #include $panel + ".inc"
+#end for
+        </div>
+
+      </div>
+
+      <p class="footer">
+        $gettext("This station is controlled by <a href='https://weewx.com'>WeeWX</a>, an experimental weather software system written in Python.")
+      </p>
+
+    </div>
+
+    <script src="uplot.min.js"></script>
+    <script>
+      window.HORIZON = {
+        dataDir: "data",
+        periods: $jsonize($periods),
+        plotGroups: $jsonize($plot_groups),
+        refreshInterval: $refresh,
+        generated: $current.dateTime.raw,
+        station: "$station.location",
+        weekStart: $station.week_start,
+        hasImages: #if $to_bool($DisplayOptions.get('show_image_links', True)) then 'true' else 'false'#,
+        text: {
+          noData: "$gettext('No data for this period')",
+          showData: "$gettext('Show data as table')",
+          time: "$gettext('Time')",
+          now: "$gettext('Now')",
+          thinned: "$gettext('thinned')",
+          linkCopied: "$gettext('Link copied')",
+          copyLink: "$gettext('Copy this link:')",
+          saveImage: "$gettext('Save image')",
+          imageLink: "$gettext('PNG')",
+          imageLinkTitle: "$gettext('Permanent link to the rendered image')",
+          toDark: "$gettext('Switch to dark theme')",
+          toLight: "$gettext('Switch to light theme')"
+        }
+      };
+    </script>
+    <script src="horizon.js"></script>
+  </body>
+</html>

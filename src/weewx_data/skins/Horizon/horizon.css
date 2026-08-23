@@ -1,0 +1,697 @@
+/* Copyright (c) 2026 the WeeWX contributors
+ * Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Light palette. Neutrals carry a slight blue cast so they sit with the
+     steel blue that WeeWX has used for its charts since forever. */
+  --bg:            #f4f7f9;
+  --surface:       #ffffff;
+  --surface-sunk:  #eef3f7;
+  --ink:           #16222e;
+  --ink-muted:     #5c7183;
+  --ink-faint:     #8397a7;
+  --border:        #dbe4ec;
+  --border-strong: #c2d0dc;
+  --accent:        #2c6d9e;
+  --accent-bright: #4282b4;
+  --hi:            #b44242;
+  --lo:            #4257b4;
+  --ok:            #3d8a4e;
+  --warn:          #b4762c;
+  --shadow:        0 1px 2px rgb(22 34 46 / 6%), 0 4px 12px rgb(22 34 46 / 4%);
+
+  /* Chart surfaces, read by horizon.js so canvas and page agree. */
+  --chart-grid:    #e3eaf1;
+  --chart-axis:    #8397a7;
+  --chart-night:   #eaeef3;
+
+  --radius: 10px;
+  --gap: clamp(0.75rem, 2.2vw, 1.25rem);
+
+  --fs-xs:   0.75rem;
+  --fs-sm:   0.8125rem;
+  --fs-base: 0.9375rem;
+  --fs-md:   1.0625rem;
+  --fs-lg:   clamp(1.15rem, 1.05rem + 0.5vw, 1.4rem);
+  --fs-xl:   clamp(1.75rem, 1.4rem + 1.7vw, 2.6rem);
+  --fs-huge: clamp(2.6rem, 1.9rem + 3.4vw, 4rem);
+
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:            #0e161f;
+    --surface:       #17212d;
+    --surface-sunk:  #121b25;
+    --ink:           #e1e9f0;
+    --ink-muted:     #93a6b6;
+    --ink-faint:     #6d8195;
+    --border:        #253243;
+    --border-strong: #33455a;
+    --accent:        #6fa9d6;
+    --accent-bright: #4282b4;
+    --hi:            #d97b7b;
+    --lo:            #8b9bdd;
+    --ok:            #6bb37c;
+    --warn:          #d3a05c;
+    --shadow:        0 1px 2px rgb(0 0 0 / 30%), 0 4px 14px rgb(0 0 0 / 22%);
+    --chart-grid:    #223044;
+    --chart-axis:    #6d8195;
+    --chart-night:   #101a25;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg:            #0e161f;
+  --surface:       #17212d;
+  --surface-sunk:  #121b25;
+  --ink:           #e1e9f0;
+  --ink-muted:     #93a6b6;
+  --ink-faint:     #6d8195;
+  --border:        #253243;
+  --border-strong: #33455a;
+  --accent:        #6fa9d6;
+  --accent-bright: #4282b4;
+  --hi:            #d97b7b;
+  --lo:            #8b9bdd;
+  --ok:            #6bb37c;
+  --warn:          #d3a05c;
+  --shadow:        0 1px 2px rgb(0 0 0 / 30%), 0 4px 14px rgb(0 0 0 / 22%);
+  --chart-grid:    #223044;
+  --chart-axis:    #6d8195;
+  --chart-night:   #101a25;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+a { color: var(--accent); text-underline-offset: 2px; }
+
+:where(a, button, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------------------------------------------------------------- shell */
+
+.wrap {
+  max-width: 84rem;
+  margin: 0 auto;
+  padding: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+/* ---------------------------------------------------------------- header */
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.masthead h1 {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.masthead .updated {
+  font-size: var(--fs-sm);
+  color: var(--ink-muted);
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.masthead-tools { display: flex; align-items: center; gap: 0.4rem; margin-left: auto; }
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.icon-button:hover { color: var(--ink); border-color: var(--border-strong); }
+.icon-button svg { width: 1.15rem; height: 1.15rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+/* The two theme glyphs swap depending on the resolved theme. */
+.icon-button .glyph-dark { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .icon-button .glyph-light { display: none; }
+  :root:not([data-theme="light"]) .icon-button .glyph-dark  { display: block; }
+}
+:root[data-theme="dark"] .icon-button .glyph-light { display: none; }
+:root[data-theme="dark"] .icon-button .glyph-dark  { display: block; }
+
+/* Deliberately quiet: a reader who needs it will look for it, and everyone else
+   should not have to see it. */
+select.lang-select {
+  font: inherit;
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  background: none;
+  border: 0;
+  padding: 0.25rem 0.15rem;
+  cursor: pointer;
+  max-width: 8rem;
+}
+select.lang-select:hover { color: var(--ink); }
+
+.masthead-link {
+  font-family: var(--font);
+  font-size: var(--fs-sm);
+  color: var(--ink-muted);
+  text-decoration: none;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--radius);
+  white-space: nowrap;
+}
+.masthead-link:hover { color: var(--ink); background: var(--surface); }
+
+/* NOAA summaries: fixed-pitch, and allowed to scroll sideways on a phone
+   rather than forcing the whole page to. */
+.report-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  margin: 0;
+  overflow-x: auto;
+  color: var(--ink);
+  tab-size: 4;
+}
+
+.imagery img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+#map_canvas {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--surface-sunk);
+}
+
+select.report-select {
+  font: inherit;
+  font-size: var(--fs-sm);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.35rem 0.5rem;
+  max-width: 10rem;
+}
+
+/* ---------------------------------------------------------------- headline */
+
+.headline {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: var(--gap);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: clamp(1rem, 3vw, 1.6rem);
+}
+
+/* Quiet link to the shareable image of these readings. */
+.headline-share {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  color: var(--ink-faint);
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity .15s, color .15s;
+}
+.headline:hover .headline-share,
+.headline-share:focus-visible { opacity: 1; }
+@media (hover: none) { .headline-share { opacity: 1; } }
+.headline-share:hover { color: var(--accent); background: var(--surface-sunk); }
+.headline-share svg {
+  width: 1.1rem; height: 1.1rem; fill: none; stroke: currentColor;
+  stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+}
+
+.headline-item { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+
+.headline-item .label {
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--ink-faint);
+  font-weight: 500;
+}
+
+.headline-item .value {
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* The first headline item is the lead reading and gets more room. */
+.headline-item:first-child .value { font-size: var(--fs-huge); }
+
+.headline-item .sub {
+  font-size: var(--fs-sm);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.trend-up::before   { content: "\2191\FE0E"; color: var(--hi); margin-right: 0.2em; }
+.trend-down::before { content: "\2193\FE0E"; color: var(--lo); margin-right: 0.2em; }
+.trend-flat::before { content: "\2192\FE0E"; color: var(--ink-faint); margin-right: 0.2em; }
+
+/* Quiet link to the shareable image of these readings. */
+.headline-share {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  color: var(--ink-faint);
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity .15s, color .15s;
+}
+.headline:hover .headline-share,
+.headline-share:focus-visible { opacity: 1; }
+@media (hover: none) { .headline-share { opacity: 1; } }
+.headline-share:hover { color: var(--accent); background: var(--surface-sunk); }
+.headline-share svg {
+  width: 1.1rem; height: 1.1rem; fill: none; stroke: currentColor;
+  stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* ---------------------------------------------------------------- layout */
+
+.columns {
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 60rem) {
+  .columns { grid-template-columns: minmax(0, 1fr) 21rem; }
+}
+
+.stack { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+
+/* ---------------------------------------------------------------- panels */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem clamp(0.85rem, 2.5vw, 1.15rem);
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-head h2 {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.005em;
+}
+.panel-head h2 a { color: inherit; text-decoration: none; }
+.panel-head h2 a:hover { color: var(--accent); }
+
+.panel-body { padding: clamp(0.85rem, 2.5vw, 1.15rem); }
+.panel-body.flush { padding: 0; }
+
+/* ---------------------------------------------------------------- tabs */
+
+.tabs {
+  display: flex;
+  gap: 0.15rem;
+  padding: 0.25rem;
+  background: var(--surface-sunk);
+  border-radius: var(--radius);
+}
+
+.tabs button {
+  flex: 1 1 auto;
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--ink-muted);
+  background: none;
+  border: 0;
+  border-radius: calc(var(--radius) - 3px);
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+.tabs button:hover { color: var(--ink); }
+.tabs button[aria-selected="true"] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+/* ---------------------------------------------------------- time navigation */
+
+/* Three tracks: the middle one holds the arrows and stays put, whatever appears
+   beside it. Without this, the "Now" button showing up on the first click shifted
+   the arrows sideways -- and the next click landed on nothing. */
+.range-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-sunk);
+}
+
+.range-nav {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.range-extra {
+  grid-column: 3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.range-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.range-button:hover:not(:disabled) { color: var(--ink); border-color: var(--border-strong); }
+.range-button:disabled { opacity: 0.35; cursor: default; }
+.range-button svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Fixed width, not just a minimum: the label swings between "Now" and
+   "Saturday, 22 August 2026", and a growing label would push the arrows around
+   just as surely as an appearing button does. */
+.range-label {
+  width: clamp(9rem, 42vw, 15rem);
+  text-align: center;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.range-now {
+  font: inherit;
+  font-size: var(--fs-xs);
+  color: var(--accent);
+  background: none;
+  border: 0;
+  padding: 0.2rem 0.4rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.range-now:hover { text-decoration: underline; }
+
+/* ---------------------------------------------------------------- charts */
+
+.charts { display: flex; flex-direction: column; }
+
+.chart-card { border-top: 1px solid var(--border); }
+.chart-card:first-child { border-top: 0; }
+
+.chart-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem clamp(0.85rem, 2.5vw, 1.15rem) 0.25rem;
+}
+
+.chart-title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+  text-wrap: balance;
+}
+
+/* The legend is the title: series names carry their own colour swatch. */
+.chart-legend { display: flex; flex-wrap: wrap; gap: 0.15rem 0.9rem; font-size: var(--fs-sm); }
+.chart-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.chart-legend i { width: 0.75rem; height: 0.2rem; border-radius: 1px; background: currentColor; flex: none; }
+.chart-legend .series-name { color: var(--ink); font-weight: 500; }
+
+/* Ways out of a chart: the view on screen, and the file the server rendered.
+   Kept quiet until the card is hovered or something in it has focus. */
+.chart-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex: none;
+  opacity: 0;
+  transition: opacity .15s;
+}
+
+.chart-card:hover .chart-actions,
+.chart-card:focus-within .chart-actions { opacity: 1; }
+
+/* Touch has no hover, so never hide them there. */
+@media (hover: none) {
+  .chart-actions { opacity: 1; }
+}
+
+.chart-action {
+  font: inherit;
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  background: none;
+  border: 0;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.chart-action:hover { color: var(--accent); background: var(--surface-sunk); }
+
+.chart-host { padding: 0 clamp(0.5rem, 2vw, 0.85rem) 0.6rem; }
+.chart-host .uplot { width: 100% !important; }
+
+/* uPlot brings its own stylesheet; align it with ours. */
+.u-legend { display: none; }
+.u-cursor-pt { mix-blend-mode: normal; }
+.u-tooltip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 10;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  box-shadow: var(--shadow);
+  padding: 0.4rem 0.55rem;
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  transition: opacity .1s;
+}
+.u-tooltip .t-time { color: var(--ink-muted); margin-bottom: 0.15rem; }
+.u-tooltip .t-row { display: flex; align-items: center; gap: 0.4rem; }
+.u-tooltip .t-row i { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: currentColor; flex: none; }
+.u-tooltip .t-row b { font-weight: 600; margin-left: auto; padding-left: 0.6rem; }
+
+/* Placeholder that holds the card's height until its data arrives. */
+.chart-skeleton {
+  height: 180px;
+  border-radius: 6px;
+  background: linear-gradient(100deg, var(--surface-sunk) 30%, var(--border) 50%, var(--surface-sunk) 70%);
+  background-size: 300% 100%;
+  animation: chart-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes chart-shimmer {
+  from { background-position: 130% 0; }
+  to   { background-position: -30% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-skeleton { animation: none; background: var(--surface-sunk); }
+}
+
+.chart-empty, .chart-error {
+  padding: 1.5rem clamp(0.85rem, 2.5vw, 1.15rem);
+  color: var(--ink-faint);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+.chart-error { color: var(--hi); }
+
+/* The accessible text alternative to each canvas. */
+.chart-data { padding: 0 clamp(0.85rem, 2.5vw, 1.15rem) 0.85rem; }
+.chart-data summary {
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  cursor: pointer;
+  padding: 0.2rem 0;
+}
+.chart-data summary:hover { color: var(--ink-muted); }
+/* Roomy enough that a day's readings need little or no scrolling. */
+.chart-data .scroller {
+  max-height: min(75vh, 42rem);
+  overflow: auto;
+  margin-top: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.chart-data .table-note {
+  margin: 0.4rem 0 0;
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+}
+
+/* Two or three columns of readings side by side where the width allows, so a
+   long series does not turn into one endless strip. */
+.chart-data .scroller .data-table { min-width: 0; }
+
+/* ---------------------------------------------------------------- tables */
+
+.data-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+
+.data-table th, .data-table td { padding: 0.35rem 0.5rem; text-align: right; }
+.data-table th:first-child, .data-table td:first-child { text-align: left; }
+
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--border);
+  z-index: 1;
+}
+
+.data-table tbody tr + tr td { border-top: 1px solid var(--border); }
+.data-table td { font-variant-numeric: tabular-nums; }
+.data-table td.metric { color: var(--ink-muted); text-align: left; }
+.data-table .num { font-weight: 500; }
+
+.table-scroll { overflow-x: auto; }
+
+.stat-hi { color: var(--hi); }
+.stat-lo { color: var(--lo); }
+.when { display: block; font-size: var(--fs-xs); color: var(--ink-faint); font-weight: 400; }
+
+/* Readings list, used for current conditions and station info. */
+.readings { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 0.9rem; margin: 0; font-size: var(--fs-sm); }
+.readings dt { color: var(--ink-muted); }
+.readings dd { margin: 0; text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- status */
+
+.status-dot { display: inline-block; width: 0.55rem; height: 0.55rem; border-radius: 50%; margin-right: 0.35rem; vertical-align: baseline; }
+.status-ok      { background: var(--ok); }
+.status-low     { background: var(--hi); }
+.status-unknown { background: var(--border-strong); }
+
+/* ---------------------------------------------------------------- footer */
+
+.footer {
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  text-align: center;
+  padding: 0.5rem 0 1.5rem;
+}
+.footer a { color: var(--ink-muted); }
+
+/* ---------------------------------------------------------------- misc */
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.is-stale { opacity: 0.55; transition: opacity .3s; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+@media print {
+  .masthead-tools, .tabs, .chart-data { display: none; }
+  .panel { break-inside: avoid; box-shadow: none; }
+  body { background: #fff; }
+}
