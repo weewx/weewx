@@ -103,6 +103,7 @@ nav = [
             { "[StdQC]" = "reference/weewx-options/stdqc.md" },
             { "[StdWXCalculate]" = "reference/weewx-options/stdwxcalculate.md" },
             { "[StdArchive]" = "reference/weewx-options/stdarchive.md" },
+            { "[Accumulator]" = "reference/weewx-options/accumulator.md" },
             { "[StdTimeSynch]" = "reference/weewx-options/stdtimesynch.md" },
             { "[DataBindings]" = "reference/weewx-options/data-bindings.md" },
             { "[Databases]" = "reference/weewx-options/databases.md" },
