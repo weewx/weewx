@@ -988,14 +988,16 @@ class Converter:
     def getTargetUnit(self, obs_type, agg_type=None):
         """Given an observation type and an aggregation type, return the 
         target unit type and group, or (None, None) if they cannot be determined.
+
+        Args:
+            obs_type(str): An observation type ('outTemp', 'rain', etc.)
+
+            agg_type(str|None): Type of aggregation ('mintime', 'count', etc.)
+            [Optional. default is no aggregation]
         
-        obs_type: An observation type ('outTemp', 'rain', etc.)
-        
-        agg_type: Type of aggregation ('mintime', 'count', etc.)
-        [Optional. default is no aggregation]
-        
-        returns: A 2-way tuple holding the unit type and the unit group
-        or (None, None) if they cannot be determined.
+        Returns:
+            tuple[str|None, str|None]: A 2-way tuple containing the unit type
+                and unit group, or `(None, None)` if they cannot be determined.
         """
         unit_group = _getUnitGroup(obs_type, agg_type)
         if unit_group in self.group_unit_dict:
@@ -1531,15 +1533,15 @@ def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
         (None, None)
 
     Args:
-        target_std_unit_system (int): A standardized unit system. If None, then
+        target_std_unit_system (int|None): A standardized unit system. If None, then
             the output units are indeterminate, so (None, None) is returned.
 
         obs_type (str): An observation type, e.g., 'outTemp'
 
-        agg_type (str): An aggregation type, e.g., 'mintime', or 'avg'.
+        agg_type (str|None): An aggregation type, e.g., 'mintime', or 'avg'.
     
     Returns:
-         tuple. A 2-way tuple containing the target units, and the target group.
+         tuple(int|None, str|None). A 2-way tuple containing the target units, and the target group.
     """
 
     if target_std_unit_system is not None:
