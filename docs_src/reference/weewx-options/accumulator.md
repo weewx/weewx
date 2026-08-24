@@ -24,6 +24,10 @@ whose treatment you need to change:
 Each subsection is named after an observation type and takes any of four
 options. Nothing else needs to be given: what you leave out keeps its default.
 
+The values each option accepts are listed below. For how the accumulators work
+and what they do between one packet and the next, see
+[Accumulators](https://github.com/weewx/weewx/wiki/Accumulators) in the wiki.
+
 !!! Note
     An unrecognized value raises a `KeyError` naming it, rather than a message
     saying what is wrong. It is not raised at startup either, but the first time
@@ -59,16 +63,16 @@ Default is `add`. The other three exist for `windSpeed`, `usUnits` and
 
 #### merger
 
-What to do when two accumulators are combined, which happens when statistics
-are rolled up over a longer period.
+What to do when the finished accumulator is merged into the daily summaries at
+the end of the interval.
 
 | Value    | Effect                                                     |
 |----------|-------------------------------------------------------------|
 | `minmax` | Keep the lowest minimum and the highest maximum              |
 | `avg`    | Keep the lowest minimum, but use the average as the maximum  |
 
-Default is `minmax`. Use `avg` for a type whose maximum is meaningless on its
-own, such as a wind speed that is already an average.
+Default is `minmax`. Use `avg` if you have set
+[`loop_hilo`](stdarchive.md#loop_hilo) to `False`.
 
 #### extractor
 
