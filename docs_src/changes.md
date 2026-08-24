@@ -3,6 +3,10 @@ WeeWX change history
 
 ### 5.5.n n-Month-2026
 
+Say so in the log when a Vantage logger returns far fewer archive records than it
+said it would, which is what corrupt logger memory looks like, and link to the fix.
+Fixes [Issue #1105](https://github.com/weewx/weewx/issues/1105).
+
 Saving the configuration file no longer changes its mode or ownership. Under a
 package installation, `weectl extension install`, `weectl extension uninstall`,
 `weectl station reconfigure` and `weectl station upgrade` were leaving
