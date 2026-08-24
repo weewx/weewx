@@ -715,12 +715,13 @@ def get_extension_installer(extension_installer_dir):
         sys.path.insert(0, extension_installer_dir)
         try:
             # Now I can import the extension's 'install' module:
-            __import__('install')
+            install_module = importlib.import_module('install')
         except ImportError:
             raise ExtensionError("Cannot find 'install' module in %s" % extension_installer_dir)
-        install_module = sys.modules['install']
         loader = getattr(install_module, 'loader')
-        # Get rid of the module:
+        # Every extension names its installer module 'install', so it must not be left in
+        # the module cache: the next extension installed by this process would get this
+        # one's installer back instead of its own.
         sys.modules.pop('install', None)
         installer = loader()
     finally:
