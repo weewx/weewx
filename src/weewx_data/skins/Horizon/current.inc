@@ -9,7 +9,11 @@
 ##
 #set $headline = $to_list($DisplayOptions.get('observations_headline', ['outTemp', 'windSpeed', 'rain', 'barometer']))
 #set $lead = $headline and $headline[0] or 'outTemp'
-#set $rest = [$x for $x in $headline[1:] if $getVar('year.%s.has_data' % $x, False)]
+## Everything the station actually records, in the order the skin lists it.
+## 'has_data' does the filtering, so a station without a UV sensor never sees
+## that row and nobody has to keep a list of what is fitted.
+#set $wanted = $to_list($DisplayOptions.get('observations_current', ['outTemp', 'barometer']))
+#set $rest = [$x for $x in $wanted if $x != $lead and $getVar('year.%s.has_data' % $x, False)]
 #set $summary_image = $to_bool($DisplayOptions.get('show_summary_image', True))
 ##
 <section class="panel headline" aria-label="$gettext('Current Conditions')">
@@ -89,12 +93,6 @@ $shown#slurp
 
   ## Everything else, two columns, all the same weight.
   <dl class="companions">
-#if $current.dewpoint.raw is not None and 'dewpoint' not in $headline
-    <div>
-      <dt>$obs.label.dewpoint</dt>
-      <dd>$current.dewpoint.format(add_label=False)<small>$unit.label.dewpoint</small></dd>
-    </div>
-#end if
 #for $x in $rest
     <div>
     #if $x == 'windSpeed'
@@ -121,10 +119,11 @@ $shown#slurp
     #end if
     </div>
 #end for
-#if $day.rainRate.max.raw
+#if $getVar('year.rainRate.has_data', False) and $day.rainRate.max.raw is not None
     <div>
       <dt>$gettext("Max rate")</dt>
-      <dd>$day.rainRate.max.format(add_label=False)<small>$unit.label.rainRate</small></dd>
+      <dd>$day.rainRate.max.format(add_label=False)<small>$unit.label.rainRate</small>
+          <span class="faint">$gettext("today")</span></dd>
     </div>
 #end if
   </dl>
