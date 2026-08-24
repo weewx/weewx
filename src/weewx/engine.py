@@ -8,10 +8,10 @@
 
 # Python imports
 import gc
+import importlib
 import logging
 import math
 import socket
-import importlib
 import threading
 import time
 import traceback
