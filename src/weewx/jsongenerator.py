@@ -570,6 +570,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             'name': group_name,
             'start': start,
             'interval': resolution,
+            'yscale': _yscale(plot_options, series_out),
             'count': slots,
             # The reading this file was built from. What decides whether it has to be
             # written again, rather than how old the file happens to be.
@@ -741,6 +742,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     # Negated, exactly as the ImageGenerator does it. Without the minus
                     # the arrows come out mirrored against the PNG of the same data.
                     entry['vector_rotate'] = -float(vr)
+                # The compass rose the PNGs draw in the corner: without it, nothing on
+                # the plot says which way the arrows are measured from.
+                entry['rose_label'] = self.text_dict.get(
+                    'rose_label', plot_options.get('rose_label', 'N'))
 
             series_out.append(entry)
 
@@ -753,6 +758,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             'start': int(x_domain.start),
             'stop': int(x_domain.stop),
             'x_interval': int(timeinc),
+            'yscale': _yscale(plot_options, series_out),
             'aggregate_interval': aggregate_interval_out,
             'unit': unit,
             'unit_label': (unit_label or '').strip(),
@@ -833,6 +839,43 @@ def _daynight(start_ts, stop_ts, lat, lon):
     transitions.sort()
     twilight.sort(key=lambda b: b['from'])
     return {'first': first or 'day', 'transitions': transitions, 'twilight': twilight}
+
+
+def _yscale(plot_options, series_out):
+    """The y axis for this plot, as [min, max, increment].
+
+    The same axis the ImageGenerator would draw: the plot's own 'yscale' fixes
+    whichever of the three it names, and weeplot.utilities.scale() fills in the rest
+    from the data. Leaving that to the client means a chart disagreeing with the PNG
+    of the same plot -- wind direction running to 400 degrees where the image stops
+    at 360, or an axis to 5 m/s for wind that never passed 2.3.
+
+    Returns:
+        list|None: The three values, or None if there is nothing to scale.
+    """
+    prescale = weeutil.weeutil.convertToFloat(
+        weeutil.weeutil.option_as_list(plot_options.get('yscale', ['None', 'None', 'None'])))
+    prescale = tuple(prescale) + (None,) * (3 - len(prescale))
+
+    ymin = ymax = None
+    for entry in series_out:
+        values = [v for v in entry['values'] if v is not None]
+        if not values:
+            continue
+        if entry.get('plot_type') == 'vector':
+            # A vector's extent is the magnitude, mirrored about zero, exactly as
+            # genplot._calcYScaling() has it.
+            line_max = max(abs(v) for v in values)
+            line_min = -line_max
+        else:
+            line_min, line_max = min(values), max(values)
+        ymin = line_min if ymin is None else min(ymin, line_min)
+        ymax = line_max if ymax is None else max(ymax, line_max)
+
+    if ymin is None:
+        return None
+    nsteps = to_int(plot_options.get('y_nticks', 10))
+    return list(weeplot.utilities.scale(ymin, ymax, prescale, nsteps=nsteps))
 
 
 def _round_seq(seq, ndigits):

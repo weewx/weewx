@@ -261,16 +261,6 @@
     };
   }
 
-  /* Round up to 1, 2, 5 or 10 times a power of ten, the way
-     weeplot.utilities.scale() rounds an axis for the images. 8.9 m/s of wind gives
-     an axis to 10, not to 8.9. */
-  function niceCeil(v) {
-    if (!(v > 0)) return 1;
-    var mag = Math.pow(10, Math.floor(Math.log(v) / Math.LN10));
-    var f = v / mag;
-    return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * mag;
-  }
-
   /* A wind vector plot is not a line. Each reading is an arrow from the zero line whose
      direction is the wind and whose length is the speed -- the "progressive vector"
      plot WeeWX has always drawn. The arithmetic below is weeplot's, so the canvas and
@@ -329,6 +319,8 @@
             ctx.stroke();
           });
 
+          vectors.forEach(function (s) { drawRose(u, s); });
+
           /* The zero line the arrows hang from. */
           ctx.strokeStyle = themeColors().axis;
           ctx.lineWidth = 1;
@@ -342,6 +334,52 @@
         }
       }
     };
+  }
+
+  /* The compass rose the PNGs put in the lower left corner: an arrow to north,
+     turned by the same 'vector_rotate' as the arrows themselves, with the label
+     upright in the middle. Without it nothing says which way the wind is measured
+     from. Shape and proportions follow genplot._renderRose(). */
+  function drawRose(u, s) {
+    var dpr = devicePixelRatio || 1;
+    var ctx = u.ctx;
+    var size = 26 * dpr, barb = 4 * dpr, radius = 8 * dpr;
+    var cx = u.bbox.left + 10 * dpr + size / 2;
+    var cy = u.bbox.top + u.bbox.height - 8 * dpr - size / 2;
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.strokeStyle = s.color || themeColors().ink;
+    ctx.lineWidth = Math.max(1, Math.round(dpr));
+    ctx.globalAlpha = 0.85;
+
+    ctx.save();
+    /* PIL turns the image anticlockwise, the canvas turns the other way. */
+    ctx.rotate(-(s.vector_rotate || 0) * Math.PI / 180);
+    ctx.beginPath();
+    /* The shaft stops at the circle rather than running through it, so the label
+       inside stays readable. The PNG draws it straight through. */
+    ctx.moveTo(0, -size / 2);
+    ctx.lineTo(0, -radius);
+    ctx.moveTo(0, radius);
+    ctx.lineTo(0, size / 2);
+    ctx.moveTo(-barb, -size / 2 + barb);
+    ctx.lineTo(0, -size / 2);
+    ctx.lineTo(barb, -size / 2 + barb);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.restore();
+
+    /* Drawn after the rotation, so it stays the right way up. */
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = themeColors().axis;
+    ctx.font = Math.round(10 * dpr) + 'px ' + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(s.rose_label || 'N', 0, 0.5 * dpr);
+    ctx.restore();
   }
 
   /* The unit, over the y axis. The PNGs put it in the upper left corner, and a
@@ -491,7 +529,7 @@
     var data = align(meta.series);
     var digits = digitsFor(meta.series);
     var isBar = meta.series.some(function (s) { return s.plot_type === 'bar'; });
-    var isVector = meta.series.some(function (s) { return s.plot_type === 'vector'; });
+    var ys = meta.yscale;
 
     var opts = {
       title: '',
@@ -506,14 +544,11 @@
       },
       scales: {
         x: { time: true },
-        /* Vectors radiate from zero, so the axis has to be centred on it -- as the
-           PNGs are -- and rounded up, or the longest arrow ends exactly on the
-           frame. weeplot.utilities.scale() does the same for the images. */
-        y: isVector ? {
-          range: function (u, min, max) {
-            var m = niceCeil(Math.max(Math.abs(min), Math.abs(max)));
-            return [-m, m];
-          }
+        /* 'yscale' is the axis the ImageGenerator would draw, worked out by the
+           generator so that the chart and the PNG of the same plot agree. It is
+           null only when a plot has no data to scale. */
+        y: ys ? {
+          range: function () { return [ys[0], ys[1]]; }
         } : {}
       },
       /* Colors are read at draw time, so switching theme only needs a redraw. */
@@ -534,6 +569,14 @@
           ticks: { show: false },
           font: '11px ' + getComputedStyle(document.body).fontFamily,
           size: 46,
+          /* Gridlines where the PNG puts them. */
+          splits: ys && ys[2] ? function (u, ai, min, max) {
+            var out = [];
+            for (var v = Math.ceil(min / ys[2]) * ys[2]; v <= max + 1e-9; v += ys[2]) {
+              out.push(Math.round(v / ys[2]) * ys[2]);
+            }
+            return out;
+          } : null,
           values: function (u, splits) {
             return splits.map(function (v) { return fmtNumber(v, digits); });
           }

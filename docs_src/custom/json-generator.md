@@ -44,7 +44,8 @@ A plot file looks like this:
 {
   "name": "daytempdew",
   "generated": 1787518200,
-  "start": 1787420400, "stop": 1787518200,
+  "start": 1787420400, "stop": 1787518200, "x_interval": 10800,
+  "yscale": [null, null, null],
   "unit": "degree_C", "unit_label": "°C",
   "daynight": {"first": "day", "transitions": [1787430000, 1787479000],
                "twilight": [{"from": 1787428000, "to": 1787430000, "dir": "dawn"}]},
@@ -63,6 +64,12 @@ A few things worth knowing:
   the gap.
 - `color` comes from `chart_line_colors` in the skin, so the charts inherit whatever
   palette you configured for the PNGs.
+- `start`, `stop` and `x_interval` are the axis the ImageGenerator would draw, snapped
+  by `weeplot.utilities.scaletime()`. A chart that uses them lines up with the PNG of
+  the same plot.
+- `yscale` is the y axis from the plot options, as `[min, max, increment]`. Any member
+  may be `null`, meaning "work it out from the data". Wind direction is configured
+  `0, 360, 45`, and a chart that ignores this runs to 400 degrees.
 - `daynight` carries the sunrise and sunset times for the window, so a client can shade
   the night the way the PNGs do — plus the **civil twilight** around each of them, as
   `dawn` and `dusk` bands. Dusk is not an edge, and the PNGs can only approximate it

@@ -321,6 +321,50 @@ class TestPeriodFiles:
             payload = json.load(fd)
         assert payload['x_interval'] == 7200
 
+    @pytest.mark.parametrize('plot', ['daytempdew', 'dayrain', 'daywindvec'])
+    def test_y_axis_matches_the_image_generator(self, config_dict, tmp_path, plot):
+        """A line, a bar plot and a vector plot must all land on the PNG's axis."""
+        html_root = str(tmp_path)
+        skin_dict = build_skin_dict(html_root)
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        stn_info = weewx.station.StationInfo(**cd['Station'])
+        gen_ts = parameters.synthetic_dict['stop_ts']
+
+        img_gen = weewx.imagegenerator.ImageGenerator(
+            cd, skin_dict, gen_ts, first_run=True, stn_info=stn_info)
+        img_gen.start()
+        try:
+            section = skin_dict['ImageGenerator']['day_images'][plot]
+            image_plot = img_gen.gen_plot(gen_ts, accumulateLeaves(section), section)
+            image_plot.render()          # this is what works the y scaling out
+        finally:
+            img_gen.finalize()
+
+        data_dir = run_generator(config_dict, tmp_path)
+        with open(os.path.join(data_dir, '%s.json' % plot), encoding='utf-8') as fd:
+            payload = json.load(fd)
+
+        assert payload['yscale'] == pytest.approx(list(image_plot.yscale))
+
+    def test_configured_yscale_is_honoured(self, config_dict, tmp_path):
+        html_root = str(tmp_path)
+        skin_dict = build_skin_dict(html_root)
+        skin_dict['ImageGenerator']['day_images']['daytempdew']['yscale'] =             ['0.0', '360.0', '45.0']
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        stn_info = weewx.station.StationInfo(**cd['Station'])
+
+        generator = weewx.jsongenerator.JSONGenerator(
+            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
+            first_run=True, stn_info=stn_info)
+        try:
+            generator.start()
+        finally:
+            generator.finalize()
+
+        with open(os.path.join(html_root, 'data', 'daytempdew.json'),
+                  encoding='utf-8') as fd:
+            assert json.load(fd)['yscale'] == [0.0, 360.0, 45.0]
+
     def test_manifest_lists_what_exists(self, config_dict, tmp_path):
         data_dir = run_generator(config_dict, tmp_path)
         with open(os.path.join(data_dir, 'index.json'), encoding='utf-8') as fd:
