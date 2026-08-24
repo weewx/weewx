@@ -521,8 +521,11 @@
           base.width = 0;
         } else if (s.plot_type === 'vector') {
           /* Drawn by vectorPlugin, from the components. A line through the
-             magnitudes would say nothing about direction. */
-          base.show = false;
+             magnitudes would say nothing about direction. The series still has to
+             count as shown: uPlot works out a scale's range from its visible series
+             only, and a hidden one leaves the y axis on its 0..1 default. */
+          base.paths = function () { return null; };
+          base.points = { show: false };
         }
         return base;
       })),
