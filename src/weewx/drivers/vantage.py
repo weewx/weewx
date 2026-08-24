@@ -24,6 +24,10 @@ log = logging.getLogger(__name__)
 DRIVER_NAME = 'Vantage'
 DRIVER_VERSION = '3.6.3'
 
+# Where to send someone whose logger memory has gone bad.
+CORRUPT_MEMORY_URL = ("https://github.com/weewx/weewx/wiki/"
+                      "Troubleshooting-the-Davis-Vantage-station#corrupt-station-memory")
+
 int2byte = struct.Struct(">B").pack
 
 
@@ -680,6 +684,12 @@ class Vantage(weewx.drivers.AbstractDevice):
         _npages, _start_index = struct.unpack("<HH", _buffer[:4])
         log.debug("Retrieving %d page(s); starting index= %d", _npages, _start_index)
 
+        # The console has just said how many records it is about to send. Count them as
+        # they arrive, so we can tell a normal end of data from a logger whose memory
+        # has gone bad. See the check further down.
+        _expected = _npages * 5 - _start_index
+        _returned = 0
+
         # Cycle through the pages...
         for ipage in range(_npages):
             # ... get a page of archive data
@@ -703,14 +713,27 @@ class Vantage(weewx.drivers.AbstractDevice):
                 # signal that we are done. 
                 if _record['dateTime'] is None \
                         or _record['dateTime'] <= _last_good_ts - self.max_dst_jump:
-                    # The time stamp is declining. We're done.
+                    # The time stamp is declining. Normally this is how we know we have
+                    # reached the end: the logger memory wraps around, so the record we
+                    # are looking at is an old one.
                     log.debug("DMPAFT complete: page timestamp %s less than final timestamp %s",
                               weeutil.weeutil.timestamp_to_string(_record['dateTime']),
                               weeutil.weeutil.timestamp_to_string(_last_good_ts))
+                    # But if that happens while more than a page of the promised records
+                    # is still outstanding, the console was describing data it does not
+                    # actually hold. Up to a page can be left over legitimately, because
+                    # the wrap-around lands somewhere inside the final page.
+                    if _expected - _returned > 5:
+                        log.error("Logger promised %d archive records, but returned %d "
+                                  "before its timestamps went backwards.",
+                                  _expected, _returned)
+                        log.error("This is what corrupt logger memory looks like. "
+                                  "For how to fix it, see %s", CORRUPT_MEMORY_URL)
                     log.debug("Catch up complete.")
                     return
                 # Set the last time to the current time, and yield the packet
                 _last_good_ts = _record['dateTime']
+                _returned += 1
                 yield _record
 
             # The starting index for pages other than the first is always zero
