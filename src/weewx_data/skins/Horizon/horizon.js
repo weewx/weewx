@@ -668,6 +668,12 @@
     return { plot: plot, meta: meta, host: host };
   }
 
+  /* The label's length depends on the width, so it is rewritten when that
+     changes: turning a phone sideways should not leave the short form. */
+  window.matchMedia('(min-width: 34rem)').addEventListener('change', function () {
+    if (currentPeriod) showPeriod(currentPeriod);
+  });
+
   function redrawAll() {
     /* Axis colors and the night shading resolve themselves at draw time, so a
        plain redraw is enough. The first argument is rebuildPaths: it must stay
@@ -1207,12 +1213,19 @@
     var start = new Date(from * 1000);
     var end = new Date((to - 1) * 1000);
 
+    /* "Sunday, 23 August 2026" does not fit between the two arrows on a phone,
+       and pushed the Now button under the forward one. The long form stays on
+       a wide screen, where there is room for it. */
+    var roomy = window.matchMedia('(min-width: 34rem)').matches;
+
     if (period === 'day') {
-      return start.toLocaleDateString(LOCALE,
-        { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      return start.toLocaleDateString(LOCALE, roomy
+        ? { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }
+        : { weekday: 'short', day: 'numeric', month: 'short' });
     }
     if (period === 'week') {
-      var opts = { day: 'numeric', month: 'short', year: 'numeric' };
+      var opts = roomy ? { day: 'numeric', month: 'short', year: 'numeric' }
+                       : { day: 'numeric', month: 'short' };
       /* formatRange knows how each language shortens a span -- "10.–16. Aug. 2026"
          in German, "10 – 16 Aug 2026" in English. Hand-joining two formatted dates
          gets the punctuation wrong in most of them. */
@@ -1224,7 +1237,8 @@
       }
     }
     if (period === 'month') {
-      return start.toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' });
+      return start.toLocaleDateString(LOCALE,
+        roomy ? { month: 'long', year: 'numeric' } : { month: 'short', year: 'numeric' });
     }
     return String(start.getFullYear());
   }

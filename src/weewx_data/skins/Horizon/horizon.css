@@ -135,6 +135,9 @@ a { color: var(--accent); text-underline-offset: 2px; }
   max-width: 84rem;
   margin: 0 auto;
   padding: var(--gap) var(--edge);
+  /* Nothing reaches past the edge of the page. Not 'clip' or 'hidden' on an
+     ancestor of the panels: either would take the sticky head with it. */
+  max-width: min(84rem, 100%);
   display: flex;
   flex-direction: column;
   gap: var(--gap);
@@ -265,9 +268,9 @@ select.report-select {
    the whole page the reading would grow to the size of a poster and the two
    columns would drift apart. */
 .headline { position: relative; padding: clamp(1rem, 3vw, 1.4rem); }
-.headline .lead-value { font-size: clamp(3.6rem, 11vw, 5rem); }
-.headline .lead-unit { font-size: clamp(1rem, 2.4vw, 1.35rem); }
-.headline .lead-trend { width: 1.5rem; height: 1.5rem; }
+.headline .lead-value { font-size: clamp(4.6rem, 17vw, 6rem); }
+.headline .lead-unit { font-size: clamp(1.25rem, 4vw, 1.6rem); }
+.headline .lead-trend { width: 1.9rem; height: 1.9rem; }
 
 /* The temperature carries the range bar, so it needs the width of two on a
    phone and stays with the others once there is room. */
@@ -360,14 +363,18 @@ select.report-select {
   letter-spacing: 0.13em;
   text-transform: uppercase;
   color: var(--ink-faint);
+  /* German has words like Aussenluftfeuchte, and two columns on a phone are
+     narrow. Let them break rather than run into the next column. */
+  overflow-wrap: anywhere;
 }
 .companions dd {
   margin: 0.1rem 0 0;
   font-family: var(--font-mono);
   font-size: 1.2rem;
   font-variant-numeric: tabular-nums;
-  /* The arrow belongs to the number, not to a line of its own. */
-  white-space: nowrap;
+  /* The arrow belongs to the number, not to a line of its own -- but a column
+     that will not wrap runs into its neighbour instead, so it may. */
+  overflow-wrap: anywhere;
 }
 /* A second line under a reading: the same thing measured another way. */
 .sub-reading {
@@ -587,9 +594,12 @@ select.report-select {
     --fs-base: 1.0625rem;
     --fs-md:   1.1875rem;
   }
-  .companions { gap: 1.1rem 1.2rem; }
-  .companions dt { font-size: 0.78rem; }
-  .companions dd { font-size: 1.45rem; }
+  .companions { gap: 1.2rem 1rem; }
+  .companions dt { font-size: 0.78rem; letter-spacing: 0.08em; }
+  .companions dd { font-size: 1.5rem; }
+  .companions dd small { font-size: 0.55em; }
+  .lead-label { font-size: 0.82rem; }
+  .span-title { font-size: 1rem; }
   .span-ends { font-size: var(--fs-sm); }
   .panel-body, .panel-head { padding-left: 0.85rem; padding-right: 0.85rem; }
 }
@@ -653,6 +663,18 @@ select.report-select {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow: hidden;
+}
+
+/* Any overflow other than visible makes the panel the frame a sticky child
+   sticks inside, so the history head stayed put relative to its own panel and
+   scrolled away with it. That panel gets visible, and its corners are rounded
+   on the children that reach them instead. */
+.panel:has(.range-bar) { overflow: visible; }
+.panel:has(.range-bar) > .panel-head {
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.panel:has(.range-bar) > *:last-child {
+  border-radius: 0 0 var(--radius) var(--radius);
 }
 
 .panel-head {
@@ -724,6 +746,30 @@ select.report-select {
   background: none;
 }
 
+/* Below this the three columns do not fit: the label needs its width, the two
+   arrows theirs, and Now and Share were left overlapping the forward arrow.
+   Two rows instead, arrows over buttons. */
+@media (max-width: 34rem) {
+  /* The panel head no longer clips, so its contents have to fit by themselves:
+     the tabs wrap under the title rather than off the side of the page. */
+  .panel:has(.range-bar) > .panel-head { flex-wrap: wrap; row-gap: 0.35rem; }
+  .panel:has(.range-bar) > .panel-head .tabs { margin-left: auto; }
+  .range-bar { grid-template-columns: minmax(0, 1fr); gap: 0.2rem; }
+  .range-nav, .range-extra { grid-column: 1; justify-content: center; padding-left: 0; }
+  .range-extra:empty { display: none; }
+}
+
+/* The head of the history panel stays put. Scrolling through eleven charts
+   otherwise loses both which day is on screen and the means to change it. */
+.panel:has(.range-bar) .panel-head,
+.range-bar {
+  position: sticky;
+  z-index: 3;
+  background: var(--surface);
+}
+.panel:has(.range-bar) .panel-head { top: 0; }
+.range-bar { top: 2.9rem; border-bottom: 1px solid var(--border); }
+
 .range-nav {
   grid-column: 2;
   display: flex;
@@ -737,8 +783,9 @@ select.report-select {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.25rem;
+  gap: 0.4rem;
   min-width: 0;
+  padding-left: 0.5rem;
 }
 
 .range-button {
@@ -762,7 +809,7 @@ select.report-select {
    "Saturday, 22 August 2026", and a growing label would push the arrows around
    just as surely as an appearing button does. */
 .range-label {
-  width: clamp(9rem, 42vw, 15rem);
+  width: clamp(7rem, 38vw, 15rem);
   text-align: center;
   font-size: var(--fs-sm);
   font-weight: 500;
