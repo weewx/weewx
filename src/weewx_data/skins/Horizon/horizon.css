@@ -619,6 +619,10 @@ select.report-select {
    screen reader should hear them in. */
 .columns.sidebar-responsive-top > .stack:last-child { order: -1; }
 
+@media (min-width: 62.5rem) {
+  .chart-skeleton { height: 340px; }
+}
+
 @media (min-width: 60rem) {
   .columns { grid-template-columns: minmax(0, 1fr) 21rem; }
 
@@ -922,8 +926,11 @@ select.report-select {
 .u-tooltip .t-row b { font-weight: 600; margin-left: auto; padding-left: 0.6rem; }
 
 /* Placeholder that holds the card's height until its data arrives. */
+/* The same height the chart will be, or the page grows under the reader as the
+   charts load in and whatever they were looking at moves. chartHeight() in
+   horizon.js computes the same number. */
 .chart-skeleton {
-  height: 180px;
+  height: 290px;
   border-radius: 6px;
   background: linear-gradient(100deg, var(--surface-sunk) 30%, var(--border) 50%, var(--surface-sunk) 70%);
   background-size: 300% 100%;

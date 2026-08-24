@@ -30,6 +30,34 @@ put back.
 A panel is an `.inc` file in the skin directory. Write your own, add its name to
 `panels`, and it appears. No template editing.
 
+## The cards
+
+Each name in `panels` is an `.inc` file in the skin directory. These come with it:
+
+| Panel | What it shows |
+|---|---|
+| `current` | The reading set large, the day's range under it, and everything else the station records in two columns. `dashboard_lead` and `dashboard_readings` decide what. |
+| `sun` | The sun's arc through the day, with the band behind it covering the year between the solstices. Daylight, how much that has changed since yesterday, the highest the sun reaches, when it is light enough to see by, and the distance. |
+| `moon` | The moon as NASA rendered it, one of 32 frames picked by age since the last new moon. Illumination, phase, age, rise and set, and the next full and new moon. |
+| `imagery` | Radar, satellite and map, where they are configured. |
+| `sensors` | Signal strength, batteries and voltages. |
+| `about` | Where the station is and what it runs. |
+
+A panel of your own is a file plus its name in `panels`. Nothing else to edit.
+
+The sun's arc costs one number per curve rather than a reading every quarter
+hour: at hour angle H the height of the sun is `sin(h) = sin(lat) sin(dec) +
+cos(lat) cos(dec) cos(H)`, and the band is the same curve at the solstices. Each
+curve is drawn for its own day, so the axis is the clock on the wall: the sun is
+highest at 13:15 rather than at noon in central Europe, and an hour earlier by
+the clock at midwinter than at midsummer. North of the arctic circle there are
+days with no sunrise, and the card says so.
+
+The moon images are NASA's, rendered from Lunar Reconnaissance Orbiter
+elevation data and in the public domain. `moon/LICENSE.txt` has the details.
+The phase is right in any year; the libration was computed for 2026 and drifts
+after that by an amount nobody will see.
+
 ## What the skin adds to [DisplayOptions]
 
 Most of the section is shared with *Seasons* and documented in the reference under
