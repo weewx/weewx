@@ -345,11 +345,28 @@ setup_database_dir() {
     chown -R $WEEWX_USER:$WEEWX_GROUP %{sqlite_root}
 }
 
+# get HTML_ROOT from the configuration file, falling back to the default
+get_html_root() {
+    hr=
+    if [ -f %{cfg_file} ]; then
+        # The first HTML_ROOT is the one in [StdReport]. Later ones belong to
+        # individual reports. Leading whitespace matters: the option is indented,
+        # and commented-out examples must not match.
+        hr=$(sed -n 's/^[[:space:]]*HTML_ROOT[[:space:]]*=[[:space:]]*//p' %{cfg_file} | head -1)
+        hr=$(echo "$hr" | sed -e 's/[[:space:]]*#.*$//' -e 's/[[:space:]]*$//')
+    fi
+    case "$hr" in
+        ''|.*|[!/]*) echo '%{html_root}' ;;
+        *) echo "$hr" ;;
+    esac
+}
+
 # create the reports directory
 setup_reporting_dir() {
-    echo "Configuring reporting directory %{html_root}"
-    mkdir -p %{html_root}
-    set_permissions $WEEWX_USER $WEEWX_GROUP %{html_root}
+    html_root=$(get_html_root)
+    echo "Configuring reporting directory $html_root"
+    mkdir -p "$html_root"
+    set_permissions $WEEWX_USER $WEEWX_GROUP "$html_root"
 }
 
 # set the permissions on the configuration, skins, and extensions
