@@ -3,6 +3,12 @@ WeeWX change history
 
 ### 5.5.n n-Month-2026
 
+Saving the configuration file no longer changes its mode or ownership. Under a
+package installation, `weectl extension install`, `weectl extension uninstall`,
+`weectl station reconfigure` and `weectl station upgrade` were leaving
+`weewx.conf` as `root:weewx 0644` instead of `weewx:weewx 0660`, so the `weewx`
+user could no longer edit it and the passwords in it became world-readable.
+
 Removed the APRS "messaging-capable" packet flag from `restx.py`.
 [PR #1108](https://github.com/weewx/weewx/pull/1108), by `W0CHP`.
 
