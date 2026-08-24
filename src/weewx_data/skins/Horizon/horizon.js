@@ -414,6 +414,39 @@
           el.style.opacity = '0';
           u.over.appendChild(el);
           u.over.addEventListener('mouseleave', function () { el.style.opacity = '0'; });
+
+          /* Touch has no hover, so a finger dragged across the chart moves the
+             cursor instead. Which gesture it is only becomes clear after a few
+             pixels: mostly sideways reads the chart, mostly up and down scrolls
+             the page, and until then neither is claimed. */
+          var startX = 0, startY = 0, reading = null;
+
+          u.over.addEventListener('touchstart', function (e) {
+            var t = e.touches[0];
+            startX = t.clientX;
+            startY = t.clientY;
+            reading = null;
+          }, { passive: true });
+
+          u.over.addEventListener('touchmove', function (e) {
+            var t = e.touches[0];
+            if (reading === null) {
+              var dx = Math.abs(t.clientX - startX), dy = Math.abs(t.clientY - startY);
+              if (dx + dy < 8) return;
+              reading = dx > dy;
+            }
+            if (!reading) return;
+            /* Ours now, so the page must not scroll under it. */
+            if (e.cancelable) e.preventDefault();
+            var box = u.over.getBoundingClientRect();
+            u.setCursor({ left: t.clientX - box.left, top: t.clientY - box.top });
+          }, { passive: false });
+
+          u.over.addEventListener('touchend', function () {
+            reading = null;
+            el.style.opacity = '0';
+            u.setCursor({ left: -10, top: -10 });
+          }, { passive: true });
         },
         setCursor: function (u) {
           var idx = u.cursor.idx;
@@ -569,11 +602,18 @@
           ticks: { show: false },
           font: '11px ' + getComputedStyle(document.body).fontFamily,
           size: 46,
-          /* Gridlines where the PNG puts them. */
+          /* Gridlines where the PNG puts them, but not closer than they can be
+             read: on a phone the same increment that suits a 500 pixel image
+             stacks the labels on top of each other. Double it until they fit. */
+          space: 34,
           splits: ys && ys[2] ? function (u, ai, min, max) {
+            var step = ys[2];
+            while ((max - min) / step > Math.max(2, u.bbox.height / (34 * (devicePixelRatio || 1)))) {
+              step *= 2;
+            }
             var out = [];
-            for (var v = Math.ceil(min / ys[2]) * ys[2]; v <= max + 1e-9; v += ys[2]) {
-              out.push(Math.round(v / ys[2]) * ys[2]);
+            for (var v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) {
+              out.push(Math.round(v / step * 1e6) / 1e6);
             }
             return out;
           } : null,
