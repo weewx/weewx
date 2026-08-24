@@ -3,6 +3,10 @@ WeeWX change history
 
 ### 5.5.n n-Month-2026
 
+Added packaging for openSUSE Leap 16. It does not carry `python3-ephem`, so that
+dependency is dropped for that release, the same way it is for Redhat 9 and 10.
+Fixes [Issue #1065](https://github.com/weewx/weewx/issues/1065).
+
 Saving the configuration file no longer changes its mode or ownership. Under a
 package installation, `weectl extension install`, `weectl extension uninstall`,
 `weectl station reconfigure` and `weectl station upgrade` were leaving
