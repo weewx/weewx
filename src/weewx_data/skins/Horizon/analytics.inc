@@ -1,5 +1,6 @@
-## Copyright (c) 2026 the WeeWX contributors
-## Adapted from the Seasons skin, copyright (c) Tom Keffer and Matthew Wall.
+## analytics module weewx skins
+## Copyright Tom Keffer, Matthew Wall
+## Copyright (c) 2026 Manuel Hilgert
 ## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
 #errorCatcher Echo
 #encoding UTF-8

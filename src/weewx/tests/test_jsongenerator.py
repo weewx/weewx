@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2026 the WeeWX contributors
+#    Copyright (c) 2026 Manuel Hilgert
 #
 #    See the file LICENSE.txt for your full rights.
 #
