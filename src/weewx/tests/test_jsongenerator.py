@@ -106,7 +106,7 @@ def build_skin_dict(html_root, archive=False):
     return skin_dict
 
 
-def run_generator(config_dict, tmp_path, archive=False):
+def run_generator(config_dict, tmp_path, archive=False, gen_ts=None):
     """Run the generator against the test database and return its output directory."""
     html_root = str(tmp_path)
     skin_dict = build_skin_dict(html_root, archive=archive)
@@ -116,7 +116,8 @@ def run_generator(config_dict, tmp_path, archive=False):
     config_dict = configobj.ConfigObj(config_dict.dict(), interpolation=False)
 
     stn_info = weewx.station.StationInfo(**config_dict['Station'])
-    gen_ts = parameters.synthetic_dict['stop_ts']
+    if gen_ts is None:
+        gen_ts = parameters.synthetic_dict['stop_ts']
 
     generator = weewx.jsongenerator.JSONGenerator(
         config_dict, skin_dict, gen_ts, first_run=True, stn_info=stn_info)
@@ -374,10 +375,6 @@ class TestArchive:
 
         This is the case that matters in practice: reports run every archive interval,
         and the archive must cost almost nothing on all the runs after the first.
-
-        (The test database stops in September 2010, so 2010 is the *current* year here
-        and is held back by stale_age. A year that has actually run out takes the same
-        path and is skipped outright, regardless of age.)
         """
         data_dir = run_generator(config_dict, tmp_path, archive=True)
         path = os.path.join(data_dir, 'archive', 'tempdew-2010.json')
@@ -387,16 +384,63 @@ class TestArchive:
 
         assert os.path.getmtime(path) == before
 
-    def test_stale_file_is_refreshed(self, config_dict, tmp_path):
-        """Once the current year's file is older than stale_age, it is rewritten."""
-        data_dir = run_generator(config_dict, tmp_path, archive=True)
+    def test_a_new_grid_slot_rewrites_the_file(self, config_dict, tmp_path):
+        """The current year is rewritten once the data reach into the next slot."""
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        data_dir = run_generator(config_dict, tmp_path, archive=True,
+                                 gen_ts=stop_ts - 7200)
         path = os.path.join(data_dir, 'archive', 'tempdew-2010.json')
+        before = os.path.getmtime(path)
 
-        aged = os.path.getmtime(path) - 86400
-        os.utime(path, (aged, aged))
+        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts)
+
+        assert os.path.getmtime(path) != before
+
+    def test_catchup_data_reach_the_archive(self, config_dict, tmp_path):
+        """A file minutes old can still be hours behind.
+
+        Stop the station, restart it, and the logger hands over everything it recorded
+        meanwhile. The file on disk is younger than any age test would trip on, and
+        missing a day of data. Reported by tkeffer in #1111.
+        """
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        data_dir = run_generator(config_dict, tmp_path, archive=True,
+                                 gen_ts=stop_ts - 2 * 86400)
+        path = os.path.join(data_dir, 'archive', 'tempdew-2010.json')
+        with open(path, encoding='utf-8') as fd:
+            before = json.load(fd)
+
+        # The file is seconds old at this point. Only the data have moved.
+        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts)
+        with open(path, encoding='utf-8') as fd:
+            after = json.load(fd)
+
+        assert after['covered'] > before['covered']
+        filled = lambda p: sum(1 for v in p['series'][0]['values'] if v is not None)
+        assert filled(after) > filled(before) + 40
+
+    def test_an_import_rebuilds_finished_years(self, config_dict, tmp_path):
+        """Data reaching further back than last time mean an import.
+
+        A finished year is otherwise written once and skipped forever, so imported
+        history would never show up.
+        """
+        data_dir = run_generator(config_dict, tmp_path, archive=True)
+        index_path = os.path.join(data_dir, 'archive', 'index.json')
+        path = os.path.join(data_dir, 'archive', 'tempdew-2010.json')
+        before = os.path.getmtime(path)
+
+        # Claim the last run only saw data from a week in. Anything earlier than that
+        # is new, exactly as it would be after 'weectl import'.
+        with open(index_path, encoding='utf-8') as fd:
+            index = json.load(fd)
+        index['first'] += 7 * 86400
+        with open(index_path, 'w', encoding='utf-8') as fd:
+            json.dump(index, fd)
+
         run_generator(config_dict, tmp_path, archive=True)
 
-        assert os.path.getmtime(path) > aged
+        assert os.path.getmtime(path) != before
 
     def test_archive_index_lists_years(self, config_dict, tmp_path):
         data_dir = run_generator(config_dict, tmp_path, archive=True)

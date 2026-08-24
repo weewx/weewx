@@ -249,8 +249,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         Within a file the grid is regular, so timestamps are implied by `start` and
         `interval` rather than stored, which roughly halves the size.
 
-        The current year is rewritten at most every `stale_age` seconds (default: the
-        grid resolution -- there is nothing new to say before the next slot begins).
+        A file is rewritten when the data it covers have moved on to another grid slot,
+        not when the file reaches a certain age. The two are the same thing while the
+        station is running. They part company after a catchup: the file is minutes old
+        and hours behind, and an age test says there is nothing to do.
 
         To rebuild everything, delete the archive directory and run the report again
         (`weectl report run <report>`).
@@ -280,14 +282,15 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             log.error("Archive: no section [%s]. Skipped.", source_group)
             return
 
-        stale_age = to_int(weeutil.weeutil.nominal_spans(
-            arch_dict.get('stale_age', resolution)))
-
         ngen = 0
         nskipped = 0
         index = {}
         root = None
         overall_start = overall_stop = None
+
+        # What the last run covered, so this one can tell what has actually changed.
+        # One file, read once, the same way gen_json() reads its manifest.
+        previous, previous_first = self._read_archive_index(dest_dir)
 
         for plotname in group_dict.sections:
             if self.stop_event and self.stop_event.is_set():
@@ -296,12 +299,16 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             plot_options = accumulateLeaves(group_dict[plotname])
             db_manager = self.db_binder.get_manager(plot_options['data_binding'])
 
-            first_ts = db_manager.firstGoodStamp()
+            db_first = db_manager.firstGoodStamp()
             last_ts = gen_ts or db_manager.lastGoodStamp()
-            if not first_ts or not last_ts:
+            if not db_first or not last_ts:
                 continue
-            if max_days:
-                first_ts = max(first_ts, last_ts - max_days * 86400)
+            first_ts = max(db_first, last_ts - max_days * 86400) if max_days else db_first
+
+            # Data that reach further back than the last run saw mean an import, and
+            # every year has to be built again. 'first_ts' cannot be used for this:
+            # under 'max_days' it moves forward on its own as the record grows.
+            reimported = previous_first is not None and int(db_first) < previous_first
 
             # Track the covered span from the data itself, not from what happened to be
             # rewritten this run -- on a second run nothing is rewritten at all.
@@ -320,22 +327,20 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 year = time.localtime(year_span.start).tm_year
                 out_file = os.path.join(arch_root, '%s-%d.json' % (group_name, year))
 
-                # A year that has run out can never gain another reading, so once its
-                # file exists there is nothing to do. This is what keeps a long-running
-                # station cheap.
-                complete = year_span.stop <= last_ts
-                if os.path.exists(out_file):
-                    if complete:
-                        nskipped += 1
-                        index.setdefault(group_name, {'years': []})['years'].append(year)
-                        root = arch_root
-                        continue
-                    # Current year: only rewrite once per grid slot.
-                    if stale_age and (time.time() - os.path.getmtime(out_file)) < stale_age:
-                        nskipped += 1
-                        index.setdefault(group_name, {'years': []})['years'].append(year)
-                        root = arch_root
-                        continue
+                # How far into this year the data now reach. For a year that has run
+                # out this is the end of the year, so it never moves again and the
+                # file is written once -- which is what keeps a long-running station
+                # cheap. For the current year it advances with the record, and the
+                # file is rewritten when it advances into the next grid slot.
+                covered = min(int(year_span.stop), int(last_ts))
+                was = previous.get(group_name, {}).get(year)
+                if os.path.exists(out_file) and was is not None and not reimported                         and was // resolution == covered // resolution:
+                    nskipped += 1
+                    entry = index.setdefault(group_name, {'years': [], 'covered': {}})
+                    entry['years'].append(year)
+                    entry['covered'][year] = was
+                    root = arch_root
+                    continue
 
                 payload = self._archive_year(group_dict[plotname], plot_options, year_span,
                                              resolution, aggregate_type, rounding,
@@ -350,8 +355,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                                   separators=(',', ':') if indent is None else None)
                     ngen += 1
                     root = arch_root
-                    entry = index.setdefault(group_name, {'years': []})
+                    entry = index.setdefault(group_name, {'years': [], 'covered': {}})
                     entry['years'].append(year)
+                    entry['covered'][year] = payload['covered']
                     entry['title'] = ', '.join(s['label'] for s in payload['series'])
                     entry['unit_label'] = payload['unit_label']
                 except OSError as e:
@@ -373,6 +379,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     'title': entry.get('title', name),
                     'unit_label': entry.get('unit_label', ''),
                     'years': sorted(set(entry['years'])),
+                    # Keyed by year, so it survives the trip through JSON as strings.
+                    'covered': {str(y): c for y, c in entry.get('covered', {}).items()},
                 })
             try:
                 with open(os.path.join(root, 'index.json'), 'w', encoding='utf-8') as fd:
@@ -389,6 +397,34 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             log.info("Generated %d archive files (%d already current) for report %s "
                      "in %.2f seconds",
                      ngen, nskipped, self.skin_dict['REPORT_NAME'], time.time() - t1)
+
+    def _read_archive_index(self, dest_dir):
+        """What the previous run wrote, from the index it left behind.
+
+        Returns:
+            tuple: A dict of {group: {year: covered}}, and the earliest reading the
+                last run knew about (None if there was no usable index).
+        """
+        covered = {}
+        first = None
+        try:
+            path = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                search_up(self.skin_dict, 'HTML_ROOT', 'public_html'),
+                                dest_dir, 'index.json')
+            with open(path, encoding='utf-8') as fd:
+                index = json.load(fd)
+            first = to_int(index.get('first'))
+            for group in index.get('groups', []):
+                years = {}
+                for year, ts in (group.get('covered') or {}).items():
+                    years[int(year)] = int(ts)
+                if years:
+                    covered[group['name']] = years
+        except (OSError, ValueError, KeyError, TypeError):
+            # No index, or one this version cannot read. Everything gets rebuilt,
+            # which is the safe direction to fail in.
+            return {}, None
+        return covered, first
 
     def _archive_daynight(self, root, first_ts, last_ts, indent):
         """Write sunrise/sunset transitions, one file per calendar year.
@@ -535,6 +571,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             'start': start,
             'interval': resolution,
             'count': slots,
+            # The reading this file was built from. What decides whether it has to be
+            # written again, rather than how old the file happens to be.
+            'covered': min(int(year_span.stop), int(last_ts)),
             'unit': unit,
             'unit_label': (unit_label or '').strip(),
             'series': series_out,

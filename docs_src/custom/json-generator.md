@@ -102,8 +102,8 @@ Two properties of that split matter on the small machines WeeWX usually runs on:
 
 - **A finished year never changes.** It is written once and then skipped forever. A
   station with fourteen years of data rewrites one file per report cycle, not fourteen.
-  The current year is rewritten at most once per `stale_age` (default: the grid
-  resolution — there is nothing new to say before the next slot begins).
+  The current year is rewritten when the data reach into the next grid slot. There is
+  nothing new to say before that.
 - **A client fetches only the years it is showing.** Looking at last March costs one
   file, not the whole record.
 
@@ -171,9 +171,6 @@ And in `[[Archive]]`:
     <tr><td class="first_col">aggregate_type</td>
         <td>How to aggregate onto the grid. Default: <span class="code">avg</span>. Rain,
         ET, hail, snow and lightning counts are always summed.</td></tr>
-    <tr><td class="first_col">stale_age</td>
-        <td>How long the current year's file may go without being rewritten. Default: the
-        resolution.</td></tr>
     <tr><td class="first_col">max_days</td>
         <td>How far back to go. Default: 0, meaning the whole record.</td></tr>
     <tr><td class="first_col">source_group</td>
@@ -202,7 +199,7 @@ files and 11 plot groups spanning two calendar years:
 
 The archive's first build is a one-off, and it scales with the length of your record: a
 station with ten years of data pays for ten years once. After that only the current year
-is touched, and only once per `stale_age`. The steady-state figure above is the one that
+is touched, and only once per grid slot. The steady-state figure above is the one that
 matters for a station running every five minutes.
 
 These numbers will be several times larger on a Raspberry Pi. They are given to show the
