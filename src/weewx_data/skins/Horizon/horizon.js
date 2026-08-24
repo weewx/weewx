@@ -556,8 +556,18 @@
 
   var charts = [];   // {plot, meta, host}
 
+  /* Proportions on a wide screen, a floor on a narrow one. A third of 400
+     pixels is 130 pixels of chart, in which a day's temperature is a flat
+     wiggle and the axis fits two labels. The floor is what a chart needs to
+     show its shape, whatever the width; above it the old ratio takes over, so
+     nothing jumps as the window is dragged across the threshold. */
+  function chartHeight(width) {
+    return Math.max(290, Math.min(340, Math.round(width * 0.34)));
+  }
+
   function buildChart(host, meta, period) {
     meta._period = period;
+    var hostWidth = host.clientWidth || 600;
     var colors = themeColors();
     var data = align(meta.series);
     var digits = digitsFor(meta.series);
@@ -566,8 +576,8 @@
 
     var opts = {
       title: '',
-      width: host.clientWidth || 600,
-      height: Math.max(150, Math.min(260, Math.round((host.clientWidth || 600) * 0.34))),
+      width: hostWidth,
+      height: chartHeight(hostWidth),
       padding: [22, 8, 0, 0],     // room for the unit above the y axis
       legend: { show: false },
       cursor: {
@@ -672,7 +682,7 @@
       if (!c) return;
       var w = Math.round(entry.contentRect.width);
       if (w > 0 && w !== c.plot.width) {
-        c.plot.setSize({ width: w, height: Math.max(150, Math.min(260, Math.round(w * 0.34))) });
+        c.plot.setSize({ width: w, height: chartHeight(w) });
       }
     });
   });
