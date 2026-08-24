@@ -613,7 +613,10 @@
             }
             var out = [];
             for (var v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) {
-              out.push(Math.round(v / step * 1e6) / 1e6);
+              /* Round the value, not the value over the step. Dividing here turned
+                 a tick at 800 into one at 8, and every label piled up at the
+                 bottom of the axis. */
+              out.push(Math.round(v * 1e6) / 1e6);
             }
             return out;
           } : null,
@@ -901,6 +904,7 @@
     if ((to - from) > 9 * 86400) return Promise.resolve(null);
     return Promise.all(years.map(loadDayNight)).then(function (files) {
       var all = [];
+      var bands = [];
       var first = null;
       files.filter(Boolean).forEach(function (f) {
         if (first === null) {
@@ -910,10 +914,16 @@
           first = (before % 2 === 0) ? startState : (startState === 'day' ? 'night' : 'day');
         }
         all = all.concat(f.transitions.filter(function (t) { return t > from && t < to; }));
+        /* The twilight bands travel with the transitions. Dropping them here left
+           the archive with hard edges where the live view fades. */
+        bands = bands.concat((f.twilight || []).filter(function (b) {
+          return b.to > from && b.from < to;
+        }));
       });
       if (!all.length) return null;
       all.sort(function (a, b) { return a - b; });
-      return { first: first, transitions: all };
+      bands.sort(function (a, b) { return a.from - b.from; });
+      return { first: first, transitions: all, twilight: bands };
     });
   }
 

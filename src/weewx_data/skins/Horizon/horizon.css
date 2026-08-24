@@ -26,7 +26,7 @@
   /* Chart surfaces, read by horizon.js so canvas and page agree. */
   --chart-grid: rgb(0 0 0 / 5.5%);
   --chart-axis: #8e939b;
-  --chart-night: #e6e4db;
+  --chart-night: #e8ecf3;
 
   /* Nine bands from cold to hot, for the reading that leads the page. */
   --cool:   #6b8f7e;
@@ -42,6 +42,9 @@
 
   --radius: 10px;
   --gap: clamp(0.75rem, 2.2vw, 1.25rem);
+  /* The margin either side of the page. A phone has little width to give away;
+     a desktop has plenty and looks bare without it. */
+  --edge: clamp(0.4rem, 2.2vw, 1.25rem);
 
   --fs-xs:   0.75rem;
   --fs-sm:   0.8125rem;
@@ -62,46 +65,48 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg:            #0e161f;
-    --surface:       #17212d;
-    --surface-sunk:  #121b25;
-    --ink:           #e1e9f0;
-    --ink-muted:     #93a6b6;
-    --ink-faint:     #6d8195;
-    --border:        #253243;
-    --border-strong: #33455a;
-    --accent:        #6fa9d6;
-    --accent-bright: #4282b4;
-    --hi:            #d97b7b;
-    --lo:            #8b9bdd;
-    --ok:            #6bb37c;
-    --warn:          #d3a05c;
-    --shadow:        0 1px 2px rgb(0 0 0 / 30%), 0 4px 14px rgb(0 0 0 / 22%);
-    --chart-grid:    #223044;
-    --chart-axis:    #6d8195;
-    --chart-night:   #101a25;
+    --bg: #14181d;
+    --surface: #1a1f25;
+    --surface-sunk: #0f1317;
+    --ink: #e7e5dd;
+    --ink-muted: #9aa1aa;
+    --ink-faint: #6c737c;
+    --border: #212830;
+    --border-strong: #2c333b;
+    --accent: #7fb2df;
+    --accent-bright: #6aa8d8;
+    --hi: #e08262;
+    --lo: #6aa8d8;
+    --ok: #6ea765;
+    --warn: #d3a13f;
+    --shadow: 0 1px 2px rgb(0 0 0 / 30%);
+    --chart-grid: rgb(255 255 255 / 6%);
+    --chart-axis: #6c737c;
+    --chart-night: #0f1317;
+    --cool: #8bbba4;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #16181a;
-  --surface: #1d2022;
-  --surface-sunk: #131517;
-  --ink: #e8e6df;
-  --ink-muted: #a0a49f;
-  --ink-faint: #7c807c;
-  --border: #2c2f31;
-  --border-strong: #3d4143;
-  --accent: #7fb0d8;
-  --accent-bright: #5f95c4;
-  --hi: #cf7a63;
-  --lo: #6ba3cf;
-  --ok: #7ba86f;
-  --warn: #c9a05a;
+  --bg: #14181d;
+  --surface: #1a1f25;
+  --surface-sunk: #0f1317;
+  --ink: #e7e5dd;
+  --ink-muted: #9aa1aa;
+  --ink-faint: #6c737c;
+  --border: #212830;
+  --border-strong: #2c333b;
+  --accent: #7fb2df;
+  --accent-bright: #6aa8d8;
+  --hi: #e08262;
+  --lo: #6aa8d8;
+  --ok: #6ea765;
+  --warn: #d3a13f;
   --shadow: 0 1px 2px rgb(0 0 0 / 30%);
   --chart-grid: rgb(255 255 255 / 6%);
-  --chart-axis: #7c807c;
-  --chart-night: #131517;
+  --chart-axis: #6c737c;
+  --chart-night: #0f1317;
+  --cool: #8bbba4;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -129,7 +134,7 @@ a { color: var(--accent); text-underline-offset: 2px; }
 .wrap {
   max-width: 84rem;
   margin: 0 auto;
-  padding: var(--gap);
+  padding: var(--gap) var(--edge);
   display: flex;
   flex-direction: column;
   gap: var(--gap);
@@ -361,6 +366,8 @@ select.report-select {
   font-family: var(--font-mono);
   font-size: 1.2rem;
   font-variant-numeric: tabular-nums;
+  /* The arrow belongs to the number, not to a line of its own. */
+  white-space: nowrap;
 }
 .companions dd small,
 .lead-unit small { font-size: 0.62em; color: var(--ink-muted); margin-left: 0.15em; }
@@ -564,6 +571,20 @@ select.report-select {
 .headline-share svg {
   width: 1.1rem; height: 1.1rem; fill: none; stroke: currentColor;
   stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+}
+
+@media (max-width: 34rem) {
+  :root {
+    --fs-xs:   0.8125rem;
+    --fs-sm:   0.9375rem;
+    --fs-base: 1.0625rem;
+    --fs-md:   1.1875rem;
+  }
+  .companions { gap: 1.1rem 1.2rem; }
+  .companions dt { font-size: 0.78rem; }
+  .companions dd { font-size: 1.45rem; }
+  .span-ends { font-size: var(--fs-sm); }
+  .panel-body, .panel-head { padding-left: 0.85rem; padding-right: 0.85rem; }
 }
 
 /* ---------------------------------------------------------------- layout */
