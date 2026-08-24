@@ -261,6 +261,16 @@
     };
   }
 
+  /* Round up to 1, 2, 5 or 10 times a power of ten, the way
+     weeplot.utilities.scale() rounds an axis for the images. 8.9 m/s of wind gives
+     an axis to 10, not to 8.9. */
+  function niceCeil(v) {
+    if (!(v > 0)) return 1;
+    var mag = Math.pow(10, Math.floor(Math.log(v) / Math.LN10));
+    var f = v / mag;
+    return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * mag;
+  }
+
   /* A wind vector plot is not a line. Each reading is an arrow from the zero line whose
      direction is the wind and whose length is the speed -- the "progressive vector"
      plot WeeWX has always drawn. The arithmetic below is weeplot's, so the canvas and
@@ -328,6 +338,28 @@
           ctx.lineTo(u.bbox.left + u.bbox.width, y0);
           ctx.stroke();
 
+          ctx.restore();
+        }
+      }
+    };
+  }
+
+  /* The unit, over the y axis. The PNGs put it in the upper left corner, and a
+     chart without it says 21.4 and leaves the reader to guess at what. */
+  function unitPlugin(label) {
+    if (!label) return null;
+    return {
+      hooks: {
+        draw: function (u) {
+          var dpr = devicePixelRatio || 1;
+          var ctx = u.ctx;
+          ctx.save();
+          ctx.font = Math.round(11 * dpr) + 'px ' + getComputedStyle(document.body).fontFamily;
+          ctx.fillStyle = themeColors().axis;
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'bottom';
+          /* Clear of the topmost tick, which uPlot centres on the axis top. */
+          ctx.fillText(label, 2 * dpr, u.bbox.top - 8 * dpr);
           ctx.restore();
         }
       }
@@ -465,7 +497,7 @@
       title: '',
       width: host.clientWidth || 600,
       height: Math.max(150, Math.min(260, Math.round((host.clientWidth || 600) * 0.34))),
-      padding: [10, 8, 0, 0],
+      padding: [22, 8, 0, 0],     // room for the unit above the y axis
       legend: { show: false },
       cursor: {
         drag: { x: true, y: false, setScale: true },
@@ -475,10 +507,11 @@
       scales: {
         x: { time: true },
         /* Vectors radiate from zero, so the axis has to be centred on it -- as the
-           PNGs are. */
+           PNGs are -- and rounded up, or the longest arrow ends exactly on the
+           frame. weeplot.utilities.scale() does the same for the images. */
         y: isVector ? {
           range: function (u, min, max) {
-            var m = Math.max(Math.abs(min), Math.abs(max)) || 1;
+            var m = niceCeil(Math.max(Math.abs(min), Math.abs(max)));
             return [-m, m];
           }
         } : {}
@@ -529,7 +562,8 @@
         }
         return base;
       })),
-      plugins: [tooltipPlugin(meta, digits), vectorPlugin(meta.series)].concat(
+      plugins: [tooltipPlugin(meta, digits), vectorPlugin(meta.series),
+                unitPlugin(meta.unit_label)].concat(
         isBar ? [] : [nightPlugin(meta.daynight)]
       ).filter(Boolean)
     };
