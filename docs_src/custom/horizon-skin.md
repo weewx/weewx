@@ -48,6 +48,8 @@ These are its own:
 | `panels` | Which panels appear beside the charts, and in what order. Each name is an `.inc` file in the skin directory, so a panel of your own is a file plus a name in this list. |
 | `hide_panels` | Panels to leave out, without editing the list above. |
 | `hide_plot_groups` | Charts to leave out, without editing `plot_groups`. |
+| `dashboard_lead` | The one reading set large at the top of the current conditions card. Defaults to the first entry in `observations_headline`. |
+| `dashboard_readings` | The rows underneath it, in order. Defaults to `observations_current`. Anything the station does not record is skipped, so the list may name more than you have. |
 | `observations_headline` | The types shown large at the top of the page. Three or four is about right on a phone. |
 | `refresh_interval` | How often the page re-fetches current conditions, in seconds. `0` turns it off. There is no point going below your archive interval, since nothing new appears until the next record is archived. |
 | `show_image_links` | Offer the server-rendered PNG next to each chart. Set it to `False` if you drop the ImageGenerator from `[Generators]`, or the links point at files nobody writes. |

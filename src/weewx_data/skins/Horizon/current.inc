@@ -7,12 +7,19 @@
 ## and then everything else in two quiet columns. The reading leads because it is
 ## what anyone came for; the rest is the same size as itself and does not compete.
 ##
-#set $headline = $to_list($DisplayOptions.get('observations_headline', ['outTemp', 'windSpeed', 'rain', 'barometer']))
-#set $lead = $headline and $headline[0] or 'outTemp'
-## Everything the station actually records, in the order the skin lists it.
-## 'has_data' does the filtering, so a station without a UV sensor never sees
-## that row and nobody has to keep a list of what is fitted.
-#set $wanted = $to_list($DisplayOptions.get('observations_current', ['outTemp', 'barometer']))
+## What the card shows, and in what order.
+##
+##   dashboard_lead     the one reading set large at the top
+##   dashboard_readings the rows underneath
+##
+## Both fall back to the lists the skin already keeps, so a configuration that
+## never mentions them still gets a sensible card. 'has_data' does the rest:
+## a station without a UV sensor never sees that row, and nobody has to keep a
+## second list of what is fitted.
+#set $headline = $to_list($DisplayOptions.get('observations_headline', ['outTemp']))
+#set $lead = $DisplayOptions.get('dashboard_lead') or ($headline and $headline[0]) or 'outTemp'
+#set $wanted = $to_list($DisplayOptions.get('dashboard_readings',
+                        $DisplayOptions.get('observations_current', ['outTemp', 'barometer'])))
 #set $rest = [$x for $x in $wanted if $x != $lead and $getVar('year.%s.has_data' % $x, False)]
 ## Rain is three readings of one thing: how much today, how hard right now, and
 ## the hardest it came down. Three rows of mostly zeroes said that badly.
