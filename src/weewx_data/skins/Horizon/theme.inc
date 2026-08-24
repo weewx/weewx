@@ -37,3 +37,12 @@
   #end if
     </style>
 #end if
+
+## A stylesheet of your own, for whatever the custom properties do not reach. Editing
+## horizon.css instead works until the next upgrade overwrites it. It comes last, so
+## it wins over [[Theme]] as well. Name the file in 'custom_css' and add it to
+## 'copy_once' in [CopyGenerator], or it will not be installed.
+#set $custom_css = $DisplayOptions.get('custom_css')
+#if $custom_css
+    <link rel="stylesheet" href="$custom_css">
+#end if
