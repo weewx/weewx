@@ -654,6 +654,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             # is far more useful to a client than a raw pair of components.
             magnitudes, directions = _split_vectors(new_data_vec_t[0])
             values = _round_seq(magnitudes, rounding)
+            components = _vector_components(new_data_vec_t[0])
 
             entry = {
                 'obs_type': var_type,
@@ -678,9 +679,17 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 # Bar width, in seconds, so the client can size the bars correctly.
                 entry['bar_width'] = [b - a for a, b in zip(start_vec_t[0], stop_vec_t[0])]
             if plot_type == 'vector':
+                # A vector plot draws each reading as an arrow from the zero line, so
+                # the client needs the components, not just the magnitude. Handing them
+                # over avoids rebuilding them from magnitude and bearing at the far end.
+                if components:
+                    entry['vector_x'] = _round_seq(components[0], rounding)
+                    entry['vector_y'] = _round_seq(components[1], rounding)
                 vr = line_options.get('vector_rotate')
                 if vr is not None:
-                    entry['vector_rotate'] = float(vr)
+                    # Negated, exactly as the ImageGenerator does it. Without the minus
+                    # the arrows come out mirrored against the PNG of the same data.
+                    entry['vector_rotate'] = -float(vr)
 
             series_out.append(entry)
 
@@ -779,6 +788,24 @@ def _round_seq(seq, ndigits):
     if ndigits is None:
         return list(seq)
     return [None if v is None else round(v, ndigits) for v in seq]
+
+
+def _vector_components(seq):
+    """Split a complex series into its real and imaginary parts.
+
+    weeplot draws a vector by scaling the complex value and offsetting from the zero
+    line; a client doing the same needs the components. Returns None for a series that
+    is not complex.
+
+    Returns:
+        tuple[list, list]|None: The real and imaginary parts.
+    """
+    seq = list(seq)
+    if not any(isinstance(v, complex) for v in seq):
+        return None
+    real = [None if v is None else (v.real if isinstance(v, complex) else v) for v in seq]
+    imag = [None if v is None else (v.imag if isinstance(v, complex) else 0.0) for v in seq]
+    return real, imag
 
 
 def _split_vectors(seq):

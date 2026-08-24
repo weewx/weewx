@@ -54,6 +54,11 @@ data_binding = wx_binding
             aggregate_interval = 3600
             [[[[rain]]]]
 
+        [[[daywindvec]]]
+            vector_rotate = 90
+            [[[[windvec]]]]
+                plot_type = vector
+
         [[[daynothing]]]
             [[[[soilMoist4]]]]
 
@@ -232,6 +237,33 @@ class TestPeriodFiles:
             edge = band['to'] if band['dir'] == 'dawn' else band['from']
             if payload['start'] < edge < payload['stop']:
                 assert edge in crossings
+
+    def test_vector_plot_carries_components_and_rotation(self, config_dict, tmp_path):
+        """A vector plot needs the components, and the rotation the PNGs use.
+
+        The ImageGenerator negates vector_rotate before handing it to weeplot. Passing
+        it through unnegated draws every arrow mirrored against the PNG of the same
+        data -- which looks plausible until you put the two side by side.
+        """
+        data_dir = run_generator(config_dict, tmp_path)
+        with open(os.path.join(data_dir, 'daywindvec.json'), encoding='utf-8') as fd:
+            payload = json.load(fd)
+
+        series = payload['series'][0]
+        assert series['plot_type'] == 'vector'
+
+        # Components, one per sample, alongside the magnitude.
+        assert len(series['vector_x']) == len(series['values'])
+        assert len(series['vector_y']) == len(series['values'])
+
+        # Magnitude has to agree with the components it was derived from.
+        for vx, vy, mag in zip(series['vector_x'], series['vector_y'], series['values']):
+            if vx is None or mag is None:
+                continue
+            assert mag == pytest.approx((vx ** 2 + vy ** 2) ** 0.5, abs=0.01)
+
+        # The skin configures 90; what reaches the client must be -90.
+        assert series['vector_rotate'] == -90.0
 
     def test_manifest_lists_what_exists(self, config_dict, tmp_path):
         data_dir = run_generator(config_dict, tmp_path)

@@ -261,6 +261,79 @@
     };
   }
 
+  /* A wind vector plot is not a line. Each reading is an arrow from the zero line whose
+     direction is the wind and whose length is the speed -- the "progressive vector"
+     plot WeeWX has always drawn. The arithmetic below is weeplot's, so the canvas and
+     the PNG agree:
+
+         scaled = vector * yscale          (both components scaled by the y axis)
+         scaled *= e^(i·rotate)            (vector_rotate, 90 degrees by default)
+         xEnd = xStart - scaled.real       (x grows right, y grows down)
+         yEnd = yStart + scaled.imag
+  */
+  function vectorPlugin(series) {
+    var vectors = series.filter(function (s) {
+      return s.plot_type === 'vector' && s.vector_x && s.vector_y;
+    });
+    if (!vectors.length) return null;
+
+    return {
+      hooks: {
+        draw: function (u) {
+          var ctx = u.ctx;
+          var y0 = u.valToPos(0, 'y', true);
+          /* Pixels per unit on the y axis. Negative, because canvas y grows downward
+             while values grow upward -- the same sign weeplot's yscale carries. */
+          var yScale = u.valToPos(1, 'y', true) - y0;
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(u.bbox.left, u.bbox.top, u.bbox.width, u.bbox.height);
+          ctx.clip();
+
+          vectors.forEach(function (s) {
+            var rot = (s.vector_rotate || 0) * Math.PI / 180;
+            var cos = Math.cos(rot), sin = Math.sin(rot);
+
+            ctx.strokeStyle = s.color || 'currentColor';
+            ctx.lineWidth = Math.max(1, Math.round(devicePixelRatio || 1));
+            ctx.beginPath();
+
+            for (var i = 0; i < s.time.length; i++) {
+              var vx = s.vector_x[i], vy = s.vector_y[i];
+              if (vx === null || vy === null) continue;
+              var ts = s.time[i];
+              if (ts < u.scales.x.min || ts > u.scales.x.max) continue;
+
+              var sx = vx * yScale, sy = vy * yScale;
+              if (rot) {
+                var rx = sx * cos - sy * sin;
+                sy = sx * sin + sy * cos;
+                sx = rx;
+              }
+
+              var xPix = u.valToPos(ts, 'x', true);
+              ctx.moveTo(xPix, y0);
+              ctx.lineTo(xPix - sx, y0 + sy);
+            }
+            ctx.stroke();
+          });
+
+          /* The zero line the arrows hang from. */
+          ctx.strokeStyle = themeColors().axis;
+          ctx.lineWidth = 1;
+          ctx.globalAlpha = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(u.bbox.left, y0);
+          ctx.lineTo(u.bbox.left + u.bbox.width, y0);
+          ctx.stroke();
+
+          ctx.restore();
+        }
+      }
+    };
+  }
+
   function tooltipPlugin(meta, digits) {
     var el;
     return {
@@ -386,6 +459,7 @@
     var data = align(meta.series);
     var digits = digitsFor(meta.series);
     var isBar = meta.series.some(function (s) { return s.plot_type === 'bar'; });
+    var isVector = meta.series.some(function (s) { return s.plot_type === 'vector'; });
 
     var opts = {
       title: '',
@@ -398,7 +472,17 @@
         points: { size: 6, width: 2 },
         focus: { prox: 24 }
       },
-      scales: { x: { time: true } },
+      scales: {
+        x: { time: true },
+        /* Vectors radiate from zero, so the axis has to be centred on it -- as the
+           PNGs are. */
+        y: isVector ? {
+          range: function (u, min, max) {
+            var m = Math.max(Math.abs(min), Math.abs(max)) || 1;
+            return [-m, m];
+          }
+        } : {}
+      },
       /* Colors are read at draw time, so switching theme only needs a redraw. */
       axes: [
         {
@@ -436,11 +520,13 @@
           base.stroke = s.fill_color || s.color || colors.ink;
           base.width = 0;
         } else if (s.plot_type === 'vector') {
-          base.points = { show: true, size: 3 };
+          /* Drawn by vectorPlugin, from the components. A line through the
+             magnitudes would say nothing about direction. */
+          base.show = false;
         }
         return base;
       })),
-      plugins: [tooltipPlugin(meta, digits)].concat(
+      plugins: [tooltipPlugin(meta, digits), vectorPlugin(meta.series)].concat(
         isBar ? [] : [nightPlugin(meta.daynight)]
       ).filter(Boolean)
     };
