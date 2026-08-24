@@ -1,4 +1,4 @@
-# Theming the Horizon skin
+# Customizing the Horizon skin
 
 The Horizon skin draws its charts in the browser, but its look is settled before that,
 in CSS custom properties. Everything you see is one of them: the surfaces, the type
@@ -7,7 +7,30 @@ sizes, the corner radius, the colours the charts read for their grid and axes.
 Any of them can be overridden from `skin.conf`, so restyling the skin is a change to
 your configuration and not to a file that the next upgrade will overwrite.
 
-## How it works
+## Layout
+
+The page is charts and a column of panels beside them. Four options settle the rest:
+
+``` ini
+[DisplayOptions]
+    sidebar        = right          # or left, when there is room for two columns
+    sidebar_narrow = bottom         # or top, when there is only one
+
+    plot_groups = tempdew, wind, rain, ...
+    panels      = current, sunmoon, imagery, sensors, about
+
+    hide_plot_groups = tempin, humin
+    hide_panels      = imagery
+```
+
+`plot_groups` and `panels` set what appears and in what order. `hide_plot_groups` and
+`hide_panels` take things out without editing those lists, so you still have them to
+put back.
+
+A panel is an `.inc` file in the skin directory. Write your own, add its name to
+`panels`, and it appears. No template editing.
+
+## Theming: how it works
 
 Under `[DisplayOptions]`:
 

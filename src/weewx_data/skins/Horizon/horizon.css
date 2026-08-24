@@ -347,8 +347,20 @@ select.report-select {
   align-items: start;
 }
 
+/* One column, and the panels come after the charts. 'sidebar_narrow = top' puts
+   them first instead, for anyone who wants the current readings before the
+   history. The panels stay second in the markup either way, which is the order a
+   screen reader should hear them in. */
+.columns.sidebar-narrow-top > .stack:last-child { order: -1; }
+
 @media (min-width: 60rem) {
   .columns { grid-template-columns: minmax(0, 1fr) 21rem; }
+
+  /* Two columns now, so the narrow rule above stops applying and 'sidebar'
+     decides the side. */
+  .columns.sidebar-narrow-top > .stack:last-child { order: 0; }
+  .columns.sidebar-left { grid-template-columns: 21rem minmax(0, 1fr); }
+  .columns.sidebar-left > .stack:last-child { order: -1; }
 }
 
 .stack { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }

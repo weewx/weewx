@@ -6,6 +6,9 @@
 
 #set $periods = $to_list($DisplayOptions.get('periods', ['day', 'week', 'month', 'year']))
 #set $plot_groups = $to_list($DisplayOptions.get('plot_groups', ['tempdew', 'wind', 'rain']))
+## Hiding is its own list, so switching a chart off does not mean editing the one
+## above and losing what was there. The same for panels.
+#set $plot_groups = [$g for $g in $plot_groups if $g not in $to_list($DisplayOptions.get('hide_plot_groups', []))]
 #set $refresh = $to_int($DisplayOptions.get('refresh_interval', 60))
 
 <!DOCTYPE html>
@@ -81,7 +84,16 @@
 
       #include "headline.inc"
 
-      <div class="columns">
+## Where the panels sit: which side on a wide screen, above or below the charts
+## when there is only one column.
+#set $columns = 'columns'
+#if $DisplayOptions.get('sidebar', 'right') == 'left'
+#set $columns = $columns + ' sidebar-left'
+#end if
+#if $DisplayOptions.get('sidebar_narrow', 'bottom') == 'top'
+#set $columns = $columns + ' sidebar-narrow-top'
+#end if
+      <div class="$columns">
 
         <div class="stack">
           <section class="panel">
@@ -133,6 +145,7 @@
 ## file in the skin directory, so your own panel is a file plus a name in this list --
 ## no need to edit this template.
 #set $panels = $to_list($DisplayOptions.get('panels', ['current', 'sunmoon', 'imagery', 'sensors', 'about']))
+#set $panels = [$p for $p in $panels if $p not in $to_list($DisplayOptions.get('hide_panels', []))]
 #for $panel in $panels
           #include $panel + ".inc"
 #end for
