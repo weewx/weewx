@@ -112,6 +112,7 @@ nav = [
         { "Skin options" = [
             { Introduction = "reference/skin-options/introduction.md" },
             { "[Extras]" = "reference/skin-options/extras.md" },
+            { "[DisplayOptions]" = "reference/skin-options/displayoptions.md" },
             { "[Labels]" = "reference/skin-options/labels.md" },
             { "[Almanac]" = "reference/skin-options/almanac.md" },
             { "[Units]" = "reference/skin-options/units.md" },
