@@ -14,6 +14,10 @@
 ## that row and nobody has to keep a list of what is fitted.
 #set $wanted = $to_list($DisplayOptions.get('observations_current', ['outTemp', 'barometer']))
 #set $rest = [$x for $x in $wanted if $x != $lead and $getVar('year.%s.has_data' % $x, False)]
+## Rain is three readings of one thing: how much today, how hard right now, and
+## the hardest it came down. Three rows of mostly zeroes said that badly.
+#set $has_rain = 'rain' in $rest
+#set $rest = [$x for $x in $rest if $x not in ('rain', 'rainRate')]
 #set $summary_image = $to_bool($DisplayOptions.get('show_summary_image', True))
 ##
 <section class="panel headline" aria-label="$gettext('Current Conditions')">
@@ -119,11 +123,17 @@ $shown#slurp
     #end if
     </div>
 #end for
-#if $getVar('year.rainRate.has_data', False) and $day.rainRate.max.raw is not None
+#if $has_rain
     <div>
-      <dt>$gettext("Max rate")</dt>
-      <dd>$day.rainRate.max.format(add_label=False)<small>$unit.label.rainRate</small>
-          <span class="faint">$gettext("today")</span></dd>
+      <dt>$gettext("Rain Today")</dt>
+      <dd data-live="rainToday">$day.rain.sum.format(add_label=False)<small>$unit.label.rain</small></dd>
+      #if $getVar('year.rainRate.has_data', False)
+      <dd class="sub-reading">$current.rainRate.format(add_label=False)<small>$unit.label.rainRate</small>#slurp
+      #if $day.rainRate.max.raw
+       &middot; $gettext("max") $day.rainRate.max.format(add_label=False)#slurp
+      #end if
+      </dd>
+      #end if
     </div>
 #end if
   </dl>

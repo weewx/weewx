@@ -369,6 +369,13 @@ select.report-select {
   /* The arrow belongs to the number, not to a line of its own. */
   white-space: nowrap;
 }
+/* A second line under a reading: the same thing measured another way. */
+.sub-reading {
+  font-size: 0.85rem !important;
+  color: var(--ink-muted);
+  margin-top: 0.15rem !important;
+}
+
 .companions dd small,
 .lead-unit small { font-size: 0.62em; color: var(--ink-muted); margin-left: 0.15em; }
 .companions dd .faint { font-family: var(--font); font-size: 0.72em; margin-left: 0.3em; }
