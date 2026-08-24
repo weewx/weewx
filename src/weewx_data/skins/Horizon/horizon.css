@@ -365,6 +365,30 @@ select.report-select {
 
 .stack { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
 
+/* ------------------------------------------------------------- sun & moon */
+
+.sunarc { width: 100%; height: auto; display: block; margin-bottom: var(--gap); }
+
+/* Between the two solstices: everything the sun does here in a year. */
+.sunarc-band { fill: var(--accent); opacity: 0.12; stroke: none; }
+.sunarc-edge { fill: none; stroke: var(--accent); stroke-width: 0.8; opacity: 0.35; }
+.sunarc-today { fill: none; stroke: var(--accent); stroke-width: 2.2; }
+.sunarc-horizon { stroke: var(--border-strong); stroke-width: 1; }
+.sunarc-now { stroke: var(--ink-faint); stroke-width: 1; stroke-dasharray: 2 2; }
+.sunarc-noon { stroke: var(--border-strong); stroke-width: 1; }
+.sunarc-label { fill: var(--ink-faint); font-size: 9px; font-family: var(--font); }
+
+/* A quieter aside next to a reading: "in 3 days" behind a date. */
+.hint { color: var(--ink-faint); font-size: var(--fs-xs); }
+
+.moon-image {
+  display: block;
+  margin: 0 auto var(--gap);
+  width: 9rem;
+  max-width: 100%;
+  height: auto;
+}
+
 /* ---------------------------------------------------------------- panels */
 
 .panel {
