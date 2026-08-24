@@ -7,6 +7,7 @@
 import io
 import os.path
 import shutil
+import stat
 import sys
 import tempfile
 
@@ -318,6 +319,41 @@ class TestExtensionUtility:
                                                                                 file_list)]
         assert out_list == [('/bar/baz/bin/user/foo.py', '/etc/weewx/bin/user/foo.py'),
                             ('/bar/baz/bin/user/bar.py', '/etc/weewx/bin/user/bar.py')]
+
+
+class TestSavePermissions:
+    """Tests that saving a config file does not change how it is protected."""
+
+    def test_backup_save_keeps_mode(self):
+        """A save with a backup must leave the mode alone.
+
+        The backup path moves the old file aside and copies a new one into
+        place, and a fresh file takes its mode from the caller's umask. On a
+        package installation /etc/weewx/weewx.conf is 0660 so that the 'weewx'
+        user can edit it and nobody else can read the passwords in it; 0644
+        loses both of those.
+        """
+        with tempfile.TemporaryDirectory() as dir_name:
+            config_path = os.path.join(dir_name, 'test.conf')
+            config_dict = configobj.ConfigObj({'WEEWX_ROOT': '/tmp', 'foo': 'bar'}, encoding='utf-8')
+            weecfg.save(config_dict, config_path)
+            os.chmod(config_path, 0o660)
+
+            weecfg.save(config_dict, config_path, backup=True)
+
+            assert stat.S_IMODE(os.stat(config_path).st_mode) == 0o660
+
+    def test_backup_keeps_mode_too(self):
+        """The file that is moved aside keeps its mode as well."""
+        with tempfile.TemporaryDirectory() as dir_name:
+            config_path = os.path.join(dir_name, 'test.conf')
+            config_dict = configobj.ConfigObj({'WEEWX_ROOT': '/tmp', 'foo': 'bar'}, encoding='utf-8')
+            weecfg.save(config_dict, config_path)
+            os.chmod(config_path, 0o660)
+
+            backup_path = weecfg.save(config_dict, config_path, backup=True)
+
+            assert stat.S_IMODE(os.stat(backup_path).st_mode) == 0o660
 
 
 class TestExtensionInstall:

@@ -10,6 +10,7 @@ import importlib
 import os.path
 import pkgutil
 import shutil
+import stat
 import sys
 import tempfile
 
@@ -224,6 +225,13 @@ def save(config_dict, config_path, backup=False):
     # Check to see if the file exists, and we are supposed to make a backup:
     if os.path.exists(config_path) and backup:
 
+        # Note how the file looks before it is moved aside. The copy further down
+        # creates a new file, which would otherwise take its mode from the caller's
+        # umask and its ownership from whoever is running. After a package install
+        # that means root:root 0644 in place of weewx:weewx 0660, and the 'weewx'
+        # user can no longer edit its own configuration.
+        old_stat = os.stat(config_path)
+
         # Yes. We'll have to back it up.
         backup_path = weeutil.weeutil.move_with_timestamp(config_path)
 
@@ -235,6 +243,14 @@ def save(config_dict, config_path, backup=False):
 
             # Now move the temporary file into the proper place:
             shutil.copyfile(tmpfile.name, config_path)
+
+        # Then put the old mode and ownership back.
+        os.chmod(config_path, stat.S_IMODE(old_stat.st_mode))
+        try:
+            os.chown(config_path, old_stat.st_uid, old_stat.st_gid)
+        except PermissionError:
+            # Not running as root, so the file already belongs to us.
+            pass
 
     else:
 
