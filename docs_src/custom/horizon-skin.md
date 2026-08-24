@@ -14,7 +14,7 @@ The page is charts and a column of panels beside them. Four options settle the r
 ``` ini
 [DisplayOptions]
     sidebar        = right          # or left, when there is room for two columns
-    sidebar_narrow = bottom         # or top, when there is only one
+    sidebar_responsive = bottom         # or top, when there is only one
 
     plot_groups = tempdew, wind, rain, ...
     panels      = current, sunmoon, imagery, sensors, about
@@ -30,36 +30,29 @@ put back.
 A panel is an `.inc` file in the skin directory. Write your own, add its name to
 `panels`, and it appears. No template editing.
 
-## Everything under [DisplayOptions]
+## What the skin adds to [DisplayOptions]
+
+Most of the section is shared with *Seasons* and documented in the reference under
+[_[DisplayOptions]_](../reference/skin-options/displayoptions.md): `plot_groups`,
+`periods`, `observations_current`, `observations_stats`, `observations_rss`,
+`obs_type_sum`, `obs_type_max`, `telemetry_plot_groups`, `sensor_connections`,
+`sensor_batteries`, `sensor_voltages`, `show_rss` and `show_reports`. Horizon reads
+them the same way.
+
+These are its own:
 
 | Option | What it does |
 |---|---|
 | `sidebar` | Which side the panels sit on, `right` or `left`, where there is room for two columns. |
-| `sidebar_narrow` | Where they go when there is not: `bottom` or `top`. |
-| `panels` | Which panels appear beside the charts, and in what order. Each name is an `.inc` file in the skin directory. |
+| `sidebar_responsive` | Where they go when there is not: `bottom` or `top`. |
+| `panels` | Which panels appear beside the charts, and in what order. Each name is an `.inc` file in the skin directory, so a panel of your own is a file plus a name in this list. |
 | `hide_panels` | Panels to leave out, without editing the list above. |
-| `plot_groups` | Which charts appear, and in what order. The names are the plots in `[ImageGenerator]`, with the period prefix removed. |
-| `hide_plot_groups` | Charts to leave out. |
-| `periods` | Which spans the tabs offer. Default `day, week, month, year`. |
-| `telemetry_plot_groups` | Which plots appear on the telemetry page. |
-| `observations_headline` | The types shown large at the top. Three or four is about right on a phone. |
-| `observations_current` | The types in "current conditions", and in what order. |
-| `observations_stats` | The types in the statistics section. |
-| `observations_rss` | The types in the RSS feed. |
-| `obs_type_sum` | Types that show a sum rather than a min and a max, such as rain. |
-| `obs_type_max` | Types that show only a maximum, such as `rainRate`. |
-| `sensor_connections` | Signal strength fields for the sensors panel. |
-| `sensor_batteries` | Battery status fields. |
-| `sensor_voltages` | Voltage fields. |
-| `refresh_interval` | How often the page re-fetches current conditions, in seconds. `0` turns it off. There is no point going below your archive interval. |
-| `show_reports` | Link to the NOAA-style summaries. |
-| `show_rss` | Link to the RSS feed. |
-| `show_image_links` | Offer the server-rendered PNG next to each chart. Set this to `False` if you drop the ImageGenerator from `[Generators]`, or the links point at files nobody writes. |
+| `hide_plot_groups` | Charts to leave out, without editing `plot_groups`. |
+| `observations_headline` | The types shown large at the top of the page. Three or four is about right on a phone. |
+| `refresh_interval` | How often the page re-fetches current conditions, in seconds. `0` turns it off. There is no point going below your archive interval, since nothing new appears until the next record is archived. |
+| `show_image_links` | Offer the server-rendered PNG next to each chart. Set it to `False` if you drop the ImageGenerator from `[Generators]`, or the links point at files nobody writes. |
 | `custom_css` | A stylesheet of your own. See below. |
 | `lang_root` | For a rendering in a subdirectory: how it gets back to the top. See the language switcher in `skin.conf`. |
-
-Most of these are lists of observation types. Anything your station does not record is
-skipped, so a list may safely name more than you have.
 
 ## Theming: how it works
 
