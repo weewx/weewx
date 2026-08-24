@@ -1136,6 +1136,24 @@
     return { period: period, anchor: unit.to > dataTs() ? null : ts };
   }
 
+  /* Changing the span from somewhere down the page leaves the reader among
+     charts that have just been replaced, at an offset that means nothing. Take
+     them back to the first one, under the head stuck over it. Only if they had
+     scrolled past it: at the top of the page nothing should move. This runs
+     once the cards are in place, since until then the page is too short to
+     scroll anywhere. */
+  function backToFirstChart(container) {
+    var panel = container.closest('.panel');
+    if (!panel) return;
+    var head = panel.querySelector('.panel-head');
+    var bar = panel.querySelector('.range-bar');
+    var stuck = (head ? head.offsetHeight : 0) + (bar ? bar.offsetHeight : 0);
+    var top = window.scrollY + container.getBoundingClientRect().top - stuck - 8;
+    if (window.scrollY > top + 4) {
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }
+  }
+
   function showPeriod(period, newAnchor) {
     var container = document.getElementById('charts');
     if (!container) return;
@@ -1198,26 +1216,13 @@
       });
 
       container.setAttribute('aria-busy', 'false');
+      backToFirstChart(container);
     });
 
     document.querySelectorAll('#period-tabs button').forEach(function (b) {
       b.setAttribute('aria-selected', String(b.dataset.period === period));
     });
 
-    /* Changing the span from somewhere down the page left the reader among
-       charts that had just been replaced, at an offset that meant nothing. Take
-       them back to the first one, under the head that is stuck over it. Only if
-       they had scrolled past it: at the top of the page nothing should move. */
-    var panel = container.closest('.panel');
-    if (panel) {
-      var head = panel.querySelector('.panel-head');
-      var bar = panel.querySelector('.range-bar');
-      var stuck = (head ? head.offsetHeight : 0) + (bar ? bar.offsetHeight : 0);
-      var top = window.scrollY + container.getBoundingClientRect().top - stuck - 8;
-      if (window.scrollY > top) {
-        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
-      }
-    }
     remember('period', period);
     writeLocation(period);
   }
