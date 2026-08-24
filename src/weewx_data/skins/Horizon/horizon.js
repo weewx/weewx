@@ -724,8 +724,21 @@
     });
   }
 
+  /* Two different "nows", and mixing them up moves the calendar.
+
+     dataTs() is the last reading in the report, and everything the arrows do is
+     measured from it. The live view ends there, so the unit it falls in is the unit
+     on screen, and "back" means the one before that.
+
+     nowTs() is the reader's clock. It only decides whether the live view can still
+     be called "now": the two part company when a station was off overnight, when a
+     page has been open past midnight, or when a site is served from a cache. */
   function nowTs() {
-    return CFG.generated || Math.floor(Date.now() / 1000);
+    return Math.floor(Date.now() / 1000);
+  }
+
+  function dataTs() {
+    return CFG.generated || nowTs();
   }
 
   /* The calendar unit of `period` that contains `ts`. */
@@ -757,7 +770,7 @@
   /* The window currently on screen. */
   function currentWindow(period) {
     if (anchor === null) {
-      var to = nowTs();
+      var to = dataTs();
       return { from: to - (PERIOD_SECONDS[period] || PERIOD_SECONDS.day), to: to, live: true };
     }
     var w = calendarWindow(period, anchor);
@@ -1002,7 +1015,7 @@
       var n = parseInt(parts[1].replace(/^-/, ''), 10);
       if (!isNaN(n) && n > 0) {
         var span = PERIOD_SECONDS[period] || PERIOD_SECONDS.day;
-        return { period: period, anchor: nowTs() - n * span };
+        return { period: period, anchor: dataTs() - n * span };
       }
       return { period: period, anchor: null };
     }
@@ -1011,7 +1024,7 @@
     var ts = Math.floor(d.getTime() / 1000);
     /* A unit that is still running is the live view. */
     var unit = calendarWindow(period, ts);
-    return { period: period, anchor: unit.to > nowTs() ? null : ts };
+    return { period: period, anchor: unit.to > dataTs() ? null : ts };
   }
 
   function showPeriod(period, newAnchor) {
@@ -1113,6 +1126,16 @@
     return String(start.getFullYear());
   }
 
+  /* "Now" is only honest while the last reading falls in the unit the clock is in.
+     Older than that, the live view is showing Sunday and calling it now, and the
+     step back to Saturday looks as if it skipped a day. Name the unit instead. */
+  function liveLabel(period) {
+    var d = calendarWindow(period, dataTs());
+    return d.from === calendarWindow(period, nowTs()).from
+      ? (CFG.text.now || 'Now')
+      : unitLabel(period, d.from, d.to);
+  }
+
   /* Label the window being shown, and disable the arrows at the ends of the record. */
   function updateRange(period, from, to, ai) {
     var label = document.getElementById('range-label');
@@ -1122,7 +1145,7 @@
     if (!label) return;
 
     label.textContent = anchor === null
-      ? (CFG.text.now || 'Now')
+      ? liveLabel(period)
       : unitLabel(period, from, to);
 
     if (fwd) fwd.disabled = anchor === null;
@@ -1135,15 +1158,17 @@
   }
 
   /* Move one whole calendar unit. From the live view, "back" lands on the last
-     complete unit; stepping forward into the present returns to following the clock. */
+     complete unit; stepping forward into the unit still running returns to following
+     the clock. */
   function step(direction) {
-    var here = calendarWindow(currentPeriod, anchor === null ? nowTs() : anchor);
-    var next = direction < 0 ? here.from - 1 : here.to + 1;
-    if (next >= nowTs()) {
-      showPeriod(currentPeriod, null);
-    } else {
-      showPeriod(currentPeriod, next);
-    }
+    var here = calendarWindow(currentPeriod, anchor === null ? dataTs() : anchor);
+    var target = direction < 0 ? here.from - 1 : here.to + 1;
+    /* The unit the data end in is the live view, the same rule readLocation()
+       applies to a pasted link. Testing the instant instead of the unit it falls in
+       left "forward" one short: it landed on the current unit as an archive window,
+       so it took two steps to get back. */
+    var unit = calendarWindow(currentPeriod, target);
+    showPeriod(currentPeriod, unit.to > dataTs() ? null : target);
   }
 
   function setupRangeNav() {
