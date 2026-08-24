@@ -10,8 +10,10 @@ import importlib
 import os.path
 import pkgutil
 import shutil
+import stat
 import sys
 import tempfile
+from contextlib import contextmanager
 
 import configobj
 
@@ -224,6 +226,13 @@ def save(config_dict, config_path, backup=False):
     # Check to see if the file exists, and we are supposed to make a backup:
     if os.path.exists(config_path) and backup:
 
+        # Note how the file looks before it is moved aside. The copy further down
+        # creates a new file, which would otherwise take its mode from the caller's
+        # umask and its ownership from whoever is running. After a package install
+        # that means root:root 0644 in place of weewx:weewx 0660, and the 'weewx'
+        # user can no longer edit its own configuration.
+        old_stat = os.stat(config_path)
+
         # Yes. We'll have to back it up.
         backup_path = weeutil.weeutil.move_with_timestamp(config_path)
 
@@ -235,6 +244,14 @@ def save(config_dict, config_path, backup=False):
 
             # Now move the temporary file into the proper place:
             shutil.copyfile(tmpfile.name, config_path)
+
+        # Then put the old mode and ownership back.
+        os.chmod(config_path, stat.S_IMODE(old_stat.st_mode))
+        try:
+            os.chown(config_path, old_stat.st_uid, old_stat.st_gid)
+        except PermissionError:
+            # Not running as root, so the file already belongs to us.
+            pass
 
     else:
 
@@ -707,24 +724,33 @@ def extract_zip(filename, target_dir, printer=None):
     return member_names
 
 
+@contextmanager
+def add_path(new_path):
+    """Put a directory at the front of sys.path for the duration of the block.
+
+    A copy, not a reference: sys.path is mutated in place below, so keeping a
+    reference would restore the mutated list."""
+    old_path = list(sys.path)
+    try:
+        sys.path.insert(0, new_path)
+        yield sys.path
+    finally:
+        sys.path = old_path
+
+
 def get_extension_installer(extension_installer_dir):
     """Get the installer in the given extension installer subdirectory"""
-    old_path = sys.path
-    try:
-        # Inject the location of the installer directory into the path
-        sys.path.insert(0, extension_installer_dir)
+    with add_path(extension_installer_dir):
         try:
             # Now I can import the extension's 'install' module:
-            __import__('install')
+            install_module = importlib.import_module('install')
         except ImportError:
             raise ExtensionError("Cannot find 'install' module in %s" % extension_installer_dir)
-        install_module = sys.modules['install']
         loader = getattr(install_module, 'loader')
-        # Get rid of the module:
+        # Every extension names its installer module 'install', so it must not be left in
+        # the module cache: the next extension installed by this process would get this
+        # one's installer back instead of its own.
         sys.modules.pop('install', None)
         installer = loader()
-    finally:
-        # Restore the path
-        sys.path = old_path
 
     return install_module.__file__, installer

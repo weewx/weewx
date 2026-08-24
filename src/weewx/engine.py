@@ -8,10 +8,10 @@
 
 # Python imports
 import gc
+import importlib
 import logging
 import math
 import socket
-import sys
 import threading
 import time
 import traceback
@@ -101,18 +101,11 @@ class StdEngine:
 
         log.info("Loading station type %s (%s)", station_type, driver)
 
-        # Import the driver:
-        __import__(driver)
-
         # Open up the weather station, wrapping it in a try block in case
         # of failure.
         try:
-            # This is a bit of Python wizardry. First, find the driver module
-            # in sys.modules.
-            driver_module = sys.modules[driver]
-            # Find the function 'loader' within the module:
+            driver_module = importlib.import_module(driver)
             loader_function = getattr(driver_module, 'loader')
-            # Call it with the configuration dictionary as the only argument:
             self.console = loader_function(config_dict, self)
         except Exception as ex:
             log.error("Import of driver failed: %s (%s)", ex, type(ex))

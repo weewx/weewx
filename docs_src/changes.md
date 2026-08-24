@@ -1,6 +1,21 @@
 WeeWX change history
 --------------------
 
+### 5.5.n n-Month-2026
+
+Say so in the log when a Vantage logger returns far fewer archive records than it
+said it would, which is what corrupt logger memory looks like, and link to the fix.
+Fixes [Issue #1105](https://github.com/weewx/weewx/issues/1105).
+
+Saving the configuration file no longer changes its mode or ownership. Under a
+package installation, `weectl extension install`, `weectl extension uninstall`,
+`weectl station reconfigure` and `weectl station upgrade` were leaving
+`weewx.conf` as `root:weewx 0644` instead of `weewx:weewx 0660`, so the `weewx`
+user could no longer edit it and the passwords in it became world-readable.
+
+Removed the APRS "messaging-capable" packet flag from `restx.py`.
+[PR #1108](https://github.com/weewx/weewx/pull/1108), by `W0CHP`.
+
 ### 5.5.0 6-Aug-2026
 
 Added the ability for services to bind to a `SHUTDOWN` event. This allows
