@@ -17,7 +17,7 @@
   </div>
   <div class="panel-body flush">
     <div class="table-scroll">
-      <table class="data-table">
+      <table class="data-table stats">
         <caption class="visually-hidden">$gettext("Minimum and maximum values by time span")</caption>
         <thead>
           <tr>
@@ -35,7 +35,7 @@
           <tr>
             <th scope="row" class="metric">$gettext("Max Wind")</th>
       #for $timespan in $timespans
-            <td class="num stat-hi">$getVar($timespan).wind.max.format(add_label=False)
+            <td class="num stat-hi" data-label="$gettext($timespan.capitalize())">$getVar($timespan).wind.max.format(add_label=False)
               <span class="when">$getVar($timespan).wind.maxtime</span>
             </td>
       #end for
@@ -43,21 +43,21 @@
           <tr>
             <th scope="row" class="metric">$gettext("Average Wind")</th>
       #for $timespan in $timespans
-            <td class="num">$getVar($timespan).wind.avg.format(add_label=False)</td>
+            <td class="num" data-label="$gettext($timespan.capitalize())">$getVar($timespan).wind.avg.format(add_label=False)</td>
       #end for
           </tr>
     #elif $x in $obs_type_sum
           <tr>
             <th scope="row" class="metric">$obs.label[$x]</th>
       #for $timespan in $timespans
-            <td class="num">$getVar('%s.%s.sum' % ($timespan, $x)).format(add_label=False)</td>
+            <td class="num" data-label="$gettext($timespan.capitalize())">$getVar('%s.%s.sum' % ($timespan, $x)).format(add_label=False)</td>
       #end for
           </tr>
     #elif $x in $obs_type_max
           <tr>
             <th scope="row" class="metric">$obs.label[$x]</th>
       #for $timespan in $timespans
-            <td class="num stat-hi">$getVar('%s.%s.max' % ($timespan, $x)).format(add_label=False)
+            <td class="num stat-hi" data-label="$gettext($timespan.capitalize())">$getVar('%s.%s.max' % ($timespan, $x)).format(add_label=False)
               <span class="when">$getVar('%s.%s.maxtime' % ($timespan, $x))</span>
             </td>
       #end for
@@ -66,7 +66,7 @@
           <tr>
             <th scope="row" class="metric">$obs.label[$x]</th>
       #for $timespan in $timespans
-            <td class="num">
+            <td class="num" data-label="$gettext($timespan.capitalize())">
               <span class="stat-hi">$getVar('%s.%s.max' % ($timespan, $x)).format(add_label=False)</span> /
               <span class="stat-lo">$getVar('%s.%s.min' % ($timespan, $x)).format(add_label=False)</span>
               <span class="when">$getVar('%s.%s.maxtime' % ($timespan, $x))</span>

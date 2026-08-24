@@ -44,7 +44,7 @@
         </div>
         <div class="panel-body flush">
           <div class="table-scroll">
-            <table class="data-table">
+            <table class="data-table stats">
               <thead>
                 <tr>
                   <th scope="col">$gettext("Metric")</th>
@@ -60,12 +60,12 @@
                   <th scope="row" class="metric">$obs.label[$x]</th>
     #for $timespan in $timespans
       #if $x in $obs_type_sum
-                  <td class="num">$getVar('%s.%s.sum' % ($timespan, $x)).format(add_label=False)</td>
+                  <td class="num" data-label="$gettext($timespan.capitalize())">$getVar('%s.%s.sum' % ($timespan, $x)).format(add_label=False)</td>
       #elif $x in $obs_type_max
-                  <td class="num stat-hi">$getVar('%s.%s.max' % ($timespan, $x)).format(add_label=False)
+                  <td class="num stat-hi" data-label="$gettext($timespan.capitalize())">$getVar('%s.%s.max' % ($timespan, $x)).format(add_label=False)
                     <span class="when">$getVar('%s.%s.maxtime' % ($timespan, $x))</span></td>
       #else
-                  <td class="num">
+                  <td class="num" data-label="$gettext($timespan.capitalize())">
                     <span class="stat-hi">$getVar('%s.%s.max' % ($timespan, $x)).format(add_label=False)</span> /
                     <span class="stat-lo">$getVar('%s.%s.min' % ($timespan, $x)).format(add_label=False)</span>
                     <span class="when">$getVar('%s.%s.maxtime' % ($timespan, $x))</span>

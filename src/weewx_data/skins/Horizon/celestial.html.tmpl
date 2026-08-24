@@ -38,15 +38,15 @@
           <div class="panel-head"><h2>$gettext("Sun")</h2></div>
           <div class="panel-body">
             <dl class="readings">
-              <dt>$gettext("Start civil twilight")</dt><dd>$almanac.sun.civil_twilight_start</dd>
+              <dt>$gettext("Start civil twilight")</dt><dd>$almanac(horizon=-6).sun(use_center=1).rise</dd>
               <dt>$gettext("Sunrise")</dt><dd>$almanac.sun.rise</dd>
               <dt>$gettext("Transit")</dt><dd>$almanac.sun.transit</dd>
               <dt>$gettext("Sunset")</dt><dd>$almanac.sun.set</dd>
-              <dt>$gettext("End civil twilight")</dt><dd>$almanac.sun.civil_twilight_end</dd>
+              <dt>$gettext("End civil twilight")</dt><dd>$almanac(horizon=-6).sun(use_center=1).set</dd>
               <dt>$gettext("Azimuth")</dt><dd>$("%.1f" % $almanac.sun.az)&deg;</dd>
               <dt>$pgettext("Astronomical", "Altitude")</dt><dd>$("%.1f" % $almanac.sun.alt)&deg;</dd>
               <dt>$gettext("Total daylight")</dt>
-              <dd>$almanac.sun.visible.long_form</dd>
+              <dd>$almanac.sun.visible.long_form(format_string="%(hour)d%(hour_label)s, %(minute)d%(minute_label)s")</dd>
               <dt>$gettext("Equinox")</dt><dd>$almanac.next_equinox</dd>
               <dt>$gettext("Solstice")</dt><dd>$almanac.next_solstice</dd>
             </dl>

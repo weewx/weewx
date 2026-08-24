@@ -15,7 +15,7 @@
       <dt>$gettext("Sunset")</dt>
       <dd>$almanac.sun.set</dd>
       <dt>$gettext("Total daylight")</dt>
-      <dd>$almanac.sun.visible.long_form</dd>
+      <dd>$almanac.sun.visible.long_form(format_string="%(hour)d%(hour_label)s, %(minute)d%(minute_label)s")</dd>
       <dt>$gettext("Moon Phase")</dt>
       <dd>$almanac.moon_phase, $almanac.moon_fullness%</dd>
     </dl>

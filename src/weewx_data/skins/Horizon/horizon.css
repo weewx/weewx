@@ -290,6 +290,17 @@ select.report-select {
   overflow-wrap: anywhere;
 }
 
+/* The unit belongs to the figure but should not compete with it: at full weight
+   "mbar" carries as much visual load as "1026.4". */
+.headline-item .unit {
+  font-size: 0.44em;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--ink-muted);
+  margin-left: 0.18em;
+  white-space: nowrap;
+}
+
 /* The first headline item is the lead reading and gets more room. */
 .headline-item:first-child .value { font-size: var(--fs-huge); }
 
@@ -414,9 +425,11 @@ select.report-select {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.45rem 0.75rem;
+  padding: 0.4rem 0.75rem;
   border-bottom: 1px solid var(--border);
-  background: var(--surface-sunk);
+  /* No fill: a shaded strip between the panel head and the first chart reads as a
+     separate object. This belongs to the charts below it. */
+  background: none;
 }
 
 .range-nav {
@@ -650,14 +663,110 @@ select.report-select {
 
 .table-scroll { overflow-x: auto; }
 
+/* Below this width a five-column statistics table is unreadable: the head scrolls
+   out of sight and you can no longer tell which figure belongs to which span. Turn
+   each row into a card instead, with every value carrying its own label. The markup
+   stays a table, so it still reads correctly to a screen reader. */
+@media (max-width: 44rem) {
+  .table-scroll { overflow-x: visible; }
+
+  .data-table.stats,
+  .data-table.stats tbody,
+  .data-table.stats tr,
+  .data-table.stats th,
+  .data-table.stats td { display: block; }
+
+  .data-table.stats { min-width: 0; }
+  .data-table.stats thead { display: none; }
+
+  /* The panel body is flush for the table, so the cards have to bring their own
+     side padding -- the same value the other panels use. */
+  .data-table.stats tr {
+    padding: 0.85rem clamp(0.85rem, 2.5vw, 1.15rem);
+    border-top: 1px solid var(--border);
+  }
+  .data-table.stats tr:first-child { border-top: 0; }
+  .data-table.stats tbody tr + tr td { border-top: 0; }
+
+  /* The metric name becomes the card's heading. */
+  .data-table.stats th[scope="row"] {
+    font-size: var(--fs-base);
+    font-weight: 600;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+    padding: 0 0 0.5rem;
+    border-bottom: 0;
+    text-align: left;
+  }
+
+  /* Block, not grid: a grid would make every child of the cell its own column, and
+     these cells hold several -- a high, a slash, a low, a timestamp. */
+  .data-table.stats td {
+    display: block;
+    padding: 0.28rem 0;
+    border-top: 0;
+    text-align: left;
+    line-height: 1.5;
+  }
+
+  .data-table.stats td::before {
+    content: attr(data-label);
+    display: inline-block;
+    width: 5.5rem;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+
+  /* A cell with no reading adds nothing on a card. */
+  .data-table.stats td:empty { display: none; }
+
+  /* Timestamps sit beside the value rather than under it, where there is room. */
+  .data-table.stats .when {
+    display: inline;
+    margin-left: 0.4rem;
+  }
+}
+
 .stat-hi { color: var(--hi); }
 .stat-lo { color: var(--lo); }
 .when { display: block; font-size: var(--fs-xs); color: var(--ink-faint); font-weight: 400; }
 
-/* Readings list, used for current conditions and station info. */
-.readings { display: grid; grid-template-columns: auto 1fr; gap: 0.35rem 0.9rem; margin: 0; font-size: var(--fs-sm); }
-.readings dt { color: var(--ink-muted); }
-.readings dd { margin: 0; text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; }
+/* Readings list, used for current conditions and station info. Rows are separated by
+   a hairline rather than by spacing alone: at eight or twenty entries the eye needs
+   something to track along, and the value sits far from its label. */
+.readings {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  margin: 0;
+  font-size: var(--fs-sm);
+  align-items: baseline;
+}
+
+.readings dt {
+  color: var(--ink-muted);
+  padding: 0.4rem 0.9rem 0.4rem 0;
+  min-width: 0;
+}
+
+.readings dd {
+  margin: 0;
+  padding: 0.4rem 0;
+  text-align: right;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Hairline between rows, but not above the first. Both cells of a row carry it so
+   the line runs the full width. */
+.readings dt:not(:first-of-type),
+.readings dd:not(:first-of-type) {
+  border-top: 1px solid var(--border);
+}
 
 /* ---------------------------------------------------------------- status */
 

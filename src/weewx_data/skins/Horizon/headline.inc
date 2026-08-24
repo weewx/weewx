@@ -19,7 +19,7 @@
   <div class="headline-item">
     #if $x == 'windSpeed'
     <span class="label">$obs.label.wind</span>
-    <span class="value" data-live="windSpeed">$current.windSpeed</span>
+    <span class="value" data-live="windSpeed">$current.windSpeed.format(add_label=False)<span class="unit">$unit.label.windSpeed</span></span>
     <span class="sub">
       #if $current.windDir.raw is not None
       $current.windDir.ordinal_compass ($current.windDir)
@@ -30,7 +30,7 @@
     </span>
     #elif $x == 'rain'
     <span class="label">$gettext("Rain Today")</span>
-    <span class="value" data-live="rainToday">$day.rain.sum</span>
+    <span class="value" data-live="rainToday">$day.rain.sum.format(add_label=False)<span class="unit">$unit.label.rain</span></span>
     <span class="sub">
       #if $day.rainRate.max.raw
       $gettext("Max rate") $day.rainRate.max
@@ -40,7 +40,7 @@
     </span>
     #elif $x == 'barometer'
     <span class="label">$obs.label.barometer</span>
-    <span class="value" data-live="barometer">$current.barometer</span>
+    <span class="value" data-live="barometer">$current.barometer.format(add_label=False)<span class="unit">$unit.label.barometer</span></span>
     <span class="sub">
       #if $trend.barometer.raw is not None
         #set $trend_class = 'trend-flat'
@@ -55,7 +55,7 @@
     </span>
     #elif $x == 'outTemp'
     <span class="label">$obs.label.outTemp</span>
-    <span class="value" data-live="outTemp">$current.outTemp</span>
+    <span class="value" data-live="outTemp">$current.outTemp.format(add_label=False)<span class="unit">$unit.label.outTemp</span></span>
     <span class="sub">
       #if $current.dewpoint.raw is not None
       $obs.label.dewpoint $current.dewpoint &middot;
@@ -65,7 +65,7 @@
     </span>
     #else
     <span class="label">$obs.label[$x]</span>
-    <span class="value" data-live="$x">$getVar('current.' + $x)</span>
+    <span class="value" data-live="$x">$getVar('current.%s.format' % $x)(add_label=False)<span class="unit">$unit.label[$x]</span></span>
     <span class="sub">
       <span class="stat-lo">$getVar('day.%s.min' % $x).format(add_label=False)</span> /
       <span class="stat-hi">$getVar('day.%s.max' % $x)</span>
