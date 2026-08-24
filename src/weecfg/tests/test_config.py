@@ -335,7 +335,8 @@ class TestSavePermissions:
         """
         with tempfile.TemporaryDirectory() as dir_name:
             config_path = os.path.join(dir_name, 'test.conf')
-            config_dict = configobj.ConfigObj({'WEEWX_ROOT': '/tmp', 'foo': 'bar'}, encoding='utf-8')
+            config_dict = configobj.ConfigObj({'WEEWX_ROOT': '/tmp', 'foo': 'bar'},
+                                              encoding='utf-8')
             weecfg.save(config_dict, config_path)
             os.chmod(config_path, 0o660)
 
@@ -347,13 +348,85 @@ class TestSavePermissions:
         """The file that is moved aside keeps its mode as well."""
         with tempfile.TemporaryDirectory() as dir_name:
             config_path = os.path.join(dir_name, 'test.conf')
-            config_dict = configobj.ConfigObj({'WEEWX_ROOT': '/tmp', 'foo': 'bar'}, encoding='utf-8')
+            config_dict = configobj.ConfigObj({'WEEWX_ROOT': '/tmp', 'foo': 'bar'},
+                                              encoding='utf-8')
             weecfg.save(config_dict, config_path)
             os.chmod(config_path, 0o660)
 
             backup_path = weecfg.save(config_dict, config_path, backup=True)
 
             assert stat.S_IMODE(os.stat(backup_path).st_mode) == 0o660
+
+
+class TestGetExtensionInstaller:
+    """Tests of loading an extension's 'install' module."""
+
+    # A minimal extension installer. Its name is what tells one apart from another.
+    INSTALL_PY = """from setup import ExtensionInstaller
+
+
+def loader():
+    return MiniInstaller()
+
+
+class MiniInstaller(ExtensionInstaller):
+    def __init__(self):
+        super().__init__(version='1.0', name='%s')
+"""
+
+    @pytest.fixture(autouse=True)
+    def setup_teardown(self):
+        saved_path = list(sys.path)
+        yield
+        sys.path = saved_path
+        sys.modules.pop('install', None)
+
+    @classmethod
+    def _write_installer(cls, directory, name):
+        """Write an 'install.py' for an extension called 'name'. Returns its path."""
+        os.makedirs(directory, exist_ok=True)
+        install_path = os.path.join(directory, 'install.py')
+        with open(install_path, 'w') as fd:
+            fd.write(cls.INSTALL_PY % name)
+        return install_path
+
+    def test_get_installer(self):
+        with tempfile.TemporaryDirectory() as installer_dir:
+            expected_path = self._write_installer(installer_dir, 'alpha')
+            before = list(sys.path)
+            installer_path, installer = weecfg.get_extension_installer(installer_dir)
+            assert os.path.samefile(installer_path, expected_path)
+            assert installer['name'] == 'alpha'
+            # The installer directory must not be left on the path.
+            assert sys.path == before
+            # Nor the module in the cache. See test_get_installer_two_extensions.
+            assert 'install' not in sys.modules
+
+    def test_get_installer_missing(self):
+        """A directory with no 'install.py' in it raises ExtensionError."""
+        with tempfile.TemporaryDirectory() as empty_dir:
+            before = list(sys.path)
+            with pytest.raises(weecfg.ExtensionError):
+                weecfg.get_extension_installer(empty_dir)
+            assert sys.path == before
+
+    def test_get_installer_two_extensions(self):
+        """Every extension calls its installer module 'install'. If the module were
+        left in sys.modules, the second extension loaded by a process would get the
+        first one's installer back instead of its own."""
+        with tempfile.TemporaryDirectory() as parent:
+            alpha_dir = os.path.join(parent, 'alpha')
+            beta_dir = os.path.join(parent, 'beta')
+            alpha_expected = self._write_installer(alpha_dir, 'alpha')
+            beta_expected = self._write_installer(beta_dir, 'beta')
+
+            alpha_path, alpha = weecfg.get_extension_installer(alpha_dir)
+            beta_path, beta = weecfg.get_extension_installer(beta_dir)
+
+            assert alpha['name'] == 'alpha'
+            assert beta['name'] == 'beta'
+            assert os.path.samefile(alpha_path, alpha_expected)
+            assert os.path.samefile(beta_path, beta_expected)
 
 
 class TestExtensionInstall:
