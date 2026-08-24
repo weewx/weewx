@@ -22,7 +22,7 @@ from weewx.crc16 import crc16
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'Vantage'
-DRIVER_VERSION = '3.6.3'
+DRIVER_VERSION = '3.7.0'
 
 # Where to send someone whose logger memory has gone bad.
 CORRUPT_MEMORY_URL = ("https://github.com/weewx/weewx/wiki/"
