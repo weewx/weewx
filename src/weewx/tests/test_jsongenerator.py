@@ -18,10 +18,12 @@ import pytest
 import parameters
 import weewx
 import weewx.defaults
+import weewx.imagegenerator
 import weewx.jsongenerator
 import weewx.reportengine
 import weewx.station
 import weewx.units
+from weeutil.config import accumulateLeaves
 
 # The generator works off plot definitions in the [ImageGenerator] syntax. This is a
 # small but representative one: a two-line plot, a bar plot with aggregation, and a
@@ -264,6 +266,59 @@ class TestPeriodFiles:
 
         # The skin configures 90; what reaches the client must be -90.
         assert series['vector_rotate'] == -90.0
+
+    def test_time_axis_matches_the_image_generator(self, config_dict, tmp_path):
+        """The two generators must agree on the window, or a chart and the PNG of the
+        same plot show different days."""
+        html_root = str(tmp_path)
+        skin_dict = build_skin_dict(html_root)
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        stn_info = weewx.station.StationInfo(**cd['Station'])
+        gen_ts = parameters.synthetic_dict['stop_ts']
+
+        img_gen = weewx.imagegenerator.ImageGenerator(
+            cd, skin_dict, gen_ts, first_run=True, stn_info=stn_info)
+        img_gen.start()
+        try:
+            plot = img_gen.gen_plot(gen_ts,
+                                    accumulateLeaves(
+                                        skin_dict['ImageGenerator']['day_images']['daytempdew']),
+                                    skin_dict['ImageGenerator']['day_images']['daytempdew'])
+        finally:
+            img_gen.finalize()
+        xmin, xmax, xinc = plot.xscale
+
+        data_dir = run_generator(config_dict, tmp_path)
+        with open(os.path.join(data_dir, 'daytempdew.json'), encoding='utf-8') as fd:
+            payload = json.load(fd)
+
+        assert payload['start'] == int(xmin)
+        assert payload['stop'] == int(xmax)
+        assert payload['x_interval'] == int(xinc)
+
+        # The window is snapped, so it is not simply now minus time_length. Without that
+        # snapping this test would pass for the wrong reason.
+        assert payload['stop'] != int(gen_ts)
+
+    def test_explicit_x_interval_wins(self, config_dict, tmp_path):
+        html_root = str(tmp_path)
+        skin_dict = build_skin_dict(html_root)
+        skin_dict['ImageGenerator']['day_images']['daytempdew']['x_interval'] = '2h'
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        stn_info = weewx.station.StationInfo(**cd['Station'])
+
+        generator = weewx.jsongenerator.JSONGenerator(
+            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
+            first_run=True, stn_info=stn_info)
+        try:
+            generator.start()
+        finally:
+            generator.finalize()
+
+        with open(os.path.join(html_root, 'data', 'daytempdew.json'),
+                  encoding='utf-8') as fd:
+            payload = json.load(fd)
+        assert payload['x_interval'] == 7200
 
     def test_manifest_lists_what_exists(self, config_dict, tmp_path):
         data_dir = run_generator(config_dict, tmp_path)

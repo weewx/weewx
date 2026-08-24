@@ -56,6 +56,7 @@ import logging
 import os
 import time
 
+import weeplot.utilities
 import weeutil.logger
 import weeutil.weeutil
 import weewx.imagegenerator
@@ -549,7 +550,18 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 skip_if_empty asked us to drop it.
         """
         time_length = weeutil.weeutil.nominal_spans(plot_options.get('time_length', 86400))
-        x_domain = TimeSpan(int(plotgen_ts - time_length), int(plotgen_ts))
+        # Snap to the same boundaries the ImageGenerator uses. Taking the window raw
+        # would put the JSON and the PNG of the same plot on different axes, and the
+        # two would disagree about where a day begins.
+        minstamp, maxstamp, timeinc = weeplot.utilities.scaletime(plotgen_ts - time_length,
+                                                                  plotgen_ts)
+        x_domain = TimeSpan(int(minstamp), int(maxstamp))
+
+        # Override the tick interval if the user has given an explicit one, exactly as
+        # the ImageGenerator does.
+        timeinc_user = to_int(weeutil.weeutil.nominal_spans(plot_options.get('x_interval')))
+        if timeinc_user is not None:
+            timeinc = timeinc_user
 
         check_domain = _get_check_domain(plot_options.get('skip_if_empty', False), x_domain)
 
@@ -701,6 +713,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             'generated': int(plotgen_ts),
             'start': int(x_domain.start),
             'stop': int(x_domain.stop),
+            'x_interval': int(timeinc),
             'aggregate_interval': aggregate_interval_out,
             'unit': unit,
             'unit_label': (unit_label or '').strip(),
