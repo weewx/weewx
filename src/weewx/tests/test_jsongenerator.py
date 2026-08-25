@@ -365,6 +365,54 @@ class TestPeriodFiles:
                   encoding='utf-8') as fd:
             assert json.load(fd)['yscale'] == [0.0, 360.0, 45.0]
 
+    def test_its_own_section_comes_first(self, config_dict, tmp_path):
+        """Plots defined under [JSONGenerator] win over [ImageGenerator].
+
+        A skin that draws only in the browser should not have to keep a section
+        named after images it never generates.
+        """
+        html_root = str(tmp_path)
+        skin_dict = build_skin_dict(html_root)
+        skin_dict['JSONGenerator']['day_images'] = {
+            'ownplot': {'time_length': '6h', 'outTemp': {'label': 'Own'}},
+        }
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        stn_info = weewx.station.StationInfo(**cd['Station'])
+
+        generator = weewx.jsongenerator.JSONGenerator(
+            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
+            first_run=True, stn_info=stn_info)
+        try:
+            generator.start()
+        finally:
+            generator.finalize()
+
+        data_dir = os.path.join(html_root, 'data')
+        assert sorted(f for f in os.listdir(data_dir) if f.endswith('.json'))             == ['index.json', 'ownplot.json']
+
+    def test_settings_are_not_mistaken_for_plots(self, config_dict, tmp_path):
+        """[[Archive]] is a subsection too, and defines no plots.
+
+        Counting subsections alone would take it for a time span and leave the
+        generator with nothing to draw, silently.
+        """
+        html_root = str(tmp_path)
+        skin_dict = build_skin_dict(html_root, archive=True)
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        stn_info = weewx.station.StationInfo(**cd['Station'])
+
+        generator = weewx.jsongenerator.JSONGenerator(
+            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
+            first_run=True, stn_info=stn_info)
+        try:
+            generator.start()
+        finally:
+            generator.finalize()
+
+        # Falls back to [ImageGenerator] and writes its plots, not nothing.
+        data_dir = os.path.join(html_root, 'data')
+        assert 'daytempdew.json' in os.listdir(data_dir)
+
     def test_plots_can_come_from_another_section(self, config_dict, tmp_path):
         """'source' points the generator at a section of its own.
 
@@ -419,6 +467,42 @@ class TestPeriodFiles:
             generator.finalize()
 
         assert not os.path.isdir(os.path.join(html_root, 'data'))
+
+    def test_manifest_says_whether_images_are_drawn(self, config_dict, tmp_path):
+        """A page offering a link to a PNG needs to know if anyone writes it.
+
+        The skin says once, in [Generators]. Telling the page a second time in
+        [DisplayOptions] gives two answers that can disagree.
+        """
+        html_root = str(tmp_path)
+        skin_dict = build_skin_dict(html_root)
+        skin_dict['Generators'] = {
+            'generator_list': 'weewx.jsongenerator.JSONGenerator',
+        }
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        stn_info = weewx.station.StationInfo(**cd['Station'])
+
+        def run(sd):
+            gen = weewx.jsongenerator.JSONGenerator(
+                cd, sd, parameters.synthetic_dict['stop_ts'],
+                first_run=True, stn_info=stn_info)
+            try:
+                gen.start()
+            finally:
+                gen.finalize()
+            with open(os.path.join(html_root, 'data', 'index.json'),
+                      encoding='utf-8') as fd:
+                return json.load(fd)
+
+        assert run(skin_dict)['images'] is False
+
+        # SummaryImageGenerator has the word in its name and draws one picture of
+        # the current readings, not a plot per chart.
+        skin_dict['Generators']['generator_list'] =             'weewx.jsongenerator.JSONGenerator, weewx.summaryimage.SummaryImageGenerator'
+        assert run(skin_dict)['images'] is False
+
+        skin_dict['Generators']['generator_list'] =             'weewx.jsongenerator.JSONGenerator, weewx.imagegenerator.ImageGenerator'
+        assert run(skin_dict)['images'] is True
 
     def test_manifest_lists_what_exists(self, config_dict, tmp_path):
         data_dir = run_generator(config_dict, tmp_path)

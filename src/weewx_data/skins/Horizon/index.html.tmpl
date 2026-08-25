@@ -168,7 +168,10 @@
         generated: $current.dateTime.raw,
         station: "$station.location",
         weekStart: $station.week_start,
-        hasImages: #if $to_bool($DisplayOptions.get('show_image_links', True)) then 'true' else 'false'#,
+        ## null means "work it out": the manifest says whether the images are
+        ## being generated at all. Set 'show_image_links' to override, for a
+        ## station whose PNGs come from somewhere else.
+        hasImages: #if $DisplayOptions.get('show_image_links') is None then 'null' else ($to_bool($DisplayOptions.show_image_links) and 'true' or 'false')#,
         text: {
           noData: "$gettext('No data for this period')",
           showData: "$gettext('Show data as table')",

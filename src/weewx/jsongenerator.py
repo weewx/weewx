@@ -93,15 +93,37 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # Translated text strings:
         self.text_dict = self.skin_dict.get('Texts', {})
 
-        # Which section holds the plot definitions? Default to the one the ImageGenerator
-        # uses, so that an existing skin works untouched.
+        # Which section holds the plot definitions?
+        #
+        # Its own, when it has any. [ImageGenerator] otherwise, so that a skin
+        # written before this generator existed works untouched, and so that
+        # anyone who wants one definition to serve both the chart and the image
+        # gets that by doing nothing.
+        #
+        # The order matters more than it looks. Defaulting to [ImageGenerator]
+        # would mean a skin with no images at all still keeps a section named
+        # after them, and that the JSON generator is defined in terms of the one
+        # it was meant to stand beside. This way round it stands on its own, and
+        # the fall-back is what serves the existing skins rather than the rule.
         self.gen_dict = self.skin_dict.get('JSONGenerator', {})
-        source = self.gen_dict.get('source', 'ImageGenerator')
-        try:
-            self.plot_dict = self.skin_dict[source]
-        except KeyError:
-            log.error("No section [%s] found. JSON generation skipped.", source)
-            self.plot_dict = {}
+        source = self.gen_dict.get('source')
+        if source:
+            named = True
+        else:
+            source, named = 'JSONGenerator', False
+
+        self.plot_dict = self.skin_dict.get(source, {})
+        if not _holds_plots(self.plot_dict):
+            if named:
+                log.error("Section [%s] holds no plot definitions. "
+                          "JSON generation skipped.", source)
+                self.plot_dict = {}
+            else:
+                self.plot_dict = self.skin_dict.get('ImageGenerator', {})
+                if not _holds_plots(self.plot_dict):
+                    log.error("No plot definitions found, in [JSONGenerator] or "
+                              "[ImageGenerator]. JSON generation skipped.")
+                    self.plot_dict = {}
 
         self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
@@ -220,6 +242,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 with open(index_file, 'w', encoding='utf-8') as fd:
                     json.dump({'generated': int(gen_ts or time.time()),
                                'spans': span_lengths,
+                               # Whether the PNGs of these plots are being written
+                               # at all. A client offering a link to one wants to
+                               # know before it points at a file nobody generates.
+                               'images': self._images_are_generated(),
                                'plots': manifest},
                               fd, indent=indent, ensure_ascii=False,
                               separators=(',', ':') if indent is None else None)
@@ -397,6 +423,23 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             log.info("Generated %d archive files (%d already current) for report %s "
                      "in %.2f seconds",
                      ngen, nskipped, self.skin_dict['REPORT_NAME'], time.time() - t1)
+
+    def _images_are_generated(self):
+        """Is the ImageGenerator in this report's generator list?
+
+        The skin says once, in [Generators], whether it draws images. Anything
+        that needs to know reads it from here rather than being told a second
+        time in a second place, where the two can disagree.
+        """
+        try:
+            generators = self.skin_dict['Generators']['generator_list']
+        except (KeyError, TypeError):
+            return False
+        # The dots matter: 'summaryimage.SummaryImageGenerator' contains the
+        # word too, and draws one picture of the current readings rather than a
+        # plot per chart.
+        return any('.imagegenerator.' in str(g).lower()
+                   for g in weeutil.weeutil.option_as_list(generators))
 
     def _read_archive_index(self, dest_dir):
         """What the previous run wrote, from the index it left behind.
@@ -839,6 +882,19 @@ def _daynight(start_ts, stop_ts, lat, lon):
     transitions.sort()
     twilight.sort(key=lambda b: b['from'])
     return {'first': first or 'day', 'transitions': transitions, 'twilight': twilight}
+
+
+def _holds_plots(section):
+    """Does this section define plots, rather than merely hold settings?
+
+    A time span such as [[day_images]] is a subsection whose own entries are
+    subsections: one per plot. Settings like [[Archive]] carry scalars only, so
+    counting subsections alone would mistake them for plot definitions.
+    """
+    try:
+        return any(section[name].sections for name in section.sections)
+    except (AttributeError, KeyError, TypeError):
+        return False
 
 
 def _yscale(plot_options, series_out):

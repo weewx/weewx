@@ -760,7 +760,12 @@
       actions.appendChild(save);
 
       /* The rendered PNG only exists for the four standard windows. */
-      if (anchor === null && CFG.hasImages && meta.name) {
+      /* Configured either way, or worked out from the manifest: no point
+         offering a link to a picture nobody is drawing. */
+      var offerImage = CFG.hasImages === null || CFG.hasImages === undefined
+        ? !!(manifest && manifest.images)
+        : CFG.hasImages;
+      if (anchor === null && offerImage && meta.name) {
         var link = document.createElement('a');
         link.className = 'chart-action';
         link.href = meta.name + '.png';
