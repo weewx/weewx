@@ -798,3 +798,74 @@ class TestHelpers:
         assert directions[0] is not None
         assert directions[1] is None
         assert 0 <= directions[0] <= 360
+
+
+# ==============================================================================
+#                        points that carry nothing
+# ==============================================================================
+
+def entry_with(times, values, **extra):
+    e = {'obs_type': 'extraTemp1', 'time': list(times), 'values': list(values)}
+    e.update(extra)
+    return e
+
+
+def test_empty_points_are_left_out():
+    """A source reporting every five minutes fills one archive record in five."""
+    times = [1000 + n * 60 for n in range(10)]
+    values = [None] * 10
+    for n in (0, 5):
+        values[n] = 20.0 + n
+
+    entry = entry_with(times, values)
+    weewx.jsongenerator._drop_empty_points(entry, 86400, None)
+
+    assert entry['values'] == [20.0, 25.0]
+    assert entry['time'] == [1000, 1300]
+
+
+def test_a_long_silence_stays_a_gap():
+    """Without this a sensor that stopped for hours would be drawn as a straight line."""
+    times = [1000 + n * 60 for n in range(40)]
+    values = [None] * 40
+    values[0] = 20.0
+    values[39] = 21.0
+
+    entry = entry_with(times, values)
+    # A tenth of a day is 8640 s; the silence here is 38 minutes, so it is not a gap.
+    weewx.jsongenerator._drop_empty_points(entry, 86400, 0.1)
+    assert entry['values'] == [20.0, 21.0]
+
+    entry = entry_with(times, values)
+    # Against a one-hour plot the same silence is most of it, so it is.
+    weewx.jsongenerator._drop_empty_points(entry, 3600, 0.1)
+    assert entry['values'] == [20.0, None, 21.0]
+
+
+def test_leading_and_trailing_nothing_is_dropped():
+    entry = entry_with([1, 2, 3, 4, 5], [None, None, 7.0, None, None])
+    weewx.jsongenerator._drop_empty_points(entry, 86400, 0.1)
+
+    assert entry['values'] == [7.0]
+    assert entry['time'] == [3]
+
+
+def test_parallel_sequences_are_filtered_along():
+    """bar_width and the vector components line up with values, index for index."""
+    entry = entry_with([1, 2, 3], [5.0, None, 7.0],
+                       bar_width=[3600, 3600, 3600],
+                       vector_x=[1.0, 2.0, 3.0], vector_y=[4.0, 5.0, 6.0])
+    weewx.jsongenerator._drop_empty_points(entry, 86400, None)
+
+    assert entry['values'] == [5.0, 7.0]
+    assert entry['bar_width'] == [3600, 3600]
+    assert entry['vector_x'] == [1.0, 3.0]
+    assert entry['vector_y'] == [4.0, 6.0]
+
+
+def test_a_full_series_is_left_exactly_as_it_was():
+    entry = entry_with([1, 2, 3], [5.0, 6.0, 7.0])
+    weewx.jsongenerator._drop_empty_points(entry, 86400, 0.1)
+
+    assert entry['values'] == [5.0, 6.0, 7.0]
+    assert entry['time'] == [1, 2, 3]

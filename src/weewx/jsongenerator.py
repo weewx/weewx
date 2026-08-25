@@ -790,6 +790,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 entry['rose_label'] = self.text_dict.get(
                     'rose_label', plot_options.get('rose_label', 'N'))
 
+            # Last, so that every parallel sequence is filtered along with the values.
+            _drop_empty_points(entry, plot_options.get('time_length', 86400),
+                               line_options.get('line_gap_fraction'))
+
             series_out.append(entry)
 
         if not series_out:
@@ -932,6 +936,51 @@ def _yscale(plot_options, series_out):
         return None
     nsteps = to_int(plot_options.get('y_nticks', 10))
     return list(weeplot.utilities.scale(ymin, ymax, prescale, nsteps=nsteps))
+
+
+def _drop_empty_points(entry, time_length, gap_fraction):
+    """Leave out the points that carry nothing, keeping real gaps visible.
+
+    A source that reports every five minutes fills one archive record in five, and the
+    other four hold null for it. Sent as they are, the client draws a line broken in
+    hundreds of places, and the file is twenty times larger than the data in it.
+
+    So the empty points go, except where a run of them is long enough to mean the
+    readings really stopped. That threshold is `line_gap_fraction`, the same option the
+    ImageGenerator uses for the same decision; without it, nothing is treated as a gap
+    and the line runs through.
+    """
+    times, values = entry['time'], entry['values']
+    if len(times) != len(values):
+        return
+    threshold = None
+    if gap_fraction and time_length:
+        threshold = float(gap_fraction) * float(time_length)
+
+    keep = []
+    run = []
+    for i, value in enumerate(values):
+        if value is not None:
+            if run and threshold is not None and keep:
+                span = times[run[-1]] - times[run[0]]
+                if span >= threshold:
+                    # Long enough to be a gap. One null says so; the rest are noise.
+                    keep.append(run[len(run) // 2])
+            run = []
+            keep.append(i)
+        elif keep:
+            # Leading nulls are never worth keeping: there is nothing to break away
+            # from yet.
+            run.append(i)
+
+    if len(keep) == len(values):
+        return
+    entry['time'] = [times[i] for i in keep]
+    entry['values'] = [values[i] for i in keep]
+    for extra in ('directions', 'bar_width', 'vector_x', 'vector_y'):
+        seq = entry.get(extra)
+        if isinstance(seq, list) and len(seq) == len(values):
+            entry[extra] = [seq[i] for i in keep]
 
 
 def _round_seq(seq, ndigits):
