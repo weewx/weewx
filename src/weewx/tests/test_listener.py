@@ -15,6 +15,7 @@ import time
 
 import pytest
 
+import weewx
 import weewx.listener
 from weewx.listener import HTTPListener, Request, UDPListener
 
@@ -428,3 +429,33 @@ def test_udp_context_manager():
         assert listener.port != 0
         send_udp(listener, TEMPEST_OBS)
         assert listener.get(timeout=5).text == TEMPEST_OBS
+
+
+def test_a_dead_thread_is_not_silence(make_listener):
+    """Nothing restarts the listening thread, so a driver must not wait for good."""
+    listener = make_listener()
+    listener.server.shutdown()
+    while listener.thread.is_alive():
+        pass
+
+    with pytest.raises(weewx.WeeWxIOError):
+        listener.get(timeout=2)
+
+
+def test_a_dead_udp_thread_is_not_silence(make_udp_listener):
+    listener = make_udp_listener()
+    listener.socket.close()
+    while listener.thread.is_alive():
+        pass
+
+    with pytest.raises(weewx.WeeWxIOError):
+        listener.get(timeout=2)
+
+
+def test_closing_is_not_an_error(make_listener):
+    """A thread that stopped because we asked it to is not a failure."""
+    listener = make_listener()
+    listener.close()
+
+    assert listener.get(timeout=1) is None
+    assert list(listener) == []

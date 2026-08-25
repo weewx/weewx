@@ -52,6 +52,7 @@ import threading
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+import weewx
 from weeutil.weeutil import to_bool, to_int
 
 log = logging.getLogger(__name__)
@@ -139,7 +140,10 @@ class Listener:
     def get(self, timeout=None):
         """Return the next request, or None if none arrived in time.
 
-        Returns None once the listener has been closed.
+        Returns None once the listener has been closed. Raises weewx.WeeWxIOError if
+        the thread doing the listening has stopped, because from here that is
+        indistinguishable from a station that went quiet, and the two need very
+        different handling.
         """
         deadline = None if timeout is None else timeout
         while not self.closed.is_set():
@@ -147,11 +151,23 @@ class Listener:
             try:
                 return self.queue.get(timeout=wait)
             except queue.Empty:
+                self._still_listening()
                 if deadline is not None:
                     deadline -= wait
                     if deadline <= 0:
                         return None
         return None
+
+    def _still_listening(self):
+        """Raise if the thread that fills the queue is gone.
+
+        Nothing restarts it, and a driver waiting on an empty queue would wait for
+        good. Better to say so and let the engine decide.
+        """
+        thread = getattr(self, 'thread', None)
+        if thread is not None and not thread.is_alive() and not self.closed.is_set():
+            raise weewx.WeeWxIOError("The listener on port %s has stopped"
+                                     % getattr(self, 'port', '?'))
 
     def __iter__(self):
         return self
