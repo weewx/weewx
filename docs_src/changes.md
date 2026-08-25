@@ -5,6 +5,7 @@ WeeWX change history
 
 Fix loss of an archive record when the main loop runs past the end of two archive
 periods without being broken.
+[PR #1126](https://github.com/weewx/weewx/pull/1126).
 
 Say so in the log when a Vantage logger returns far fewer archive records than it
 said it would, which is what corrupt logger memory looks like, and link to the fix.
