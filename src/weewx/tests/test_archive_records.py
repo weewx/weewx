@@ -204,4 +204,28 @@ def test_an_unknown_generation_still_raises():
 
     with pytest.raises(ValueError):
         engine.dispatchEvent(weewx.Event(weewx.POST_LOOP))
-    assert archive.old_accumulator is None
+    # Neither accumulator was discarded on the way out.
+    assert len(archive.accumulators) == 2
+
+
+def test_a_packet_from_a_slower_source_still_reaches_its_period():
+    """More than one source means timestamps that go backwards.
+
+    A packet older than the one before it belongs to a period that is still being
+    held. It has to go in there, and it must not make that period look like the
+    current one, or the period that really is current gets its record written early
+    and short.
+    """
+    records = run(
+        packet(START + 290),                     # period 1
+        packet(START + 305),                     # period 2 begins, too early to break
+        packet(START + 265),                     # the other source, running 40 s behind
+        packet(START + 320),                     # breaks the loop
+        packet(START + INTERVAL + 320),          # period 3, breaks it again
+        packet(START + 3 * INTERVAL + 30),
+    )
+    by_time = {r['dateTime']: r for r in records}
+
+    assert sorted(by_time) == [START + INTERVAL, START + 2 * INTERVAL, START + 3 * INTERVAL]
+    assert by_time[START + INTERVAL]['rain'] == 2          # 290 and the late 265
+    assert by_time[START + 2 * INTERVAL]['rain'] == 2      # 305 and 320

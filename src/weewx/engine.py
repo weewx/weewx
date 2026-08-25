@@ -556,9 +556,6 @@ class StdArchive(StdService):
         # than one can be waiting, because the loop is not broken until archive_delay
         # after a period ends, and a packet arriving before that does not break it.
         self.accumulators = collections.deque()
-        # The accumulator whose record is being made, so that new_archive_record can
-        # augment it. None the rest of the time.
-        self.old_accumulator = None
 
         if self.record_generation == 'software':
             self.archive_interval = software_interval
@@ -637,7 +634,6 @@ class StdArchive(StdService):
             start_archive_period_ts = weeutil.weeutil.startOfInterval(now, self.archive_interval)
             self.end_archive_period_ts = start_archive_period_ts + self.archive_interval
             self.end_archive_delay_ts = self.end_archive_period_ts + self.archive_delay
-        self.old_accumulator = None
 
     def new_loop_packet(self, event):
         """Called when A new LOOP record has arrived."""
@@ -669,7 +665,9 @@ class StdArchive(StdService):
                 return accumulator
         accumulator = self._new_accumulator(timestamp)
         place = 0
-        while place < len(self.accumulators)                 and self.accumulators[place].timespan.stop > accumulator.timespan.stop:
+        for held in self.accumulators:
+            if held.timespan.stop < accumulator.timespan.stop:
+                break
             place += 1
         self.accumulators.insert(place, accumulator)
         return accumulator
@@ -703,8 +701,8 @@ class StdArchive(StdService):
         # in the small time interval between the end of the archive interval and the
         # end of the archive delay period, there is nothing behind it yet.
         while len(self.accumulators) > 1:
-            self.old_accumulator = self.accumulators.pop()
-            # If the user has requested software generation, then do that:
+            # The one at the back stays there until its record has been dispatched,
+            # because new_archive_record uses it to augment the record.
             if self.record_generation == 'software':
                 self._software_catchup()
             elif self.record_generation == 'hardware':
@@ -716,10 +714,9 @@ class StdArchive(StdService):
                 except NotImplementedError:
                     self._software_catchup()
             else:
-                self.old_accumulator = None
                 raise ValueError("Unknown station record generation value %s"
                                  % self.record_generation)
-            self.old_accumulator = None
+            self.accumulators.pop()
 
         # Set the time of the next break loop:
         self.end_archive_delay_ts = self.end_archive_period_ts + self.archive_delay
@@ -731,15 +728,16 @@ class StdArchive(StdService):
         # If requested, extract any extra information we can out of the accumulator and put it in
         # the record. Not necessary in the case of software record generation because it has
         # already been done.
+        accumulator = self._finished_accumulator()
         if self.record_augmentation \
-                and self.old_accumulator \
-                and event.record['dateTime'] == self.old_accumulator.timespan.stop \
+                and accumulator \
+                and event.record['dateTime'] == accumulator.timespan.stop \
                 and event.origin != 'software':
-            self.old_accumulator.augmentRecord(event.record)
+            accumulator.augmentRecord(event.record)
 
         dbmanager = self.engine.db_binder.get_manager(self.data_binding)
         dbmanager.addRecord(event.record,
-                            accumulator=self.old_accumulator,
+                            accumulator=accumulator,
                             log_success=self.log_success,
                             log_failure=self.log_failure)
 
@@ -772,9 +770,15 @@ class StdArchive(StdService):
             log.error("Internal error detected. Catchup abandoned")
             log.error("**** %s" % e)
 
+    def _finished_accumulator(self):
+        """The accumulator whose record is being made, or None outside of that.
+
+        Everything but the one at the front has ended, so it is the one at the back."""
+        return self.accumulators[-1] if len(self.accumulators) > 1 else None
+
     def _software_catchup(self):
-        # Extract a record out of the old accumulator. 
-        record = self.old_accumulator.getRecord()
+        # Extract a record out of the accumulator whose period has ended.
+        record = self._finished_accumulator().getRecord()
         # Add the archive interval
         record['interval'] = self.archive_interval / 60
         # Send out an event with the new record:
