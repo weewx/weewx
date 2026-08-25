@@ -7,6 +7,7 @@
 """Main engine for the weewx weather system."""
 
 # Python imports
+import collections
 import gc
 import importlib
 import logging
@@ -550,14 +551,14 @@ class StdArchive(StdService):
         self.end_archive_period_ts = None
         # The timestamp that marks the end of the archive period, plus a delay
         self.end_archive_delay_ts = None
-        # The accumulator to be used for the current archive period
-        self.accumulator = None
-        # The accumulator that was used for the last archive period. Set to None after it has
-        # been processed.
+        # Accumulators, newest first. The one at the front is the period being filled;
+        # anything behind it has ended and is waiting for the loop to be broken. More
+        # than one can be waiting, because the loop is not broken until archive_delay
+        # after a period ends, and a packet arriving before that does not break it.
+        self.accumulators = collections.deque()
+        # The accumulator whose record is being made, so that new_archive_record can
+        # augment it. None the rest of the time.
         self.old_accumulator = None
-        # Accumulators for periods that have ended and are waiting for the loop to be
-        # broken, oldest first.
-        self.old_accumulators = []
 
         if self.record_generation == 'software':
             self.archive_interval = software_interval
@@ -642,22 +643,20 @@ class StdArchive(StdService):
         """Called when A new LOOP record has arrived."""
 
         # Do we have an accumulator at all? If not, create one:
-        if not self.accumulator:
-            self.accumulator = self._new_accumulator(event.packet['dateTime'])
+        if not self.accumulators:
+            self.accumulators.appendleft(self._new_accumulator(event.packet['dateTime']))
 
-        # Try adding the LOOP packet to the existing accumulator. If the
+        # Try adding the LOOP packet to the current accumulator. If the
         # timestamp is outside the timespan of the accumulator, an exception
         # will be thrown:
         try:
-            self.accumulator.addRecord(event.packet, add_hilo=self.loop_hilo)
+            self.accumulators[0].addRecord(event.packet, add_hilo=self.loop_hilo)
         except weewx.accum.OutOfSpan:
-            # Shuffle accumulators. The old one joins the queue rather than replacing
-            # whatever was already in it: more than one period can end before the loop
-            # is broken, and an accumulator that is replaced never becomes a record.
-            self.old_accumulators.append(self.accumulator)
-            self.accumulator = self._new_accumulator(event.packet['dateTime'])
+            # Put a new one at the front. The old one drops back a place rather than
+            # being replaced: an accumulator that is replaced never becomes a record.
+            self.accumulators.appendleft(self._new_accumulator(event.packet['dateTime']))
             # Try again:
-            self.accumulator.addRecord(event.packet, add_hilo=self.loop_hilo)
+            self.accumulators[0].addRecord(event.packet, add_hilo=self.loop_hilo)
 
     def check_loop(self, event):
         """Called after any loop packets have been processed. This is the opportunity
@@ -680,15 +679,15 @@ class StdArchive(StdService):
         """The main packet loop has ended, so process the old accumulators.
 
         Usually there is one, for the period that just ended. Where the loop ran past
-        the end of a period without being broken there can be more, and they are done
-        oldest first, so that the records reach the database in order.
+        the end of a period without being broken there can be more, and they come off
+        the back of the queue oldest first, so that the records reach the database in
+        order.
         """
-        # If weewx happens to startup in the small time interval between the end of
-        # the archive interval and the end of the archive delay period, then
-        # there will be no old accumulator. Check for this.
-        waiting, self.old_accumulators = self.old_accumulators, []
-        for accumulator in waiting:
-            self.old_accumulator = accumulator
+        # Everything but the one at the front has ended. If weewx happens to startup
+        # in the small time interval between the end of the archive interval and the
+        # end of the archive delay period, there is nothing behind it yet.
+        while len(self.accumulators) > 1:
+            self.old_accumulator = self.accumulators.pop()
             # If the user has requested software generation, then do that:
             if self.record_generation == 'software':
                 self._software_catchup()
