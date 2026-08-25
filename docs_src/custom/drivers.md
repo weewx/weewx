@@ -265,6 +265,14 @@ straight through:
     <td>Accept requests from these addresses only.</td>
   </tr>
   <tr>
+    <td class="code">token</td>
+    <td><i>none</i></td>
+    <td>Require this token, given as query parameter
+        <span class="code">token</span>, in header
+        <span class="code">X-Auth-Token</span>, or as a bearer token in
+        <span class="code">Authorization</span>. Anything else gets a 403.</td>
+  </tr>
+  <tr>
     <td class="code">trust_proxy</td>
     <td>False</td>
     <td>Take the client address from <span class="code">X-Forwarded-For</span>. Only
@@ -280,6 +288,25 @@ straight through:
 
 The socket is bound when the listener is created, so a port that is already in use is
 reported where the driver is built.
+
+Anyone who can reach the port can post readings, so the listener offers three ways to
+narrow that down: `allowed_hosts`, `token`, and `path`. Hardware that can only be given
+a URL, which is most of it, can still carry a secret in the path:
+
+``` ini
+[MyDriver]
+    driver = user.mydriver
+    port = 8000
+    path = /a8f3c1e0/report
+```
+
+None of this is a substitute for TLS, and the listener does not offer any. Put a reverse
+proxy in front for that, and set `trust_proxy` so the driver still sees the real client
+address.
+
+What the listener does not check is whatever the device carries in its own payload, such
+as the Ecowitt `PASSKEY` or a Weather Underground station ID. Those belong to the
+protocol, so they are the driver's to verify.
 
 ## Define the configuration
 

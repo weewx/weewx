@@ -41,6 +41,7 @@ Options may be passed as strings, so a driver can hand over its configuration st
 unchanged.
 """
 
+import hmac
 import logging
 import queue
 import socket
@@ -188,6 +189,11 @@ class HTTPListener(Listener):
         socket_timeout (int): How long an idle client may hold a connection.
         allowed_hosts (list): Accept requests from these addresses only. Default is
             empty, i.e. accept from anywhere.
+        token (str): Accept a request only if it presents this token, either as query
+            parameter 'token', or in header 'X-Auth-Token', or as a bearer token in
+            header 'Authorization'. Anything else gets a 403. Default is None, i.e. no
+            token is required. A device that cannot set a header or a query parameter
+            can carry the token in 'path' instead.
         trust_proxy (bool): Take the client address from 'X-Forwarded-For'. Only set
             this when a proxy you control sets that header. Default False.
         log_raw (bool): Log every request body at debug level. This is what you turn on
@@ -206,6 +212,7 @@ class HTTPListener(Listener):
         self.max_body = to_int(kwargs.get('max_body', DEFAULT_MAX_BODY))
         self.socket_timeout = to_int(kwargs.get('socket_timeout', DEFAULT_SOCKET_TIMEOUT))
         self.allowed_hosts = _as_list(kwargs.get('allowed_hosts'))
+        self.token = kwargs.get('token')
         self.trust_proxy = to_bool(kwargs.get('trust_proxy', False))
         self.log_raw = to_bool(kwargs.get('log_raw', False))
 
@@ -317,6 +324,11 @@ class _Handler(BaseHTTPRequestHandler):
             self.send_error(404, "Not Found")
             return
 
+        if not self._token_ok(listener, parts.query):
+            log.warning("Rejected a request from %s: bad or missing token", client)
+            self.send_error(403, "Forbidden")
+            return
+
         request = Request(method=self.command,
                           path=parts.path,
                           query=parts.query,
@@ -349,6 +361,25 @@ class _Handler(BaseHTTPRequestHandler):
         self.end_headers()
         if response:
             self.wfile.write(response)
+
+    def _token_ok(self, listener, query):
+        """Check the token, if one is required.
+
+        Devices differ in what they can send, so look in the three places one can end
+        up: a query parameter, our own header, and a bearer token.
+        """
+        if not listener.token:
+            return True
+        presented = self.headers.get('X-Auth-Token', '')
+        if not presented:
+            authorization = self.headers.get('Authorization', '')
+            if authorization.startswith('Bearer '):
+                presented = authorization[len('Bearer '):].strip()
+        if not presented:
+            presented = urllib.parse.parse_qs(query).get('token', [''])[0]
+        # Constant time, so that a wrong token cannot be found one character at a time.
+        return hmac.compare_digest(presented.encode('utf-8'),
+                                   str(listener.token).encode('utf-8'))
 
     def _client_address(self):
         if self.server.listener.trust_proxy:

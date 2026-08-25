@@ -163,6 +163,63 @@ def test_allowed_hosts_as_a_list(make_listener):
     assert status == 200
 
 
+def test_token_in_the_query(make_listener):
+    listener = make_listener(token='s3cret')
+    status, _ = send(listener, path='/?token=s3cret', body=ECOWITT_BODY)
+    assert status == 200
+    assert listener.get(timeout=5) is not None
+
+
+def test_token_in_a_header(make_listener):
+    listener = make_listener(token='s3cret')
+    status, _ = send(listener, body=ECOWITT_BODY, headers={'X-Auth-Token': 's3cret'})
+    assert status == 200
+
+
+def test_token_as_a_bearer(make_listener):
+    listener = make_listener(token='s3cret')
+    status, _ = send(listener, body=ECOWITT_BODY,
+                     headers={'Authorization': 'Bearer s3cret'})
+    assert status == 200
+
+
+def test_wrong_token(make_listener):
+    listener = make_listener(token='s3cret')
+    status, _ = send(listener, path='/?token=wrong', body=ECOWITT_BODY)
+    assert status == 403
+    assert listener.get(timeout=0.5) is None
+
+
+def test_missing_token(make_listener):
+    listener = make_listener(token='s3cret')
+    status, _ = send(listener, body=ECOWITT_BODY)
+    assert status == 403
+
+
+def test_no_token_required(make_listener):
+    listener = make_listener()
+    status, _ = send(listener, body=ECOWITT_BODY, headers={'X-Auth-Token': 'anything'})
+    assert status == 200
+
+
+def test_token_with_non_ascii(make_listener):
+    """A token outside ASCII must not crash the comparison."""
+    listener = make_listener(token='grün')
+    status, _ = send(listener, body=ECOWITT_BODY, headers={'X-Auth-Token': 'grün'})
+    assert status == 200
+    status, _ = send(listener, body=ECOWITT_BODY, headers={'X-Auth-Token': 'blau'})
+    assert status == 403
+
+
+def test_token_in_the_path(make_listener):
+    """A device that can only be given a URL carries its token in the path."""
+    listener = make_listener(path='/a8f3c1/report')
+    status, _ = send(listener, path='/a8f3c1/report', body=ECOWITT_BODY)
+    assert status == 200
+    status, _ = send(listener, path='/report', body=ECOWITT_BODY)
+    assert status == 404
+
+
 def test_trust_proxy(make_listener):
     listener = make_listener(trust_proxy=True)
     send(listener, body=ECOWITT_BODY, headers={'X-Forwarded-For': '10.0.0.9, 10.0.0.1'})
