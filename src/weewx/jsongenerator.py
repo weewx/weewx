@@ -938,40 +938,50 @@ def _yscale(plot_options, series_out):
     return list(weeplot.utilities.scale(ymin, ymax, prescale, nsteps=nsteps))
 
 
-def _drop_empty_points(entry, time_length, gap_fraction):
+def _drop_empty_points(entry, time_length, gap_fraction, gap_factor=3.0):
     """Leave out the points that carry nothing, keeping real gaps visible.
 
-    A source that reports every five minutes fills one archive record in five, and the
-    other four hold null for it. Sent as they are, the client draws a line broken in
-    hundreds of places, and the file is twenty times larger than the data in it.
+    A source reporting every ten minutes fills one archive record in ten, and the rest
+    hold null for it. Sent as they are, a client draws a line broken in hundreds of
+    places, and the file is far larger than the data in it.
 
-    So the empty points go, except where a run of them is long enough to mean the
-    readings really stopped. That threshold is `line_gap_fraction`, the same option the
-    ImageGenerator uses for the same decision; without it, nothing is treated as a gap
-    and the line runs through.
+    What counts as a gap has to come from the source's own rhythm, not from the width
+    of the plot: ten minutes between readings is a break for a station reporting every
+    eight seconds and business as usual for one reporting every ten minutes. So the
+    usual spacing is measured, and only a run several times longer than that is drawn
+    as a gap. `line_gap_fraction` still wins where it is set, for anyone who wants the
+    ImageGenerator's fixed threshold.
     """
     times, values = entry['time'], entry['values']
     if len(times) != len(values):
         return
+
+    kept = [i for i, v in enumerate(values) if v is not None]
+    if not kept:
+        return
+
     threshold = None
     if gap_fraction and time_length:
-        threshold = float(gap_fraction) * float(time_length)
+        # 'time_length' may be a duration such as '27h', the same as everywhere else
+        # it is read.
+        span = weeutil.weeutil.nominal_spans(time_length)
+        if span:
+            threshold = float(gap_fraction) * float(span)
+    if threshold is None and len(kept) >= 3:
+        spacings = sorted(times[b] - times[a] for a, b in zip(kept, kept[1:]))
+        usual = spacings[len(spacings) // 2]
+        if usual > 0:
+            threshold = gap_factor * usual
 
     keep = []
-    run = []
-    for i, value in enumerate(values):
-        if value is not None:
-            if run and threshold is not None and keep:
-                span = times[run[-1]] - times[run[0]]
-                if span >= threshold:
-                    # Long enough to be a gap. One null says so; the rest are noise.
-                    keep.append(run[len(run) // 2])
-            run = []
-            keep.append(i)
-        elif keep:
-            # Leading nulls are never worth keeping: there is nothing to break away
-            # from yet.
-            run.append(i)
+    for position, i in enumerate(kept):
+        if position and threshold is not None:
+            previous = kept[position - 1]
+            if times[i] - times[previous] >= threshold:
+                # Long enough to be a break in the readings rather than their rhythm.
+                # One null says so; the rest of the run would only be noise.
+                keep.append(previous + (i - previous) // 2)
+        keep.append(i)
 
     if len(keep) == len(values):
         return

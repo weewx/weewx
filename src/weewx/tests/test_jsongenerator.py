@@ -824,6 +824,46 @@ def test_empty_points_are_left_out():
     assert entry['time'] == [1000, 1300]
 
 
+def test_a_duration_string_is_understood():
+    """time_length may be '27h', the same as everywhere else it is read."""
+    entry = entry_with([1000 + n * 60 for n in range(40)],
+                       [20.0] + [None] * 38 + [21.0])
+
+    weewx.jsongenerator._drop_empty_points(entry, '27h', 0.1)
+
+    assert entry['values'] == [20.0, 21.0]
+
+
+def test_the_source_rhythm_decides_what_a_gap_is():
+    """Ten minutes between readings is a break for one station and normal for another."""
+    # A source on a ten-minute rhythm, one archive record in ten carrying its reading.
+    times = [1000 + n * 60 for n in range(41)]
+    values = [None] * 41
+    for n in range(0, 41, 10):
+        values[n] = 20.0 + n
+
+    entry = entry_with(times, values)
+    weewx.jsongenerator._drop_empty_points(entry, 86400, None)
+
+    # Its own rhythm, so the line runs through: no gap anywhere.
+    assert entry['values'] == [20.0, 30.0, 40.0, 50.0, 60.0]
+    assert None not in entry['values']
+
+
+def test_a_silence_several_times_the_rhythm_is_a_gap():
+    times = [1000 + n * 60 for n in range(80)]
+    values = [None] * 80
+    for n in (0, 10, 20, 30):          # ten-minute rhythm ...
+        values[n] = 20.0
+    values[79] = 21.0                  # ... then nothing for 49 minutes
+
+    entry = entry_with(times, values)
+    weewx.jsongenerator._drop_empty_points(entry, 86400, None)
+
+    assert entry['values'].count(None) == 1
+    assert entry['values'][-1] == 21.0
+
+
 def test_a_long_silence_stays_a_gap():
     """Without this a sensor that stopped for hours would be drawn as a straight line."""
     times = [1000 + n * 60 for n in range(40)]
@@ -833,6 +873,7 @@ def test_a_long_silence_stays_a_gap():
 
     entry = entry_with(times, values)
     # A tenth of a day is 8640 s; the silence here is 38 minutes, so it is not a gap.
+    # Two points are too few to measure a rhythm from, so nothing else applies.
     weewx.jsongenerator._drop_empty_points(entry, 86400, 0.1)
     assert entry['values'] == [20.0, 21.0]
 
