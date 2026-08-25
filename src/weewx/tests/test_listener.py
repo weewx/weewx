@@ -459,3 +459,35 @@ def test_closing_is_not_an_error(make_listener):
 
     assert listener.get(timeout=1) is None
     assert list(listener) == []
+
+
+def test_a_queue_size_of_zero_is_not_unbounded(make_listener):
+    """queue.Queue(maxsize=0) is unbounded, which is what this guards against."""
+    listener = make_listener(queue_size=0)
+
+    assert listener.queue.maxsize == 1
+
+
+def test_a_zero_timeout_returns_promptly(make_listener):
+    listener = make_listener()
+    start = time.time()
+
+    assert listener.get(timeout=0) is None
+    assert time.time() - start < 1
+
+
+def test_a_negative_timeout_is_not_an_error(make_listener):
+    listener = make_listener()
+
+    assert listener.get(timeout=-5) is None
+
+
+def test_closing_a_udp_listener_does_not_race_its_thread(make_udp_listener):
+    """The reading thread must not find the socket gone mid-call."""
+    listener = make_udp_listener()
+    for _ in range(20):
+        send_udp(listener, TEMPEST_OBS)
+    listener.close()
+
+    assert listener.thread is None
+    assert listener.socket is None

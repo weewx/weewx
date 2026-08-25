@@ -110,7 +110,9 @@ class Listener:
     """Base class for listeners. Holds the queue and the iteration protocol."""
 
     def __init__(self, **kwargs):
-        self.queue_size = to_int(kwargs.get('queue_size', DEFAULT_QUEUE_SIZE))
+        # At least one, because a Queue of size zero is an unbounded one, which is
+        # the thing this is here to avoid.
+        self.queue_size = max(1, to_int(kwargs.get('queue_size', DEFAULT_QUEUE_SIZE)))
         self.queue = queue.Queue(maxsize=self.queue_size)
         self.closed = threading.Event()
         # Number of requests dropped because nobody picked them up in time.
@@ -145,11 +147,11 @@ class Listener:
         indistinguishable from a station that went quiet, and the two need very
         different handling.
         """
-        deadline = None if timeout is None else timeout
+        deadline = None if timeout is None else max(0.0, float(timeout))
         while not self.closed.is_set():
             wait = POLL_INTERVAL if deadline is None else min(POLL_INTERVAL, deadline)
             try:
-                return self.queue.get(timeout=wait)
+                return self.queue.get(timeout=max(wait, 0.001))
             except queue.Empty:
                 self._still_listening()
                 if deadline is not None:
@@ -158,14 +160,20 @@ class Listener:
                         return None
         return None
 
-    def _still_listening(self):
-        """Raise if the thread that fills the queue is gone.
+    def _listening(self):
+        """Whether this listener is still able to receive anything.
 
-        Nothing restarts it, and a driver waiting on an empty queue would wait for
-        good. Better to say so and let the engine decide.
+        Subclasses that run a thread say so here.
         """
-        thread = getattr(self, 'thread', None)
-        if thread is not None and not thread.is_alive() and not self.closed.is_set():
+        return True
+
+    def _still_listening(self):
+        """Raise if nothing is filling the queue any more.
+
+        Nothing restarts a listener that has stopped, and a driver waiting on an
+        empty queue would wait for good. Better to say so and let the engine decide.
+        """
+        if not self.closed.is_set() and not self._listening():
             raise weewx.WeeWxIOError("The listener on port %s has stopped"
                                      % getattr(self, 'port', '?'))
 
@@ -251,6 +259,9 @@ class HTTPListener(Listener):
         self.thread.start()
         log.info("Listening for HTTP requests on %s:%d", self.address or '*', self.port)
 
+    def _listening(self):
+        return self.thread is not None and self.thread.is_alive()
+
     def get_response(self, request):
         """The body to send back. Override this, or pass 'response' to the constructor."""
         if callable(self.response):
@@ -318,14 +329,18 @@ class UDPListener(Listener):
         self.thread.start()
         log.info("Listening for UDP datagrams on %s:%d", self.address or '*', self.port)
 
+    def _listening(self):
+        return self.thread is not None and self.thread.is_alive()
+
     def _run(self):
         while not self.closed.is_set():
             try:
                 datagram, sender = self.socket.recvfrom(self.max_body)
             except socket.timeout:
                 continue
-            except OSError:
-                # The socket was closed under us. That is how this loop ends.
+            except (OSError, AttributeError):
+                # The socket was closed under us, and may already be gone. Either way
+                # that is how this loop ends.
                 return
             if self.allowed_hosts and sender[0] not in self.allowed_hosts:
                 log.warning("Rejected a datagram from %s", sender[0])
@@ -340,11 +355,13 @@ class UDPListener(Listener):
         """Stop listening and release the port."""
         super().close()
         if self.socket is not None:
+            # Closing wakes the reading thread. Wait for it before dropping the
+            # reference, or it can find self.socket gone mid-call.
             self.socket.close()
+            if self.thread is not None:
+                self.thread.join(POLL_INTERVAL * 2)
+                self.thread = None
             self.socket = None
-        if self.thread is not None:
-            self.thread.join(POLL_INTERVAL * 2)
-            self.thread = None
         log.info("Stopped listening on port %d", self.port)
 
 
