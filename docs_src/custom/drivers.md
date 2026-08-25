@@ -176,6 +176,111 @@ database, or perform any other activity before the application terminates, then
 you must supply this function. WeeWX will call it if it needs to shut down your
 console (usually in the case of an error).
 
+## Hardware that pushes {#listener}
+
+Some hardware never answers a request. It uploads on its own schedule, so a driver for
+it has to be a server rather than a client. Ecowitt gateways and consoles, Acurite
+bridges, and WeatherFlow hardware all work this way.
+
+Use `weewx.listener.HTTPListener` for these. It owns the socket, the thread, and the
+queue, which leaves the driver with the part that actually differs between devices.
+
+``` python
+from weewx.listener import HTTPListener
+
+class MyDriver(weewx.drivers.AbstractDevice):
+
+    def __init__(self, **stn_dict):
+        self.listener = HTTPListener(**stn_dict)
+
+    def genLoopPackets(self):
+        for request in self.listener:
+            packet = self.parse(request.text)
+            if packet:
+                yield packet
+
+    def closePort(self):
+        self.listener.close()
+```
+
+Each request carries `method`, `path`, `query`, `body`, `headers`, and
+`client_address`. Use `request.text` if the device may use either protocol: it returns
+the body of a POST, and the query string of a GET.
+
+Most devices treat an upload as failed until they have read a response, and what they
+expect is part of their protocol. Give the listener a string, or a function of the
+request:
+
+``` python
+self.listener = HTTPListener(response='{"errcode":"0","errmsg":"ok"}',
+                             content_type='application/json',
+                             **stn_dict)
+```
+
+Options may be given as strings, so a driver can pass its configuration stanza
+straight through:
+
+<table>
+  <tr class="first_row">
+    <td>Option</td>
+    <td>Default</td>
+    <td>Meaning</td>
+  </tr>
+  <tr>
+    <td class="code">port</td>
+    <td>80</td>
+    <td>The port to listen on. Ports below 1024 need root.</td>
+  </tr>
+  <tr>
+    <td class="code">address</td>
+    <td><i>every interface</i></td>
+    <td>The address to bind to. Use <span class="code">localhost</span> when a reverse
+        proxy sits in front.</td>
+  </tr>
+  <tr>
+    <td class="code">path</td>
+    <td><i>every path</i></td>
+    <td>Accept this path only, <i>e.g.</i>
+        <span class="code">/data/report/</span>. Anything else gets a 404.</td>
+  </tr>
+  <tr>
+    <td class="code">max_body</td>
+    <td>65536</td>
+    <td>Largest body accepted, in bytes. Bigger requests get a 413.</td>
+  </tr>
+  <tr>
+    <td class="code">socket_timeout</td>
+    <td>20</td>
+    <td>How long an idle client may hold a connection open, in seconds.</td>
+  </tr>
+  <tr>
+    <td class="code">queue_size</td>
+    <td>10</td>
+    <td>How many requests may wait to be picked up. Beyond that, the oldest is
+        dropped and a warning is logged.</td>
+  </tr>
+  <tr>
+    <td class="code">allowed_hosts</td>
+    <td><i>anywhere</i></td>
+    <td>Accept requests from these addresses only.</td>
+  </tr>
+  <tr>
+    <td class="code">trust_proxy</td>
+    <td>False</td>
+    <td>Take the client address from <span class="code">X-Forwarded-For</span>. Only
+        set this when a proxy you control sets that header.</td>
+  </tr>
+  <tr>
+    <td class="code">log_raw</td>
+    <td>False</td>
+    <td>Log every request body at debug level. This is what you turn on when a sensor
+        is missing from the data.</td>
+  </tr>
+</table>
+
+The socket is bound when the listener is created, so a port that is already in use is
+reported where the driver is built.
+
 ## Define the configuration
 
 You then include a new section in the configuration file `weewx.conf` that

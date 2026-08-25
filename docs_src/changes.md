@@ -1,6 +1,13 @@
 WeeWX change history
 --------------------
 
+### 5.6.0 MM/DD/YYYY
+
+Added `weewx.listener`, a listener for hardware that pushes its data rather than
+answering a poll. Drivers for such hardware no longer have to write their own HTTP
+server. See [Issue #1124](https://github.com/weewx/weewx/issues/1124).
+
+
 ### 5.5.0 6-Aug-2026
 
 Added the ability for services to bind to a `SHUTDOWN` event. This allows
