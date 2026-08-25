@@ -37,6 +37,9 @@ upload as failed until they have read one, e.g. an Ecowitt gateway expects JSON:
     HTTPListener(port=8000, response='{"errcode":"0","errmsg":"ok"}',
                  content_type='application/json')
 
+Hardware that broadcasts instead of posting uses `UDPListener` the same way. Same queue,
+same iteration, no response to send.
+
 Options may be passed as strings, so a driver can hand over its configuration stanza
 unchanged.
 """
@@ -245,6 +248,84 @@ class HTTPListener(Listener):
             self.server.shutdown()
             self.server.server_close()
             self.server = None
+        if self.thread is not None:
+            self.thread.join(POLL_INTERVAL * 2)
+            self.thread = None
+        log.info("Stopped listening on port %d", self.port)
+
+
+class UDPListener(Listener):
+    """Listen for UDP datagrams and queue them for a driver.
+
+    Hardware that broadcasts rather than posts, e.g. WeatherFlow on port 50222 or a
+    Davis WeatherLink Live on 22222, ends up here. There is no response to send: a
+    datagram is sent once and nobody waits for an answer.
+
+    Args:
+        port (int): The port to listen on. Required.
+        address (str): The address to bind to. Default is '', i.e. every interface,
+            which is what receiving a broadcast usually needs.
+        max_body (int): Largest datagram accepted, in bytes.
+        allowed_hosts (list): Accept datagrams from these addresses only. Default is
+            empty, i.e. accept from anywhere.
+        reuse_address (bool): Let other programs on this machine read the same
+            broadcasts. Default True, because that is nearly always wanted.
+        log_raw (bool): Log every datagram at debug level.
+        queue_size (int): How many datagrams may wait to be picked up.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.port = to_int(kwargs.get('port', 0))
+        self.address = kwargs.get('address', '')
+        self.max_body = to_int(kwargs.get('max_body', DEFAULT_MAX_BODY))
+        self.allowed_hosts = _as_list(kwargs.get('allowed_hosts'))
+        self.reuse_address = to_bool(kwargs.get('reuse_address', True))
+        self.log_raw = to_bool(kwargs.get('log_raw', False))
+
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        if self.reuse_address:
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            self.socket.bind((self.address, self.port))
+        except OSError as e:
+            log.error("Cannot listen on %s:%s: %s", self.address or '*', self.port, e)
+            self.socket.close()
+            raise
+        # So the reading loop comes up for air often enough to notice a close().
+        self.socket.settimeout(POLL_INTERVAL)
+        self.port = self.socket.getsockname()[1]
+
+        self.thread = threading.Thread(target=self._run, name='WeeWX-listener')
+        self.thread.daemon = True
+        self.thread.start()
+        log.info("Listening for UDP datagrams on %s:%d", self.address or '*', self.port)
+
+    def _run(self):
+        while not self.closed.is_set():
+            try:
+                datagram, sender = self.socket.recvfrom(self.max_body)
+            except socket.timeout:
+                continue
+            except OSError:
+                # The socket was closed under us. That is how this loop ends.
+                return
+            if self.allowed_hosts and sender[0] not in self.allowed_hosts:
+                log.warning("Rejected a datagram from %s", sender[0])
+                continue
+            request = Request(method='UDP', path='', query='', body=datagram,
+                              headers={}, client_address=sender[0])
+            if self.log_raw:
+                log.debug("Raw datagram: %s", request.text)
+            self.put(request)
+
+    def close(self):
+        """Stop listening and release the port."""
+        super().close()
+        if self.socket is not None:
+            self.socket.close()
+            self.socket = None
         if self.thread is not None:
             self.thread.join(POLL_INTERVAL * 2)
             self.thread = None

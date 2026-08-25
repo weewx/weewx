@@ -308,6 +308,27 @@ What the listener does not check is whatever the device carries in its own paylo
 as the Ecowitt `PASSKEY` or a Weather Underground station ID. Those belong to the
 protocol, so they are the driver's to verify.
 
+### Hardware that broadcasts
+
+Some hardware does not post at all. It puts a datagram on the local network and moves
+on, e.g. WeatherFlow on port 50222, or a Davis WeatherLink Live on 22222. Use
+`weewx.listener.UDPListener` for those. Same queue, same iteration, no response to send:
+
+``` python
+from weewx.listener import UDPListener
+
+self.listener = UDPListener(port=50222)
+```
+
+It takes `port`, `address`, `max_body`, `allowed_hosts`, `log_raw`, and `queue_size`
+with the same meanings, plus `reuse_address`. That one defaults to `True`, so other
+programs on the machine can read the same broadcasts. Set it to `False` to have the port
+to yourself.
+
+Two differences are worth knowing. UDP has no way to refuse an oversized datagram, so
+`max_body` truncates rather than rejects. And a datagram carries no path, no headers and
+no token, so `allowed_hosts` is the only filter there is.
+
 ## Define the configuration
 
 You then include a new section in the configuration file `weewx.conf` that

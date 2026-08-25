@@ -9,13 +9,14 @@ import http.client
 import importlib
 import logging
 import queue
+import socket
 import threading
 import time
 
 import pytest
 
 import weewx.listener
-from weewx.listener import HTTPListener, Request
+from weewx.listener import HTTPListener, Request, UDPListener
 
 ECOWITT_BODY = ("PASSKEY=ABC&stationtype=GW1000B_V1.5.5&dateutc=2026-08-25+11:29:50"
                 "&tempinf=67.1&humidityin=39&baromrelin=30.138")
@@ -322,3 +323,108 @@ def test_queue_is_not_unbounded(make_listener):
     listener = make_listener(queue_size=1)
     assert isinstance(listener.queue, queue.Queue)
     assert listener.queue.maxsize == 1
+
+
+# ---------------------------------------------------------------------------- UDP
+
+
+@pytest.fixture
+def make_udp_listener():
+    """Hand out UDP listeners on a free port, and close them afterwards."""
+    made = []
+
+    def _make(**kwargs):
+        kwargs.setdefault('port', 0)
+        kwargs.setdefault('address', '127.0.0.1')
+        listener = UDPListener(**kwargs)
+        made.append(listener)
+        return listener
+
+    yield _make
+
+    for listener in made:
+        listener.close()
+
+
+def send_udp(listener, payload):
+    """Send one datagram to a listener."""
+    if isinstance(payload, str):
+        payload = payload.encode('utf-8')
+    sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        sender.sendto(payload, ('127.0.0.1', listener.port))
+    finally:
+        sender.close()
+
+
+TEMPEST_OBS = '{"serial_number":"ST-00000512","type":"obs_st","hub_sn":"HB-00013030"}'
+
+
+def test_datagram_arrives(make_udp_listener):
+    listener = make_udp_listener()
+    send_udp(listener, TEMPEST_OBS)
+
+    request = listener.get(timeout=5)
+    assert request is not None
+    assert request.method == 'UDP'
+    assert request.text == TEMPEST_OBS
+    assert request.client_address == '127.0.0.1'
+
+
+def test_udp_iteration(make_udp_listener):
+    listener = make_udp_listener()
+    send_udp(listener, 'first')
+    send_udp(listener, 'second')
+
+    collected = []
+    for request in listener:
+        collected.append(request.text)
+        if len(collected) == 2:
+            break
+    assert collected == ['first', 'second']
+
+
+def test_udp_allowed_hosts(make_udp_listener):
+    listener = make_udp_listener(allowed_hosts='192.168.1.5')
+    send_udp(listener, TEMPEST_OBS)
+    assert listener.get(timeout=0.5) is None
+
+
+def test_udp_body_is_capped(make_udp_listener):
+    """UDP has no way to refuse an oversized datagram, so it is read short."""
+    listener = make_udp_listener(max_body=8)
+    send_udp(listener, 'x' * 100)
+    assert listener.get(timeout=5).body == b'x' * 8
+
+
+def test_udp_options_may_be_strings(make_udp_listener):
+    listener = make_udp_listener(max_body='512', queue_size='3', reuse_address='true',
+                                 log_raw='false')
+    assert listener.max_body == 512
+    assert listener.queue_size == 3
+    assert listener.reuse_address is True
+
+
+def test_udp_port_may_be_shared(make_udp_listener):
+    """Broadcasts are usually wanted by more than one program on the machine."""
+    first = make_udp_listener()
+    second = make_udp_listener(port=first.port)
+    assert second.port == first.port
+
+
+def test_udp_close_releases_the_port(make_udp_listener):
+    listener = make_udp_listener(reuse_address=False)
+    port = listener.port
+    listener.close()
+    listener.close()
+
+    # Binding again is proof the socket is gone.
+    again = UDPListener(port=port, address='127.0.0.1', reuse_address=False)
+    again.close()
+
+
+def test_udp_context_manager():
+    with UDPListener(port=0, address='127.0.0.1') as listener:
+        assert listener.port != 0
+        send_udp(listener, TEMPEST_OBS)
+        assert listener.get(timeout=5).text == TEMPEST_OBS
