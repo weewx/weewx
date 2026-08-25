@@ -212,6 +212,24 @@ matters for a station running every five minutes.
 These numbers will be several times larger on a Raspberry Pi. They are given to show the
 *shape* of the cost — a large one-off, then almost nothing — not as a benchmark.
 
+## What it takes from [ImageGenerator], and what it does not
+
+The generator reads the section the images use, so a plot is defined once.
+That cuts both ways, and it is worth knowing which way round.
+
+**What the plot is** comes from there: the time span, the aggregation, the data
+binding, the observation types, their labels, the line colours, the y scaling.
+Change any of those and the chart follows, as the PNG does.
+
+**What the picture looks like** does not. Fonts, image dimensions, background
+colours, anti-aliasing, marker shapes, label formats: those describe how to draw
+an image on a canvas of a given size, and a browser is not doing that. Setting
+`chart_background_color` leaves the charts as they were; their colours come from
+the page, through `[[Theme]]` under `[DisplayOptions]`.
+
+The full split is listed in the skin's own `skin.conf`, at the head of the
+`[ImageGenerator]` section.
+
 ## A picture of the current readings
 
 WeeWX has always been able to draw a time series. It has never been able to draw the
