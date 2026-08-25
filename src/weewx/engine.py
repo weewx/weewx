@@ -555,6 +555,9 @@ class StdArchive(StdService):
         # The accumulator that was used for the last archive period. Set to None after it has
         # been processed.
         self.old_accumulator = None
+        # Accumulators for periods that have ended and are waiting for the loop to be
+        # broken, oldest first.
+        self.old_accumulators = []
 
         if self.record_generation == 'software':
             self.archive_interval = software_interval
@@ -648,9 +651,11 @@ class StdArchive(StdService):
         try:
             self.accumulator.addRecord(event.packet, add_hilo=self.loop_hilo)
         except weewx.accum.OutOfSpan:
-            # Shuffle accumulators:
-            (self.old_accumulator, self.accumulator) = \
-                (self.accumulator, self._new_accumulator(event.packet['dateTime']))
+            # Shuffle accumulators. The old one joins the queue rather than replacing
+            # whatever was already in it: more than one period can end before the loop
+            # is broken, and an accumulator that is replaced never becomes a record.
+            self.old_accumulators.append(self.accumulator)
+            self.accumulator = self._new_accumulator(event.packet['dateTime'])
             # Try again:
             self.accumulator.addRecord(event.packet, add_hilo=self.loop_hilo)
 
@@ -672,11 +677,18 @@ class StdArchive(StdService):
             raise BreakLoop
 
     def post_loop(self, _event):
-        """The main packet loop has ended, so process the old accumulator."""
+        """The main packet loop has ended, so process the old accumulators.
+
+        Usually there is one, for the period that just ended. Where the loop ran past
+        the end of a period without being broken there can be more, and they are done
+        oldest first, so that the records reach the database in order.
+        """
         # If weewx happens to startup in the small time interval between the end of
         # the archive interval and the end of the archive delay period, then
         # there will be no old accumulator. Check for this.
-        if self.old_accumulator:
+        waiting, self.old_accumulators = self.old_accumulators, []
+        for accumulator in waiting:
+            self.old_accumulator = accumulator
             # If the user has requested software generation, then do that:
             if self.record_generation == 'software':
                 self._software_catchup()
@@ -689,6 +701,7 @@ class StdArchive(StdService):
                 except NotImplementedError:
                     self._software_catchup()
             else:
+                self.old_accumulator = None
                 raise ValueError("Unknown station record generation value %s"
                                  % self.record_generation)
             self.old_accumulator = None
