@@ -20,6 +20,7 @@
   --hi: #b2503c;
   --lo: #2f6f9e;
   --ok: #4a7a45;
+  --sun: #a8761c;
   --warn: #a8761c;
   --shadow: 0 1px 2px rgb(0 0 0 / 4%);
 
@@ -78,6 +79,7 @@
     --hi: #e08262;
     --lo: #6aa8d8;
     --ok: #6ea765;
+    --sun: #d9a441;
     --warn: #d3a13f;
     --shadow: 0 1px 2px rgb(0 0 0 / 30%);
     --chart-grid: rgb(255 255 255 / 6%);
@@ -101,6 +103,7 @@
   --hi: #e08262;
   --lo: #6aa8d8;
   --ok: #6ea765;
+  --sun: #d9a441;
   --warn: #d3a13f;
   --shadow: 0 1px 2px rgb(0 0 0 / 30%);
   --chart-grid: rgb(255 255 255 / 6%);
@@ -640,9 +643,9 @@ select.report-select {
 .sunarc { width: 100%; height: auto; display: block; margin-bottom: var(--gap); }
 
 /* Between the two solstices: everything the sun does here in a year. */
-.sunarc-band { fill: var(--accent); opacity: 0.12; stroke: none; }
-.sunarc-edge { fill: none; stroke: var(--accent); stroke-width: 0.8; opacity: 0.35; }
-.sunarc-today { fill: none; stroke: var(--accent); stroke-width: 2.2; }
+.sunarc-band { fill: var(--sun); opacity: 0.12; stroke: none; }
+.sunarc-edge { fill: none; stroke: var(--sun); stroke-width: 0.8; opacity: 0.35; }
+.sunarc-today { fill: none; stroke: var(--sun); stroke-width: 2.2; }
 .sunarc-horizon { stroke: var(--border-strong); stroke-width: 1; }
 .sunarc-now { stroke: var(--ink-faint); stroke-width: 1; stroke-dasharray: 2 2; }
 .sunarc-noon { stroke: var(--border-strong); stroke-width: 1; }

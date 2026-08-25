@@ -1159,7 +1159,7 @@
     }
   }
 
-  function showPeriod(period, newAnchor) {
+  function showPeriod(period, newAnchor, keepPlace) {
     var container = document.getElementById('charts');
     if (!container) return;
 
@@ -1221,7 +1221,7 @@
       });
 
       container.setAttribute('aria-busy', 'false');
-      backToFirstChart(container);
+      if (!keepPlace) backToFirstChart(container);
     });
 
     document.querySelectorAll('#period-tabs button').forEach(function (b) {
@@ -1395,6 +1395,31 @@
 
   /* ------------------------------------------------------------ live update */
 
+  /* The headline takes a value apart: the decimals are set smaller, and the unit
+     has its own element beside it. current.json carries it in one piece, so put it
+     back together here. Anywhere else the whole string is what is wanted. */
+  function setLive(el, text) {
+    if (!el.classList.contains('lead-value')) {
+      el.textContent = text;
+      return;
+    }
+    var match = /^\s*([-+]?[\d.,]+)/.exec(text);
+    var number = match ? match[1] : text.trim();
+    var point = number.search(/[.,]/);
+    if (point < 0) {
+      el.textContent = number;
+      return;
+    }
+    var decimals = el.querySelector('.lead-dec');
+    if (!decimals) {
+      decimals = document.createElement('span');
+      decimals.className = 'lead-dec';
+    }
+    decimals.textContent = number.slice(point);
+    el.textContent = number.slice(0, point);
+    el.appendChild(decimals);
+  }
+
   function setupLiveUpdate() {
     var seconds = parseInt(CFG.refreshInterval, 10);
     if (!seconds || seconds < 5) return;
@@ -1409,7 +1434,7 @@
           document.querySelectorAll('[data-live]').forEach(function (el) {
             var key = el.dataset.live;
             if (data[key] !== undefined && data[key] !== null) {
-              el.textContent = data[key];
+              setLive(el, String(data[key]));
               el.classList.remove('is-stale');
             }
           });
@@ -1420,7 +1445,7 @@
             cache.clear();
             manifest = null;
             var active = document.querySelector('#period-tabs button[aria-selected="true"]');
-            if (active) showPeriod(active.dataset.period);
+            if (active) showPeriod(active.dataset.period, undefined, true);
           }
         })
         .catch(function () { /* offline; try again next tick */ });
