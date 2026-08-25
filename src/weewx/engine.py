@@ -644,7 +644,7 @@ class StdArchive(StdService):
 
         # Do we have an accumulator at all? If not, create one:
         if not self.accumulators:
-            self.accumulators.appendleft(self._new_accumulator(event.packet['dateTime']))
+            self.accumulators.append(self._new_accumulator(event.packet['dateTime']))
 
         # Try adding the LOOP packet to the current accumulator. If the
         # timestamp is outside the timespan of the accumulator, an exception
@@ -652,11 +652,27 @@ class StdArchive(StdService):
         try:
             self.accumulators[0].addRecord(event.packet, add_hilo=self.loop_hilo)
         except weewx.accum.OutOfSpan:
-            # Put a new one at the front. The old one drops back a place rather than
-            # being replaced: an accumulator that is replaced never becomes a record.
-            self.accumulators.appendleft(self._new_accumulator(event.packet['dateTime']))
-            # Try again:
-            self.accumulators[0].addRecord(event.packet, add_hilo=self.loop_hilo)
+            # The packet belongs to some other period. Find it, or make it.
+            self._accumulator_for(event.packet['dateTime']).addRecord(
+                event.packet, add_hilo=self.loop_hilo)
+
+    def _accumulator_for(self, timestamp):
+        """Return the accumulator whose period holds the given time, making one if
+        there is none.
+
+        The queue is kept in time order, newest at the front, rather than in arrival
+        order. A packet that is older than its predecessor happens whenever more than
+        one source feeds the loop, and it must not make an already running period look
+        like a finished one."""
+        for accumulator in self.accumulators:
+            if accumulator.timespan.includesArchiveTime(timestamp):
+                return accumulator
+        accumulator = self._new_accumulator(timestamp)
+        place = 0
+        while place < len(self.accumulators)                 and self.accumulators[place].timespan.stop > accumulator.timespan.stop:
+            place += 1
+        self.accumulators.insert(place, accumulator)
+        return accumulator
 
     def check_loop(self, event):
         """Called after any loop packets have been processed. This is the opportunity
