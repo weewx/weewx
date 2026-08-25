@@ -230,6 +230,27 @@ the page, through `[[Theme]]` under `[DisplayOptions]`.
 The full split is listed in the skin's own `skin.conf`, at the head of the
 `[ImageGenerator]` section.
 
+### Keeping them apart
+
+Sharing the section is the default because it saves defining a plot twice. Point
+`source` somewhere else and it stops:
+
+``` ini
+[JSONGenerator]
+    source = MyPlots
+
+[MyPlots]
+    chart_line_colors = "#118844"
+    [[day_images]]
+        [[[mything]]]
+            time_length = 6h
+            [[[[outTemp]]]]
+```
+
+Same syntax, same option names, nothing shared with the images. Useful if you
+want charts and PNGs to differ, or if you run no ImageGenerator at all and would
+rather not keep a section named after it.
+
 ## A picture of the current readings
 
 WeeWX has always been able to draw a time series. It has never been able to draw the

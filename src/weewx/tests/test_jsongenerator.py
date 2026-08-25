@@ -365,6 +365,61 @@ class TestPeriodFiles:
                   encoding='utf-8') as fd:
             assert json.load(fd)['yscale'] == [0.0, 360.0, 45.0]
 
+    def test_plots_can_come_from_another_section(self, config_dict, tmp_path):
+        """'source' points the generator at a section of its own.
+
+        Sharing [ImageGenerator] means a plot is defined once and both the image
+        and the chart have it. Anyone who would rather keep them apart, or who
+        runs no ImageGenerator at all, names their own section instead.
+        """
+        html_root = str(tmp_path)
+        skin_dict = build_skin_dict(html_root)
+        skin_dict['JSONGenerator']['source'] = 'MyPlots'
+        skin_dict['MyPlots'] = {
+            'chart_line_colors': '#118844',
+            'day_images': {
+                'mything': {'time_length': '6h', 'outTemp': {'label': 'Mine'}},
+            },
+        }
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        stn_info = weewx.station.StationInfo(**cd['Station'])
+
+        generator = weewx.jsongenerator.JSONGenerator(
+            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
+            first_run=True, stn_info=stn_info)
+        try:
+            generator.start()
+        finally:
+            generator.finalize()
+
+        data_dir = os.path.join(html_root, 'data')
+        written = sorted(f for f in os.listdir(data_dir) if f.endswith('.json'))
+        assert written == ['index.json', 'mything.json']
+
+        with open(os.path.join(data_dir, 'mything.json'), encoding='utf-8') as fd:
+            payload = json.load(fd)
+        assert payload['series'][0]['label'] == 'Mine'
+        assert payload['series'][0]['color'] == '#118844'
+        assert payload['stop'] - payload['start'] == 6 * 3600
+
+    def test_a_missing_source_section_is_reported(self, config_dict, tmp_path):
+        """Naming a section that is not there writes nothing, and says why."""
+        html_root = str(tmp_path)
+        skin_dict = build_skin_dict(html_root)
+        skin_dict['JSONGenerator']['source'] = 'NotThere'
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        stn_info = weewx.station.StationInfo(**cd['Station'])
+
+        generator = weewx.jsongenerator.JSONGenerator(
+            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
+            first_run=True, stn_info=stn_info)
+        try:
+            generator.start()
+        finally:
+            generator.finalize()
+
+        assert not os.path.isdir(os.path.join(html_root, 'data'))
+
     def test_manifest_lists_what_exists(self, config_dict, tmp_path):
         data_dir = run_generator(config_dict, tmp_path)
         with open(os.path.join(data_dir, 'index.json'), encoding='utf-8') as fd:
