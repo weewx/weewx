@@ -325,6 +325,60 @@ with the same meanings, plus `reuse_address`. That one defaults to `True`, so ot
 programs on the machine can read the same broadcasts. Set it to `False` to have the port
 to yourself.
 
+A whole driver for broadcasting hardware fits in forty lines, and all of them are about
+the hardware:
+
+``` python
+import json
+import time
+
+import weewx
+import weewx.drivers
+from weewx.listener import UDPListener
+
+DRIVER_NAME = 'Tempest'
+
+
+def loader(config_dict, _engine):
+    return TempestDriver(**config_dict[DRIVER_NAME])
+
+
+class TempestDriver(weewx.drivers.AbstractDevice):
+    """Reads WeatherFlow-style JSON broadcasts."""
+
+    def __init__(self, **stn_dict):
+        self.listener = UDPListener(**stn_dict)
+
+    @property
+    def hardware_name(self):
+        return 'Tempest'
+
+    def genLoopPackets(self):
+        for request in self.listener:
+            packet = self.parse(request.text)
+            if packet:
+                yield packet
+
+    @staticmethod
+    def parse(text):
+        """JSON in, a loop packet out. No socket, no engine, testable on its own."""
+        try:
+            message = json.loads(text)
+        except ValueError:
+            return None
+        if message.get('type') != 'obs_st':
+            return None
+        obs = message['obs'][0]
+        return {'dateTime': int(obs[0] or time.time()), 'usUnits': weewx.METRICWX,
+                'outTemp': obs[7], 'outHumidity': obs[8], 'windSpeed': obs[2]}
+
+    def closePort(self):
+        self.listener.close()
+```
+
+`parse()` is a static method for a reason: it needs neither a socket nor an engine, so
+a test can hand it a captured datagram and check what comes out.
+
 Two differences are worth knowing. UDP has no way to refuse an oversized datagram, so
 `max_body` truncates rather than rejects. And a datagram carries no path, no headers and
 no token, so `allowed_hosts` is the only filter there is.
