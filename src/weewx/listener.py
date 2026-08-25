@@ -216,7 +216,13 @@ class HTTPListener(Listener):
         self.trust_proxy = to_bool(kwargs.get('trust_proxy', False))
         self.log_raw = to_bool(kwargs.get('log_raw', False))
 
-        self.server = _Server(self, self.address, self.port)
+        try:
+            self.server = _Server(self, self.address, self.port)
+        except OSError as e:
+            # Almost always a port that something else already holds, e.g. a web server
+            # on 80, or a second WeeWX instance. Say so, then let it stop the startup.
+            log.error("Cannot listen on %s:%s: %s", self.address or '*', self.port, e)
+            raise
         # Report the port the socket actually got. They differ when the caller asked for
         # port 0, i.e. "any free port".
         self.port = self.server.server_address[1]

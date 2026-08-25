@@ -6,11 +6,15 @@
 """Test module weewx.listener"""
 
 import http.client
+import importlib
+import logging
 import queue
+import threading
 import time
 
 import pytest
 
+import weewx.listener
 from weewx.listener import HTTPListener, Request
 
 ECOWITT_BODY = ("PASSKEY=ABC&stationtype=GW1000B_V1.5.5&dateutc=2026-08-25+11:29:50"
@@ -289,14 +293,24 @@ def test_context_manager():
         conn.getresponse()
 
 
-def test_port_in_use():
+def test_port_in_use(caplog):
     """A port that is already taken is reported where the driver is built."""
     first = HTTPListener(port=0, address='127.0.0.1')
     try:
-        with pytest.raises(OSError):
-            HTTPListener(port=first.port, address='127.0.0.1')
+        with caplog.at_level(logging.ERROR):
+            with pytest.raises(OSError):
+                HTTPListener(port=first.port, address='127.0.0.1')
+        assert "Cannot listen on 127.0.0.1:%d" % first.port in caplog.text
     finally:
         first.close()
+
+
+def test_importing_the_module_starts_nothing():
+    """The listener is a library. Upgrading to a version that has it changes nothing
+    for a station whose driver does not ask for one."""
+    before = threading.active_count()
+    importlib.reload(weewx.listener)
+    assert threading.active_count() == before
 
 
 def test_request_str():
