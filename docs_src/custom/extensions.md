@@ -113,6 +113,57 @@ Once an extension has been packaged, it can be installed using `weectl`:
 
     weectl extension install EXTENSION-LOCATION
 
+## Adding translations to someone else's skin
+
+An extension that adds a widget to an existing skin brings text of its own. Do
+not put the translations in the skin's own language files: those edits are lost
+the next time the user upgrades WeeWX or reinstalls the skin.
+
+Instead, put the translations in a subdirectory of the skin's `lang` directory.
+Any subdirectory whose name starts with `lang` is searched, and what it holds
+is merged into the language the report is being run in. So an extension called
+`climate`, which adds a widget to the *Seasons* skin, would install
+
+```
+skins
+└── Seasons
+    └── lang
+        └── lang-climate
+            ├── cz.conf
+            ├── de.conf
+            ├── es.conf
+            └── fr.conf
+```
+
+leaving `skins/Seasons/lang/de.conf` and its siblings untouched. Each file
+holds only the phrases the extension itself introduces:
+
+``` ini
+[Texts]
+    "Record High" = "Rekordhoch"
+```
+
+* The name of the subdirectory must *begin* with `lang`. `lang-climate`,
+  `lang_climate` and `langclimate` are all found; `climate-lang` is not.
+
+* Several extensions can do this at once. Each gets its own subdirectory, and
+  all of them are merged.
+
+* Where an extension and the skin give the same phrase, the extension wins.
+  Better not to depend on that.
+
+* A missing translation is not an error. If the extension ships `de.conf` but
+  no `th.conf`, a station running `lang=th` shows the phrase untranslated, just
+  as for any other entry missing from `[Texts]`.
+
+For how a skin is internationalized in the first place, see
+*[Localization](localization.md)*.
+
+!!! Note
+    Searching the subdirectories was added in WeeWX v5.3. An extension that
+    relies on it will not translate on earlier versions, although it will
+    otherwise work.
+
 ## Default values
 
 Whenever possible, an extension should *just work*, with a minimum of input from
