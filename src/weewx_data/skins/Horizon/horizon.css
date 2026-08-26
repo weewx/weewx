@@ -223,6 +223,16 @@ select.lang-select {
 }
 select.lang-select:hover { color: var(--ink); }
 
+/* The list that drops out of a select is drawn by the browser, and it takes the
+   colour from the select while taking the background from the system. On a dark page
+   under a light system that is grey text on white, which is the one combination that
+   cannot be read. Naming both on the options settles it. */
+select.lang-select option,
+select.unit-select option {
+  background-color: var(--surface);
+  color: var(--ink);
+}
+
 /* The same, for the unit picker beside it. Both change what the whole page says
    without being anything the page is about. */
 select.unit-select {
@@ -809,61 +819,126 @@ select.report-select {
   gap: 0.4rem;
 }
 
-/* The date between the two arrows is the date picker.
+/* The date between the two arrows opens the calendar.
 
    A separate control would be a second thing on a row that is already full, saying
-   the same date the label says. So the label is the control: a native date input
-   lies over it, invisible, and a click opens whichever calendar the reader's browser
-   and phone provide. That calendar is drawn by the browser and cannot be styled,
-   which is what the color-scheme declarations above are for.
+   the same date the label says. So the label is the control, marked as one by a
+   dotted underline and nothing else. */
+.range-label-wrap { position: relative; display: inline-block; }
 
-   The reader still reads "Friday, 3 September 2010" rather than 03/09/2010: the
-   label under the input keeps its own wording, and the input's own text is hidden. */
-.range-label-wrap {
-  position: relative;
-  display: inline-block;
-}
-
-/* Marked as something to click, and nothing more. A button or a bordered field would
-   take width the row has not got, and the date is already the widest thing on it. */
 .range-label-wrap .range-label {
+  font: inherit;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
   text-decoration: underline dotted;
   text-decoration-color: var(--border-strong);
   text-underline-offset: 3px;
 }
-.range-label-wrap:hover .range-label,
-.range-label-wrap:focus-within .range-label {
+.range-label-wrap .range-label:hover,
+.range-label-wrap .range-label[aria-expanded="true"] {
   text-decoration-color: var(--accent);
+}
+
+/* The calendar itself, drawn by the skin rather than by the browser. What a browser
+   drops out of <input type="date"> cannot be styled at all: on a themed page it
+   arrives white, with its own fonts and its own blue, and it offers every date since
+   the calendar began. This one takes the page's colours and greys out the days the
+   station has no readings for. */
+.range-cal {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  width: 17rem;
+  padding: 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 18%);
+  font-size: var(--fs-sm);
+  /* The row it hangs from is sticky and centred; on a narrow screen the panel would
+     otherwise reach past the edge of the page. */
+  max-width: calc(100vw - 1.5rem);
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  margin-bottom: 0.45rem;
+}
+
+.cal-title {
+  font-weight: 600;
   color: var(--ink);
+  text-align: center;
+  flex: 1;
 }
 
-/* Over the label, transparent, and the size of it. Its own text would say the date a
-   second time in a format the browser chooses, so it is not shown. */
-.range-date {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
+.cal-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
   padding: 0;
-  border: 0;
-  opacity: 0;
+  flex: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--ink-muted);
   cursor: pointer;
+}
+.cal-step:hover { background: var(--surface-sunk); color: var(--ink); }
+.cal-step svg {
+  width: 1rem; height: 1rem; fill: none; stroke: currentColor;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+
+.cal-dow {
+  text-align: center;
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  padding-bottom: 0.25rem;
+}
+
+.cal-day {
   font: inherit;
-}
-
-/* Chrome puts the calendar button at the right edge of the field. Stretched over the
-   whole label, that is a long way from where the reader clicked, so the button is
-   made the size of the field instead. */
-.range-date::-webkit-calendar-picker-indicator {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  padding: 0;
+  font-variant-numeric: tabular-nums;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--ink);
   cursor: pointer;
 }
+.cal-day:hover:not(:disabled) { background: var(--surface-sunk); }
+
+/* Days before the first reading, and days after the last. Nothing to show for them. */
+.cal-day:disabled { color: var(--ink-faint); opacity: 0.4; cursor: default; }
+
+/* The days either side of the month, kept so the weeks line up. */
+.cal-other:not(:disabled) { color: var(--ink-faint); }
+
+/* The day the readings end. Marked, but not selected: the live view is not a day. */
+.cal-today { box-shadow: inset 0 0 0 1px var(--border-strong); }
+
+.cal-selected,
+.cal-selected:hover { background: var(--accent); color: #fff; }
 
 .range-extra {
   grid-column: 3;

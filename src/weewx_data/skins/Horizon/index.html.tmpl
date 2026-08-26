@@ -117,9 +117,11 @@
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
                 </button>
                 <div class="range-label-wrap">
-                  <span id="range-label" class="range-label">$gettext("Now")</span>
-                  <input type="date" id="range-date" class="range-date"
-                         aria-label="$gettext('Jump to a date')">
+                  <button type="button" id="range-label" class="range-label"
+                          aria-haspopup="dialog" aria-expanded="false"
+                          title="$gettext('Jump to a date')">$gettext("Now")</button>
+                  <div id="range-cal" class="range-cal" role="dialog" hidden
+                       aria-label="$gettext('Jump to a date')"></div>
                 </div>
                 <button type="button" id="range-fwd" class="range-button"
                         aria-label="$gettext('Later')" disabled>
@@ -187,6 +189,8 @@
           time: "$gettext('Time')",
           now: "$gettext('Now')",
           asConfigured: "$gettext('As configured')",
+          earlier: "$gettext('Earlier')",
+          later: "$gettext('Later')",
           thinned: "$gettext('thinned')",
           linkCopied: "$gettext('Link copied')",
           copyLink: "$gettext('Copy this link:')",

@@ -1722,13 +1722,8 @@
       back.disabled = from <= ai.first;
     }
 
-    /* The picker shows the span on screen, and will not go outside the record. */
-    var picker = document.getElementById('range-date');
-    if (picker) {
-      picker.value = isoDate(anchor === null ? dataTs() : from);
-      if (ai && ai.first) picker.min = isoDate(ai.first);
-      if (ai && ai.last) picker.max = isoDate(ai.last);
-    }
+    /* An open calendar follows the span it was opened from. */
+    drawCalendar();
   }
 
   /* A timestamp as YYYY-MM-DD in local time, which is the only form a date input
@@ -1755,6 +1750,139 @@
     showPeriod(currentPeriod, unit.to > dataTs() ? null : target);
   }
 
+  /* ------------------------------------------------------------- calendar */
+
+  /* Reaching a date. The arrows step one calendar unit at a time, which is a long way
+     back to last March.
+
+     Drawn here rather than handed to <input type="date">. The panel a browser drops
+     out of that input cannot be styled at all, so on a themed page it arrives as a
+     white box with its own fonts and its own blue. It also knows nothing about this
+     station: it offers every date since the calendar began, including the years
+     before the station was built. This one greys those out, and it marks the day the
+     readings end. */
+
+  var calShown = null;                       // first of the month on display
+
+  function setupCalendar() {
+    var button = document.getElementById('range-label');
+    var panel = document.getElementById('range-cal');
+    if (!button || !panel) return;
+
+    button.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (panel.hidden) openCalendar(); else closeCalendar();
+    });
+
+    panel.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var step = e.target.closest('[data-cal-step]');
+      if (step) {
+        calShown = new Date(calShown.getFullYear(),
+                            calShown.getMonth() + Number(step.dataset.calStep), 1);
+        drawCalendar();
+        return;
+      }
+      var day = e.target.closest('[data-cal-day]');
+      if (!day || day.disabled) return;
+      /* Midday, not midnight. A date taken as local midnight and then moved by an
+         hour of summer time lands on the day before. */
+      var parts = day.dataset.calDay.split('-').map(Number);
+      var ts = Math.floor(new Date(parts[0], parts[1] - 1, parts[2], 12).getTime() / 1000);
+      var unit = calendarWindow(currentPeriod, ts);
+      closeCalendar();
+      showPeriod(currentPeriod, unit.to > dataTs() ? null : ts);
+    });
+
+    /* A click anywhere else, or Escape, closes it. */
+    document.addEventListener('click', function () {
+      if (!panel.hidden) closeCalendar();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !panel.hidden) { closeCalendar(); button.focus(); }
+    });
+  }
+
+  function openCalendar() {
+    var panel = document.getElementById('range-cal');
+    var at = new Date((anchor === null ? dataTs() : anchor) * 1000);
+    calShown = new Date(at.getFullYear(), at.getMonth(), 1);
+    panel.hidden = false;
+    document.getElementById('range-label').setAttribute('aria-expanded', 'true');
+    drawCalendar();
+  }
+
+  function closeCalendar() {
+    var panel = document.getElementById('range-cal');
+    if (!panel) return;
+    panel.hidden = true;
+    document.getElementById('range-label').setAttribute('aria-expanded', 'false');
+  }
+
+  /* One month. The week starts on the day the station's configuration says, which is
+     not Monday everywhere, and the day names come from the reader's locale. */
+  function drawCalendar() {
+    var panel = document.getElementById('range-cal');
+    if (!panel || panel.hidden) return;
+
+    var ai = archiveIndex || {};
+    var first = ai.first ? new Date(ai.first * 1000) : null;
+    var last = new Date(dataTs() * 1000);
+    var selected = anchor === null ? null : isoDate(anchor);
+    var today = isoDate(dataTs());
+
+    var year = calShown.getFullYear(), month = calShown.getMonth();
+    var startDow = (CFG.weekStart === undefined ? 0 : +CFG.weekStart);
+    var jsStart = (startDow + 1) % 7;                    // JS counts Sunday as 0
+
+    /* Day names, in the reader's language, from a week that is known to begin on a
+       Sunday. Reading them out of Intl rather than listing them keeps this working in
+       every language the skin is translated into. */
+    var names = [];
+    for (var i = 0; i < 7; i++) {
+      var d = new Date(2024, 0, 7 + ((jsStart + i) % 7));
+      names.push(d.toLocaleDateString(LOCALE, { weekday: 'short' }));
+    }
+
+    var firstOfMonth = new Date(year, month, 1);
+    var lead = (firstOfMonth.getDay() - jsStart + 7) % 7;
+    var cells = [];
+    for (var n = 0; n < 42; n++) {
+      var day = new Date(year, month, 1 - lead + n);
+      var iso = isoDate(Math.floor(day.getTime() / 1000) + 43200);
+      var outside = day.getMonth() !== month;
+      var tooEarly = first && day < new Date(first.getFullYear(), first.getMonth(), first.getDate());
+      var tooLate = day > new Date(last.getFullYear(), last.getMonth(), last.getDate());
+      var classes = ['cal-day'];
+      if (outside) classes.push('cal-other');
+      if (iso === selected) classes.push('cal-selected');
+      if (iso === today) classes.push('cal-today');
+      cells.push('<button type="button" class="' + classes.join(' ') + '"'
+        + ' data-cal-day="' + iso + '"'
+        + (tooEarly || tooLate ? ' disabled' : '')
+        + (iso === selected ? ' aria-current="date"' : '')
+        + '>' + day.getDate() + '</button>');
+      /* Stop after a whole week that has left the month behind. */
+      if (n % 7 === 6 && new Date(year, month, 1 - lead + n + 1).getMonth() !== month) break;
+    }
+
+    var title = calShown.toLocaleDateString(LOCALE, { month: 'long', year: 'numeric' });
+    panel.innerHTML =
+      '<div class="cal-head">'
+      + '<button type="button" class="cal-step" data-cal-step="-1"'
+      + ' aria-label="' + escapeHtml(CFG.text.earlier || 'Earlier') + '">'
+      + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>'
+      + '<span class="cal-title">' + escapeHtml(title) + '</span>'
+      + '<button type="button" class="cal-step" data-cal-step="1"'
+      + ' aria-label="' + escapeHtml(CFG.text.later || 'Later') + '">'
+      + '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>'
+      + '</div>'
+      + '<div class="cal-grid">'
+      + names.map(function (x) { return '<span class="cal-dow">' + escapeHtml(x) + '</span>'; }).join('')
+      + cells.join('')
+      + '</div>';
+  }
+
   function setupRangeNav() {
     var back = document.getElementById('range-back');
     var fwd = document.getElementById('range-fwd');
@@ -1765,23 +1893,7 @@
     });
     if (now) now.addEventListener('click', function () { showPeriod(currentPeriod, null); });
 
-    /* Reaching a date. The arrows step one unit at a time, which is a long way to
-       last March. This is a native date input, so the reader gets whatever picker
-       their browser and their phone already give them, written in their own locale,
-       and it costs no library. The date chosen selects the calendar unit holding it,
-       the same rule a pasted link follows. */
-    var picker = document.getElementById('range-date');
-    if (picker) {
-      picker.addEventListener('change', function () {
-        if (!picker.value) return;
-        var parts = picker.value.split('-').map(Number);
-        /* Midday, not midnight. A date read as local midnight and then shifted by an
-           hour of summer time lands on the day before. */
-        var ts = Math.floor(new Date(parts[0], parts[1] - 1, parts[2], 12).getTime() / 1000);
-        var unit = calendarWindow(currentPeriod, ts);
-        showPeriod(currentPeriod, unit.to > dataTs() ? null : ts);
-      });
-    }
+    setupCalendar();
 
     var share = document.getElementById('range-share');
     if (share) {
