@@ -1,0 +1,23 @@
+## Copyright (c) 2026 Manuel Hilgert
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+#encoding UTF-8
+##
+## Kept deliberately small: it is fetched every refresh_interval seconds. Values are
+## pre-formatted strings, so the client needs no unit or locale logic of its own.
+##
+#set $observations = $to_list($DisplayOptions.get('observations_current', ['outTemp', 'barometer']))
+#set $fields = {}
+#set $ignore = $fields.update({'dateTime': $str($current.dateTime), 'dateTime_raw': $current.dateTime.raw})
+#for $x in $observations
+#if $getVar('year.%s.has_data' % $x, False)
+#set $ignore = $fields.update({$x: $str($getVar('current.' + $x))})
+#end if
+#end for
+## The colour of the headline follows the temperature, and the client works it out
+## from degrees C so that it does not depend on what the page displays in.
+#if $current.outTemp.degree_C.raw is not None
+#set $ignore = $fields.update({'outTemp_c': $round($current.outTemp.degree_C.raw, 2)})
+#end if
+#set $ignore = $fields.update({'rainToday': $str($day.rain.sum)})
+$jsonize($fields)

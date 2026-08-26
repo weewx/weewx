@@ -18,6 +18,11 @@ Removed the APRS "messaging-capable" packet flag from `restx.py`.
 
 ### 5.5.0 6-Aug-2026
 
+Added `weewx.jsongenerator.JSONGenerator`, which writes the plots defined for the
+`ImageGenerator` as JSON, so a skin can draw its charts in the browser. Added the
+skin `Horizon`, which does that and can step back through the whole record.
+[PR #1128](https://github.com/weewx/weewx/issues/1128).
+
 Added the ability for services to bind to a `SHUTDOWN` event. This allows
 services to be notified when `weewxd` is being shutdown. 
 [PR #1106](https://github.com/weewx/weewx/issues/1106). Thanks to user
