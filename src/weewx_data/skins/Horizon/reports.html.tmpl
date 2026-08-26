@@ -14,6 +14,8 @@
 #silent $year_list.append($str($y))
 #end for
 
+#set $refresh = $to_int($DisplayOptions.get('refresh_interval', 60))
+
 <!DOCTYPE html>
 <html lang="$lang">
   <head>
@@ -39,7 +41,9 @@
       <header class="masthead">
         <div>
           <h1>$gettext("Reports")</h1>
-          <p class="updated"><a href="index.html">&larr; $station.location</a></p>
+          <p class="updated"><a href="index.html">&larr; $station.location</a> &middot;
+            <span class="visually-hidden">$gettext("Last update")</span>
+            <span data-live="dateTime" data-raw="$current.dateTime.raw">$current.dateTime</span></p>
         </div>
       </header>
 
@@ -159,7 +163,18 @@
         fill(list().indexOf(wanted) >= 0 ? wanted : null);
         show(pick.value);
         sync();
+
+        /* The report for the month in progress is rewritten every archive cycle.
+           The picker holds the viewer's choice, so this panel is not one the script
+           swaps out wholesale; it listens for the record instead and fetches the
+           text it is already showing. */
+        document.addEventListener('horizon:update', function () { show(pick.value); });
       })();
     </script>
+
+    <script>
+      window.HORIZON = { refreshInterval: $refresh, generated: $current.dateTime.raw };
+    </script>
+    <script src="horizon.js"></script>
   </body>
 </html>

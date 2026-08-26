@@ -4,6 +4,8 @@
 #errorCatcher Echo
 #encoding UTF-8
 
+#set $refresh = $to_int($DisplayOptions.get('refresh_interval', 60))
+
 <!DOCTYPE html>
 <html lang="$lang">
   <head>
@@ -29,13 +31,15 @@
       <header class="masthead">
         <div>
           <h1>$gettext("Celestial")</h1>
-          <p class="updated"><a href="index.html">&larr; $station.location</a></p>
+          <p class="updated"><a href="index.html">&larr; $station.location</a> &middot;
+            <span class="visually-hidden">$gettext("Last update")</span>
+            <span data-live="dateTime" data-raw="$current.dateTime.raw">$current.dateTime</span></p>
         </div>
       </header>
 
 #if $almanac.hasExtras
       <div class="columns">
-        <section class="panel">
+        <section class="panel" data-live-panel="sun">
           <div class="panel-head"><h2>$gettext("Sun")</h2></div>
           <div class="panel-body">
             <dl class="readings">
@@ -54,7 +58,7 @@
           </div>
         </section>
 
-        <section class="panel">
+        <section class="panel" data-live-panel="moon">
           <div class="panel-head"><h2>$gettext("Moon")</h2></div>
           <div class="panel-body">
             <dl class="readings">
@@ -83,5 +87,10 @@
         $gettext("This station is controlled by <a href='https://weewx.com'>WeeWX</a>, an experimental weather software system written in Python.")
       </p>
     </div>
+
+    <script>
+      window.HORIZON = { refreshInterval: $refresh, generated: $current.dateTime.raw };
+    </script>
+    <script src="horizon.js"></script>
   </body>
 </html>
