@@ -25,6 +25,11 @@ Removed the APRS "messaging-capable" packet flag from `restx.py`.
 
 ### 5.5.0 6-Aug-2026
 
+Split `StdArchive` into `StdArchiveGenerator`, which makes archive records, and
+`StdArchiveStore`, which saves them, so that either can be replaced on its own.
+`StdArchive` still runs both, so an existing configuration is unaffected.
+[PR #1129](https://github.com/weewx/weewx/issues/1129).
+
 Added the ability for services to bind to a `SHUTDOWN` event. This allows
 services to be notified when `weewxd` is being shutdown. 
 [PR #1106](https://github.com/weewx/weewx/issues/1106). Thanks to user
