@@ -1662,6 +1662,17 @@
 
     var stamp = document.querySelector('[data-live="dateTime"]');
     var seen = String((stamp && stamp.dataset.raw) || CFG.generated || '');
+    /* A reading that has stopped arriving should look like one, rather than sit
+       there being read as current. Counted in polls since the last new record and
+       not from the clock, so a station whose clock is a few minutes out is not
+       declared dead on the strength of it.
+
+       How long to wait comes from the station: current.json says how far apart its
+       records are, and two records' worth of silence is a fault. Guessing that
+       would mean calling a ten-minute archive interval a fault every time. Ten
+       minutes stands in until the first record says otherwise. */
+    var quiet = 0;
+    var patience = Math.ceil(600 / seconds);
     var busy = false;
 
     function tick() {
@@ -1673,13 +1684,17 @@
           busy = false;
           if (!data) return;
 
+          var minutes = parseFloat(data.interval);
+          if (minutes > 0) {
+            patience = Math.max(3, Math.ceil(minutes * 60 * 2.5 / seconds));
+          }
+
           /* The readings that have an element of their own. Cheap, and on its own
              enough for a station whose current.json is written between records. */
           document.querySelectorAll('[data-live]').forEach(function (el) {
             var key = el.dataset.live;
             if (data[key] !== undefined && data[key] !== null) {
               setLive(el, String(data[key]));
-              el.classList.remove('is-stale');
             }
           });
           if (data.outTemp_c !== undefined && data.outTemp_c !== null) {
@@ -1688,11 +1703,16 @@
             paintSpan();
           }
 
-          if (!data.dateTime_raw || String(data.dateTime_raw) === seen) return;
+          if (!data.dateTime_raw || String(data.dateTime_raw) === seen) {
+            if (++quiet >= patience) markStale(true);
+            return;
+          }
 
           /* A new archive record. The page was re-rendered before current.json was
              written, so everything on it can be brought forward, not just the
              readings. */
+          quiet = 0;
+          markStale(false);
           seen = String(data.dateTime_raw);
           if (stamp) stamp.dataset.raw = data.dateTime_raw;
           refreshPanels();
@@ -1709,7 +1729,16 @@
             detail: { dateTime: data.dateTime_raw }
           }));
         })
-        .catch(function () { busy = false; /* offline; try again next tick */ });
+        .catch(function () {
+          busy = false;
+          if (++quiet >= patience) markStale(true);
+        });
+    }
+
+    function markStale(stale) {
+      var card = document.querySelector('.panel.headline');
+      if (card) card.classList.toggle('is-stale', stale);
+      if (stamp) stamp.classList.toggle('is-stale', stale);
     }
 
     setInterval(tick, seconds * 1000);
