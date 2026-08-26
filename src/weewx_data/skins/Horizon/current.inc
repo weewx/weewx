@@ -12,10 +12,10 @@
 ##   dashboard_lead     the one reading set large at the top
 ##   dashboard_readings the rows underneath
 ##
-## Both fall back to the lists the skin already keeps, so a configuration that
-## never mentions them still gets a sensible card. 'has_data' does the rest:
-## a station without a UV sensor never sees that row, and nobody has to keep a
-## second list of what is fitted.
+## Where neither option is set, the card falls back to the lists the skin already
+## keeps, so a configuration that names neither still gets a sensible card. The
+## 'has_data' test drops the rest: a station with no UV sensor never shows that row,
+## and nobody has to maintain a second list of what is fitted.
 #set $headline = $to_list($DisplayOptions.get('observations_headline', ['outTemp']))
 #set $lead = $DisplayOptions.get('dashboard_lead') or ($headline and $headline[0]) or 'outTemp'
 #set $wanted = $to_list($DisplayOptions.get('dashboard_readings',
@@ -59,15 +59,19 @@
     #set $edges = [-10, 0, 5, 12, 18, 23, 28, 33]
     #set $band = ' data-band="%d"' % len([$e for $e in $edges if $current.outTemp.degree_C.raw >= $e])
   #end if
+  ## 'data-value' and 'data-unit' carry the reading as the database holds it, so the
+  ## page can show it in another unit without asking the server for it again. The
+  ## text between the tags is what a reader without JavaScript sees.
   <div class="lead">
-    <span class="lead-value"$band data-live="$lead">#slurp
+    <span class="lead-value"$band data-live="$lead"
+          data-value="$lead_vh.raw" data-unit="$getVar('unit.unit_type.%s' % $lead)">#slurp
 #if $cut > 0
 $shown[:$cut]<span class="lead-dec">$shown[$cut:]</span>#slurp
 #else
 $shown#slurp
 #end if
 </span>
-    <span class="lead-unit">$getVar('unit.label.%s' % $lead)</span>
+    <span class="lead-unit" data-unit-label>$getVar('unit.label.%s' % $lead)</span>
     #set $tr = $getVar('trend.%s' % $lead, None)
     #if $tr is not None and $tr.raw is not None
       #set $step = $lead == 'barometer' and 0.6 or 0.3
@@ -106,10 +110,12 @@ $shown#slurp
       #end if
     </div>
     <div class="span-ends">
-      <span class="span-end"><b>$lo_vt.format(add_label=False)</b><small>$getVar('unit.label.%s' % $lead)</small>
+      <span class="span-end" data-value="$lo_vt.raw" data-obs="$lead"
+            data-unit="$getVar('unit.unit_type.%s' % $lead)"><b data-unit-value>$lo_vt.format(add_label=False)</b><small data-unit-label>$getVar('unit.label.%s' % $lead)</small>
             <span class="faint">$lead_day.mintime.format("%H:%M")</span></span>
       <span class="span-caption">$gettext("measured")</span>
-      <span class="span-end span-end--right"><b>$hi_vt.format(add_label=False)</b><small>$getVar('unit.label.%s' % $lead)</small>
+      <span class="span-end span-end--right" data-value="$hi_vt.raw" data-obs="$lead"
+            data-unit="$getVar('unit.unit_type.%s' % $lead)"><b data-unit-value>$hi_vt.format(add_label=False)</b><small data-unit-label>$getVar('unit.label.%s' % $lead)</small>
             <span class="faint">$lead_day.maxtime.format("%H:%M")</span></span>
     </div>
   </div>
@@ -122,18 +128,21 @@ $shown#slurp
     <div>
     #if $x == 'windSpeed'
       <dt>$obs.label.wind</dt>
-      <dd data-live="windSpeed">$current.windSpeed.format(add_label=False)<small>$unit.label.windSpeed</small>
+      <dd data-live="windSpeed" data-value="$current.windSpeed.raw"
+          data-unit="$unit.unit_type.windSpeed"><span data-unit-value>$current.windSpeed.format(add_label=False)</span><small data-unit-label>$unit.label.windSpeed</small>
         #if $current.windDir.raw is not None
         <span class="faint">$current.windDir.ordinal_compass</span>
         #end if
       </dd>
     #elif $x == 'rain'
       <dt>$gettext("Rain Today")</dt>
-      <dd data-live="rainToday">$day.rain.sum.format(add_label=False)<small>$unit.label.rain</small></dd>
+      <dd data-live="rainToday" data-value="$day.rain.sum.raw"
+          data-unit="$unit.unit_type.rain"><span data-unit-value>$day.rain.sum.format(add_label=False)</span><small data-unit-label>$unit.label.rain</small></dd>
     #else
       <dt>$getVar('obs.label.%s' % $x)</dt>
       #set $vh = $getVar('current.%s' % $x)
-      <dd data-live="$x">$vh.format(add_label=False)<small>$getVar('unit.label.%s' % $x)</small>#slurp
+      <dd data-live="$x" data-value="$vh.raw"
+          data-unit="$getVar('unit.unit_type.%s' % $x)"><span data-unit-value>$vh.format(add_label=False)</span><small data-unit-label>$getVar('unit.label.%s' % $x)</small>#slurp
       #set $tr = $getVar('trend.%s' % $x, None)
       #if $tr is not None and $tr.raw is not None
         #set $step = $x == 'barometer' and 0.6 or 0.3
@@ -147,9 +156,11 @@ $shown#slurp
 #if $has_rain
     <div>
       <dt>$gettext("Rain Today")</dt>
-      <dd data-live="rainToday">$day.rain.sum.format(add_label=False)<small>$unit.label.rain</small></dd>
+      <dd data-live="rainToday" data-value="$day.rain.sum.raw"
+          data-unit="$unit.unit_type.rain"><span data-unit-value>$day.rain.sum.format(add_label=False)</span><small data-unit-label>$unit.label.rain</small></dd>
       #if $getVar('year.rainRate.has_data', False)
-      <dd class="sub-reading">$current.rainRate.format(add_label=False)<small>$unit.label.rainRate</small>#slurp
+      <dd class="sub-reading" data-value="$current.rainRate.raw" data-obs="rainRate"
+          data-unit="$unit.unit_type.rainRate"><span data-unit-value>$current.rainRate.format(add_label=False)</span><small data-unit-label>$unit.label.rainRate</small>#slurp
       #if $day.rainRate.max.raw
        &middot; $gettext("max") $day.rainRate.max.format(add_label=False)#slurp
       #end if

@@ -32,11 +32,11 @@
 ##   - Summer time moves the clock, not the sun. At the winter solstice the peak
 ##     is at 12:11, over an hour earlier by the clock than at the summer one.
 ##
-## mktime() with isdst = -1 finds local midnight for whichever day it is asked
-## about, so a December curve is placed in standard time and a June curve is not.
-## Named for the month, not the season: at the June solstice the sun stands at
-## dec +23.44 wherever you are, and which of the two curves ends up on top falls
-## out of the latitude. South of the equator the June one is the low one.
+## mktime() with isdst = -1 finds local midnight for whichever day it is given, so a
+## December curve is placed in standard time and a June curve in summer time.
+## The two curves are named for the month rather than the season. At the June
+## solstice the sun stands at dec +23.44 whatever the latitude, and the latitude
+## decides which curve comes out on top. South of the equator, June is the low one.
 #set $curves = {}
 #for $name, $when in [('june', $almanac.next_summer_solstice.raw),
                       ('december', $almanac.next_winter_solstice.raw),

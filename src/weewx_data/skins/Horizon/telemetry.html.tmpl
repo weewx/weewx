@@ -102,7 +102,11 @@
                         aria-label="$gettext('Earlier')">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
                 </button>
-                <span id="range-label" class="range-label">$gettext("Now")</span>
+                <div class="range-label-wrap">
+                  <span id="range-label" class="range-label">$gettext("Now")</span>
+                  <input type="date" id="range-date" class="range-date"
+                         aria-label="$gettext('Jump to a date')">
+                </div>
                 <button type="button" id="range-fwd" class="range-button"
                         aria-label="$gettext('Later')" disabled>
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
@@ -205,6 +209,7 @@
           showData: "$gettext('Show data as table')",
           time: "$gettext('Time')",
           now: "$gettext('Now')",
+          asConfigured: "$gettext('As configured')",
           thinned: "$gettext('thinned')",
           linkCopied: "$gettext('Link copied')",
           copyLink: "$gettext('Copy this link:')",
