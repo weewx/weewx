@@ -20,7 +20,10 @@
 #set $lead = $DisplayOptions.get('dashboard_lead') or ($headline and $headline[0]) or 'outTemp'
 #set $wanted = $to_list($DisplayOptions.get('dashboard_readings',
                         $DisplayOptions.get('observations_current', ['outTemp', 'barometer'])))
-#set $rest = [$x for $x in $wanted if $x != $lead and $getVar('year.%s.has_data' % $x, False)]
+## 'lead' carries no '$' on purpose. Cheetah would look the name up in the calling
+## frame, and until Python 3.12 a comprehension has a frame of its own, which a
+## '#set' never reaches. Plain Python finds it through the closure, everywhere.
+#set $rest = [$x for $x in $wanted if $x != lead and $getVar('year.%s.has_data' % $x, False)]
 ## Rain is three readings of one thing: how much today, how hard right now, and
 ## the hardest it came down. Three rows of mostly zeroes said that badly.
 #set $has_rain = 'rain' in $rest
