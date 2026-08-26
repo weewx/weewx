@@ -551,12 +551,16 @@ class StdQC(StdService):
 #                    Class StdArchive
 # ==============================================================================
 
-class StdArchive(StdService):
-    """Service that archives LOOP and archive data in the SQL databases."""
+class StdArchiveGenerator(StdService):
+    """Service that turns LOOP packets into archive records.
 
-    # This service manages an "accumulator", which records high/lows and
-    # averages of LOOP packets over an archive period. At the end of the
-    # archive period it then emits an archive record.
+    It manages an "accumulator", which records high/lows and averages of LOOP packets
+    over an archive period. At the end of the period it emits a NEW_ARCHIVE_RECORD
+    event carrying the record, and the accumulator that made it.
+
+    It does not write to the database. StdArchiveStore does that, listening for the
+    same event, so that either half can be replaced without touching the other.
+    """
 
     def __init__(self, engine, config_dict):
         super().__init__(engine, config_dict)
@@ -570,10 +574,7 @@ class StdArchive(StdService):
         software_interval = to_int(archive_dict.get('archive_interval', 300))
         self.loop_hilo = to_bool(archive_dict.get('loop_hilo', True))
         self.record_augmentation = to_bool(archive_dict.get('record_augmentation', True))
-        self.log_success = to_bool(weeutil.config.search_up(archive_dict, 'log_success', True))
-        self.log_failure = to_bool(weeutil.config.search_up(archive_dict, 'log_failure', True))
 
-        log.info("Archive will use data binding %s", self.data_binding)
         log.info("Record generation will be attempted in '%s'", self.record_generation)
 
         # The timestamp that marks the end of the archive period
@@ -624,37 +625,23 @@ class StdArchive(StdService):
         self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
         self.bind(weewx.CHECK_LOOP, self.check_loop)
         self.bind(weewx.POST_LOOP, self.post_loop)
-        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
     def startup(self, _unused):
-        """Called when the engine is starting up. Main task is to set up the database, backfill it,
-        then perform a catch-up if the hardware supports it.
+        """Called when the engine is starting up. Do a catch-up on any data still on the
+        station, but not yet put in the database. Setting up the database is
+        StdArchiveStore's job.
 
         _unused (weewx.Event): Not used.
         """
 
-        # This will create the database if it doesn't exist:
-        dbmanager = self.engine.db_binder.get_manager(self.data_binding, initialize=True)
-        log.info("Using binding '%s' to database '%s'", self.data_binding, dbmanager.database_name)
-
-        # Make sure the daily summaries have not been partially updated
-        if dbmanager._read_metadata('lastWeightPatch'):
-            raise weewx.ViolatedPrecondition("Update of daily summary for database '%s' not"
-                                             " complete. Finish the update first."
-                                             % dbmanager.database_name)
-
-        # Backfill the daily summaries.
-        _nrecs, _ndays = dbmanager.backfill_day_summary()
-
-        # Do a catch-up on any data still on the station, but not yet put in the database.
         if self.no_catchup:
             log.debug("No catchup specified.")
-        else:
-            # Not all consoles can do a hardware catchup, so be prepared to catch the exception:
-            try:
-                self._catchup(self.engine.console.genStartupRecords)
-            except NotImplementedError:
-                pass
+            return
+        # Not all consoles can do a hardware catchup, so be prepared to catch the exception:
+        try:
+            self._catchup(self.engine.console.genStartupRecords)
+        except NotImplementedError:
+            pass
 
     def pre_loop(self, _event):
         """Called before the main packet loop is entered.
@@ -741,31 +728,9 @@ class StdArchive(StdService):
         # Set the time of the next break loop:
         self.end_archive_delay_ts = self.end_archive_period_ts + self.archive_delay
 
-    def new_archive_record(self, event):
-        """Called when a new archive record has arrived.
-        Put it in the archive database.
-
-        event (weewx.Event): The event containing the new archive record.
-        """
-
-        # If requested, extract any extra information we can out of the accumulator and put it in
-        # the record. Not necessary in the case of software record generation because it has
-        # already been done.
-        if self.record_augmentation \
-                and self.old_accumulator \
-                and event.record['dateTime'] == self.old_accumulator.timespan.stop \
-                and event.origin != 'software':
-            self.old_accumulator.augmentRecord(event.record)
-
-        dbmanager = self.engine.db_binder.get_manager(self.data_binding)
-        dbmanager.addRecord(event.record,
-                            accumulator=self.old_accumulator,
-                            log_success=self.log_success,
-                            log_failure=self.log_failure)
-
     def _catchup(self, generator):
         """Pull any unarchived records off the console and archive them.
-        
+
         If the hardware does not support hardware archives, an exception of
         type NotImplementedError will be thrown.
 
@@ -773,7 +738,9 @@ class StdArchive(StdService):
         self.engine.console.genStartupRecords or genArchiveRecords).
         """
 
-        dbmanager = self.engine.db_binder.get_manager(self.data_binding)
+        # 'initialize' because the catchup at startup can run before anything else has
+        # had a reason to open the database.
+        dbmanager = self.engine.db_binder.get_manager(self.data_binding, initialize=True)
         # Find out when the database was last updated.
         lastgood_ts = dbmanager.lastGoodStamp()
 
@@ -787,9 +754,7 @@ class StdArchive(StdService):
             for record in generator(lastgood_ts):
                 ts = record.get('dateTime')
                 if ts and ts < time.time() + self.archive_delay:
-                    self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
-                                                          record=record,
-                                                          origin='hardware'))
+                    self._emit(record, 'hardware')
                 else:
                     log.warning("Ignore historical record: %s" % record)
         except weewx.HardwareError as e:
@@ -797,14 +762,31 @@ class StdArchive(StdService):
             log.error("**** %s" % e)
 
     def _software_catchup(self):
-        # Extract a record out of the old accumulator. 
+        # Extract a record out of the old accumulator.
         record = self.old_accumulator.getRecord()
         # Add the archive interval
         record['interval'] = self.archive_interval / 60
         # Send out an event with the new record:
+        self._emit(record, 'software')
+
+    def _emit(self, record, origin):
+        """Augment the record from the accumulator that covers it, then send it out.
+
+        Augmenting here, rather than on the way into the database, means every service
+        listening for the event sees the same record. It is not needed for a record made
+        by software, which came out of the accumulator to begin with.
+        """
+        accumulator = self.old_accumulator
+        if accumulator is not None and record['dateTime'] != accumulator.timespan.stop:
+            # The record covers some other period, so the accumulator has nothing to say
+            # about it. A hardware catchup after an outage is the usual case.
+            accumulator = None
+        if self.record_augmentation and accumulator is not None and origin != 'software':
+            accumulator.augmentRecord(record)
         self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
                                               record=record,
-                                              origin='software'))
+                                              origin=origin,
+                                              accumulator=accumulator))
 
     def _new_accumulator(self, timestamp):
         start_ts = weeutil.weeutil.startOfInterval(timestamp,
@@ -814,6 +796,84 @@ class StdArchive(StdService):
         # Instantiate a new accumulator
         new_accumulator = weewx.accum.Accum(weeutil.weeutil.TimeSpan(start_ts, end_ts))
         return new_accumulator
+
+
+# ==============================================================================
+#                    Class StdArchiveStore
+# ==============================================================================
+
+class StdArchiveStore(StdService):
+    """Service that puts archive records in a database.
+
+    It listens for NEW_ARCHIVE_RECORD and knows nothing about where the record came
+    from, so anything that emits that event is served: the accumulator in
+    StdArchiveGenerator, or an extension that replaces it.
+    """
+
+    def __init__(self, engine, config_dict):
+        super().__init__(engine, config_dict)
+
+        archive_dict = config_dict.get('StdArchive', {})
+        self.data_binding = archive_dict.get('data_binding', 'wx_binding')
+        self.log_success = to_bool(weeutil.config.search_up(archive_dict, 'log_success', True))
+        self.log_failure = to_bool(weeutil.config.search_up(archive_dict, 'log_failure', True))
+
+        log.info("Archive will use data binding %s", self.data_binding)
+
+        self.bind(weewx.STARTUP, self.startup)
+        self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
+
+    def startup(self, _unused):
+        """Called when the engine is starting up. Set up the database and backfill it."""
+
+        # This will create the database if it doesn't exist:
+        dbmanager = self.engine.db_binder.get_manager(self.data_binding, initialize=True)
+        log.info("Using binding '%s' to database '%s'", self.data_binding, dbmanager.database_name)
+
+        # Make sure the daily summaries have not been partially updated
+        if dbmanager._read_metadata('lastWeightPatch'):
+            raise weewx.ViolatedPrecondition("Update of daily summary for database '%s' not"
+                                             " complete. Finish the update first."
+                                             % dbmanager.database_name)
+
+        # Backfill the daily summaries.
+        _nrecs, _ndays = dbmanager.backfill_day_summary()
+
+    def new_archive_record(self, event):
+        """Called when a new archive record has arrived.
+        Put it in the archive database.
+
+        event (weewx.Event): The event containing the new archive record.
+        """
+
+        # The accumulator that made the record, where there was one. It carries the
+        # high/lows measured between archive records, which are finer than anything the
+        # record itself can say. An event from somewhere else will not have one.
+        accumulator = getattr(event, 'accumulator', None)
+
+        dbmanager = self.engine.db_binder.get_manager(self.data_binding)
+        dbmanager.addRecord(event.record,
+                            accumulator=accumulator,
+                            log_success=self.log_success,
+                            log_failure=self.log_failure)
+
+
+# ==============================================================================
+#                    Class StdArchive
+# ==============================================================================
+
+class StdArchive(StdService):
+    """Generate archive records and save them, in one service.
+
+    This is what a configuration written before v5.5 names, and it behaves as it always
+    has. A configuration that lists StdArchiveGenerator and StdArchiveStore separately
+    can replace either half.
+    """
+
+    def __init__(self, engine, config_dict):
+        super().__init__(engine, config_dict)
+        self.generator = StdArchiveGenerator(engine, config_dict)
+        self.store = StdArchiveStore(engine, config_dict)
 
 
 # ==============================================================================
