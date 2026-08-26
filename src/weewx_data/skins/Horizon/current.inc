@@ -30,7 +30,7 @@
 #set $rest = [$x for $x in $rest if $x not in ('rain', 'rainRate')]
 #set $summary_image = $to_bool($DisplayOptions.get('show_summary_image', True))
 ##
-<section class="panel headline" aria-label="$gettext('Current Conditions')">
+<section class="panel headline" data-live-panel="current" aria-label="$gettext('Current Conditions')">
 #if $summary_image
   <a class="headline-share" href="current.png"
      title="$gettext('An image of these readings, for sharing')">

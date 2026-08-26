@@ -11,7 +11,7 @@
 #set $SYNODIC = 29.530588
 #set $age_days = ($current.dateTime.raw - $almanac.previous_new_moon.raw) / 86400.0
 #set $frame = '%02d' % (int(round($age_days / $SYNODIC * 32)) % 32)
-<section class="panel">
+<section class="panel" data-live-panel="moon">
   <div class="panel-head">
     <h2><a href="celestial.html">$gettext("Moon")</a></h2>
   </div>

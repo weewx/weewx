@@ -142,7 +142,8 @@
         <div class="stack">
 ## Which panels appear beside the charts, and in what order. Each name is an .inc
 ## file in the skin directory, so your own panel is a file plus a name in this list --
-## no need to edit this template.
+## no need to edit this template. Give its section a 'data-live-panel' of its own and
+## it is brought forward with the rest whenever a new record arrives.
 #set $panels = $to_list($DisplayOptions.get('panels', ['current', 'sunmoon', 'imagery', 'sensors', 'about']))
 #set $panels = [$p for $p in $panels if $p not in $to_list($DisplayOptions.get('hide_panels', []))]
 #for $panel in $panels

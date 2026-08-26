@@ -19,7 +19,7 @@
 #end for
 
 #if $any_sensor
-<section class="panel">
+<section class="panel" data-live-panel="sensors">
   <div class="panel-head">
     <h2>$gettext("Sensor Status")</h2>
   </div>
