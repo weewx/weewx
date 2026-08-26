@@ -56,10 +56,15 @@
       remember('theme', next);
       syncLabel();
       redrawAll();
+      paintSpan();
     });
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
-      if (!document.documentElement.getAttribute('data-theme')) { syncLabel(); redrawAll(); }
+      if (!document.documentElement.getAttribute('data-theme')) {
+        syncLabel();
+        redrawAll();
+        paintSpan();
+      }
     });
 
     function syncLabel() {
@@ -107,8 +112,12 @@
 
   /* Axis ticks. uPlot's built-in date formatter is English and 12-hour; use the
      viewer's locale instead, and keep the labels short enough not to collide. */
-  function fmtTick(ts, period) {
+  function fmtTick(ts, period, splits) {
     var d = new Date(ts * 1000);
+    /* How far apart the ticks are, which is what the label has to suit. The name of
+       the period is not enough on its own: a year view of a station three weeks old
+       puts every tick inside one month, and a row of identical labels says nothing. */
+    var step = (splits && splits.length > 1) ? (splits[1] - splits[0]) : null;
     if (period === 'day') {
       return d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
     }
@@ -117,8 +126,20 @@
         ? d.toLocaleDateString(LOCALE, { weekday: 'short' })
         : d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
     }
+    /* Ticks closer together than a day need a time on them, whatever the period is
+       called. That happens on a month or a year view of a station that has only been
+       running a few days: without this every label reads the same. */
+    if (step !== null && step < 86400) {
+      return d.getHours() === 0 && d.getMinutes() === 0
+        ? d.toLocaleDateString(LOCALE, { day: '2-digit', month: 'short' })
+        : d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit',
+                                         hourCycle: 'h23' });
+    }
     if (period === 'month') {
       return d.toLocaleDateString(LOCALE, { day: '2-digit', month: '2-digit' });
+    }
+    if (step !== null && step < 25 * 86400) {
+      return d.toLocaleDateString(LOCALE, { day: '2-digit', month: 'short' });
     }
     return d.toLocaleDateString(LOCALE, { month: 'short' });
   }
@@ -603,7 +624,7 @@
           font: '11px ' + getComputedStyle(document.body).fontFamily,
           space: 60,
           values: function (u, splits) {
-            return splits.map(function (ts) { return fmtTick(ts, period); });
+            return splits.map(function (ts) { return fmtTick(ts, period, splits); });
           }
         },
         {
@@ -902,6 +923,42 @@
       .catch(function () { archiveCache.set(key, null); return null; });
   }
 
+  /* The archive is written on an hourly grid, which is the right trade over years
+     but flattens a single day. Where the generator has also written the finer grid,
+     use it -- but only for a window short enough to see the difference. A month or a
+     year is what the hourly grid was made for. */
+  function fineMonthsFor(group, from, to) {
+    if (!archiveIndex || !archiveIndex.fine_interval) return null;
+    if ((to - from) > 8 * 86400) return null;
+    var entry = (archiveIndex.groups || []).filter(function (g) {
+      return g.name === group;
+    })[0];
+    if (!entry || !entry.fine) return null;
+
+    var want = [];
+    var cursor = new Date(from * 1000);
+    cursor.setDate(1);
+    cursor.setHours(0, 0, 0, 0);
+    while (cursor.getTime() / 1000 < to) {
+      var month = cursor.getMonth() + 1;
+      var stamp = cursor.getFullYear() + '-' + (month < 10 ? '0' : '') + month;
+      /* One month missing and the window would be stitched from two grids. */
+      if (!(stamp in entry.fine)) return null;
+      want.push(stamp);
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+    return want.length ? want : null;
+  }
+
+  function loadArchiveFine(group, stamp) {
+    var key = group + '-fine-' + stamp;
+    if (archiveCache.has(key)) return Promise.resolve(archiveCache.get(key));
+    return fetch(DATA_DIR + '/archive/' + key + '.json', { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { archiveCache.set(key, j); return j; })
+      .catch(function () { archiveCache.set(key, null); return null; });
+  }
+
   var daynightCache = new Map();
 
   function loadDayNight(year) {
@@ -964,8 +1021,11 @@
     }
     if (!years.length) return Promise.resolve(null);
 
+    var fine = fineMonthsFor(group, from, to);
     return Promise.all([
-      Promise.all(years.map(function (y) { return loadArchiveYear(group, y); })),
+      Promise.all(fine
+        ? fine.map(function (m) { return loadArchiveFine(group, m); })
+        : years.map(function (y) { return loadArchiveYear(group, y); })),
       nightForWindow(from, to, years)
     ]).then(function (both) {
       var files = both[0];
@@ -1147,6 +1207,20 @@
      scrolled past it: at the top of the page nothing should move. This runs
      once the cards are in place, since until then the page is too short to
      scroll anywhere. */
+  /* The range bar sticks underneath the head, so it has to know how tall the head
+     is. A fixed guess in the stylesheet holds only for one font size and one line
+     of tabs; anything else and the two overlap. */
+  function measureStickyHead() {
+    var panels = document.querySelectorAll('.panel');
+    for (var i = 0; i < panels.length; i++) {
+      var head = panels[i].querySelector('.panel-head');
+      var bar = panels[i].querySelector('.range-bar');
+      if (head && bar) {
+        panels[i].style.setProperty('--head-height', head.offsetHeight + 'px');
+      }
+    }
+  }
+
   function backToFirstChart(container) {
     var panel = container.closest('.panel');
     if (!panel) return;
@@ -1420,6 +1494,94 @@
     el.appendChild(decimals);
   }
 
+  /* ------------------------------------------------------- temperature colour */
+
+  /* The nine --warm-* steps, pinned to the middle of the band each one stands for.
+     Reading them from the stylesheet keeps one palette for the whole page, and lets
+     a theme change move the bar and the headline together. */
+  var WARM_AT = [-15, -5, 2.5, 8.5, 15, 20.5, 25.5, 30.5, 36];
+  var BAND_EDGES = [-10, 0, 5, 12, 18, 23, 28, 33];
+
+  function warmStops() {
+    var css = getComputedStyle(document.documentElement);
+    return WARM_AT.map(function (c, i) {
+      return { c: c, rgb: parseColour(css.getPropertyValue('--warm-' + i).trim()) };
+    }).filter(function (s) { return s.rgb; });
+  }
+
+  function parseColour(text) {
+    if (!text) return null;
+    var hex = /^#([0-9a-f]{6})$/i.exec(text);
+    if (hex) {
+      var n = parseInt(hex[1], 16);
+      return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    }
+    var rgb = /rgba?\(([^)]+)\)/.exec(text);
+    if (rgb) {
+      var parts = rgb[1].split(/[,\s/]+/).map(parseFloat);
+      return [parts[0], parts[1], parts[2]];
+    }
+    return null;
+  }
+
+  /* The colour for one temperature, interpolated between the two steps it falls
+     between. Interpolated rather than snapped, so that the mark on the bar and the
+     headline can agree on a colour that the bar actually shows at that point. */
+  function tempColour(celsius, stops) {
+    if (!stops.length) return null;
+    if (celsius <= stops[0].c) return rgbText(stops[0].rgb);
+    for (var i = 1; i < stops.length; i++) {
+      if (celsius <= stops[i].c) {
+        var a = stops[i - 1], b = stops[i];
+        var t = (celsius - a.c) / (b.c - a.c);
+        return rgbText([0, 1, 2].map(function (k) {
+          return Math.round(a.rgb[k] + (b.rgb[k] - a.rgb[k]) * t);
+        }));
+      }
+    }
+    return rgbText(stops[stops.length - 1].rgb);
+  }
+
+  function rgbText(rgb) {
+    return 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')';
+  }
+
+  /* Paint the day's range onto the bar: the ends take the colours of the lowest and
+     highest readings, and every band boundary in between gets a stop at the position
+     it actually sits at. A day from 13 to 14 degrees is then one colour, and a day
+     from 2 to 30 runs through all of them. */
+  function paintSpan() {
+    var track = document.querySelector('.span-track[data-lo]');
+    if (!track) return;
+    var lo = parseFloat(track.dataset.lo);
+    var hi = parseFloat(track.dataset.hi);
+    if (isNaN(lo) || isNaN(hi) || hi <= lo) return;
+
+    var stops = warmStops();
+    if (!stops.length) return;
+
+    var parts = [tempColour(lo, stops) + ' 0%'];
+    BAND_EDGES.forEach(function (edge) {
+      if (edge > lo && edge < hi) {
+        parts.push(tempColour(edge, stops)
+                   + ' ' + ((edge - lo) / (hi - lo) * 100).toFixed(1) + '%');
+      }
+    });
+    parts.push(tempColour(hi, stops) + ' 100%');
+
+    var fill = track.querySelector('.span-fill');
+    if (fill) fill.style.background = 'linear-gradient(90deg, ' + parts.join(', ') + ')';
+
+    var now = parseFloat(track.dataset.now);
+    if (isNaN(now)) return;
+    var colour = tempColour(now, stops);
+    var mark = track.querySelector('.span-now');
+    if (mark) mark.style.setProperty('--span-at', colour);
+    /* The headline reads the same temperature, so it takes the same colour. */
+    var lead = document.querySelector('.lead-value[data-band]');
+    if (lead) lead.style.color = colour;
+  }
+
   function setupLiveUpdate() {
     var seconds = parseInt(CFG.refreshInterval, 10);
     if (!seconds || seconds < 5) return;
@@ -1438,6 +1600,12 @@
               el.classList.remove('is-stale');
             }
           });
+          if (data.outTemp_c !== undefined && data.outTemp_c !== null) {
+            var track = document.querySelector('.span-track[data-lo]');
+            if (track) track.dataset.now = data.outTemp_c;
+            paintSpan();
+          }
+
           /* New archive record: the plots are stale too. */
           if (stamp && data.dateTime_raw && stamp.dataset.raw
               && String(data.dateTime_raw) !== String(stamp.dataset.raw)) {
@@ -1459,6 +1627,9 @@
     setupThemeToggle();
     setupPeriods();
     setupLiveUpdate();
+    measureStickyHead();
+    window.addEventListener('resize', measureStickyHead);
+    paintSpan();
   }
 
   if (document.readyState === 'loading') {

@@ -83,8 +83,19 @@ $shown#slurp
   ## are the same thing today, since the day's own range is all there is. Kept
   ## apart anyway: a forecast would go in the same track, and then they are not.
   <h3 class="span-title">$gettext("Today")</h3>
+  ## The track carries its own range in degrees C, so the script can colour it by
+  ## the weather it is showing rather than by a fixed sweep. Celsius whatever the
+  ## page displays in, so the same weather is the same colour in Fahrenheit.
+  #set $span_data = ''
+  #if $lead == 'outTemp' and $lead_day.min.degree_C.raw is not None
+    #set $span_data = ' data-lo="%.2f" data-hi="%.2f"' % ($lead_day.min.degree_C.raw,
+                                                          $lead_day.max.degree_C.raw)
+    #if $current.outTemp.degree_C.raw is not None
+      #set $span_data = $span_data + ' data-now="%.2f"' % $current.outTemp.degree_C.raw
+    #end if
+  #end if
   <div class="span-today">
-    <div class="span-track">
+    <div class="span-track"$span_data>
       <span class="span-fill" style="left:0%;width:100%"></span>
       #if $now_raw is not None
       #set $at = max(0.0, min(100.0, ($now_raw - $lo_vt.raw) / ($hi_vt.raw - $lo_vt.raw) * 100.0))

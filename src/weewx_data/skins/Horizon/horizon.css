@@ -325,16 +325,18 @@ select.report-select {
   position: absolute;
   height: 100%;
   border-radius: 5px;
-  background: linear-gradient(90deg, var(--cool), var(--hi));
+  background: linear-gradient(90deg, var(--span-from, var(--cool)), var(--span-to, var(--hi)));
 }
 .span-now {
   position: absolute;
   top: -3px;
-  width: 2px;
+  width: 3px;
   height: 15px;
-  margin-left: -1px;
-  border-radius: 1px;
-  background: var(--ink);
+  margin-left: -1.5px;
+  border-radius: 1.5px;
+  background: var(--span-at, var(--ink));
+  /* The mark sits on the colour it is reporting, so it needs an edge of its own. */
+  box-shadow: 0 0 0 1px var(--surface);
 }
 .span-ends {
   display: grid;
@@ -775,7 +777,7 @@ select.report-select {
   background: var(--surface);
 }
 .panel:has(.range-bar) .panel-head { top: 0; }
-.range-bar { top: 2.9rem; border-bottom: 1px solid var(--border); }
+.range-bar { top: var(--head-height, 2.9rem); border-bottom: 1px solid var(--border); }
 
 .range-nav {
   grid-column: 2;

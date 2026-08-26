@@ -14,5 +14,10 @@
 #set $ignore = $fields.update({$x: $str($getVar('current.' + $x))})
 #end if
 #end for
+## The colour of the headline follows the temperature, and the client works it out
+## from degrees C so that it does not depend on what the page displays in.
+#if $current.outTemp.degree_C.raw is not None
+#set $ignore = $fields.update({'outTemp_c': $round($current.outTemp.degree_C.raw, 2)})
+#end if
 #set $ignore = $fields.update({'rainToday': $str($day.rain.sum)})
 $jsonize($fields)
