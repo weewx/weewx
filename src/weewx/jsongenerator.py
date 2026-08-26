@@ -294,6 +294,20 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         resolution = to_int(weeutil.weeutil.nominal_spans(arch_dict.get('resolution', 3600)))
         aggregate_type = arch_dict.get('aggregate_type', 'avg')
         max_days = to_int(arch_dict.get('max_days', 0))
+        # A second, finer grid over the recent past, written per calendar month. An
+        # hourly grid is the right trade over years, but it flattens a single day, and
+        # stepping back through days is exactly what the client offers. Thirty days at
+        # five minutes costs about what one year at one hour costs, and the client only
+        # ever fetches the months it is showing.
+        fine_days = to_int(arch_dict.get('fine_days', 0))
+        fine_resolution = to_int(weeutil.weeutil.nominal_spans(
+            arch_dict.get('fine_resolution', 300)))
+        if fine_days and fine_resolution >= resolution:
+            # Easily done: in a duration suffix 'm' means months, so '5m' asks for a
+            # grid coarser than the one it was meant to refine.
+            log.warning("Ignoring fine_days: fine_resolution (%d seconds) is not finer "
+                        "than resolution (%d seconds)", fine_resolution, resolution)
+            fine_days = 0
         dest_dir = arch_dict.get('dest_dir',
                                  os.path.join(self.gen_dict.get('json_dest_dir', 'data'),
                                               'archive'))
@@ -316,7 +330,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
         # What the last run covered, so this one can tell what has actually changed.
         # One file, read once, the same way gen_json() reads its manifest.
-        previous, previous_first = self._read_archive_index(dest_dir)
+        previous, previous_fine, previous_first = self._read_archive_index(dest_dir)
 
         for plotname in group_dict.sections:
             if self.stop_event and self.stop_event.is_set():
@@ -360,7 +374,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 # file is rewritten when it advances into the next grid slot.
                 covered = min(int(year_span.stop), int(last_ts))
                 was = previous.get(group_name, {}).get(year)
-                if os.path.exists(out_file) and was is not None and not reimported                         and was // resolution == covered // resolution:
+                if os.path.exists(out_file) and was is not None and not reimported \
+                        and was // resolution == covered // resolution:
                     nskipped += 1
                     entry = index.setdefault(group_name, {'years': [], 'covered': {}})
                     entry['years'].append(year)
@@ -389,6 +404,39 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 except OSError as e:
                     log.error("Unable to save to file '%s': %s", out_file, e)
 
+            if fine_days:
+                fine_from = max(int(first_ts), int(last_ts) - fine_days * 86400)
+                for month_span in weeutil.weeutil.genMonthSpans(fine_from, last_ts):
+                    stamp = time.strftime('%Y-%m', time.localtime(month_span.start))
+                    out_file = os.path.join(arch_root, '%s-fine-%s.json'
+                                            % (group_name, stamp))
+                    covered = min(int(month_span.stop), int(last_ts))
+                    was = previous_fine.get(group_name, {}).get(stamp)
+                    if os.path.exists(out_file) and was is not None and not reimported                             and was // fine_resolution == covered // fine_resolution:
+                        nskipped += 1
+                        entry = index.setdefault(group_name, {'years': [], 'covered': {}})
+                        entry.setdefault('fine', {})[stamp] = was
+                        root = arch_root
+                        continue
+
+                    payload = self._archive_year(group_dict[plotname], plot_options,
+                                                 month_span, fine_resolution,
+                                                 aggregate_type, rounding, group_name,
+                                                 fine_from, last_ts)
+                    if payload is None:
+                        continue
+                    try:
+                        os.makedirs(arch_root, exist_ok=True)
+                        with open(out_file, 'w', encoding='utf-8') as fd:
+                            json.dump(payload, fd, indent=indent, ensure_ascii=False,
+                                      separators=(',', ':') if indent is None else None)
+                        ngen += 1
+                        root = arch_root
+                        entry = index.setdefault(group_name, {'years': [], 'covered': {}})
+                        entry.setdefault('fine', {})[stamp] = payload['covered']
+                    except OSError as e:
+                        log.error("Unable to save to file '%s': %s", out_file, e)
+
         # Sunrise/sunset for the whole record, written once rather than repeated in
         # every group's file. The client shades the night from this when it is showing
         # a window short enough for the bands to mean anything.
@@ -407,10 +455,13 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     'years': sorted(set(entry['years'])),
                     # Keyed by year, so it survives the trip through JSON as strings.
                     'covered': {str(y): c for y, c in entry.get('covered', {}).items()},
+                    # Months that also exist on the finer grid.
+                    'fine': {str(m): c for m, c in entry.get('fine', {}).items()},
                 })
             try:
                 with open(os.path.join(root, 'index.json'), 'w', encoding='utf-8') as fd:
                     json.dump({'interval': resolution,
+                               'fine_interval': fine_resolution if fine_days else None,
                                'first': int(overall_start) if overall_start else None,
                                'last': int(overall_stop) if overall_stop else None,
                                'groups': groups},
@@ -445,10 +496,12 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         """What the previous run wrote, from the index it left behind.
 
         Returns:
-            tuple: A dict of {group: {year: covered}}, and the earliest reading the
-                last run knew about (None if there was no usable index).
+            tuple: A dict of {group: {year: covered}}, the same for the finer months as
+                {group: {'YYYY-MM': covered}}, and the earliest reading the last run
+                knew about (None if there was no usable index).
         """
         covered = {}
+        fine = {}
         first = None
         try:
             path = os.path.join(self.config_dict['WEEWX_ROOT'],
@@ -463,11 +516,16 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     years[int(year)] = int(ts)
                 if years:
                     covered[group['name']] = years
+                months = {}
+                for stamp, ts in (group.get('fine') or {}).items():
+                    months[str(stamp)] = int(ts)
+                if months:
+                    fine[group['name']] = months
         except (OSError, ValueError, KeyError, TypeError):
             # No index, or one this version cannot read. Everything gets rebuilt,
             # which is the safe direction to fail in.
-            return {}, None
-        return covered, first
+            return {}, {}, None
+        return covered, fine, first
 
     def _archive_daynight(self, root, first_ts, last_ts, indent):
         """Write sunrise/sunset transitions, one file per calendar year.

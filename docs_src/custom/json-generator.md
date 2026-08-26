@@ -180,6 +180,14 @@ And in `[[Archive]]`:
         ET, hail, snow and lightning counts are always summed.</td></tr>
     <tr><td class="first_col">max_days</td>
         <td>How far back to go. Default: 0, meaning the whole record.</td></tr>
+    <tr><td class="first_col">fine_days</td>
+        <td>How far back to also write a finer grid, one file per calendar month.
+        Default: 0, meaning none. Thirty days at five minutes costs about what one
+        year at one hour costs, and a client fetches only the months it shows.</td></tr>
+    <tr><td class="first_col">fine_resolution</td>
+        <td>The interval of that finer grid. Default:
+        <span class="code">300</span>. Ignored unless it is finer than
+        <span class="code">resolution</span>.</td></tr>
     <tr><td class="first_col">source_group</td>
         <td>Which time-period section defines the plot groups. Default:
         <span class="code">day_images</span>.</td></tr>

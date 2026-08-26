@@ -75,7 +75,7 @@ data_binding = wx_binding
 """
 
 
-def build_skin_dict(html_root, archive=False):
+def build_skin_dict(html_root, archive=False, archive_options=None):
     """A skin dictionary complete enough for the generator to run against."""
     # The delta-time formats contain things like %(minute_label)s, which ConfigObj would
     # otherwise try to resolve as interpolation. The report engine turns interpolation
@@ -88,6 +88,7 @@ def build_skin_dict(html_root, archive=False):
     if archive:
         json_conf['Archive'] = {'enable': 'true', 'resolution': '3600',
                                 'stale_age': '3600'}
+        json_conf['Archive'].update(archive_options or {})
 
     # Assemble as a plain dict, then hand the whole thing to ConfigObj at once.
     # accumulateLeaves() walks the parent chain up to the root, and only a
@@ -106,10 +107,12 @@ def build_skin_dict(html_root, archive=False):
     return skin_dict
 
 
-def run_generator(config_dict, tmp_path, archive=False, gen_ts=None):
+def run_generator(config_dict, tmp_path, archive=False, gen_ts=None,
+                  archive_options=None):
     """Run the generator against the test database and return its output directory."""
     html_root = str(tmp_path)
-    skin_dict = build_skin_dict(html_root, archive=archive)
+    skin_dict = build_skin_dict(html_root, archive=archive,
+                                archive_options=archive_options)
 
     # WEEWX_ROOT is left as the test configuration set it, so the database is still
     # found. HTML_ROOT is absolute, and os.path.join() ignores the prefix for those.
@@ -349,7 +352,8 @@ class TestPeriodFiles:
     def test_configured_yscale_is_honoured(self, config_dict, tmp_path):
         html_root = str(tmp_path)
         skin_dict = build_skin_dict(html_root)
-        skin_dict['ImageGenerator']['day_images']['daytempdew']['yscale'] =             ['0.0', '360.0', '45.0']
+        skin_dict['ImageGenerator']['day_images']['daytempdew']['yscale'] = \
+            ['0.0', '360.0', '45.0']
         cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
         stn_info = weewx.station.StationInfo(**cd['Station'])
 
@@ -388,7 +392,8 @@ class TestPeriodFiles:
             generator.finalize()
 
         data_dir = os.path.join(html_root, 'data')
-        assert sorted(f for f in os.listdir(data_dir) if f.endswith('.json'))             == ['index.json', 'ownplot.json']
+        assert sorted(f for f in os.listdir(data_dir) if f.endswith('.json')) \
+                == ['index.json', 'ownplot.json']
 
     def test_settings_are_not_mistaken_for_plots(self, config_dict, tmp_path):
         """[[Archive]] is a subsection too, and defines no plots.
@@ -498,10 +503,12 @@ class TestPeriodFiles:
 
         # SummaryImageGenerator has the word in its name and draws one picture of
         # the current readings, not a plot per chart.
-        skin_dict['Generators']['generator_list'] =             'weewx.jsongenerator.JSONGenerator, weewx.summaryimage.SummaryImageGenerator'
+        skin_dict['Generators']['generator_list'] = \
+            'weewx.jsongenerator.JSONGenerator, weewx.summaryimage.SummaryImageGenerator'
         assert run(skin_dict)['images'] is False
 
-        skin_dict['Generators']['generator_list'] =             'weewx.jsongenerator.JSONGenerator, weewx.imagegenerator.ImageGenerator'
+        skin_dict['Generators']['generator_list'] = \
+            'weewx.jsongenerator.JSONGenerator, weewx.imagegenerator.ImageGenerator'
         assert run(skin_dict)['images'] is True
 
     def test_manifest_lists_what_exists(self, config_dict, tmp_path):
@@ -634,6 +641,39 @@ class TestArchive:
         groups = {g['name']: g for g in index['groups']}
         assert 'tempdew' in groups
         assert 2010 in groups['tempdew']['years']
+
+    def test_a_finer_grid_is_written_for_the_recent_past(self, config_dict, tmp_path):
+        """An hourly grid flattens a single day, so recent months also get a fine one."""
+        data_dir = run_generator(config_dict, tmp_path, archive=True,
+                                 archive_options={'fine_days': '30',
+                                                  'fine_resolution': '300'})
+        archive_dir = os.path.join(data_dir, 'archive')
+        fine = sorted(f for f in os.listdir(archive_dir) if '-fine-' in f)
+        assert fine, "no fine files written"
+
+        with open(os.path.join(archive_dir, fine[0]), encoding='utf-8') as fd:
+            payload = json.load(fd)
+        assert payload['interval'] == 300
+
+        # The coarse file for the same group is still there, and still hourly.
+        group = fine[0].split('-fine-')[0]
+        with open(os.path.join(archive_dir, '%s-2010.json' % group), encoding='utf-8') as fd:
+            assert json.load(fd)['interval'] == 3600
+
+        with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
+            index = json.load(fd)
+        assert index['fine_interval'] == 300
+        groups = {g['name']: g for g in index['groups']}
+        # The month the fine file covers is named, so a client knows to ask for it.
+        assert fine[0].split('-fine-')[1][:-5] in groups[group]['fine']
+
+    def test_a_grid_that_is_not_finer_is_refused(self, config_dict, tmp_path):
+        """'5m' means five months. Silently writing that would be worse than saying so."""
+        data_dir = run_generator(config_dict, tmp_path, archive=True,
+                                 archive_options={'fine_days': '30',
+                                                  'fine_resolution': '7200'})
+        archive_dir = os.path.join(data_dir, 'archive')
+        assert not [f for f in os.listdir(archive_dir) if '-fine-' in f]
 
 
 class TestSummaryImage:
