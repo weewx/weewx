@@ -72,6 +72,18 @@ def _as_list(option):
     return [str(x).strip() for x in weeutil.weeutil.option_as_list(option) if str(x).strip()]
 
 
+def _text(draw, xy, string, font, fill):
+    """Draw a string, in as much of it as the font can encode.
+
+    PIL's own bitmap font encodes to latin-1 and raises on anything else. A station
+    called Ζάκυνθος should cost its accents, not the whole picture. Pillow 10.1 and
+    later hand back a FreeType font instead, which draws everything.
+    """
+    if not isinstance(font, ImageFont.FreeTypeFont):
+        string = string.encode('latin-1', 'replace').decode('latin-1')
+    draw.text(xy, string, font=font, fill=fill)
+
+
 class SummaryImageGenerator(weewx.reportengine.ReportGenerator):
     """Draw the current readings into a single, linkable PNG."""
 
@@ -203,7 +215,12 @@ class SummaryImageGenerator(weewx.reportengine.ReportGenerator):
                 return ImageFont.truetype(candidate, int(size * scale))
             except (OSError, ValueError):
                 log.debug("Font '%s' unavailable; using the default.", candidate)
-        return ImageFont.load_default()
+        try:
+            # Pillow 10.1 and later size their default font, and it draws anything.
+            return ImageFont.load_default(int(size * scale))
+        except TypeError:
+            # Older ones hand back a bitmap font: one size, latin-1 only.
+            return ImageFont.load_default()
 
     def _draw(self, payload, opts):
         scale = max(1, to_int(opts['scale']))
@@ -236,9 +253,9 @@ class SummaryImageGenerator(weewx.reportengine.ReportGenerator):
         draw = ImageDraw.Draw(image)
 
         y = pad
-        draw.text((pad, y), payload['location'], font=f_title, fill=opts['title_color'])
+        _text(draw, (pad, y), payload['location'], f_title, opts['title_color'])
         y += line_h
-        draw.text((pad, y), payload['stamp'], font=f_stamp, fill=opts['label_color'])
+        _text(draw, (pad, y), payload['stamp'], f_stamp, opts['label_color'])
         y += stamp_h
 
         draw.line([(pad, y), (width - pad, y)], fill=opts['rule_color'], width=scale)
@@ -249,15 +266,14 @@ class SummaryImageGenerator(weewx.reportengine.ReportGenerator):
             cx = pad + (index % columns) * col_w
             cy = y + (index // columns) * card_h
 
-            draw.text((cx, cy), card['label'].upper(), font=f_label,
-                      fill=opts['label_color'])
+            _text(draw, (cx, cy), card['label'].upper(), f_label, opts['label_color'])
             cy += label_h
 
-            draw.text((cx, cy), card['value'], font=f_value, fill=opts['value_color'])
+            _text(draw, (cx, cy), card['value'], f_value, opts['value_color'])
             cy += value_h
 
             if card['sub']:
-                draw.text((cx, cy), card['sub'], font=f_sub, fill=opts['sub_color'])
+                _text(draw, (cx, cy), card['sub'], f_sub, opts['sub_color'])
 
         if scale > 1:
             image = image.resize((width // scale, height // scale), Image.LANCZOS)

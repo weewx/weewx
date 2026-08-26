@@ -25,6 +25,11 @@ import weewx.station
 import weewx.units
 from weeutil.config import accumulateLeaves
 
+# The grid the archive tests are written on. Four hours rather than the hour a station
+# would use: get_series() runs one aggregate query per slot, so the resolution decides
+# what these tests cost, and nothing they check depends on which one it is.
+ARCHIVE_RESOLUTION = 14400
+
 # The generator works off plot definitions in the [ImageGenerator] syntax. This is a
 # small but representative one: a two-line plot, a bar plot with aggregation, and a
 # plot of a type the test database does not have (which must be skipped).
@@ -86,7 +91,8 @@ def build_skin_dict(html_root, archive=False, archive_options=None):
 
     json_conf = {'json_dest_dir': 'data', 'round': '3'}
     if archive:
-        json_conf['Archive'] = {'enable': 'true', 'resolution': '3600',
+        json_conf['Archive'] = {'enable': 'true',
+                                'resolution': str(ARCHIVE_RESOLUTION),
                                 'stale_age': '3600'}
         json_conf['Archive'].update(archive_options or {})
 
@@ -526,32 +532,38 @@ class TestPeriodFiles:
 
 class TestArchive:
 
-    def test_writes_one_file_per_group_and_year(self, config_dict, tmp_path):
-        data_dir = run_generator(config_dict, tmp_path, archive=True)
-        archive_dir = os.path.join(data_dir, 'archive')
+    @pytest.fixture(scope='class')
+    def archive_dir(self, config_dict, tmp_path_factory):
+        """One archive run, shared by the tests that only read what it wrote.
+
+        Writing it costs an aggregate query per grid slot, which is most of what this
+        file costs to run. The tests below look at the same output instead of each
+        building their own; the ones that need a second run still make it.
+        """
+        data_dir = run_generator(config_dict, tmp_path_factory.mktemp('archive'),
+                                 archive=True)
+        return os.path.join(data_dir, 'archive')
+
+    def test_writes_one_file_per_group_and_year(self, archive_dir):
         written = sorted(f for f in os.listdir(archive_dir) if f.endswith('.json'))
 
         # The test data sit in 2010, and the group name has the 'day' prefix stripped.
         assert 'tempdew-2010.json' in written
         assert 'index.json' in written
 
-    def test_grid_is_regular_and_timestamps_implied(self, config_dict, tmp_path):
-        data_dir = run_generator(config_dict, tmp_path, archive=True)
-        path = os.path.join(data_dir, 'archive', 'tempdew-2010.json')
-        with open(path, encoding='utf-8') as fd:
+    def test_grid_is_regular_and_timestamps_implied(self, archive_dir):
+        with open(os.path.join(archive_dir, 'tempdew-2010.json'), encoding='utf-8') as fd:
             payload = json.load(fd)
 
-        assert payload['interval'] == 3600
-        assert payload['start'] % 3600 == 0
+        assert payload['interval'] == ARCHIVE_RESOLUTION
+        assert payload['start'] % ARCHIVE_RESOLUTION == 0
         # No 'time' array at all: that is the point of the fixed grid.
         for series in payload['series']:
             assert 'time' not in series
             assert len(series['values']) == payload['count']
 
-    def test_values_land_in_the_right_slots(self, config_dict, tmp_path):
-        data_dir = run_generator(config_dict, tmp_path, archive=True)
-        path = os.path.join(data_dir, 'archive', 'tempdew-2010.json')
-        with open(path, encoding='utf-8') as fd:
+    def test_values_land_in_the_right_slots(self, archive_dir):
+        with open(os.path.join(archive_dir, 'tempdew-2010.json'), encoding='utf-8') as fd:
             payload = json.load(fd)
 
         series = payload['series'][0]
@@ -578,7 +590,7 @@ class TestArchive:
         """The current year is rewritten once the data reach into the next slot."""
         stop_ts = parameters.synthetic_dict['stop_ts']
         data_dir = run_generator(config_dict, tmp_path, archive=True,
-                                 gen_ts=stop_ts - 7200)
+                                 gen_ts=stop_ts - ARCHIVE_RESOLUTION)
         path = os.path.join(data_dir, 'archive', 'tempdew-2010.json')
         before = os.path.getmtime(path)
 
@@ -607,7 +619,9 @@ class TestArchive:
 
         assert after['covered'] > before['covered']
         filled = lambda p: sum(1 for v in p['series'][0]['values'] if v is not None)
-        assert filled(after) > filled(before) + 40
+        # Two days of catch-up, so nearly two days of grid slots have to fill in.
+        slots = 2 * 86400 // ARCHIVE_RESOLUTION
+        assert filled(after) - filled(before) > 0.8 * slots
 
     def test_an_import_rebuilds_finished_years(self, config_dict, tmp_path):
         """Data reaching further back than last time mean an import.
@@ -637,7 +651,7 @@ class TestArchive:
         with open(os.path.join(data_dir, 'archive', 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
 
-        assert index['interval'] == 3600
+        assert index['interval'] == ARCHIVE_RESOLUTION
         groups = {g['name']: g for g in index['groups']}
         assert 'tempdew' in groups
         assert 2010 in groups['tempdew']['years']
@@ -655,10 +669,10 @@ class TestArchive:
             payload = json.load(fd)
         assert payload['interval'] == 300
 
-        # The coarse file for the same group is still there, and still hourly.
+        # The coarse file for the same group is still there, on the wide grid.
         group = fine[0].split('-fine-')[0]
         with open(os.path.join(archive_dir, '%s-2010.json' % group), encoding='utf-8') as fd:
-            assert json.load(fd)['interval'] == 3600
+            assert json.load(fd)['interval'] == ARCHIVE_RESOLUTION
 
         with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
@@ -671,7 +685,7 @@ class TestArchive:
         """'5m' means five months. Silently writing that would be worse than saying so."""
         data_dir = run_generator(config_dict, tmp_path, archive=True,
                                  archive_options={'fine_days': '30',
-                                                  'fine_resolution': '7200'})
+                                                  'fine_resolution': '28800'})
         archive_dir = os.path.join(data_dir, 'archive')
         assert not [f for f in os.listdir(archive_dir) if '-fine-' in f]
 
