@@ -61,21 +61,18 @@ import time
 import weeplot.utilities
 import weeutil.logger
 import weeutil.weeutil
-import weewx.imagegenerator
+import weewx.accum
 import weewx.reportengine
 import weewx.units
 import weewx.xtypes
 from weeutil.config import search_up, accumulateLeaves
 from weeutil.weeutil import to_bool, to_int, TimeSpan
+# The ImageGenerator's helpers, used rather than copied, so that a fix to "is this plot
+# empty?" reaches both generators.
+from weewx.imagegenerator import _get_check_domain, _skip_if_empty, _skip_this_plot
 from weewx.units import ValueTuple
 
 log = logging.getLogger(__name__)
-
-# The ImageGenerator's helpers, used rather than copied, so that a fix to "is this plot
-# empty?" reaches both generators.
-_get_check_domain = weewx.imagegenerator._get_check_domain
-_skip_if_empty = weewx.imagegenerator._skip_if_empty
-_skip_this_plot = weewx.imagegenerator._skip_this_plot
 
 
 class JSONGenerator(weewx.reportengine.ReportGenerator):
@@ -135,8 +132,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # Where to write. Default to a 'data' subdirectory so JSON does not litter the
         # top level next to the HTML.
         dest_dir = self.gen_dict.get('json_dest_dir', 'data')
-        indent = self.gen_dict.get('json_indent')
-        indent = to_int(indent) if indent not in (None, '', 'None', 'none') else None
+        indent = to_int(self.gen_dict.get('json_indent'))
 
         # One entry per plot written. At the end of this method they go into
         # 'index.json', a list of every plot file that exists, with its title, its
@@ -150,8 +146,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # How many seconds each time span covers, from 'time_length' in the plot
         # definitions: 86400 for [[day_images]], and so on. It goes into index.json
         # because the page draws the x axis itself, and 'time_length' is the only
-        # statement of how wide a "day" plot is meant to be. Leave it out, and
-        # changing 'time_length' moves the PNG while the chart stays as it was.
+        # statement of how wide a "day" plot is meant to be. Leave it out and the
+        # option no longer reaches the chart at all.
         span_lengths = {}
 
         # Last run's index.json. A plot skipped as unchanged still belongs in the new
@@ -215,16 +211,14 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     continue
 
                 try:
-                    os.makedirs(os.path.dirname(json_file), exist_ok=True)
-                    with open(json_file, 'w', encoding='utf-8') as fd:
-                        json.dump(payload, fd, indent=indent, ensure_ascii=False,
-                                  separators=(',', ':') if indent is None else None)
+                    _write_json(json_file, payload, indent)
                     ngen += 1
                     manifest_root = json_root
                     manifest.append({
                         'name': plotname,
                         'group': timespan,
                         'title': ', '.join(s['label'] for s in payload['series']),
+                        'unit': payload['unit'],
                         'unit_label': payload['unit_label'],
                         'obs_types': [s['obs_type'] for s in payload['series']],
                     })
@@ -236,17 +230,27 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # index.json: the list described at the top of this method.
         if manifest_root:
             index_file = os.path.join(manifest_root, 'index.json')
+            obs_types = set()
+            units_seen = set()
+            for entry in manifest:
+                obs_types.update(entry.get('obs_types') or [])
+                if entry.get('unit'):
+                    units_seen.add(entry['unit'])
             try:
-                with open(index_file, 'w', encoding='utf-8') as fd:
-                    json.dump({'generated': int(gen_ts or time.time()),
-                               'spans': span_lengths,
-                               # Whether the PNGs of these plots are being written at
-                               # all. A page that offers a link to the PNG has to
-                               # know before it points at a file nobody writes.
-                               'images': self._images_are_generated(),
-                               'plots': manifest},
-                              fd, indent=indent, ensure_ascii=False,
-                              separators=(',', ':') if indent is None else None)
+                _write_json(index_file,
+                            {'generated': int(gen_ts or time.time()),
+                             'spans': span_lengths,
+                             # Whether the PNGs of these plots are being written at
+                             # all. A page that offers a link to the PNG has to know
+                             # before it points at a file nobody writes.
+                             'images': self._images_are_generated(),
+                             # What it takes to show these readings in another unit.
+                             # The files hold one unit each, whichever the skin asked
+                             # for, so without this a page cannot offer a second.
+                             'units': _unit_choices(obs_types, units_seen,
+                                                    self.formatter),
+                             'plots': manifest},
+                            indent)
             except OSError as e:
                 log.error("Unable to save to file '%s': %s", index_file, e)
 
@@ -311,10 +315,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         dest_dir = arch_dict.get('dest_dir',
                                  os.path.join(self.gen_dict.get('json_dest_dir', 'data'),
                                               'archive'))
-        indent = self.gen_dict.get('json_indent')
-        indent = to_int(indent) if indent not in (None, '', 'None', 'none') else None
-        rounding = arch_dict.get('round', self.gen_dict.get('round', 2))
-        rounding = to_int(rounding) if rounding not in (None, '', 'None', 'none') else None
+        indent = to_int(self.gen_dict.get('json_indent'))
+        rounding = to_int(arch_dict.get('round', self.gen_dict.get('round', 2)))
 
         try:
             group_dict = self.plot_dict[source_group]
@@ -391,10 +393,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     continue
 
                 try:
-                    os.makedirs(arch_root, exist_ok=True)
-                    with open(out_file, 'w', encoding='utf-8') as fd:
-                        json.dump(payload, fd, indent=indent, ensure_ascii=False,
-                                  separators=(',', ':') if indent is None else None)
+                    _write_json(out_file, payload, indent)
                     ngen += 1
                     root = arch_root
                     entry = index.setdefault(group_name, {'years': [], 'covered': {}})
@@ -413,7 +412,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                                             % (group_name, stamp))
                     covered = min(int(month_span.stop), int(last_ts))
                     was = previous_fine.get(group_name, {}).get(stamp)
-                    if os.path.exists(out_file) and was is not None and not reimported                             and was // fine_resolution == covered // fine_resolution:
+                    if os.path.exists(out_file) and was is not None and not reimported \
+                            and was // fine_resolution == covered // fine_resolution:
                         nskipped += 1
                         entry = index.setdefault(group_name, {'years': [], 'covered': {}})
                         entry.setdefault('fine', {})[stamp] = was
@@ -427,10 +427,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     if payload is None:
                         continue
                     try:
-                        os.makedirs(arch_root, exist_ok=True)
-                        with open(out_file, 'w', encoding='utf-8') as fd:
-                            json.dump(payload, fd, indent=indent, ensure_ascii=False,
-                                      separators=(',', ':') if indent is None else None)
+                        _write_json(out_file, payload, indent)
                         ngen += 1
                         root = arch_root
                         entry = index.setdefault(group_name, {'years': [], 'covered': {}})
@@ -462,14 +459,13 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     'fine': {str(m): c for m, c in entry.get('fine', {}).items()},
                 })
             try:
-                with open(os.path.join(root, 'index.json'), 'w', encoding='utf-8') as fd:
-                    json.dump({'interval': resolution,
-                               'fine_interval': fine_resolution if fine_days else None,
-                               'first': int(overall_start) if overall_start else None,
-                               'last': int(overall_stop) if overall_stop else None,
-                               'groups': groups},
-                              fd, indent=indent, ensure_ascii=False,
-                              separators=(',', ':') if indent is None else None)
+                _write_json(os.path.join(root, 'index.json'),
+                            {'interval': resolution,
+                             'fine_interval': fine_resolution if fine_days else None,
+                             'first': int(overall_start) if overall_start else None,
+                             'last': int(overall_stop) if overall_stop else None,
+                             'groups': groups},
+                            indent)
             except OSError as e:
                 log.error("Unable to write archive index: %s", e)
 
@@ -560,9 +556,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 if dn is None:
                     continue
                 dn['start'] = int(year_span.start)
-                with open(out_file, 'w', encoding='utf-8') as fd:
-                    json.dump(dn, fd, indent=indent, ensure_ascii=False,
-                              separators=(',', ':') if indent is None else None)
+                _write_json(out_file, dn, indent)
             except Exception as e:
                 log.warning("Could not write day/night file for %d: %s", year, e)
 
@@ -621,7 +615,12 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             agg = line_options.get('aggregate_type')
             if agg in (None, '', 'None', 'none'):
                 agg = aggregate_type
-            if var_type in ('rain', 'ET', 'lightning_strike_count', 'hail', 'snow'):
+            # Which types are totals rather than levels is already recorded, once, in
+            # the accumulator defaults: 'rain', 'ET', 'lightning_strike_count' and
+            # 'windrun' all carry 'extractor = sum'. Reading it from there rather than
+            # from a list here means a type the station added under [Accumulator] is
+            # summed too.
+            if weewx.accum.accum_dict.get(var_type, {}).get('extractor') == 'sum':
                 agg = 'sum'
             elif var_type in ('windDir', 'windGustDir'):
                 # An arithmetic mean of compass bearings says the wrong thing: 350 and
@@ -718,9 +717,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 module. None if no series had data and skip_if_empty was set.
         """
         time_length = weeutil.weeutil.nominal_spans(plot_options.get('time_length', 86400))
-        # Move the ends of the span onto the boundaries the ImageGenerator uses. Taken
-        # unrounded, the JSON and the PNG of one plot would start at different instants
-        # and disagree about where the day begins.
+        # Move the ends of the span onto round boundaries, using the same function the
+        # ImageGenerator calls. Taken unrounded, a "day" starts at whatever minute the
+        # last record happened to land on, and the axis labels fall between the hours.
         minstamp, maxstamp, timeinc = weeplot.utilities.scaletime(plotgen_ts - time_length,
                                                                   plotgen_ts)
         x_domain = TimeSpan(int(minstamp), int(maxstamp))
@@ -740,8 +739,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         default_fills = weeutil.weeutil.option_as_list(
             plot_options.get('chart_fill_colors', [])) or []
 
-        rounding = plot_options.get('round', 3)
-        rounding = to_int(rounding) if rounding not in (None, '', 'None', 'none') else None
+        rounding = to_int(plot_options.get('round', 3))
 
         series_out = []
         unit = unit_label = None
@@ -796,9 +794,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 continue
 
             # get_series() timestamps an aggregate at the end of its interval. For a
-            # line the ImageGenerator moves it to the middle, where the average of the
-            # interval belongs. Doing the same here keeps the chart and the PNG of one
-            # plot on the same points.
+            # line, the point belongs in the middle of the interval it averages, which
+            # is where the ImageGenerator puts it.
             if aggregate_type and plot_type != 'bar':
                 stop_vec_t = ValueTuple(
                     [x - aggregate_interval / 2.0 for x in stop_vec_t[0]],
@@ -871,8 +868,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     entry['vector_y'] = _round_seq(components[1], rounding)
                 vr = line_options.get('vector_rotate')
                 if vr is not None:
-                    # Negated, as the ImageGenerator negates it. Keep the sign as
-                    # configured and the arrows come out mirrored against the PNG.
+                    # Negated, as the ImageGenerator negates it. The option is written
+                    # for PIL, which turns the other way round from a canvas.
                     entry['vector_rotate'] = -float(vr)
                 # The letter on the compass rose the PNGs draw in the corner. Without
                 # it nothing on the plot says which bearing the arrows point from.
@@ -917,6 +914,115 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 log.warning("Could not compute day/night for '%s': %s", plotname, e)
 
         return payload
+
+
+def _linear(convert, from_unit, to_unit):
+    """The factor and offset that turn a reading in one unit into the other.
+
+    weewx.units holds a function per pair of units, which is no use to a page that
+    wants to do the same arithmetic. Almost every one of them is linear, so measuring
+    it at 0 and at 1 gives the factor and the offset exactly. Checking it again at 10
+    catches the ones that are not, and those are left out rather than approximated.
+
+    Returns:
+        list|None: [factor, offset], such that to = from * factor + offset. None if
+            the conversion is not linear, or if there is no way from one to the other.
+    """
+    try:
+        at_zero = float(convert((0.0, from_unit, None), to_unit)[0])
+        at_one = float(convert((1.0, from_unit, None), to_unit)[0])
+        at_ten = float(convert((10.0, from_unit, None), to_unit)[0])
+    except (KeyError, TypeError, ValueError, ZeroDivisionError):
+        return None
+    factor = at_one - at_zero
+    if abs(10.0 * factor + at_zero - at_ten) > 1e-6 * max(1.0, abs(at_ten)):
+        return None
+    return [round(factor, 12), round(at_zero, 12)]
+
+
+def _unit_choices(obs_types, units_seen, formatter):
+    """What the page needs in order to show these readings in another unit.
+
+    Everything a plot file carries is already converted, into whatever the skin asked
+    for, and a page that wants to offer Fahrenheit next to Celsius cannot get there
+    from the numbers alone. This is the missing half: which group each observation
+    belongs to, which unit each unit system uses for that group, and the arithmetic
+    between any two of them.
+
+    It is written once, into index.json, and is about a kilobyte.
+
+    Returns:
+        dict: Four keys. 'groups' maps an observation type to its unit group.
+            'systems' maps a system name to the unit it uses for each group.
+            'convert' maps a unit to each unit it can be turned into, as
+            [factor, offset]. 'labels' and 'formats' give the label and the number
+            format for each unit, so that the page writes "18.5 °C" the way the
+            server would have.
+    """
+    systems = [('US', weewx.units.USUnits),
+               ('Metric', weewx.units.MetricUnits),
+               ('MetricWX', weewx.units.MetricWXUnits)]
+
+    groups = {}
+    for obs_type in sorted(obs_types):
+        group = weewx.units.getUnitGroup(obs_type)
+        if group:
+            groups[obs_type] = group
+
+    wanted = set(units_seen)
+    by_system = {}
+    for name, table in systems:
+        chosen = {}
+        for group in sorted(set(groups.values())):
+            unit = table.get(group)
+            if unit:
+                chosen[group] = unit
+                wanted.add(unit)
+        by_system[name] = chosen
+
+    convert = {}
+    for from_unit in sorted(units_seen):
+        pairs = {}
+        for to_unit in sorted(wanted):
+            if to_unit == from_unit:
+                continue
+            steps = _linear(weewx.units.convert, from_unit, to_unit)
+            if steps:
+                pairs[to_unit] = steps
+        if pairs:
+            convert[from_unit] = pairs
+
+    labels = {}
+    formats = {}
+    for unit in sorted(wanted):
+        labels[unit] = (formatter.get_label_string(unit) or '').strip()
+        fmt = formatter.get_format_string(unit)
+        if fmt:
+            formats[unit] = fmt
+
+    return {'groups': groups, 'systems': by_system, 'convert': convert,
+            'labels': labels, 'formats': formats}
+
+
+def _write_json(path, payload, indent):
+    """Write one JSON file, so that a reader never sees half of it.
+
+    The files are written while a browser somewhere may be fetching them, and a
+    reader that arrives mid-write gets a truncated document. index.json is the one
+    that matters: a browser cannot parse half a list, so it concludes that the station
+    publishes no plots at all and draws nothing until the next poll.
+
+    Writing to a temporary file in the same directory and renaming it over the target
+    fixes that. Within one filesystem the rename is atomic, so a reader sees either
+    the old file or the new one.
+    """
+    directory = os.path.dirname(path)
+    os.makedirs(directory, exist_ok=True)
+    tmp = path + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as fd:
+        json.dump(payload, fd, indent=indent, ensure_ascii=False,
+                  separators=(',', ':') if indent is None else None)
+    os.replace(tmp, path)
 
 
 def _daynight(start_ts, stop_ts, lat, lon):
@@ -1000,11 +1106,14 @@ def _holds_plots(section):
 def _yscale(plot_options, series_out):
     """The y axis for this plot, as [min, max, increment].
 
-    The same axis the ImageGenerator would draw. The plot's own 'yscale' fixes
-    whichever of the three values it names, and weeplot.utilities.scale() works out
-    the rest from the data. Left to the page, the chart and the PNG of one plot end up
-    with different axes. Wind direction runs to 400 degrees where the image stops at
-    360. An axis reaches 5 m/s for wind that never passed 2.3.
+    Worked out here rather than in the page, using the function the ImageGenerator
+    calls. The plot's own 'yscale' fixes whichever of the three values it names, and
+    weeplot.utilities.scale() works out the rest from the data.
+
+    A chart library left to choose its own axis gets this wrong in ways that matter:
+    wind direction running to 400 degrees, or an axis reaching 5 m/s for wind that
+    never passed 2.3. The rule for a readable axis is the same whatever draws it, and
+    WeeWX already has it.
 
     Returns:
         list|None: The three values, or None if there is nothing to scale.

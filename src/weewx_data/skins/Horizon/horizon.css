@@ -89,6 +89,14 @@
   }
 }
 
+/* The theme toggle has to move this too, not only the custom properties. Everything
+   the browser draws itself reads it: the date picker and its calendar, the drop-downs,
+   the scrollbars, the focus rings. Left saying "light dark" while the page is dark, a
+   reader who switched to dark on a light system gets a white calendar on a dark panel,
+   which is the one part of the page the stylesheet cannot reach. */
+:root[data-theme="dark"] { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+
 :root[data-theme="dark"] {
   --bg: #14181d;
   --surface: #1a1f25;
@@ -214,6 +222,20 @@ select.lang-select {
   max-width: 8rem;
 }
 select.lang-select:hover { color: var(--ink); }
+
+/* The same, for the unit picker beside it. Both change what the whole page says
+   without being anything the page is about. */
+select.unit-select {
+  font: inherit;
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  background: none;
+  border: 0;
+  padding: 0.25rem 0.15rem;
+  cursor: pointer;
+  max-width: 8rem;
+}
+select.unit-select:hover { color: var(--ink); }
 
 .masthead-link {
   font-family: var(--font);
@@ -785,6 +807,62 @@ select.report-select {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
+}
+
+/* The date between the two arrows is the date picker.
+
+   A separate control would be a second thing on a row that is already full, saying
+   the same date the label says. So the label is the control: a native date input
+   lies over it, invisible, and a click opens whichever calendar the reader's browser
+   and phone provide. That calendar is drawn by the browser and cannot be styled,
+   which is what the color-scheme declarations above are for.
+
+   The reader still reads "Friday, 3 September 2010" rather than 03/09/2010: the
+   label under the input keeps its own wording, and the input's own text is hidden. */
+.range-label-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+/* Marked as something to click, and nothing more. A button or a bordered field would
+   take width the row has not got, and the date is already the widest thing on it. */
+.range-label-wrap .range-label {
+  text-decoration: underline dotted;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+.range-label-wrap:hover .range-label,
+.range-label-wrap:focus-within .range-label {
+  text-decoration-color: var(--accent);
+  color: var(--ink);
+}
+
+/* Over the label, transparent, and the size of it. Its own text would say the date a
+   second time in a format the browser chooses, so it is not shown. */
+.range-date {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+/* Chrome puts the calendar button at the right edge of the field. Stretched over the
+   whole label, that is a long way from where the reader clicked, so the button is
+   made the size of the field instead. */
+.range-date::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
 }
 
 .range-extra {

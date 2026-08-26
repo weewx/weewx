@@ -145,6 +145,217 @@
     return d.toLocaleDateString(LOCALE, { month: 'short' });
   }
 
+  /* ---------------------------------------------------------------- units */
+
+  /* The plot files hold readings already converted, into whichever unit the skin was
+     configured for. That is one unit, decided on the server, and a reader who thinks
+     in the other one is stuck with it.
+
+     index.json carries what it takes to change that: the unit group each observation
+     belongs to, the unit each unit system uses for that group, and the factor and
+     offset between any two units. So the page can redraw the same readings in
+     Fahrenheit or in Celsius without fetching anything.
+
+     Only the charts. The panels are rendered by the server, in the report's own unit,
+     and moving those would mean rebuilding WeeWX's formatting in JavaScript. So the
+     control sits on the history panel, next to the span it applies to, rather than in
+     the masthead where it would look like it governed the page. */
+
+  /* Kept apart from the manifest, and not cleared with it. A new record empties the
+     manifest so that a plot added since is noticed, and the conversions would go with
+     it: the reader's choice of unit would fall back to the server's for as long as it
+     took the index to arrive again. The table itself changes only when the station is
+     reconfigured. */
+  var unitChoices = null;
+
+  function unitTable() {
+    return unitChoices;
+  }
+
+  /* The unit this series should be shown in, or null to leave it as it came. */
+  function targetUnit(obsType, fromUnit) {
+    var table = unitTable();
+    var system = recall('units', '');
+    if (!table || !system || !fromUnit) return null;
+    var group = table.groups && table.groups[obsType];
+    var wanted = group && table.systems && table.systems[system]
+      && table.systems[system][group];
+    if (!wanted || wanted === fromUnit) return null;
+    if (!table.convert || !table.convert[fromUnit]
+        || !table.convert[fromUnit][wanted]) return null;
+    return wanted;
+  }
+
+  /* Rewrite a plot's readings, axis and labels in the reader's chosen unit.
+
+     Done to a copy, never to what came off the wire: the cached file has to stay in
+     the unit it was written in, or switching back and forth would convert a converted
+     reading. */
+  function inChosenUnit(meta) {
+    var table = unitTable();
+    if (!table || !meta || !meta.series || !meta.series.length) return shallow(meta);
+
+    var to = targetUnit(meta.series[0].obs_type, meta.unit);
+    /* A copy even when there is nothing to convert. Returning the argument would make
+       entry.meta and entry.raw the same object, and the next conversion would write
+       its result into the file it was meant to convert from. Switching unit twice
+       would then convert an already converted reading. */
+    if (!to) return shallow(meta);
+    var steps = table.convert[meta.unit][to];
+    var factor = steps[0], offset = steps[1];
+    var apply = function (v) {
+      return v === null || v === undefined ? null : v * factor + offset;
+    };
+
+    var out = shallow(meta);
+    out.unit = to;
+    out.unit_label = (table.labels && table.labels[to]) || '';
+
+    /* The axis moves with the readings. Its step is a distance, not a reading, so it
+       takes the factor and not the offset: 5 degrees Celsius of spacing is 9 degrees
+       Fahrenheit of spacing, not 41. */
+    if (meta.yscale) {
+      out.yscale = [apply(meta.yscale[0]), apply(meta.yscale[1]),
+                    meta.yscale[2] * Math.abs(factor)];
+    }
+
+    out.series = meta.series.map(function (s) {
+      var copy = {};
+      Object.keys(s).forEach(function (k) { copy[k] = s[k]; });
+      copy.unit = to;
+      copy.unit_label = out.unit_label;
+      copy.values = s.values.map(apply);
+      /* Wind arrows are drawn from these, and they are lengths on the same axis. */
+      ['vector_x', 'vector_y'].forEach(function (k) {
+        if (s[k]) copy[k] = s[k].map(function (v) {
+          return v === null ? null : v * factor;
+        });
+      });
+      return copy;
+    });
+    return out;
+  }
+
+  /* A copy one level deep. Enough here: what gets replaced is always a whole property,
+     never something inside one. */
+  function shallow(obj) {
+    if (!obj) return obj;
+    var out = {};
+    Object.keys(obj).forEach(function (k) { out[k] = obj[k]; });
+    return out;
+  }
+
+  /* How many decimals to write, taken from the format string the skin uses for that
+     unit: "%.1f" means one. Without it, a temperature converted to Celsius comes out
+     as 17.72222222222222. */
+  function decimalsFor(unit, fallback) {
+    var table = unitTable();
+    var fmt = table && table.formats && table.formats[unit];
+    var m = fmt && /%\.(\d+)f/.exec(fmt);
+    return m ? parseInt(m[1], 10) : (fallback === undefined ? 1 : fallback);
+  }
+
+  /* One reading, in the unit the reader asked for. Returns the number as it should be
+     shown and the label to put beside it, or null where nothing has to change. */
+  function convertReading(value, fromUnit, obsType) {
+    if (value === null || value === undefined || isNaN(value)) return null;
+    var to = targetUnit(obsType, fromUnit);
+    if (!to) return null;
+    var table = unitTable();
+    var steps = table.convert[fromUnit][to];
+    return {
+      value: value * steps[0] + steps[1],
+      unit: to,
+      label: table.labels[to] || ''
+    };
+  }
+
+  /* Rewrite the readings the server put on the page.
+
+     Each of them carries the number as the database holds it and the unit that number
+     is in, so the page can show it in another unit without asking for it again. The
+     text stays as the server wrote it until a reader chooses otherwise, which is what
+     a reader without JavaScript sees, and what everyone sees first. */
+  function applyUnitsToPanels(root) {
+    (root || document).querySelectorAll('[data-unit][data-value]').forEach(function (el) {
+      var obs = el.dataset.live || el.dataset.obs;
+      var out = convertReading(parseFloat(el.dataset.value), el.dataset.unit, obs);
+      var target = el.querySelector('[data-unit-value]') || el;
+      var label = el.querySelector('[data-unit-label]')
+        || (el.parentNode && el.parentNode.querySelector('[data-unit-label]'));
+
+      if (!out) {
+        /* Back to what the server wrote. Kept on the element for exactly this. */
+        if (el.dataset.asWritten !== undefined) setLive(target, el.dataset.asWritten);
+        if (label && label.dataset.asWritten !== undefined) {
+          label.textContent = label.dataset.asWritten;
+        }
+        return;
+      }
+      if (el.dataset.asWritten === undefined) {
+        el.dataset.asWritten = (target.textContent || '').trim();
+      }
+      if (label && label.dataset.asWritten === undefined) {
+        label.dataset.asWritten = label.textContent;
+      }
+      setLive(target, fmtNumber(out.value, decimalsFor(out.unit)));
+      if (label) label.textContent = out.label;
+    });
+  }
+
+  /* Which systems this station's readings can be shown in. Empty where the station
+     publishes no unit table, which is any skin whose generator predates it. */
+  function availableSystems() {
+    var table = unitTable();
+    if (!table || !table.systems) return [];
+    return Object.keys(table.systems).filter(function (name) {
+      return Object.keys(table.systems[name]).length;
+    });
+  }
+
+  /* The control, in the masthead beside the language picker and the theme toggle.
+
+     It belongs there rather than on the history panel: it governs every reading on
+     the page, the card at the top as much as the charts. A control over the charts
+     alone would leave the card saying 63.9 while the chart under it said 17.7. */
+  function setupUnitPicker() {
+    var picker = document.getElementById('unit-picker');
+    if (!picker) return;
+
+    var chosen = recall('units', '');
+    /* Convert whatever is already on the page, before the manifest arrives. The
+       readings carry their own units, so this does not wait for anything. */
+    if (chosen) applyUnitsAll();
+
+    loadManifest().then(function () {
+      var systems = availableSystems();
+      if (systems.length < 2) return;
+      picker.innerHTML = ['<option value="">'
+                          + escapeHtml(CFG.text.asConfigured || 'As configured')
+                          + '</option>']
+        .concat(systems.map(function (name) {
+          return '<option value="' + name + '"'
+            + (name === recall('units', '') ? ' selected' : '') + '>' + name + '</option>';
+        })).join('');
+      picker.hidden = false;
+      if (recall('units', '')) applyUnitsAll();
+    });
+
+    picker.addEventListener('change', function () {
+      remember('units', picker.value);
+      applyUnitsAll();
+    });
+  }
+
+  /* Everything on the page that carries a reading. Nothing is fetched: the numbers
+     are already here, and only the arithmetic on them changes. */
+  function applyUnitsAll() {
+    applyUnitsToPanels();
+    charts.forEach(function (entry) {
+      if (entry.raw) updateChart(entry, entry.raw);
+    });
+  }
+
   /* -------------------------------------------------------------- shaping */
 
   /* uPlot draws every series against one array of timestamps. The series in a plot
@@ -202,11 +413,17 @@
   /* --------------------------------------------------------------- plugins */
 
   /* Shade the hours between sunset and sunrise, the way the PNGs do. */
-  function nightPlugin(daynight) {
-    if (!daynight || !daynight.transitions || !daynight.transitions.length) return null;
+  function nightPlugin(meta) {
+    var dn = meta.daynight;
+    if (!dn || !dn.transitions || !dn.transitions.length) return null;
     return {
       hooks: {
         drawClear: function (u) {
+          /* Read from meta on every draw, not once when the plugin was built. New
+             data arriving at the turn of a day brings new sunrise and sunset times
+             with it, and the shading has to follow them. */
+          var daynight = meta.daynight;
+          if (!daynight || !daynight.transitions) return;
           var ctx = u.ctx;
           var colors = themeColors();
           var left = u.bbox.left, right = u.bbox.left + u.bbox.width;
@@ -288,23 +505,25 @@
 
   /* A wind vector plot draws no line. Each reading is an arrow from the zero line,
      pointing the way the wind blew and as long as the wind was strong. This is the
-     plot WeeWX has always drawn for wind. The arithmetic is weeplot's, so that the
-     canvas and the PNG put the arrows in the same places:
+     plot WeeWX has always drawn for wind. The arithmetic is weeplot's, which is where
+     the shape of this plot is defined:
 
          scaled = vector * yscale          (both components scaled by the y axis)
          scaled *= e^(i·rotate)            (vector_rotate, 90 degrees by default)
          xEnd = xStart - scaled.real       (x grows right, y grows down)
          yEnd = yStart + scaled.imag
   */
-  function vectorPlugin(series) {
-    var vectors = series.filter(function (s) {
+  function vectorPlugin(meta) {
+    var isVector = function (s) {
       return s.plot_type === 'vector' && s.vector_x && s.vector_y;
-    });
-    if (!vectors.length) return null;
+    };
+    if (!meta.series.some(isVector)) return null;
 
     return {
       hooks: {
         draw: function (u) {
+          /* From meta on every draw, so that new readings are drawn as new arrows. */
+          var vectors = meta.series.filter(isVector);
           var ctx = u.ctx;
           var y0 = u.valToPos(0, 'y', true);
           /* Pixels per unit on the y axis. Negative, because y on a canvas grows
@@ -410,11 +629,13 @@
 
   /* The unit label, above the y axis, where the PNGs put it. Without it the axis
      reads 21.4 and does not say whether that is Celsius or Fahrenheit. */
-  function unitPlugin(label) {
-    if (!label) return null;
+  function unitPlugin(meta) {
+    if (!meta.unit_label) return null;
     return {
       hooks: {
         draw: function (u) {
+          var label = meta.unit_label;
+          if (!label) return;
           var dpr = devicePixelRatio || 1;
           var ctx = u.ctx;
           ctx.save();
@@ -431,7 +652,7 @@
     };
   }
 
-  function tooltipPlugin(meta, digits) {
+  function tooltipPlugin(meta) {
     var el;
     return {
       hooks: {
@@ -495,7 +716,8 @@
             }
             rows += '<div class="t-row" style="color:' + (s.color || 'currentColor') + '">'
               + '<i></i><span style="color:var(--ink)">' + escapeHtml(s.label) + '</span>'
-              + '<b style="color:var(--ink)">' + fmtNumber(v, digits) + (meta.unit_label || '')
+              + '<b style="color:var(--ink)">' + fmtNumber(v, digitsFor(meta.series))
+              + (meta.unit_label || '')
               + escapeHtml(extra) + '</b></div>';
           }
           if (!any) { el.style.opacity = '0'; return; }
@@ -524,10 +746,8 @@
 
   /* ---------------------------------------------------------- image export */
 
-  /* Save the chart on screen as a PNG. The server writes PNGs of its own, and where
-     one exists it is the better thing to link to, because it has a lasting URL. This
-     covers what the server never rendered: a span the reader zoomed into, or a month
-     from years back. */
+  /* Save the chart on screen as a PNG. Works for any span, including one the server
+     never rendered: a span the reader zoomed into, or a month from years back. */
   function exportChart(entry, card) {
     var src = entry.plot.ctx.canvas;
     var ratio = window.devicePixelRatio || 1;
@@ -599,9 +819,7 @@
     var hostWidth = host.clientWidth || 600;
     var colors = themeColors();
     var data = align(meta.series);
-    var digits = digitsFor(meta.series);
     var isBar = meta.series.some(function (s) { return s.plot_type === 'bar'; });
-    var ys = meta.yscale;
 
     var opts = {
       title: '',
@@ -616,12 +834,17 @@
       },
       scales: {
         x: { time: true },
-        /* 'yscale' is [min, max, step] for the y axis, computed by the JSON
-           generator with the same code the ImageGenerator uses, so that the chart
-           and the PNG of one plot carry the same axis. It is null only for a plot
-           with no data to scale. */
-        y: ys ? {
-          range: function () { return [ys[0], ys[1]]; }
+        /* 'yscale' is [min, max, step] for the y axis, worked out by the JSON
+           generator. Letting a chart library choose instead gives axes that reach
+           400 degrees of wind direction. It is null only for a plot with no data
+           to scale. */
+        y: meta.yscale ? {
+          /* Read from meta on every draw. A record arriving warmer than any so far
+             widens the axis, and the chart has to follow without being rebuilt. */
+          range: function () {
+            var ys = meta.yscale;
+            return [ys[0], ys[1]];
+          }
         } : {}
       },
       /* Every colour below is a function, called at draw time. Switching between the
@@ -643,12 +866,12 @@
           ticks: { show: false },
           font: '11px ' + getComputedStyle(document.body).fontFamily,
           size: 46,
-          /* Gridlines at the same values as the PNG, but no closer together than the
-             labels can be read. The step that suits a 500 pixel image stacks the
+          /* Gridlines at the step the generator worked out, but no closer together
+             than the labels can be read. A step that suits a wide screen stacks the
              labels on top of each other on a phone, so double it until they fit. */
           space: 34,
-          splits: ys && ys[2] ? function (u, ai, min, max) {
-            var step = ys[2];
+          splits: meta.yscale && meta.yscale[2] ? function (u, ai, min, max) {
+            var step = (meta.yscale && meta.yscale[2]) || 1;
             while ((max - min) / step > Math.max(2, u.bbox.height / (34 * (devicePixelRatio || 1)))) {
               step *= 2;
             }
@@ -662,7 +885,7 @@
             return out;
           } : null,
           values: function (u, splits) {
-            return splits.map(function (v) { return fmtNumber(v, digits); });
+            return splits.map(function (v) { return fmtNumber(v, digitsFor(meta.series)); });
           }
         }
       ],
@@ -690,9 +913,9 @@
         }
         return base;
       })),
-      plugins: [tooltipPlugin(meta, digits), vectorPlugin(meta.series),
-                unitPlugin(meta.unit_label)].concat(
-        isBar ? [] : [nightPlugin(meta.daynight)]
+      plugins: [tooltipPlugin(meta), vectorPlugin(meta),
+                unitPlugin(meta)].concat(
+        isBar ? [] : [nightPlugin(meta)]
       ).filter(Boolean)
     };
 
@@ -759,7 +982,10 @@
       + '</thead><tbody>' + rows.join('') + '</tbody></table></div>';
   }
 
-  function renderChart(card, meta, period) {
+  function renderChart(card, raw, period) {
+    /* Convert here, and keep 'raw' on the entry below. Switching unit reruns the
+       conversion from the file as it was written, never from a converted copy. */
+    var meta = inChosenUnit(raw);
     var host = card.querySelector('.chart-host');
     var legend = card.querySelector('.chart-title');
     var details = card.querySelector('.chart-data');
@@ -780,12 +1006,13 @@
     }).join('');
 
     var entry = buildChart(host, meta, period);
+    entry.raw = raw;
     charts.push(entry);
     resizeObserver.observe(host);
 
-    /* Two ways to take the chart away. The PNG the server rendered has a lasting
-       URL, so it is the one to link to. Saving what is on screen works for any
-       span, including one the server never rendered. */
+    /* Saving the chart. Where the skin also runs the ImageGenerator there is a
+       second button, linking to the file it wrote, because a file on the server has
+       a URL that can be pasted somewhere. */
     var actions = card.querySelector('.chart-actions');
     if (actions) {
       var save = document.createElement('button');
@@ -795,10 +1022,9 @@
       save.addEventListener('click', function () { exportChart(entry, card); });
       actions.appendChild(save);
 
-      /* The PNG exists only for the day, week, month and year the server renders,
-         and only where the skin runs the ImageGenerator. 'show_image_links' settles
-         it where the skin sets it. Otherwise index.json says whether PNGs are being
-         written. There is no point linking to a picture nobody draws. */
+      /* Most stations run one skin, and this one does not draw PNGs unless asked.
+         So the link appears only where index.json says they are being written, or
+         where 'show_image_links' says so outright. */
       var offerImage = CFG.hasImages === null || CFG.hasImages === undefined
         ? !!(manifest && manifest.images)
         : CFG.hasImages;
@@ -816,6 +1042,85 @@
       var digits = digitsFor(meta.series);
       details.querySelector('.scroller-host').innerHTML = renderTable(meta, digits);
     }
+  }
+
+  /* Put a new record into a chart that is already on screen.
+
+     Rebuilding the chart instead would destroy the uPlot instance and make a new one,
+     which clears the canvas, drops the reader's zoom and their place in the data
+     table, and shows an empty plot for as long as the fetch takes. All of that once a
+     minute. Handing uPlot the new arrays leaves the instance alone: the x axis moves
+     to the left by one record and the new reading is drawn on the right.
+
+     Returns false where the shape of the plot has changed, which uPlot cannot take
+     through setData(). The caller rebuilds those. It happens when a series that has
+     never had a reading gets its first one. */
+  function updateChart(entry, raw) {
+    var plot = entry.plot;
+    var fresh = inChosenUnit(raw);
+    if (!fresh.series || fresh.series.length !== entry.meta.series.length) return false;
+
+    /* Whether the reader has zoomed into part of the chart. Having zoomed, they are
+       reading something, and the axis must stay where they put it. Showing the whole
+       plot, they want the axis to follow the new record. */
+    var times = plot.data[0];
+    var whole = !times.length
+      || (plot.scales.x.min <= times[0] && plot.scales.x.max >= times[times.length - 1]);
+
+    /* Every plugin and the y axis read their values out of entry.meta on each draw,
+       so replacing its contents is what carries the new sunrise times, unit label and
+       axis range into the redraw below. */
+    Object.keys(fresh).forEach(function (key) { entry.meta[key] = fresh[key]; });
+    entry.raw = raw;
+    plot.setData(align(entry.meta.series), whole);
+
+    /* The table is built from the data, so it is rebuilt as well. Only while it is
+       open: a closed one is rebuilt when the reader opens it. */
+    var details = entry.host.closest('.chart-card').querySelector('.chart-data');
+    if (details && details.open) {
+      details.querySelector('.scroller-host').innerHTML =
+        renderTable(entry.meta, digitsFor(entry.meta.series));
+    }
+    return true;
+  }
+
+  /* Bring every chart on screen up to the newest record.
+
+     A span in the past cannot have changed, so there is nothing to do for one. Only
+     the live view follows the clock. */
+  function refreshCharts() {
+    if (anchor !== null) return;
+    cache.clear();
+    manifest = null;
+    indexRefetched = false;
+
+    charts.forEach(function (entry) {
+      var name = entry.meta.name;
+      if (!name) return;
+      loadPlot(name).then(function (fresh) {
+        if (!fresh || !fresh.series || !fresh.series.length) return;
+        if (updateChart(entry, fresh)) return;
+        /* The plot has a series it did not have before. Draw the card again. */
+        var card = entry.host.closest('.chart-card');
+        if (!card) return;
+        resizeObserver.unobserve(entry.host);
+        entry.plot.destroy();
+        charts = charts.filter(function (c) { return c !== entry; });
+        renderChart(card, fresh, card.dataset.period);
+      });
+    });
+
+    /* Cards further down the page have no chart yet, and cards whose plot had no
+       readings were left empty. Both have to look again, because the file behind them
+       has changed. Those still waiting to be scrolled into view do so on their own,
+       out of the cache that was just emptied. */
+    document.querySelectorAll('#charts .chart-card').forEach(function (card) {
+      var drawn = charts.some(function (c) { return c.host === card.querySelector('.chart-host'); });
+      if (!drawn && card.dataset.loaded) {
+        delete card.dataset.loaded;
+        hydrate(card);
+      }
+    });
   }
 
   function clearCharts() {
@@ -855,8 +1160,8 @@
      as Tuesday, week 33, July or 2025, which is what "back" means to a reader.
 
      These four are fallbacks. The real lengths arrive in index.json, which takes them
-     from 'time_length' in skin.conf. Changing that option therefore moves the chart
-     and the PNG together, rather than the PNG alone. */
+     from 'time_length' in skin.conf, so that option reaches the chart and not only
+     the PNGs of a skin that draws them. */
   var PERIOD_SECONDS = { day: 27 * 3600, week: 7 * 86400, month: 30 * 86400, year: 365 * 86400 };
 
   function adoptSpans(manifest) {
@@ -1111,15 +1416,35 @@
       .then(function (json) {
         manifest = json || { plots: [] };
         adoptSpans(manifest);
+        if (manifest.units) unitChoices = manifest.units;
         return manifest;
       })
       .catch(function () { manifest = { plots: [] }; return manifest; });
   }
 
+  /* index.json lists the plot files that existed when the report last ran, and it can
+     end up naming one that is not there. A file deleted by hand does it. So does a
+     publish over FTP or rsync that carries index.json across before the file it names,
+     which leaves a window of a few seconds on every cycle.
+
+     There is no way for the page to prevent that, so it recovers from it instead. A
+     404 on a file the index names means the index is the thing that is wrong, so fetch
+     it again. Once, until the next record arrives: a station that really is missing a
+     file would otherwise re-read the index for every card on the page, every time. */
+  var indexRefetched = false;
+
   function loadPlot(name) {
     if (cache.has(name)) return Promise.resolve(cache.get(name));
     return fetch(DATA_DIR + '/' + name + '.json', { cache: 'no-cache' })
-      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (r) {
+        if (r.ok) return r.json();
+        if (r.status === 404 && !indexRefetched) {
+          indexRefetched = true;
+          manifest = null;
+          return loadManifest().then(function () { return null; });
+        }
+        return null;
+      })
       .then(function (json) { cache.set(name, json); return json; })
       .catch(function () { cache.set(name, null); return null; });
   }
@@ -1396,6 +1721,24 @@
     if (back && ai && ai.first) {
       back.disabled = from <= ai.first;
     }
+
+    /* The picker shows the span on screen, and will not go outside the record. */
+    var picker = document.getElementById('range-date');
+    if (picker) {
+      picker.value = isoDate(anchor === null ? dataTs() : from);
+      if (ai && ai.first) picker.min = isoDate(ai.first);
+      if (ai && ai.last) picker.max = isoDate(ai.last);
+    }
+  }
+
+  /* A timestamp as YYYY-MM-DD in local time, which is the only form a date input
+     takes. toISOString() would give the date in UTC, which is the day before for
+     anyone west of Greenwich for part of every day. */
+  function isoDate(ts) {
+    var d = new Date(ts * 1000);
+    return d.getFullYear()
+      + '-' + String(d.getMonth() + 1).padStart(2, '0')
+      + '-' + String(d.getDate()).padStart(2, '0');
   }
 
   /* Move one whole calendar unit. From the live view, "back" lands on the last unit
@@ -1421,6 +1764,24 @@
       if (anchor !== null) step(1);
     });
     if (now) now.addEventListener('click', function () { showPeriod(currentPeriod, null); });
+
+    /* Reaching a date. The arrows step one unit at a time, which is a long way to
+       last March. This is a native date input, so the reader gets whatever picker
+       their browser and their phone already give them, written in their own locale,
+       and it costs no library. The date chosen selects the calendar unit holding it,
+       the same rule a pasted link follows. */
+    var picker = document.getElementById('range-date');
+    if (picker) {
+      picker.addEventListener('change', function () {
+        if (!picker.value) return;
+        var parts = picker.value.split('-').map(Number);
+        /* Midday, not midnight. A date read as local midnight and then shifted by an
+           hour of summer time lands on the day before. */
+        var ts = Math.floor(new Date(parts[0], parts[1] - 1, parts[2], 12).getTime() / 1000);
+        var unit = calendarWindow(currentPeriod, ts);
+        showPeriod(currentPeriod, unit.to > dataTs() ? null : ts);
+      });
+    }
 
     var share = document.getElementById('range-share');
     if (share) {
@@ -1656,6 +2017,9 @@
         if (touched) {
           paintSpan();
           measureStickyHead();
+          /* The sections just swapped in were rendered by the server, in the report's
+             own unit. */
+          applyUnitsToPanels();
         }
       })
       .catch(function () { pageFetch = false; });
@@ -1719,13 +2083,44 @@
           }
 
           /* The readings that have an element of their own. Cheap, and on its own
-             enough for a station whose current.json is written between records. */
+             enough for a station whose current.json is written between records.
+
+             Each arrives twice: as the string the server formatted, and as the number
+             behind it. The number goes onto the element, so that a reader who has
+             chosen another unit keeps it through the update. */
           document.querySelectorAll('[data-live]').forEach(function (el) {
             var key = el.dataset.live;
-            if (data[key] !== undefined && data[key] !== null) {
-              setLive(el, String(data[key]));
+            if (data[key] === undefined || data[key] === null) return;
+            var target = el.querySelector('[data-unit-value]') || el;
+            setLive(target, String(data[key]));
+            delete el.dataset.asWritten;
+            if (data[key + '_v'] !== undefined && data[key + '_v'] !== null) {
+              el.dataset.value = data[key + '_v'];
+              if (data[key + '_u']) el.dataset.unit = data[key + '_u'];
             }
           });
+
+          /* The day's high and low, and the times they were reached. They sit either
+             side of the bar under the headline and move with it. */
+          if (data.day_unit) {
+            [['span-end', 'min'], ['span-end--right', 'max']].forEach(function (pair) {
+              var el = document.querySelector('.' + pair[0]);
+              if (!el || data['day_' + pair[1]] === undefined) return;
+              var value = el.querySelector('[data-unit-value]');
+              var when = el.querySelector('.faint');
+              if (value) value.textContent = data['day_' + pair[1]];
+              if (when && data['day_' + pair[1] + 'time']) {
+                when.textContent = data['day_' + pair[1] + 'time'];
+              }
+              delete el.dataset.asWritten;
+              el.dataset.value = data['day_' + pair[1] + '_v'];
+              el.dataset.unit = data.day_unit;
+            });
+          }
+
+          /* Back into the reader's unit, since the strings just written are in the
+             report's. Returns at once where they have not chosen one. */
+          applyUnitsToPanels();
           if (data.outTemp_c !== undefined && data.outTemp_c !== null) {
             var track = document.querySelector('.span-track[data-lo]');
             if (track) track.dataset.now = data.outTemp_c;
@@ -1746,11 +2141,7 @@
           if (stamp) stamp.dataset.raw = data.dateTime_raw;
           refreshPanels();
           refreshImages(seen);
-
-          cache.clear();
-          manifest = null;
-          var active = document.querySelector('#period-tabs button[aria-selected="true"]');
-          if (active) showPeriod(active.dataset.period, undefined, true);
+          refreshCharts();
 
           /* Anything else on the page keeping state of its own, and wanting to
              know that there is something new to fetch. */
@@ -1785,6 +2176,7 @@
   function init() {
     CFG.text = CFG.text || {};
     setupThemeToggle();
+    setupUnitPicker();
     setupPeriods();
     setupLiveUpdate();
     measureStickyHead();
