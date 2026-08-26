@@ -1,6 +1,11 @@
 # [StdArchive]
 
-The `StdArchive` service stores data into a database.
+This section configures both of the archive services. `StdArchiveGenerator` makes
+archive records out of LOOP packets, `StdArchiveStore` puts them in a database, and
+they read the options below out of the same section.
+
+`weewx.engine.StdArchive` runs both in one service, which is what a configuration
+written before v5.5 names.
 
 #### ==archive_interval==
 
