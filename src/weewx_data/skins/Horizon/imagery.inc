@@ -5,6 +5,12 @@
 ##
 ## All three are opt-in: they only appear if the corresponding entry exists in
 ## [Extras]. See skin.conf for the option names.
+##
+## No 'data-live-panel' here, unlike the other panels. The map holds a Google Maps
+## object that a swap would throw away, and the two pictures are not ours to
+## re-render: they come from someone else's server, with cache headers of their own.
+## 'data-live-src' says what to ask for again instead, which the script does under a
+## fresh query string once there is a new record.
 
 #if 'radar_img' in $Extras
 <section class="panel">
@@ -14,10 +20,10 @@
   <div class="panel-body imagery">
   #if 'radar_url' in $Extras
     <a href="$Extras.radar_url" rel="noopener">
-      <img src="$Extras.radar_img" alt="$gettext('Radar')" loading="lazy">
+      <img src="$Extras.radar_img" data-live-src="$Extras.radar_img" alt="$gettext('Radar')" loading="lazy">
     </a>
   #else
-    <img src="$Extras.radar_img" alt="$gettext('Radar')" loading="lazy">
+    <img src="$Extras.radar_img" data-live-src="$Extras.radar_img" alt="$gettext('Radar')" loading="lazy">
   #end if
   </div>
 </section>
@@ -31,10 +37,10 @@
   <div class="panel-body imagery">
   #if 'satellite_url' in $Extras
     <a href="$Extras.satellite_url" rel="noopener">
-      <img src="$Extras.satellite_img" alt="$gettext('Satellite')" loading="lazy">
+      <img src="$Extras.satellite_img" data-live-src="$Extras.satellite_img" alt="$gettext('Satellite')" loading="lazy">
     </a>
   #else
-    <img src="$Extras.satellite_img" alt="$gettext('Satellite')" loading="lazy">
+    <img src="$Extras.satellite_img" data-live-src="$Extras.satellite_img" alt="$gettext('Satellite')" loading="lazy">
   #end if
   </div>
 </section>

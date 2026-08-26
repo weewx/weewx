@@ -13,7 +13,7 @@
 ## Use a recent span to decide whether an observation is worth a row at all.
 #set $recent = $span($day_delta=30, boundary='midnight')
 
-<section class="panel">
+<section class="panel" data-live-panel="stats">
   <div class="panel-head">
     <h2><a href="statistics.html">$gettext("Statistics")</a></h2>
   </div>

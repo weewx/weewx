@@ -78,7 +78,7 @@
                             + cos(radians($lat)) * cos(radians($almanac.sun.dec))))
 #set $civil = $almanac(horizon=-6).sun(use_center=1)
 #set $sun_light = $almanac.sun.earth_distance * $AU_LIGHT_S
-<section class="panel">
+<section class="panel" data-live-panel="sun">
   <div class="panel-head">
     <h2><a href="celestial.html">$gettext("Sun")</a></h2>
   </div>

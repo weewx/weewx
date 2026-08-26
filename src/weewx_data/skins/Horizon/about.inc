@@ -5,7 +5,7 @@
 #errorCatcher Echo
 #encoding UTF-8
 
-<section class="panel">
+<section class="panel" data-live-panel="about">
   <div class="panel-head">
     <h2>$gettext("About this station")</h2>
   </div>

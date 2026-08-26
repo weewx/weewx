@@ -1582,22 +1582,119 @@
     if (lead) lead.style.color = colour;
   }
 
+  /* --------------------------------------------------------- panel refresh */
+
+  /* Only the readings have an element of their own, and only they used to be
+     brought forward. Everything else the template worked out -- the day's high and
+     low, the times they were reached, where in that range the reading sits, the
+     trend arrows, the almanac, the statistics -- stood as it was first rendered.
+     Leave the page open for an afternoon and the card contradicts itself: a reading
+     well above a day that, by the line under it, never got that warm.
+
+     So the page fetches itself and puts the new sections where the old ones were.
+     What the server can render, the server renders; the client only decides when to
+     ask. A panel the template changes tomorrow goes on updating, with nothing here
+     to keep in step with it.
+
+     A panel holding something the server cannot know about says so by not carrying
+     the attribute. The charts hold uPlot instances, the map holds a Google Maps
+     object, the report picker holds the viewer's choice; each is brought forward
+     its own way instead. */
+  var pageFetch = false;
+
+  function refreshPanels() {
+    var slots = document.querySelectorAll('[data-live-panel]');
+    if (!slots.length || pageFetch) return;
+    pageFetch = true;
+
+    fetch(location.pathname + location.search, { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.text() : null; })
+      .then(function (html) {
+        pageFetch = false;
+        if (!html) return;
+        var fresh = new DOMParser().parseFromString(html, 'text/html');
+        var touched = false;
+        slots.forEach(function (old) {
+          if (!old.parentNode) return;
+          var next = fresh.querySelector('[data-live-panel="'
+                                         + old.dataset.livePanel + '"]');
+          if (!next || next.outerHTML === old.outerHTML) return;
+          var fit = document.importNode(next, true);
+          old.parentNode.replaceChild(fit, old);
+          carryOver(old, fit);
+          touched = true;
+        });
+        if (touched) {
+          paintSpan();
+          measureStickyHead();
+        }
+      })
+      .catch(function () { pageFetch = false; });
+  }
+
+  /* What the viewer did inside the panel that its freshly rendered twin cannot
+     know about. One thing so far: how far a table too wide for its column has been
+     pushed sideways. Set after the swap, since until then there is no layout to
+     scroll. */
+  function carryOver(old, fit) {
+    var was = old.querySelectorAll('.table-scroll');
+    var now = fit.querySelectorAll('.table-scroll');
+    for (var i = 0; i < was.length && i < now.length; i++) {
+      now[i].scrollLeft = was[i].scrollLeft;
+    }
+  }
+
+  /* Radar and satellite pictures come from somewhere else and carry cache headers
+     of their own, so on a page left open all afternoon the picture is still the
+     morning's. Asking again under a new query string gets the current one. */
+  function refreshImages(version) {
+    document.querySelectorAll('img[data-live-src]').forEach(function (img) {
+      var base = img.dataset.liveSrc;
+      img.src = base + (base.indexOf('?') < 0 ? '?' : '&') + 'v=' + version;
+    });
+  }
+
+  /* ------------------------------------------------------------ live update */
+
   function setupLiveUpdate() {
     var seconds = parseInt(CFG.refreshInterval, 10);
     if (!seconds || seconds < 5) return;
 
     var stamp = document.querySelector('[data-live="dateTime"]');
+    var seen = String((stamp && stamp.dataset.raw) || CFG.generated || '');
+    /* A reading that has stopped arriving should look like one, rather than sit
+       there being read as current. Counted in polls since the last new record and
+       not from the clock, so a station whose clock is a few minutes out is not
+       declared dead on the strength of it.
 
-    setInterval(function () {
+       How long to wait comes from the station: current.json says how far apart its
+       records are, and two records' worth of silence is a fault. Guessing that
+       would mean calling a ten-minute archive interval a fault every time. Ten
+       minutes stands in until the first record says otherwise. */
+    var quiet = 0;
+    var patience = Math.ceil(600 / seconds);
+    var busy = false;
+
+    function tick() {
+      if (busy) return;
+      busy = true;
       fetch('current.json', { cache: 'no-cache' })
         .then(function (r) { return r.ok ? r.json() : null; })
         .then(function (data) {
+          busy = false;
           if (!data) return;
+
+          var minutes = parseFloat(data.interval);
+          if (minutes > 0) {
+            patience = Math.max(3, Math.ceil(minutes * 60 * 2.5 / seconds));
+          }
+
+          /* The readings that have an element of their own. Cheap, and on its own
+             enough for a station whose current.json is written between records. */
           document.querySelectorAll('[data-live]').forEach(function (el) {
             var key = el.dataset.live;
             if (data[key] !== undefined && data[key] !== null) {
               setLive(el, String(data[key]));
-              el.classList.remove('is-stale');
             }
           });
           if (data.outTemp_c !== undefined && data.outTemp_c !== null) {
@@ -1606,18 +1703,52 @@
             paintSpan();
           }
 
-          /* New archive record: the plots are stale too. */
-          if (stamp && data.dateTime_raw && stamp.dataset.raw
-              && String(data.dateTime_raw) !== String(stamp.dataset.raw)) {
-            stamp.dataset.raw = data.dateTime_raw;
-            cache.clear();
-            manifest = null;
-            var active = document.querySelector('#period-tabs button[aria-selected="true"]');
-            if (active) showPeriod(active.dataset.period, undefined, true);
+          if (!data.dateTime_raw || String(data.dateTime_raw) === seen) {
+            if (++quiet >= patience) markStale(true);
+            return;
           }
+
+          /* A new archive record. The page was re-rendered before current.json was
+             written, so everything on it can be brought forward, not just the
+             readings. */
+          quiet = 0;
+          markStale(false);
+          seen = String(data.dateTime_raw);
+          if (stamp) stamp.dataset.raw = data.dateTime_raw;
+          refreshPanels();
+          refreshImages(seen);
+
+          cache.clear();
+          manifest = null;
+          var active = document.querySelector('#period-tabs button[aria-selected="true"]');
+          if (active) showPeriod(active.dataset.period, undefined, true);
+
+          /* Anything else on the page keeping state of its own, and wanting to
+             know that there is something new to fetch. */
+          document.dispatchEvent(new CustomEvent('horizon:update', {
+            detail: { dateTime: data.dateTime_raw }
+          }));
         })
-        .catch(function () { /* offline; try again next tick */ });
-    }, seconds * 1000);
+        .catch(function () {
+          busy = false;
+          if (++quiet >= patience) markStale(true);
+        });
+    }
+
+    function markStale(stale) {
+      var card = document.querySelector('.panel.headline');
+      if (card) card.classList.toggle('is-stale', stale);
+      if (stamp) stamp.classList.toggle('is-stale', stale);
+    }
+
+    setInterval(tick, seconds * 1000);
+
+    /* A tab in the background has its timers throttled, so what it shows is as old
+       as the last time the browser felt like running one. Ask once on the way back
+       rather than leaving yesterday's weather up while the viewer reads it. */
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden) tick();
+    });
   }
 
   /* ----------------------------------------------------------------- start */

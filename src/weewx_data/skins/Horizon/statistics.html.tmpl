@@ -9,6 +9,7 @@
 #set $obs_type_sum = $to_list($DisplayOptions.get('obs_type_sum', ['rain']))
 #set $obs_type_max = $to_list($DisplayOptions.get('obs_type_max', ['rainRate']))
 #set $recent = $span($day_delta=30, boundary='midnight')
+#set $refresh = $to_int($DisplayOptions.get('refresh_interval', 60))
 
 <!DOCTYPE html>
 <html lang="$lang">
@@ -35,11 +36,13 @@
       <header class="masthead">
         <div>
           <h1>$gettext("Statistics")</h1>
-          <p class="updated"><a href="index.html">&larr; $station.location</a></p>
+          <p class="updated"><a href="index.html">&larr; $station.location</a> &middot;
+            <span class="visually-hidden">$gettext("Last update")</span>
+            <span data-live="dateTime" data-raw="$current.dateTime.raw">$current.dateTime</span></p>
         </div>
       </header>
 
-      <section class="panel">
+      <section class="panel" data-live-panel="stats">
         <div class="panel-head">
           <h2>$gettext("Statistical Summary")</h2>
         </div>
@@ -86,5 +89,10 @@
         $gettext("This station is controlled by <a href='https://weewx.com'>WeeWX</a>, an experimental weather software system written in Python.")
       </p>
     </div>
+
+    <script>
+      window.HORIZON = { refreshInterval: $refresh, generated: $current.dateTime.raw };
+    </script>
+    <script src="horizon.js"></script>
   </body>
 </html>

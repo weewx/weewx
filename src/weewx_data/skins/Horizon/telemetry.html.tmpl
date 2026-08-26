@@ -10,6 +10,7 @@
 #set $telemetry_groups = $to_list($DisplayOptions.get('telemetry_plot_groups', ['rx', 'volt']))
 #set $periods = $to_list($DisplayOptions.get('periods', ['day', 'week', 'month', 'year']))
 #set $recent = $span($day_delta=30, boundary='midnight')
+#set $refresh = $to_int($DisplayOptions.get('refresh_interval', 60))
 
 ## A configured field is not the same as a field with readings. Check the data, so
 ## the page does not show three empty boxes on a station with no radio sensors.
@@ -67,7 +68,9 @@
       <header class="masthead">
         <div>
           <h1>$gettext("Telemetry")</h1>
-          <p class="updated"><a href="index.html">&larr; $station.location</a></p>
+          <p class="updated"><a href="index.html">&larr; $station.location</a> &middot;
+            <span class="visually-hidden">$gettext("Last update")</span>
+            <span data-live="dateTime" data-raw="$current.dateTime.raw">$current.dateTime</span></p>
         </div>
       </header>
 
@@ -122,7 +125,7 @@
 
         <div class="stack">
 #if $have_connections
-          <section class="panel">
+          <section class="panel" data-live-panel="connectivity">
             <div class="panel-head"><h2>$gettext("Connectivity")</h2></div>
             <div class="panel-body">
               <dl class="readings">
@@ -138,7 +141,7 @@
 #end if
 
 #if $have_batteries
-          <section class="panel">
+          <section class="panel" data-live-panel="battery">
             <div class="panel-head"><h2>$gettext("Battery Status")</h2></div>
             <div class="panel-body">
               <dl class="readings">
@@ -163,7 +166,7 @@
 #end if
 
 #if $have_voltages
-          <section class="panel">
+          <section class="panel" data-live-panel="voltage">
             <div class="panel-head"><h2>$gettext("Voltage")</h2></div>
             <div class="panel-body">
               <dl class="readings">
@@ -192,7 +195,7 @@
         dataDir: "data",
         periods: $jsonize($periods),
         plotGroups: $jsonize($telemetry_groups),
-        refreshInterval: 0,
+        refreshInterval: $refresh,
         generated: $current.dateTime.raw,
         station: "$station.location",
         weekStart: $station.week_start,
