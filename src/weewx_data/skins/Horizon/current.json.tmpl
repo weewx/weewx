@@ -9,9 +9,11 @@
 #set $observations = $to_list($DisplayOptions.get('observations_current', ['outTemp', 'barometer']))
 #set $fields = {}
 #set $ignore = $fields.update({'dateTime': $str($current.dateTime), 'dateTime_raw': $current.dateTime.raw})
-## How far apart this station's records are, in minutes. The page needs it to tell a
-## slow archive interval from a station that has stopped: two records' worth of
-## silence is a fault, and without this it could only guess where that line is.
+## How far apart this station's records are, in minutes. The page uses it to tell a
+## slow archive interval from a station that has stopped sending. Two records' worth
+## of silence is a fault. Without this the page would have to guess where that is,
+## and a guess short enough to help a five-minute station would dim a slower one
+## every cycle.
 #if $current.interval.raw is not None
 #set $ignore = $fields.update({'interval': $current.interval.raw})
 #end if

@@ -52,9 +52,9 @@
         <div class="masthead-tools">
 #set $languages = $DisplayOptions.get('Languages', {})
 #if len($languages) > 1
-## Paths in [[Languages]] are relative to the station's top directory. 'lang_root'
-## says how this particular rendering gets back up there, so a page in a
-## subdirectory links correctly in both directions.
+## Paths in [[Languages]] are relative to the station's top directory. 'lang_root' is
+## the way back up to it from wherever this page was rendered, so a page in a
+## subdirectory and a page at the top both link correctly.
 #set $lang_root = $DisplayOptions.get('lang_root', '.')
           <label class="visually-hidden" for="lang-picker">$gettext("Language")</label>
           <select id="lang-picker" class="lang-select"
@@ -141,9 +141,9 @@
 
         <div class="stack">
 ## Which panels appear beside the charts, and in what order. Each name is an .inc
-## file in the skin directory, so your own panel is a file plus a name in this list --
-## no need to edit this template. Give its section a 'data-live-panel' of its own and
-## it is brought forward with the rest whenever a new record arrives.
+## file in the skin directory, so adding your own means writing that file and naming
+## it in this list. This template does not have to change. Give the panel's section a
+## 'data-live-panel' attribute and it is refreshed with the rest on a new record.
 #set $panels = $to_list($DisplayOptions.get('panels', ['current', 'sunmoon', 'imagery', 'sensors', 'about']))
 #set $panels = [$p for $p in $panels if $p not in $to_list($DisplayOptions.get('hide_panels', []))]
 #for $panel in $panels
@@ -169,9 +169,9 @@
         generated: $current.dateTime.raw,
         station: "$station.location",
         weekStart: $station.week_start,
-        ## null means "work it out": the manifest says whether the images are
-        ## being generated at all. Set 'show_image_links' to override, for a
-        ## station whose PNGs come from somewhere else.
+        ## null leaves it to the page, which reads index.json to see whether PNGs
+        ## are being written at all. Set 'show_image_links' in skin.conf to decide
+        ## it here instead, on a station whose PNGs come from elsewhere.
         hasImages: #if $DisplayOptions.get('show_image_links') is None then 'null' else ($to_bool($DisplayOptions.show_image_links) and 'true' or 'false')#,
         text: {
           noData: "$gettext('No data for this period')",

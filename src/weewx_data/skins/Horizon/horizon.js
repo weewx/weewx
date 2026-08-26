@@ -110,13 +110,14 @@
     return d.toLocaleString(LOCALE, opts);
   }
 
-  /* Axis ticks. uPlot's built-in date formatter is English and 12-hour; use the
-     viewer's locale instead, and keep the labels short enough not to collide. */
+  /* One label for one tick on the x axis. uPlot's own date formatter writes English
+     and a 12-hour clock. This one writes the reader's locale, and keeps the labels
+     short enough that they do not run into each other. */
   function fmtTick(ts, period, splits) {
     var d = new Date(ts * 1000);
-    /* How far apart the ticks are, which is what the label has to suit. The name of
-       the period is not enough on its own: a year view of a station three weeks old
-       puts every tick inside one month, and a row of identical labels says nothing. */
+    /* Seconds between ticks, which is what the label has to suit. The name of the
+       period does not say it. A year view of a station three weeks old has every tick
+       inside one month, where twelve labels reading "Aug" say nothing. */
     var step = (splits && splits.length > 1) ? (splits[1] - splits[0]) : null;
     if (period === 'day') {
       return d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
@@ -126,9 +127,9 @@
         ? d.toLocaleDateString(LOCALE, { weekday: 'short' })
         : d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
     }
-    /* Ticks closer together than a day need a time on them, whatever the period is
-       called. That happens on a month or a year view of a station that has only been
-       running a few days: without this every label reads the same. */
+    /* Ticks less than a day apart need a clock time on them, whatever the period is
+       called. A month or a year view of a station running for three days has all its
+       ticks inside those days. Without the time, every label reads the same. */
     if (step !== null && step < 86400) {
       return d.getHours() === 0 && d.getMinutes() === 0
         ? d.toLocaleDateString(LOCALE, { day: '2-digit', month: 'short' })
@@ -146,8 +147,9 @@
 
   /* -------------------------------------------------------------- shaping */
 
-  /* uPlot wants one shared x axis. Series usually share timestamps already;
-     when they do not, fall back to a union and index each series into it. */
+  /* uPlot draws every series against one array of timestamps. The series in a plot
+     usually already carry the same ones. Where they do not, build the union of all
+     their timestamps and put each series' values at the right positions in it. */
   function align(series) {
     var first = series[0].time;
     var same = series.every(function (s) {
@@ -176,9 +178,9 @@
     return out;
   }
 
-  /* A gradient stop of 'transparent' is rgba(0,0,0,0), so fading a colour out
-     through it runs the middle of the ramp through black. Fade to the same colour
-     at zero alpha instead. */
+  /* The CSS keyword 'transparent' means rgba(0,0,0,0), which is black. A gradient
+     that fades a colour out through it therefore passes through grey on the way.
+     Return the same colour at zero alpha, which fades without changing hue. */
   function fadeOut(color) {
     var c = color.trim();
     var m = c.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
@@ -215,15 +217,15 @@
             return b.to > xmin && b.from < xmax;
           });
 
-          /* Work out the stretches of full night. Counting crossings does not work
-             here: the end of dusk and the start of dawn are both "night boundaries"
-             but they are not alternating events in the same list. Walk the bands and
-             open and close a night instead. */
+          /* Find the stretches of full darkness. Alternating between day and night at
+             each timestamp does not work here, because a twilight band has two
+             timestamps and only one of them opens or closes the darkness: dusk ends
+             it, dawn begins it. So walk the bands and open and close a night. */
           var nights = [];
           var openedAt = null;
 
           if (bands.length) {
-            /* If the first thing ahead is dawn, the window opened during the night. */
+            /* Dawn first means the span starts in darkness. */
             if (bands[0].dir === 'dawn') openedAt = xmin;
           } else if (daynight.first === 'night') {
             openedAt = xmin;
@@ -238,7 +240,8 @@
           });
           if (openedAt !== null) nights.push([openedAt, xmax]);
 
-          /* No twilight data at all: fall back to the horizon crossings. */
+          /* No twilight times in the data. Shade from sunrise and sunset alone, which
+             is what the file held before twilight was added to it. */
           if (!bands.length && daynight.transitions.length) {
             nights = [];
             var isNight = daynight.first === 'night';
@@ -257,9 +260,10 @@
             if (x1 > x0) ctx.fillRect(x0, top, x1 - x0, height);
           });
 
-          /* Now the fade across the real civil twilight -- half an hour here, hours
-             in a northern summer -- instead of a fixed number of pixels that means
-             something different at every time scale. */
+          /* The fade at each end of the darkness spans the real civil twilight, half
+             an hour in the tropics and hours in a northern summer. A fade over a
+             fixed number of pixels would mean a different length of time on every
+             span the reader can select. */
           bands.forEach(function (b) {
             var a = u.valToPos(b.from, 'x', true);
             var z = u.valToPos(b.to, 'x', true);
@@ -269,7 +273,7 @@
 
             var grad = ctx.createLinearGradient(a, 0, z, 0);
             var clear = fadeOut(colors.night);
-            /* Dawn starts dark and clears; dusk does the reverse. */
+            /* Dawn runs from dark to clear, dusk from clear to dark. */
             grad.addColorStop(0, b.dir === 'dawn' ? colors.night : clear);
             grad.addColorStop(1, b.dir === 'dawn' ? clear : colors.night);
 
@@ -282,10 +286,10 @@
     };
   }
 
-  /* A wind vector plot is not a line. Each reading is an arrow from the zero line whose
-     direction is the wind and whose length is the speed -- the "progressive vector"
-     plot WeeWX has always drawn. The arithmetic below is weeplot's, so the canvas and
-     the PNG agree:
+  /* A wind vector plot draws no line. Each reading is an arrow from the zero line,
+     pointing the way the wind blew and as long as the wind was strong. This is the
+     plot WeeWX has always drawn for wind. The arithmetic is weeplot's, so that the
+     canvas and the PNG put the arrows in the same places:
 
          scaled = vector * yscale          (both components scaled by the y axis)
          scaled *= e^(i·rotate)            (vector_rotate, 90 degrees by default)
@@ -303,8 +307,9 @@
         draw: function (u) {
           var ctx = u.ctx;
           var y0 = u.valToPos(0, 'y', true);
-          /* Pixels per unit on the y axis. Negative, because canvas y grows downward
-             while values grow upward -- the same sign weeplot's yscale carries. */
+          /* Pixels per unit on the y axis. Negative, because y on a canvas grows
+             downward while a reading grows upward. weeplot's yscale carries the same
+             sign for the same reason. */
           var yScale = u.valToPos(1, 'y', true) - y0;
 
           ctx.save();
@@ -342,7 +347,7 @@
 
           vectors.forEach(function (s) { drawRose(u, s); });
 
-          /* The zero line the arrows hang from. */
+          /* The zero line every arrow starts from. */
           ctx.strokeStyle = themeColors().axis;
           ctx.lineWidth = 1;
           ctx.globalAlpha = 0.5;
@@ -357,10 +362,10 @@
     };
   }
 
-  /* The compass rose the PNGs put in the lower left corner: an arrow to north,
-     turned by the same 'vector_rotate' as the arrows themselves, with the label
-     upright in the middle. Without it nothing says which way the wind is measured
-     from. Shape and proportions follow genplot._renderRose(). */
+  /* The compass rose the PNGs draw in the lower left corner. An arrow pointing north,
+     turned by the same 'vector_rotate' as the wind arrows, with the letter upright in
+     the middle of it. Without the rose, nothing on the plot says which bearing the
+     arrows are measured from. Shape and proportions follow genplot._renderRose(). */
   function drawRose(u, s) {
     var dpr = devicePixelRatio || 1;
     var ctx = u.ctx;
@@ -375,11 +380,11 @@
     ctx.globalAlpha = 0.85;
 
     ctx.save();
-    /* PIL turns the image anticlockwise, the canvas turns the other way. */
+    /* A positive angle turns anticlockwise in PIL and clockwise on a canvas. */
     ctx.rotate(-(s.vector_rotate || 0) * Math.PI / 180);
     ctx.beginPath();
-    /* The shaft stops at the circle rather than running through it, so the label
-       inside stays readable. The PNG draws it straight through. */
+    /* The shaft breaks at the circle instead of crossing it, which leaves the letter
+       inside readable. The PNG draws the shaft straight through. */
     ctx.moveTo(0, -size / 2);
     ctx.lineTo(0, -radius);
     ctx.moveTo(0, radius);
@@ -393,7 +398,7 @@
     ctx.stroke();
     ctx.restore();
 
-    /* Drawn after the rotation, so it stays the right way up. */
+    /* Drawn after the rotation is undone, so the letter stays upright. */
     ctx.globalAlpha = 1;
     ctx.fillStyle = themeColors().axis;
     ctx.font = Math.round(10 * dpr) + 'px ' + getComputedStyle(document.body).fontFamily;
@@ -403,8 +408,8 @@
     ctx.restore();
   }
 
-  /* The unit, over the y axis. The PNGs put it in the upper left corner, and a
-     chart without it says 21.4 and leaves the reader to guess at what. */
+  /* The unit label, above the y axis, where the PNGs put it. Without it the axis
+     reads 21.4 and does not say whether that is Celsius or Fahrenheit. */
   function unitPlugin(label) {
     if (!label) return null;
     return {
@@ -417,7 +422,8 @@
           ctx.fillStyle = themeColors().axis;
           ctx.textAlign = 'left';
           ctx.textBaseline = 'bottom';
-          /* Clear of the topmost tick, which uPlot centres on the axis top. */
+          /* High enough to clear the topmost tick label, which uPlot centres on
+             the top of the axis. */
           ctx.fillText(label, 2 * dpr, u.bbox.top - 8 * dpr);
           ctx.restore();
         }
@@ -436,10 +442,10 @@
           u.over.appendChild(el);
           u.over.addEventListener('mouseleave', function () { el.style.opacity = '0'; });
 
-          /* Touch has no hover, so a finger dragged across the chart moves the
-             cursor instead. Which gesture it is only becomes clear after a few
-             pixels: mostly sideways reads the chart, mostly up and down scrolls
-             the page, and until then neither is claimed. */
+          /* A touch screen has no hover, so a finger dragged across the chart moves
+             the cursor instead. The first few pixels do not say which gesture the
+             reader means. A drag that is mostly sideways reads the chart; one that is
+             mostly up and down scrolls the page. Until it is clear, do neither. */
           var startX = 0, startY = 0, reading = null;
 
           u.over.addEventListener('touchstart', function (e) {
@@ -457,7 +463,7 @@
               reading = dx > dy;
             }
             if (!reading) return;
-            /* Ours now, so the page must not scroll under it. */
+            /* The drag is reading the chart. Stop the page scrolling with it. */
             if (e.cancelable) e.preventDefault();
             var box = u.over.getBoundingClientRect();
             u.setCursor({ left: t.clientX - box.left, top: t.clientY - box.top });
@@ -518,9 +524,10 @@
 
   /* ---------------------------------------------------------- image export */
 
-  /* The server still writes the classic PNGs, and those remain the right thing to
-     link to. This covers what they cannot: the window actually on screen, including
-     a zoomed or historical one that was never rendered to a file. */
+  /* Save the chart on screen as a PNG. The server writes PNGs of its own, and where
+     one exists it is the better thing to link to, because it has a lasting URL. This
+     covers what the server never rendered: a span the reader zoomed into, or a month
+     from years back. */
   function exportChart(entry, card) {
     var src = entry.plot.ctx.canvas;
     var ratio = window.devicePixelRatio || 1;
@@ -577,11 +584,12 @@
 
   var charts = [];   // {plot, meta, host}
 
-  /* Proportions on a wide screen, a floor on a narrow one. A third of 400
-     pixels is 130 pixels of chart, in which a day's temperature is a flat
-     wiggle and the axis fits two labels. The floor is what a chart needs to
-     show its shape, whatever the width; above it the old ratio takes over, so
-     nothing jumps as the window is dragged across the threshold. */
+  /* How tall to draw a chart, given how wide it is. A third of its width works on a
+     wide screen. On a phone it does not: a third of 400 pixels is 130 pixels of
+     chart, where a day of temperature is a flat wiggle and the y axis holds two
+     labels. So the height never falls below 290 pixels, which is what a chart needs
+     to show its shape. Above that the ratio takes over again, and dragging a window
+     across the point where they meet moves the height smoothly. */
   function chartHeight(width) {
     return Math.max(290, Math.min(340, Math.round(width * 0.34)));
   }
@@ -608,14 +616,16 @@
       },
       scales: {
         x: { time: true },
-        /* 'yscale' is the axis the ImageGenerator would draw, worked out by the
-           generator so that the chart and the PNG of the same plot agree. It is
-           null only when a plot has no data to scale. */
+        /* 'yscale' is [min, max, step] for the y axis, computed by the JSON
+           generator with the same code the ImageGenerator uses, so that the chart
+           and the PNG of one plot carry the same axis. It is null only for a plot
+           with no data to scale. */
         y: ys ? {
           range: function () { return [ys[0], ys[1]]; }
         } : {}
       },
-      /* Colors are read at draw time, so switching theme only needs a redraw. */
+      /* Every colour below is a function, called at draw time. Switching between the
+         light and dark themes therefore needs a redraw and nothing else. */
       axes: [
         {
           stroke: function () { return themeColors().axis; },
@@ -633,9 +643,9 @@
           ticks: { show: false },
           font: '11px ' + getComputedStyle(document.body).fontFamily,
           size: 46,
-          /* Gridlines where the PNG puts them, but not closer than they can be
-             read: on a phone the same increment that suits a 500 pixel image
-             stacks the labels on top of each other. Double it until they fit. */
+          /* Gridlines at the same values as the PNG, but no closer together than the
+             labels can be read. The step that suits a 500 pixel image stacks the
+             labels on top of each other on a phone, so double it until they fit. */
           space: 34,
           splits: ys && ys[2] ? function (u, ai, min, max) {
             var step = ys[2];
@@ -644,8 +654,8 @@
             }
             var out = [];
             for (var v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) {
-              /* Round the value, not the value over the step. Dividing here turned
-                 a tick at 800 into one at 8, and every label piled up at the
+              /* Round the tick value itself. Rounding the value divided by the step
+                 turns a tick at 800 into one at 8, and every label lands at the
                  bottom of the axis. */
               out.push(Math.round(v * 1e6) / 1e6);
             }
@@ -670,10 +680,11 @@
           base.stroke = s.fill_color || s.color || colors.ink;
           base.width = 0;
         } else if (s.plot_type === 'vector') {
-          /* Drawn by vectorPlugin, from the components. A line through the
-             magnitudes would say nothing about direction. The series still has to
-             count as shown: uPlot works out a scale's range from its visible series
-             only, and a hidden one leaves the y axis on its 0..1 default. */
+          /* vectorPlugin draws these, as arrows built from the two components. A
+             line through the speeds would say nothing about direction. The series
+             still has to count as shown, because uPlot takes a scale's range from
+             its visible series alone, and hiding this one leaves the y axis on its
+             default of 0 to 1. */
           base.paths = function () { return null; };
           base.points = { show: false };
         }
@@ -689,20 +700,21 @@
     return { plot: plot, meta: meta, host: host };
   }
 
-  /* The label's length depends on the width, so it is rewritten when that
-     changes: turning a phone sideways should not leave the short form. */
+  /* The range label is written short or long depending on how much room there is.
+     Turning a phone sideways has to rewrite it, or the short form stays. */
   window.matchMedia('(min-width: 34rem)').addEventListener('change', function () {
     if (currentPeriod) showPeriod(currentPeriod);
   });
 
   function redrawAll() {
-    /* Axis colors and the night shading resolve themselves at draw time, so a
-       plain redraw is enough. The first argument is rebuildPaths: it must stay
-       true, or the canvas is cleared and nothing is drawn back onto it. */
+    /* Axis colours and the night shading are read at draw time, so redrawing is
+       all a theme change needs. The first argument is uPlot's rebuildPaths, and it
+       has to stay true: false clears the canvas and draws nothing back. */
     charts.forEach(function (c) { c.plot.redraw(true, true); });
   }
 
-  /* Resize charts to their container. One observer for all of them. */
+  /* Redraw a chart when the element holding it changes size. One observer watches
+     every chart, rather than one observer each. */
   var resizeObserver = new ResizeObserver(function (entries) {
     entries.forEach(function (entry) {
       var c = charts.find(function (x) { return x.host === entry.target; });
@@ -722,8 +734,9 @@
       + '</tr>';
     var data = align(meta.series);
     var rows = [];
-    /* Show every sample. An aggregated plot is a few hundred rows at most; only
-       an unaggregated long span needs thinning, and then we say so. */
+    /* One row per reading. An aggregated plot has a few hundred readings at most.
+       Only a long span of raw readings runs past the limit, and the table says so
+       in its caption when it does. */
     var LIMIT = 1500;
     var total = data[0].length;
     var step = total > LIMIT ? Math.ceil(total / LIMIT) : 1;
@@ -758,8 +771,9 @@
       return;
     }
 
-    /* The title doubles as the legend: each series name in its own colour. Saying
-       it twice wastes a line, which matters on a phone. */
+    /* The card's title is also its legend: each series name in the colour of its
+       line. A separate legend would repeat those names on a second line, and on a
+       phone that line is one the chart could have had. */
     legend.innerHTML = meta.series.map(function (s) {
       return '<span style="color:' + (s.color || 'currentColor') + '"><i></i>'
         + '<span class="series-name">' + escapeHtml(s.label) + '</span></span>';
@@ -769,8 +783,9 @@
     charts.push(entry);
     resizeObserver.observe(host);
 
-    /* Two ways out of the chart: the file the server rendered (a stable URL, good
-       for linking) and the view on screen (good for anything else). */
+    /* Two ways to take the chart away. The PNG the server rendered has a lasting
+       URL, so it is the one to link to. Saving what is on screen works for any
+       span, including one the server never rendered. */
     var actions = card.querySelector('.chart-actions');
     if (actions) {
       var save = document.createElement('button');
@@ -780,9 +795,10 @@
       save.addEventListener('click', function () { exportChart(entry, card); });
       actions.appendChild(save);
 
-      /* The rendered PNG only exists for the four standard windows. */
-      /* Configured either way, or worked out from the manifest: no point
-         offering a link to a picture nobody is drawing. */
+      /* The PNG exists only for the day, week, month and year the server renders,
+         and only where the skin runs the ImageGenerator. 'show_image_links' settles
+         it where the skin sets it. Otherwise index.json says whether PNGs are being
+         written. There is no point linking to a picture nobody draws. */
       var offerImage = CFG.hasImages === null || CFG.hasImages === undefined
         ? !!(manifest && manifest.images)
         : CFG.hasImages;
@@ -820,47 +836,51 @@
 
   /* ------------------------------------------------------- history archive */
 
-  /* The four period files are snapshots of "now". To look further back, the archive
-     is used instead: one file per plot group and calendar year, on a fixed grid.
-     Only the years a window actually touches are fetched, and each is kept once. */
+  /* The day, week, month and year files all end at the last reading, so none of them
+     reaches further back than a year. Spans before that come from the archive files
+     instead: one per plot group and calendar year, with readings evenly spaced in
+     time. Only the years a span touches are fetched, and each is kept after that. */
 
   var archiveIndex = null;
-  var archiveCache = new Map();           // "group-year" -> payload
+  var archiveCache = new Map();           // "group-year" -> the file's contents
 
-  /* The end of the window on screen, as a timestamp. null means "now", which is the
-     only view that follows the clock. Everything else is pinned to a moment in time,
-     so that a link keeps showing the same days tomorrow as it does today. */
+  /* The end of the span on screen, as a timestamp. null means the live view, which is
+     the only one that follows the clock. Every other span is fixed to a moment, so a
+     link to one still shows the same days tomorrow. */
   var anchor = null;
 
-  /* Only used for the live view, which slides: at half past midnight you want to see
-     last evening, not an empty "today". Everything you page back to is a whole
-     calendar unit instead -- Tuesday, week 33, July, 2025 -- which is what people
-     mean when they click "back".
+  /* How many seconds each span covers. Used for the live view alone, because the live
+     view slides: at half past midnight the reader wants last evening, not an empty
+     "today". Every span reached by the arrows is a whole calendar unit instead, such
+     as Tuesday, week 33, July or 2025, which is what "back" means to a reader.
 
-     These are fallbacks. The real lengths come from the manifest, which reads them
-     from 'time_length' in skin.conf -- so changing the configuration moves the charts
-     and the PNGs together, instead of only the PNGs. */
+     These four are fallbacks. The real lengths arrive in index.json, which takes them
+     from 'time_length' in skin.conf. Changing that option therefore moves the chart
+     and the PNG together, rather than the PNG alone. */
   var PERIOD_SECONDS = { day: 27 * 3600, week: 7 * 86400, month: 30 * 86400, year: 365 * 86400 };
 
   function adoptSpans(manifest) {
     if (!manifest || !manifest.spans) return;
     Object.keys(manifest.spans).forEach(function (group) {
-      /* The manifest names the section ('day_images'); the page names the period. */
+      /* index.json uses the skin.conf section name, 'day_images'. The page uses the
+         period name, 'day'. */
       var period = group.replace(/_images$/, '');
       var seconds = parseInt(manifest.spans[group], 10);
       if (seconds > 0) PERIOD_SECONDS[period] = seconds;
     });
   }
 
-  /* Two different "nows", and mixing them up moves the calendar.
+  /* There are two "nows" here, and using one where the other belongs moves the
+     calendar by a day.
 
-     dataTs() is the last reading in the report, and everything the arrows do is
-     measured from it. The live view ends there, so the unit it falls in is the unit
-     on screen, and "back" means the one before that.
+     dataTs() is the time of the last reading in the report. The arrows measure from
+     it. The live view ends there, so the calendar unit holding that reading is the
+     unit on screen, and "back" means the unit before it.
 
-     nowTs() is the reader's clock. It only decides whether the live view can still
-     be called "now": the two part company when a station was off overnight, when a
-     page has been open past midnight, or when a site is served from a cache. */
+     nowTs() is the reader's own clock. It decides one thing only: whether the live
+     view can still be labelled "Now". The two times differ when the station was off
+     overnight, when the page has been open past midnight, or when a cache is serving
+     an older copy of the site. */
   function nowTs() {
     return Math.floor(Date.now() / 1000);
   }
@@ -869,7 +889,7 @@
     return CFG.generated || nowTs();
   }
 
-  /* The calendar unit of `period` that contains `ts`. */
+  /* The start and end of the calendar unit of `period` that holds `ts`. */
   function calendarWindow(period, ts) {
     var d = new Date(ts * 1000);
     var y = d.getFullYear(), m = d.getMonth(), day = d.getDate();
@@ -879,7 +899,7 @@
       from = new Date(y, m, day);
       to = new Date(y, m, day + 1);
     } else if (period === 'week') {
-      /* week_start comes from the station config: 0 = Monday, 6 = Sunday. */
+      /* week_start comes from weewx.conf: 0 is Monday, 6 is Sunday. */
       var startDow = (CFG.weekStart === undefined ? 0 : +CFG.weekStart);
       var jsStart = (startDow + 1) % 7;            // JS counts Sunday as 0
       var back = (d.getDay() - jsStart + 7) % 7;
@@ -895,7 +915,7 @@
     return { from: Math.floor(from.getTime() / 1000), to: Math.floor(to.getTime() / 1000) };
   }
 
-  /* The window currently on screen. */
+  /* The span currently on screen, as a start, an end, and whether it is live. */
   function currentWindow(period) {
     if (anchor === null) {
       var to = dataTs();
@@ -923,10 +943,10 @@
       .catch(function () { archiveCache.set(key, null); return null; });
   }
 
-  /* The archive is written on an hourly grid, which is the right trade over years
-     but flattens a single day. Where the generator has also written the finer grid,
-     use it -- but only for a window short enough to see the difference. A month or a
-     year is what the hourly grid was made for. */
+  /* Archive files hold one reading an hour, which is the right trade over years but
+     flattens a single day. Where the generator has also written the closely spaced
+     monthly files, use those instead. Only for a span short enough for the difference
+     to show: a month or a year is what the hourly files are for. */
   function fineMonthsFor(group, from, to) {
     if (!archiveIndex || !archiveIndex.fine_interval) return null;
     if ((to - from) > 8 * 86400) return null;
@@ -942,7 +962,7 @@
     while (cursor.getTime() / 1000 < to) {
       var month = cursor.getMonth() + 1;
       var stamp = cursor.getFullYear() + '-' + (month < 10 ? '0' : '') + month;
-      /* One month missing and the window would be stitched from two grids. */
+      /* One month missing, and the span would be joined from two spacings. */
       if (!(stamp in entry.fine)) return null;
       want.push(stamp);
       cursor.setMonth(cursor.getMonth() + 1);
@@ -963,7 +983,7 @@
 
   function loadDayNight(year) {
     if (daynightCache.has(year)) return Promise.resolve(daynightCache.get(year));
-    /* Only years the archive actually covers. */
+    /* Only the years the archive holds. */
     if (archiveIndex && archiveIndex.first
         && year < new Date(archiveIndex.first * 1000).getFullYear()) {
       daynightCache.set(year, null);
@@ -975,9 +995,9 @@
       .catch(function () { daynightCache.set(year, null); return null; });
   }
 
-  /* Night bands only say something on a window short enough to show individual days;
-     on a month or a year they turn into a grey smear, which is why the PNGs switch
-     them off there too. */
+  /* Night shading is readable only on a span short enough to show single days. Over a
+     month or a year the bands are a pixel or two wide and read as grey haze. The PNGs
+     leave the shading off on those spans for the same reason. */
   function nightForWindow(from, to, years) {
     if ((to - from) > 9 * 86400) return Promise.resolve(null);
     return Promise.all(years.map(loadDayNight)).then(function (files) {
@@ -986,14 +1006,15 @@
       var first = null;
       files.filter(Boolean).forEach(function (f) {
         if (first === null) {
-          /* Work out the state at `from` by counting the transitions before it. */
+          /* Whether `from` falls in daylight or darkness. Day and night alternate,
+             so counting the crossings before it settles which. */
           var before = f.transitions.filter(function (t) { return t <= from; }).length;
           var startState = f.first === 'day' ? 'day' : 'night';
           first = (before % 2 === 0) ? startState : (startState === 'day' ? 'night' : 'day');
         }
         all = all.concat(f.transitions.filter(function (t) { return t > from && t < to; }));
-        /* The twilight bands travel with the transitions. Dropping them here left
-           the archive with hard edges where the live view fades. */
+        /* The twilight times have to be carried across with the crossings. Without
+           them the archive view steps from day to night where the live view fades. */
         bands = bands.concat((f.twilight || []).filter(function (b) {
           return b.to > from && b.from < to;
         }));
@@ -1005,10 +1026,10 @@
     });
   }
 
-  /* Assemble one window from however many year files it spans. */
+  /* Build one span's series by joining the year files it reaches across. */
   function windowFromArchive(group, from, to) {
-    /* The index knows which years exist for this group. Asking for the others would
-       only produce 404s in the console of every visitor. */
+    /* index.json lists the years this group has a file for. Requesting any other
+       year puts a 404 in the console of everyone who opens the page. */
     var known = null;
     if (archiveIndex && archiveIndex.groups) {
       var entry = archiveIndex.groups.find(function (g) { return g.name === group; });
@@ -1103,8 +1124,8 @@
       .catch(function () { cache.set(name, null); return null; });
   }
 
-  /* Draw a card's chart the first time it comes near the viewport. On a phone that
-     means one or two fetches on load instead of twenty. */
+  /* Draw a card's chart when the card first comes near the screen. On a phone that
+     is one or two files fetched on load, rather than twenty. */
   var lazyObserver = new IntersectionObserver(function (entries) {
     entries.forEach(function (entry) {
       if (!entry.isIntersecting) return;
@@ -1121,8 +1142,9 @@
     var period = card.dataset.period;
     var empty = '<p class="chart-empty">' + escapeHtml(CFG.text.noData || 'No data') + '</p>';
 
-    /* The live window uses the ready-made snapshot: full resolution, with the
-       day/night bands. Anything pinned to the past comes from the archive. */
+    /* The live span is served by the file the generator already wrote for it: every
+       reading the station took, with the sunrise and sunset times alongside. Any
+       other span is built from the archive files. */
     var source = anchor === null
       ? loadPlot(card.dataset.plot)
       : windowFromArchive(card.dataset.group, +card.dataset.from, +card.dataset.to);
@@ -1147,18 +1169,19 @@
 
   /* ------------------------------------------------------------ shared links */
 
-  /* A rendered PNG can be linked because a web server hands it out as a file. The
-     canvas export cannot: it exists only in the browser that made it. What *can* be
-     shared is the view itself, which is usually what someone means anyway -- and it
-     arrives current, in the reader's language and theme. */
+  /* A PNG on the server can be linked to, because the web server hands it out as a
+     file. A chart saved from the canvas cannot: it exists only in the browser that
+     made it. What can be shared is the view, as a link that reopens it. That is
+     usually what is meant anyway, and it arrives current, in the reader's own
+     language and theme.
 
-  /* The link carries a date, not an offset. "Three weeks back" would point somewhere
-     else next week; "the week ending 2 August 2026" does not move. */
+     The link names a date rather than an offset. "Three weeks back" points somewhere
+     else next week. "The week ending 2 August 2026" does not move. */
   function writeLocation(period) {
     var hash = '#' + period;
     if (anchor !== null) {
-      /* Name the unit, not an arbitrary instant inside it: #month/2026-07 rather
-         than #month/2026-07-13. */
+      /* Name the calendar unit, not an instant inside it: #month/2026-07, not
+         #month/2026-07-13. */
       var d = new Date(calendarWindow(period, anchor).from * 1000);
       var y = d.getFullYear();
       var mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -1181,11 +1204,12 @@
 
     if (!parts[1]) return { period: period, anchor: null };
 
-    /* Accepts 2026, 2026-07 and 2026-07-13, whichever suits the period. Anything
-       inside the unit resolves to the unit, so a hand-typed date still works. */
+    /* Accepts 2026, 2026-07 and 2026-07-13, whichever suits the period. Any date
+       inside a unit selects that unit, so a link typed by hand still works. */
     var m = parts[1].match(/^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?(?:T\d{1,2})?$/);
     if (!m) {
-      /* Tolerate the older "-3" form rather than dropping the reader at "now". */
+      /* An older form of the link counted units back, as "-3". Read it rather than
+         dropping the reader at the live view. */
       var n = parseInt(parts[1].replace(/^-/, ''), 10);
       if (!isNaN(n) && n > 0) {
         var span = PERIOD_SECONDS[period] || PERIOD_SECONDS.day;
@@ -1196,20 +1220,14 @@
 
     var d = new Date(+m[1], m[2] ? +m[2] - 1 : 0, m[3] ? +m[3] : 1, 12, 0, 0);
     var ts = Math.floor(d.getTime() / 1000);
-    /* A unit that is still running is the live view. */
+    /* A calendar unit that has not ended yet is the live view. */
     var unit = calendarWindow(period, ts);
     return { period: period, anchor: unit.to > dataTs() ? null : ts };
   }
 
-  /* Changing the span from somewhere down the page leaves the reader among
-     charts that have just been replaced, at an offset that means nothing. Take
-     them back to the first one, under the head stuck over it. Only if they had
-     scrolled past it: at the top of the page nothing should move. This runs
-     once the cards are in place, since until then the page is too short to
-     scroll anywhere. */
-  /* The range bar sticks underneath the head, so it has to know how tall the head
-     is. A fixed guess in the stylesheet holds only for one font size and one line
-     of tabs; anything else and the two overlap. */
+  /* The range bar sticks to the window under the panel head, so it has to be told how
+     tall that head is. A fixed value in the stylesheet holds for one font size and one
+     row of tabs. At any other size the two overlap. */
   function measureStickyHead() {
     var panels = document.querySelectorAll('.panel');
     for (var i = 0; i < panels.length; i++) {
@@ -1221,6 +1239,11 @@
     }
   }
 
+  /* Scroll back to the first chart after the span changed. Changing it from halfway
+     down the page leaves the reader among charts that have just been replaced, at a
+     scroll position that no longer means anything. Only scroll if they were past the
+     first chart: at the top of the page, nothing should move. Called once the cards
+     are in place, because until then the page is too short to scroll. */
   function backToFirstChart(container) {
     var panel = container.closest('.panel');
     if (!panel) return;
@@ -1253,7 +1276,8 @@
       var mf = res[0], ai = res[1];
       var groups = CFG.plotGroups || [];
 
-      /* Keep the order the skin configured, not the order the files were written. */
+      /* Order the cards as 'plot_groups' in skin.conf lists them, not as the files
+         happen to appear in index.json. */
       var wanted = groups.map(function (g) {
         var snapshot = mf.plots.find(function (p) { return p.name === period + g; });
         var archived = (ai.groups || []).find(function (p) { return p.name === g; });
@@ -1306,15 +1330,15 @@
     writeLocation(period);
   }
 
-  /* Name the calendar unit on screen: "Tuesday, 18 August 2026", "11–17 Aug 2026",
-     "July 2026", "2025". */
+  /* The name of the calendar unit on screen: "Tuesday, 18 August 2026" for a day,
+     "11–17 Aug 2026" for a week, "July 2026" for a month, "2025" for a year. */
   function unitLabel(period, from, to) {
     var start = new Date(from * 1000);
     var end = new Date((to - 1) * 1000);
 
-    /* "Sunday, 23 August 2026" does not fit between the two arrows on a phone,
-       and pushed the Now button under the forward one. The long form stays on
-       a wide screen, where there is room for it. */
+    /* "Sunday, 23 August 2026" does not fit between the two arrows on a phone. It
+       pushed the Now button underneath the forward arrow. The long form is kept on a
+       wide screen, where there is room for it. */
     var roomy = window.matchMedia('(min-width: 34rem)').matches;
 
     if (period === 'day') {
@@ -1325,9 +1349,9 @@
     if (period === 'week') {
       var opts = roomy ? { day: 'numeric', month: 'short', year: 'numeric' }
                        : { day: 'numeric', month: 'short' };
-      /* formatRange knows how each language shortens a span -- "10.–16. Aug. 2026"
-         in German, "10 – 16 Aug 2026" in English. Hand-joining two formatted dates
-         gets the punctuation wrong in most of them. */
+      /* formatRange() knows how each language writes a span of dates: "10.–16. Aug.
+         2026" in German, "10 – 16 Aug 2026" in English. Formatting both dates and
+         joining them with a dash gets the punctuation wrong in most languages. */
       try {
         return new Intl.DateTimeFormat(LOCALE, opts).formatRange(start, end);
       } catch (e) {
@@ -1342,9 +1366,10 @@
     return String(start.getFullYear());
   }
 
-  /* "Now" is only honest while the last reading falls in the unit the clock is in.
-     Older than that, the live view is showing Sunday and calling it now, and the
-     step back to Saturday looks as if it skipped a day. Name the unit instead. */
+  /* The word "Now" holds only while the last reading falls in the calendar unit the
+     reader's clock is in. Where it does not, the live view shows Sunday and calls it
+     now, and stepping back to Saturday looks as though it skipped a day. So label it
+     with the name of the unit instead. */
   function liveLabel(period) {
     var d = calendarWindow(period, dataTs());
     return d.from === calendarWindow(period, nowTs()).from
@@ -1352,7 +1377,7 @@
       : unitLabel(period, d.from, d.to);
   }
 
-  /* Label the window being shown, and disable the arrows at the ends of the record. */
+  /* Label the span on screen, and grey out an arrow that would leave the record. */
   function updateRange(period, from, to, ai) {
     var label = document.getElementById('range-label');
     var back = document.getElementById('range-back');
@@ -1367,22 +1392,22 @@
     if (fwd) fwd.disabled = anchor === null;
     if (now) now.hidden = anchor === null;
 
-    /* Do not walk off the start of the record. */
+    /* There is nothing before the first reading in the database. */
     if (back && ai && ai.first) {
       back.disabled = from <= ai.first;
     }
   }
 
-  /* Move one whole calendar unit. From the live view, "back" lands on the last
-     complete unit; stepping forward into the unit still running returns to following
-     the clock. */
+  /* Move one whole calendar unit. From the live view, "back" lands on the last unit
+     that has ended. Stepping forward into the unit still running returns to the live
+     view, which follows the clock. */
   function step(direction) {
     var here = calendarWindow(currentPeriod, anchor === null ? dataTs() : anchor);
     var target = direction < 0 ? here.from - 1 : here.to + 1;
-    /* The unit the data end in is the live view, the same rule readLocation()
-       applies to a pasted link. Testing the instant instead of the unit it falls in
-       left "forward" one short: it landed on the current unit as an archive window,
-       so it took two steps to get back. */
+    /* The unit the readings end in is the live view. readLocation() applies the same
+       rule to a pasted link. Test the unit, not the instant: testing the instant
+       leaves "forward" one step short, landing on the current unit as a fixed span,
+       from where it takes a second press to reach the live view. */
     var unit = calendarWindow(currentPeriod, target);
     showPeriod(currentPeriod, unit.to > dataTs() ? null : target);
   }
@@ -1409,13 +1434,14 @@
         if (navigator.clipboard && window.isSecureContext) {
           navigator.clipboard.writeText(url).then(done, function () { prompt(url); });
         } else {
-          /* Plain http, which most stations serve: no clipboard API available. */
+          /* The clipboard API needs a secure context, and most stations are served
+             over plain http. Show the link for the reader to copy. */
           window.prompt(CFG.text.copyLink || 'Copy this link:', url);
         }
       });
     }
 
-    /* Arrow keys move through time when the chart area has focus. */
+    /* With the chart area focused, the left and right arrow keys step through time. */
     var container = document.getElementById('charts');
     if (container) {
       container.addEventListener('keydown', function (e) {
@@ -1433,8 +1459,8 @@
       if (b) showPeriod(b.dataset.period);
     });
 
-    /* Opening the data table on a card that has not been drawn yet must still
-       produce a table. */
+    /* Opening the table on a card whose chart has not been drawn yet has to produce
+       a table all the same. */
     var container = document.getElementById('charts');
     if (container) {
       container.addEventListener('toggle', function (e) {
@@ -1446,7 +1472,7 @@
     }
     setupRangeNav();
 
-    /* A link wins over what this browser last looked at. */
+    /* A span named in the link beats the one this browser last looked at. */
     var linked = readLocation();
     if (linked) {
       currentPeriod = linked.period;
@@ -1457,7 +1483,7 @@
       showPeriod(start, null);
     }
 
-    /* Back and forward buttons, and links pasted into the same tab. */
+    /* The browser's back and forward buttons, and a link pasted into this tab. */
     window.addEventListener('hashchange', function () {
       var loc = readLocation();
       if (loc && (loc.period !== currentPeriod || loc.anchor !== anchor)) {
@@ -1469,9 +1495,9 @@
 
   /* ------------------------------------------------------------ live update */
 
-  /* The headline takes a value apart: the decimals are set smaller, and the unit
-     has its own element beside it. current.json carries it in one piece, so put it
-     back together here. Anywhere else the whole string is what is wanted. */
+  /* Write one live value into one element. The headline is set in two sizes, with the
+     decimals smaller than the whole units, so its number arrives as one string and has
+     to be split again here. Every other element takes the string as it is. */
   function setLive(el, text) {
     if (!el.classList.contains('lead-value')) {
       el.textContent = text;
@@ -1496,9 +1522,12 @@
 
   /* ------------------------------------------------------- temperature colour */
 
-  /* The nine --warm-* steps, pinned to the middle of the band each one stands for.
-     Reading them from the stylesheet keeps one palette for the whole page, and lets
-     a theme change move the bar and the headline together. */
+  /* The stylesheet defines nine colours, --warm-0 to --warm-8, one per temperature
+     band. BAND_EDGES holds the temperatures where one band ends and the next begins,
+     in degrees Celsius. WARM_AT holds the temperature at the middle of each band,
+     which is where that colour is exact. Reading the colours from the stylesheet
+     rather than repeating them here keeps one palette for the page, and moves the
+     bar and the headline together when the theme changes. */
   var WARM_AT = [-15, -5, 2.5, 8.5, 15, 20.5, 25.5, 30.5, 36];
   var BAND_EDGES = [-10, 0, 5, 12, 18, 23, 28, 33];
 
@@ -1524,9 +1553,9 @@
     return null;
   }
 
-  /* The colour for one temperature, interpolated between the two steps it falls
-     between. Interpolated rather than snapped, so that the mark on the bar and the
-     headline can agree on a colour that the bar actually shows at that point. */
+  /* The colour for one temperature, mixed from the two band colours it falls between.
+     Mixed rather than rounded to the nearer band, so that the mark on the bar and the
+     headline both take the colour the bar is actually showing at that point. */
   function tempColour(celsius, stops) {
     if (!stops.length) return null;
     if (celsius <= stops[0].c) return rgbText(stops[0].rgb);
@@ -1546,10 +1575,11 @@
     return 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')';
   }
 
-  /* Paint the day's range onto the bar: the ends take the colours of the lowest and
-     highest readings, and every band boundary in between gets a stop at the position
-     it actually sits at. A day from 13 to 14 degrees is then one colour, and a day
-     from 2 to 30 runs through all of them. */
+  /* Colour the bar under the headline by the temperatures it spans. Its ends take the
+     colours of the day's lowest and highest readings. Every band edge between them
+     gets a gradient stop at the position that temperature occupies on the bar. A day
+     from 13 to 14 degrees comes out one colour. A day from 2 to 30 runs through all
+     nine. */
   function paintSpan() {
     var track = document.querySelector('.span-track[data-lo]');
     if (!track) return;
@@ -1577,29 +1607,28 @@
     var colour = tempColour(now, stops);
     var mark = track.querySelector('.span-now');
     if (mark) mark.style.setProperty('--span-at', colour);
-    /* The headline reads the same temperature, so it takes the same colour. */
+    /* The headline shows the same temperature as the mark, so it takes its colour. */
     var lead = document.querySelector('.lead-value[data-band]');
     if (lead) lead.style.color = colour;
   }
 
   /* --------------------------------------------------------- panel refresh */
 
-  /* Only the readings have an element of their own, and only they used to be
-     brought forward. Everything else the template worked out -- the day's high and
-     low, the times they were reached, where in that range the reading sits, the
-     trend arrows, the almanac, the statistics -- stood as it was first rendered.
-     Leave the page open for an afternoon and the card contradicts itself: a reading
-     well above a day that, by the line under it, never got that warm.
+  /* Bring every panel forward when a new record arrives, by fetching the page again
+     and putting each freshly rendered section in place of the one on screen.
 
-     So the page fetches itself and puts the new sections where the old ones were.
-     What the server can render, the server renders; the client only decides when to
-     ask. A panel the template changes tomorrow goes on updating, with nothing here
-     to keep in step with it.
+     Only elements carrying 'data-live' used to be updated, which meant the readings
+     and nothing else. The day's high and low, the times they were reached, the mark
+     showing where the reading sits between them, the trend arrows, the almanac and
+     the statistics all stood as the template first rendered them. Left open for an
+     afternoon, the card contradicted itself: a reading well above a day that, by the
+     line under it, never got that warm.
 
-     A panel holding something the server cannot know about says so by not carrying
-     the attribute. The charts hold uPlot instances, the map holds a Google Maps
-     object, the report picker holds the viewer's choice; each is brought forward
-     its own way instead. */
+     A section is swapped if it carries 'data-live-panel'. A section that holds
+     something the templates cannot render says so by not carrying the attribute: the
+     charts hold uPlot instances, the map holds a Google Maps object, and the report
+     picker holds the reader's choice of month. Each of those is brought forward its
+     own way instead. */
   var pageFetch = false;
 
   function refreshPanels() {

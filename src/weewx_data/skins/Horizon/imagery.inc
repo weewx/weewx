@@ -6,11 +6,12 @@
 ## All three are opt-in: they only appear if the corresponding entry exists in
 ## [Extras]. See skin.conf for the option names.
 ##
-## No 'data-live-panel' here, unlike the other panels. The map holds a Google Maps
-## object that a swap would throw away, and the two pictures are not ours to
-## re-render: they come from someone else's server, with cache headers of their own.
-## 'data-live-src' says what to ask for again instead, which the script does under a
-## fresh query string once there is a new record.
+## These panels carry no 'data-live-panel', unlike the others. Replacing the map
+## panel would throw away the Google Maps object inside it. The radar and satellite
+## pictures come from someone else's server, with cache headers of their own, so
+## re-rendering this panel would not fetch a newer one. 'data-live-src' names the
+## picture to request again, which the script does under a fresh query string once
+## a new record arrives.
 
 #if 'radar_img' in $Extras
 <section class="panel">

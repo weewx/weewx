@@ -12,10 +12,10 @@
 ##   dashboard_lead     the one reading set large at the top
 ##   dashboard_readings the rows underneath
 ##
-## Both fall back to the lists the skin already keeps, so a configuration that
-## never mentions them still gets a sensible card. 'has_data' does the rest:
-## a station without a UV sensor never sees that row, and nobody has to keep a
-## second list of what is fitted.
+## Where neither option is set, the card falls back to the lists the skin already
+## keeps, so a configuration that names neither still gets a sensible card. The
+## 'has_data' test drops the rest: a station with no UV sensor never shows that row,
+## and nobody has to maintain a second list of what is fitted.
 #set $headline = $to_list($DisplayOptions.get('observations_headline', ['outTemp']))
 #set $lead = $DisplayOptions.get('dashboard_lead') or ($headline and $headline[0]) or 'outTemp'
 #set $wanted = $to_list($DisplayOptions.get('dashboard_readings',

@@ -3,16 +3,18 @@
 #
 #    See the file LICENSE.txt for your full rights.
 #
-"""Generate JSON time series for client-side plotting.
+"""Generate JSON time series, for a page that draws its own charts.
 
 This generator is the data-only counterpart to `weewx.imagegenerator`. It reads the same
 plot definitions, fetches the same series through `weewx.xtypes.get_series()`, applies the
 same unit conversion and label lookup, then writes the result as JSON instead of rendering
 it into a PNG.
 
-Because it understands the existing `[ImageGenerator]` syntax, any plot a user has already
-defined -- including plots added by hand over the years -- is available as JSON without
-touching the configuration.
+The syntax is the ImageGenerator's, so a plot already defined for a PNG is available as
+JSON without any change to the configuration.
+
+"The page", throughout this module, means whatever reads these files and draws the chart.
+For the skin that ships with WeeWX that is JavaScript running in the reader's browser.
 
 Configuration
 
@@ -46,8 +48,8 @@ and looks like this:
       ]
     }
 
-Series are written as two parallel arrays rather than a list of pairs: it is roughly 30%
-smaller on the wire and is the shape charting libraries want.
+Times and values are written as two arrays of the same length rather than as a list of
+pairs. That is about 30% smaller, and it is the shape charting libraries take.
 """
 
 import calendar
@@ -69,8 +71,8 @@ from weewx.units import ValueTuple
 
 log = logging.getLogger(__name__)
 
-# Reuse the ImageGenerator's helpers rather than duplicating them. Keeping these in one
-# place means a fix to the "is this plot empty?" logic benefits both generators.
+# The ImageGenerator's helpers, used rather than copied, so that a fix to "is this plot
+# empty?" reaches both generators.
 _get_check_domain = weewx.imagegenerator._get_check_domain
 _skip_if_empty = weewx.imagegenerator._skip_if_empty
 _skip_this_plot = weewx.imagegenerator._skip_this_plot
@@ -93,18 +95,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # Translated text strings:
         self.text_dict = self.skin_dict.get('Texts', {})
 
-        # Which section holds the plot definitions?
-        #
-        # Its own, when it has any. [ImageGenerator] otherwise, so that a skin
-        # written before this generator existed works untouched, and so that
-        # anyone who wants one definition to serve both the chart and the image
-        # gets that by doing nothing.
-        #
-        # The order matters more than it looks. Defaulting to [ImageGenerator]
-        # would mean a skin with no images at all still keeps a section named
-        # after them, and that the JSON generator is defined in terms of the one
-        # it was meant to stand beside. This way round it stands on its own, and
-        # the fall-back is what serves the existing skins rather than the rule.
+        # Which section holds the plot definitions. [JSONGenerator] when the skin
+        # has one, [ImageGenerator] otherwise, so that a skin written before this
+        # generator existed needs no new configuration. Option 'source' names a
+        # third section instead.
         self.gen_dict = self.skin_dict.get('JSONGenerator', {})
         source = self.gen_dict.get('source')
         if source:
@@ -144,20 +138,25 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         indent = self.gen_dict.get('json_indent')
         indent = to_int(indent) if indent not in (None, '', 'None', 'none') else None
 
-        # Collected for the manifest, so a client knows what exists without having to
-        # probe for it (and without generating a 404 for every sensor this station
-        # happens not to have).
+        # One entry per plot written. At the end of this method they go into
+        # 'index.json', a list of every plot file that exists, with its title, its
+        # units and the observation types in it. The page reads index.json first and
+        # lays out its charts from that, rather than requesting each plot to find out
+        # whether it is there. A station without a UV sensor has no UV plot, and
+        # nothing asks for the file.
         manifest = []
         manifest_root = None
         nskipped = 0
-        # How long each time span covers, straight from the plot definitions. A client
-        # that lays out its own periods needs this, or 'time_length' would only ever
-        # affect the PNGs and the two would drift apart.
+        # How many seconds each time span covers, from 'time_length' in the plot
+        # definitions: 86400 for [[day_images]], and so on. It goes into index.json
+        # because the page draws the x axis itself, and 'time_length' is the only
+        # statement of how wide a "day" plot is meant to be. Leave it out, and
+        # changing 'time_length' moves the PNG while the chart stays as it was.
         span_lengths = {}
 
-        # A plot that is skipped as unchanged still belongs in the manifest. Read the
-        # previous one once, rather than opening every skipped file to rebuild its
-        # entry.
+        # Last run's index.json. A plot skipped as unchanged still belongs in the new
+        # index. Its entry is copied from here, rather than rebuilt by opening the
+        # file it describes.
         previous = {}
         try:
             prev_path = os.path.join(self.config_dict['WEEWX_ROOT'],
@@ -192,10 +191,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 json_file = os.path.join(json_root, '%s.json' % plotname)
 
                 # An aggregated plot only changes when its aggregation interval rolls
-                # over: a year plot on daily averages says the same thing at 10:05 as
-                # it did at 10:00. Rewriting it anyway costs a database read here and
-                # -- for anyone publishing over FTP -- an upload of every file, every
-                # cycle. This is the same test the ImageGenerator applies to its PNGs.
+                # over: a year plot of daily averages says the same thing at 10:05 as
+                # it did at 10:00. Rewriting it anyway costs a database read, and on a
+                # station publishing over FTP, an upload of every file every cycle.
+                # This is the test the ImageGenerator applies to its PNGs.
                 if _skip_this_plot(plotgen_ts, plot_options, json_file) \
                         and plotname in previous:
                     nskipped += 1
@@ -234,17 +233,16 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 except OSError as e:
                     log.error("Unable to save to file '%s': %s", json_file, e)
 
-        # An index of what was written. Lets a client build its layout up front and
-        # fetch each series only when it actually needs it.
+        # index.json: the list described at the top of this method.
         if manifest_root:
             index_file = os.path.join(manifest_root, 'index.json')
             try:
                 with open(index_file, 'w', encoding='utf-8') as fd:
                     json.dump({'generated': int(gen_ts or time.time()),
                                'spans': span_lengths,
-                               # Whether the PNGs of these plots are being written
-                               # at all. A client offering a link to one wants to
-                               # know before it points at a file nobody generates.
+                               # Whether the PNGs of these plots are being written at
+                               # all. A page that offers a link to the PNG has to
+                               # know before it points at a file nobody writes.
                                'images': self._images_are_generated(),
                                'plots': manifest},
                               fd, indent=indent, ensure_ascii=False,
@@ -258,27 +256,29 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                      ngen, nskipped, self.skin_dict['REPORT_NAME'], t2 - t1)
 
     def gen_archive(self, gen_ts):
-        """Write the history per plot group and calendar year, on a fixed grid.
+        """Write the whole record, one file per plot group and calendar year.
 
-        The per-period files above are snapshots of four fixed windows -- the same four
-        the ImageGenerator draws. They cannot answer "show me last March", because that
-        window was never rendered.
+        gen_json() above writes the four plots the ImageGenerator draws: the last day,
+        the last week, the last month and the last year, each ending now. None of the
+        four can answer "show me last March", because last March was never one of them.
 
-        The archive covers the whole record instead, split by calendar year. Two things
-        follow from that split, and both matter on the small machines WeeWX usually runs
-        on:
+        This method writes the whole database instead, split by calendar year. Two
+        things follow from splitting it that way, and both matter on the small machines
+        WeeWX usually runs on:
 
-        - A finished year never changes, so it is written once and then skipped forever.
-          A station with fourteen years of data rewrites one file, not fourteen.
-        - A client fetches only the years it is actually showing.
+        - A year that has ended never changes again. Its file is written once and
+          skipped from then on, so a station with fourteen years of data rewrites one
+          file per report rather than fourteen.
+        - The page fetches only the years it is showing.
 
-        Within a file the grid is regular, so timestamps are implied by `start` and
-        `interval` rather than stored, which roughly halves the size.
+        Readings inside a file are spaced evenly in time, one every `resolution`
+        seconds. A file therefore stores the first timestamp and that spacing, and no
+        timestamp per reading, which halves it.
 
-        A file is rewritten when the data it covers have moved on to another grid slot,
-        not when the file reaches a certain age. The two are the same thing while the
-        station is running. They part company after a catchup: the file is minutes old
-        and hours behind, and an age test says there is nothing to do.
+        A file is rewritten when its newest reading moves into the next slot of that
+        spacing, not when the file reaches a given age. While the station is running,
+        those two are the same thing. They differ after a catch-up import, where the
+        file is minutes old and hours behind: an age test would find nothing to do.
 
         To rebuild everything, delete the archive directory and run the report again
         (`weectl report run <report>`).
@@ -294,17 +294,17 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         resolution = to_int(weeutil.weeutil.nominal_spans(arch_dict.get('resolution', 3600)))
         aggregate_type = arch_dict.get('aggregate_type', 'avg')
         max_days = to_int(arch_dict.get('max_days', 0))
-        # A second, finer grid over the recent past, written per calendar month. An
-        # hourly grid is the right trade over years, but it flattens a single day, and
-        # stepping back through days is exactly what the client offers. Thirty days at
-        # five minutes costs about what one year at one hour costs, and the client only
-        # ever fetches the months it is showing.
+        # A second set of files over the recent past, spaced more closely and written
+        # per calendar month. One reading an hour is the right trade over years, but it
+        # flattens a single day, and stepping back one day at a time is what the page
+        # offers. Thirty days at one reading per five minutes costs about what one year
+        # at one per hour costs, and the page fetches only the months it is showing.
         fine_days = to_int(arch_dict.get('fine_days', 0))
         fine_resolution = to_int(weeutil.weeutil.nominal_spans(
             arch_dict.get('fine_resolution', 300)))
         if fine_days and fine_resolution >= resolution:
-            # Easily done: in a duration suffix 'm' means months, so '5m' asks for a
-            # grid coarser than the one it was meant to refine.
+            # An easy mistake: in a duration suffix 'm' means months, not minutes, so
+            # '5m' asks for readings five months apart.
             log.warning("Ignoring fine_days: fine_resolution (%d seconds) is not finer "
                         "than resolution (%d seconds)", fine_resolution, resolution)
             fine_days = 0
@@ -328,8 +328,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         root = None
         overall_start = overall_stop = None
 
-        # What the last run covered, so this one can tell what has actually changed.
-        # One file, read once, the same way gen_json() reads its manifest.
+        # How far the last run got, per group and year, from the index it left behind.
+        # One file, read once, the way gen_json() reads its own index.
         previous, previous_fine, previous_first = self._read_archive_index(dest_dir)
 
         for plotname in group_dict.sections:
@@ -345,13 +345,14 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 continue
             first_ts = max(db_first, last_ts - max_days * 86400) if max_days else db_first
 
-            # Data that reach further back than the last run saw mean an import, and
-            # every year has to be built again. 'first_ts' cannot be used for this:
-            # under 'max_days' it moves forward on its own as the record grows.
+            # The database now reaches further back than it did last run, which means
+            # somebody imported history. Every year has to be built again. The test
+            # cannot use 'first_ts': under 'max_days' that moves forward on its own as
+            # the record grows, and would report an import every day.
             reimported = previous_first is not None and int(db_first) < previous_first
 
-            # Track the covered span from the data itself, not from what happened to be
-            # rewritten this run -- on a second run nothing is rewritten at all.
+            # The span covered comes from the database, not from the files rewritten
+            # this run. On a second run in the same minute, no file is rewritten.
             if overall_start is None or first_ts < overall_start:
                 overall_start = int(first_ts)
             if overall_stop is None or last_ts > overall_stop:
@@ -367,11 +368,11 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 year = time.localtime(year_span.start).tm_year
                 out_file = os.path.join(arch_root, '%s-%d.json' % (group_name, year))
 
-                # How far into this year the data now reach. For a year that has run
-                # out this is the end of the year, so it never moves again and the
-                # file is written once -- which is what keeps a long-running station
-                # cheap. For the current year it advances with the record, and the
-                # file is rewritten when it advances into the next grid slot.
+                # The newest reading this file holds. For a year that has ended it is
+                # the last instant of the year, and never moves again. That file is
+                # written once, which is what keeps a long record cheap to report. For
+                # the year in progress it advances with the database, and the file is
+                # rewritten once it reaches the next slot.
                 covered = min(int(year_span.stop), int(last_ts))
                 was = previous.get(group_name, {}).get(year)
                 if os.path.exists(out_file) and was is not None and not reimported \
@@ -437,9 +438,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     except OSError as e:
                         log.error("Unable to save to file '%s': %s", out_file, e)
 
-        # Sunrise/sunset for the whole record, written once rather than repeated in
-        # every group's file. The client shades the night from this when it is showing
-        # a window short enough for the bands to mean anything.
+        # Sunrise and sunset for the whole record. They depend on the location alone,
+        # so they go in one file per year instead of being repeated in every group's
+        # file. The page shades the night from them, on spans short enough for the
+        # bands to be readable.
         if root and to_bool(arch_dict.get('include_daynight',
                                           self.gen_dict.get('include_daynight', True))):
             self._archive_daynight(root, overall_start, overall_stop, indent)
@@ -453,9 +455,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     'title': entry.get('title', name),
                     'unit_label': entry.get('unit_label', ''),
                     'years': sorted(set(entry['years'])),
-                    # Keyed by year, so it survives the trip through JSON as strings.
+                    # Newest reading per year. JSON has no integer keys, so the year
+                    # is written as a string and read back as one.
                     'covered': {str(y): c for y, c in entry.get('covered', {}).items()},
-                    # Months that also exist on the finer grid.
+                    # The same, for the months that also have a closely spaced file.
                     'fine': {str(m): c for m, c in entry.get('fine', {}).items()},
                 })
             try:
@@ -478,27 +481,31 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
     def _images_are_generated(self):
         """Is the ImageGenerator in this report's generator list?
 
-        The skin says once, in [Generators], whether it draws images. Anything
-        that needs to know reads it from here rather than being told a second
-        time in a second place, where the two can disagree.
+        [Generators] is where the skin says whether it draws PNGs. Reading the
+        answer from there, rather than from a second option that says the same
+        thing, means there is nothing that can disagree with it.
         """
         try:
             generators = self.skin_dict['Generators']['generator_list']
         except (KeyError, TypeError):
             return False
-        # The dots matter: 'summaryimage.SummaryImageGenerator' contains the
-        # word too, and draws one picture of the current readings rather than a
-        # plot per chart.
+        # The dots keep 'summaryimage.SummaryImageGenerator' out. That name holds
+        # the word too, and it draws one picture of the current readings, not a
+        # PNG per plot.
         return any('.imagegenerator.' in str(g).lower()
                    for g in weeutil.weeutil.option_as_list(generators))
 
     def _read_archive_index(self, dest_dir):
-        """What the previous run wrote, from the index it left behind.
+        """How far the previous run got, from the index it left behind.
 
         Returns:
-            tuple: A dict of {group: {year: covered}}, the same for the finer months as
-                {group: {'YYYY-MM': covered}}, and the earliest reading the last run
-                knew about (None if there was no usable index).
+            tuple: Three values.
+
+                - {group: {year: timestamp}}, the newest reading each year's file
+                  holds, e.g. {'tempdew': {2025: 1735689599, 2026: 1787777700}}
+                - the same for the closely spaced months, keyed 'YYYY-MM'
+                - the oldest reading in the database when the last run read it, or
+                  None if there was no index to read
         """
         covered = {}
         fine = {}
@@ -522,17 +529,18 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 if months:
                     fine[group['name']] = months
         except (OSError, ValueError, KeyError, TypeError):
-            # No index, or one this version cannot read. Everything gets rebuilt,
-            # which is the safe direction to fail in.
+            # No index, or one this version cannot read. Report that nothing is
+            # current, so everything is rebuilt. That costs a run; the other way
+            # round would leave stale files in place.
             return {}, {}, None
         return covered, fine, first
 
     def _archive_daynight(self, root, first_ts, last_ts, indent):
-        """Write sunrise/sunset transitions, one file per calendar year.
+        """Write sunrise and sunset times, one file per calendar year.
 
-        These depend only on the location, so they are the same for every plot group and
-        are written once instead of being repeated in each. Like the data files, a
-        finished year is written once and then left alone.
+        Sunrise and sunset depend on the station's latitude and longitude and on
+        nothing else, so one file serves every plot group. Like the data files, a year
+        that has ended is written once and then left alone.
         """
         if not first_ts or not last_ts:
             return
@@ -560,14 +568,28 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
     def _archive_year(self, plot_section, plot_options, year_span, resolution,
                       aggregate_type, rounding, group_name, first_ts, last_ts):
-        """Build the payload for one plot group over one calendar year.
+        """Build the contents of one archive file: one plot group, one calendar year.
+
+        There are no timestamps in the result. `start` is the first instant, `interval`
+        the seconds between readings, and `count` how many there are, so the time of
+        `values[i]` is `start + i * interval`. A null in `values` is a reading the
+        station did not take.
 
         Returns:
-            dict|None: The payload, or None if this year holds nothing worth writing.
+            dict|None: The file's contents, or None if the year holds nothing worth
+                writing. For a temperature group over an hour-spaced 2025::
+
+                    {'name': 'tempdew', 'start': 1735725600, 'interval': 3600,
+                     'count': 8760, 'covered': 1767261599,
+                     'unit': 'degree_C', 'unit_label': '°C',
+                     'yscale': [-10.0, 35.0, 5.0],
+                     'series': [{'obs_type': 'outTemp', 'label': 'Outside Temperature',
+                                 'aggregate_type': 'avg', 'color': '#4282b4',
+                                 'values': [3.1, 2.8, None, 2.4, ...]}]}
         """
-        # Clip to the data we actually have, then snap to the grid, so that every series
-        # of every year lands on the same instants and the client can stitch years
-        # together without resampling.
+        # Clip to the readings that exist, then move both ends onto a multiple of
+        # 'resolution'. Every series of every year then falls on the same instants, and
+        # the page can put two years end to end without resampling either.
         lo = max(year_span.start, int(first_ts))
         hi = min(year_span.stop, int(last_ts) + resolution)
         start = int(lo // resolution * resolution)
@@ -588,23 +610,25 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             if _skip_if_empty(mgr, var_type, domain):
                 continue
 
-            # A vector series has no meaning on a shared grid of scalars. The
-            # per-period files still carry it.
+            # Wind vectors are pairs of components, not single numbers, and the evenly
+            # spaced form here holds one number per slot. The day, week, month and year
+            # files written by gen_json() still carry them.
             if line_options.get('plot_type', 'line').lower() == 'vector':
                 continue
 
-            # The plot's own aggregate_type wins, but 'none' is how a skin asks for raw
-            # samples -- not an option on a fixed grid, so fall back to the default.
+            # The plot's own aggregate_type wins. 'none' is how a skin asks for raw
+            # samples, which cannot be placed at a fixed spacing, so use the default.
             agg = line_options.get('aggregate_type')
             if agg in (None, '', 'None', 'none'):
                 agg = aggregate_type
             if var_type in ('rain', 'ET', 'lightning_strike_count', 'hail', 'snow'):
                 agg = 'sum'
             elif var_type in ('windDir', 'windGustDir'):
-                # Averaging compass bearings is meaningless: 350 deg and 10 deg average
-                # to 180, due south, when the wind never blew from there. WeeWX has
-                # 'vecdir' for this, which resolves the vectors first -- but it works
-                # off the 'wind' daily summary, not 'windDir'.
+                # An arithmetic mean of compass bearings says the wrong thing: 350 and
+                # 10 degrees average to 180, due south, where the wind never blew from.
+                # WeeWX has the 'vecdir' aggregate for this, which averages the vectors
+                # and then takes the bearing. It reads the 'wind' daily summary, so the
+                # observation type has to change with the aggregate.
                 var_type = 'wind'
                 agg = 'vecdir'
 
@@ -630,8 +654,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             unit_label = line_options.get(
                 'y_label', self.formatter.get_label_string(conv[1]))
 
-            # Place the values on the grid. get_series() skips empty intervals, so the
-            # slot has to be computed rather than assumed.
+            # Put each value where its timestamp belongs. get_series() returns nothing
+            # at all for an interval with no readings, so the position is computed from
+            # the timestamp rather than taken from the loop counter.
             grid = [None] * slots
             for ts, val in zip(stop_vec_t[0], conv[0]):
                 if ts is None or val is None:
@@ -660,7 +685,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         if not series_out:
             return None
 
-        # Fall back to the skin's palette, exactly as the per-period files do.
+        # Colours the skin sets for every plot, for series that name none of their own.
         default_colors = weeutil.weeutil.option_as_list(
             plot_options.get('chart_line_colors', [])) or []
         for i, s in enumerate(series_out):
@@ -673,8 +698,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             'interval': resolution,
             'yscale': _yscale(plot_options, series_out),
             'count': slots,
-            # The reading this file was built from. What decides whether it has to be
-            # written again, rather than how old the file happens to be.
+            # The newest reading in this file. The next run compares it with the
+            # database to decide whether the file has to be written again.
             'covered': min(int(year_span.stop), int(last_ts)),
             'unit': unit,
             'unit_label': (unit_label or '').strip(),
@@ -684,16 +709,18 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
     def gen_plot_data(self, plotgen_ts, plot_options, plot_dict, plotname):
         """Assemble the data for a single plot.
 
-        Mirrors ImageGenerator.gen_plot(), minus everything to do with drawing.
+        Mirrors ImageGenerator.gen_plot(), minus everything to do with drawing. Unlike
+        _archive_year() above, every reading carries its own timestamp here, because
+        the readings are as the station took them and not evenly spaced.
 
         Returns:
-            dict|None: The payload, or None if the plot has no non-null data and
-                skip_if_empty asked us to drop it.
+            dict|None: The file's contents, in the shape shown at the top of this
+                module. None if no series had data and skip_if_empty was set.
         """
         time_length = weeutil.weeutil.nominal_spans(plot_options.get('time_length', 86400))
-        # Snap to the same boundaries the ImageGenerator uses. Taking the window raw
-        # would put the JSON and the PNG of the same plot on different axes, and the
-        # two would disagree about where a day begins.
+        # Move the ends of the span onto the boundaries the ImageGenerator uses. Taken
+        # unrounded, the JSON and the PNG of one plot would start at different instants
+        # and disagree about where the day begins.
         minstamp, maxstamp, timeinc = weeplot.utilities.scaletime(plotgen_ts - time_length,
                                                                   plotgen_ts)
         x_domain = TimeSpan(int(minstamp), int(maxstamp))
@@ -768,8 +795,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 log.error("Unknown plot type '%s'. Ignored", plot_type)
                 continue
 
-            # When aggregating, the ImageGenerator shifts the point into the middle of
-            # its interval. Do the same, so both renderings line up.
+            # get_series() timestamps an aggregate at the end of its interval. For a
+            # line the ImageGenerator moves it to the middle, where the average of the
+            # interval belongs. Doing the same here keeps the chart and the PNG of one
+            # plot on the same points.
             if aggregate_type and plot_type != 'bar':
                 stop_vec_t = ValueTuple(
                     [x - aggregate_interval / 2.0 for x in stop_vec_t[0]],
@@ -802,9 +831,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
             times = [None if t is None else int(t) for t in stop_vec_t[0]]
 
-            # Wind vectors arrive as complex numbers (x + yj). Split them into magnitude
-            # and compass direction: that is what the vector plot actually draws, and it
-            # is far more useful to a client than a raw pair of components.
+            # Wind arrives as complex numbers (x + yj). Split each into a speed and a
+            # compass bearing, which is what the vector plot draws and what a reader
+            # of the JSON can use without knowing WeeWX's internal representation.
             magnitudes, directions = _split_vectors(new_data_vec_t[0])
             values = _round_seq(magnitudes, rounding)
             components = _vector_components(new_data_vec_t[0])
@@ -829,26 +858,29 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 entry['aggregate_interval'] = aggregate_interval
                 aggregate_interval_out = aggregate_interval
             if plot_type == 'bar':
-                # Bar width, in seconds, so the client can size the bars correctly.
+                # How many seconds each bar spans, so the page can draw it that wide.
+                # Bars are not all one width: an aggregate over a month is wider than
+                # one over February.
                 entry['bar_width'] = [b - a for a, b in zip(start_vec_t[0], stop_vec_t[0])]
             if plot_type == 'vector':
                 # A vector plot draws each reading as an arrow from the zero line, so
-                # the client needs the components, not just the magnitude. Handing them
-                # over avoids rebuilding them from magnitude and bearing at the far end.
+                # the page needs the two components and not just the speed. Sending
+                # them saves it computing them back from speed and bearing.
                 if components:
                     entry['vector_x'] = _round_seq(components[0], rounding)
                     entry['vector_y'] = _round_seq(components[1], rounding)
                 vr = line_options.get('vector_rotate')
                 if vr is not None:
-                    # Negated, exactly as the ImageGenerator does it. Without the minus
-                    # the arrows come out mirrored against the PNG of the same data.
+                    # Negated, as the ImageGenerator negates it. Keep the sign as
+                    # configured and the arrows come out mirrored against the PNG.
                     entry['vector_rotate'] = -float(vr)
-                # The compass rose the PNGs draw in the corner: without it, nothing on
-                # the plot says which way the arrows are measured from.
+                # The letter on the compass rose the PNGs draw in the corner. Without
+                # it nothing on the plot says which bearing the arrows point from.
                 entry['rose_label'] = self.text_dict.get(
                     'rose_label', plot_options.get('rose_label', 'N'))
 
-            # Last, so that every parallel sequence is filtered along with the values.
+            # Last, so that 'directions', 'bar_width' and the rest are already in
+            # 'entry' and get shortened along with the values they belong to.
             _drop_empty_points(entry, plot_options.get('time_length', 86400),
                                line_options.get('line_gap_fraction'))
 
@@ -870,7 +902,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             'series': series_out,
         }
 
-        # The PNGs shade night-time. Hand the client what it needs to do the same.
+        # The PNGs shade the hours of darkness. Send what the page needs to do the same.
         if to_bool(plot_options.get('show_daynight', False)) \
                 and to_bool(self.gen_dict.get('include_daynight', True)):
             try:
@@ -879,8 +911,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 if dn:
                     payload['daynight'] = dn
             except Exception as e:
-                # Shading is decorative and must never break a report -- but a silent
-                # failure here once hid a real bug, so say something.
+                # Night shading is decorative, so a failure here must not stop the
+                # report. Log it: without a line in the log, a plot that quietly
+                # loses its shading looks like a skin problem.
                 log.warning("Could not compute day/night for '%s': %s", plotname, e)
 
         return payload
@@ -890,15 +923,17 @@ def _daynight(start_ts, stop_ts, lat, lon):
     """Sunrise, sunset, and the civil twilight around them.
 
     `weeutil.weeutil.getDayNightTransitions()` gives the moments the sun crosses the
-    horizon, which is what the PNGs shade against. But dusk is not an edge: the light
-    fades over the half hour or so of civil twilight, and much longer at high latitude
-    in summer. Returning those boundaries as well lets a client draw the real thing
-    instead of a step.
+    horizon, which is where the PNGs step from day shading to night. The light does not
+    change that abruptly: it fades over the half hour or so of civil twilight, and over
+    much longer at high latitude in summer. The twilight boundaries are returned as
+    well, so the page can fade between the two instead of stepping.
 
     Returns:
-        dict|None: 'first' ('day' or 'night' at start_ts), 'transitions' (horizon
-            crossings, as before), and 'twilight' (pairs of timestamps bounding each
-            dawn and dusk).
+        dict|None: Three keys. 'first' is 'day' or 'night', whichever it was at
+            start_ts. 'transitions' is the horizon crossings, as timestamps.
+            'twilight' is one entry per dawn and dusk, e.g.
+            {'from': 1787725000, 'to': 1787727100, 'dir': 'dawn'}. None where the sun
+            neither rises nor sets in this span, as it does inside the polar circles.
     """
     from weeutil import Sun
 
@@ -929,16 +964,17 @@ def _daynight(start_ts, stop_ts, lat, lon):
             if first is None:
                 first = 'day'
 
-        # Dawn runs from the start of civil twilight to sunrise, getting lighter;
-        # dusk from sunset to the end of civil twilight, getting darker. Saying which
-        # is which saves the client from working it out from the crossings.
+        # Dawn runs from the start of civil twilight to sunrise, getting lighter. Dusk
+        # runs from sunset to the end of civil twilight, getting darker. Naming which
+        # is which saves the page from deducing it from the horizon crossings.
         if dawn < stop_ts and rise > start_ts:
             twilight.append({'from': dawn, 'to': rise, 'dir': 'dawn'})
         if sets < stop_ts and dusk > start_ts:
             twilight.append({'from': sets, 'to': dusk, 'dir': 'dusk'})
 
     if first is None and not transitions:
-        # Polar day or night: nothing crosses the horizon in this window.
+        # The sun neither rose nor set in this span. Inside the polar circles that is
+        # normal for weeks at a time.
         return None
 
     transitions.sort()
@@ -947,11 +983,13 @@ def _daynight(start_ts, stop_ts, lat, lon):
 
 
 def _holds_plots(section):
-    """Does this section define plots, rather than merely hold settings?
+    """Does this section define plots, rather than hold settings?
 
-    A time span such as [[day_images]] is a subsection whose own entries are
-    subsections: one per plot. Settings like [[Archive]] carry scalars only, so
-    counting subsections alone would mistake them for plot definitions.
+    A plot definition is three levels deep: [ImageGenerator], then a time span such as
+    [[day_images]], then a plot such as [[[daytempdew]]]. So a section holds plots when
+    its subsections have subsections of their own. A settings section such as
+    [[Archive]] has one level of subsections at most, and holding scalars is what tells
+    it apart.
     """
     try:
         return any(section[name].sections for name in section.sections)
@@ -962,11 +1000,11 @@ def _holds_plots(section):
 def _yscale(plot_options, series_out):
     """The y axis for this plot, as [min, max, increment].
 
-    The same axis the ImageGenerator would draw: the plot's own 'yscale' fixes
-    whichever of the three it names, and weeplot.utilities.scale() fills in the rest
-    from the data. Leaving that to the client means a chart disagreeing with the PNG
-    of the same plot -- wind direction running to 400 degrees where the image stops
-    at 360, or an axis to 5 m/s for wind that never passed 2.3.
+    The same axis the ImageGenerator would draw. The plot's own 'yscale' fixes
+    whichever of the three values it names, and weeplot.utilities.scale() works out
+    the rest from the data. Left to the page, the chart and the PNG of one plot end up
+    with different axes. Wind direction runs to 400 degrees where the image stops at
+    360. An axis reaches 5 m/s for wind that never passed 2.3.
 
     Returns:
         list|None: The three values, or None if there is nothing to scale.
@@ -999,15 +1037,15 @@ def _yscale(plot_options, series_out):
 def _drop_empty_points(entry, time_length, gap_fraction, gap_factor=3.0):
     """Leave out the points that carry nothing, keeping real gaps visible.
 
-    A source reporting every ten minutes fills one archive record in ten, and the rest
-    hold null for it. Sent as they are, a client draws a line broken in hundreds of
-    places, and the file is far larger than the data in it.
+    A sensor that reports every ten minutes has a reading in one archive record out of
+    ten, and null in the other nine. Sent as they are, the page draws a line broken in
+    hundreds of places, and the file is many times larger than the readings in it.
 
-    What counts as a gap has to come from the source's own rhythm, not from the width
-    of the plot: ten minutes between readings is a break for a station reporting every
-    eight seconds and business as usual for one reporting every ten minutes. So the
-    usual spacing is measured, and only a run several times longer than that is drawn
-    as a gap. `line_gap_fraction` still wins where it is set, for anyone who wants the
+    How long a run of nulls counts as a gap depends on how often the sensor reports,
+    not on how wide the plot is. Ten minutes without a reading is a fault on a station
+    reporting every eight seconds and normal on one reporting every ten minutes. So the
+    interval between readings is measured, and only a run several times longer than
+    that is kept as a gap. Where 'line_gap_fraction' is set it wins, which is the
     ImageGenerator's fixed threshold.
     """
     times, values = entry['time'], entry['values']
@@ -1036,8 +1074,9 @@ def _drop_empty_points(entry, time_length, gap_fraction, gap_factor=3.0):
         if position and threshold is not None:
             previous = kept[position - 1]
             if times[i] - times[previous] >= threshold:
-                # Long enough to be a break in the readings rather than their rhythm.
-                # One null says so; the rest of the run would only be noise.
+                # Long enough to be a break in the readings rather than the sensor's
+                # normal spacing. Keep one null in the middle of the run, which is
+                # what breaks the line; the other nulls would draw nothing.
                 keep.append(previous + (i - previous) // 2)
         keep.append(i)
 
@@ -1061,12 +1100,12 @@ def _round_seq(seq, ndigits):
 def _vector_components(seq):
     """Split a complex series into its real and imaginary parts.
 
-    weeplot draws a vector by scaling the complex value and offsetting from the zero
-    line; a client doing the same needs the components. Returns None for a series that
-    is not complex.
+    weeplot draws a wind vector by scaling the complex value and offsetting it from the
+    zero line, so a page drawing the same arrows needs both parts.
 
     Returns:
-        tuple[list, list]|None: The real and imaginary parts.
+        tuple[list, list]|None: The real parts and the imaginary parts, or None if the
+            series holds no complex values and is therefore not a vector series.
     """
     seq = list(seq)
     if not any(isinstance(v, complex) for v in seq):
@@ -1077,14 +1116,15 @@ def _vector_components(seq):
 
 
 def _split_vectors(seq):
-    """Split a possibly-complex sequence into magnitudes and directions.
+    """Split a wind series into speeds and compass bearings.
 
-    WeeWX carries wind vectors as complex numbers, and `Polar` for the already-converted
-    form. Anything else is returned unchanged with no directions.
+    WeeWX holds a wind vector either as a complex number or, once converted, as a
+    `weewx.units.Polar`. A series of neither is not a wind series and is returned as it
+    came.
 
     Returns:
-        tuple[list, list|None]: Magnitudes, and compass directions in degrees (or None if
-            the series was not a vector series).
+        tuple[list, list|None]: The speeds, and the bearings in degrees. The bearings
+            are None for a series that was not a wind series.
     """
     seq = list(seq)
     if not any(isinstance(v, (complex, weewx.units.Polar)) for v in seq):
@@ -1101,8 +1141,8 @@ def _split_vectors(seq):
             directions.append(v.dir)
         elif isinstance(v, complex):
             magnitudes.append(abs(v))
-            # WeeWX's convention: the vector points in the direction the wind is coming
-            # from, measured clockwise from north. That is what Polar.from_complex does.
+            # Polar.from_complex() applies WeeWX's convention: the bearing is the one
+            # the wind blows from, measured clockwise from north.
             directions.append(weewx.units.Polar.from_complex(v).dir)
         else:
             magnitudes.append(v)
@@ -1111,10 +1151,11 @@ def _split_vectors(seq):
 
 
 def _normalize_color(color):
-    """Normalize a WeeWX color spec to something CSS understands.
+    """Rewrite a WeeWX colour as one CSS understands.
 
-    WeeWX accepts '#RRGGBB', '0xBBGGRR' and English names. The first and last are already
-    valid CSS; the middle one is byte-swapped and has to be turned around.
+    WeeWX accepts three forms: '#RRGGBB', '0xBBGGRR' and English names such as 'blue'.
+    CSS takes the first and the third as they are. The second has its red and blue bytes
+    the other way round and has to be swapped.
     """
     if not isinstance(color, str):
         return color

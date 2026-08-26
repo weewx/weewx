@@ -5,21 +5,21 @@
 #
 """Render the current conditions as an image.
 
-WeeWX has always been able to draw a time series. It has never been able to draw the
-*numbers* -- and a picture of the current readings is what people actually paste into a
-forum post, a signature or a chat window. A screenshot goes stale the moment it is taken;
-a file at a fixed URL stays current on its own.
+WeeWX can draw a time series as a PNG. It cannot draw the current readings as one, and
+that is the picture people paste into a forum post, a signature or a chat window. A
+screenshot of the page is out of date the moment it is taken. A file at a fixed URL is
+redrawn every report cycle and stays current.
 
-The output is one PNG, redrawn each report cycle:
+The output is one PNG:
 
     [SummaryImageGenerator]
         enable = true
         filename = current.png
         observations = outTemp, windSpeed, rain, barometer
 
-Everything else -- fonts, colours, sizes -- has a default and can be overridden. Labels,
-units and formatting come from the skin, so the image says the same thing in the same
-language as the page beside it.
+Fonts, colours and sizes all have defaults, and each can be set in that section. Labels,
+units and number formatting come from the skin, so the image reads the same way, and in
+the same language, as the page beside it.
 """
 
 import logging
@@ -64,8 +64,8 @@ DEFAULTS = {
 def _as_list(option):
     """Coerce an option to a list of names.
 
-    ConfigObj already splits "a, b, c" into a list, but the option may also arrive as a
-    plain string -- from a hand-built dictionary, or a single-item value.
+    ConfigObj splits "a, b, c" into a list on its own. The option can still arrive as a
+    plain string: from a dictionary built in code, or from an option holding one name.
     """
     if isinstance(option, str):
         return [x.strip() for x in option.split(',') if x.strip()]

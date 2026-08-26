@@ -3,8 +3,8 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
-## One of 32 frames, picked by the moon's age since the last new moon. The images
-## are NASA's, rendered from Lunar Reconnaissance Orbiter data; see moon/LICENSE.txt.
+## One of 32 images, chosen by the moon's age since the last new moon. The images are
+## NASA's, rendered from Lunar Reconnaissance Orbiter data. See moon/LICENSE.txt.
 ##
 #if $almanac.hasExtras
 #set $AU_KM = 149597870.7
