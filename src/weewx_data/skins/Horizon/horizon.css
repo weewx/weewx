@@ -1355,8 +1355,15 @@ select.report-select {
 }
 
 /* The days at either end that belong to the year before or after. Kept so that every
-   column is a whole week, and left blank so they are not read as dry days. */
+   column is a whole week, and left blank so they are not read as readings. */
 .hm-outside { background: none; }
+
+/* A day inside the year that the station did not record. Outlined rather than
+   filled: a day with no reading is not a day with a reading of nothing. */
+.hm-empty {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
 
 .hm-dow, .hm-month {
   grid-column: 1;
@@ -1382,6 +1389,13 @@ select.report-select {
   height: 0.55rem;
   border-radius: 2px;
   background: linear-gradient(90deg, var(--surface-sunk), var(--lo));
+}
+
+/* Temperature runs through the same nine steps as the reading on the front page,
+   rather than from nothing to one colour. */
+.hm-ramp--temp {
+  background: linear-gradient(90deg, var(--warm-0), var(--warm-2), var(--warm-4),
+                              var(--warm-6), var(--warm-8));
 }
 
 /* A phone cannot show 53 columns of squares and still have squares. It scrolls. */

@@ -177,6 +177,16 @@
 #set $daily_start = $rain_series.start.raw if $has_rain else None
 ## The heatmap has no ratio to honour, so its days stay in the unit the page reads in.
 #set $daily_rain = $rain_series.data.raw if $has_rain else None
+##
+## The other three the calendar can show. One query each, the same as the rain, and
+## the reader picks between them. A year of daily figures is 365 numbers.
+#set $temp_series = $year.outTemp.series(aggregate_type='avg', aggregate_interval='day') if $has_temp else None
+#set $tmin_series = $year.outTemp.series(aggregate_type='min', aggregate_interval='day') if $has_temp else None
+#set $tmax_series = $year.outTemp.series(aggregate_type='max', aggregate_interval='day') if $has_temp else None
+#set $daily_temp = $temp_series.data.raw if $has_temp else None
+#set $daily_tmin = $tmin_series.data.raw if $has_temp else None
+#set $daily_tmax = $tmax_series.data.raw if $has_temp else None
+#set $daily_temp_start = $temp_series.start.raw if $has_temp else None
 #if $has_temp or $has_rain
 <section class="panel" data-live-panel="climate-diagram">
   <div class="panel-head">
@@ -195,10 +205,25 @@
 ## resolution where a single day is still visible.
 ##
 ## The series is one query. Asking the daily summaries day by day would be 365.
+#if $has_rain or $has_temp
+#set $heat_kinds = []
 #if $has_rain
+#silent $heat_kinds.append(('rain', $gettext("Rainfall")))
+#end if
+#if $has_temp
+#silent $heat_kinds.append(('temp', $gettext("Mean temperature")))
+#silent $heat_kinds.append(('tmin', $gettext("Lowest temperature")))
+#silent $heat_kinds.append(('tmax', $gettext("Highest temperature")))
+#end if
 <section class="panel" data-live-panel="climate-heatmap">
   <div class="panel-head">
     <h2>$gettext("Day by day")</h2>
+    <div class="tabs" id="heat-tabs" role="tablist" aria-label="$gettext('Metric')">
+#for $i, $kind in $enumerate($heat_kinds)
+      <button type="button" role="tab" data-heat="$kind[0]"
+              aria-selected="#if $i == 0 then 'true' else 'false'#">$kind[1]</button>
+#end for
+    </div>
   </div>
   <div class="panel-body">
     <div id="climate-heatmap" class="climate-heatmap"></div>
@@ -292,6 +317,15 @@
 #set $r0 = $convert($ValueTuple(0.0, 'mm', 'group_rain'), $r_unit)[0]
 #set $r1 = $convert($ValueTuple(1.0, 'mm', 'group_rain'), $r_unit)[0]
 #silent $climate_data.update({'tempBack': [$t1 - $t0, $t0], 'rainBack': [$r1 - $r0, $r0]})
-#silent $climate_data.update({'dayStart': $daily_start, 'dayRain': $daily_rain,
+#silent $climate_data.update({'dayStart': $daily_start or $daily_temp_start,
+                              'dayRain': $daily_rain, 'dayTemp': $daily_temp,
+                              'dayMin': $daily_tmin, 'dayMax': $daily_tmax,
                               'weekStart': $station.week_start})
-<script id="climate-data" type="application/json">$jsonize($climate_data)</script>
+## Which unit each of those is in, so the page can show them in another. The daily
+## figures are in the unit the report was rendered in, unlike the monthly ones above.
+#silent $climate_data.update({'rainUnit': $getVar('unit.unit_type.rain', None),
+                              'tempUnit': $getVar('unit.unit_type.outTemp', None)})
+## 'data-live-panel' on a script tag: the live update replaces it like any other
+## marked element, which is what carries the new day into the pictures below.
+<script id="climate-data" type="application/json"
+        data-live-panel="climate-data">$jsonize($climate_data)</script>

@@ -306,6 +306,29 @@
     });
   }
 
+  /* What another script on the page needs in order to show its own numbers in the
+     reader's unit. Four functions and nothing else: the tables and the reader's
+     choice stay in here, so there is one of each on the page.
+
+     Used by climate.js, which draws from data the server put in the page rather than
+     from the plot files, and so cannot go through the chart path above. */
+  CFG.units = {
+    /* The unit this reading should be shown in, or null to leave it alone. */
+    target: targetUnit,
+    /* {value, unit, label} in that unit, or null where nothing has to change. */
+    convert: convertReading,
+    /* How many decimals the skin writes for that unit. */
+    decimals: decimalsFor,
+    /* Whether a reader has chosen a unit system at all. */
+    chosen: function () { return recall('units', ''); }
+  };
+
+  /* The colour this skin gives a temperature, so that the same reading is the same
+     colour wherever it appears. Celsius in, CSS colour out. */
+  CFG.tempColour = function (celsius) {
+    return tempColour(celsius, warmStops());
+  };
+
   /* Which systems this station's readings can be shown in. Empty where the station
      publishes no unit table, which is any skin whose generator predates it. */
   function availableSystems() {
@@ -357,6 +380,8 @@
     charts.forEach(function (entry) {
       if (entry.raw) updateChart(entry, entry.raw);
     });
+    /* For anything on the page that holds numbers of its own. */
+    document.dispatchEvent(new CustomEvent('horizon:units'));
   }
 
   /* -------------------------------------------------------------- shaping */
@@ -2135,6 +2160,11 @@
           /* The sections just swapped in were rendered by the server, in the report's
              own unit. */
           applyUnitsToPanels();
+          /* Anything that drew into a panel has just had its drawing thrown away,
+             along with any listener it had bound to an element inside one. This says
+             the swap is finished and the new elements are in the document. The event
+             on the live update announces the record; this one announces the DOM. */
+          document.dispatchEvent(new CustomEvent('horizon:panels'));
         }
       })
       .catch(function () { pageFetch = false; });

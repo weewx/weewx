@@ -49,6 +49,9 @@
     <script src="uplot.min.js"></script>
     <script>
       window.HORIZON = {
+        /* Where index.json lives. The unit table is in it, and the picker above
+           cannot offer anything without it. */
+        dataDir: "data",
         refreshInterval: $refresh,
         generated: $current.dateTime.raw,
         weekStart: $station.week_start,

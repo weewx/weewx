@@ -11,17 +11,50 @@
 (function () {
   'use strict';
 
-  var node = document.getElementById('climate-data');
-  if (!node) return;
+  var LOCALE = document.documentElement.lang || undefined;
+  var CFG = window.HORIZON || {};
+  var DATA = null;
 
-  var DATA;
-  try {
-    DATA = JSON.parse(node.textContent);
-  } catch (e) {
-    return;
+  /* Read again rather than once. The live update replaces the script tag along with
+     the panels, so what was parsed at load is last cycle's numbers. */
+  function readData() {
+    var node = document.getElementById('climate-data');
+    if (!node) return null;
+    try {
+      return JSON.parse(node.textContent);
+    } catch (e) {
+      return null;
+    }
   }
 
-  var LOCALE = document.documentElement.lang || undefined;
+  /* Which of the four the calendar is showing. Kept here rather than read off the
+     buttons, so it survives the buttons being replaced. */
+  var heatKind = null;
+
+  /* One reading in the unit the reader chose, or unchanged where they chose none.
+     The conversion lives in horizon.js, which owns the table and the choice. */
+  function inReaderUnit(value, unit, obsType) {
+    if (value === null || value === undefined) return value;
+    if (!CFG.units || !unit) return value;
+    var out = CFG.units.convert(value, unit, obsType);
+    return out ? out.value : value;
+  }
+
+  function readerUnit(unit, obsType) {
+    if (!CFG.units || !unit) return unit;
+    return CFG.units.target(obsType, unit) || unit;
+  }
+
+  /* The label to write beside a reading. Where the reader has chosen a unit, it is
+     that unit's; otherwise it is the one the server rendered the page in, which the
+     template sent along. */
+  function unitLabel(unit, obsType, asRendered) {
+    if (CFG.units && unit) {
+      var out = CFG.units.convert(1, unit, obsType);
+      if (out) return out.label;
+    }
+    return asRendered || '';
+  }
 
   function themeColor(name, fallback) {
     var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -39,10 +72,19 @@
      against 20 mm. On a page in Fahrenheit and inches the same ratio would put the
      crossing somewhere else, so the axes are scaled from the data instead, and the
      rule is applied to the axis rather than to the numbers. */
+  var diagram = null;
+
   function drawDiagram() {
     var host = document.getElementById('climate-diagram');
     if (!host || !window.uPlot) return;
     if (!DATA.temp && !DATA.rain) return;
+    /* Called again after a unit change, on the element that still holds the last
+       one. Take it down first, or the two are drawn on top of each other. */
+    if (diagram) {
+      diagram.destroy();
+      diagram = null;
+    }
+    host.innerHTML = '';
 
     var n = DATA.months.length;
     var x = [];
@@ -63,8 +105,19 @@
 
     /* Back to the unit the page reads in, for the labels only. The plot itself stays
        metric, because that is what the 2:1 rule is stated in. */
+    /* From Celsius and millimetres to whatever is on screen. Where the reader has
+       chosen a system, that is the one; otherwise it is the report's own, which is
+       what tempBack and rainBack carry. */
     var backT = DATA.tempBack || [1, 0];
     var backR = DATA.rainBack || [1, 0];
+    if (CFG.units && CFG.units.chosen()) {
+      var t2 = CFG.units.convert(0, 'degree_C', 'outTemp');
+      var t3 = CFG.units.convert(1, 'degree_C', 'outTemp');
+      if (t2 && t3) backT = [t3.value - t2.value, t2.value];
+      var r2 = CFG.units.convert(0, 'mm', 'rain');
+      var r3 = CFG.units.convert(1, 'mm', 'rain');
+      if (r2 && r3) backR = [r3.value - r2.value, r2.value];
+    }
     var label = function (back, digits) {
       return function (u, splits) {
         return splits.map(function (v) {
@@ -152,42 +205,78 @@
       series: series
     };
 
-    var plot = new uPlot(opts, data, host);
+    diagram = new uPlot(opts, data, host);
     new ResizeObserver(function () {
-      plot.setSize({ width: host.clientWidth, height: 300 });
+      if (diagram) diagram.setSize({ width: host.clientWidth, height: 300 });
     }).observe(host);
   }
 
   /* --------------------------------------------------------------- day by day */
 
   /* One square per day, in the shape a calendar has: a column per week, a row per
-     weekday. Drawn as elements rather than as a canvas so that each day keeps its
-     own tooltip and its own place in the page for a screen reader. */
+     weekday. Drawn as elements rather than onto a canvas, so each day keeps its own
+     tooltip and its own place in the page for a screen reader.
+
+     Four things can be shown in it. Rain runs from the page's dry colour to its wet
+     one. The three temperatures use the same nine steps as the reading at the top of
+     the front page, so a warm day is the same colour wherever it appears. */
+  var HEAT = {
+    rain: { list: 'dayRain', unit: 'rainUnit', obs: 'rain', kind: 'rain' },
+    temp: { list: 'dayTemp', unit: 'tempUnit', obs: 'outTemp', kind: 'temp' },
+    tmin: { list: 'dayMin', unit: 'tempUnit', obs: 'outTemp', kind: 'temp' },
+    tmax: { list: 'dayMax', unit: 'tempUnit', obs: 'outTemp', kind: 'temp' }
+  };
+
+  function availableHeat() {
+    return Object.keys(HEAT).filter(function (key) {
+      var list = DATA[HEAT[key].list];
+      return list && list.some(function (v) { return v !== null; });
+    });
+  }
+
   function drawHeatmap() {
     var host = document.getElementById('climate-heatmap');
-    if (!host || !DATA.dayStart || !DATA.dayStart.length) return;
+    if (!host || !DATA || !DATA.dayStart || !DATA.dayStart.length) return;
 
-    /* Two lists of the same length: when each day began, and what fell on it. */
+    var kinds = availableHeat();
+    if (!kinds.length) return;
+    if (kinds.indexOf(heatKind) < 0) heatKind = kinds[0];
+    var spec = HEAT[heatKind];
+    var values = DATA[spec.list] || [];
+    var unit = DATA[spec.unit];
+    var shown = readerUnit(unit, spec.obs);
+    var label = unitLabel(unit, spec.obs,
+                          spec.kind === 'rain' ? DATA.rainLabel : DATA.tempLabel);
+
+    /* Each day twice: as the reader sees it, and as the data hold it. The colour
+       scale for temperature is defined in Celsius, and converting back from what is
+       on screen would go through two conversions to arrive where it started. */
     var byDay = {};
-    var most = 0;
+    var lo = null, hi = null;
     DATA.dayStart.forEach(function (start, i) {
-      var value = DATA.dayRain[i];
-      if (value === null || value === undefined) return;
-      byDay[isoDay(new Date(start * 1000))] = value;
-      if (value > most) most = value;
+      var raw = values[i];
+      if (raw === null || raw === undefined) return;
+      var v = inReaderUnit(raw, unit, spec.obs);
+      byDay[isoDay(new Date(start * 1000))] = { shown: v, raw: raw };
+      if (lo === null || v < lo) lo = v;
+      if (hi === null || v > hi) hi = v;
     });
-    if (!most) {
-      host.innerHTML = '<p class="chart-empty">'
-        + escapeHtml(DATA.noRain || '') + '</p>';
-      return;
-    }
+    if (lo === null) return;
+    /* Rain is measured from nothing, not from the driest day of the year. */
+    if (spec.kind === 'rain') lo = 0;
+
+    var toCelsius = function (v) {
+      if (unit === 'degree_F') return (v - 32) / 1.8;
+      if (unit === 'degree_K') return v - 273.15;
+      return v;
+    };
 
     var startDow = DATA.weekStart === undefined ? 0 : Number(DATA.weekStart);
     var jsStart = (startDow + 1) % 7;
 
     var first = new Date(DATA.year, 0, 1);
     var last = new Date(DATA.year, 11, 31);
-    /* Back up to the start of the week the year begins in, so every column is a whole
+    /* Back to the start of the week the year begins in, so every column is a whole
        week and the rows line up with the weekday names. */
     var cursor = new Date(first);
     cursor.setDate(cursor.getDate() - ((first.getDay() - jsStart + 7) % 7));
@@ -198,9 +287,17 @@
         .toLocaleDateString(LOCALE, { weekday: 'short' }));
     }
 
+    var digits = (CFG.units && CFG.units.decimals(shown, 1)) || 1;
+    var write = function (v) {
+      return v.toLocaleString(LOCALE, {
+        minimumFractionDigits: digits, maximumFractionDigits: digits
+      });
+    };
+
     var cells = [];
     var monthMarks = [];
     var column = 0;
+    var span = (hi - lo) || 1;
     while (cursor <= last) {
       for (var row = 0; row < 7; row++) {
         var inYear = cursor.getFullYear() === DATA.year;
@@ -209,17 +306,24 @@
         if (!inYear) {
           cells.push('<span class="hm-cell hm-outside" style="grid-column:'
             + (column + 2) + ';grid-row:' + (row + 1) + '"></span>');
+        } else if (value === undefined) {
+          cells.push('<span class="hm-cell hm-empty" style="grid-column:'
+            + (column + 2) + ';grid-row:' + (row + 1) + '"></span>');
         } else {
-          /* The scale is the fourth root of the share of the wettest day. A linear
-             scale on rainfall leaves almost every day in the palest step, because
-             most rain falls on few days. */
-          var share = value ? Math.pow(value / most, 0.25) : 0;
+          var style = 'grid-column:' + (column + 2) + ';grid-row:' + (row + 1);
+          if (spec.kind === 'temp' && CFG.tempColour) {
+            style += ';background:' + CFG.tempColour(toCelsius(value.raw));
+          } else {
+            /* The fourth root of the share of the range. On a linear scale nearly
+               every wet day lands in the palest step, because most of a year's rain
+               falls on few of its days. */
+            style += ';--hm: '
+              + Math.pow(Math.max(0, value.shown - lo) / span, 0.25).toFixed(3);
+          }
           var title = cursor.toLocaleDateString(LOCALE, {
             weekday: 'long', day: 'numeric', month: 'long'
-          }) + (value ? ': ' + fmt(value) + ' ' + DATA.rainLabel : '');
-          cells.push('<span class="hm-cell" style="grid-column:' + (column + 2)
-            + ';grid-row:' + (row + 1)
-            + ';--hm: ' + share.toFixed(3) + '"'
+          }) + ': ' + write(value.shown) + (label ? ' ' + label : '');
+          cells.push('<span class="hm-cell" style="' + style + '"'
             + ' title="' + escapeHtml(title) + '"></span>');
           if (cursor.getDate() === 1) {
             monthMarks.push('<span class="hm-month" style="grid-column:' + (column + 2)
@@ -238,14 +342,15 @@
         + (i % 2 === 0 ? escapeHtml(name) : '') + '</span>';
     });
 
+    var ramp = spec.kind === 'temp' ? 'hm-ramp hm-ramp--temp' : 'hm-ramp';
     host.innerHTML =
       '<div class="hm-months" style="grid-template-columns: 2.2rem repeat('
       + column + ', 1fr)">' + monthMarks.join('') + '</div>'
       + '<div class="hm-grid" style="grid-template-columns: 2.2rem repeat('
       + column + ', 1fr)">' + labels.join('') + cells.join('') + '</div>'
-      + '<div class="hm-key"><span>' + escapeHtml(fmt(0)) + '</span>'
-      + '<span class="hm-ramp"></span><span>'
-      + escapeHtml(fmt(most) + ' ' + DATA.rainLabel) + '</span></div>';
+      + '<div class="hm-key"><span>' + escapeHtml(write(lo)) + '</span>'
+      + '<span class="' + ramp + '"></span><span>'
+      + escapeHtml(write(hi) + (label ? ' ' + label : '')) + '</span></div>';
   }
 
   function isoDay(d) {
@@ -265,28 +370,126 @@
 
   /* ------------------------------------------------------------- the record */
 
-  /* Four tables of the same shape, one showing at a time. All four are in the page
-     already, so the switch shows and hides rather than fetching or rebuilding. */
-  function setupRecordTabs() {
-    var tabs = document.getElementById('record-tabs');
-    if (!tabs) return;
-    tabs.addEventListener('click', function (e) {
-      var button = e.target.closest('button[data-record]');
-      if (!button) return;
-      var wanted = button.dataset.record;
-      tabs.querySelectorAll('button[data-record]').forEach(function (b) {
+  /* ------------------------------------------------------------- switching */
+
+  /* Both sets of tabs are bound to the document rather than to the tab strip. The
+     live update replaces whole panels, and a listener bound to an element inside one
+     goes with it: the tabs would still be drawn and no longer do anything. */
+  document.addEventListener('click', function (e) {
+    var record = e.target.closest('#record-tabs button[data-record]');
+    if (record) {
+      var wanted = record.dataset.record;
+      document.querySelectorAll('#record-tabs button[data-record]').forEach(function (b) {
         b.setAttribute('aria-selected', String(b.dataset.record === wanted));
       });
       document.querySelectorAll('[data-record-panel]').forEach(function (panel) {
         panel.hidden = panel.dataset.recordPanel !== wanted;
       });
+      return;
+    }
+    var heat = e.target.closest('#heat-tabs button[data-heat]');
+    if (heat) {
+      heatKind = heat.dataset.heat;
+      markHeatTabs();
+      drawHeatmap();
+    }
+  });
+
+  function markHeatTabs() {
+    document.querySelectorAll('#heat-tabs button[data-heat]').forEach(function (b) {
+      b.setAttribute('aria-selected', String(b.dataset.heat === heatKind));
     });
   }
 
-  function start() {
+  /* ---------------------------------------------------------------- years */
+
+  /* Stepping back through the record. Each year is its own page, written once when
+     the year ended, so the picker fetches the wanted one and puts its panels in place
+     of these rather than loading it. What the reader has open stays open: the tabs,
+     the unit, the scroll position.
+
+     A year is around six kilobytes over the wire. Holding every year in every page
+     would be a quarter of a megabyte on a station with fourteen years of record, and
+     the page is rendered again on every report cycle. */
+  var loading = false;
+
+  function setupYearPicker() {
+    var picker = document.getElementById('climate-year');
+    if (!picker) return;
+    picker.addEventListener('change', function () {
+      if (!picker.value || loading) return;
+      showYear(picker.value, true);
+    });
+
+    /* Back and forward, once a year has been fetched. */
+    window.addEventListener('popstate', function (e) {
+      if (e.state && e.state.climateYear) showYear(e.state.climateYear, false);
+    });
+  }
+
+  function showYear(url, push) {
+    loading = true;
+    var body = document.querySelector('.wrap');
+    if (body) body.setAttribute('aria-busy', 'true');
+
+    fetch(url, { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.text() : null; })
+      .then(function (html) {
+        loading = false;
+        if (body) body.removeAttribute('aria-busy');
+        if (!html) return;
+        var fresh = new DOMParser().parseFromString(html, 'text/html');
+
+        /* The panels, and the data block that feeds the pictures. Same mechanism the
+           live update uses, so a panel that gains a 'data-live-panel' tomorrow is
+           carried across here without anything being added. */
+        document.querySelectorAll('[data-live-panel]').forEach(function (old) {
+          var next = fresh.querySelector('[data-live-panel="' + old.dataset.livePanel + '"]');
+          if (next && old.parentNode) {
+            old.parentNode.replaceChild(document.importNode(next, true), old);
+          }
+        });
+
+        /* The heading says which year is on screen. */
+        var head = document.querySelector('.masthead h1');
+        var freshHead = fresh.querySelector('.masthead h1');
+        if (head && freshHead) head.textContent = freshHead.textContent;
+        document.title = fresh.title || document.title;
+
+        if (push) {
+          history.pushState({ climateYear: url }, '', url);
+        }
+        draw();
+      })
+      .catch(function () {
+        loading = false;
+        if (body) body.removeAttribute('aria-busy');
+        /* The page is still there and still readable. Fall back to loading it. */
+        window.location = url;
+      });
+  }
+
+  /* ------------------------------------------------------------------ start */
+
+  function draw() {
+    DATA = readData();
+    if (!DATA) return;
+    markHeatTabs();
     drawDiagram();
     drawHeatmap();
-    setupRecordTabs();
+  }
+
+  /* The panels have been replaced, taking the pictures with them. Draw them again,
+     from the data that arrived with them. */
+  document.addEventListener('horizon:panels', draw);
+
+  /* The reader has changed unit. Nothing has to be fetched; the same numbers are
+     shown in another one. */
+  document.addEventListener('horizon:units', draw);
+
+  function start() {
+    setupYearPicker();
+    draw();
   }
 
   if (document.readyState === 'loading') {
