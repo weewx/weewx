@@ -1,7 +1,7 @@
 WeeWX change history
 --------------------
 
-### 5.5.n n-Month-2026
+### 5.6.0 dd-Mmm-2026
 
 Say so in the log when a Vantage logger returns far fewer archive records than it
 said it would, which is what corrupt logger memory looks like, and link to the fix.
@@ -12,6 +12,7 @@ package installation, `weectl extension install`, `weectl extension uninstall`,
 `weectl station reconfigure` and `weectl station upgrade` were leaving
 `weewx.conf` as `root:weewx 0644` instead of `weewx:weewx 0660`, so the `weewx`
 user could no longer edit it and the passwords in it became world-readable.
+[PR #1118](https://github.com/weewx/weewx/pull/1118).
 
 Removed the APRS "messaging-capable" packet flag from `restx.py`.
 [PR #1108](https://github.com/weewx/weewx/pull/1108), by `W0CHP`.
