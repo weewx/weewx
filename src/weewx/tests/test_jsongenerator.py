@@ -503,6 +503,30 @@ class TestPeriodFiles:
                    if f.endswith('.json')}
         assert written
 
+    def test_it_runs_where_there_is_no_stop_event(self, config_dict, tmp_path):
+        """ReportGenerator gained stop_event in v5.5.0.
+
+        Under an earlier WeeWX the attribute is never set, and the generator runs
+        there as an extension.
+        """
+        html_root = str(tmp_path)
+        skin_dict = build_skin_dict(html_root)
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        stn_info = weewx.station.StationInfo(**cd['Station'])
+
+        generator = weewx.jsongenerator.JSONGenerator(
+            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
+            first_run=True, stn_info=stn_info)
+        del generator.stop_event
+        try:
+            generator.start()
+        finally:
+            generator.finalize()
+
+        written = {f for f in os.listdir(os.path.join(html_root, 'data'))
+                   if f.endswith('.json')}
+        assert written
+
     def test_manifest_says_whether_images_are_drawn(self, config_dict, tmp_path):
         """A page offering a link to a PNG needs to know if anyone writes it.
 
