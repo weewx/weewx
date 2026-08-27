@@ -161,7 +161,9 @@ a { color: var(--accent); text-underline-offset: 2px; }
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.5rem 1rem;
+  /* Narrow between columns, because two of them are buttons standing side by side.
+     What keeps the heading clear of them is the auto margin below, not this. */
+  gap: 0.5rem 0.4rem;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--border);
 }
@@ -183,24 +185,38 @@ a { color: var(--accent); text-underline-offset: 2px; }
 
 .masthead { position: relative; }
 
-.masthead-tools { display: flex; align-items: center; gap: 0.4rem; margin-left: auto; }
+.masthead-tools { display: flex; align-items: center; gap: 0.4rem; margin-left: auto; order: 1; }
+
+/* The theme switch stands outside the menu, so the order has to put it back where it
+   stood while it was inside: at the end of the row, with the menu button after it.
+
+   Both are centred against the row rather than sat on its baseline. A 2.25rem button
+   is taller than the links beside it, and a shared baseline then leaves it standing
+   a few pixels high. It used to be centred inside .masthead-tools, and this is what
+   keeps it looking the same now that it is not. */
+.masthead > .icon-button,
+.masthead-tools { align-self: center; }
+.masthead > .icon-button { flex: none; }
+.masthead > .theme-toggle { order: 2; }
+.masthead > .nav-toggle { order: 3; }
 
 /* The menu button, hidden until the controls stop fitting. Both class names, because
    .icon-button sets display too and is declared further down. */
 .icon-button.nav-toggle { display: none; }
 
-/* Seven controls do not fit across a phone, and a masthead wider than the page is a
+/* The controls do not fit across a phone, and a masthead wider than the page is a
    page that scrolls sideways. Below this width they fold into a panel under the
-   button, which is the only thing left on the row.
+   button, leaving the two buttons alone on the row.
 
    The panel is positioned against .masthead rather than against the page, so it opens
    under the button wherever the heading has pushed it. */
 @media (max-width: 40rem) {
   .icon-button.nav-toggle {
     display: inline-flex;
-    margin-left: auto;
-    flex: none;
   }
+
+  /* The pair is pushed across together, so the switch carries the margin. */
+  .masthead > .theme-toggle { margin-left: auto; }
 
   .masthead-tools {
     display: none;
@@ -234,17 +250,6 @@ a { color: var(--accent); text-underline-offset: 2px; }
     padding: 0.5rem 0.6rem;
     font-size: var(--fs-sm);
   }
-  .masthead-tools .icon-button {
-    width: 100%;
-    justify-content: flex-start;
-    gap: 0.5rem;
-    padding: 0.5rem 0.6rem;
-    border: 0;
-    font-size: var(--fs-sm);
-  }
-  .masthead-tools .icon-label { display: inline; }
-  /* The menu button keeps its glyph alone: it is not in the menu. */
-  .nav-toggle .icon-label { display: none; }
 }
 
 .icon-button {
@@ -263,11 +268,6 @@ a { color: var(--accent); text-underline-offset: 2px; }
 }
 .icon-button:hover { color: var(--ink); border-color: var(--border-strong); }
 .icon-button svg { width: 1.15rem; height: 1.15rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-
-/* A glyph on its own is enough on a wide screen, where the button sits among other
-   glyphs. In the menu it sits among lines of text, and a lone glyph there reads as
-   something unfinished. */
-.icon-label { display: none; }
 
 /* The two theme glyphs swap depending on the resolved theme. */
 .icon-button .glyph-dark { display: none; }

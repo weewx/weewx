@@ -25,6 +25,11 @@
             <span data-live="dateTime" data-raw="$current.dateTime.raw">$current.dateTime</span></p>
         </div>
 
+          <button type="button" id="theme-toggle" class="icon-button theme-toggle"
+                  aria-label="$gettext('Switch theme')">
+            <svg class="glyph-light" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.5 1.5m11.2 11.2l1.5 1.5M19.1 4.9l-1.5 1.5M6.4 17.6l-1.5 1.5"/></svg>
+            <svg class="glyph-dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></svg>
+          </button>
           <button type="button" id="nav-toggle" class="icon-button nav-toggle"
                   aria-expanded="false" aria-controls="masthead-tools"
                   aria-label="$gettext('Menu')">
@@ -60,10 +65,5 @@
 #end if
           <a class="masthead-link" href="$climate_root/statistics.html">$gettext("Statistics")</a>
           <a class="masthead-link" href="$climate_root/reports.html">$gettext("Reports")</a>
-          <button type="button" id="theme-toggle" class="icon-button" aria-label="$gettext('Switch theme')">
-            <svg class="glyph-light" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.5 1.5m11.2 11.2l1.5 1.5M19.1 4.9l-1.5 1.5M6.4 17.6l-1.5 1.5"/></svg>
-            <svg class="glyph-dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></svg>
-            <span class="icon-label">$gettext("Switch theme")</span>
-          </button>
         </div>
       </header>
