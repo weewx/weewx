@@ -479,6 +479,30 @@ class TestPeriodFiles:
 
         assert not os.path.isdir(os.path.join(html_root, 'data'))
 
+    def test_a_skin_without_a_json_section_runs(self, config_dict, tmp_path):
+        """[ImageGenerator] on its own is enough, which is what the module promises.
+
+        search_up() climbs the section tree through .parent. An empty dict standing
+        in for a missing section has none, so every option read that way raises.
+        """
+        html_root = str(tmp_path)
+        skin_dict = build_skin_dict(html_root)
+        del skin_dict['JSONGenerator']
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        stn_info = weewx.station.StationInfo(**cd['Station'])
+
+        generator = weewx.jsongenerator.JSONGenerator(
+            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
+            first_run=True, stn_info=stn_info)
+        try:
+            generator.start()
+        finally:
+            generator.finalize()
+
+        written = {f for f in os.listdir(os.path.join(html_root, 'data'))
+                   if f.endswith('.json')}
+        assert written
+
     def test_manifest_says_whether_images_are_drawn(self, config_dict, tmp_path):
         """A page offering a link to a PNG needs to know if anyone writes it.
 

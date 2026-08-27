@@ -96,7 +96,12 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # has one, [ImageGenerator] otherwise, so that a skin written before this
         # generator existed needs no new configuration. Option 'source' names a
         # third section instead.
-        self.gen_dict = self.skin_dict.get('JSONGenerator', {})
+        #
+        # An empty section, not an empty dict, when the skin has none: search_up()
+        # climbs the tree through .parent, which a plain dict does not have.
+        if 'JSONGenerator' not in self.skin_dict:
+            self.skin_dict['JSONGenerator'] = {}
+        self.gen_dict = self.skin_dict['JSONGenerator']
         source = self.gen_dict.get('source')
         if source:
             named = True
