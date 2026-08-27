@@ -136,7 +136,7 @@ $shown#slurp
       </dd>
     #elif $x == 'rain'
       <dt>$gettext("Rain Today")</dt>
-      <dd data-live="rainToday" data-value="$day.rain.sum.raw"
+      <dd data-live="rainToday" data-obs="rain" data-value="$day.rain.sum.raw"
           data-unit="$unit.unit_type.rain"><span data-unit-value>$day.rain.sum.format(add_label=False)</span><small data-unit-label>$unit.label.rain</small></dd>
     #else
       <dt>$getVar('obs.label.%s' % $x)</dt>
@@ -156,7 +156,7 @@ $shown#slurp
 #if $has_rain
     <div>
       <dt>$gettext("Rain Today")</dt>
-      <dd data-live="rainToday" data-value="$day.rain.sum.raw"
+      <dd data-live="rainToday" data-obs="rain" data-value="$day.rain.sum.raw"
           data-unit="$unit.unit_type.rain"><span data-unit-value>$day.rain.sum.format(add_label=False)</span><small data-unit-label>$unit.label.rain</small></dd>
       #if $getVar('year.rainRate.has_data', False)
       <dd class="sub-reading" data-value="$current.rainRate.raw" data-obs="rainRate"
