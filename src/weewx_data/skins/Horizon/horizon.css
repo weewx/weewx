@@ -1293,6 +1293,29 @@ select.report-select {
 }
 .footer a { color: var(--ink-muted); }
 
+/* ------------------------------------------------------------ back to top */
+
+/* A page of readings is a long way down, and the way back should not be a swipe
+   repeated twenty times. The button is faint on purpose: it is a convenience laid
+   over the page, not a part of it, and it firms up under the pointer.
+
+   It is kept invisible rather than absent, so that the fade has something to fade.
+   'visibility' is what takes it out of the tab order and off a screen reader while
+   it is gone; opacity alone would leave a button there to be found. */
+.to-top {
+  position: fixed;
+  right: max(var(--edge), 0.75rem);
+  bottom: max(var(--edge), 0.75rem);
+  z-index: 25;
+  opacity: 0;
+  visibility: hidden;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+  transition: opacity .2s, visibility .2s, color .15s, border-color .15s;
+}
+.to-top[data-show] { opacity: 0.45; visibility: visible; }
+.to-top[data-show]:hover,
+.to-top:focus-visible { opacity: 1; }
+
 /* ---------------------------------------------------------------- misc */
 
 .visually-hidden {

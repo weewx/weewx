@@ -75,6 +75,46 @@
     }
   }
 
+  /* The way back to the top of a long page. The stylesheet keeps the button out of
+     sight until this shows it, which is why it is safe to write it on every page:
+     without a script there is nothing to see and nothing to tab to. */
+  function setupToTop() {
+    var button = document.getElementById('to-top');
+    if (!button) return;
+
+    var shown = false;
+    var queued = false;
+
+    /* A scroll event fires far more often than the page can paint, and all this has
+       to decide is whether one attribute is set. One look per frame is enough. */
+    function check() {
+      queued = false;
+      /* A screen of page behind the reader. Less than that and the button would be
+         offering a trip that a flick of the thumb already makes. */
+      var want = (window.pageYOffset || document.documentElement.scrollTop || 0)
+                 > window.innerHeight;
+      if (want === shown) return;
+      shown = want;
+      if (want) button.dataset.show = '';
+      else delete button.dataset.show;
+    }
+
+    window.addEventListener('scroll', function () {
+      if (queued) return;
+      queued = true;
+      window.requestAnimationFrame(check);
+    }, { passive: true });
+    window.addEventListener('resize', check);
+
+    button.addEventListener('click', function () {
+      var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' });
+    });
+
+    /* A page opened at an anchor, or returned to, is already scrolled. */
+    check();
+  }
+
   /* ----------------------------------------------------------- formatting */
 
   var LOCALE = document.documentElement.lang || undefined;
@@ -2291,6 +2331,7 @@
   function init() {
     CFG.text = CFG.text || {};
     setupThemeToggle();
+    setupToTop();
     setupUnitPicker();
     setupPeriods();
     setupLiveUpdate();
