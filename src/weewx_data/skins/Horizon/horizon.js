@@ -278,7 +278,10 @@
      a reader without JavaScript sees, and what everyone sees first. */
   function applyUnitsToPanels(root) {
     (root || document).querySelectorAll('[data-unit][data-value]').forEach(function (el) {
-      var obs = el.dataset.live || el.dataset.obs;
+      /* 'data-obs' first: it names the observation type, while 'data-live' names the
+         field in current.json. They differ where one is derived from the other, as
+         'rainToday' is from 'rain', and only the type is in the unit table. */
+      var obs = el.dataset.obs || el.dataset.live;
       var out = convertReading(parseFloat(el.dataset.value), el.dataset.unit, obs);
       var target = el.querySelector('[data-unit-value]') || el;
       var label = el.querySelector('[data-unit-label]')
