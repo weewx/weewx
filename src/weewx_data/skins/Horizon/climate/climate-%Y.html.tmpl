@@ -10,6 +10,10 @@
 ## The page itself is climate.inc, the same one the year in progress uses.
 ##
 #set $refresh = 0
+## $current is empty on a summary page: it reads the record at the report time,
+## and that is not what an archive page is about. $latest takes the last record
+## the database holds. 'null' keeps the object literal valid on an empty one.
+#set $generated_ts = $latest.dateTime.raw or 'null'
 ## 'global', so that the two includes below can see them. See climate.html.tmpl.
 #set global $climate_year = $year.dateTime.format("%Y")
 #set global $climate_root = '..'
@@ -49,7 +53,7 @@
       window.HORIZON = {
         dataDir: "$climate_root/data",
         refreshInterval: 0,
-        generated: $current.dateTime.raw,
+        generated: $generated_ts,
         weekStart: $station.week_start,
         text: { noData: "$gettext('No data for this period')" }
       };
