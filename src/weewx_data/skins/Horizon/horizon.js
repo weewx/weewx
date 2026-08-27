@@ -334,7 +334,7 @@
       var systems = availableSystems();
       if (systems.length < 2) return;
       picker.innerHTML = ['<option value="">'
-                          + escapeHtml(CFG.text.asConfigured || 'As configured')
+                          + escapeHtml(CFG.text.asConfigured || 'Default')
                           + '</option>']
         .concat(systems.map(function (name) {
           return '<option value="' + name + '"'
