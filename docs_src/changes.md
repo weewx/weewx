@@ -6,7 +6,9 @@ WeeWX change history
 Package upgrades now read `HTML_ROOT` from `weewx.conf` before setting ownership on
 the reporting directory. A station that had moved `HTML_ROOT` was left with the
 directory owned by whoever created it, and `weewxd` could not write its reports there.
+A relative `HTML_ROOT` is resolved against `WEEWX_ROOT`.
 Fixes [Issue #1046](https://github.com/weewx/weewx/issues/1046).
+[PR #1120](https://github.com/weewx/weewx/pull/1120).
 
 Saving the configuration file no longer changes its mode or ownership. Under a
 package installation, `weectl extension install`, `weectl extension uninstall`,
