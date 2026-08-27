@@ -181,7 +181,71 @@ a { color: var(--accent); text-underline-offset: 2px; }
   font-variant-numeric: tabular-nums;
 }
 
+.masthead { position: relative; }
+
 .masthead-tools { display: flex; align-items: center; gap: 0.4rem; margin-left: auto; }
+
+/* The menu button, hidden until the controls stop fitting. Both class names, because
+   .icon-button sets display too and is declared further down. */
+.icon-button.nav-toggle { display: none; }
+
+/* Seven controls do not fit across a phone, and a masthead wider than the page is a
+   page that scrolls sideways. Below this width they fold into a panel under the
+   button, which is the only thing left on the row.
+
+   The panel is positioned against .masthead rather than against the page, so it opens
+   under the button wherever the heading has pushed it. */
+@media (max-width: 40rem) {
+  .icon-button.nav-toggle {
+    display: inline-flex;
+    margin-left: auto;
+    flex: none;
+  }
+
+  .masthead-tools {
+    display: none;
+    position: absolute;
+    top: calc(100% - 0.4rem);
+    right: 0;
+    z-index: 30;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.15rem;
+    min-width: 11rem;
+    max-width: min(16rem, calc(100vw - 2rem));
+    padding: 0.4rem;
+    margin: 0;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: 0 6px 24px rgb(0 0 0 / 18%);
+  }
+
+  .masthead-tools[data-open] { display: flex; }
+
+  /* Full-width rows in the panel, rather than the chips they are on a wide screen. */
+  .masthead-tools .masthead-link {
+    padding: 0.5rem 0.6rem;
+    border-radius: var(--radius);
+  }
+  .masthead-tools select {
+    width: 100%;
+    max-width: none;
+    padding: 0.5rem 0.6rem;
+    font-size: var(--fs-sm);
+  }
+  .masthead-tools .icon-button {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    padding: 0.5rem 0.6rem;
+    border: 0;
+    font-size: var(--fs-sm);
+  }
+  .masthead-tools .icon-label { display: inline; }
+  /* The menu button keeps its glyph alone: it is not in the menu. */
+  .nav-toggle .icon-label { display: none; }
+}
 
 .icon-button {
   display: inline-flex;
@@ -199,6 +263,11 @@ a { color: var(--accent); text-underline-offset: 2px; }
 }
 .icon-button:hover { color: var(--ink); border-color: var(--border-strong); }
 .icon-button svg { width: 1.15rem; height: 1.15rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+/* A glyph on its own is enough on a wide screen, where the button sits among other
+   glyphs. In the menu it sits among lines of text, and a lone glyph there reads as
+   something unfinished. */
+.icon-label { display: none; }
 
 /* The two theme glyphs swap depending on the resolved theme. */
 .icon-button .glyph-dark { display: none; }
@@ -810,6 +879,19 @@ select.report-select {
 }
 .panel:has(.range-bar) .panel-head { top: 0; }
 .range-bar { top: var(--head-height, 2.9rem); border-bottom: 1px solid var(--border); }
+
+/* A row of tabs wider than its panel. On a phone the record tables offer five, which
+   is about twice what fits. They scroll rather than being cut off: a tab nobody can
+   reach is a tab that is not there. The scrollbar itself is left out, because the row
+   is short and a bar under it would take a third of its height. */
+.tabs {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tabs > button { flex: none; }
 
 .range-nav {
   grid-column: 2;

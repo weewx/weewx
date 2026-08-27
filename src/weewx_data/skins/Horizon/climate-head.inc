@@ -25,7 +25,12 @@
             <span data-live="dateTime" data-raw="$current.dateTime.raw">$current.dateTime</span></p>
         </div>
 
-        <div class="masthead-tools">
+          <button type="button" id="nav-toggle" class="icon-button nav-toggle"
+                  aria-expanded="false" aria-controls="masthead-tools"
+                  aria-label="$gettext('Menu')">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+        <div class="masthead-tools" id="masthead-tools">
 ## The same control the front page carries, so a reader who set a unit there finds
 ## the same numbers here. Filled by the script, and hidden where there is nothing to
 ## choose between.
@@ -58,6 +63,7 @@
           <button type="button" id="theme-toggle" class="icon-button" aria-label="$gettext('Switch theme')">
             <svg class="glyph-light" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.5 1.5m11.2 11.2l1.5 1.5M19.1 4.9l-1.5 1.5M6.4 17.6l-1.5 1.5"/></svg>
             <svg class="glyph-dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></svg>
+            <span class="icon-label">$gettext("Switch theme")</span>
           </button>
         </div>
       </header>

@@ -40,6 +40,47 @@
     };
   }
 
+  /* The menu the masthead controls fold into on a phone. The stylesheet decides
+     whether there is a button at all; this only opens and closes it. */
+  function setupNavToggle() {
+    var button = document.getElementById('nav-toggle');
+    var tools = document.getElementById('masthead-tools');
+    if (!button || !tools) return;
+
+    var close = function () {
+      delete tools.dataset.open;
+      button.setAttribute('aria-expanded', 'false');
+    };
+
+    button.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (tools.dataset.open === undefined) {
+        tools.dataset.open = '';
+        button.setAttribute('aria-expanded', 'true');
+      } else {
+        close();
+      }
+    });
+
+    /* A tap anywhere else, or Escape, puts it away. Not a tap inside it: choosing a
+       unit there should leave it open to choose something else. */
+    document.addEventListener('click', function (e) {
+      if (tools.dataset.open !== undefined && !tools.contains(e.target)) close();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && tools.dataset.open !== undefined) {
+        close();
+        button.focus();
+      }
+    });
+
+    /* Following a link leaves the page anyway, and leaving it open would have it
+       flash back into view on the way out. */
+    tools.addEventListener('click', function (e) {
+      if (e.target.closest('a')) close();
+    });
+  }
+
   function setupThemeToggle() {
     var button = document.getElementById('theme-toggle');
     if (!button) return;
@@ -2398,6 +2439,7 @@
 
   function init() {
     CFG.text = CFG.text || {};
+    setupNavToggle();
     setupThemeToggle();
     setupUnitPicker();
     setupPeriods();
