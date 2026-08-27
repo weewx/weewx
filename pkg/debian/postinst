@@ -433,11 +433,45 @@ setup_database_dir() {
     chown -R $WEEWX_USER:$WEEWX_GROUP $WEEWX_HOME
 }
 
+# get the first value of an option from the configuration file. Leading
+# whitespace matters: the option is indented, and commented-out examples such as
+# #HTML_ROOT must not match. A trailing comment is stripped.
+get_option() {
+    [ -f $cfgfile ] || return
+    sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" $cfgfile | head -1         | sed -e 's/[[:space:]]*#.*$//' -e 's/[[:space:]]*$//'
+}
+
+# get WEEWX_ROOT from the configuration file. It defaults to the directory that
+# holds the configuration file, and a relative value is relative to that
+# directory. A value of / comes from a v4 configuration file, which weecfg
+# patches to the same default.
+get_weewx_root() {
+    wr=$(get_option WEEWX_ROOT)
+    case "$wr" in
+        ''|/) dirname $cfgfile ;;
+        /*) echo "$wr" ;;
+        *) echo "$(dirname $cfgfile)/$wr" ;;
+    esac
+}
+
+# get HTML_ROOT from the configuration file, falling back to the default. The
+# first HTML_ROOT is the one in [StdReport]. Later ones belong to individual
+# reports and sit under it.
+get_html_root() {
+    hr=$(get_option HTML_ROOT)
+    case "$hr" in
+        '') echo "$WEEWX_HTMLDIR" ;;
+        /*) echo "$hr" ;;
+        *) echo "$(get_weewx_root)/$hr" ;;
+    esac
+}
+
 # create the reporting directory
 setup_reporting_dir() {
-    echo "Configuring reporting directory $WEEWX_HTMLDIR"
-    mkdir -p $WEEWX_HTMLDIR
-    set_permissions $WEEWX_USER $WEEWX_GROUP $WEEWX_HTMLDIR
+    html_root=$(get_html_root)
+    echo "Configuring reporting directory $html_root"
+    mkdir -p "$html_root"
+    set_permissions $WEEWX_USER $WEEWX_GROUP "$html_root"
 }
 
 # set the permissions on the configuration, skins, and extensions

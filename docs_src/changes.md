@@ -3,6 +3,13 @@ WeeWX change history
 
 ### 5.5.n n-Month-2026
 
+Package upgrades now read `HTML_ROOT` from `weewx.conf` before setting ownership on
+the reporting directory. A station that had moved `HTML_ROOT` was left with the
+directory owned by whoever created it, and `weewxd` could not write its reports there.
+A relative `HTML_ROOT` is resolved against `WEEWX_ROOT`.
+Fixes [Issue #1046](https://github.com/weewx/weewx/issues/1046).
+[PR #1120](https://github.com/weewx/weewx/pull/1120).
+
 Say so in the log when a Vantage logger returns far fewer archive records than it
 said it would, which is what corrupt logger memory looks like, and link to the fix.
 Fixes [Issue #1105](https://github.com/weewx/weewx/issues/1105).
