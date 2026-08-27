@@ -349,6 +349,13 @@
     chosen: function () { return recall('units', ''); }
   };
 
+  /* The tooltip, for a chart this file did not build. Pass a function that writes
+     the contents for one point; the box, its placement and the touch handling are
+     the ones the charts on this page use. */
+  CFG.tooltip = function (render) {
+    return tooltipPlugin(null, render);
+  };
+
   /* The colour this skin gives a temperature, so that the same reading is the same
      colour wherever it appears. Celsius in, CSS colour out. */
   CFG.tempColour = function (celsius) {
@@ -706,7 +713,17 @@
     };
   }
 
-  function tooltipPlugin(meta) {
+  /* The box that follows the cursor, and the reading it shows.
+
+     'render' is optional. Without it the box lists the series of a plot file, which
+     is what the charts on this page hold. With it, the caller writes the contents:
+     the climate page draws from monthly figures rather than from a plot file, and its
+     x axis counts months rather than seconds.
+
+     Everything else is shared, and the part worth sharing is the touch handling: a
+     touch screen has no hover, so reading a chart with a finger has to be told apart
+     from scrolling past it. */
+  function tooltipPlugin(meta, render) {
     var el;
     return {
       hooks: {
@@ -756,6 +773,15 @@
             el.style.opacity = '0';
             return;
           }
+
+          if (render) {
+            var written = render(u, idx);
+            if (!written) { el.style.opacity = '0'; return; }
+            el.innerHTML = written;
+            place(u);
+            return;
+          }
+
           var ts = u.data[0][idx];
           var rows = '';
           var any = false;
@@ -777,19 +803,23 @@
           if (!any) { el.style.opacity = '0'; return; }
 
           el.innerHTML = '<div class="t-time">' + escapeHtml(fmtTime(ts, meta._period)) + '</div>' + rows;
-          el.style.opacity = '1';
-
-          /* Keep the tooltip inside the plot. */
-          var w = el.offsetWidth, h = el.offsetHeight;
-          var left = u.cursor.left + 14;
-          if (left + w > u.bbox.width / devicePixelRatio) left = u.cursor.left - w - 14;
-          var top = u.cursor.top - h - 10;
-          if (top < 0) top = u.cursor.top + 16;
-          el.style.left = left + 'px';
-          el.style.top = top + 'px';
+          place(u);
         }
       }
     };
+
+    /* Beside the cursor, and inside the plot. Above it where there is room, below it
+       at the top of the chart, and on the other side near the right edge. */
+    function place(u) {
+      el.style.opacity = '1';
+      var w = el.offsetWidth, h = el.offsetHeight;
+      var left = u.cursor.left + 14;
+      if (left + w > u.bbox.width / devicePixelRatio) left = u.cursor.left - w - 14;
+      var top = u.cursor.top - h - 10;
+      if (top < 0) top = u.cursor.top + 16;
+      el.style.left = left + 'px';
+      el.style.top = top + 'px';
+    }
   }
 
   function escapeHtml(s) {

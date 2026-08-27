@@ -367,6 +367,11 @@
 ## figures are in the unit the report was rendered in, unlike the monthly ones above.
 #silent $climate_data.update({'rainUnit': $getVar('unit.unit_type.rain', None),
                               'tempUnit': $getVar('unit.unit_type.outTemp', None)})
+## What the tooltips call each figure. In the page's language, like everything else.
+#silent $climate_data.update({'meanText': $gettext("Mean temperature"),
+                              'rainText': $gettext("Rainfall"),
+                              'etText': $gettext("Evapotranspiration"),
+                              'keptText': $gettext("Water balance")})
 ## 'data-live-panel' on a script tag: the live update replaces it like any other
 ## marked element, which is what carries the new day into the pictures below.
 <script id="climate-data" type="application/json"

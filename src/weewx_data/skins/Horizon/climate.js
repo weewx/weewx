@@ -72,6 +72,33 @@
      against 20 mm. On a page in Fahrenheit and inches the same ratio would put the
      crossing somewhere else, so the axes are scaled from the data instead, and the
      rule is applied to the axis rather than to the numbers. */
+  /* What a tooltip shows for one month. 'rows' is [label, value, unit, colour], and a
+     null value is left out rather than written as a gap.
+
+     The box and the touch handling come from horizon.js, so reading these charts with
+     a finger works the same way as reading the ones on the front page. */
+  function monthTip(rows) {
+    return function (u, idx) {
+      var written = rows(idx).filter(function (r) {
+        return r[1] !== null && r[1] !== undefined && !isNaN(r[1]);
+      });
+      if (!written.length) return null;
+      var digits = function (v) {
+        return Math.abs(v) >= 100 ? 0 : 1;
+      };
+      return '<div class="t-time">' + escapeHtml(DATA.months[idx] || '') + '</div>'
+        + written.map(function (r) {
+          return '<div class="t-row" style="color:' + r[3] + '">'
+            + '<i></i><span style="color:var(--ink)">' + escapeHtml(r[0]) + '</span>'
+            + '<b style="color:var(--ink)">'
+            + r[1].toLocaleString(LOCALE, {
+                minimumFractionDigits: digits(r[1]), maximumFractionDigits: digits(r[1])
+              })
+            + (r[2] ? ' ' + escapeHtml(r[2]) : '') + '</b></div>';
+        }).join('');
+    };
+  }
+
   var diagram = null;
 
   function drawDiagram() {
@@ -206,7 +233,23 @@
           values: label(backR, backR[0] < 0.5 ? 1 : 0)
         }
       ],
-      series: series
+      series: series,
+      plugins: CFG.tooltip ? [CFG.tooltip(monthTip(function (idx) {
+        var tLabel = unitLabel(DATA.tempUnit, 'outTemp', DATA.tempLabel);
+        var rLabel = unitLabel(DATA.rainUnit, 'rain', DATA.rainLabel);
+        var out = [];
+        if (DATA.temp && DATA.temp[idx] !== null) {
+          out.push([DATA.meanText || 'Mean temperature',
+                    DATA.temp[idx] * backT[0] + backT[1], tLabel,
+                    themeColor('--hi', '#b2503c')]);
+        }
+        if (DATA.rain && DATA.rain[idx] !== null) {
+          out.push([DATA.rainText || 'Rainfall',
+                    DATA.rain[idx] * backR[0] + backR[1], rLabel,
+                    themeColor('--lo', '#2f6f9e')]);
+        }
+        return out;
+      }))] : []
     };
 
     diagram = new uPlot(opts, data, host);
@@ -299,6 +342,19 @@
           }
         }
       ],
+      plugins: CFG.tooltip ? [CFG.tooltip(monthTip(function (idx) {
+        var label = unitLabel(DATA.rainUnit, 'rain', DATA.rainLabel);
+        var scaled = function (v) { return v === null ? null : v * back[0] + back[1]; };
+        return [
+          [DATA.rainText || 'Rainfall', scaled(rain[idx]), label,
+           themeColor('--lo', '#2f6f9e')],
+          [DATA.etText || 'Evapotranspiration',
+           DATA.et[idx] === null ? null : scaled(DATA.et[idx]), label,
+           themeColor('--sun', '#a8761c')],
+          [DATA.keptText || 'Water balance', scaled(kept[idx]), label,
+           themeColor('--ink', '#16222e')]
+        ];
+      }))] : [],
       series: [
         {},
         {
