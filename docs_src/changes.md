@@ -23,6 +23,11 @@ Added `weewx.jsongenerator.JSONGenerator`, which writes the plots defined for th
 skin `Horizon`, which does that and can step back through the whole record.
 [PR #1128](https://github.com/weewx/weewx/issues/1128).
 
+Added a climate page to the skin `Horizon`: the climatological days of a year, the
+year's shape as a Walter and Lieth diagram, rainfall against evapotranspiration,
+and the whole record month by month. One page per year.
+[PR #1130](https://github.com/weewx/weewx/issues/1130).
+
 Added the ability for services to bind to a `SHUTDOWN` event. This allows
 services to be notified when `weewxd` is being shutdown. 
 [PR #1106](https://github.com/weewx/weewx/issues/1106). Thanks to user
