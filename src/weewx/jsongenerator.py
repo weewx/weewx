@@ -84,6 +84,11 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         self.gen_archive(self.gen_ts)
 
     def setup(self):
+        # ReportGenerator gained stop_event in v5.5.0. Earlier versions do not set
+        # it, and this generator runs under them as an extension.
+        if not hasattr(self, 'stop_event'):
+            self.stop_event = None
+
         # Generic labels, such as "Outside Temperature":
         try:
             self.generic_dict = self.skin_dict['Labels']['Generic']
@@ -96,7 +101,12 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # has one, [ImageGenerator] otherwise, so that a skin written before this
         # generator existed needs no new configuration. Option 'source' names a
         # third section instead.
-        self.gen_dict = self.skin_dict.get('JSONGenerator', {})
+        #
+        # An empty section, not an empty dict, when the skin has none: search_up()
+        # climbs the tree through .parent, which a plain dict does not have.
+        if 'JSONGenerator' not in self.skin_dict:
+            self.skin_dict['JSONGenerator'] = {}
+        self.gen_dict = self.skin_dict['JSONGenerator']
         source = self.gen_dict.get('source')
         if source:
             named = True
