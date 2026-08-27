@@ -72,6 +72,9 @@
   #end for
           </select>
 #end if
+#if $to_bool($DisplayOptions.get('show_climate', True))
+          <a class="masthead-link" href="climate.html">$gettext("Climate")</a>
+#end if
 #if $to_bool($DisplayOptions.get('show_reports', True))
           <a class="masthead-link" href="reports.html">$gettext("Reports")</a>
 #end if
