@@ -1323,6 +1323,15 @@ select.report-select {
   white-space: nowrap;
 }
 
+/* The unit a row of the statistics tables is written in. Without it the numbers
+   change when the reader picks another unit and nothing says why. */
+.stat-unit {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
 /* The year's own total, which is what most readers came for. */
 .climate-total { font-weight: 600; color: var(--ink); }
 

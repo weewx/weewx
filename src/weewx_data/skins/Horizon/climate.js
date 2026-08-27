@@ -105,19 +105,23 @@
 
     /* Back to the unit the page reads in, for the labels only. The plot itself stays
        metric, because that is what the 2:1 rule is stated in. */
-    /* From Celsius and millimetres to whatever is on screen. Where the reader has
-       chosen a system, that is the one; otherwise it is the report's own, which is
-       what tempBack and rainBack carry. */
-    var backT = DATA.tempBack || [1, 0];
-    var backR = DATA.rainBack || [1, 0];
-    if (CFG.units && CFG.units.chosen()) {
-      var t2 = CFG.units.convert(0, 'degree_C', 'outTemp');
-      var t3 = CFG.units.convert(1, 'degree_C', 'outTemp');
-      if (t2 && t3) backT = [t3.value - t2.value, t2.value];
-      var r2 = CFG.units.convert(0, 'mm', 'rain');
-      var r3 = CFG.units.convert(1, 'mm', 'rain');
-      if (r2 && r3) backR = [r3.value - r2.value, r2.value];
-    }
+    /* From Celsius and millimetres to whatever is on screen, as a factor and an
+       offset. Without a choice by the reader that is the report's own unit, which the
+       template worked out and sent along. With one it is theirs.
+
+       Measured at 0 and at 1. Where the answer is null the target is the metric unit
+       itself, and the conversion is the identity: a reader who asks for Celsius on a
+       page rendered in Fahrenheit must not be given the page's factor. */
+    var backOf = function (metricUnit, obs, asRendered) {
+      if (!CFG.units || !CFG.units.chosen()) return asRendered || [1, 0];
+      var target = CFG.units.target(obs, metricUnit);
+      if (!target) return [1, 0];
+      var at0 = CFG.units.convert(0, metricUnit, obs);
+      var at1 = CFG.units.convert(1, metricUnit, obs);
+      return (at0 && at1) ? [at1.value - at0.value, at0.value] : [1, 0];
+    };
+    var backT = backOf('degree_C', 'outTemp', DATA.tempBack);
+    var backR = backOf('mm', 'rain', DATA.rainBack);
     var label = function (back, digits) {
       return function (u, splits) {
         return splits.map(function (v) {
@@ -175,7 +179,7 @@
         },
         {
           scale: 't',
-          label: DATA.tempLabel,
+          label: unitLabel(DATA.tempUnit, 'outTemp', DATA.tempLabel),
           labelSize: 22,
           labelFont: '11px ' + getComputedStyle(document.body).fontFamily,
           stroke: function () { return themeColor('--hi', '#b2503c'); },
@@ -191,7 +195,7 @@
         {
           scale: 'r',
           side: 1,
-          label: DATA.rainLabel,
+          label: unitLabel(DATA.rainUnit, 'rain', DATA.rainLabel),
           labelSize: 22,
           labelFont: '11px ' + getComputedStyle(document.body).fontFamily,
           stroke: function () { return themeColor('--lo', '#2f6f9e'); },

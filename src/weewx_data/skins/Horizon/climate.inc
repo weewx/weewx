@@ -95,11 +95,17 @@
 ## observation, so the threshold comes out looking like every other reading on the
 ## page rather than like a number from the code.
 #from weewx.units import ValueTuple, convert
+## The threshold, as an element rather than as a number inside a sentence. It carries
+## the reading the way every other reading on the page does, so the unit picker
+## reaches it: 25 C stays 25 C when the reader asks for Celsius, and reads 77 F when
+## they ask for Fahrenheit.
 #def threshold_of($spec)
 #set $obs = $spec['obs']
 #set $vt = $ValueTuple(*$spec['value'])
-#set $shown = $convert($vt, $getVar('unit.unit_type.%s' % $obs))
-#return ($getVar('unit.format.%s' % $obs) % $shown[0]) + $getVar('unit.label.%s' % $obs)
+#set $target = $getVar('unit.unit_type.%s' % $obs)
+#set $shown = $convert($vt, $target)
+#set $text = ($getVar('unit.format.%s' % $obs) % $shown[0])
+#return '<span data-obs="%s" data-value="%s" data-unit="%s"><span data-unit-value>%s</span><small data-unit-label>%s</small></span>' % ($obs, $shown[0], $target, $text, $getVar('unit.label.%s' % $obs))
 #end def
 ##
 <section class="panel" data-live-panel="climate-days">
@@ -266,7 +272,11 @@
         <caption class="visually-hidden">$spec['title']</caption>
         <thead>
           <tr>
-            <th scope="col">$gettext("Year")</th>
+            <th scope="col">$gettext("Year")
+              <span class="climate-rule" data-obs="$spec['obs']"
+                    data-unit="$getVar('unit.unit_type.%s' % $spec['obs'])"><small
+                    data-unit-label>$getVar('unit.label.%s' % $spec['obs'])</small></span>
+            </th>
 #for $name in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
             <th scope="col" class="num">$gettext($name)</th>
 #end for
@@ -282,12 +292,18 @@
 #silent $by_month.__setitem__($int($m.dateTime.format("%m")),
                               $getattr($getattr($m, $spec['obs']), $spec['agg']))
 #end for
+#set $cell_unit = $getVar('unit.unit_type.%s' % $spec['obs'])
 #for $mon in range(1, 13)
 #set $cell = $by_month.get($mon)
-            <td class="num#if $cell is None or $cell.raw is None then ' climate-none' else ''#">#slurp
-#if $cell is not None and $cell.raw is not None then $cell.format(add_label=False) else '&ndash;'#</td>
+#if $cell is None or $cell.raw is None
+            <td class="num climate-none">&ndash;</td>
+#else
+            <td class="num" data-obs="$spec['obs']" data-value="$cell.raw"
+                data-unit="$cell_unit"><span data-unit-value>$cell.format(add_label=False)</span></td>
+#end if
 #end for
-            <td class="num climate-total">$getattr($getattr($y, $spec['obs']), $spec['agg']).format(add_label=False)</td>
+#set $whole = $getattr($getattr($y, $spec['obs']), $spec['agg'])
+            <td class="num climate-total"#if $whole.raw is not None then ' data-obs="%s" data-value="%s" data-unit="%s"' % ($spec['obs'], $whole.raw, $cell_unit) else ''#><span data-unit-value>$whole.format(add_label=False)</span></td>
           </tr>
 #end for
         </tbody>

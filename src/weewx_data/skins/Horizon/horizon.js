@@ -270,6 +270,13 @@
     };
   }
 
+  /* A label spaced the way the one it replaces was spaced. */
+  function respace(was, now) {
+    if (!now) return now;
+    var lead = was && /^\s/.test(was) ? ' ' : '';
+    return lead + now.replace(/^\s+/, '');
+  }
+
   /* Rewrite the readings the server put on the page.
 
      Each of them carries the number as the database holds it and the unit that number
@@ -277,7 +284,23 @@
      text stays as the server wrote it until a reader chooses otherwise, which is what
      a reader without JavaScript sees, and what everyone sees first. */
   function applyUnitsToPanels(root) {
-    (root || document).querySelectorAll('[data-unit][data-value]').forEach(function (el) {
+    var scope = root || document;
+
+    /* A column heading that names the unit for the column under it, and carries no
+       reading of its own. Only the label moves; there is no number here to convert. */
+    scope.querySelectorAll('[data-unit]:not([data-value])').forEach(function (el) {
+      var label = el.querySelector('[data-unit-label]');
+      if (!label) return;
+      if (label.dataset.asWritten === undefined) {
+        label.dataset.asWritten = label.textContent;
+      }
+      var out = convertReading(1, el.dataset.unit, el.dataset.obs || el.dataset.live);
+      label.textContent = out
+        ? respace(label.dataset.asWritten, out.label)
+        : label.dataset.asWritten;
+    });
+
+    scope.querySelectorAll('[data-unit][data-value]').forEach(function (el) {
       /* 'data-obs' first: it names the observation type, while 'data-live' names the
          field in current.json. They differ where one is derived from the other, as
          'rainToday' is from 'rain', and only the type is in the unit table. */
@@ -302,7 +325,10 @@
         label.dataset.asWritten = label.textContent;
       }
       setLive(target, fmtNumber(out.value, decimalsFor(out.unit)));
-      if (label) label.textContent = out.label;
+      /* The skin writes some labels with a leading space and some without, and the
+         unit table strips them all. Put back whatever the server had used here, so a
+         converted reading is spaced like the one it replaced. */
+      if (label) label.textContent = respace(label.dataset.asWritten, out.label);
     });
   }
 
@@ -1102,12 +1128,19 @@
     entry.raw = raw;
     plot.setData(align(entry.meta.series), whole);
 
-    /* The table is built from the data, so it is rebuilt as well. Only while it is
-       open: a closed one is rebuilt when the reader opens it. */
-    var details = entry.host.closest('.chart-card').querySelector('.chart-data');
-    if (details && details.open) {
-      details.querySelector('.scroller-host').innerHTML =
-        renderTable(entry.meta, digitsFor(entry.meta.series));
+    /* The table is built from the data, so it is rebuilt as well. A closed one is
+       marked instead of rebuilt, and built again when the reader opens it: rebuilding
+       eleven tables nobody is looking at, once a minute, is work for nothing. */
+    var card = entry.host.closest('.chart-card');
+    var details = card && card.querySelector('.chart-data');
+    if (details) {
+      if (details.open) {
+        details.querySelector('.scroller-host').innerHTML =
+          renderTable(entry.meta, digitsFor(entry.meta.series));
+        delete details.dataset.stale;
+      } else {
+        details.dataset.stale = '1';
+      }
     }
     return true;
   }
@@ -1965,9 +1998,24 @@
     var container = document.getElementById('charts');
     if (container) {
       container.addEventListener('toggle', function (e) {
-        if (e.target.matches('details.chart-data') && e.target.open) {
-          var card = e.target.closest('.chart-card');
-          if (card) hydrate(card);
+        if (!e.target.matches('details.chart-data') || !e.target.open) return;
+        var card = e.target.closest('.chart-card');
+        if (!card) return;
+        /* Never drawn: fetch and draw it, table and all. */
+        if (!card.dataset.loaded) {
+          hydrate(card);
+          return;
+        }
+        /* Drawn, but the data or the unit moved on while this was closed. */
+        if (e.target.dataset.stale) {
+          var entry = charts.find(function (c) {
+            return c.host === card.querySelector('.chart-host');
+          });
+          if (entry) {
+            e.target.querySelector('.scroller-host').innerHTML =
+              renderTable(entry.meta, digitsFor(entry.meta.series));
+          }
+          delete e.target.dataset.stale;
         }
       }, true);
     }

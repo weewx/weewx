@@ -963,7 +963,15 @@ def _unit_choices(obs_types, units_seen, formatter):
                ('Metric', weewx.units.MetricUnits),
                ('MetricWX', weewx.units.MetricWXUnits)]
 
+    # Every observation type WeeWX knows a group for, not only the ones that appear in
+    # a plot. A page shows readings that were never plotted: the card at the top of
+    # the Horizon skin carries rain rate, UV and half a dozen others that no chart
+    # draws. Leaving those out means the picker moves some readings on a page and not
+    # the ones beside them. The whole table is three and a half kilobytes.
     groups = {}
+    for obs_type, group in weewx.units.obs_group_dict.items():
+        if group:
+            groups[str(obs_type)] = str(group)
     for obs_type in sorted(obs_types):
         group = weewx.units.getUnitGroup(obs_type)
         if group:
@@ -980,8 +988,13 @@ def _unit_choices(obs_types, units_seen, formatter):
                 wanted.add(unit)
         by_system[name] = chosen
 
+    # From every unit that could be on screen, not only from the ones the plot files
+    # were written in. A page that draws its own picture may work in a unit no plot
+    # uses: the climate diagram plots Celsius and millimetres whatever the station
+    # records, because the ratio it draws is defined in those. Without a row for them
+    # here, that page has no way back to the reader's unit.
     convert = {}
-    for from_unit in sorted(units_seen):
+    for from_unit in sorted(wanted):
         pairs = {}
         for to_unit in sorted(wanted):
             if to_unit == from_unit:
