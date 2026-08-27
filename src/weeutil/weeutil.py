@@ -12,6 +12,7 @@
 
 import calendar
 import cmath
+import collections
 import datetime
 import importlib
 import math
@@ -163,32 +164,27 @@ def _ord_to_ts(ord_date):
 # "weekSpans", etc. They are generally not used between two random times. 
 # ===============================================================================
 
-class TimeSpan(tuple):
+class TimeSpan(collections.namedtuple('TimeSpanBase', ['start', 'stop'])):
     """Represents a time span, exclusive on the left, inclusive on the right."""
 
-    def __new__(cls, *args):
-        if args[0] > args[1]:
-            raise ValueError("start time (%d) is greater than stop time (%d)" % (args[0], args[1]))
-        return tuple.__new__(cls, args)
+    # We do not need new attributes.
+    __slots__ = ()
 
-    @property
-    def start(self):
-        return self[0]
-
-    @property
-    def stop(self):
-        return self[1]
+    def __new__(cls, start, stop):
+        if start > stop:
+            raise ValueError("start time (%d) is greater than stop time (%d)" % (start, stop))
+        return super(TimeSpan, cls).__new__(cls, start, stop)
 
     @property
     def length(self):
-        return self[1] - self[0]
+        return self.stop - self.start
 
     def includesArchiveTime(self, timestamp):
         """Test whether the span includes a timestamp, exclusive on the left,
         inclusive on the right.
 
         Args:
-            timestamp(float): The timestamp to be tested.
+            timestamp(float|int): The timestamp to be tested.
 
         Returns:
              bool: True if the span includes the time timestamp, otherwise False.
@@ -197,17 +193,12 @@ class TimeSpan(tuple):
         return self.start < timestamp <= self.stop
 
     def includes(self, span):
+        """Test whether another TimeSpan lies wholly within me."""
         return self.start <= span.start <= self.stop and self.start <= span.stop <= self.stop
-
-    def __eq__(self, other):
-        return self.start == other.start and self.stop == other.stop
 
     def __str__(self):
         return "[%s -> %s]" % (timestamp_to_string(self.start),
                                timestamp_to_string(self.stop))
-
-    def __hash__(self):
-        return hash(self.start) ^ hash(self.stop)
 
 
 nominal_intervals = {

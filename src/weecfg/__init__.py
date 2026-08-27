@@ -13,6 +13,7 @@ import shutil
 import stat
 import sys
 import tempfile
+from contextlib import contextmanager
 
 import configobj
 
@@ -723,24 +724,33 @@ def extract_zip(filename, target_dir, printer=None):
     return member_names
 
 
+@contextmanager
+def add_path(new_path):
+    """Put a directory at the front of sys.path for the duration of the block.
+
+    A copy, not a reference: sys.path is mutated in place below, so keeping a
+    reference would restore the mutated list."""
+    old_path = list(sys.path)
+    try:
+        sys.path.insert(0, new_path)
+        yield sys.path
+    finally:
+        sys.path = old_path
+
+
 def get_extension_installer(extension_installer_dir):
     """Get the installer in the given extension installer subdirectory"""
-    old_path = sys.path
-    try:
-        # Inject the location of the installer directory into the path
-        sys.path.insert(0, extension_installer_dir)
+    with add_path(extension_installer_dir):
         try:
             # Now I can import the extension's 'install' module:
-            __import__('install')
+            install_module = importlib.import_module('install')
         except ImportError:
             raise ExtensionError("Cannot find 'install' module in %s" % extension_installer_dir)
-        install_module = sys.modules['install']
         loader = getattr(install_module, 'loader')
-        # Get rid of the module:
+        # Every extension names its installer module 'install', so it must not be left in
+        # the module cache: the next extension installed by this process would get this
+        # one's installer back instead of its own.
         sys.modules.pop('install', None)
         installer = loader()
-    finally:
-        # Restore the path
-        sys.path = old_path
 
     return install_module.__file__, installer

@@ -11,6 +11,7 @@
 # The doctest examples work under Python 3 only!!
 #
 
+import collections
 import json
 import locale
 import logging
@@ -528,7 +529,7 @@ complex_conversions = {
     'polar': lambda c: weeutil.weeutil.Polar.from_complex(c) if c is not None else None,
 }
 
-class ValueTuple(tuple):
+class ValueTuple(collections.namedtuple('ValueTuple', ['value', 'unit', 'group'])):
     """
     A value, along with the unit it is in, can be represented by a 3-way tuple called a value
     tuple. All weewx routines can accept a simple unadorned 3-way tuple as a value tuple, but they
@@ -546,20 +547,7 @@ class ValueTuple(tuple):
     It is also valid to have a unit type of None (meaning there is no information about the unit
     the value is in). In this case, you won't be able to convert it to another unit.
     """
-    def __new__(cls, *args):
-        return tuple.__new__(cls, args)
-
-    @property
-    def value(self):
-        return self[0]
-
-    @property
-    def unit(self):
-        return self[1]
-
-    @property
-    def group(self):
-        return self[2]
+    __slots__ = ()
 
     # ValueTuples have some modest math abilities: subtraction and addition.
     def __sub__(self, other):
