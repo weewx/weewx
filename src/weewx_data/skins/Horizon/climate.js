@@ -215,6 +215,120 @@
     }).observe(host);
   }
 
+  /* ------------------------------------------------------------ water balance */
+
+  /* What fell against what left again, month by month. Rain stands above the line,
+     evapotranspiration below it, and the line between them is what the ground kept.
+
+     Two bars and a line rather than one bar of the difference: a dry month and a
+     month where a lot fell and a lot evaporated both come out near zero, and they are
+     not the same month. */
+  var water = null;
+
+  function drawWater() {
+    var host = document.getElementById('climate-water');
+    if (!host || !window.uPlot) return;
+    if (!DATA.rain || !DATA.et) return;
+    if (water) {
+      water.destroy();
+      water = null;
+    }
+    host.innerHTML = '';
+
+    var n = DATA.months.length;
+    var x = [];
+    for (var i = 0; i < n; i++) x.push(i);
+
+    var rain = DATA.rain.map(function (v) { return v === null ? null : v; });
+    var lost = DATA.et.map(function (v) { return v === null ? null : -v; });
+    var kept = rain.map(function (v, i) {
+      var e = DATA.et[i];
+      return (v === null || e === null) ? null : v - e;
+    });
+
+    var real = function (list) { return list.filter(function (v) { return v !== null; }); };
+    var top = Math.max.apply(null, real(rain).concat(real(kept)).concat([0])) * 1.1 || 1;
+    var bottom = Math.min.apply(null, real(lost).concat(real(kept)).concat([0])) * 1.1;
+
+    /* Millimetres in, the reader's unit on the axis. Same rule as the diagram above. */
+    var back = [1, 0];
+    if (CFG.units && CFG.units.chosen() && CFG.units.target('rain', 'mm')) {
+      var a = CFG.units.convert(0, 'mm', 'rain');
+      var b = CFG.units.convert(1, 'mm', 'rain');
+      if (a && b) back = [b.value - a.value, a.value];
+    } else if (!CFG.units || !CFG.units.chosen()) {
+      back = DATA.rainBack || [1, 0];
+    }
+
+    var opts = {
+      width: host.clientWidth || 600,
+      height: 260,
+      padding: [16, 8, 0, 0],
+      legend: { show: false },
+      cursor: { drag: { x: false, y: false } },
+      scales: { x: { time: false, range: [-0.6, n - 0.4] },
+                y: { range: function () { return [bottom, top]; } } },
+      axes: [
+        {
+          stroke: function () { return themeColor('--chart-axis', '#8397a7'); },
+          grid: { show: false },
+          ticks: { show: false },
+          font: '11px ' + getComputedStyle(document.body).fontFamily,
+          splits: function () { return x; },
+          values: function () { return DATA.months; }
+        },
+        {
+          label: unitLabel(DATA.rainUnit, 'rain', DATA.rainLabel),
+          labelSize: 22,
+          labelFont: '11px ' + getComputedStyle(document.body).fontFamily,
+          stroke: function () { return themeColor('--chart-axis', '#8397a7'); },
+          grid: {
+            stroke: function () { return themeColor('--chart-grid', '#e3eaf1'); },
+            width: 1
+          },
+          ticks: { show: false },
+          font: '11px ' + getComputedStyle(document.body).fontFamily,
+          size: 50,
+          values: function (u, splits) {
+            return splits.map(function (v) {
+              return (v * back[0] + back[1]).toLocaleString(LOCALE, {
+                minimumFractionDigits: back[0] < 0.5 ? 1 : 0,
+                maximumFractionDigits: back[0] < 0.5 ? 1 : 0
+              });
+            });
+          }
+        }
+      ],
+      series: [
+        {},
+        {
+          paths: uPlot.paths.bars({ size: [0.5, 30] }),
+          fill: function () { return themeColor('--lo', '#2f6f9e'); },
+          stroke: function () { return themeColor('--lo', '#2f6f9e'); },
+          width: 0,
+          points: { show: false }
+        },
+        {
+          paths: uPlot.paths.bars({ size: [0.5, 30] }),
+          fill: function () { return themeColor('--sun', '#a8761c'); },
+          stroke: function () { return themeColor('--sun', '#a8761c'); },
+          width: 0,
+          points: { show: false }
+        },
+        {
+          stroke: function () { return themeColor('--ink', '#16222e'); },
+          width: 2,
+          points: { show: true, size: 5 }
+        }
+      ]
+    };
+
+    water = new uPlot(opts, [x, rain, lost, kept], host);
+    new ResizeObserver(function () {
+      if (water) water.setSize({ width: host.clientWidth, height: 260 });
+    }).observe(host);
+  }
+
   /* --------------------------------------------------------------- day by day */
 
   /* One square per day, in the shape a calendar has: a column per week, a row per
@@ -480,6 +594,7 @@
     if (!DATA) return;
     markHeatTabs();
     drawDiagram();
+    drawWater();
     drawHeatmap();
   }
 

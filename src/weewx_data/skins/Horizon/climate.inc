@@ -184,6 +184,13 @@
 ## The heatmap has no ratio to honour, so its days stay in the unit the page reads in.
 #set $daily_rain = $rain_series.data.raw if $has_rain else None
 ##
+## What fell against what left again. Rain minus evapotranspiration is the water the
+## ground actually kept, which is the figure a garden runs on and the one no other
+## page here shows. In millimetres, like the diagram above, so that the two pictures
+## agree with each other.
+#set $has_et = $getVar('year.ET.has_data', False)
+#set $month_et = [m.ET.sum.mm.raw for m in $months_of_year] if $has_et else None
+##
 ## The other three the calendar can show. One query each, the same as the rain, and
 ## the reader picks between them. A year of daily figures is 365 numbers.
 #set $temp_series = $year.outTemp.series(aggregate_type='avg', aggregate_interval='day') if $has_temp else None
@@ -200,6 +207,23 @@
   </div>
   <div class="panel-body">
     <div id="climate-diagram" class="climate-chart"></div>
+  </div>
+</section>
+#end if
+##
+## ------------------------------------------------------------- the water balance
+##
+## Only where the station records evapotranspiration. Most do not: it is computed
+## from radiation, wind and humidity, and a station without those sensors has no
+## figure to show.
+#if $has_rain and $has_et
+<section class="panel" data-live-panel="climate-water">
+  <div class="panel-head">
+    <h2>$gettext("Water balance")</h2>
+  </div>
+  <div class="panel-body">
+    <div id="climate-water" class="climate-chart"></div>
+    <p class="climate-note">$gettext("Rainfall above the line, evapotranspiration below it. The line is what the ground kept.")</p>
   </div>
 </section>
 #end if
@@ -253,6 +277,7 @@
   {'key': 'temp_min', 'title': $gettext("Lowest temperature"), 'obs': 'outTemp', 'agg': 'min'},
   {'key': 'temp_max', 'title': $gettext("Highest temperature"), 'obs': 'outTemp', 'agg': 'max'},
   {'key': 'rain_sum', 'title': $gettext("Rainfall"), 'obs': 'rain', 'agg': 'sum'},
+  {'key': 'et_sum', 'title': $gettext("Evapotranspiration"), 'obs': 'ET', 'agg': 'sum'},
 ]
 #set $matrix = [x for x in $matrix if $getVar('alltime.%s.has_data' % x['obs'], False)]
 <section class="panel" data-live-panel="climate-record">
@@ -320,7 +345,8 @@
 #set $climate_data = {}
 #silent $climate_data.update({'year': $int($climate_year), 'months': $month_names})
 #silent $climate_data.update({'temp': $month_temp, 'tempLow': $month_low,
-                              'tempHigh': $month_high, 'rain': $month_rain})
+                              'tempHigh': $month_high, 'rain': $month_rain,
+                              'et': $month_et})
 #silent $climate_data.update({'tempLabel': $getVar('unit.label.outTemp', '').strip(),
                               'rainLabel': $getVar('unit.label.rain', '').strip()})
 ## From Celsius and millimetres back to whatever the page reads in, as a factor and

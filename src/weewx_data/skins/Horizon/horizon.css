@@ -1339,7 +1339,14 @@ select.report-select {
    quiet, so the months that do have some are what the eye lands on. */
 .climate-none { color: var(--ink-faint); }
 
-.climate-chart { width: 100%; min-height: 300px; }
+.climate-chart { width: 100%; min-height: 260px; }
+
+/* One line saying how to read the picture above it. */
+.climate-note {
+  margin: 0.4rem 0 0;
+  font-size: var(--fs-sm);
+  color: var(--ink-muted);
+}
 
 /* One square per day of the year: a column per week, a row per weekday. The colour
    runs from the page's own surface to the colour it uses for cold and wet. */
