@@ -969,9 +969,12 @@ def _unit_choices(obs_types, units_seen, formatter):
             format for each unit, so that the page writes "18.5 °C" the way the
             server would have.
     """
-    systems = [('US', weewx.units.USUnits),
-               ('Metric', weewx.units.MetricUnits),
-               ('MetricWX', weewx.units.MetricWXUnits)]
+    # The unit systems WeeWX has, taken from it rather than listed here, so that a
+    # fourth one would need no change. The name is the one the user writes in
+    # weewx.conf, and it is what the page puts in front of the reader.
+    systems = [(name, weewx.units.std_groups[constant])
+               for name, constant in sorted(weewx.units.unit_constants.items(),
+                                            key=lambda pair: pair[1])]
 
     # Every observation type WeeWX knows a group for, not only the ones that appear in
     # a plot. A page shows readings that were never plotted: the card at the top of
@@ -998,16 +1001,21 @@ def _unit_choices(obs_types, units_seen, formatter):
                 wanted.add(unit)
         by_system[name] = chosen
 
-    # From every unit that could be on screen, not only from the ones the plot files
-    # were written in. A page that draws its own picture may work in a unit no plot
-    # uses: the climate diagram plots Celsius and millimetres whatever the station
-    # records, because the ratio it draws is defined in those. Without a row for them
-    # here, that page has no way back to the reader's unit.
+    # Over the conversion table, keeping the pairs both of whose units can be on
+    # screen. The other way round, asking for every pair of units in 'wanted', asks
+    # weewx.units.convert for hundreds of conversions that do not exist, and it logs
+    # a DEBUG line for each.
+    #
+    # 'wanted' is wider than the units the plot files were written in, and has to be:
+    # a page can hold a reading in a unit no plot uses. The Walter and Lieth diagram
+    # on the climate page is drawn in degree_C and mm whatever the station records,
+    # because the two-to-one ratio it shows is defined in those units. Without a row
+    # here, the page cannot put that reading into the reader's unit.
     convert = {}
     for from_unit in sorted(wanted):
         pairs = {}
-        for to_unit in sorted(wanted):
-            if to_unit == from_unit:
+        for to_unit in sorted(weewx.units.conversionDict.get(from_unit, {})):
+            if to_unit not in wanted:
                 continue
             steps = _linear(weewx.units.convert, from_unit, to_unit)
             if steps:
