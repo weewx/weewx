@@ -188,6 +188,11 @@ And in `[[Archive]]`:
         <td>The interval of that finer grid. Default:
         <span class="code">300</span>. Ignored unless it is finer than
         <span class="code">resolution</span>.</td></tr>
+    <tr><td class="first_col">rebuild</td>
+        <td>How often a file is built from the whole database again instead of being
+        carried forward from the copy on disk. Default:
+        <span class="code">1d</span>, checked against the calendar, so the first report
+        after midnight. 0 never rebuilds. See <em>Costs</em> below.</td></tr>
     <tr><td class="first_col">source_group</td>
         <td>Which time-period section defines the plot groups. Default:
         <span class="code">day_images</span>.</td></tr>
@@ -204,18 +209,26 @@ And in `[[Archive]]`:
 ## Costs
 
 Measured on a development machine (x86-64, SQLite) against 400 days of synthetic data at
-a ten-minute archive interval, with the plot set the Horizon skin ships with — 48 period
-files and 11 plot groups spanning two calendar years:
+a ten-minute archive interval, with the plot set the Horizon skin ships with — 57601
+records, 44 period files and 39 archive files spanning two calendar years:
 
 | | first run | every run after |
 |---|---|---|
-| Period files (48) | 0.6 s | 0.6 s |
-| Archive (22 files) | 4.9 s | 0.2 s |
+| Period files (44) | 2.9 s | 0.02 to 0.14 s |
+| Archive (39 files) | 11.3 s | 0.05 to 0.09 s |
 
 The archive's first build is a one-off, and it scales with the length of your record: a
-station with ten years of data pays for ten years once. After that only the current year
-is touched, and only once per grid slot. The steady-state figure above is the one that
-matters for a station running every five minutes.
+station with ten years of data pays for ten years once. After that a finished year is
+skipped altogether, and the year in progress is carried forward rather than worked out
+again: the file on disk already holds every slot but its last, so only the slots since
+the last report are read from the database. That is why the steady-state figure does not
+grow with the length of the record, and it is the figure that matters for a station
+reporting every five minutes.
+
+Once a day the whole span is built again anyway, which costs what the first run costs.
+That is what picks up anything that changed further back than the last report: a reading
+corrected by an import, a sensor that has just started reporting. `rebuild` sets the
+cadence.
 
 These numbers will be several times larger on a Raspberry Pi. They are given to show the
 *shape* of the cost — a large one-off, then almost nothing — not as a benchmark.

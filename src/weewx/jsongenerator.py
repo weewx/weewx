@@ -53,6 +53,7 @@ pairs. That is about 30% smaller, and it is the shape charting libraries take.
 """
 
 import calendar
+import datetime
 import json
 import logging
 import os
@@ -294,8 +295,15 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         those two are the same thing. They differ after a catch-up import, where the
         file is minutes old and hours behind: an age test would find nothing to do.
 
-        To rebuild everything, delete the archive directory and run the report again
-        (`weectl report run <report>`).
+        Rewriting one does not mean working the whole span out again. The file on disk
+        already holds every slot but its last, so it is read back and only the slots
+        from there on are calculated. The month in progress at five-minute spacing is
+        8640 slots, and a report five minutes later adds one of them. Once a day,
+        `rebuild` does the whole span anyway, which is what picks up anything that
+        changed further back than the last report. See _rebuild_due().
+
+        To rebuild everything now, delete the archive directory and run the report
+        again (`weectl report run <report>`).
         """
         arch_dict = self.gen_dict.get('Archive', {})
         if not to_bool(arch_dict.get('enable', False)):
@@ -327,6 +335,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                                               'archive'))
         indent = to_int(self.gen_dict.get('json_indent'))
         rounding = to_int(arch_dict.get('round', self.gen_dict.get('round', 2)))
+        # How often a file is built from the whole database again rather than carried
+        # forward from the one on disk. See _rebuild_due().
+        rebuild_after = to_int(weeutil.weeutil.nominal_spans(
+            arch_dict.get('rebuild', '1d')))
 
         try:
             group_dict = self.plot_dict[source_group]
@@ -336,13 +348,17 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
         ngen = 0
         nskipped = 0
+        nextended = 0
         index = {}
         root = None
         overall_start = overall_stop = None
 
         # How far the last run got, per group and year, from the index it left behind.
         # One file, read once, the way gen_json() reads its own index.
-        previous, previous_fine, previous_first = self._read_archive_index(dest_dir)
+        previous, previous_fine, previous_first, rebuilt = \
+            self._read_archive_index(dest_dir)
+        now_ts = int(gen_ts or time.time())
+        rebuilding = _rebuild_due(rebuilt, now_ts, rebuild_after)
 
         for plotname in group_dict.sections:
             if self.stop_event and self.stop_event.is_set():
@@ -396,9 +412,17 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     root = arch_root
                     continue
 
+                # Everything before the last slot this file holds is already worked
+                # out. Handing it over means only the slots since the last report get
+                # calculated, instead of every slot in the year.
+                carry = None if rebuilding or reimported or was is None \
+                    else _read_archive_file(out_file)
+                if carry is not None:
+                    nextended += 1
+
                 payload = self._archive_year(group_dict[plotname], plot_options, year_span,
                                              resolution, aggregate_type, rounding,
-                                             group_name, first_ts, last_ts)
+                                             group_name, first_ts, last_ts, carry)
                 if payload is None:
                     continue
 
@@ -430,10 +454,15 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                         root = arch_root
                         continue
 
+                    carry = None if rebuilding or reimported or was is None \
+                        else _read_archive_file(out_file)
+                    if carry is not None:
+                        nextended += 1
+
                     payload = self._archive_year(group_dict[plotname], plot_options,
                                                  month_span, fine_resolution,
                                                  aggregate_type, rounding, group_name,
-                                                 fine_from, last_ts)
+                                                 fine_from, last_ts, carry)
                     if payload is None:
                         continue
                     try:
@@ -474,15 +503,19 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                              'fine_interval': fine_resolution if fine_days else None,
                              'first': int(overall_start) if overall_start else None,
                              'last': int(overall_stop) if overall_stop else None,
+                             # When the files last came from the database in full. The
+                             # next run reads it to decide whether it may extend them.
+                             'rebuilt': now_ts if rebuilding else rebuilt,
                              'groups': groups},
                             indent)
             except OSError as e:
                 log.error("Unable to write archive index: %s", e)
 
         if to_bool(search_up(self.gen_dict, 'log_success', True)):
-            log.info("Generated %d archive files (%d already current) for report %s "
-                     "in %.2f seconds",
-                     ngen, nskipped, self.skin_dict['REPORT_NAME'], time.time() - t1)
+            log.info("Generated %d archive files (%d extended, %d already current) "
+                     "for report %s in %.2f seconds",
+                     ngen, nextended, nskipped, self.skin_dict['REPORT_NAME'],
+                     time.time() - t1)
 
     def _images_are_generated(self):
         """Is the ImageGenerator in this report's generator list?
@@ -505,17 +538,21 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         """How far the previous run got, from the index it left behind.
 
         Returns:
-            tuple: Three values.
+            tuple: Four values.
 
                 - {group: {year: timestamp}}, the newest reading each year's file
                   holds, e.g. {'tempdew': {2025: 1735689599, 2026: 1787777700}}
                 - the same for the closely spaced months, keyed 'YYYY-MM'
                 - the oldest reading in the database when the last run read it, or
                   None if there was no index to read
+                - when a file was last built from the database in full, or None. A run
+                  that finds no value here rebuilds, which is what a reader written
+                  before this field should get.
         """
         covered = {}
         fine = {}
         first = None
+        rebuilt = None
         try:
             path = os.path.join(self.config_dict['WEEWX_ROOT'],
                                 search_up(self.skin_dict, 'HTML_ROOT', 'public_html'),
@@ -523,6 +560,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             with open(path, encoding='utf-8') as fd:
                 index = json.load(fd)
             first = to_int(index.get('first'))
+            rebuilt = to_int(index.get('rebuilt'))
             for group in index.get('groups', []):
                 years = {}
                 for year, ts in (group.get('covered') or {}).items():
@@ -538,8 +576,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             # No index, or one this version cannot read. Report that nothing is
             # current, so everything is rebuilt. That costs a run; the other way
             # round would leave stale files in place.
-            return {}, {}, None
-        return covered, fine, first
+            return {}, {}, None, None
+        return covered, fine, first, rebuilt
 
     def _archive_daynight(self, root, first_ts, last_ts, indent):
         """Write sunrise and sunset times, one file per calendar year.
@@ -571,13 +609,22 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 log.warning("Could not write day/night file for %d: %s", year, e)
 
     def _archive_year(self, plot_section, plot_options, year_span, resolution,
-                      aggregate_type, rounding, group_name, first_ts, last_ts):
+                      aggregate_type, rounding, group_name, first_ts, last_ts,
+                      previous=None):
         """Build the contents of one archive file: one plot group, one calendar year.
 
         There are no timestamps in the result. `start` is the first instant, `interval`
         the seconds between readings, and `count` how many there are, so the time of
         `values[i]` is `start + i * interval`. A null in `values` is a reading the
         station did not take.
+
+        Args:
+            previous (dict|None): The file this one replaces, as it was read back from
+                disk. Given one it can carry over, only the slots after the newest one
+                it holds are calculated, which is the difference between one statement
+                per slot in the year and one per slot since the last report. Anything
+                that makes the old file unusable, from a changed series list to a
+                changed unit, falls back to calculating the whole span.
 
         Returns:
             dict|None: The file's contents, or None if the year holds nothing worth
@@ -603,8 +650,19 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         if slots < 2:
             return None
 
+        # Where to pick up from, or None to do the lot.
+        resume = _resume_from(previous, start, resolution, slots)
+        tail = TimeSpan(resume[0], stop) if resume else domain
+
         series_out = []
         unit = unit_label = None
+        # The boundary the last slot of this file starts on, and which slot that is.
+        # Written into the file so the next run can carry on from exactly here.
+        resume_ts = resume_slot = None
+        # Set when the file on disk turns out not to match what is being built after
+        # all. Only the loop below can see that, so it stops and the whole span is
+        # calculated instead.
+        stale = False
 
         for line_name in plot_section.sections:
             line_options = accumulateLeaves(plot_section[line_name])
@@ -641,13 +699,23 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 var_type = 'wind'
                 agg = 'vecdir'
 
+            # The series this one replaces, matched by position. The order comes from
+            # the skin's plot section, so it only moves when the skin does.
+            carried = None
+            if resume is not None:
+                carried = _carried_series(previous, len(series_out), var_type,
+                                          previous['count'])
+                if carried is None:
+                    stale = True
+                    break
+
             option_dict = dict(line_options)
             option_dict.pop('aggregate_type', None)
             option_dict.pop('aggregate_interval', None)
 
             try:
-                _, stop_vec_t, data_vec_t = weewx.xtypes.get_series(
-                    var_type, domain, mgr,
+                start_vec_t, stop_vec_t, data_vec_t = weewx.xtypes.get_series(
+                    var_type, tail, mgr,
                     aggregate_type=agg,
                     aggregate_interval=resolution,
                     **option_dict)
@@ -659,20 +727,48 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             else:
                 conv = self.converter.convert(data_vec_t)
 
-            unit = conv[1]
-            unit_label = line_options.get(
-                'y_label', self.formatter.get_label_string(conv[1]))
+            # A span with no readings in it has no unit to report. Letting that
+            # overwrite a unit an earlier series established would put a null in the
+            # file, and on the extending path it would read as a changed unit and
+            # rebuild the whole span every report.
+            if conv[1] is not None:
+                unit = conv[1]
+                unit_label = line_options.get(
+                    'y_label', self.formatter.get_label_string(conv[1]))
+
+            if carried is not None:
+                if conv[1] is not None and conv[1] != previous.get('unit'):
+                    stale = True
+                    break
+                if unit is None:
+                    unit = previous.get('unit')
+                    unit_label = previous.get('unit_label')
 
             # Put each value where its timestamp belongs. get_series() returns nothing
             # at all for an interval with no readings, so the position is computed from
             # the timestamp rather than taken from the loop counter.
-            grid = [None] * slots
+            if carried is None:
+                grid = [None] * slots
+            else:
+                # Everything before the resume point stands. From there on the file is
+                # rewritten, including slots this run finds nothing for.
+                grid = list(carried[:resume[1]]) + [None] * (slots - resume[1])
             for ts, val in zip(stop_vec_t[0], conv[0]):
                 if ts is None or val is None:
                     continue
                 slot = int((ts - resolution - start) // resolution)
                 if 0 <= slot < slots:
                     grid[slot] = round(val, rounding) if rounding is not None else val
+
+            # Where this series stopped. Its last aggregation interval was still
+            # filling up when it was worked out, so it is where the next run starts.
+            # The earliest across the series wins: none of them may be left behind.
+            if stop_vec_t[0]:
+                last_slot = int((stop_vec_t[0][-1] - resolution - start) // resolution)
+                if resume_ts is None or start_vec_t[0][-1] < resume_ts:
+                    resume_ts = int(start_vec_t[0][-1])
+                if resume_slot is None or last_slot < resume_slot:
+                    resume_slot = max(0, min(last_slot, slots - 1))
 
             label = line_options.get('label')
             label = self.text_dict.get(label, label) if label \
@@ -690,6 +786,21 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             if line_options.get('plot_type', 'line').lower() == 'bar':
                 entry['plot_type'] = 'bar'
             series_out.append(entry)
+
+        # A series that has appeared since the file was written leaves the two lists
+        # different lengths, and the loop above cannot see that until it has finished.
+        if resume is not None and len(series_out) != len(previous['series']):
+            stale = True
+
+        if stale:
+            # Rare, and worth being able to find: the file on disk was written for a
+            # different set of series, or in a different unit, than the one the skin
+            # now asks for. It cannot be carried forward, so do the span in full.
+            log.debug("Archive file for '%s' does not match the plot it is for. "
+                      "Rebuilding it.", group_name)
+            return self._archive_year(plot_section, plot_options, year_span, resolution,
+                                      aggregate_type, rounding, group_name, first_ts,
+                                      last_ts)
 
         if not series_out:
             return None
@@ -710,6 +821,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             # The newest reading in this file. The next run compares it with the
             # database to decide whether the file has to be written again.
             'covered': min(int(year_span.stop), int(last_ts)),
+            # The aggregation boundary the last slot starts on, and the slot it fills.
+            # Together they are where the next run carries on from. See _resume_from().
+            'resume_ts': resume_ts,
+            'resume_slot': resume_slot,
             'unit': unit,
             'unit_label': (unit_label or '').strip(),
             'series': series_out,
@@ -1054,6 +1169,102 @@ def _write_json(path, payload, indent):
         json.dump(payload, fd, indent=indent, ensure_ascii=False,
                   separators=(',', ':') if indent is None else None)
     os.replace(tmp, path)
+
+
+def _rebuild_due(rebuilt, now_ts, after):
+    """Is this the run that builds every file from the database again?
+
+    Extending a file forward keeps whatever the run before put in it, so anything that
+    changes the past stays: a reading corrected by an import, a series that only starts
+    reporting now, a unit the configuration has since changed. Doing the whole span
+    again at a fixed cadence puts a bound on how long any of that survives.
+
+    The test is on the calendar rather than on elapsed seconds. A station reporting
+    every five minutes and one reporting every hour then both rebuild once a day, on
+    the first report after midnight, and one that was switched off over midnight
+    rebuilds when it comes back instead of missing its turn.
+    """
+    if not after:
+        return False
+    if rebuilt is None:
+        return True
+    # Under a day there are no calendar boundaries to hang this on, so it goes back
+    # to elapsed time.
+    if after < 86400:
+        return now_ts - rebuilt >= after
+    then = datetime.date.fromtimestamp(rebuilt)
+    now = datetime.date.fromtimestamp(now_ts)
+    return (now - then).days >= int(after // 86400)
+
+
+def _read_archive_file(path):
+    """One archive file as the last run left it, or None if it cannot be used.
+
+    None covers every way this can go wrong: no file, half a file, a file written by a
+    version that shaped it differently. All of them mean the same thing to the caller,
+    which is that the span has to be calculated from the database again.
+    """
+    try:
+        with open(path, encoding='utf-8') as fd:
+            payload = json.load(fd)
+    except (OSError, ValueError):
+        return None
+    if not isinstance(payload, dict) or not isinstance(payload.get('series'), list):
+        return None
+    return payload
+
+
+def _resume_from(previous, start, resolution, slots):
+    """Where an extended file picks up, or None to work the whole span out again.
+
+    The instant comes out of the file rather than being worked out from its slot
+    number, and it has to. get_series() puts its aggregation boundaries on constant
+    local time, so where the clocks change they are not a whole number of intervals
+    apart. A run that started counting from the top of the year and one that started
+    from the middle would then disagree about where a slot begins, and the extended
+    file would not be the file a rebuild produces. Writing down the boundary the last
+    run stopped on takes the question away.
+
+    Returns:
+        tuple|None: The instant to ask the database from, and the first slot to
+            overwrite. None if the file on disk cannot be carried forward: a changed
+            'start' (a moved 'max_days' window), a changed 'interval' (a changed
+            'resolution'), a file that reaches past the span now being built (a clock
+            that went backwards), or one written before this field existed.
+    """
+    if not previous:
+        return None
+    try:
+        if int(previous['start']) != start or int(previous['interval']) != resolution:
+            return None
+        count = int(previous['count'])
+        resume_ts = int(previous['resume_ts'])
+        resume_slot = int(previous['resume_slot'])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if not 2 <= count <= slots or not previous['series']:
+        return None
+    if not 0 <= resume_slot < count or not start <= resume_ts:
+        return None
+    return resume_ts, resume_slot
+
+
+def _carried_series(previous, position, var_type, count):
+    """The values an extended file keeps for one series, or None to rebuild.
+
+    Matched by position, because that is the order the skin's plot section gives and
+    it only changes when the skin does. The observation type has to agree as well: two
+    series can swap places in a section without changing how many there are.
+    """
+    try:
+        entry = previous['series'][position]
+        values = entry['values']
+    except (IndexError, KeyError, TypeError):
+        return None
+    if entry.get('obs_type') != var_type or not isinstance(values, list) \
+            or len(values) != count:
+        return None
+    return values
 
 
 def _daynight(start_ts, stop_ts, lat, lon):

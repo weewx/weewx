@@ -23,6 +23,7 @@ import weewx.jsongenerator
 import weewx.reportengine
 import weewx.station
 import weewx.units
+import weewx.xtypes
 from weeutil.config import accumulateLeaves
 
 # The grid the archive tests are written on. Four hours rather than the hour a station
@@ -736,6 +737,269 @@ class TestArchive:
                                                   'fine_resolution': '28800'})
         archive_dir = os.path.join(data_dir, 'archive')
         assert not [f for f in os.listdir(archive_dir) if '-fine-' in f]
+
+
+class TestArchiveExtension:
+    """Carrying a file forward instead of working the whole span out again.
+
+    A file already holds every slot but its last, so a report only has to calculate
+    from there on. That is one aggregate query rather than one per slot in the year,
+    and it is the difference between the archive costing seconds every report and
+    costing nothing. What the tests here are for is the other half of that trade: the
+    result has to be what the long way round would have produced.
+    """
+
+    # What a run leaves behind that says when it ran rather than what it found.
+    # 'covered' and the resume pair belong to the last run that wrote the file, and a
+    # run whose slot has not moved does not write one. So a chain of reports ending on
+    # a skipped one carries the stamps of the report before it, while a single run at
+    # the same instant carries its own. Neither is in the data the page draws.
+    BOOKKEEPING = ('covered', 'resume_ts', 'resume_slot')
+
+    @classmethod
+    def payloads(cls, archive_dir, only=None):
+        """The drawable contents of every archive file, keyed by name."""
+        out = {}
+        for name in sorted(os.listdir(archive_dir)):
+            if not name.endswith('.json') or name == 'index.json':
+                continue
+            if only and only not in name:
+                continue
+            with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
+                payload = json.load(fd)
+            out[name] = {k: v for k, v in payload.items() if k not in cls.BOOKKEEPING}
+        return out
+
+    def walk_forward(self, config_dict, root, first_ts, last_ts, step,
+                     archive_options=None):
+        """Report once per step from first_ts to last_ts, extending each time."""
+        options = {'rebuild': '0'}
+        options.update(archive_options or {})
+        gen_ts = first_ts
+        data_dir = None
+        while gen_ts <= last_ts:
+            data_dir = run_generator(config_dict, root, archive=True, gen_ts=gen_ts,
+                                     archive_options=options)
+            gen_ts += step
+        return os.path.join(data_dir, 'archive')
+
+    def test_extending_matches_a_full_rebuild(self, config_dict, tmp_path_factory):
+        """Six reports, each carrying the last forward, against one that does the lot."""
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        first_ts = stop_ts - 6 * ARCHIVE_RESOLUTION
+
+        grown = self.walk_forward(config_dict, tmp_path_factory.mktemp('grown'),
+                                  first_ts, stop_ts, ARCHIVE_RESOLUTION)
+        built = os.path.join(
+            run_generator(config_dict, tmp_path_factory.mktemp('built'), archive=True,
+                          gen_ts=stop_ts),
+            'archive')
+
+        assert self.payloads(grown) == self.payloads(built)
+
+    def test_extending_matches_a_full_rebuild_over_a_dst_boundary(
+            self, config_dict, tmp_path_factory):
+        """intervalgen() keeps local time constant, so a slot can be three hours long.
+
+        The grid a file is written on is worked out from its own start, and an extending
+        run starts from further along than the run that first wrote it. Where the clocks
+        change, the two could disagree about where a slot begins.
+        """
+        # 2010-03-14 02:00 PST is 03:00 PDT. Straddle it.
+        first_ts = int(time.mktime((2010, 3, 13, 12, 0, 0, 0, 0, -1)))
+        last_ts = int(time.mktime((2010, 3, 15, 0, 0, 0, 0, 0, -1)))
+
+        grown = self.walk_forward(config_dict, tmp_path_factory.mktemp('dst_grown'),
+                                  first_ts, last_ts, ARCHIVE_RESOLUTION)
+        built = os.path.join(
+            run_generator(config_dict, tmp_path_factory.mktemp('dst_built'),
+                          archive=True, gen_ts=last_ts), 'archive')
+
+        assert self.payloads(grown) == self.payloads(built)
+
+    def test_extending_matches_a_full_rebuild_on_the_fine_grid(
+            self, config_dict, tmp_path_factory):
+        """The fine files are the expensive ones, and they are per month, not per year.
+
+        Only the month in progress is compared. 'fine_days' is a window that slides
+        with the data, so the file for the month before it starts wherever the window
+        reached on the run that wrote it, and a run that skips it leaves that alone.
+        """
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        options = {'fine_days': '30', 'fine_resolution': '3600'}
+        first_ts = stop_ts - 4 * 3600
+        current_month = '-fine-%s' % time.strftime('%Y-%m', time.localtime(stop_ts))
+
+        grown = self.walk_forward(config_dict, tmp_path_factory.mktemp('fine_grown'),
+                                  first_ts, stop_ts, 3600, options)
+        built = os.path.join(
+            run_generator(config_dict, tmp_path_factory.mktemp('fine_built'),
+                          archive=True, gen_ts=stop_ts, archive_options=options),
+            'archive')
+
+        grown_files = self.payloads(grown, only=current_month)
+        assert grown_files, "no fine file for the month in progress"
+        assert grown_files == self.payloads(built, only=current_month)
+
+    def test_extending_costs_one_query_per_new_slot(self, config_dict, tmp_path,
+                                                    monkeypatch):
+        """The whole point. A year's file must not cost a query per slot in the year."""
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        run_generator(config_dict, tmp_path, archive=True,
+                      gen_ts=stop_ts - ARCHIVE_RESOLUTION,
+                      archive_options={'rebuild': '0'})
+
+        calls = []
+        original = weewx.xtypes.get_series
+        monkeypatch.setattr(weewx.xtypes, 'get_series',
+                            lambda *args, **kwargs: calls.append(args[1])
+                            or original(*args, **kwargs))
+
+        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                      archive_options={'rebuild': '0'})
+
+        assert calls, "the second run asked for nothing at all"
+        # gen_json() is in here too, and its longest plot is a week. Anything longer
+        # than that is the archive asking for a span of the year, which is what
+        # carrying the file forward is supposed to have made unnecessary.
+        assert max(span.stop - span.start for span in calls) <= 8 * 86400
+
+    def test_a_rebuild_happens_once_a_calendar_day(self, config_dict, tmp_path):
+        """Anything that changed further back than the last report needs this."""
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        index_path = lambda d: os.path.join(d, 'archive', 'index.json')
+        rebuilt_at = lambda d: json.load(open(index_path(d), encoding='utf-8'))['rebuilt']
+
+        data_dir = run_generator(config_dict, tmp_path, archive=True,
+                                 gen_ts=stop_ts - 86400)
+        first = rebuilt_at(data_dir)
+        assert first is not None
+
+        # Later the same day: carried forward, so the stamp does not move.
+        run_generator(config_dict, tmp_path, archive=True,
+                      gen_ts=stop_ts - 86400 + ARCHIVE_RESOLUTION)
+        assert rebuilt_at(data_dir) == first
+
+        # The next day: rebuilt, so it does.
+        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts)
+        assert rebuilt_at(data_dir) != first
+
+    def test_rebuilding_can_be_turned_off(self, config_dict, tmp_path):
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts - 86400,
+                      archive_options={'rebuild': '0'})
+        path = os.path.join(str(tmp_path), 'data', 'archive', 'index.json')
+        with open(path, encoding='utf-8') as fd:
+            assert json.load(fd)['rebuilt'] is None
+
+    def test_a_file_that_does_not_match_is_rebuilt(self, config_dict, tmp_path):
+        """A file whose series are not the ones being written cannot be carried on.
+
+        This is what a changed skin looks like from here: same name, same grid, other
+        contents. Taking its values would put one observation's readings under another
+        one's label.
+        """
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        run_generator(config_dict, tmp_path, archive=True,
+                      gen_ts=stop_ts - ARCHIVE_RESOLUTION,
+                      archive_options={'rebuild': '0'})
+        path = os.path.join(str(tmp_path), 'data', 'archive', 'tempdew-2010.json')
+
+        with open(path, encoding='utf-8') as fd:
+            payload = json.load(fd)
+        payload['series'][0]['obs_type'] = 'somethingElse'
+        payload['series'][0]['values'] = [-99.0] * payload['count']
+        with open(path, 'w', encoding='utf-8') as fd:
+            json.dump(payload, fd)
+
+        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                      archive_options={'rebuild': '0'})
+
+        with open(path, encoding='utf-8') as fd:
+            after = json.load(fd)
+        assert after['series'][0]['obs_type'] == 'outTemp'
+        assert -99.0 not in after['series'][0]['values']
+
+
+class TestResumeFrom:
+    """Whether a file on disk can be carried forward, and from where."""
+
+    @staticmethod
+    def file(**overrides):
+        payload = {'start': 1000, 'interval': 100, 'count': 10,
+                   'resume_ts': 1900, 'resume_slot': 9,
+                   'series': [{'obs_type': 'outTemp', 'values': [1.0] * 10}]}
+        payload.update(overrides)
+        return payload
+
+    def test_resumes_where_the_file_says_it_stopped(self):
+        # The instant comes out of the file, not from slot arithmetic: see the
+        # docstring on _resume_from().
+        assert weewx.jsongenerator._resume_from(self.file(), 1000, 100, 20) == (1900, 9)
+
+    def test_no_file_means_no_resuming(self):
+        assert weewx.jsongenerator._resume_from(None, 1000, 100, 20) is None
+
+    @pytest.mark.parametrize('overrides, reason', [
+        ({'start': 2000}, 'max_days moved the start'),
+        ({'interval': 50}, 'resolution changed'),
+        ({'count': 1}, 'too short to carry anything'),
+        ({'series': []}, 'no series in it'),
+        ({'count': 'nonsense'}, 'not a number'),
+        ({'resume_ts': None}, 'written before the field existed'),
+        ({'resume_slot': None}, 'written before the field existed'),
+        ({'resume_slot': 10}, 'points past the slots the file has'),
+        ({'resume_ts': 500}, 'before the file even starts'),
+    ])
+    def test_a_file_that_cannot_be_used(self, overrides, reason):
+        assert weewx.jsongenerator._resume_from(self.file(**overrides),
+                                                1000, 100, 20) is None, reason
+
+    def test_a_file_reaching_past_the_span_is_refused(self):
+        """A clock that went backwards leaves more slots on disk than are wanted."""
+        assert weewx.jsongenerator._resume_from(self.file(count=30), 1000, 100, 20) is None
+
+    def test_carried_series_matches_by_position_and_type(self):
+        previous = self.file()
+        assert weewx.jsongenerator._carried_series(previous, 0, 'outTemp', 10) is not None
+        assert weewx.jsongenerator._carried_series(previous, 0, 'dewpoint', 10) is None
+        assert weewx.jsongenerator._carried_series(previous, 1, 'outTemp', 10) is None
+
+    def test_carried_series_checks_its_length(self):
+        """A file whose values do not fill its own grid cannot be trusted."""
+        previous = self.file(series=[{'obs_type': 'outTemp', 'values': [1.0] * 3}])
+        assert weewx.jsongenerator._carried_series(previous, 0, 'outTemp', 10) is None
+
+
+class TestRebuildDue:
+
+    DAY = 86400
+
+    def test_no_stamp_means_rebuild(self):
+        assert weewx.jsongenerator._rebuild_due(None, 1000, self.DAY)
+
+    def test_turned_off(self):
+        assert not weewx.jsongenerator._rebuild_due(None, 1000, 0)
+
+    def test_same_calendar_day(self):
+        morning = int(time.mktime((2010, 3, 1, 8, 0, 0, 0, 0, -1)))
+        evening = int(time.mktime((2010, 3, 1, 23, 59, 0, 0, 0, -1)))
+        assert not weewx.jsongenerator._rebuild_due(morning, evening, self.DAY)
+
+    def test_over_midnight(self):
+        """Two minutes apart, and due, where 24 hours of elapsed time would not be."""
+        before = int(time.mktime((2010, 3, 1, 23, 59, 0, 0, 0, -1)))
+        after = int(time.mktime((2010, 3, 2, 0, 1, 0, 0, 0, -1)))
+        assert weewx.jsongenerator._rebuild_due(before, after, self.DAY)
+
+    def test_a_station_that_was_off_over_midnight_still_rebuilds(self):
+        before = int(time.mktime((2010, 3, 1, 20, 0, 0, 0, 0, -1)))
+        after = int(time.mktime((2010, 3, 3, 9, 0, 0, 0, 0, -1)))
+        assert weewx.jsongenerator._rebuild_due(before, after, self.DAY)
+
+    def test_under_a_day_falls_back_to_elapsed_time(self):
+        assert weewx.jsongenerator._rebuild_due(1000, 1000 + 3600, 3600)
+        assert not weewx.jsongenerator._rebuild_due(1000, 1000 + 3599, 3600)
 
 
 class TestSummaryImage:
