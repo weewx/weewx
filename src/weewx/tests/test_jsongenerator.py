@@ -708,7 +708,7 @@ class TestArchive:
     def test_a_finer_grid_is_written_for_the_recent_past(self, config_dict, tmp_path):
         """An hourly grid flattens a single day, so recent months also get a fine one."""
         data_dir = run_generator(config_dict, tmp_path, archive=True,
-                                 archive_options={'fine_days': '30',
+                                 archive_options={'fine_months': '2',
                                                   'fine_resolution': '300'})
         archive_dir = os.path.join(data_dir, 'archive')
         fine = sorted(f for f in os.listdir(archive_dir) if '-fine-' in f)
@@ -733,7 +733,7 @@ class TestArchive:
     def test_a_grid_that_is_not_finer_is_refused(self, config_dict, tmp_path):
         """'5m' means five months. Silently writing that would be worse than saying so."""
         data_dir = run_generator(config_dict, tmp_path, archive=True,
-                                 archive_options={'fine_days': '30',
+                                 archive_options={'fine_months': '2',
                                                   'fine_resolution': '28800'})
         archive_dir = os.path.join(data_dir, 'archive')
         assert not [f for f in os.listdir(archive_dir) if '-fine-' in f]
@@ -821,12 +821,12 @@ class TestArchiveExtension:
             self, config_dict, tmp_path_factory):
         """The fine files are the expensive ones, and they are per month, not per year.
 
-        Only the month in progress is compared. 'fine_days' is a window that slides
-        with the data, so the file for the month before it starts wherever the window
-        reached on the run that wrote it, and a run that skips it leaves that alone.
+        Only the month in progress is compared. Whole months either side of it are
+        written once and then kept, so the run that wrote one decides where it starts,
+        and a later run that skips it leaves that alone.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'fine_days': '30', 'fine_resolution': '3600'}
+        options = {'fine_months': '2', 'fine_resolution': '3600'}
         first_ts = stop_ts - 4 * 3600
         current_month = '-fine-%s' % time.strftime('%Y-%m', time.localtime(stop_ts))
 
@@ -969,6 +969,158 @@ class TestResumeFrom:
         """A file whose values do not fill its own grid cannot be trusted."""
         previous = self.file(series=[{'obs_type': 'outTemp', 'values': [1.0] * 3}])
         assert weewx.jsongenerator._carried_series(previous, 0, 'outTemp', 10) is None
+
+
+class TestTiers:
+    """Which grid a calendar year's file is written on."""
+
+    @staticmethod
+    def grid(year, this_year=2026, recent=2, fine=3600, coarse=14400, existing=None):
+        return weewx.jsongenerator._year_grid(year, this_year, recent, fine, coarse,
+                                              existing)
+
+    def test_the_recent_years_get_the_finer_grid(self):
+        assert self.grid(2026) == 3600
+        assert self.grid(2025) == 3600
+
+    def test_older_years_get_the_coarse_one(self):
+        assert self.grid(2024) == 14400
+        assert self.grid(2016) == 14400
+
+    def test_without_a_recent_window_every_year_is_the_same(self):
+        assert self.grid(2016, recent=0) == 3600
+
+    def test_a_file_already_finer_keeps_what_it_has(self):
+        """Rewriting a year to hold less than it does would be work spent backwards."""
+        assert self.grid(2016, existing=3600) == 3600
+
+    def test_a_file_coarser_than_wanted_is_refined(self):
+        assert self.grid(2026, existing=14400) == 3600
+
+
+class TestMonthsBack:
+
+    @staticmethod
+    def at(year, month, day, months, floor=0):
+        last = int(time.mktime((year, month, day, 12, 0, 0, 0, 0, -1)))
+        start = weewx.jsongenerator._months_back(last, months, floor)
+        return time.strftime('%Y-%m-%d', time.localtime(start))
+
+    def test_one_month_is_the_month_in_progress(self):
+        assert self.at(2026, 8, 28, 1) == '2026-08-01'
+
+    def test_two_months_reaches_the_first_of_last_month(self):
+        assert self.at(2026, 8, 28, 2) == '2026-07-01'
+
+    def test_it_crosses_the_new_year(self):
+        assert self.at(2026, 2, 3, 4) == '2025-11-01'
+
+    def test_it_does_not_go_before_the_record(self):
+        floor = int(time.mktime((2026, 6, 15, 0, 0, 0, 0, 0, -1)))
+        start = weewx.jsongenerator._months_back(
+            int(time.mktime((2026, 8, 28, 12, 0, 0, 0, 0, -1))), 6, floor)
+        assert start == floor
+
+
+class TestArchiveMemory:
+    """What the archive knows about files it did not write this run."""
+
+    def test_finished_months_stay_available(self, config_dict, tmp_path):
+        """A month that has ended never changes, so its file is good forever.
+
+        Only the months inside the writing window are written. Everything older that
+        is still on disk has to stay named in the index, or the page cannot see it and
+        the detail is there for nobody.
+        """
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        options = {'fine_months': '2', 'fine_resolution': '3600'}
+        # Two runs a month apart, so the first month falls out of the window.
+        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts - 45 * 86400,
+                      archive_options=options)
+        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                                 archive_options=options)
+
+        archive_dir = os.path.join(data_dir, 'archive')
+        on_disk = {f for f in os.listdir(archive_dir) if '-fine-' in f}
+        assert on_disk, "no fine files at all"
+
+        with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
+            index = json.load(fd)
+        named = set()
+        for group in index['groups']:
+            for stamp in group.get('fine', {}):
+                named.add('%s-fine-%s.json' % (group['name'], stamp))
+        assert on_disk <= named, "files on disk that the index does not name"
+
+    def test_a_lost_index_is_rebuilt_from_the_directory(self, config_dict, tmp_path):
+        """The directory is the truth. Losing the index must not lose the work.
+
+        Every answer is already in the files. Without this, deleting one small file
+        would mean working out the whole record again.
+        """
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        options = {'fine_months': '2', 'fine_resolution': '3600'}
+        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                                 archive_options=options)
+        archive_dir = os.path.join(data_dir, 'archive')
+        index_path = os.path.join(archive_dir, 'index.json')
+        with open(index_path, encoding='utf-8') as fd:
+            before = json.load(fd)
+
+        os.remove(index_path)
+        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                      archive_options=options)
+
+        with open(index_path, encoding='utf-8') as fd:
+            after = json.load(fd)
+        named = lambda idx: {(g['name'], y) for g in idx['groups']
+                             for y in list(g.get('covered', {}))
+                             + list(g.get('fine', {}))}
+        assert named(after) == named(before)
+
+    def test_the_index_drops_files_that_have_gone(self, config_dict, tmp_path):
+        """An index naming a file that is not there sends the reader after a 404.
+
+        A file inside the writing window is simply written again, so the case that
+        needs catching is one outside it: a month the run no longer visits, deleted by
+        whoever was tidying up the directory.
+        """
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        options = {'fine_months': '2', 'fine_resolution': '3600'}
+        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts - 45 * 86400,
+                      archive_options=options)
+        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                                 archive_options=options)
+        archive_dir = os.path.join(data_dir, 'archive')
+
+        with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
+            index = json.load(fd)
+        months = sorted({m for g in index['groups'] for m in g.get('fine', {})})
+        assert len(months) > 1, "only one month written, nothing is out of the window"
+        oldest = months[0]
+        gone = [f for f in os.listdir(archive_dir) if f.endswith('-fine-%s.json' % oldest)]
+        assert gone
+        for name in gone:
+            os.remove(os.path.join(archive_dir, name))
+
+        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                      archive_options=options)
+
+        with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
+            index = json.load(fd)
+        for group in index['groups']:
+            assert oldest not in group.get('fine', {}), \
+                "index still names %s for %s" % (oldest, group['name'])
+
+    def test_the_index_records_the_grid_of_each_file(self, config_dict, tmp_path):
+        """Files are not all on the same grid, so the reader is told per file."""
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts)
+        with open(os.path.join(data_dir, 'archive', 'index.json'), encoding='utf-8') as fd:
+            index = json.load(fd)
+
+        groups = {g['name']: g for g in index['groups']}
+        assert groups['tempdew']['intervals']['2010'] == ARCHIVE_RESOLUTION
 
 
 class TestRebuildDue:

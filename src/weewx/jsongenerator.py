@@ -313,23 +313,35 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
         source_group = arch_dict.get('source_group', 'day_images')
         strip_prefix = arch_dict.get('strip_prefix', 'day')
-        resolution = to_int(weeutil.weeutil.nominal_spans(arch_dict.get('resolution', 3600)))
         aggregate_type = arch_dict.get('aggregate_type', 'avg')
         max_days = to_int(arch_dict.get('max_days', 0))
-        # A second set of files over the recent past, spaced more closely and written
-        # per calendar month. One reading an hour is the right trade over years, but it
-        # flattens a single day, and stepping back one day at a time is what the page
-        # offers. Thirty days at one reading per five minutes costs about what one year
-        # at one per hour costs, and the page fetches only the months it is showing.
-        fine_days = to_int(arch_dict.get('fine_days', 0))
+
+        # Three grids, coarsening with age. Reading a year by the hour is worth having
+        # while it is the year people look at; reading 2016 that way is 8760 points
+        # nobody asked for. The recent years therefore get 'resolution' and everything
+        # older 'coarse_resolution', both written per calendar year.
+        resolution = to_int(weeutil.weeutil.nominal_spans(arch_dict.get('resolution', 3600)))
+        coarse_resolution = to_int(weeutil.weeutil.nominal_spans(
+            arch_dict.get('coarse_resolution', resolution)))
+        recent_years = to_int(arch_dict.get('recent_years', 0))
+
+        # The finest grid, written per calendar month, for stepping back through single
+        # days. An hourly grid flattens a day, and a day is what the range bar offers.
+        fine_months = to_int(arch_dict.get('fine_months', 0))
         fine_resolution = to_int(weeutil.weeutil.nominal_spans(
-            arch_dict.get('fine_resolution', 300)))
-        if fine_days and fine_resolution >= resolution:
+            arch_dict.get('fine_resolution', 900)))
+        if fine_months and fine_resolution >= resolution:
             # An easy mistake: in a duration suffix 'm' means months, not minutes, so
             # '5m' asks for readings five months apart.
-            log.warning("Ignoring fine_days: fine_resolution (%d seconds) is not finer "
-                        "than resolution (%d seconds)", fine_resolution, resolution)
-            fine_days = 0
+            log.warning("Ignoring fine_months: fine_resolution (%d seconds) is not "
+                        "finer than resolution (%d seconds)",
+                        fine_resolution, resolution)
+            fine_months = 0
+        if coarse_resolution < resolution:
+            log.warning("coarse_resolution (%d seconds) is finer than resolution "
+                        "(%d seconds). Using resolution for both.",
+                        coarse_resolution, resolution)
+            coarse_resolution = resolution
         dest_dir = arch_dict.get('dest_dir',
                                  os.path.join(self.gen_dict.get('json_dest_dir', 'data'),
                                               'archive'))
@@ -353,12 +365,17 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         root = None
         overall_start = overall_stop = None
 
-        # How far the last run got, per group and year, from the index it left behind.
-        # One file, read once, the way gen_json() reads its own index.
-        previous, previous_fine, previous_first, rebuilt = \
-            self._read_archive_index(dest_dir)
+        # What already exists, from the index the last run left behind. One file, read
+        # once, the way gen_json() reads its own index.
+        known = self._read_archive_index(dest_dir)
+        self._reconcile_index(known, os.path.join(
+            self.config_dict['WEEWX_ROOT'],
+            search_up(self.skin_dict, 'HTML_ROOT', 'public_html'), dest_dir))
+        previous = known['covered']
+        previous_fine = known['fine']
+        previous_first = known['first']
         now_ts = int(gen_ts or time.time())
-        rebuilding = _rebuild_due(rebuilt, now_ts, rebuild_after)
+        rebuilding = _rebuild_due(known['rebuilt'], now_ts, rebuild_after)
 
         for plotname in group_dict.sections:
             if self.stop_event and self.stop_event.is_set():
@@ -392,9 +409,19 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             arch_root = os.path.join(self.config_dict['WEEWX_ROOT'],
                                      plot_options['HTML_ROOT'], dest_dir)
 
+            this_year = time.localtime(int(last_ts)).tm_year
+
             for year_span in weeutil.weeutil.genYearSpans(first_ts, last_ts):
                 year = time.localtime(year_span.start).tm_year
                 out_file = os.path.join(arch_root, '%s-%d.json' % (group_name, year))
+
+                # Which grid this year goes on. The recent ones are the ones people
+                # read closely. A file that is already finer than that keeps what it
+                # has: coarsening it would mean working out a whole year to end up
+                # with less than is already on disk.
+                grid = _year_grid(year, this_year, recent_years, resolution,
+                                  coarse_resolution,
+                                  known['intervals'].get(group_name, {}).get(year))
 
                 # The newest reading this file holds. For a year that has ended it is
                 # the last instant of the year, and never moves again. That file is
@@ -404,11 +431,12 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 covered = min(int(year_span.stop), int(last_ts))
                 was = previous.get(group_name, {}).get(year)
                 if os.path.exists(out_file) and was is not None and not reimported \
-                        and was // resolution == covered // resolution:
+                        and was // grid == covered // grid:
                     nskipped += 1
-                    entry = index.setdefault(group_name, {'years': [], 'covered': {}})
+                    entry = index.setdefault(group_name, _new_entry())
                     entry['years'].append(year)
                     entry['covered'][year] = was
+                    entry['intervals'][year] = grid
                     root = arch_root
                     continue
 
@@ -421,7 +449,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     nextended += 1
 
                 payload = self._archive_year(group_dict[plotname], plot_options, year_span,
-                                             resolution, aggregate_type, rounding,
+                                             grid, aggregate_type, rounding,
                                              group_name, first_ts, last_ts, carry)
                 if payload is None:
                     continue
@@ -430,16 +458,17 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     _write_json(out_file, payload, indent)
                     ngen += 1
                     root = arch_root
-                    entry = index.setdefault(group_name, {'years': [], 'covered': {}})
+                    entry = index.setdefault(group_name, _new_entry())
                     entry['years'].append(year)
                     entry['covered'][year] = payload['covered']
+                    entry['intervals'][year] = grid
                     entry['title'] = ', '.join(s['label'] for s in payload['series'])
                     entry['unit_label'] = payload['unit_label']
                 except OSError as e:
                     log.error("Unable to save to file '%s': %s", out_file, e)
 
-            if fine_days:
-                fine_from = max(int(first_ts), int(last_ts) - fine_days * 86400)
+            if fine_months:
+                fine_from = _months_back(int(last_ts), fine_months, int(first_ts))
                 for month_span in weeutil.weeutil.genMonthSpans(fine_from, last_ts):
                     stamp = time.strftime('%Y-%m', time.localtime(month_span.start))
                     out_file = os.path.join(arch_root, '%s-fine-%s.json'
@@ -449,8 +478,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     if os.path.exists(out_file) and was is not None and not reimported \
                             and was // fine_resolution == covered // fine_resolution:
                         nskipped += 1
-                        entry = index.setdefault(group_name, {'years': [], 'covered': {}})
-                        entry.setdefault('fine', {})[stamp] = was
+                        entry = index.setdefault(group_name, _new_entry())
+                        entry['fine'][stamp] = was
+                        entry['fine_intervals'][stamp] = fine_resolution
                         root = arch_root
                         continue
 
@@ -469,10 +499,28 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                         _write_json(out_file, payload, indent)
                         ngen += 1
                         root = arch_root
-                        entry = index.setdefault(group_name, {'years': [], 'covered': {}})
-                        entry.setdefault('fine', {})[stamp] = payload['covered']
+                        entry = index.setdefault(group_name, _new_entry())
+                        entry['fine'][stamp] = payload['covered']
+                        entry['fine_intervals'][stamp] = fine_resolution
                     except OSError as e:
                         log.error("Unable to save to file '%s': %s", out_file, e)
+
+            # Months that fell out of the writing window but whose file is still on
+            # disk. A month that has ended never changes, so the file stays correct
+            # forever, and the only thing standing between the reader and a year of
+            # close detail is this index naming it. Nothing is calculated here.
+            if root:
+                entry = index.setdefault(group_name, _new_entry())
+                for stamp, ts in previous_fine.get(group_name, {}).items():
+                    if stamp in entry['fine']:
+                        continue
+                    if not os.path.exists(os.path.join(
+                            arch_root, '%s-fine-%s.json' % (group_name, stamp))):
+                        continue
+                    entry['fine'][stamp] = ts
+                    entry['fine_intervals'][stamp] = \
+                        known['fine_intervals'].get(group_name, {}).get(
+                            stamp, fine_resolution)
 
         # Sunrise and sunset for the whole record. They depend on the location alone,
         # so they go in one file per year instead of being repeated in every group's
@@ -493,19 +541,28 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     'years': sorted(set(entry['years'])),
                     # Newest reading per year. JSON has no integer keys, so the year
                     # is written as a string and read back as one.
-                    'covered': {str(y): c for y, c in entry.get('covered', {}).items()},
+                    'covered': {str(y): c for y, c in entry['covered'].items()},
+                    # The grid each file is on. Files written years apart, or under
+                    # different settings, are not all on the same one, so the reader
+                    # has to be told per file rather than once at the top.
+                    'intervals': {str(y): g for y, g in entry['intervals'].items()},
                     # The same, for the months that also have a closely spaced file.
-                    'fine': {str(m): c for m, c in entry.get('fine', {}).items()},
+                    'fine': {str(m): c for m, c in entry['fine'].items()},
+                    'fine_intervals': {str(m): g
+                                       for m, g in entry['fine_intervals'].items()},
                 })
             try:
                 _write_json(os.path.join(root, 'index.json'),
+                            # 'interval' and 'fine_interval' are what a file is written
+                            # at now. They are the fallback for a reader that does not
+                            # know about the per file grids above.
                             {'interval': resolution,
-                             'fine_interval': fine_resolution if fine_days else None,
+                             'fine_interval': fine_resolution if fine_months else None,
                              'first': int(overall_start) if overall_start else None,
                              'last': int(overall_stop) if overall_stop else None,
                              # When the files last came from the database in full. The
                              # next run reads it to decide whether it may extend them.
-                             'rebuilt': now_ts if rebuilding else rebuilt,
+                             'rebuilt': now_ts if rebuilding else known['rebuilt'],
                              'groups': groups},
                             indent)
             except OSError as e:
@@ -535,22 +592,32 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                    for g in weeutil.weeutil.option_as_list(generators))
 
     def _read_archive_index(self, dest_dir):
-        """How far the previous run got, from the index it left behind.
+        """What the previous run left behind, as a record of what already exists.
+
+        This is the archive's memory. A file it names is a file that does not have to
+        be worked out again, whatever the current settings say should be written now.
 
         Returns:
-            tuple: Four values.
+            dict: With keys
 
-                - {group: {year: timestamp}}, the newest reading each year's file
-                  holds, e.g. {'tempdew': {2025: 1735689599, 2026: 1787777700}}
-                - the same for the closely spaced months, keyed 'YYYY-MM'
-                - the oldest reading in the database when the last run read it, or
-                  None if there was no index to read
-                - when a file was last built from the database in full, or None. A run
-                  that finds no value here rebuilds, which is what a reader written
-                  before this field should get.
+                covered:        {group: {year: timestamp}}, the newest reading each
+                                year's file holds
+                fine:           the same for the closely spaced months, keyed 'YYYY-MM'
+                intervals:      {group: {year: seconds}}, the grid each year's file is
+                                on. Files written at different times can be on
+                                different grids, and a file is never rewritten just to
+                                coarsen it.
+                fine_intervals: the same for the months
+                first:          the oldest reading in the database when the last run
+                                read it, or None if there was no index
+                rebuilt:        when the files last came from the database in full
         """
+        empty = {'covered': {}, 'fine': {}, 'intervals': {}, 'fine_intervals': {},
+                 'first': None, 'rebuilt': None}
         covered = {}
         fine = {}
+        intervals = {}
+        fine_intervals = {}
         first = None
         rebuilt = None
         try:
@@ -561,23 +628,100 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 index = json.load(fd)
             first = to_int(index.get('first'))
             rebuilt = to_int(index.get('rebuilt'))
+            # An index written before the grid could vary per file says so once, at
+            # the top. Read it as the grid every file in it is on.
+            default = to_int(index.get('interval'))
+            fine_default = to_int(index.get('fine_interval'))
             for group in index.get('groups', []):
+                name = group['name']
                 years = {}
                 for year, ts in (group.get('covered') or {}).items():
                     years[int(year)] = int(ts)
                 if years:
-                    covered[group['name']] = years
+                    covered[name] = years
                 months = {}
                 for stamp, ts in (group.get('fine') or {}).items():
                     months[str(stamp)] = int(ts)
                 if months:
-                    fine[group['name']] = months
+                    fine[name] = months
+                grids = {}
+                for year, seconds in (group.get('intervals') or {}).items():
+                    grids[int(year)] = int(seconds)
+                for year in years:
+                    grids.setdefault(year, default)
+                if grids:
+                    intervals[name] = {y: g for y, g in grids.items() if g}
+                fine_grids = {}
+                for stamp, seconds in (group.get('fine_intervals') or {}).items():
+                    fine_grids[str(stamp)] = int(seconds)
+                for stamp in months:
+                    fine_grids.setdefault(stamp, fine_default)
+                if fine_grids:
+                    fine_intervals[name] = {s: g for s, g in fine_grids.items() if g}
         except (OSError, ValueError, KeyError, TypeError):
             # No index, or one this version cannot read. Report that nothing is
             # current, so everything is rebuilt. That costs a run; the other way
             # round would leave stale files in place.
-            return {}, {}, None, None
-        return covered, fine, first, rebuilt
+            return empty
+        return {'covered': covered, 'fine': fine, 'intervals': intervals,
+                'fine_intervals': fine_intervals, 'first': first, 'rebuilt': rebuilt}
+
+    @staticmethod
+    def _reconcile_index(known, arch_root):
+        """Make what the index claims agree with what is on disk.
+
+        The index is the fast path; the directory is the truth. A file the index does
+        not name is invisible to the page however good it is, and an index naming a
+        file that has gone sends the reader after a 404. Losing the index would
+        otherwise mean working out the whole record again, with every answer already
+        sitting there in the files.
+
+        Only files the index does not already account for are opened, so a run that
+        finds the index intact pays one listdir.
+        """
+        try:
+            names = os.listdir(arch_root)
+        except OSError:
+            return
+
+        seen = {'covered': set(), 'fine': set()}
+        for filename in names:
+            if not filename.endswith('.json') or filename == 'index.json' \
+                    or filename.startswith('daynight-'):
+                continue
+            stem = filename[:-len('.json')]
+            if '-fine-' in stem:
+                group, _, stamp = stem.partition('-fine-')
+                kind, key = 'fine', stamp
+            else:
+                group, _, tail = stem.rpartition('-')
+                if not group or not tail.isdigit():
+                    continue
+                kind, key = 'covered', int(tail)
+            if not group:
+                continue
+            seen[kind].add((group, key))
+            if key in known[kind].get(group, {}):
+                continue
+            # A file nothing knew about. Its own header says what it holds.
+            payload = _read_archive_file(os.path.join(arch_root, filename))
+            if not payload:
+                continue
+            covered = to_int(payload.get('covered'))
+            interval = to_int(payload.get('interval'))
+            if covered is None or not interval:
+                continue
+            known[kind].setdefault(group, {})[key] = covered
+            grids = 'intervals' if kind == 'covered' else 'fine_intervals'
+            known[grids].setdefault(group, {})[key] = interval
+
+        # And drop what the index remembers but the directory does not have.
+        for kind, grids in (('covered', 'intervals'), ('fine', 'fine_intervals')):
+            for group in list(known[kind]):
+                for key in list(known[kind][group]):
+                    if (group, key) not in seen[kind]:
+                        known[kind][group].pop(key, None)
+                        known[grids].get(group, {}).pop(key, None)
 
     def _archive_daynight(self, root, first_ts, last_ts, indent):
         """Write sunrise and sunset times, one file per calendar year.
@@ -1169,6 +1313,49 @@ def _write_json(path, payload, indent):
         json.dump(payload, fd, indent=indent, ensure_ascii=False,
                   separators=(',', ':') if indent is None else None)
     os.replace(tmp, path)
+
+
+def _new_entry():
+    """A blank index entry for one plot group."""
+    return {'years': [], 'covered': {}, 'intervals': {}, 'fine': {},
+            'fine_intervals': {}}
+
+
+def _year_grid(year, this_year, recent_years, resolution, coarse_resolution, existing):
+    """The interval one calendar year's file is written at.
+
+    The recent years get the finer grid, because those are the ones people read
+    closely. Older ones get the coarse one: a year read at a glance does not need
+    8760 points, and the difference is what a long record costs to build and to fetch.
+
+    A file that is already finer than the answer keeps what it has. Rewriting a year
+    to hold less than it already does would be a year of aggregate queries spent going
+    backwards.
+    """
+    if recent_years and year <= this_year - recent_years:
+        grid = coarse_resolution
+    else:
+        grid = resolution
+    if existing and existing < grid:
+        return existing
+    return grid
+
+
+def _months_back(last_ts, months, floor_ts):
+    """The start of the calendar month 'months - 1' before the one holding last_ts.
+
+    Counted in calendar months rather than days, because that is how the files are
+    cut. 'fine_months = 2' means the month in progress and the one before it, whole,
+    however long they are.
+    """
+    tt = time.localtime(last_ts)
+    year, month = tt.tm_year, tt.tm_mon
+    month -= max(0, months - 1)
+    while month < 1:
+        month += 12
+        year -= 1
+    start = int(time.mktime((year, month, 1, 0, 0, 0, 0, 0, -1)))
+    return max(start, floor_ts)
 
 
 def _rebuild_due(rebuilt, now_ts, after):

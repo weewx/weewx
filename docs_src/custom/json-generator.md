@@ -173,26 +173,36 @@ And in `[[Archive]]`:
         <td>Whether to write the archive at all. Default:
         <span class="code">false</span>.</td></tr>
     <tr><td class="first_col">resolution</td>
-        <td>The grid interval. Default: <span class="code">1h</span>. A finer grid gives
-        a sharper zoom at proportionally larger files.</td></tr>
+        <td>The grid the recent calendar years are written on. Default:
+        <span class="code">1h</span>.</td></tr>
+    <tr><td class="first_col">recent_years</td>
+        <td>How many calendar years count as recent. Default: 0, meaning every year
+        gets <span class="code">resolution</span>.</td></tr>
+    <tr><td class="first_col">coarse_resolution</td>
+        <td>The grid for years older than that. Default: the same as
+        <span class="code">resolution</span>. A year read at a glance does not need
+        8760 points, and this is most of what a long record costs to build and to
+        fetch.</td></tr>
     <tr><td class="first_col">aggregate_type</td>
         <td>How to aggregate onto the grid. Default: <span class="code">avg</span>. Rain,
         ET, hail, snow and lightning counts are always summed.</td></tr>
     <tr><td class="first_col">max_days</td>
         <td>How far back to go. Default: 0, meaning the whole record.</td></tr>
-    <tr><td class="first_col">fine_days</td>
-        <td>How far back to also write a finer grid, one file per calendar month.
-        Default: 0, meaning none. Thirty days at five minutes costs about what one
-        year at one hour costs, and a client fetches only the months it shows.</td></tr>
+    <tr><td class="first_col">fine_months</td>
+        <td>How many calendar months also get a closely spaced file, counted whole and
+        including the month in progress. Default: 0, meaning none. A month that has
+        ended never changes, so its file is written once and then kept: the coverage
+        grows with the length of the record while the work stays the same.</td></tr>
     <tr><td class="first_col">fine_resolution</td>
         <td>The interval of that finer grid. Default:
-        <span class="code">300</span>. Ignored unless it is finer than
+        <span class="code">900</span>. Ignored unless it is finer than
         <span class="code">resolution</span>.</td></tr>
     <tr><td class="first_col">rebuild</td>
-        <td>How often a file is built from the whole database again instead of being
-        carried forward from the copy on disk. Default:
-        <span class="code">1d</span>, checked against the calendar, so the first report
-        after midnight. 0 never rebuilds. See <em>Costs</em> below.</td></tr>
+        <td>How often every file is built from the whole database again instead of
+        being carried forward from the copy on disk. Default: 0, never. The index is
+        checked against the directory on every run, so nothing depends on a rebuild to
+        stay honest. Set it to <span class="code">1d</span> if readings in your
+        database get edited in place. See <em>Costs</em> below.</td></tr>
     <tr><td class="first_col">source_group</td>
         <td>Which time-period section defines the plot groups. Default:
         <span class="code">day_images</span>.</td></tr>
@@ -209,13 +219,16 @@ And in `[[Archive]]`:
 ## Costs
 
 Measured on a development machine (x86-64, SQLite) against 400 days of synthetic data at
-a ten-minute archive interval, with the plot set the Horizon skin ships with — 57601
-records, 44 period files and 39 archive files spanning two calendar years:
+a half-hourly archive interval, with the plot set the Horizon skin ships with — 175321
+records, 44 period files and 125 archive files spanning eleven calendar years:
 
 | | first run | every run after |
 |---|---|---|
-| Period files (44) | 2.9 s | 0.02 to 0.14 s |
-| Archive (39 files) | 11.3 s | 0.05 to 0.09 s |
+| Period files (44) | 1.9 s | 0.02 to 0.14 s |
+| Archive (125 files) | 20.6 s | 0.16 s |
+
+The three grids are what keep the first figure down: at one hour for every year it is
+46.8 s instead of 20.6 s, for a file set nobody reads that closely.
 
 The archive's first build is a one-off, and it scales with the length of your record: a
 station with ten years of data pays for ten years once. After that a finished year is
@@ -225,10 +238,10 @@ the last report are read from the database. That is why the steady-state figure 
 grow with the length of the record, and it is the figure that matters for a station
 reporting every five minutes.
 
-Once a day the whole span is built again anyway, which costs what the first run costs.
-That is what picks up anything that changed further back than the last report: a reading
-corrected by an import, a sensor that has just started reporting. `rebuild` sets the
-cadence.
+A month or a year that has ended never changes, so its file is written once and then
+kept, whatever the current settings say should be written now. The index is checked
+against the directory on every run, so a file that survives is a file that stays in
+use, and losing the index costs a directory listing rather than the whole record.
 
 These numbers will be several times larger on a Raspberry Pi. They are given to show the
 *shape* of the cost — a large one-off, then almost nothing — not as a benchmark.
