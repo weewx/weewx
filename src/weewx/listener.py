@@ -207,8 +207,16 @@ class HTTPListener(Listener):
         port (int): The port to listen on. Default is 80, which needs root.
         address (str): The address to bind to. Default is '', i.e. every interface. Use
             'localhost' when a reverse proxy sits in front.
-        path (str): Accept requests for this path only, e.g. '/data/report/'. Anything
-            else is answered with a 404. Default is None, i.e. accept every path.
+        path (str|list|callable): Which paths to answer for. Anything else is
+            answered with a 404. Default is None, i.e. accept every path.
+
+            A string is one path, e.g. '/data/report/'. A list, or a
+            comma-separated string, is several. A callable is passed the path and
+            returns whether to accept it, which is what a driver needs when the set
+            of paths is not fixed at startup: one path per station, say, where a
+            station can be added while WeeWX is running.
+
+            Trailing slashes are ignored on both sides.
         response (str|bytes|callable): What to send back. A callable is passed the
             Request and returns the body. Default is an empty 200.
         content_type (str): The content type of the response. Default 'text/plain'.
@@ -234,6 +242,10 @@ class HTTPListener(Listener):
         self.port = to_int(kwargs.get('port', 80))
         self.address = kwargs.get('address', '')
         self.path = kwargs.get('path')
+        # Worked out once. A list is the common case and comparing it per request
+        # would mean splitting the same string over and over.
+        self.paths = (None if self.path is None or callable(self.path)
+                      else [p.rstrip('/') for p in _as_list(self.path)])
         self.response = kwargs.get('response', '')
         self.content_type = kwargs.get('content_type', 'text/plain')
         self.max_body = to_int(kwargs.get('max_body', DEFAULT_MAX_BODY))
@@ -261,6 +273,18 @@ class HTTPListener(Listener):
 
     def _listening(self):
         return self.thread is not None and self.thread.is_alive()
+
+    def accepts(self, path):
+        """Whether this listener answers for a path.
+
+        Asked before the request is read any further, so that a path nobody wants
+        costs a dictionary lookup and a 404 rather than a parse.
+        """
+        if self.path is None:
+            return True
+        if callable(self.path):
+            return bool(self.path(path))
+        return path.rstrip('/') in self.paths
 
     def get_response(self, request):
         """The body to send back. Override this, or pass 'response' to the constructor."""
@@ -440,7 +464,7 @@ class _Handler(BaseHTTPRequestHandler):
             return
 
         parts = urllib.parse.urlsplit(self.path)
-        if listener.path is not None and parts.path.rstrip('/') != listener.path.rstrip('/'):
+        if not listener.accepts(parts.path):
             self.send_error(404, "Not Found")
             return
 

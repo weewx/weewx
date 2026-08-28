@@ -240,8 +240,10 @@ straight through:
   <tr>
     <td class="code">path</td>
     <td><i>every path</i></td>
-    <td>Accept this path only, <i>e.g.</i>
-        <span class="code">/data/report/</span>. Anything else gets a 404.</td>
+    <td>Which paths to answer for, <i>e.g.</i>
+        <span class="code">/data/report/</span>. A comma-separated list, or a
+        Python list, is several. A callable is passed the path and returns whether
+        to accept it. Anything else gets a 404.</td>
   </tr>
   <tr>
     <td class="code">max_body</td>
@@ -298,6 +300,22 @@ a URL, which is most of it, can still carry a secret in the path:
     driver = user.mydriver
     port = 8000
     path = /a8f3c1e0/report
+```
+
+`path` takes more than one, which matters where a driver answers to several kinds of
+hardware: a console whose path you choose, and one whose path is burned into its
+firmware, cannot share a single setting.
+
+``` ini
+    path = /a8f3c1e0/report, /weatherstation/updateweatherstation.php
+```
+
+Where the set of paths is not known when the socket is opened, pass a callable
+instead. A driver that gives each station a path of its own can then accept a new one
+without WeeWX being restarted:
+
+``` python
+self.listener = HTTPListener(port=8000, path=self.knows_this_path)
 ```
 
 None of this is a substitute for TLS, and the listener does not offer any. Put a reverse

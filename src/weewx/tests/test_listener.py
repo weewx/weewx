@@ -142,6 +142,57 @@ def test_path_filter(make_listener):
     assert listener.queue.qsize() == 2
 
 
+def test_several_paths(make_listener):
+    """A driver with more than one kind of hardware answers on more than one path."""
+    listener = make_listener(path=['/data/report/', '/weatherstation/update'])
+
+    assert send(listener, path='/data/report/', body=ECOWITT_BODY)[0] == 200
+    assert send(listener, path='/weatherstation/update', body=ECOWITT_BODY)[0] == 200
+    assert send(listener, path='/somewhere/else', body=ECOWITT_BODY)[0] == 404
+
+    assert listener.queue.qsize() == 2
+
+
+def test_several_paths_as_one_string(make_listener):
+    """configobj hands over a comma-separated option as a list, but a driver may be
+    given the string as it was typed."""
+    listener = make_listener(path='/one/, /two/')
+
+    assert send(listener, path='/one/', body=ECOWITT_BODY)[0] == 200
+    assert send(listener, path='/two', body=ECOWITT_BODY)[0] == 200
+    assert send(listener, path='/three', body=ECOWITT_BODY)[0] == 404
+
+
+def test_a_path_that_is_decided_when_the_request_arrives(make_listener):
+    """Which paths are wanted is not always known when the socket is opened. A driver
+    that gives each station a path of its own has to be able to add one without
+    restarting WeeWX."""
+    wanted = {'/first/'}
+    listener = make_listener(path=lambda path: path.rstrip('/') + '/' in wanted)
+
+    assert send(listener, path='/first/', body=ECOWITT_BODY)[0] == 200
+    assert send(listener, path='/second/', body=ECOWITT_BODY)[0] == 404
+
+    wanted.add('/second/')
+    assert send(listener, path='/second/', body=ECOWITT_BODY)[0] == 200
+
+
+def test_every_path_by_default(make_listener):
+    listener = make_listener()
+
+    assert send(listener, path='/anything/at/all', body=ECOWITT_BODY)[0] == 200
+
+
+def test_a_path_nobody_wants_is_not_queued(make_listener):
+    """The 404 comes before the request is built, so a driver iterating the listener
+    never sees it and a flood of them cannot push real readings out of the queue."""
+    listener = make_listener(path='/data/report/')
+
+    send(listener, path='/somewhere/else', body=ECOWITT_BODY)
+
+    assert listener.queue.empty()
+
+
 def test_body_over_the_limit_is_refused(make_listener):
     listener = make_listener(max_body=64)
     status, _ = send(listener, body='x' * 65)
