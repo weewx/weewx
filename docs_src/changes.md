@@ -3,6 +3,12 @@ WeeWX change history
 
 ### 5.5.n n-Month-2026
 
+`weectl extension uninstall` no longer removes a configuration section that is still
+in use. A section was pruned as soon as it had no subsections left, so uninstalling
+any driver extension took all of `[Station]` with it, including the location and the
+coordinates. Fixes [Issue #1131](https://github.com/weewx/weewx/issues/1131).
+[PR #PRNUM](https://github.com/weewx/weewx/pull/PRNUM).
+
 Say so in the log when a Vantage logger returns far fewer archive records than it
 said it would, which is what corrupt logger memory looks like, and link to the fix.
 Fixes [Issue #1105](https://github.com/weewx/weewx/issues/1105).
