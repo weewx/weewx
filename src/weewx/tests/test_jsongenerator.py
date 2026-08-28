@@ -1192,6 +1192,125 @@ class TestRawTier:
         assert not [f for f in os.listdir(archive_dir) if '-raw-' in f]
 
 
+class TestBudget:
+    """Building a long history across several reports instead of one long one."""
+
+    _whole = {}
+
+    @classmethod
+    def whole_count(cls, config_dict, tmp_path_factory=None):
+        """How many slots the file has when nothing gets in the way."""
+        if 'count' not in cls._whole:
+            import tempfile
+            target = tempfile.mkdtemp(prefix='whole-')
+            data_dir = run_generator(config_dict, target, archive=True,
+                                     gen_ts=parameters.synthetic_dict['stop_ts'])
+            with open(os.path.join(data_dir, 'archive', 'tempdew-2010.json'),
+                      encoding='utf-8') as fd:
+                cls._whole['count'] = json.load(fd)['count']
+        return cls._whole['count']
+
+    def test_a_file_too_big_for_the_budget_is_finished_later(self, config_dict,
+                                                             tmp_path):
+        """The budget cuts inside a file, not between files.
+
+        A year on a slow machine can cost more than a whole budget on its own. Waiting
+        for it would be a report that runs long; skipping it would be a year that never
+        gets built. So the file is written holding what was worked out, and the next
+        run carries on from there, which is what extending already does.
+        """
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        name = os.path.join('data', 'archive', 'tempdew-2010.json')
+        path = os.path.join(str(tmp_path), name)
+
+        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                      archive_options={'budget': '1'})
+        with open(path, encoding='utf-8') as fd:
+            first = json.load(fd)
+        assert first['count'] < self.whole_count(config_dict), \
+            "the budget did not cut the file short"
+
+        seen = [first['count']]
+        for _ in range(3):
+            run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                          archive_options={'budget': '1'})
+            with open(path, encoding='utf-8') as fd:
+                seen.append(json.load(fd)['count'])
+
+        assert seen == sorted(seen), "the file did not grow monotonically: %s" % seen
+        assert seen[-1] > seen[0], "later runs added nothing"
+
+    def test_the_short_file_says_how_far_it_got(self, config_dict, tmp_path):
+        """'covered' has to be the truth, or the next run thinks it is done."""
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                      archive_options={'budget': '1'})
+        path = os.path.join(str(tmp_path), 'data', 'archive', 'tempdew-2010.json')
+        with open(path, encoding='utf-8') as fd:
+            payload = json.load(fd)
+
+        assert payload['covered'] < stop_ts
+        assert payload['covered'] <= payload['start'] + payload['count'] * payload['interval']
+        assert payload['resume_ts'] is not None
+
+    def test_it_ends_up_the_same_as_doing_it_in_one_go(self, config_dict,
+                                                       tmp_path_factory):
+        """Built in pieces or all at once, the file has to say the same thing."""
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        pieces = tmp_path_factory.mktemp('pieces')
+        for _ in range(40):
+            run_generator(config_dict, pieces, archive=True, gen_ts=stop_ts,
+                          archive_options={'budget': '1'})
+        whole = tmp_path_factory.mktemp('whole')
+        run_generator(config_dict, whole, archive=True, gen_ts=stop_ts)
+
+        name = os.path.join('data', 'archive', 'tempdew-2010.json')
+        with open(os.path.join(str(pieces), name), encoding='utf-8') as fd:
+            built_up = json.load(fd)
+        with open(os.path.join(str(whole), name), encoding='utf-8') as fd:
+            one_go = json.load(fd)
+
+        assert built_up['count'] == one_go['count'], "the pieces did not reach the end"
+        assert built_up['series'] == one_go['series']
+
+    def test_deferred_files_stay_in_the_index(self, config_dict, tmp_path):
+        """A run that stops early must not un-name what earlier runs wrote.
+
+        The index is built from what this run touched. Everything else is on disk and
+        correct, and dropping it would take the page's history away until the run that
+        happens to reach it again.
+        """
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        full = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts)
+        index_path = os.path.join(full, 'archive', 'index.json')
+        with open(index_path, encoding='utf-8') as fd:
+            before = json.load(fd)
+
+        # Nothing is due now, and the budget is spent at once. The index must come out
+        # the same anyway, because every file is still there.
+        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                      archive_options={'budget': '1'})
+        with open(index_path, encoding='utf-8') as fd:
+            after = json.load(fd)
+
+        named = lambda idx: {(g['name'], y) for g in idx['groups']
+                             for y in g.get('covered', {})}
+        assert named(after) == named(before)
+        assert {g['name'] for g in after['groups']} == {g['name'] for g in before['groups']}
+
+    def test_the_day_view_is_never_deferred(self, config_dict, tmp_path):
+        """The raw tier is what the page draws today from. It is not metered."""
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        data_dir = run_generator(
+            config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+            archive_options={'budget': '1', 'raw_days': '3', 'raw_resolution': '1800'})
+        archive_dir = os.path.join(data_dir, 'archive')
+
+        days = {f.split('-raw-')[1][:-len('.json')]
+                for f in os.listdir(archive_dir) if '-raw-' in f}
+        assert len(days) == 3, days
+
+
 class TestRebuildDue:
 
     DAY = 86400

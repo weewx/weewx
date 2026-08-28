@@ -197,6 +197,20 @@ And in `[[Archive]]`:
         <td>The interval of that finer grid. Default:
         <span class="code">900</span>. Ignored unless it is finer than
         <span class="code">resolution</span>.</td></tr>
+    <tr><td class="first_col">raw_days</td>
+        <td>How many days also get a file of the station's own readings, one per day.
+        Default: 0, meaning none. This is what a day view is drawn from, and the only
+        tier with a horizon: files past it are removed, because a raw day from last
+        year would be a small file per plot per day, forever.</td></tr>
+    <tr><td class="first_col">raw_resolution</td>
+        <td>The interval of those files. Default: 0, meaning the archive interval, read
+        off a record rather than the configuration.</td></tr>
+    <tr><td class="first_col">budget</td>
+        <td>How long a report may spend building the coarser tiers, in seconds.
+        Default: 0, meaning as long as it takes. The cut is inside a file: one that
+        runs out of budget is written holding what was worked out, and the next report
+        carries on from there. The day tier is never deferred. See <em>Costs</em>
+        below.</td></tr>
     <tr><td class="first_col">rebuild</td>
         <td>How often every file is built from the whole database again instead of
         being carried forward from the copy on disk. Default: 0, never. The index is
@@ -229,6 +243,13 @@ records, 44 period files and 125 archive files spanning eleven calendar years:
 
 The three grids are what keep the first figure down: at one hour for every year it is
 46.8 s instead of 20.6 s, for a file set nobody reads that closely.
+
+That first figure is still a report that runs for half a minute here, and for minutes
+on a Raspberry Pi. WeeWX skips the reports behind a long one, and after `max_wait`
+(600 s) it launches a second report thread on top of it. `budget` is the way out: set
+it, and no report runs longer than that, because a file that runs out of budget is
+written holding what was worked out and continued by the next one. The history builds
+itself over a few reports instead of blocking one.
 
 The archive's first build is a one-off, and it scales with the length of your record: a
 station with ten years of data pays for ten years once. After that a finished year is

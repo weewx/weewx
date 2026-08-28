@@ -350,6 +350,13 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         raw_days = to_int(arch_dict.get('raw_days', 0))
         raw_resolution = to_int(weeutil.weeutil.nominal_spans(
             arch_dict.get('raw_resolution', 0)))
+
+        # How long to spend on the coarse tiers before leaving the rest for the next
+        # report. A station with years of history has to build them once, and doing it
+        # in one go is a report that runs for minutes and delays the one behind it.
+        # The index knows what is missing, so stopping early costs nothing but time.
+        # 0 does the lot in one run.
+        budget = to_int(weeutil.weeutil.nominal_spans(arch_dict.get('budget', 0)))
         dest_dir = arch_dict.get('dest_dir',
                                  os.path.join(self.gen_dict.get('json_dest_dir', 'data'),
                                               'archive'))
@@ -368,7 +375,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
         # Kept in a dict because write_tier() below adds to them, and a closure that
         # rebinds a name needs 'nonlocal' for each one.
-        counters = {'written': 0, 'skipped': 0, 'extended': 0, 'root': None}
+        counters = {'written': 0, 'skipped': 0, 'extended': 0, 'deferred': 0,
+                    'spent': 0.0, 'slots': 0, 'root': None}
         index = {}
         overall_start = overall_stop = None
 
@@ -416,14 +424,23 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
             this_year = time.localtime(int(last_ts)).tm_year
 
-            def write_tier(spans, kind, grids, stamp_of, name_of, grid_of, tier_from):
+            def write_tier(spans, kind, grids, stamp_of, name_of, grid_of, tier_from,
+                           metered=True):
                 """Write one tier's files for this group.
 
                 The three tiers differ in how the record is cut into files, which grid
                 each file goes on, and what the index calls them. When to skip, what to
                 carry forward and what to record are the same for all of them.
+
+                'metered' tiers are held to the budget. The raw tier is not one: it is
+                what the day view is drawn from, it is cheap, and a report that
+                deferred it would leave the page without today.
                 """
                 for span in spans:
+                    afford = _affordable(budget, counters) if metered else None
+                    if afford == 0:
+                        counters['deferred'] += 1
+                        continue
                     stamp = stamp_of(span)
                     out_file = os.path.join(arch_root, name_of(stamp))
                     grid = grid_of(stamp, known[grids].get(group_name, {}).get(stamp))
@@ -451,11 +468,18 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     if carry is not None:
                         counters['extended'] += 1
 
+                    started = time.time()
+                    before = carry['count'] if carry else 0
                     payload = self._archive_year(
                         group_dict[plotname], plot_options, span, grid, aggregate_type,
-                        rounding, group_name, tier_from, last_ts, carry)
+                        rounding, group_name, tier_from, last_ts, carry, afford)
+                    counters['spent'] += time.time() - started
                     if payload is None:
                         continue
+                    # What a slot costs, so the next file can be sized to the budget
+                    # that is left. Measured rather than assumed: it is a database
+                    # query per slot, and databases differ.
+                    counters['slots'] += max(0, payload['count'] - before)
                     try:
                         _write_json(out_file, payload, indent)
                         counters['written'] += 1
@@ -467,28 +491,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     except OSError as e:
                         log.error("Unable to save to file '%s': %s", out_file, e)
 
-            write_tier(
-                weeutil.weeutil.genYearSpans(first_ts, last_ts), 'covered', 'intervals',
-                lambda span: time.localtime(span.start).tm_year,
-                lambda year: '%s-%d.json' % (group_name, year),
-                # The recent years are the ones people read closely. A file already
-                # finer than the answer keeps what it has: coarsening it would mean
-                # working out a whole year to end up with less than is on disk.
-                lambda year, existing: _year_grid(year, this_year, recent_years,
-                                                  resolution, coarse_resolution,
-                                                  existing),
-                first_ts)
-
-            if fine_months:
-                fine_from = _months_back(int(last_ts), fine_months, int(first_ts))
-                write_tier(
-                    weeutil.weeutil.genMonthSpans(fine_from, last_ts),
-                    'fine', 'fine_intervals',
-                    lambda span: time.strftime('%Y-%m', time.localtime(span.start)),
-                    lambda stamp: '%s-fine-%s.json' % (group_name, stamp),
-                    lambda stamp, existing: fine_resolution,
-                    fine_from)
-
+            # Finest first. A station building its history for the first time has the
+            # day view within a second or two, and fills in the years behind it over
+            # the reports that follow.
             if raw_days:
                 # The station's own readings, one file per day, for the day view and
                 # for stepping back through days. This is the one tier that does not
@@ -504,26 +509,36 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     lambda span: time.strftime('%Y-%m-%d', time.localtime(span.start)),
                     lambda stamp: '%s-raw-%s.json' % (group_name, stamp),
                     lambda stamp, existing: grid,
-                    raw_from)
+                    raw_from, metered=False)
                 _drop_stale_raw(arch_root, group_name,
                                 set(index.get(group_name, {}).get('raw', {})))
 
-            # Months that fell out of the writing window but whose file is still on
-            # disk. A month that has ended never changes, so the file stays correct
-            # forever, and the only thing standing between the reader and a year of
-            # close detail is this index naming it. Nothing is calculated here.
-            if counters['root']:
-                entry = index.setdefault(group_name, _new_entry())
-                for stamp, ts in known['fine'].get(group_name, {}).items():
-                    if stamp in entry['fine']:
-                        continue
-                    if not os.path.exists(os.path.join(
-                            arch_root, '%s-fine-%s.json' % (group_name, stamp))):
-                        continue
-                    entry['fine'][stamp] = ts
-                    entry['fine_intervals'][stamp] = \
-                        known['fine_intervals'].get(group_name, {}).get(
-                            stamp, fine_resolution)
+            if fine_months:
+                fine_from = _months_back(int(last_ts), fine_months, int(first_ts))
+                write_tier(
+                    weeutil.weeutil.genMonthSpans(fine_from, last_ts),
+                    'fine', 'fine_intervals',
+                    lambda span: time.strftime('%Y-%m', time.localtime(span.start)),
+                    lambda stamp: '%s-fine-%s.json' % (group_name, stamp),
+                    lambda stamp, existing: fine_resolution,
+                    fine_from)
+
+            write_tier(
+                weeutil.weeutil.genYearSpans(first_ts, last_ts), 'covered', 'intervals',
+                lambda span: time.localtime(span.start).tm_year,
+                lambda year: '%s-%d.json' % (group_name, year),
+                # The recent years are the ones people read closely. A file already
+                # finer than the answer keeps what it has: coarsening it would mean
+                # working out a whole year to end up with less than is on disk.
+                lambda year, existing: _year_grid(year, this_year, recent_years,
+                                                  resolution, coarse_resolution,
+                                                  existing),
+                first_ts)
+
+            _carry_over_index(index, known, group_name)
+            if index.get(group_name) \
+                    and any(index[group_name][kind] for kind, _ in TIERS):
+                counters['root'] = arch_root
 
         # Sunrise and sunset for the whole record. They depend on the location alone,
         # so they go in one file per year instead of being repeated in every group's
@@ -620,8 +635,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         for kind, grids in TIERS:
             empty[kind] = {}
             empty[grids] = {}
+        empty['labels'] = {}
         found = {kind: {} for kind, _ in TIERS}
         found.update({grids: {} for _, grids in TIERS})
+        found['labels'] = {}
         first = None
         rebuilt = None
         try:
@@ -642,6 +659,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             as_key = {'covered': int, 'fine': str, 'raw': str}
             for group in index.get('groups', []):
                 name = group['name']
+                # A run that does not get to a group still has to be able to name it
+                # in the index it writes, and these do not come from the files.
+                found['labels'][name] = (group.get('title'), group.get('unit_label'))
                 for kind, grids in TIERS:
                     spans = {}
                     for stamp, ts in (group.get(kind) or {}).items():
@@ -755,7 +775,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
     def _archive_year(self, plot_section, plot_options, year_span, resolution,
                       aggregate_type, rounding, group_name, first_ts, last_ts,
-                      previous=None):
+                      previous=None, max_slots=None):
         """Build the contents of one archive file: one plot group, one calendar year.
 
         There are no timestamps in the result. `start` is the first instant, `interval`
@@ -770,6 +790,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 per slot in the year and one per slot since the last report. Anything
                 that makes the old file unusable, from a changed series list to a
                 changed unit, falls back to calculating the whole span.
+            max_slots (int|None): At most this many slots may be worked out. The file
+                is written short if that is not enough to reach the end of the span,
+                and the next run continues from where this one stopped. None does the
+                whole span however long it takes.
 
         Returns:
             dict|None: The file's contents, or None if the year holds nothing worth
@@ -790,13 +814,26 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         hi = min(year_span.stop, int(last_ts) + resolution)
         start = int(lo // resolution * resolution)
         stop = int(hi // resolution * resolution) + resolution
-        domain = TimeSpan(start, stop)
         slots = int((stop - start) / resolution)
         if slots < 2:
             return None
 
         # Where to pick up from, or None to do the lot.
         resume = _resume_from(previous, start, resolution, slots)
+
+        # Stop short if only so many slots can be afforded. The file is then written
+        # holding less than the span it is named for, which is exactly what a file
+        # that is still filling up looks like: 'covered' says how far it got, and the
+        # next run carries on from there. A year of history therefore builds itself
+        # over several reports without any of them running long.
+        if max_slots is not None:
+            done = resume[1] if resume else 0
+            if done + max_slots < slots:
+                slots = done + max_slots
+                stop = start + slots * resolution
+                last_ts = min(int(last_ts), stop - resolution)
+
+        domain = TimeSpan(start, stop)
         tail = TimeSpan(resume[0], stop) if resume else domain
 
         series_out = []
@@ -1392,6 +1429,50 @@ def _rebuild_due(rebuilt, now_ts, after):
     then = datetime.date.fromtimestamp(rebuilt)
     now = datetime.date.fromtimestamp(now_ts)
     return (now - then).days >= int(after // 86400)
+
+
+def _affordable(budget, counters):
+    """How many slots are left in this run's budget, or None for no limit.
+
+    The cost of a slot is one database query, and how long that takes is the machine's
+    business, not something to guess at from here. So it is measured: what this run has
+    spent, over the slots it spent it on, until there is something to measure it comes
+    out of a deliberately pessimistic guess.
+
+    Returns:
+        int|None: Slots that fit in what is left, at least one so that a run always
+            gets somewhere. None if there is no budget at all.
+    """
+    if not budget:
+        return None
+    left = budget - counters['spent']
+    if left <= 0:
+        return 0
+    per_slot = counters['spent'] / counters['slots'] if counters['slots'] else 0.005
+    return max(1, int(left / per_slot))
+
+
+def _carry_over_index(index, known, group_name):
+    """Name every file that exists, not only the ones this run touched.
+
+    A run writes the spans that are due and leaves the rest alone, and a run with a
+    budget leaves more than that. Both are fine on disk and wrong in the index: what
+    it does not name, the page cannot see. 'known' has already been checked against
+    the directory, so anything in it is a file that is really there.
+    """
+    entry = index.setdefault(group_name, _new_entry())
+    for kind, grids in TIERS:
+        for stamp, ts in known[kind].get(group_name, {}).items():
+            if stamp in entry[kind]:
+                continue
+            entry[kind][stamp] = ts
+            grid = known[grids].get(group_name, {}).get(stamp)
+            if grid:
+                entry[grids][stamp] = grid
+    if not entry['title']:
+        title, unit_label = known['labels'].get(group_name, (None, None))
+        entry['title'] = title
+        entry['unit_label'] = unit_label
 
 
 def _archive_interval(db_manager, last_ts):
