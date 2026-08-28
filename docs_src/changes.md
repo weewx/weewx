@@ -7,7 +7,7 @@ WeeWX change history
 in use. A section was pruned as soon as it had no subsections left, so uninstalling
 any driver extension took all of `[Station]` with it, including the location and the
 coordinates. Fixes [Issue #1131](https://github.com/weewx/weewx/issues/1131).
-[PR #PRNUM](https://github.com/weewx/weewx/pull/PRNUM).
+[PR #1132](https://github.com/weewx/weewx/pull/1132).
 
 Say so in the log when a Vantage logger returns far fewer archive records than it
 said it would, which is what corrupt logger memory looks like, and link to the fix.
