@@ -16,6 +16,11 @@
 
 #set $refresh = $to_int($DisplayOptions.get('refresh_interval', 60))
 
+## What the masthead says. See masthead.inc. The NOAA summaries are text as the
+## report wrote them, so there is nothing for the unit picker to convert.
+#set global $page_title = $gettext("Reports")
+#set global $page_units = False
+
 <!DOCTYPE html>
 <html lang="$lang">
   <head>
@@ -38,14 +43,7 @@
   </head>
   <body>
     <div class="wrap">
-      <header class="masthead">
-        <div>
-          <h1>$gettext("Reports")</h1>
-          <p class="updated"><a href="index.html">&larr; $station.location</a> &middot;
-            <span class="visually-hidden">$gettext("Last update")</span>
-            <span data-live="dateTime" data-raw="$current.dateTime.raw">$current.dateTime</span></p>
-        </div>
-      </header>
+      #include "masthead.inc"
 
       <section class="panel">
         <div class="panel-head">

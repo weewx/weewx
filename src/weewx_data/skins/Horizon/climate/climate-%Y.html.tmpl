@@ -16,7 +16,8 @@
 #set $generated_ts = $latest.dateTime.raw or 'null'
 ## 'global', so that the two includes below can see them. See climate.html.tmpl.
 #set global $climate_year = $year.dateTime.format("%Y")
-#set global $climate_root = '..'
+#set global $page_root = '..'
+#set global $page_title = '{0} {1}'.format($gettext("Climate"), $climate_year)
 
 <!DOCTYPE html>
 <html lang="$lang">
@@ -25,9 +26,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
     <title>$gettext("Climate") $climate_year &ndash; $station.location</title>
-    <link rel="icon" href="$climate_root/favicon.ico" sizes="any">
-    <link rel="stylesheet" href="$climate_root/uplot.min.css">
-    <link rel="stylesheet" href="$climate_root/horizon.css">
+    <link rel="icon" href="$page_root/favicon.ico" sizes="any">
+    <link rel="stylesheet" href="$page_root/uplot.min.css">
+    <link rel="stylesheet" href="$page_root/horizon.css">
     <script>
       (function () {
         try {
@@ -40,7 +41,7 @@
 
   <body>
     <div class="wrap">
-      #include "climate-head.inc"
+      #include "masthead.inc"
       #include "climate.inc"
 
       <p class="footer">
@@ -50,17 +51,20 @@
 
     #include "top.inc"
 
-    <script src="$climate_root/uplot.min.js"></script>
+    <script src="$page_root/uplot.min.js"></script>
     <script>
       window.HORIZON = {
-        dataDir: "$climate_root/data",
+        dataDir: "$page_root/data",
         refreshInterval: 0,
         generated: $generated_ts,
         weekStart: $station.week_start,
-        text: { noData: "$gettext('No data for this period')" }
+        text: {
+          noData: "$gettext('No data for this period')",
+          asConfigured: "$gettext('Default')"
+        }
       };
     </script>
-    <script src="$climate_root/horizon.js"></script>
-    <script src="$climate_root/climate.js"></script>
+    <script src="$page_root/horizon.js"></script>
+    <script src="$page_root/climate.js"></script>
   </body>
 </html>

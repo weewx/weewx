@@ -8,10 +8,11 @@
 ## climate/climate-%Y.html.tmpl.
 ##
 #set $refresh = $to_int($DisplayOptions.get('refresh_interval', 60))
-## 'global', because climate-head.inc and climate.inc are included at run time and
-## are compiled on their own. A plain '#set' does not reach them.
+## 'global', because masthead.inc and climate.inc are included at run time and are
+## compiled on their own. A plain '#set' does not reach them.
 #set global $climate_year = $year.dateTime.format("%Y")
-#set global $climate_root = '.'
+#set global $page_root = '.'
+#set global $page_title = '{0} {1}'.format($gettext("Climate"), $climate_year)
 
 <!DOCTYPE html>
 <html lang="$lang">
@@ -38,7 +39,7 @@
 
   <body>
     <div class="wrap">
-      #include "climate-head.inc"
+      #include "masthead.inc"
       #include "climate.inc"
 
       <p class="footer">
@@ -58,7 +59,8 @@
         generated: $current.dateTime.raw,
         weekStart: $station.week_start,
         text: {
-          noData: "$gettext('No data for this period')"
+          noData: "$gettext('No data for this period')",
+          asConfigured: "$gettext('Default')"
         }
       };
     </script>

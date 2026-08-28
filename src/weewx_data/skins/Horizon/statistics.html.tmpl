@@ -24,6 +24,9 @@
 
 #set $refresh = $to_int($DisplayOptions.get('refresh_interval', 60))
 
+## What the masthead says. See masthead.inc.
+#set global $page_title = $gettext("Statistics")
+
 <!DOCTYPE html>
 <html lang="$lang">
   <head>
@@ -46,14 +49,7 @@
   </head>
   <body>
     <div class="wrap">
-      <header class="masthead">
-        <div>
-          <h1>$gettext("Statistics")</h1>
-          <p class="updated"><a href="index.html">&larr; $station.location</a> &middot;
-            <span class="visually-hidden">$gettext("Last update")</span>
-            <span data-live="dateTime" data-raw="$current.dateTime.raw">$current.dateTime</span></p>
-        </div>
-      </header>
+      #include "masthead.inc"
 
       <section class="panel" data-live-panel="stats">
         <div class="panel-head">
@@ -106,7 +102,16 @@
     #include "top.inc"
 
     <script>
-      window.HORIZON = { refreshInterval: $refresh, generated: $current.dateTime.raw };
+      window.HORIZON = {
+        /* Where index.json lives. The unit table is in it, and the picker in the
+           masthead cannot offer anything without it. */
+        dataDir: "data",
+        refreshInterval: $refresh,
+        generated: $current.dateTime.raw,
+        text: {
+          asConfigured: "$gettext('Default')"
+        }
+      };
     </script>
     <script src="horizon.js"></script>
   </body>

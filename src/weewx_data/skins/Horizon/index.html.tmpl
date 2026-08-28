@@ -40,68 +40,7 @@
   <body>
     <div class="wrap">
 
-      <header class="masthead">
-        <div>
-          <h1>$station.location</h1>
-          <p class="updated">
-            <span class="visually-hidden">$gettext("Last update")</span>
-            <span data-live="dateTime" data-raw="$current.dateTime.raw">$current.dateTime</span>
-          </p>
-        </div>
-
-## The theme switch stays outside the menu, because it is the one control a reader
-## reaches for without wanting anything else. On a phone it sits beside the menu
-## button rather than inside it.
-          <button type="button" id="theme-toggle" class="icon-button theme-toggle"
-                  aria-label="$gettext('Switch theme')">
-            <svg class="glyph-light" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.5 1.5m11.2 11.2l1.5 1.5M19.1 4.9l-1.5 1.5M6.4 17.6l-1.5 1.5"/></svg>
-            <svg class="glyph-dark" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/></svg>
-          </button>
-## On a phone the controls below do not fit across the page, and a masthead that
-## reaches past the edge is a page that scrolls sideways. The button folds them into
-## a menu; the stylesheet shows it only where they would not fit.
-          <button type="button" id="nav-toggle" class="icon-button nav-toggle"
-                  aria-expanded="false" aria-controls="masthead-tools"
-                  aria-label="$gettext('Menu')">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-          </button>
-        <div class="masthead-tools" id="masthead-tools">
-## Which unit the readings are shown in. Filled by the script, and hidden where the
-## station has nothing to offer besides the unit the report was rendered in.
-          <label class="visually-hidden" for="unit-picker">$gettext("Units")</label>
-          <select id="unit-picker" class="unit-select" hidden></select>
-#set $languages = $DisplayOptions.get('Languages', {})
-#if len($languages) > 1
-## Paths in [[Languages]] are relative to the station's top directory. 'lang_root' is
-## the way back up to it from wherever this page was rendered, so a page in a
-## subdirectory and a page at the top both link correctly.
-#set $lang_root = $DisplayOptions.get('lang_root', '.')
-          <label class="visually-hidden" for="lang-picker">$gettext("Language")</label>
-          <select id="lang-picker" class="lang-select"
-                  onchange="if(this.value) window.location = this.value;">
-  #for $code in $languages
-    #set $entry = $languages[$code]
-    #set $path = $entry.get('path', $code)
-    #set $parts = [$p for $p in [$lang_root, $path] if $p not in ('.', '')]
-    #set $target = '/'.join($parts + ['index.html'])
-            <option value="$target"#if $code == $lang or $lang.startswith($code + '_') then ' selected' else ''#>$entry.get('label', $code)</option>
-  #end for
-          </select>
-#end if
-#if $to_bool($DisplayOptions.get('show_climate', True))
-          <a class="masthead-link" href="climate.html">$gettext("Climate")</a>
-#end if
-          <a class="masthead-link" href="statistics.html">$gettext("Statistics")</a>
-          <a class="masthead-link" href="celestial.html">$gettext("Celestial")</a>
-#if $to_bool($DisplayOptions.get('show_reports', True))
-          <a class="masthead-link" href="reports.html">$gettext("Reports")</a>
-#end if
-          <a class="masthead-link" href="telemetry.html">$gettext("Telemetry")</a>
-#if $to_bool($DisplayOptions.get('show_rss', True))
-          <a class="masthead-link" href="rss.xml">$gettext("RSS")</a>
-#end if
-        </div>
-      </header>
+      #include "masthead.inc"
 
 
 ## Where the panels sit: which side on a wide screen, above or below the charts

@@ -42,6 +42,9 @@
 
 #set $have_any = $have_connections or $have_batteries or $have_voltages
 
+## What the masthead says. See masthead.inc.
+#set global $page_title = $gettext("Telemetry")
+
 <!DOCTYPE html>
 <html lang="$lang">
   <head>
@@ -65,14 +68,7 @@
   </head>
   <body>
     <div class="wrap">
-      <header class="masthead">
-        <div>
-          <h1>$gettext("Telemetry")</h1>
-          <p class="updated"><a href="index.html">&larr; $station.location</a> &middot;
-            <span class="visually-hidden">$gettext("Last update")</span>
-            <span data-live="dateTime" data-raw="$current.dateTime.raw">$current.dateTime</span></p>
-        </div>
-      </header>
+      #include "masthead.inc"
 
 #if not $have_any
       <section class="panel">

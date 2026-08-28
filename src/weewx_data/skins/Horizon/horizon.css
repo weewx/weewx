@@ -218,6 +218,16 @@ a { color: var(--accent); text-underline-offset: 2px; }
   /* The pair is pushed across together, so the switch carries the margin. */
   .masthead > .theme-toggle { margin-left: auto; }
 
+  /* The heading gives way before the buttons do. A page other than the front one
+     carries a way back and a timestamp on the same line, and at its own width that
+     leaves room for one button: flex wraps before it shrinks, so the menu button
+     ended up on a line of its own. A basis of zero lets the heading take what is
+     left instead of asking for what it wants. */
+  .masthead > div:first-child {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
   .masthead-tools {
     display: none;
     position: absolute;
@@ -326,6 +336,14 @@ select.unit-select:hover { color: var(--ink); }
   white-space: nowrap;
 }
 .masthead-link:hover { color: var(--ink); background: var(--surface); }
+
+/* The page the reader is already on. Marked rather than left out: a menu whose
+   entries come and go as you move through it is one that has to be read again on
+   every page. */
+.masthead-link[aria-current="page"] {
+  color: var(--ink);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
 
 /* NOAA summaries: fixed-pitch, and allowed to scroll sideways on a phone
    rather than forcing the whole page to. */
