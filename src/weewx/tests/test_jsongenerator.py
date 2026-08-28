@@ -1123,6 +1123,75 @@ class TestArchiveMemory:
         assert groups['tempdew']['intervals']['2010'] == ARCHIVE_RESOLUTION
 
 
+class TestRawTier:
+    """The station's own readings, one file per day, kept for a while and then not."""
+
+    OPTIONS = {'raw_days': '5', 'raw_resolution': '1800'}
+
+    @staticmethod
+    def days(archive_dir):
+        return sorted({f.split('-raw-')[1][:-len('.json')]
+                       for f in os.listdir(archive_dir) if '-raw-' in f})
+
+    def test_one_file_per_day(self, config_dict, tmp_path):
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                                 archive_options=self.OPTIONS)
+        archive_dir = os.path.join(data_dir, 'archive')
+
+        days = self.days(archive_dir)
+        assert len(days) == 5, days
+        assert days[-1] == time.strftime('%Y-%m-%d', time.localtime(stop_ts))
+
+    def test_the_grid_is_the_archive_interval(self, config_dict, tmp_path):
+        """0 means 'as fine as the record', read off a record rather than a setting."""
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        options = {'raw_days': '2', 'raw_resolution': '0'}
+        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                                 archive_options=options)
+        archive_dir = os.path.join(data_dir, 'archive')
+        name = [f for f in os.listdir(archive_dir) if '-raw-' in f][0]
+        with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
+            payload = json.load(fd)
+
+        assert payload['interval'] == parameters.synthetic_dict['interval']
+
+    def test_days_that_fall_out_of_the_window_are_removed(self, config_dict, tmp_path):
+        """The one tier with a horizon. Left alone it would grow a file a day forever."""
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts - 3 * 86400,
+                      archive_options=self.OPTIONS)
+        archive_dir = os.path.join(str(tmp_path), 'data', 'archive')
+        before = self.days(archive_dir)
+
+        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                      archive_options=self.OPTIONS)
+        after = self.days(archive_dir)
+
+        assert len(after) == 5, after
+        assert after[0] > before[0], "the window did not move on"
+        for stamp in before:
+            if stamp < after[0]:
+                assert not [f for f in os.listdir(archive_dir)
+                            if f.endswith('-raw-%s.json' % stamp)]
+
+    def test_the_index_names_the_raw_days(self, config_dict, tmp_path):
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                                 archive_options=self.OPTIONS)
+        with open(os.path.join(data_dir, 'archive', 'index.json'), encoding='utf-8') as fd:
+            index = json.load(fd)
+
+        groups = {g['name']: g for g in index['groups']}
+        assert len(groups['tempdew']['raw']) == 5
+        assert set(groups['tempdew']['raw_intervals'].values()) == {1800}
+
+    def test_it_is_off_unless_asked_for(self, config_dict, tmp_path):
+        data_dir = run_generator(config_dict, tmp_path, archive=True)
+        archive_dir = os.path.join(data_dir, 'archive')
+        assert not [f for f in os.listdir(archive_dir) if '-raw-' in f]
+
+
 class TestRebuildDue:
 
     DAY = 86400
