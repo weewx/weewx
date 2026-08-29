@@ -68,7 +68,7 @@ def _as_list(option):
     plain string: from a dictionary built in code, or from an option holding one name.
 
     Args:
-        option (str|list): The option as ConfigObj handed it over.
+        option (str | list[str]): The option as ConfigObj handed it over.
     """
     if isinstance(option, str):
         return [x.strip() for x in option.split(',') if x.strip()]
@@ -84,7 +84,7 @@ def _text(draw, xy, string, font, fill):
 
     Args:
         draw (PIL.ImageDraw.ImageDraw): What to draw on.
-        xy (tuple): Where to put it.
+        xy (tuple[int, int]): Where to put it.
         string (str): The text.
         font (PIL.ImageFont.ImageFont): The font to set it in.
         fill (str): Its colour.
@@ -144,7 +144,8 @@ class SummaryImageGenerator(weewx.reportengine.ReportGenerator):
         """Read the current values through the same tags a template would use.
 
         Args:
-            observations (list): The observation types to read, in the order they are to appear.
+            observations (list[str]): The observation types to read, in the order they are to
+                appear.
         """
         formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
@@ -221,7 +222,7 @@ class SummaryImageGenerator(weewx.reportengine.ReportGenerator):
         """Load a font from the skin, falling back to PIL's own if it is missing.
 
         Args:
-            opts (dict): The [SummaryImageGenerator] section.
+            opts (dict[str, Any]): The [SummaryImageGenerator] section.
             key (str): The option naming the font file, such as `title_font_path`.
             size (int): Its size in points.
             scale (int): The multiple the image is drawn at.

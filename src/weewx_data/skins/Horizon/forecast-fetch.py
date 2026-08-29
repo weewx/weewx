@@ -94,7 +94,7 @@ def to_horizon(said):
     itself when that is nothing.
 
     Args:
-        said (dict): Open-Meteo's answer, as it came back.
+        said (dict[str, Any]): Open-Meteo's answer, as it came back.
     """
     daily = said.get('daily') or {}
     hourly = said.get('hourly') or {}
@@ -139,7 +139,7 @@ def write(payload, path):
     """Into place in one step, so a reader never sees half a file.
 
     Args:
-        payload (dict): What to write.
+        payload (dict[str, Any]): What to write.
         path (str): Where to write it.
     """
     folder = os.path.dirname(os.path.abspath(path)) or '.'
