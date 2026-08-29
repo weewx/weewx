@@ -56,6 +56,38 @@
     return asRendered || '';
   }
 
+  /* From Celsius and millimetres to whatever is on screen, as a factor and an
+     offset. Without a choice by the reader that is the report's own unit, which the
+     template worked out and sent along. With one it is theirs.
+
+     Measured at 0 and at 1. Where the answer is null the target is the metric unit
+     itself, and the conversion is the identity: a reader who asks for Celsius on a
+     page rendered in Fahrenheit must not be given the page's factor, and a reader who
+     asks for millimetres on a page rendered in inches must not be given the page's. */
+  function backOf(metricUnit, obs, asRendered) {
+    if (!CFG.units || !CFG.units.chosen()) return asRendered || [1, 0];
+    var target = CFG.units.target(obs, metricUnit);
+    if (!target) return [1, 0];
+    var at0 = CFG.units.convert(0, metricUnit, obs);
+    var at1 = CFG.units.convert(1, metricUnit, obs);
+    return (at0 && at1) ? [at1.value - at0.value, at0.value] : [1, 0];
+  }
+
+  /* Millimetres are read as whole numbers, inches are not. Where the unit on screen
+     is a small fraction of the metric one, a tick without a decimal reads zero. */
+  function digitsFor(back) {
+    return back[0] < 0.5 ? 1 : 0;
+  }
+
+  /* One reading, written in the unit on screen. */
+  function scaled(back, digits) {
+    return function (v) {
+      return (v * back[0] + back[1]).toLocaleString(LOCALE, {
+        minimumFractionDigits: digits, maximumFractionDigits: digits
+      });
+    };
+  }
+
   function themeColor(name, fallback) {
     var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     return v || fallback;
@@ -72,53 +104,21 @@
      against 20 mm. On a page in Fahrenheit and inches the same ratio would put the
      crossing somewhere else, so the axes are scaled from the data instead, and the
      rule is applied to the axis rather than to the numbers. */
-  /* What a tooltip shows for one month. 'rows' is [label, value, unit, colour], and a
-     null value is left out rather than written as a gap.
-
-     The box and the touch handling come from horizon.js, so reading these charts with
-     a finger works the same way as reading the ones on the front page. */
-  function monthTip(rows) {
-    return function (u, idx) {
-      var written = rows(idx).filter(function (r) {
-        return r[1] !== null && r[1] !== undefined && !isNaN(r[1]);
-      });
-      if (!written.length) return null;
-      var digits = function (v) {
-        return Math.abs(v) >= 100 ? 0 : 1;
-      };
-      return '<div class="t-time">' + escapeHtml(DATA.months[idx] || '') + '</div>'
-        + written.map(function (r) {
-          return '<div class="t-row" style="color:' + r[3] + '">'
-            + '<i></i><span style="color:var(--ink)">' + escapeHtml(r[0]) + '</span>'
-            + '<b style="color:var(--ink)">'
-            + r[1].toLocaleString(LOCALE, {
-                minimumFractionDigits: digits(r[1]), maximumFractionDigits: digits(r[1])
-              })
-            + (r[2] ? ' ' + escapeHtml(r[2]) : '') + '</b></div>';
-        }).join('');
-    };
-  }
-
   var diagram = null;
 
   function drawDiagram() {
     var host = document.getElementById('climate-diagram');
-    if (!host || !window.uPlot) return;
+    if (!host || !window.echarts) return;
     if (!DATA.temp && !DATA.rain) return;
     /* Called again after a unit change, on the element that still holds the last
        one. Take it down first, or the two are drawn on top of each other. */
     if (diagram) {
-      diagram.destroy();
+      diagram.dispose();
       diagram = null;
     }
-    host.innerHTML = '';
 
-    var n = DATA.months.length;
-    var x = [];
-    for (var i = 0; i < n; i++) x.push(i);
-
-    var temps = (DATA.temp || []).map(function (v) { return v === null ? null : v; });
-    var rains = (DATA.rain || []).map(function (v) { return v === null ? null : v; });
+    var temps = (DATA.temp || []).slice();
+    var rains = (DATA.rain || []).slice();
 
     /* The values are in Celsius and millimetres. The rainfall axis runs at exactly
        twice the temperature axis, which is the convention, so a bar that falls below
@@ -130,133 +130,96 @@
     var top = Math.max(tMax, rMax / 2) * 1.1 || 1;
     var bottom = Math.min(tMin, 0) * 1.1;
 
-    /* Back to the unit the page reads in, for the labels only. The plot itself stays
-       metric, because that is what the 2:1 rule is stated in. */
-    /* From Celsius and millimetres to whatever is on screen, as a factor and an
-       offset. Without a choice by the reader that is the report's own unit, which the
-       template worked out and sent along. With one it is theirs.
-
-       Measured at 0 and at 1. Where the answer is null the target is the metric unit
-       itself, and the conversion is the identity: a reader who asks for Celsius on a
-       page rendered in Fahrenheit must not be given the page's factor. */
-    var backOf = function (metricUnit, obs, asRendered) {
-      if (!CFG.units || !CFG.units.chosen()) return asRendered || [1, 0];
-      var target = CFG.units.target(obs, metricUnit);
-      if (!target) return [1, 0];
-      var at0 = CFG.units.convert(0, metricUnit, obs);
-      var at1 = CFG.units.convert(1, metricUnit, obs);
-      return (at0 && at1) ? [at1.value - at0.value, at0.value] : [1, 0];
-    };
     var backT = backOf('degree_C', 'outTemp', DATA.tempBack);
     var backR = backOf('mm', 'rain', DATA.rainBack);
-    var label = function (back, digits) {
-      return function (u, splits) {
-        return splits.map(function (v) {
-          return (v * back[0] + back[1]).toLocaleString(LOCALE, {
-            minimumFractionDigits: digits, maximumFractionDigits: digits
-          });
-        });
-      };
-    };
+    var tempUnit = unitLabel(DATA.tempUnit, 'outTemp', DATA.tempLabel);
+    var rainUnit = unitLabel(DATA.rainUnit, 'rain', DATA.rainLabel);
 
-    var series = [{}];
-    var data = [x];
+    var family = getComputedStyle(document.body).fontFamily;
+    var axisColor = themeColor('--chart-axis', '#8397a7');
+    var gridColor = themeColor('--chart-grid', '#e3eaf1');
+    var tempColor = themeColor('--hi', '#b2503c');
+    var rainColor = themeColor('--lo', '#2f6f9e');
+
+    var series = [];
     if (DATA.rain) {
       series.push({
-        label: DATA.rainLabel,
-        scale: 'r',
-        paths: uPlot.paths.bars({ size: [0.62, 40] }),
-        fill: function () { return themeColor('--lo', '#2f6f9e'); },
-        stroke: function () { return themeColor('--lo', '#2f6f9e'); },
-        width: 0,
-        points: { show: false }
+        name: DATA.rainText || 'Rainfall',
+        type: 'bar', yAxisIndex: 1, data: rains,
+        itemStyle: { color: rainColor }, barMaxWidth: 40, animation: false
       });
-      data.push(rains);
     }
     if (DATA.temp) {
       series.push({
-        label: DATA.tempLabel,
-        scale: 't',
-        stroke: function () { return themeColor('--hi', '#b2503c'); },
-        width: 2,
-        points: { show: true, size: 5 }
+        name: DATA.meanText || 'Mean temperature',
+        type: 'line', yAxisIndex: 0, data: temps,
+        lineStyle: { color: tempColor, width: 1.5 },
+        itemStyle: { color: tempColor }, symbolSize: 5, animation: false
       });
-      data.push(temps);
     }
 
-    var opts = {
-      width: host.clientWidth || 600,
-      height: 300,
-      padding: [16, 8, 0, 0],
-      legend: { show: false },
-      cursor: { drag: { x: false, y: false } },
-      scales: {
-        x: { time: false, range: [-0.6, n - 0.4] },
-        t: { range: function () { return [bottom, top]; } },
-        r: { range: function () { return [bottom * 2, top * 2]; } }
+    diagram = echarts.init(host, null, { renderer: 'canvas' });
+    diagram.setOption({
+      animation: false,
+      grid: { left: 58, right: 58, top: 30, bottom: 28 },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: themeColor('--surface', '#fff'),
+        borderColor: themeColor('--border', '#e3eaf1'),
+        borderWidth: 1,
+        padding: [6, 9],
+        extraCssText: 'box-shadow: 0 2px 10px rgba(0,0,0,0.14); border-radius: 6px;',
+        textStyle: { color: themeColor('--ink', '#16222e'), fontFamily: family,
+                     fontSize: 12 },
+        formatter: function (params) {
+          var rows = params.map(function (p) {
+            var bar = p.seriesType === 'bar';
+            var back = bar ? backR : backT;
+            var unit = bar ? rainUnit : tempUnit;
+            return '<span style="color:' + p.color + '">●</span> ' + p.seriesName
+              + ': ' + scaled(back, 1)(p.value) + (unit ? ' ' + unit : '');
+          });
+          return params[0].axisValueLabel + '<br>' + rows.join('<br>');
+        }
       },
-      axes: [
+      xAxis: {
+        type: 'category', data: DATA.months, boundaryGap: true,
+        axisLine: { lineStyle: { color: axisColor } },
+        axisTick: { show: false }, splitLine: { show: false },
+        axisLabel: { color: themeColor('--ink-muted', '#5c7183'), fontFamily: family, fontSize: 12 }
+      },
+      yAxis: [
         {
-          stroke: function () { return themeColor('--chart-axis', '#8397a7'); },
-          grid: { show: false },
-          ticks: { show: false },
-          font: '11px ' + getComputedStyle(document.body).fontFamily,
-          splits: function () { return x; },
-          values: function () { return DATA.months; }
+          type: 'value', min: bottom, max: top,
+          name: tempUnit,
+          nameTextStyle: { color: tempColor, fontFamily: family, fontSize: 12 },
+          axisLine: { show: false }, axisTick: { show: false },
+          splitLine: { lineStyle: { color: gridColor } },
+          axisLabel: { color: tempColor, fontFamily: family, fontSize: 12,
+                       formatter: scaled(backT, digitsFor(backT)) }
         },
         {
-          scale: 't',
-          label: unitLabel(DATA.tempUnit, 'outTemp', DATA.tempLabel),
-          labelSize: 22,
-          labelFont: '11px ' + getComputedStyle(document.body).fontFamily,
-          stroke: function () { return themeColor('--hi', '#b2503c'); },
-          grid: {
-            stroke: function () { return themeColor('--chart-grid', '#e3eaf1'); },
-            width: 1
-          },
-          ticks: { show: false },
-          font: '11px ' + getComputedStyle(document.body).fontFamily,
-          size: 50,
-          values: label(backT, 0)
-        },
-        {
-          scale: 'r',
-          side: 1,
-          label: unitLabel(DATA.rainUnit, 'rain', DATA.rainLabel),
-          labelSize: 22,
-          labelFont: '11px ' + getComputedStyle(document.body).fontFamily,
-          stroke: function () { return themeColor('--lo', '#2f6f9e'); },
-          grid: { show: false },
-          ticks: { show: false },
-          font: '11px ' + getComputedStyle(document.body).fontFamily,
-          size: 50,
-          values: label(backR, backR[0] < 0.5 ? 1 : 0)
+          /* Exactly twice the temperature axis. That is the whole point of the
+             diagram: where the rain bar drops below the temperature line, the month
+             is dry. */
+          type: 'value', min: bottom * 2, max: top * 2,
+          name: rainUnit,
+          nameTextStyle: { color: rainColor, fontFamily: family, fontSize: 12 },
+          axisLine: { show: false }, axisTick: { show: false },
+          splitLine: { show: false },
+          axisLabel: { color: rainColor, fontFamily: family, fontSize: 12,
+                       formatter: scaled(backR, digitsFor(backR)) }
         }
       ],
-      series: series,
-      plugins: CFG.tooltip ? [CFG.tooltip(monthTip(function (idx) {
-        var tLabel = unitLabel(DATA.tempUnit, 'outTemp', DATA.tempLabel);
-        var rLabel = unitLabel(DATA.rainUnit, 'rain', DATA.rainLabel);
-        var out = [];
-        if (DATA.temp && DATA.temp[idx] !== null) {
-          out.push([DATA.meanText || 'Mean temperature',
-                    DATA.temp[idx] * backT[0] + backT[1], tLabel,
-                    themeColor('--hi', '#b2503c')]);
-        }
-        if (DATA.rain && DATA.rain[idx] !== null) {
-          out.push([DATA.rainText || 'Rainfall',
-                    DATA.rain[idx] * backR[0] + backR[1], rLabel,
-                    themeColor('--lo', '#2f6f9e')]);
-        }
-        return out;
-      }))] : []
-    };
+      series: series
+    });
 
-    diagram = new uPlot(opts, data, host);
+    host.style.height = '300px';
     new ResizeObserver(function () {
-      if (diagram) diagram.setSize({ width: host.clientWidth, height: 300 });
+      if (diagram) diagram.resize();
     }).observe(host);
   }
+
 
   /* ------------------------------------------------------------ water balance */
 
@@ -270,118 +233,82 @@
 
   function drawWater() {
     var host = document.getElementById('climate-water');
-    if (!host || !window.uPlot) return;
+    if (!host || !window.echarts) return;
     if (!DATA.rain || !DATA.et) return;
     if (water) {
-      water.destroy();
+      water.dispose();
       water = null;
     }
-    host.innerHTML = '';
 
-    var n = DATA.months.length;
-    var x = [];
-    for (var i = 0; i < n; i++) x.push(i);
-
-    var rain = DATA.rain.map(function (v) { return v === null ? null : v; });
+    var rain = DATA.rain.slice();
     var lost = DATA.et.map(function (v) { return v === null ? null : -v; });
     var kept = rain.map(function (v, i) {
       var e = DATA.et[i];
       return (v === null || e === null) ? null : v - e;
     });
 
-    var real = function (list) { return list.filter(function (v) { return v !== null; }); };
-    var top = Math.max.apply(null, real(rain).concat(real(kept)).concat([0])) * 1.1 || 1;
-    var bottom = Math.min.apply(null, real(lost).concat(real(kept)).concat([0])) * 1.1;
+    var backR = backOf('mm', 'rain', DATA.rainBack);
+    var rainUnit = unitLabel(DATA.rainUnit, 'rain', DATA.rainLabel);
+    var label = scaled(backR, digitsFor(backR));
 
-    /* Millimetres in, the reader's unit on the axis. Same rule as the diagram above. */
-    var back = [1, 0];
-    if (CFG.units && CFG.units.chosen() && CFG.units.target('rain', 'mm')) {
-      var a = CFG.units.convert(0, 'mm', 'rain');
-      var b = CFG.units.convert(1, 'mm', 'rain');
-      if (a && b) back = [b.value - a.value, a.value];
-    } else if (!CFG.units || !CFG.units.chosen()) {
-      back = DATA.rainBack || [1, 0];
-    }
+    var family = getComputedStyle(document.body).fontFamily;
+    var axisColor = themeColor('--chart-axis', '#8397a7');
+    var gridColor = themeColor('--chart-grid', '#e3eaf1');
 
-    var opts = {
-      width: host.clientWidth || 600,
-      height: 260,
-      padding: [16, 8, 0, 0],
-      legend: { show: false },
-      cursor: { drag: { x: false, y: false } },
-      scales: { x: { time: false, range: [-0.6, n - 0.4] },
-                y: { range: function () { return [bottom, top]; } } },
-      axes: [
-        {
-          stroke: function () { return themeColor('--chart-axis', '#8397a7'); },
-          grid: { show: false },
-          ticks: { show: false },
-          font: '11px ' + getComputedStyle(document.body).fontFamily,
-          splits: function () { return x; },
-          values: function () { return DATA.months; }
-        },
-        {
-          label: unitLabel(DATA.rainUnit, 'rain', DATA.rainLabel),
-          labelSize: 22,
-          labelFont: '11px ' + getComputedStyle(document.body).fontFamily,
-          stroke: function () { return themeColor('--chart-axis', '#8397a7'); },
-          grid: {
-            stroke: function () { return themeColor('--chart-grid', '#e3eaf1'); },
-            width: 1
-          },
-          ticks: { show: false },
-          font: '11px ' + getComputedStyle(document.body).fontFamily,
-          size: 50,
-          values: function (u, splits) {
-            return splits.map(function (v) {
-              return (v * back[0] + back[1]).toLocaleString(LOCALE, {
-                minimumFractionDigits: back[0] < 0.5 ? 1 : 0,
-                maximumFractionDigits: back[0] < 0.5 ? 1 : 0
-              });
-            });
-          }
+    water = echarts.init(host, null, { renderer: 'canvas' });
+    water.setOption({
+      animation: false,
+      grid: { left: 58, right: 12, top: 26, bottom: 28 },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: themeColor('--surface', '#fff'),
+        borderColor: themeColor('--border', '#e3eaf1'),
+        borderWidth: 1,
+        padding: [6, 9],
+        extraCssText: 'box-shadow: 0 2px 10px rgba(0,0,0,0.14); border-radius: 6px;',
+        textStyle: { color: themeColor('--ink', '#16222e'), fontFamily: family,
+                     fontSize: 12 },
+        formatter: function (params) {
+          var rows = params.map(function (p) {
+            return '<span style="color:' + p.color + '">●</span> ' + p.seriesName
+              + ': ' + label(Math.abs(p.value)) + (rainUnit ? ' ' + rainUnit : '');
+          });
+          return params[0].axisValueLabel + '<br>' + rows.join('<br>');
         }
-      ],
-      plugins: CFG.tooltip ? [CFG.tooltip(monthTip(function (idx) {
-        var label = unitLabel(DATA.rainUnit, 'rain', DATA.rainLabel);
-        var scaled = function (v) { return v === null ? null : v * back[0] + back[1]; };
-        return [
-          [DATA.rainText || 'Rainfall', scaled(rain[idx]), label,
-           themeColor('--lo', '#2f6f9e')],
-          [DATA.etText || 'Evapotranspiration',
-           DATA.et[idx] === null ? null : scaled(DATA.et[idx]), label,
-           themeColor('--sun', '#a8761c')],
-          [DATA.keptText || 'Water balance', scaled(kept[idx]), label,
-           themeColor('--ink', '#16222e')]
-        ];
-      }))] : [],
+      },
+      xAxis: {
+        type: 'category', data: DATA.months, boundaryGap: true,
+        axisLine: { lineStyle: { color: axisColor } },
+        axisTick: { show: false }, splitLine: { show: false },
+        axisLabel: { color: themeColor('--ink-muted', '#5c7183'), fontFamily: family, fontSize: 12 }
+      },
+      yAxis: {
+        type: 'value',
+        name: rainUnit,
+        nameTextStyle: { color: axisColor, fontFamily: family, fontSize: 12 },
+        axisLine: { show: false }, axisTick: { show: false },
+        splitLine: { lineStyle: { color: gridColor } },
+        axisLabel: { color: themeColor('--ink-muted', '#5c7183'), fontFamily: family,
+                     fontSize: 12, formatter: label }
+      },
       series: [
-        {},
-        {
-          paths: uPlot.paths.bars({ size: [0.5, 30] }),
-          fill: function () { return themeColor('--lo', '#2f6f9e'); },
-          stroke: function () { return themeColor('--lo', '#2f6f9e'); },
-          width: 0,
-          points: { show: false }
-        },
-        {
-          paths: uPlot.paths.bars({ size: [0.5, 30] }),
-          fill: function () { return themeColor('--sun', '#a8761c'); },
-          stroke: function () { return themeColor('--sun', '#a8761c'); },
-          width: 0,
-          points: { show: false }
-        },
-        {
-          stroke: function () { return themeColor('--ink', '#16222e'); },
-          width: 2,
-          points: { show: true, size: 5 }
-        }
+        { name: DATA.rainText || 'Rainfall',
+          type: 'bar', data: rain, barMaxWidth: 30,
+          itemStyle: { color: themeColor('--lo', '#2f6f9e') }, animation: false },
+        { name: DATA.etText || 'Evapotranspiration',
+          type: 'bar', data: lost, barMaxWidth: 30,
+          barGap: '-100%',
+          itemStyle: { color: themeColor('--sun', '#a8761c') }, animation: false },
+        { name: DATA.keptText || 'Water balance',
+          type: 'line', data: kept, symbolSize: 5,
+          lineStyle: { color: themeColor('--ink', '#16222e'), width: 1.5 },
+          itemStyle: { color: themeColor('--ink', '#16222e') }, animation: false }
       ]
-    };
+    });
 
-    water = new uPlot(opts, [x, rain, lost, kept], host);
+    host.style.height = '260px';
     new ResizeObserver(function () {
-      if (water) water.setSize({ width: host.clientWidth, height: 260 });
+      if (water) water.resize();
     }).observe(host);
   }
 
