@@ -100,12 +100,12 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         self.text_dict = self.skin_dict.get('Texts', {})
 
         # Which section holds the plot definitions. [JSONGenerator] when the skin
-        # has one, [ImageGenerator] otherwise, so that a skin written before this
-        # generator existed needs no new configuration. Option 'source' names a
-        # third section instead.
+        # has one, [ImageGenerator] otherwise, so a skin written before this
+        # generator existed needs no new configuration. 'source' names a third
+        # section instead.
         #
-        # An empty section, not an empty dict, when the skin has none: search_up()
-        # climbs the tree through .parent, which a plain dict does not have.
+        # An empty section, not an empty dict: search_up() climbs the tree through
+        # .parent, which a plain dict does not have.
         if 'JSONGenerator' not in self.skin_dict:
             self.skin_dict['JSONGenerator'] = {}
         self.gen_dict = self.skin_dict['JSONGenerator']
@@ -135,13 +135,11 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         """Walk the plot definitions and write one JSON file per plot.
 
         One file per plot per time span, holding every reading in it. These follow the
-        ImageGenerator's plot definitions, so what they cover is whatever the PNGs
-        would have covered: the last day, week, month and year, each ending now.
+        ImageGenerator's plot definitions, so they cover whatever the PNGs cover: the
+        last day, week, month and year, each ending now.
 
-        A skin whose archive covers the same spans does not need them, and says so with
-        'periods = false'. The archive holds the same readings on a grid, cut so that a
-        page fetches only the part it is showing, and it reaches back further than
-        these four ever can.
+        A skin whose archive covers the same spans does not need them, and says so
+        with 'periods = false'.
 
         Args:
             gen_ts (int): The time the report is being run for.
@@ -165,19 +163,17 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         indent = to_int(self.gen_dict.get('json_indent'))
 
         # One entry per plot written. At the end of this method they go into
-        # 'index.json', a list of every plot file that exists, with its title, its
-        # units and the observation types in it. The page reads index.json first and
-        # lays out its charts from that, rather than requesting each plot to find out
-        # whether it is there. A station without a UV sensor has no UV plot, and
-        # nothing asks for the file.
+        # 'index.json', with each plot's title, units and observation types. The page
+        # reads it first and lays out its charts from that, rather than requesting
+        # each plot to find out whether it is there. A station without a UV sensor
+        # has no UV plot, and nothing asks for the file.
         manifest = []
         manifest_root = None
         nskipped = 0
         # How many seconds each time span covers, from 'time_length' in the plot
         # definitions: 86400 for [[day_images]], and so on. It goes into index.json
-        # because the page draws the x axis itself, and 'time_length' is the only
-        # statement of how wide a "day" plot is meant to be. Leave it out and the
-        # option no longer reaches the chart at all.
+        # because the page draws the x axis itself, and this is the only statement of
+        # how wide a "day" plot is meant to be.
         span_lengths = {}
         # Observation types the skin plots, gathered from the definitions when there
         # are no files to read them off.
@@ -233,11 +229,11 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                         described.add(line_options.get('data_type', line_name))
                     continue
 
-                # An aggregated plot only changes when its aggregation interval rolls
-                # over: a year plot of daily averages says the same thing at 10:05 as
-                # it did at 10:00. Rewriting it anyway costs a database read, and on a
-                # station publishing over FTP, an upload of every file every cycle.
-                # This is the test the ImageGenerator applies to its PNGs.
+                # An aggregated plot only changes when its aggregation interval
+                # rolls over: a year plot of daily averages says the same thing at
+                # 10:05 as it did at 10:00. Rewriting it costs a database read, and
+                # on a station publishing over FTP, an upload every cycle. This is
+                # the test the ImageGenerator applies to its PNGs.
                 if _skip_this_plot(plotgen_ts, plot_options, json_file) \
                         and plotname in previous:
                     nskipped += 1
@@ -318,37 +314,21 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
     def gen_archive(self, gen_ts):
         """Write the whole record, one file per plot group and calendar year.
 
-        gen_json() above writes the four plots the ImageGenerator draws: the last day,
-        the last week, the last month and the last year, each ending now. None of the
-        four can answer "show me last March", because last March was never one of them.
+        Where gen_json() writes four windows each ending now, this covers the whole
+        database. A year that has ended never changes, so its file is written once and
+        skipped from then on, and a page fetches only the years it is showing. See "The
+        JSON generator" in the Customization Guide for the format and the cost.
 
-        This method writes the whole database instead, split by calendar year. Two
-        things follow from splitting it that way, and both matter on the small machines
-        WeeWX usually runs on:
+        A file is rewritten when its newest reading moves into the next slot, not when
+        it reaches a given age. The two agree while the station is running. They differ
+        after a catch-up import, where the file is minutes old and hours behind, and an
+        age test would find nothing to do.
 
-        - A year that has ended never changes again. Its file is written once and
-          skipped from then on, so a station with fourteen years of data rewrites one
-          file per report rather than fourteen.
-        - The page fetches only the years it is showing.
-
-        Readings inside a file are spaced evenly in time, one every `resolution`
-        seconds. A file therefore stores the first timestamp and that spacing, and no
-        timestamp per reading, which halves it.
-
-        A file is rewritten when its newest reading moves into the next slot of that
-        spacing, not when the file reaches a given age. While the station is running,
-        those two are the same thing. They differ after a catch-up import, where the
-        file is minutes old and hours behind: an age test would find nothing to do.
-
-        Rewriting one does not mean working the whole span out again. The file on disk
-        already holds every slot but its last, so it is read back and only the slots
-        from there on are calculated. The month in progress at five-minute spacing is
-        8640 slots, and a report five minutes later adds one of them. Once a day,
-        `rebuild` does the whole span anyway, which is what picks up anything that
-        changed further back than the last report. See _rebuild_due().
-
-        To rebuild everything now, delete the archive directory and run the report
-        again (`weectl report run <report>`).
+        Rewriting is not recalculating. The file on disk holds every slot but its last,
+        so only the slots from there on are worked out: the month in progress at
+        five-minute spacing is 8640 slots, and the next report adds one. Once a day
+        `rebuild` does the whole span anyway, which picks up anything that changed
+        further back than the last report. See _rebuild_due().
 
         Args:
             gen_ts (int): The time the report is being run for.
@@ -399,10 +379,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             arch_dict.get('raw_resolution', 0)))
 
         # How long to spend on the coarse tiers before leaving the rest for the next
-        # report. A station with years of history has to build them once, and doing it
-        # in one go is a report that runs for minutes and delays the one behind it.
-        # The index knows what is missing, so stopping early costs nothing but time.
-        # 0 does the lot in one run.
+        # report. Building years of history in one go is a report that runs for
+        # minutes and delays the one behind it. The index knows what is missing, so
+        # stopping early costs nothing but time. 0 does the lot in one run.
         budget = to_int(weeutil.weeutil.nominal_spans(arch_dict.get('budget', 0)))
 
         # Types where the average hides what mattered. A gust is the whole point of a
@@ -449,8 +428,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
             Called after each pass. The page reads this to find out which files are
             there, so a file the index does not name might as well not have been
-            written: without a first index the day view stays blank until the last
-            year of history has been worked out.
+            written.
             """
             groups = []
             for name in sorted(index):
@@ -489,10 +467,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             except OSError as e:
                 log.error("Unable to write archive index: %s", e)
 
-        # Two passes over the groups: the day tier for all of them, then the rest.
-        # The index is written in between, because the page cannot see a file the
-        # index does not name however early it was written. One pass would leave the
-        # day view invisible until the last year of history had been worked out.
+        # Two passes over the groups: the day tier for all of them, then the rest,
+        # with the index written in between. One pass would leave the day view
+        # invisible until the last year of history had been worked out.
         for pass_name in ('raw', 'rest'):
           for plotname in group_dict.sections:
             if self.stop_event and self.stop_event.is_set():
@@ -532,19 +509,16 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                            metered=True):
                 """Write one tier's files for this group.
 
-                The three tiers differ in how the record is cut into files, which grid
-                each file goes on, and what the index calls them. When to skip, what to
-                carry forward and what to record are the same for all of them.
+                The three tiers differ in how the record is cut into files, which
+                grid each goes on, and what the index calls them. When to skip, what
+                to carry forward and what to record are the same for all of them.
 
-                'metered' tiers are held to the budget. The raw tier is not one: it is
-                what the day view is drawn from, it is cheap, and a report that
-                deferred it would leave the page without today.
+                'metered' tiers are held to the budget. The raw tier is not one:
+                it is cheap, and it is what the day view is drawn from, so a report
+                that deferred it would leave the page without today.
 
-                Newest span first. A run that gives up partway leaves the far end of
-                the record unbuilt, and that is the end nobody is looking at. The
-                other way round, a station coming up for the first time would spend
-                its early reports on the years least likely to be opened, and the
-                page would be missing this year until the rest was done.
+                Newest span first, so that a run giving up partway leaves the far end
+                of the record unbuilt rather than this year.
 
                 Args:
                     spans (iterable): The spans to write, one file each.
@@ -816,13 +790,12 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         """Make what the index claims agree with what is on disk.
 
         The index is the fast path; the directory is the truth. A file the index does
-        not name is invisible to the page however good it is, and an index naming a
-        file that has gone sends the reader after a 404. Losing the index would
-        otherwise mean working out the whole record again, with every answer already
-        sitting there in the files.
+        not name is invisible to the page, and an index naming a file that has gone
+        sends the reader after a 404. Losing it would otherwise mean working out the
+        whole record again, with every answer already sitting in the files.
 
-        Only files the index does not already account for are opened, so a run that
-        finds the index intact pays one listdir.
+        Only files the index does not account for are opened, so a run that finds it
+        intact pays one listdir.
 
         Args:
             known (dict): The index as it was read.
@@ -917,10 +890,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         The same for all three tiers. A day, a month and a year differ in how long
         they are and how finely they are cut, and in nothing else.
 
-        There are no timestamps in the result. `start` is the first instant, `interval`
-        the seconds between readings, and `count` how many there are, so the time of
-        `values[i]` is `start + i * interval`. A null in `values` is a reading the
-        station did not take.
+        There are no timestamps in the result: `start` is the first instant,
+        `interval` the seconds between readings, `count` how many there are, so
+        `values[i]` is at `start + i * interval`. A null is a reading the station did
+        not take.
 
         Args:
             plot_section (configobj.Section): The plot's section, holding one
@@ -977,10 +950,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         resume = _resume_from(previous, start, resolution, slots)
 
         # Stop short if only so many slots can be afforded. The file is then written
-        # holding less than the span it is named for, which is exactly what a file
-        # that is still filling up looks like: 'covered' says how far it got, and the
-        # next run carries on from there. A year of history therefore builds itself
-        # over several reports without any of them running long.
+        # holding less than the span it is named for, which is what a file still
+        # filling up looks like: 'covered' says how far it got, and the next run
+        # carries on from there. A year builds itself over several short reports.
         if max_slots is not None:
             done = resume[1] if resume else 0
             if done + max_slots < slots:
@@ -1027,11 +999,11 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             if weewx.accum.accum_dict.get(var_type, {}).get('extractor') == 'sum':
                 agg = 'sum'
             elif var_type in ('windDir', 'windGustDir'):
-                # An arithmetic mean of compass bearings says the wrong thing: 350 and
-                # 10 degrees average to 180, due south, where the wind never blew from.
-                # WeeWX has the 'vecdir' aggregate for this, which averages the vectors
-                # and then takes the bearing. It reads the 'wind' daily summary, so the
-                # observation type has to change with the aggregate.
+                # An arithmetic mean of compass bearings says the wrong thing: 350
+                # and 10 degrees average to due south, where the wind never blew
+                # from. The 'vecdir' aggregate averages the vectors and then takes
+                # the bearing. It reads the 'wind' daily summary, so the observation
+                # type has to change with the aggregate.
                 var_type = 'wind'
                 agg = 'vecdir'
 
@@ -1045,16 +1017,14 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     stale = True
                     break
 
-            # A bar's interval is part of what it says. "Rain, hourly total" is an
-            # hour's worth in one bar, and a minute of it in each of sixty is a
-            # different statement: the numbers are a sixtieth of the size, under a
-            # label that says otherwise. So a bar asking for a coarser interval than
-            # the tier's grid gets it, and its readings sit every nth slot.
+            # A bar's interval is part of what it says. An hour's rain in one bar,
+            # and a sixtieth of it in each of sixty, are different statements under
+            # the same label. So a bar asking for a coarser interval than the tier's
+            # grid gets it, and its readings sit every nth slot.
             #
-            # Only bars. A line inherits 'aggregate_interval' from the section it is
-            # in, where it is a drawing decision rather than a claim about the number,
-            # and honouring it would leave the finest grid holding a reading every
-            # fifth slot with nothing in between.
+            # Only bars. On a line 'aggregate_interval' is a drawing decision rather
+            # than a claim about the number, and honouring it would leave the finest
+            # grid holding a reading every fifth slot with nothing in between.
             step = resolution
             asked = to_int(weeutil.weeutil.nominal_spans(
                 line_options.get('aggregate_interval')))
@@ -1455,10 +1425,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 def _linear(convert, from_unit, to_unit):
     """The factor and offset that turn a reading in one unit into the other.
 
-    weewx.units holds a function per pair of units, which is no use to a page that
-    wants to do the same arithmetic. Almost every one of them is linear, so measuring
-    it at 0 and at 1 gives the factor and the offset exactly. Checking it again at 10
-    catches the ones that are not, and those are left out rather than approximated.
+    weewx.units holds a function per pair of units, which is no use to a page doing
+    the same arithmetic. Almost every one is linear, so measuring it at 0 and at 1
+    gives the factor and the offset exactly. Checking again at 10 catches the ones
+    that are not, and those are left out rather than approximated.
 
     Args:
         convert (callable): The conversion function, normally `weewx.units.convert`.
@@ -1485,12 +1455,10 @@ def _unit_choices(obs_types, units_seen, formatter):
     """What the page needs in order to show these readings in another unit.
 
     Everything a plot file carries is already converted, into whatever the skin asked
-    for, and a page that wants to offer Fahrenheit next to Celsius cannot get there
-    from the numbers alone. This is the missing half: which group each observation
-    belongs to, which unit each unit system uses for that group, and the arithmetic
-    between any two of them.
-
-    It is written once, into index.json, and is about a kilobyte.
+    for, and a page offering Fahrenheit next to Celsius cannot get there from the
+    numbers alone. This is the missing half: which group each observation belongs to,
+    which unit each system uses for that group, and the arithmetic between any two of
+    them. It is written once, into index.json, and is about a kilobyte.
 
     Args:
         obs_types (set): The observation types the page shows.
@@ -1512,11 +1480,10 @@ def _unit_choices(obs_types, units_seen, formatter):
                for name, constant in sorted(weewx.units.unit_constants.items(),
                                             key=lambda pair: pair[1])]
 
-    # Every observation type WeeWX knows a group for, not only the ones that appear in
-    # a plot. A page shows readings that were never plotted: the card at the top of
-    # the Horizon skin carries rain rate, UV and half a dozen others that no chart
-    # draws. Leaving those out means the picker moves some readings on a page and not
-    # the ones beside them. The whole table is three and a half kilobytes.
+    # Every observation type WeeWX knows a group for, not only the ones that appear
+    # in a plot. The card at the top of the Horizon skin carries rain rate, UV and
+    # half a dozen others no chart draws, and leaving those out would move some
+    # readings on a page and not the ones beside them. The table is 3.5 kB.
     groups = {}
     for obs_type, group in weewx.units.obs_group_dict.items():
         if group:
@@ -1537,16 +1504,14 @@ def _unit_choices(obs_types, units_seen, formatter):
                 wanted.add(unit)
         by_system[name] = chosen
 
-    # Over the conversion table, keeping the pairs both of whose units can be on
-    # screen. The other way round, asking for every pair of units in 'wanted', asks
-    # weewx.units.convert for hundreds of conversions that do not exist, and it logs
-    # a DEBUG line for each.
+    # Over the conversion table, not over every pair in 'wanted': that would ask
+    # weewx.units.convert for hundreds of conversions that do not exist, and log a
+    # DEBUG line for each.
     #
-    # 'wanted' is wider than the units the plot files were written in, and has to be:
-    # a page can hold a reading in a unit no plot uses. The Walter and Lieth diagram
-    # on the climate page is drawn in degree_C and mm whatever the station records,
-    # because the two-to-one ratio it shows is defined in those units. Without a row
-    # here, the page cannot put that reading into the reader's unit.
+    # 'wanted' is wider than the units the plot files were written in, and has to be.
+    # The Walter and Lieth diagram on the climate page is drawn in degree_C and mm
+    # whatever the station records, because the ratio it shows is defined in those
+    # units, and without a row here the page cannot convert it.
     convert = {}
     for from_unit in sorted(wanted):
         pairs = {}
@@ -1574,14 +1539,14 @@ def _unit_choices(obs_types, units_seen, formatter):
 def _write_json(path, payload, indent):
     """Write one JSON file, so that a reader never sees half of it.
 
-    The files are written while a browser somewhere may be fetching them, and a
-    reader that arrives mid-write gets a truncated document. index.json is the one
-    that matters: a browser cannot parse half a list, so it concludes that the station
-    publishes no plots at all and draws nothing until the next poll.
+    The files are written while a browser may be fetching them, and a reader arriving
+    mid-write gets a truncated document. index.json is the one that matters: half a
+    list will not parse, so the browser concludes the station publishes no plots and
+    draws nothing until the next poll.
 
-    Writing to a temporary file in the same directory and renaming it over the target
-    fixes that. Within one filesystem the rename is atomic, so a reader sees either
-    the old file or the new one.
+    A temporary file in the same directory, renamed over the target, fixes that. The
+    rename is atomic within one filesystem, so a reader sees either the old file or
+    the new one.
 
     Args:
         path (str): Where to write the file.
@@ -1616,12 +1581,11 @@ def _year_grid(year, this_year, recent_years, resolution, coarse_resolution, exi
     """The interval one calendar year's file is written at.
 
     The recent years get the finer grid, because those are the ones people read
-    closely. Older ones get the coarse one: a year read at a glance does not need
-    8760 points, and the difference is what a long record costs to build and to fetch.
+    closely. Older ones get the coarse one: a year read at a glance does not need 8760
+    points, and the difference is what a long record costs to build and to fetch.
 
-    A file that is already finer than the answer keeps what it has. Rewriting a year
-    to hold less than it already does would be a year of aggregate queries spent going
-    backwards.
+    A file already finer than the answer keeps what it has. Rewriting a year to hold
+    less than it does would be a year of aggregate queries spent going backwards.
 
     Args:
         year (int): The calendar year the file covers.
@@ -1668,12 +1632,11 @@ def _rebuild_due(rebuilt, now_ts, after):
     Extending a file forward keeps whatever the run before put in it, so anything that
     changes the past stays: a reading corrected by an import, a series that only starts
     reporting now, a unit the configuration has since changed. Doing the whole span
-    again at a fixed cadence puts a bound on how long any of that survives.
+    again at a fixed cadence bounds how long any of that survives.
 
-    The test is on the calendar rather than on elapsed seconds. A station reporting
-    every five minutes and one reporting every hour then both rebuild once a day, on
-    the first report after midnight, and one that was switched off over midnight
-    rebuilds when it comes back instead of missing its turn.
+    The test is on the calendar rather than on elapsed seconds, so a station reporting
+    every five minutes and one reporting every hour both rebuild on the first report
+    after midnight, and one switched off over midnight rebuilds when it comes back.
 
     Args:
         rebuilt (int|None): When the last rebuild ran, or None for never.
@@ -1697,9 +1660,9 @@ def _affordable(budget, counters):
     """How many slots are left in this run's budget, or None for no limit.
 
     The cost of a slot is one database query, and how long that takes is the machine's
-    business, not something to guess at from here. So it is measured: what this run has
-    spent, over the slots it spent it on, until there is something to measure it comes
-    out of a deliberately pessimistic guess.
+    business rather than something to guess at here. So it is measured: what this run
+    has spent, over the slots it spent it on. Until there is something to measure, a
+    deliberately pessimistic guess stands in.
 
     Args:
         budget (int): How many seconds this report may spend. Zero removes the limit.
@@ -1722,9 +1685,9 @@ def _carry_over_index(index, known, group_name):
     """Name every file that exists, not only the ones this run touched.
 
     A run writes the spans that are due and leaves the rest alone, and a run with a
-    budget leaves more than that. Both are fine on disk and wrong in the index: what
+    budget leaves more than that. Both are right on disk and wrong in the index: what
     it does not name, the page cannot see. 'known' has already been checked against
-    the directory, so anything in it is a file that is really there.
+    the directory, so anything in it is really there.
 
     Args:
         index (dict): The index being written.
@@ -1770,9 +1733,9 @@ def _drop_stale_raw(arch_root, group_name, keep):
     """Delete this group's raw day files that are no longer wanted.
 
     The raw tier is the only one with a horizon. Every other file is written once and
-    kept, because it is the answer to a question that will be asked again. A raw day
-    from last year is not: it would be one small file per group per day, forever, for
-    a view nobody steps back that far in.
+    kept, because it answers a question that will be asked again. A raw day from last
+    year is not: it would be one small file per group per day, forever, for a view
+    nobody steps back that far in.
 
     Args:
         arch_root (str): The archive directory.
@@ -1800,8 +1763,8 @@ def _read_archive_file(path):
     """One archive file as the last run left it, or None if it cannot be used.
 
     None covers every way this can go wrong: no file, half a file, a file written by a
-    version that shaped it differently. All of them mean the same thing to the caller,
-    which is that the span has to be calculated from the database again.
+    version that shaped it differently. All of them mean the same to the caller, which
+    is that the span has to be calculated from the database again.
 
     Args:
         path (str): The file to read.
@@ -1819,13 +1782,11 @@ def _read_archive_file(path):
 def _resume_from(previous, start, resolution, slots):
     """Where an extended file picks up, or None to work the whole span out again.
 
-    The instant comes out of the file rather than being worked out from its slot
-    number, and it has to. get_series() puts its aggregation boundaries on constant
-    local time, so where the clocks change they are not a whole number of intervals
-    apart. A run that started counting from the top of the year and one that started
-    from the middle would then disagree about where a slot begins, and the extended
-    file would not be the file a rebuild produces. Writing down the boundary the last
-    run stopped on takes the question away.
+    The instant comes out of the file rather than from its slot number, and it has to.
+    get_series() puts its aggregation boundaries on constant local time, so where the
+    clocks change they are not a whole number of intervals apart. Two runs counting
+    from different points would disagree about where a slot begins, and an extended
+    file would not match what a rebuild produces.
 
     Args:
         previous (dict|None): The file already on disk, or None.
@@ -1860,9 +1821,9 @@ def _resume_from(previous, start, resolution, slots):
 def _carried_series(previous, position, var_type, count):
     """The series an extended file keeps, whole, or None to rebuild.
 
-    Matched by position, because that is the order the skin's plot section gives and
-    it only changes when the skin does. The observation type has to agree as well: two
-    series can swap places in a section without changing how many there are.
+    Matched by position, which is the order the skin's plot section gives and only
+    changes when the skin does. The observation type has to agree as well: two series
+    can swap places without changing how many there are.
 
     The whole entry rather than its values, because a series can carry more than one
     array: a vector has its components, and a type worth its extremes has those.
@@ -1888,10 +1849,10 @@ def _daynight(start_ts, stop_ts, lat, lon):
     """Sunrise, sunset, and the civil twilight around them.
 
     `weeutil.weeutil.getDayNightTransitions()` gives the moments the sun crosses the
-    horizon, which is where the PNGs step from day shading to night. The light does not
-    change that abruptly: it fades over the half hour or so of civil twilight, and over
-    much longer at high latitude in summer. The twilight boundaries are returned as
-    well, so the page can fade between the two instead of stepping.
+    horizon, where the PNGs step from day shading to night. The light does not change
+    that abruptly: it fades over the half hour or so of civil twilight, and over much
+    longer at high latitude in summer. Those boundaries are returned as well, so the
+    page can fade rather than step.
 
     Args:
         start_ts (int): The beginning of the span.
@@ -1959,8 +1920,7 @@ def _holds_plots(section):
     A plot definition is three levels deep: [ImageGenerator], then a time span such as
     [[day_images]], then a plot such as [[[daytempdew]]]. So a section holds plots when
     its subsections have subsections of their own. A settings section such as
-    [[Archive]] has one level of subsections at most, and holding scalars is what tells
-    it apart.
+    [[Archive]] has one level at most, and holding scalars is what tells it apart.
 
     Args:
         section (configobj.Section): The section to test.
@@ -1976,12 +1936,9 @@ def _yscale(plot_options, series_out):
 
     Worked out here rather than in the page, using the function the ImageGenerator
     calls. The plot's own 'yscale' fixes whichever of the three values it names, and
-    weeplot.utilities.scale() works out the rest from the data.
-
-    A chart library left to choose its own axis gets this wrong in ways that matter:
-    wind direction running to 400 degrees, or an axis reaching 5 m/s for wind that
-    never passed 2.3. The rule for a readable axis is the same whatever draws it, and
-    WeeWX already has it.
+    weeplot.utilities.scale() works out the rest from the data. A chart library left to
+    choose its own gets this wrong: wind direction running to 400 degrees, or an axis
+    reaching 5 m/s for wind that never passed 2.3.
 
     Args:
         plot_options (dict): The options of the plot being written.
@@ -2018,16 +1975,15 @@ def _yscale(plot_options, series_out):
 def _drop_empty_points(entry, time_length, gap_fraction, gap_factor=3.0):
     """Leave out the points that carry nothing, keeping real gaps visible.
 
-    A sensor that reports every ten minutes has a reading in one archive record out of
-    ten, and null in the other nine. Sent as they are, the page draws a line broken in
-    hundreds of places, and the file is many times larger than the readings in it.
+    A sensor reporting every ten minutes has a reading in one archive record out of
+    ten and null in the other nine. Sent as they are, the page draws a line broken in
+    hundreds of places, in a file many times larger than the readings in it.
 
-    How long a run of nulls counts as a gap depends on how often the sensor reports,
-    not on how wide the plot is. Ten minutes without a reading is a fault on a station
-    reporting every eight seconds and normal on one reporting every ten minutes. So the
-    interval between readings is measured, and only a run several times longer than
-    that is kept as a gap. Where 'line_gap_fraction' is set it wins, which is the
-    ImageGenerator's fixed threshold.
+    A run of nulls counts as a gap by the sensor's own interval, not the width of the
+    plot: ten minutes without a reading is a fault at an eight second interval and
+    normal at a ten minute one. So the interval is measured, and only a run several
+    times longer is kept as a gap. 'line_gap_fraction' wins where it is set, which is
+    the ImageGenerator's fixed threshold.
 
     Args:
         entry (dict): The series to thin.
