@@ -907,7 +907,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         not take.
 
         Args:
-            plot_section (configobj.Section): The plot's section, holding one subsection per
+            plot_section (dict): The plot's section, holding one subsection per
                 line.
             plot_options (dict[str, Any]): The options that apply to it.
             span (weeutil.weeutil.TimeSpan): The span the file covers.
@@ -927,8 +927,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 written short if that is not enough to reach the end of the span, and the next
                 run continues from where this one stopped. None does the whole span however long
                 it takes.
-            extrema (tuple[str, ...]): The observation types that also carry the lowest and
-                highest reading in each slot, not only the aggregate.
+            extrema (set[str] | tuple[str, ...]): The observation types that also
+                carry the lowest and highest reading in each slot, not only the
+                aggregate.
 
         Returns:
             dict|None: The file's contents, or None if the year holds nothing worth
@@ -1226,7 +1227,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         Args:
             plotgen_ts (int): The time the plot is being drawn for.
             plot_options (dict[str, Any]): The options that apply to it.
-            plot_dict (configobj.Section): Its section, holding one subsection per line.
+            plot_dict (dict): Its section, holding one subsection per line.
             plotname (str): Its name, which the file is named after.
 
         Returns:
@@ -1683,7 +1684,8 @@ def _affordable(budget, counters):
 
     Args:
         budget (int): How many seconds this report may spend. Zero removes the limit.
-        counters (dict[str, float]): What the run has spent so far, and on how many slots.
+        counters (dict[str, Any]): What the run has spent so far, and on how many
+            slots.
 
     Returns:
         int|None: Slots that fit in what is left, at least one so that a run always
@@ -1940,7 +1942,7 @@ def _holds_plots(section):
     [[Archive]] has one level at most, and holding scalars is what tells it apart.
 
     Args:
-        section (configobj.Section): The section to test.
+        section (dict): The section to test.
     """
     try:
         return any(section[name].sections for name in section.sections)

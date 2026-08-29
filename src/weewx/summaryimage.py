@@ -83,10 +83,10 @@ def _text(draw, xy, string, font, fill):
     later hand back a FreeType font instead, which draws everything.
 
     Args:
-        draw (PIL.ImageDraw.ImageDraw): What to draw on.
+        draw (ImageDraw.ImageDraw): What to draw on.
         xy (tuple[int, int]): Where to put it.
         string (str): The text.
-        font (PIL.ImageFont.ImageFont): The font to set it in.
+        font (ImageFont.ImageFont): The font to set it in.
         fill (str): Its colour.
     """
     if not isinstance(font, ImageFont.FreeTypeFont):
