@@ -46,3 +46,11 @@
 #if $custom_css
     <link rel="stylesheet" href="$custom_css">
 #end if
+##
+## And a script, for a look that needs the page arranged differently rather than
+## only painted differently. Deferred, so it runs after horizon.js has wired up
+## the elements it may move.
+#set $custom_js = $DisplayOptions.get('custom_js')
+#if $custom_js
+    <script src="$custom_js" defer></script>
+#end if
