@@ -162,7 +162,7 @@ PNGs do. See [*Mixed units*](custom-reports.md#mixed-units).
 The difference is that the reader can change it afterwards. Alongside the
 readings, the generator writes the arithmetic needed to convert between units,
 so a page can offer a unit switch that works without fetching anything. The
-Horizon skin puts one in its footer.
+Horizon skin puts one in its masthead.
 
 Nothing needs configuring for this. If you would rather not have it, drop the
 switch from the template.
