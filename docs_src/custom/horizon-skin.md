@@ -156,7 +156,7 @@ The value is the name of a file in `icons/`, without the extension. A type with
 no entry simply has no symbol. The symbols are from the IBM Carbon set, under
 the Apache 2.0 licence; see `icons/LICENSE-Carbon.txt`.
 
-## Theming: how it works
+## Changing the colours and fonts
 
 Under `[DisplayOptions]`:
 
@@ -178,7 +178,7 @@ anything `horizon.css` defines can be replaced, and nothing else is emitted.
 `[[[Light]]]` applies everywhere; `[[[Dark]]]` overrides it where the reader's
 browser or the theme toggle asks for a dark page.
 
-## What there is
+## The names you can set
 
 | Name | What it colours |
 |---|---|
@@ -196,7 +196,7 @@ The chart *line* colours are not here. They come from `chart_line_colors` in
 `[ImageGenerator]`, where the PNGs take them too, so a chart and the image of
 the same plot stay the same colour.
 
-## When the names are not enough
+## Going beyond the names
 
 Name a stylesheet of your own:
 
