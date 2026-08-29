@@ -3,6 +3,16 @@ WeeWX change history
 
 ### 5.6.0 dd-Mmm-2026
 
+The `Horizon` skin draws its charts with ECharts, which brings bars, wind
+arrows and night shading that uPlot needed code of its own for. Added a
+forecast panel, a planets panel, and a second look for the skin. Each reading
+now carries its range for the span on screen. [PR
+#1133](https://github.com/weewx/weewx/pull/1133). Thanks again to Manuel!
+
+Fixed a gap between two of the JSON generator's raw archive files. A finished
+day held one slot more than its day, and nothing could ever fill it. [PR
+#1133](https://github.com/weewx/weewx/pull/1133).
+
 Added `weewx.jsongenerator.JSONGenerator`, which writes the plots defined for
 the `ImageGenerator` as JSON, so a skin can draw its charts in the browser.
 Added the skin `Horizon`, which does that and can step back through the entire
