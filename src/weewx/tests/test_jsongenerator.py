@@ -777,10 +777,16 @@ class TestArchiveExtension:
         options.update(archive_options or {})
         gen_ts = first_ts
         data_dir = None
-        while gen_ts <= last_ts:
+        while True:
             data_dir = run_generator(config_dict, root, archive=True, gen_ts=gen_ts,
                                      archive_options=options)
-            gen_ts += step
+            if gen_ts >= last_ts:
+                break
+            # The last report lands on 'last_ts' itself, whatever the step. A day the
+            # clocks change is 23 or 25 hours long, so a fixed step does not divide the
+            # span, and the walk would otherwise stop short of the rebuild it is
+            # compared against and be handed less of the database.
+            gen_ts = min(gen_ts + step, last_ts)
         return os.path.join(data_dir, 'archive')
 
     def test_extending_matches_a_full_rebuild(self, config_dict, tmp_path_factory):
@@ -808,6 +814,11 @@ class TestArchiveExtension:
         # 2010-03-14 02:00 PST is 03:00 PDT. Straddle it.
         first_ts = int(time.mktime((2010, 3, 13, 12, 0, 0, 0, 0, -1)))
         last_ts = int(time.mktime((2010, 3, 15, 0, 0, 0, 0, 0, -1)))
+        # Both sides have to end on the same slot boundary. A file is rewritten once
+        # its newest reading reaches the next slot, not once per report, so a walk
+        # that stops in the middle of a slot leaves the file as the report before it
+        # wrote it while the rebuild writes it fresh.
+        last_ts -= last_ts % ARCHIVE_RESOLUTION
 
         grown = self.walk_forward(config_dict, tmp_path_factory.mktemp('dst_grown'),
                                   first_ts, last_ts, ARCHIVE_RESOLUTION)
@@ -1309,6 +1320,195 @@ class TestBudget:
         days = {f.split('-raw-')[1][:-len('.json')]
                 for f in os.listdir(archive_dir) if '-raw-' in f}
         assert len(days) == 3, days
+
+
+class TestPeriodSwitch:
+
+    def test_periods_can_be_turned_off(self, config_dict, tmp_path):
+        """A skin drawing from the archive does not need the four period files."""
+        data_dir = run_generator(config_dict, tmp_path, archive=True)
+        assert os.path.exists(os.path.join(data_dir, 'daytempdew.json'))
+
+        fresh = os.path.join(str(tmp_path), 'off')
+        skin_dict = build_skin_dict(fresh, archive=True)
+        skin_dict['JSONGenerator']['periods'] = 'false'
+        cfg = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        generator = weewx.jsongenerator.JSONGenerator(
+            cfg, skin_dict, parameters.synthetic_dict['stop_ts'], first_run=True,
+            stn_info=weewx.station.StationInfo(**cfg['Station']))
+        try:
+            generator.start()
+        finally:
+            generator.finalize()
+
+        data = os.path.join(fresh, 'data')
+        assert not os.path.exists(os.path.join(data, 'daytempdew.json'))
+        # The archive is untouched by the switch.
+        assert os.path.exists(os.path.join(data, 'archive', 'tempdew-2010.json'))
+
+
+class TestArchiveSeriesShapes:
+    """What a series in an archive file can carry beyond one number per slot."""
+
+    def test_a_wind_vector_keeps_its_components(self, config_dict, tmp_path):
+        """A vector is a pair. The evenly spaced grid holds it as two arrays.
+
+        Without this the wind vector plot is the one chart the archive cannot draw,
+        and the page would need a second source just for it.
+        """
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts)
+        with open(os.path.join(data_dir, 'archive', 'windvec-2010.json'),
+                  encoding='utf-8') as fd:
+            payload = json.load(fd)
+
+        series = payload['series'][0]
+        assert series['plot_type'] == 'vector'
+        assert len(series['vector_x']) == payload['count']
+        assert len(series['vector_y']) == payload['count']
+        # The magnitude stays in 'values', so a reader that knows nothing about
+        # vectors still gets a line it can draw.
+        pairs = [(x, y, v) for x, y, v in zip(series['vector_x'], series['vector_y'],
+                                              series['values']) if v is not None]
+        assert pairs
+        for x, y, v in pairs[:20]:
+            assert abs((x ** 2 + y ** 2) ** 0.5 - v) < 0.01
+
+    def test_a_line_keeps_its_own_aggregation_interval(self, config_dict, tmp_path):
+        """"Rain, hourly total" has to stay an hour, on any grid.
+
+        The plot says 'aggregate_interval = 3600'. Summing per slot on a finer grid
+        gives a number a fraction of the size, under a label that says otherwise, and
+        a row of hairline bars instead of one a reader can compare.
+        """
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        options = {'raw_days': '2', 'raw_resolution': '900'}
+        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                                 archive_options=options)
+        archive_dir = os.path.join(data_dir, 'archive')
+        name = [f for f in os.listdir(archive_dir) if f.startswith('rain-raw-')][0]
+        with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
+            payload = json.load(fd)
+
+        assert payload['interval'] == 900
+        values = payload['series'][0]['values']
+        filled = [i for i, v in enumerate(values) if v is not None]
+        assert filled, "no rain at all"
+        # An hourly total on a quarter-hour grid lands on every fourth slot.
+        gaps = {b - a for a, b in zip(filled, filled[1:])}
+        assert gaps and min(gaps) >= 4, \
+            "readings are closer together than the hour they are totalled over: %s" % sorted(gaps)[:5]
+
+    def test_finished_days_meet_without_a_seam(self, config_dict, tmp_path):
+        """The end of one raw day file is the start of the next, exactly.
+
+        A day that runs a slot past midnight owns an instant the next file owns too,
+        and it can never fill it: the run that could is the one that finds the day
+        finished and skips the file. The page then draws every reading it has with a
+        hole between each pair of days.
+        """
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        options = {'raw_days': '5', 'raw_resolution': '900'}
+        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                                 archive_options=options)
+        archive_dir = os.path.join(data_dir, 'archive')
+
+        files = sorted(f for f in os.listdir(archive_dir)
+                       if f.startswith('tempdew-raw-'))
+        assert len(files) > 2, files
+
+        spans = []
+        for name in files:
+            with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
+                payload = json.load(fd)
+            spans.append((name, payload['start'], payload['count'],
+                          payload['interval']))
+
+        # The last file is the day still filling up, so it stops where the readings do.
+        for (name, start, count, interval), (_, later, _, _) in zip(spans, spans[1:]):
+            assert start + count * interval == later,                 "%s ends at %d, but the next file starts at %d"                 % (name, start + count * interval, later)
+
+    def test_a_finished_day_holds_nothing_from_the_next(self, config_dict, tmp_path):
+        """A bar totalled over an hour must not be filed a slot early.
+
+        get_series() clips its last interval to the end of the span, so the last bar
+        of a day covers less than the hour it is meant to. Counted back from its end
+        it lands before the slot it belongs in, which puts part of tomorrow's rain at
+        the end of today, overlapping the bar that is already there.
+        """
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        options = {'raw_days': '5', 'raw_resolution': '900'}
+        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                                 archive_options=options)
+        archive_dir = os.path.join(data_dir, 'archive')
+
+        names = sorted(f for f in os.listdir(archive_dir) if f.startswith('rain-raw-'))
+        assert len(names) > 2, names
+
+        # The day still filling up counts too. Its last interval is the one
+        # get_series() clips, so it is where a bar goes astray first.
+        for name in names:
+            with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
+                payload = json.load(fd)
+            every = payload['series'][0]['aggregate_interval'] // payload['interval']
+            filled = [i for i, v in enumerate(payload['series'][0]['values'])
+                      if v is not None]
+            if len(filled) < 2:
+                continue
+            gaps = {b - a for a, b in zip(filled, filled[1:])}
+            assert min(gaps) >= every,                 "%s files an hourly bar %d slots after the last, not %d: %s"                 % (name, min(gaps), every, filled[-6:])
+            assert max(filled) < payload['count'],                 "%s fills slot %d of %d" % (name, max(filled), payload['count'])
+
+    def test_named_types_carry_their_extremes(self, config_dict, tmp_path):
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+                                 archive_options={'extremes': 'outTemp'})
+        with open(os.path.join(data_dir, 'archive', 'tempdew-2010.json'),
+                  encoding='utf-8') as fd:
+            payload = json.load(fd)
+
+        temp = payload['series'][0]
+        assert temp['obs_type'] == 'outTemp'
+        assert len(temp['min']) == payload['count']
+        assert len(temp['max']) == payload['count']
+        for lo, mid, hi in zip(temp['min'], temp['values'], temp['max']):
+            if None in (lo, mid, hi):
+                continue
+            assert lo <= mid <= hi
+
+        # dewpoint was not named, so it carries no extremes.
+        assert 'min' not in payload['series'][1]
+
+    def test_extremes_are_off_by_default(self, config_dict, tmp_path):
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts)
+        with open(os.path.join(data_dir, 'archive', 'tempdew-2010.json'),
+                  encoding='utf-8') as fd:
+            payload = json.load(fd)
+        assert 'min' not in payload['series'][0]
+
+    def test_extending_carries_the_extra_arrays_too(self, config_dict,
+                                                    tmp_path_factory):
+        """Vectors and extremes have to survive the extending path, like values do."""
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        options = {'extremes': 'outTemp', 'rebuild': '0'}
+
+        grown = tmp_path_factory.mktemp('shapes_grown')
+        for n in range(4, 0, -1):
+            run_generator(config_dict, grown, archive=True, archive_options=options,
+                          gen_ts=stop_ts - (n - 1) * ARCHIVE_RESOLUTION)
+        built = tmp_path_factory.mktemp('shapes_built')
+        run_generator(config_dict, built, archive=True, gen_ts=stop_ts,
+                      archive_options=options)
+
+        for name in ('tempdew-2010.json', 'windvec-2010.json'):
+            with open(os.path.join(str(grown), 'data', 'archive', name),
+                      encoding='utf-8') as fd:
+                a = json.load(fd)
+            with open(os.path.join(str(built), 'data', 'archive', name),
+                      encoding='utf-8') as fd:
+                b = json.load(fd)
+            assert a['series'] == b['series'], name
 
 
 class TestRebuildDue:
