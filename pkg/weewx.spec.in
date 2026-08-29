@@ -133,6 +133,8 @@ cp pkg/etc/systemd/system/weewx.service %{buildroot}%{dst_cfg_dir}/systemd
 cp pkg/etc/systemd/system/weewx@.service %{buildroot}%{dst_cfg_dir}/systemd
 mkdir %{buildroot}%{dst_cfg_dir}/udev
 cp pkg/etc/udev/rules.d/weewx.rules %{buildroot}%{dst_cfg_dir}/udev
+mkdir %{buildroot}%{dst_cfg_dir}/bash_completion.d
+cp src/weewx_data/util/bash_completion.d/weectl %{buildroot}%{dst_cfg_dir}/bash_completion.d
 
 # create the weewx configuration
 sed \
@@ -319,6 +321,19 @@ setup_udev() {
     fi
 }
 
+# install the bash completion
+setup_bash_completion() {
+    # prefer the directory that bash-completion loads on demand
+    dst=/usr/share/bash-completion/completions
+    if [ ! -d $dst ]; then
+        # bash-completion older than v2, or not installed
+        dst=/etc/bash_completion.d
+    fi
+    if [ -d $dst ]; then
+        cp %{dst_cfg_dir}/bash_completion.d/weectl $dst/weectl
+    fi
+}
+
 # copy the skins if there are not already skins in place
 setup_skins() {
     if [ ! -d %{dst_cfg_dir}/skins ]; then
@@ -440,6 +455,7 @@ if [ $1 -gt 1 ]; then
 fi
 setup_defaults $pid1
 setup_udev
+setup_bash_completion
 
 if [ "$1" = "1" ]; then
     # this is a new install so create a config file
@@ -493,6 +509,14 @@ if [ "$1" = "0" ]; then
   # remove udev rules
   if [ -f %{udev_dir}/60-weewx.rules ]; then
       rm -f %{udev_dir}/60-weewx.rules
+  fi
+  # remove weectl bash completion
+  bc_dir=/usr/share/bash-completion/completions
+  if [ ! -d $bc_dir ]; then
+      bc_dir=/etc/bash_completion.d
+  fi
+  if [ -f $bc_dir/weectl ]; then
+      rm -f $bc_dir/weectl
   fi
   # remove any bytecompiled code
   find /usr/share/weewx -name '*.pyc' -delete

@@ -22,6 +22,9 @@ user could no longer edit it and the passwords in it became world-readable.
 Removed the APRS "messaging-capable" packet flag from `restx.py`.
 [PR #1108](https://github.com/weewx/weewx/pull/1108), by `W0CHP`.
 
+Added a bash completion script for `weectl`, and a script to install it.
+[PR #1110](https://github.com/weewx/weewx/pull/1110), by `evilbunny2008`.
+
 ### 5.5.0 6-Aug-2026
 
 Added the ability for services to bind to a `SHUTDOWN` event. This allows

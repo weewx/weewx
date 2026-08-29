@@ -405,6 +405,20 @@ setup_udev() {
     fi
 }
 
+# put the bash completion in place
+setup_bash_completion() {
+    # prefer the directory that bash-completion loads on demand
+    dst=/usr/share/bash-completion/completions
+    if [ ! -d $dst ]; then
+        # bash-completion older than v2, or not installed
+        dst=/etc/bash_completion.d
+    fi
+    if [ -d $dst ]; then
+        echo "Installing bash completion"
+        cp /etc/weewx/bash_completion.d/weectl $dst/weectl
+    fi
+}
+
 # create the skins if skins do not already exist
 setup_skins() {
     if [ ! -d /etc/weewx/skins ]; then
@@ -546,6 +560,7 @@ case "$1" in
         add_to_group
         setup_defaults $pid1
         setup_udev
+        setup_bash_completion
 
         if [ "$2" != "" ]; then
             # this is an upgrade so create a maintainers version by merging
