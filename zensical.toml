@@ -122,6 +122,8 @@ nav = [
             { "[Texts]" = "reference/skin-options/texts.md" },
             { "[CheetahGenerator]" = "reference/skin-options/cheetahgenerator.md" },
             { "[ImageGenerator]" = "reference/skin-options/imagegenerator.md" },
+            { "[JSONGenerator]" = "reference/skin-options/jsongenerator.md" },
+            { "[SummaryImageGenerator]" = "reference/skin-options/summaryimagegenerator.md" },
             { "[CopyGenerator]" = "reference/skin-options/copygenerator.md" },
             { "[Generators]" = "reference/skin-options/generators.md" },
         ] },
