@@ -66,6 +66,9 @@ def _as_list(option):
 
     ConfigObj splits "a, b, c" into a list on its own. The option can still arrive as a
     plain string: from a dictionary built in code, or from an option holding one name.
+
+    Args:
+        option (str|list): The option as ConfigObj handed it over.
     """
     if isinstance(option, str):
         return [x.strip() for x in option.split(',') if x.strip()]
@@ -78,6 +81,13 @@ def _text(draw, xy, string, font, fill):
     PIL's own bitmap font encodes to latin-1 and raises on anything else. A station
     called Ζάκυνθος should cost its accents, not the whole picture. Pillow 10.1 and
     later hand back a FreeType font instead, which draws everything.
+
+    Args:
+        draw (PIL.ImageDraw.ImageDraw): What to draw on.
+        xy (tuple): Where to put it.
+        string (str): The text.
+        font (PIL.ImageFont.ImageFont): The font to set it in.
+        fill (str): Its colour.
     """
     if not isinstance(font, ImageFont.FreeTypeFont):
         string = string.encode('latin-1', 'replace').decode('latin-1')
@@ -131,7 +141,11 @@ class SummaryImageGenerator(weewx.reportengine.ReportGenerator):
     # ------------------------------------------------------------------ data
 
     def _collect(self, observations):
-        """Read the current values through the same tags a template would use."""
+        """Read the current values through the same tags a template would use.
+
+        Args:
+            observations (list): The observation types to read, in the order they are to appear.
+        """
         formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
         labels = self.skin_dict.get('Labels', {}).get('Generic', {})
@@ -204,7 +218,14 @@ class SummaryImageGenerator(weewx.reportengine.ReportGenerator):
     # --------------------------------------------------------------- drawing
 
     def _font(self, opts, key, size, scale):
-        """Load a font from the skin, falling back to PIL's own if it is missing."""
+        """Load a font from the skin, falling back to PIL's own if it is missing.
+
+        Args:
+            opts (dict): The [SummaryImageGenerator] section.
+            key (str): The option naming the font file, such as `title_font_path`.
+            size (int): Its size in points.
+            scale (int): The multiple the image is drawn at.
+        """
         path = opts.get(key)
         if path:
             candidate = os.path.join(self.config_dict['WEEWX_ROOT'],
