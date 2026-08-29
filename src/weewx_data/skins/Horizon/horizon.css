@@ -1157,7 +1157,8 @@ select.report-select {
 .chart-action:hover { color: var(--accent); background: var(--surface-sunk); }
 
 .chart-host { padding: 0 clamp(0.5rem, 2vw, 0.85rem) 0.6rem; }
-.chart-host .uplot { width: 100% !important; }
+/* The chart container, not the tooltip that also lives in here. */
+.chart-host > div[_echarts_instance_] { width: 100% !important; }
 
 /* uPlot brings its own stylesheet; align it with ours. */
 .u-legend { display: none; }
@@ -1338,6 +1339,217 @@ select.report-select {
 .stat-hi { color: var(--hi); }
 .stat-lo { color: var(--lo); }
 .when { display: block; font-size: var(--fs-xs); color: var(--ink-faint); font-weight: 400; }
+
+/* Two halves of one panel, side by side where the panel is wide enough for two
+   and stacked where it is not. The rule between them is the panel's own division,
+   so it runs the full height rather than stopping at the shorter half. */
+/* Measured against the panel rather than the window: the same 1024px window holds
+   a panel wide enough for two halves when it is alone and one that is not when
+   there are three across. 'auto-fit' is no help either -- it counts tracks the
+   width allows, not the two children there are, and lays out an empty third. */
+.split-two {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(0.85rem, 2.5vw, 1.15rem);
+}
+
+@container (min-width: 34rem) {
+  .split-two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+.split-two > * + * {
+  border-left: 1px solid var(--border);
+  padding-left: clamp(0.85rem, 2.5vw, 1.15rem);
+}
+
+/* Stacked, the rule belongs above rather than beside. */
+@container (max-width: 34rem) {
+  .split-two > * + * {
+    border-left: 0;
+    border-top: 1px solid var(--border);
+    padding-left: 0;
+    padding-top: clamp(0.85rem, 2.5vw, 1.15rem);
+  }
+}
+
+/* What the halves are measured against. */
+[data-live-panel="sunmoon"] { container-type: inline-size; }
+
+/* The planets, one row each. */
+table.planets { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+table.planets th,
+table.planets td { padding: 0.4rem clamp(0.85rem, 2.5vw, 1.15rem); text-align: left; }
+table.planets thead th {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--border);
+}
+table.planets tbody th { font-weight: 500; color: var(--ink); }
+table.planets tbody tr + tr th,
+table.planets tbody tr + tr td { border-top: 1px solid var(--border); }
+table.planets .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Filled while the planet is above the horizon, hollow while it is not. Which of
+   them can be seen right now is the first thing anyone asks of such a table. */
+.planet-mark {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  margin-right: 0.5em;
+  border: 1px solid var(--ink-faint);
+  border-radius: 50%;
+  vertical-align: 0.05em;
+}
+
+.planet-mark[data-up="1"] { background: var(--sun); border-color: var(--sun); }
+
+/* ---------------------------------------------------------------- forecast */
+
+/* Days along the top, hours beneath them, both scrolling sideways rather than
+   wrapping: a forecast reads as a sequence, and a week broken over two lines
+   reads as two weeks. */
+/* The days, and the hours of whichever day is chosen. They wrap rather than
+   scroll: a scrollbar hides half the week behind a gesture, and a forecast is
+   meant to be taken in at a glance. */
+.forecast-days,
+.forecast-hours {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.forecast-hours {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.forecast-day,
+.forecast-hour {
+  flex: 1 0 auto;
+  min-width: 6.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.6rem 0.4rem;
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.forecast-hour { min-width: 5rem; }
+
+/* A day is a button: it chooses which day the hours below are showing. It has to
+   look like the rest of the row until it is used, so the styling it gets from
+   being a button is taken back off. */
+.forecast-day {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.forecast-day:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+
+.forecast-day:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The day being shown below, and the hour we are in. */
+.forecast-day[aria-pressed="true"],
+.forecast-hour[data-now] { background: var(--surface-sunk); }
+
+.forecast-when { font-size: var(--fs-sm); color: var(--ink-muted); }
+.forecast-day[aria-pressed="true"] .forecast-when,
+.forecast-hour[data-now] .forecast-when { color: var(--accent); font-weight: 600; }
+
+/* Drawn as a mask, which is what lets one grey set of shapes carry a colour: the
+   picture is the cut-out and the background behind it is the paint. */
+.forecast-icon {
+  width: 2rem;
+  height: 2rem;
+  background: var(--sky, var(--ink-muted));
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+
+/* A sky has a colour, and it is not the colour of the text beside it. Sun warm,
+   rain and snow cold, a thunderstorm the one that says look at me. Overcast and
+   fog keep the page's own grey, which is what they are. */
+.forecast-icon[data-symbol="clear"],
+.forecast-icon[data-symbol="mostly-clear"] { --sky: var(--sun); }
+.forecast-icon[data-symbol="partly-cloudy"] { --sky: var(--warn); }
+.forecast-icon[data-symbol^="clear-night"],
+.forecast-icon[data-symbol$="-night"] { --sky: var(--ink-faint); }
+.forecast-icon[data-symbol="drizzle"],
+.forecast-icon[data-symbol="rain"],
+.forecast-icon[data-symbol="showers"],
+.forecast-icon[data-symbol="sleet"] { --sky: var(--lo); }
+.forecast-icon[data-symbol="snow"],
+.forecast-icon[data-symbol="snow-showers"] { --sky: var(--accent-bright); }
+.forecast-icon[data-symbol^="thunderstorm"] { --sky: var(--hi); }
+
+.forecast-what {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+  text-wrap: balance;
+}
+
+.forecast-temps { font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+.forecast-temps b { color: var(--ink); font-weight: 600; }
+.forecast-temps > span { color: var(--ink-faint); margin-left: 0.35rem; }
+
+/* The unit rides with its number, a size down: '20.6 °C' is one reading, not a
+   number and a word. */
+.forecast-temps small,
+.forecast-wind small {
+  font-size: 0.8em;
+  font-weight: 400;
+  margin-left: 0.1em;
+}
+
+.forecast-rain,
+.forecast-wind {
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A card with no rain to report is one line shorter than its neighbours. The
+   wind line is pushed to the foot instead, so the row stays level. */
+.forecast-day { justify-content: flex-start; }
+.forecast-day .forecast-wind { margin-top: auto; }
+
+.forecast-rain { color: var(--lo); }
+
+/* A glyph beside the label. Drawn as a mask filled with the text colour, so it
+   follows the theme without a second file per palette. */
+.tile-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin-right: 0.35em;
+  background: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+  opacity: 0.75;
+  flex: none;
+}
+
+/* How far the reading has been today, under the reading itself. */
+.tile-range {
+  display: flex;
+  gap: 1.2rem;
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+  margin: 0.15rem 0 0;
+}
+
+.tile-range .range-key { color: var(--ink-faint); }
 
 /* Readings list, used for current conditions and station info. Rows are separated by
    a hairline rather than by spacing alone: at eight or twenty entries the eye needs

@@ -36,7 +36,13 @@
       grid: s.getPropertyValue('--chart-grid').trim() || '#e3eaf1',
       axis: s.getPropertyValue('--chart-axis').trim() || '#8397a7',
       night: s.getPropertyValue('--chart-night').trim() || '#eaeef3',
-      ink: s.getPropertyValue('--ink').trim() || '#16222e'
+      ink: s.getPropertyValue('--ink').trim() || '#16222e',
+      /* The tooltip is a panel over the page, so it takes the page's own panel
+         colours. Hard-coded white here is a white box on a dark page. */
+      surface: s.getPropertyValue('--surface').trim() || '#ffffff',
+      border: s.getPropertyValue('--border').trim()
+              || s.getPropertyValue('--chart-grid').trim() || '#e3eaf1',
+      muted: s.getPropertyValue('--ink-muted').trim() || '#5c7183'
     };
   }
 
@@ -191,7 +197,8 @@
     return d.toLocaleString(LOCALE, opts);
   }
 
-  /* One label for one tick on the x axis. uPlot's own date formatter writes English
+  /* One label for one tick on the x axis. A chart library's own date formatter
+     writes English
      and a 12-hour clock. This one writes the reader's locale, and keeps the labels
      short enough that they do not run into each other. */
   function fmtTick(ts, period, splits) {
@@ -306,7 +313,12 @@
       copy.unit = to;
       copy.unit_label = out.unit_label;
       copy.values = s.values.map(apply);
-      /* Wind arrows are drawn from these, and they are lengths on the same axis. */
+      /* The extremes are readings on the same axis, so they take the offset too. */
+      ['min', 'max'].forEach(function (k) {
+        if (s[k]) copy[k] = s[k].map(apply);
+      });
+      /* Wind arrows are drawn from these, and they are lengths, not readings: a
+         length of five degrees Celsius is nine of Fahrenheit, not forty-one. */
       ['vector_x', 'vector_y'].forEach(function (k) {
         if (s[k]) copy[k] = s[k].map(function (v) {
           return v === null ? null : v * factor;
@@ -430,13 +442,6 @@
     chosen: function () { return recall('units', ''); }
   };
 
-  /* The tooltip, for a chart this file did not build. Pass a function that writes
-     the contents for one point; the box, its placement and the touch handling are
-     the ones the charts on this page use. */
-  CFG.tooltip = function (render) {
-    return tooltipPlugin(null, render);
-  };
-
   /* The colour this skin gives a temperature, so that the same reading is the same
      colour wherever it appears. Celsius in, CSS colour out. */
   CFG.tempColour = function (celsius) {
@@ -500,7 +505,8 @@
 
   /* -------------------------------------------------------------- shaping */
 
-  /* uPlot draws every series against one array of timestamps. The series in a plot
+  /* The data table draws every series against one array of timestamps. The series
+     in a plot
      usually already carry the same ones. Where they do not, build the union of all
      their timestamps and put each series' values at the right positions in it. */
   function align(series) {
@@ -552,540 +558,420 @@
     return 'rgba(0,0,0,0)';
   }
 
-  /* --------------------------------------------------------------- plugins */
-
-  /* Shade the hours between sunset and sunrise, the way the PNGs do. */
-  function nightPlugin(meta) {
-    var dn = meta.daynight;
-    if (!dn || !dn.transitions || !dn.transitions.length) return null;
-    return {
-      hooks: {
-        drawClear: function (u) {
-          /* Read from meta on every draw, not once when the plugin was built. New
-             data arriving at the turn of a day brings new sunrise and sunset times
-             with it, and the shading has to follow them. */
-          var daynight = meta.daynight;
-          if (!daynight || !daynight.transitions) return;
-          var ctx = u.ctx;
-          var colors = themeColors();
-          var left = u.bbox.left, right = u.bbox.left + u.bbox.width;
-          var top = u.bbox.top, height = u.bbox.height;
-          var xmin = u.scales.x.min, xmax = u.scales.x.max;
-
-          var bands = (daynight.twilight || []).filter(function (b) {
-            return b.to > xmin && b.from < xmax;
-          });
-
-          /* Find the stretches of full darkness. Alternating between day and night at
-             each timestamp does not work here, because a twilight band has two
-             timestamps and only one of them opens or closes the darkness: dusk ends
-             it, dawn begins it. So walk the bands and open and close a night. */
-          var nights = [];
-          var openedAt = null;
-
-          if (bands.length) {
-            /* Dawn first means the span starts in darkness. */
-            if (bands[0].dir === 'dawn') openedAt = xmin;
-          } else if (daynight.first === 'night') {
-            openedAt = xmin;
-          }
-
-          bands.forEach(function (b) {
-            if (b.dir === 'dawn') {
-              if (openedAt !== null) { nights.push([openedAt, b.from]); openedAt = null; }
-            } else {
-              openedAt = b.to;              // night proper begins when dusk ends
-            }
-          });
-          if (openedAt !== null) nights.push([openedAt, xmax]);
-
-          /* No twilight times in the data. Shade from sunrise and sunset alone, which
-             is what the file held before twilight was added to it. */
-          if (!bands.length && daynight.transitions.length) {
-            nights = [];
-            var isNight = daynight.first === 'night';
-            var edges = [xmin].concat(daynight.transitions, [xmax]);
-            for (var i = 0; i < edges.length - 1; i++) {
-              if (isNight) nights.push([edges[i], edges[i + 1]]);
-              isNight = !isNight;
-            }
-          }
-
-          ctx.save();
-          ctx.fillStyle = colors.night;
-          nights.forEach(function (n) {
-            var x0 = Math.max(u.valToPos(n[0], 'x', true), left);
-            var x1 = Math.min(u.valToPos(n[1], 'x', true), right);
-            if (x1 > x0) ctx.fillRect(x0, top, x1 - x0, height);
-          });
-
-          /* The fade at each end of the darkness spans the real civil twilight, half
-             an hour in the tropics and hours in a northern summer. A fade over a
-             fixed number of pixels would mean a different length of time on every
-             span the reader can select. */
-          bands.forEach(function (b) {
-            var a = u.valToPos(b.from, 'x', true);
-            var z = u.valToPos(b.to, 'x', true);
-            var x0 = Math.max(Math.min(a, z), left);
-            var x1 = Math.min(Math.max(a, z), right);
-            if (x1 - x0 < 0.5) return;
-
-            var grad = ctx.createLinearGradient(a, 0, z, 0);
-            var clear = fadeOut(colors.night);
-            /* Dawn runs from dark to clear, dusk from clear to dark. */
-            grad.addColorStop(0, b.dir === 'dawn' ? colors.night : clear);
-            grad.addColorStop(1, b.dir === 'dawn' ? clear : colors.night);
-
-            ctx.fillStyle = grad;
-            ctx.fillRect(x0, top, x1 - x0, height);
-          });
-          ctx.restore();
-        }
-      }
-    };
-  }
-
-  /* A wind vector plot draws no line. Each reading is an arrow from the zero line,
-     pointing the way the wind blew and as long as the wind was strong. This is the
-     plot WeeWX has always drawn for wind. The arithmetic is weeplot's, which is where
-     the shape of this plot is defined:
-
-         scaled = vector * yscale          (both components scaled by the y axis)
-         scaled *= e^(i·rotate)            (vector_rotate, 90 degrees by default)
-         xEnd = xStart - scaled.real       (x grows right, y grows down)
-         yEnd = yStart + scaled.imag
-  */
-  function vectorPlugin(meta) {
-    var isVector = function (s) {
-      return s.plot_type === 'vector' && s.vector_x && s.vector_y;
-    };
-    if (!meta.series.some(isVector)) return null;
-
-    return {
-      hooks: {
-        draw: function (u) {
-          /* From meta on every draw, so that new readings are drawn as new arrows. */
-          var vectors = meta.series.filter(isVector);
-          var ctx = u.ctx;
-          var y0 = u.valToPos(0, 'y', true);
-          /* Pixels per unit on the y axis. Negative, because y on a canvas grows
-             downward while a reading grows upward. weeplot's yscale carries the same
-             sign for the same reason. */
-          var yScale = u.valToPos(1, 'y', true) - y0;
-
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(u.bbox.left, u.bbox.top, u.bbox.width, u.bbox.height);
-          ctx.clip();
-
-          vectors.forEach(function (s) {
-            var rot = (s.vector_rotate || 0) * Math.PI / 180;
-            var cos = Math.cos(rot), sin = Math.sin(rot);
-
-            ctx.strokeStyle = s.color || 'currentColor';
-            ctx.lineWidth = Math.max(1, Math.round(devicePixelRatio || 1));
-            ctx.beginPath();
-
-            for (var i = 0; i < s.time.length; i++) {
-              var vx = s.vector_x[i], vy = s.vector_y[i];
-              if (vx === null || vy === null) continue;
-              var ts = s.time[i];
-              if (ts < u.scales.x.min || ts > u.scales.x.max) continue;
-
-              var sx = vx * yScale, sy = vy * yScale;
-              if (rot) {
-                var rx = sx * cos - sy * sin;
-                sy = sx * sin + sy * cos;
-                sx = rx;
-              }
-
-              var xPix = u.valToPos(ts, 'x', true);
-              ctx.moveTo(xPix, y0);
-              ctx.lineTo(xPix - sx, y0 + sy);
-            }
-            ctx.stroke();
-          });
-
-          vectors.forEach(function (s) { drawRose(u, s); });
-
-          /* The zero line every arrow starts from. */
-          ctx.strokeStyle = themeColors().axis;
-          ctx.lineWidth = 1;
-          ctx.globalAlpha = 0.5;
-          ctx.beginPath();
-          ctx.moveTo(u.bbox.left, y0);
-          ctx.lineTo(u.bbox.left + u.bbox.width, y0);
-          ctx.stroke();
-
-          ctx.restore();
-        }
-      }
-    };
-  }
-
-  /* The compass rose the PNGs draw in the lower left corner. An arrow pointing north,
-     turned by the same 'vector_rotate' as the wind arrows, with the letter upright in
-     the middle of it. Without the rose, nothing on the plot says which bearing the
-     arrows are measured from. Shape and proportions follow genplot._renderRose(). */
-  function drawRose(u, s) {
-    var dpr = devicePixelRatio || 1;
-    var ctx = u.ctx;
-    var size = 26 * dpr, barb = 4 * dpr, radius = 8 * dpr;
-    var cx = u.bbox.left + 10 * dpr + size / 2;
-    var cy = u.bbox.top + u.bbox.height - 8 * dpr - size / 2;
-
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.strokeStyle = s.color || themeColors().ink;
-    ctx.lineWidth = Math.max(1, Math.round(dpr));
-    ctx.globalAlpha = 0.85;
-
-    ctx.save();
-    /* A positive angle turns anticlockwise in PIL and clockwise on a canvas. */
-    ctx.rotate(-(s.vector_rotate || 0) * Math.PI / 180);
-    ctx.beginPath();
-    /* The shaft breaks at the circle instead of crossing it, which leaves the letter
-       inside readable. The PNG draws the shaft straight through. */
-    ctx.moveTo(0, -size / 2);
-    ctx.lineTo(0, -radius);
-    ctx.moveTo(0, radius);
-    ctx.lineTo(0, size / 2);
-    ctx.moveTo(-barb, -size / 2 + barb);
-    ctx.lineTo(0, -size / 2);
-    ctx.lineTo(barb, -size / 2 + barb);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(0, 0, radius, 0, 2 * Math.PI);
-    ctx.stroke();
-    ctx.restore();
-
-    /* Drawn after the rotation is undone, so the letter stays upright. */
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = themeColors().axis;
-    ctx.font = Math.round(10 * dpr) + 'px ' + getComputedStyle(document.body).fontFamily;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(s.rose_label || 'N', 0, 0.5 * dpr);
-    ctx.restore();
-  }
-
-  /* The unit label, above the y axis, where the PNGs put it. Without it the axis
-     reads 21.4 and does not say whether that is Celsius or Fahrenheit. */
-  function unitPlugin(meta) {
-    if (!meta.unit_label) return null;
-    return {
-      hooks: {
-        draw: function (u) {
-          var label = meta.unit_label;
-          if (!label) return;
-          var dpr = devicePixelRatio || 1;
-          var ctx = u.ctx;
-          ctx.save();
-          ctx.font = Math.round(11 * dpr) + 'px ' + getComputedStyle(document.body).fontFamily;
-          ctx.fillStyle = themeColors().axis;
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'bottom';
-          /* High enough to clear the topmost tick label, which uPlot centres on
-             the top of the axis. */
-          ctx.fillText(label, 2 * dpr, u.bbox.top - 8 * dpr);
-          ctx.restore();
-        }
-      }
-    };
-  }
-
-  /* The box that follows the cursor, and the reading it shows.
-
-     'render' is optional. Without it the box lists the series of a plot file, which
-     is what the charts on this page hold. With it, the caller writes the contents:
-     the climate page draws from monthly figures rather than from a plot file, and its
-     x axis counts months rather than seconds.
-
-     Everything else is shared, and the part worth sharing is the touch handling: a
-     touch screen has no hover, so reading a chart with a finger has to be told apart
-     from scrolling past it. */
-  function tooltipPlugin(meta, render) {
-    var el;
-    return {
-      hooks: {
-        init: function (u) {
-          el = document.createElement('div');
-          el.className = 'u-tooltip';
-          el.style.opacity = '0';
-          u.over.appendChild(el);
-          u.over.addEventListener('mouseleave', function () { el.style.opacity = '0'; });
-
-          /* A touch screen has no hover, so a finger dragged across the chart moves
-             the cursor instead. The first few pixels do not say which gesture the
-             reader means. A drag that is mostly sideways reads the chart; one that is
-             mostly up and down scrolls the page. Until it is clear, do neither. */
-          var startX = 0, startY = 0, reading = null;
-
-          u.over.addEventListener('touchstart', function (e) {
-            var t = e.touches[0];
-            startX = t.clientX;
-            startY = t.clientY;
-            reading = null;
-          }, { passive: true });
-
-          u.over.addEventListener('touchmove', function (e) {
-            var t = e.touches[0];
-            if (reading === null) {
-              var dx = Math.abs(t.clientX - startX), dy = Math.abs(t.clientY - startY);
-              if (dx + dy < 8) return;
-              reading = dx > dy;
-            }
-            if (!reading) return;
-            /* The drag is reading the chart. Stop the page scrolling with it. */
-            if (e.cancelable) e.preventDefault();
-            var box = u.over.getBoundingClientRect();
-            u.setCursor({ left: t.clientX - box.left, top: t.clientY - box.top });
-          }, { passive: false });
-
-          u.over.addEventListener('touchend', function () {
-            reading = null;
-            el.style.opacity = '0';
-            u.setCursor({ left: -10, top: -10 });
-          }, { passive: true });
-        },
-        setCursor: function (u) {
-          var idx = u.cursor.idx;
-          if (idx === null || idx === undefined || u.cursor.left < 0) {
-            el.style.opacity = '0';
-            return;
-          }
-
-          if (render) {
-            var written = render(u, idx);
-            if (!written) { el.style.opacity = '0'; return; }
-            el.innerHTML = written;
-            place(u);
-            return;
-          }
-
-          var ts = u.data[0][idx];
-          var rows = '';
-          var any = false;
-          for (var i = 1; i < u.data.length; i++) {
-            var v = u.data[i][idx];
-            if (v === null || v === undefined) continue;
-            any = true;
-            var s = meta.series[i - 1];
-            var extra = '';
-            if (s.directions && s.directions[idx] !== null && s.directions[idx] !== undefined) {
-              extra = ' · ' + fmtNumber(s.directions[idx], 0) + '°';
-            }
-            rows += '<div class="t-row" style="color:' + (s.color || 'currentColor') + '">'
-              + '<i></i><span style="color:var(--ink)">' + escapeHtml(s.label) + '</span>'
-              + '<b style="color:var(--ink)">' + fmtNumber(v, digitsFor(meta.series))
-              + (meta.unit_label || '')
-              + escapeHtml(extra) + '</b></div>';
-          }
-          if (!any) { el.style.opacity = '0'; return; }
-
-          el.innerHTML = '<div class="t-time">' + escapeHtml(fmtTime(ts, meta._period)) + '</div>' + rows;
-          place(u);
-        }
-      }
-    };
-
-    /* Beside the cursor, and inside the plot. Above it where there is room, below it
-       at the top of the chart, and on the other side near the right edge. */
-    function place(u) {
-      el.style.opacity = '1';
-      var w = el.offsetWidth, h = el.offsetHeight;
-      var left = u.cursor.left + 14;
-      if (left + w > u.bbox.width / devicePixelRatio) left = u.cursor.left - w - 14;
-      var top = u.cursor.top - h - 10;
-      if (top < 0) top = u.cursor.top + 16;
-      el.style.left = left + 'px';
-      el.style.top = top + 'px';
-    }
-  }
-
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
     });
   }
 
-  /* ---------------------------------------------------------- image export */
+  /* ----------------------------------------------------------- chart pieces */
 
-  /* Save the chart on screen as a PNG. Works for any span, including one the server
-     never rendered: a span the reader zoomed into, or a month from years back. */
-  function exportChart(entry, card) {
-    var src = entry.plot.ctx.canvas;
-    var ratio = window.devicePixelRatio || 1;
-    var pad = Math.round(12 * ratio);
-    var titleHeight = Math.round(30 * ratio);
+  /* Every chart on the page, as {plot, host, meta, raw, period}. Kept so that a new
+     record, a theme change or a unit change can be put into the instances that are
+     already drawn rather than building them again. */
+  var charts = [];
 
-    var out = document.createElement('canvas');
-    out.width = src.width + pad * 2;
-    out.height = src.height + titleHeight + pad;
-    var ctx = out.getContext('2d');
+  /* The stretches of darkness, as areas the chart can shade.
 
-    var styles = getComputedStyle(document.documentElement);
-    var surface = styles.getPropertyValue('--surface').trim() || '#ffffff';
-    var ink = styles.getPropertyValue('--ink').trim() || '#000000';
-    var faint = styles.getPropertyValue('--ink-faint').trim() || '#888888';
+     Worked out from the sunrise and sunset times the generator wrote beside the
+     readings, so the shading follows the real day rather than a fixed hour. Read
+     fresh on every build: a record arriving at the turn of a day brings new times
+     with it. */
+  function nightAreas(meta) {
+    var dn = meta.daynight;
+    if (!dn || !dn.transitions || !dn.transitions.length) return [];
 
-    ctx.fillStyle = surface;
-    ctx.fillRect(0, 0, out.width, out.height);
+    /* How long the light takes to go, at this latitude and this time of year. The
+       generator writes the civil twilight either side of each sunrise and sunset, so
+       the shading can fade over the time the sky actually took rather than over a
+       fixed number of minutes. Half the fade sits either side of the boundary, which
+       is where the eye puts it. */
+    var fade = {};
+    (dn.twilight || []).forEach(function (b) {
+      if (b && b.from && b.to) fade[b.dir === 'dawn' ? 'dawn' : 'dusk'] = b.to - b.from;
+    });
+    var dawn = fade.dawn || 1800;
+    var dusk = fade.dusk || 1800;
 
-    var family = getComputedStyle(document.body).fontFamily;
-    ctx.textBaseline = 'top';
+    var out = [];
+    var night = dn.first === 'night';
+    var from = meta.start;
+    var push = function (a, b) {
+      /* Grown by half a twilight at each end, so the gradient below can reach full
+         darkness at the boundary itself. */
+      var lo = a - dusk / 2, hi = b + dawn / 2;
+      var span = hi - lo;
+      if (span <= 0) return;
+      out.push({
+        span: span,
+        /* Where in the band the sky is fully dark. */
+        in1: Math.min(0.5, dusk / span),
+        in2: Math.max(0.5, 1 - dawn / span),
+        pair: [{ xAxis: lo * 1000 }, { xAxis: hi * 1000 }]
+      });
+    };
 
-    ctx.fillStyle = ink;
-    ctx.font = '600 ' + Math.round(13 * ratio) + 'px ' + family;
-    var title = card.querySelector('.chart-title').textContent.trim();
-    ctx.fillText(title, pad, Math.round(6 * ratio));
-
-    ctx.fillStyle = faint;
-    ctx.font = Math.round(10 * ratio) + 'px ' + family;
-    var stamp = (CFG.station || '') + ' · '
-      + fmtTime(entry.meta.start, entry.meta._period) + ' – '
-      + fmtTime(entry.meta.stop, entry.meta._period);
-    ctx.fillText(stamp, pad, Math.round(20 * ratio));
-
-    ctx.drawImage(src, pad, titleHeight);
-
-    var name = entry.meta.name + '-'
-      + new Date(entry.meta.stop * 1000).toISOString().slice(0, 10) + '.png';
-
-    out.toBlob(function (blob) {
-      if (!blob) return;
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-    }, 'image/png');
+    dn.transitions.forEach(function (ts) {
+      if (night) push(from, ts);
+      night = !night;
+      from = ts;
+    });
+    if (night) push(from, meta.stop || from);
+    return out;
   }
 
-  /* ---------------------------------------------------------------- charts */
+  /* One shaded band, faded in and out across its own twilight. */
+  function nightBand(band, colour) {
+    /* The same colour at zero opacity, not a transparent black: fading to black
+       puts a grey cast in the middle of the gradient. */
+    var clear = /^#[0-9a-f]{6}$/i.test(colour) ? colour + '00'
+      : colour.replace(/^rgb\(/i, 'rgba(').replace(/\)$/, ', 0)');
+    var stops = [
+      { offset: 0, color: clear },
+      { offset: band.in1, color: colour },
+      { offset: band.in2, color: colour },
+      { offset: 1, color: clear }
+    ];
+    var pair = band.pair.slice();
+    pair[0] = { xAxis: pair[0].xAxis,
+                itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 1, 0, stops) } };
+    return pair;
+  }
 
-  var charts = [];   // {plot, meta, host}
+  /* How wide to draw a bar, in pixels.
 
-  /* How tall to draw a chart, given how wide it is. A third of its width works on a
-     wide screen. On a phone it does not: a third of 400 pixels is 130 pixels of
-     chart, where a day of temperature is a flat wiggle and the y axis holds two
-     labels. So the height never falls below 290 pixels, which is what a chart needs
-     to show its shape. Above that the ratio takes over again, and dragging a window
-     across the point where they meet moves the height smoothly. */
+     A bar totalled over an hour sits on the grid every nth slot, and a chart library
+     sizes bars from the closest pair of points it can see. Left alone that makes an
+     hour's rain a hairline. The width is therefore worked out from the span the bar
+     stands for against the span on screen. */
+  function barWidthPx(meta, s, hostWidth) {
+    var covered = s.aggregate_interval || meta.aggregate_interval;
+    var span = (meta.stop || 0) - (meta.start || 0);
+    if (!covered || !span || !hostWidth) return undefined;
+    return Math.max(1, Math.floor((covered / span) * hostWidth * 0.85));
+  }
+
+  /* One wind arrow per reading, drawn from the two components.
+
+     A line through the speeds would say nothing about direction, which is the whole
+     point of the plot. Each arrow starts on the zero line and points where the wind
+     came from, scaled so the longest reaches the top of the axis. */
+  function vectorRenderItem(s, meta) {
+    var rotate = (s.vector_rotate || 0) * Math.PI / 180;
+    return function (params, api) {
+      var i = params.dataIndex;
+      var x = s.vector_x && s.vector_x[i];
+      var y = s.vector_y && s.vector_y[i];
+      if (x === null || x === undefined || y === null || y === undefined) return;
+
+      var base = api.coord([api.value(0), 0]);
+      var tip = api.coord([api.value(0), Math.sqrt(x * x + y * y)]);
+      var len = base[1] - tip[1];
+      if (!len) return;
+
+      /* The components give the direction; the axis gives how long to draw it. */
+      var mag = Math.sqrt(x * x + y * y) || 1;
+      var ux = (x / mag), uy = (y / mag);
+      var ca = Math.cos(rotate), sa = Math.sin(rotate);
+      var dx = ux * ca - uy * sa, dy = ux * sa + uy * ca;
+      var ex = base[0] + dx * len, ey = base[1] - dy * len;
+
+      return {
+        type: 'line',
+        shape: { x1: base[0], y1: base[1], x2: ex, y2: ey },
+        style: { stroke: s.color || themeColors().ink, lineWidth: 1 }
+      };
+    };
+  }
+
+  /* --------------------------------------------------------------- charting */
+
+  /* The gaps a person picks when dividing an axis by hand, whatever the decimal
+     point does. Four and a half is here for the eighths of a compass; 1.27, which is
+     what a twentieth of an inch of rain comes to in millimetres, is not. */
+  var ROUND_STEPS = [1, 1.5, 2, 2.5, 3, 4, 4.5, 5, 6, 7.5, 9];
+
+  function isRound(v) {
+    if (!v) return false;
+    var mag = Math.pow(10, Math.floor(Math.log(Math.abs(v)) / Math.LN10));
+    var lead = Math.abs(v) / mag;
+    return ROUND_STEPS.some(function (m) { return Math.abs(lead - m) < 1e-9; });
+  }
+
+  /* Whether the generator's own step still divides its own axis.
+
+     It always does as it leaves the generator. A conversion into the reader's unit
+     can break it: multiplying a fifth of an inch of mercury gives 6.77 hectopascals
+     against ends of 989.49 and 1030.13, and Fahrenheit adds an offset on top, so
+     ten degrees Celsius becomes a step of eighteen starting at minus four. Where the
+     ends are still whole multiples the step was meant, however unusual it looks:
+     forty-five degrees is an eighth of the compass. */
+  function divides(lo, hi, step) {
+    if (!step) return false;
+    var whole = function (v) {
+      var n = v / step;
+      return Math.abs(n - Math.round(n)) < 1e-6;
+    };
+    return whole(lo) && whole(hi);
+  }
+
+  /* The gap between gridlines. Null where there is nothing to scale, which leaves the
+     choice to the chart. */
+  function gridStep(meta, height) {
+    if (!meta.yscale || !meta.yscale[2]) return null;
+    var step = meta.yscale[2];
+    var span = meta.yscale[1] - meta.yscale[0];
+    if (!(span > 0)) return step;
+
+    /* A label is one line of twelve pixel type. Twenty-four leaves it as much air
+       again, which is enough to read a column of numbers down an axis. */
+    var room = Math.max(2, Math.floor((height - 40) / 24));
+
+    if (span / step <= room && isRound(step)
+        && divides(meta.yscale[0], meta.yscale[1], step)) {
+      return step;
+    }
+
+    /* Otherwise the smallest step a person would have picked that still fits. */
+    var least = span / room;
+    var mag = Math.pow(10, Math.floor(Math.log(least) / Math.LN10));
+    var nice = [1, 2, 2.5, 5, 10, 20].map(function (m) { return m * mag; })
+      .filter(function (v) { return v >= least; })[0];
+    return nice || step;
+  }
+
+  /* One end of the y axis, on a whole step. Widened, never narrowed: a reading must
+     not fall outside the axis drawn for it. */
+  function axisEnd(meta, step, which) {
+    if (!meta.yscale) return null;
+    var v = meta.yscale[which === 'min' ? 0 : 1];
+    if (v === null || v === undefined || !step) return v === undefined ? null : v;
+    var snapped = which === 'min' ? Math.floor(v / step) * step
+                                  : Math.ceil(v / step) * step;
+    /* Away from floating point dust: 0.30000000000000004 is not a tick label. */
+    return Math.round(snapped * 1e6) / 1e6;
+  }
+
   function chartHeight(width) {
-    return Math.max(290, Math.min(340, Math.round(width * 0.34)));
+    /* The floor is what a chart in a narrow column gets, and it decides how many
+       gridlines fit: at 180 a pressure axis had room for four labels. */
+    return Math.max(270, Math.min(360, Math.round(width * 0.32)));
+  }
+
+  /* Save the chart as a picture, with its title and the station's name on it.
+
+     A chart pasted into a forum post has to say what it is without the page around
+     it. */
+  function exportChart(entry, card) {
+    var url = entry.plot.getDataURL({
+      pixelRatio: window.devicePixelRatio || 2,
+      backgroundColor: getComputedStyle(document.documentElement)
+        .getPropertyValue('--surface').trim() || '#ffffff'
+    });
+    var img = new Image();
+    img.onload = function () {
+      var ratio = window.devicePixelRatio || 2;
+      var pad = Math.round(12 * ratio);
+      var titleHeight = Math.round(30 * ratio);
+      var out = document.createElement('canvas');
+      out.width = img.width + pad * 2;
+      out.height = img.height + titleHeight + pad;
+      var ctx = out.getContext('2d');
+
+      var styles = getComputedStyle(document.documentElement);
+      ctx.fillStyle = styles.getPropertyValue('--surface').trim() || '#ffffff';
+      ctx.fillRect(0, 0, out.width, out.height);
+
+      var family = getComputedStyle(document.body).fontFamily;
+      ctx.textBaseline = 'top';
+      ctx.fillStyle = styles.getPropertyValue('--ink').trim() || '#000000';
+      ctx.font = '600 ' + Math.round(13 * ratio) + 'px ' + family;
+      var title = (card.querySelector('.chart-title') || {}).textContent || '';
+      ctx.fillText(title, pad, Math.round(4 * ratio));
+
+      ctx.fillStyle = styles.getPropertyValue('--ink-faint').trim() || '#888888';
+      ctx.font = Math.round(10 * ratio) + 'px ' + family;
+      var when = card.dataset.from
+        ? fmtTime(+card.dataset.to, card.dataset.period) : '';
+      ctx.fillText((CFG.stationName || '') + (when ? ' · ' + when : ''),
+                   pad, Math.round(19 * ratio));
+
+      ctx.drawImage(img, pad, titleHeight);
+      var link = document.createElement('a');
+      link.download = (entry.meta.name || 'chart') + '.png';
+      link.href = out.toDataURL('image/png');
+      link.click();
+    };
+    img.src = url;
+  }
+
+  /* The options one chart is drawn from.
+
+     Rebuilt whenever the readings or the theme change, and handed to the instance
+     with setOption(), which keeps the reader's zoom and their place in the data. */
+  function chartOptions(meta, period, hostWidth) {
+    var colors = themeColors();
+    var family = getComputedStyle(document.body).fontFamily;
+    var digits = digitsFor(meta.series);
+    var isBar = meta.series.some(function (s) { return s.plot_type === 'bar'; });
+    var step = gridStep(meta, chartHeight(hostWidth));
+    var areas = isBar ? [] : nightAreas(meta);
+
+    var series = meta.series.map(function (s, i) {
+      var points = (s.time || []).map(function (t, j) {
+        return [t * 1000, s.values[j]];
+      });
+
+      if (s.plot_type === 'vector') {
+        return {
+          name: s.label, type: 'custom', data: points,
+          renderItem: vectorRenderItem(s, meta),
+          encode: { x: 0, y: 1 },
+          animation: false, silent: false
+        };
+      }
+
+      var out = {
+        name: s.label,
+        type: s.plot_type === 'bar' ? 'bar' : 'line',
+        data: points,
+        animation: false,
+        symbol: 'none',
+        connectNulls: false,
+        /* A day of one minute readings is 1440 points, a year of hourly ones 8760.
+           Drawing every one of them says nothing a screen can show. */
+        sampling: 'lttb',
+        large: true
+      };
+      if (s.plot_type === 'bar') {
+        out.itemStyle = { color: s.fill_color || s.color || colors.ink };
+        var w = barWidthPx(meta, s, hostWidth);
+        if (w) out.barWidth = w;
+        out.barGap = '-100%';
+      } else {
+        out.lineStyle = { color: s.color || colors.ink, width: 1.2 };
+        out.itemStyle = { color: s.color || colors.ink };
+      }
+      /* The shading goes on the first series that can carry it. Behind everything:
+         it is the backdrop, and drawn on top it hides the zero line and the grid. */
+      if (i === 0 && areas.length) {
+        var night = colors.night || 'rgba(0,0,0,0.05)';
+        out.markArea = {
+          silent: true,
+          z: -1,
+          emphasis: { disabled: true },
+          data: areas.map(function (b) { return nightBand(b, night); })
+        };
+      }
+      return out;
+    });
+
+    return {
+      animation: false,
+      grid: { left: 52, right: 10, top: 24, bottom: 28, containLabel: false },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'line', lineStyle: { color: colors.axis, width: 1,
+                                                  type: [4, 3] } },
+        /* Parked in a top corner rather than following the cursor: a box that moves
+           with the pointer covers the very readings being compared, and jumps from
+           one side to the other as it runs out of room. It sits opposite the hand,
+           so it never hides what is being pointed at. */
+        position: function (point, params, dom, rect, size) {
+          var wide = size.viewSize[0];
+          var box = size.contentSize[0];
+          var pointerRight = point[0] > wide / 2;
+          return [pointerRight ? 10 : Math.max(10, wide - box - 10), 8];
+        },
+        backgroundColor: colors.surface,
+        borderColor: colors.border,
+        borderWidth: 1,
+        padding: [6, 9],
+        extraCssText: 'box-shadow: 0 2px 10px rgba(0,0,0,0.14); border-radius: 6px;',
+        textStyle: { color: colors.ink, fontFamily: family, fontSize: 12 },
+        formatter: function (params) {
+          if (!params.length) return '';
+          var when = fmtTime(Math.round(params[0].value[0] / 1000), period);
+          var rows = params.map(function (p) {
+            var s = meta.series[p.seriesIndex];
+            var extra = '';
+            /* A wind reading is a speed and a bearing. The speed alone is half of it. */
+            if (s && s.directions) {
+              var d = s.directions[p.dataIndex];
+              if (d !== null && d !== undefined) extra = ' · ' + fmtNumber(d, 0) + '°';
+            }
+            /* Where the series carries the extremes of its slot, they belong here:
+               an average of an hour with a gust of twice it in the middle is not the
+               hour the reader thinks it was. */
+            if (s && s.max) {
+              var lo = s.min && s.min[p.dataIndex], hi = s.max[p.dataIndex];
+              if (hi !== null && hi !== undefined) {
+                extra += ' <span style="color:' + colors.muted + '">('
+                  + (lo === null || lo === undefined ? '' : fmtNumber(lo, digits) + '…')
+                  + fmtNumber(hi, digits) + ')</span>';
+              }
+            }
+            return '<span style="color:' + p.color + '">●</span> '
+              + escapeHtml(p.seriesName) + ': <b>'
+              + fmtNumber(p.value[1], digits) + '</b>'
+              + (meta.unit_label ? ' ' + escapeHtml(meta.unit_label) : '') + extra;
+          });
+          return '<span style="color:' + colors.muted + '">' + escapeHtml(when)
+            + '</span><br>' + rows.join('<br>');
+        }
+      },
+      xAxis: {
+        type: 'time',
+        axisLine: { lineStyle: { color: colors.axis } },
+        axisTick: { lineStyle: { color: colors.grid } },
+        splitLine: { show: true, lineStyle: { color: colors.grid } },
+        axisLabel: {
+          /* The muted ink rather than the axis colour: an axis line may fade into
+             the background, but the numbers on it are meant to be read. */
+          color: colors.muted, fontFamily: family, fontSize: 12,
+          formatter: function (value) { return fmtTick(value / 1000, period, null); },
+          hideOverlap: true
+        }
+      },
+      yAxis: {
+        type: 'value',
+        /* The unit, above the axis it belongs to. A column of numbers says nothing
+           on its own, and the reader can change what they mean. */
+        name: meta.unit_label || '',
+        nameLocation: 'end',
+        nameGap: 12,
+        nameTextStyle: {
+          color: colors.muted, fontFamily: family, fontSize: 12, align: 'left'
+        },
+        /* Worked out by the generator with the function the ImageGenerator uses.
+           Left to choose, a chart library gives axes that reach 400 degrees of wind
+           direction, or 5 m/s for wind that never passed 2.3.
+
+           The ends are widened to whole steps. In the reader's unit the generator's
+           are no longer round: 29.2 inches of mercury is 989.49 hectopascals, and an
+           axis starting there is labelled 989.5, 1009.5, 1029.5. */
+        min: axisEnd(meta, step, 'min'),
+        max: axisEnd(meta, step, 'max'),
+        interval: step,
+        axisLine: { show: false },
+        axisTick: { show: false },
+        splitLine: { lineStyle: { color: colors.grid } },
+        axisLabel: {
+          color: colors.muted, fontFamily: family, fontSize: 12,
+          formatter: function (v) { return fmtNumber(v, digits); }
+        }
+      },
+      series: series
+    };
   }
 
   function buildChart(host, meta, period) {
     meta._period = period;
     var hostWidth = host.clientWidth || 600;
-    var colors = themeColors();
-    var data = align(meta.series);
-    var isBar = meta.series.some(function (s) { return s.plot_type === 'bar'; });
-
-    var opts = {
-      title: '',
-      width: hostWidth,
-      height: chartHeight(hostWidth),
-      padding: [22, 8, 0, 0],     // room for the unit above the y axis
-      legend: { show: false },
-      cursor: {
-        drag: { x: true, y: false, setScale: true },
-        points: { size: 6, width: 2 },
-        focus: { prox: 24 }
-      },
-      scales: {
-        x: { time: true },
-        /* 'yscale' is [min, max, step] for the y axis, worked out by the JSON
-           generator. Letting a chart library choose instead gives axes that reach
-           400 degrees of wind direction. It is null only for a plot with no data
-           to scale. */
-        y: meta.yscale ? {
-          /* Read from meta on every draw. A record arriving warmer than any so far
-             widens the axis, and the chart has to follow without being rebuilt. */
-          range: function () {
-            var ys = meta.yscale;
-            return [ys[0], ys[1]];
-          }
-        } : {}
-      },
-      /* Every colour below is a function, called at draw time. Switching between the
-         light and dark themes therefore needs a redraw and nothing else. */
-      axes: [
-        {
-          stroke: function () { return themeColors().axis; },
-          grid: { stroke: function () { return themeColors().grid; }, width: 1 },
-          ticks: { stroke: function () { return themeColors().grid; }, width: 1, size: 5 },
-          font: '11px ' + getComputedStyle(document.body).fontFamily,
-          space: 60,
-          values: function (u, splits) {
-            return splits.map(function (ts) { return fmtTick(ts, period, splits); });
-          }
-        },
-        {
-          stroke: function () { return themeColors().axis; },
-          grid: { stroke: function () { return themeColors().grid; }, width: 1 },
-          ticks: { show: false },
-          font: '11px ' + getComputedStyle(document.body).fontFamily,
-          size: 46,
-          /* Gridlines at the step the generator worked out, but no closer together
-             than the labels can be read. A step that suits a wide screen stacks the
-             labels on top of each other on a phone, so double it until they fit. */
-          space: 34,
-          splits: meta.yscale && meta.yscale[2] ? function (u, ai, min, max) {
-            var step = (meta.yscale && meta.yscale[2]) || 1;
-            while ((max - min) / step > Math.max(2, u.bbox.height / (34 * (devicePixelRatio || 1)))) {
-              step *= 2;
-            }
-            var out = [];
-            for (var v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) {
-              /* Round the tick value itself. Rounding the value divided by the step
-                 turns a tick at 800 into one at 8, and every label lands at the
-                 bottom of the axis. */
-              out.push(Math.round(v * 1e6) / 1e6);
-            }
-            return out;
-          } : null,
-          values: function (u, splits) {
-            return splits.map(function (v) { return fmtNumber(v, digitsFor(meta.series)); });
-          }
-        }
-      ],
-      series: [{ label: 'time' }].concat(meta.series.map(function (s) {
-        var base = {
-          label: s.label,
-          stroke: s.color || colors.ink,
-          width: 1.6,
-          spanGaps: false,
-          points: { show: false }
-        };
-        if (s.plot_type === 'bar') {
-          base.paths = uPlot.paths.bars({ size: [0.85, 24], align: 0 });
-          base.fill = s.fill_color || s.color || colors.ink;
-          base.stroke = s.fill_color || s.color || colors.ink;
-          base.width = 0;
-        } else if (s.plot_type === 'vector') {
-          /* vectorPlugin draws these, as arrows built from the two components. A
-             line through the speeds would say nothing about direction. The series
-             still has to count as shown, because uPlot takes a scale's range from
-             its visible series alone, and hiding this one leaves the y axis on its
-             default of 0 to 1. */
-          base.paths = function () { return null; };
-          base.points = { show: false };
-        }
-        return base;
-      })),
-      plugins: [tooltipPlugin(meta), vectorPlugin(meta),
-                unitPlugin(meta)].concat(
-        isBar ? [] : [nightPlugin(meta)]
-      ).filter(Boolean)
-    };
-
-    var plot = new uPlot(opts, data, host);
-    return { plot: plot, meta: meta, host: host };
+    host.style.height = chartHeight(hostWidth) + 'px';
+    var plot = echarts.init(host, null, { renderer: 'canvas' });
+    plot.setOption(chartOptions(meta, period, hostWidth));
+    return { plot: plot, meta: meta, host: host, period: period };
   }
 
   /* The range label is written short or long depending on how much room there is.
@@ -1095,22 +981,25 @@
   });
 
   function redrawAll() {
-    /* Axis colours and the night shading are read at draw time, so redrawing is
-       all a theme change needs. The first argument is uPlot's rebuildPaths, and it
-       has to stay true: false clears the canvas and draws nothing back. */
-    charts.forEach(function (c) { c.plot.redraw(true, true); });
+    /* The colours are read when the options are built, so a theme change means
+       building them again. Everything else about the chart stays as it is. */
+    charts.forEach(function (c) {
+      c.plot.setOption(chartOptions(c.meta, c.period, c.host.clientWidth || 600));
+    });
   }
 
-  /* Redraw a chart when the element holding it changes size. One observer watches
-     every chart, rather than one observer each. */
+  /* Resize a chart when the element holding it changes size. One observer watches
+     every chart, rather than one observer each. A bar's width is worked out in
+     pixels, so it has to be worked out again at the new width. */
   var resizeObserver = new ResizeObserver(function (entries) {
     entries.forEach(function (entry) {
       var c = charts.find(function (x) { return x.host === entry.target; });
       if (!c) return;
       var w = Math.round(entry.contentRect.width);
-      if (w > 0 && w !== c.plot.width) {
-        c.plot.setSize({ width: w, height: chartHeight(w) });
-      }
+      if (w <= 0) return;
+      c.host.style.height = chartHeight(w) + 'px';
+      c.plot.resize({ width: w, height: chartHeight(w) });
+      c.plot.setOption({ series: chartOptions(c.meta, c.period, w).series });
     });
   });
 
@@ -1211,33 +1100,25 @@
 
   /* Put a new record into a chart that is already on screen.
 
-     Rebuilding the chart instead would destroy the uPlot instance and make a new one,
-     which clears the canvas, drops the reader's zoom and their place in the data
-     table, and shows an empty plot for as long as the fetch takes. All of that once a
-     minute. Handing uPlot the new arrays leaves the instance alone: the x axis moves
-     to the left by one record and the new reading is drawn on the right.
+     Rebuilding the chart instead would make a new instance, which clears the canvas,
+     drops the reader's zoom and their place in the data table, and shows an empty
+     plot for as long as the fetch takes. All of that once a minute. Handing the new
+     options to the instance leaves it alone: the x axis moves to the left by one
+     record and the new reading is drawn on the right.
 
-     Returns false where the shape of the plot has changed, which uPlot cannot take
-     through setData(). The caller rebuilds those. It happens when a series that has
-     never had a reading gets its first one. */
+     Returns false where the shape of the plot has changed. The caller rebuilds those.
+     It happens when a series that has never had a reading gets its first one. */
   function updateChart(entry, raw) {
     var plot = entry.plot;
     var fresh = inChosenUnit(raw);
     if (!fresh.series || fresh.series.length !== entry.meta.series.length) return false;
 
-    /* Whether the reader has zoomed into part of the chart. Having zoomed, they are
-       reading something, and the axis must stay where they put it. Showing the whole
-       plot, they want the axis to follow the new record. */
-    var times = plot.data[0];
-    var whole = !times.length
-      || (plot.scales.x.min <= times[0] && plot.scales.x.max >= times[times.length - 1]);
-
-    /* Every plugin and the y axis read their values out of entry.meta on each draw,
-       so replacing its contents is what carries the new sunrise times, unit label and
-       axis range into the redraw below. */
+    /* The options are built from entry.meta, so replacing its contents is what
+       carries the new sunrise times, unit label and axis range into the redraw. */
     Object.keys(fresh).forEach(function (key) { entry.meta[key] = fresh[key]; });
     entry.raw = raw;
-    plot.setData(align(entry.meta.series), whole);
+    plot.setOption(chartOptions(entry.meta, entry.period,
+                                entry.host.clientWidth || 600));
 
     /* The table is built from the data, so it is rebuilt as well. A closed one is
        marked instead of rebuilt, and built again when the reader opens it: rebuilding
@@ -1256,6 +1137,22 @@
     return true;
   }
 
+  /* Where one card's readings come from.
+
+     The archive answers every span, live or stepped back: it holds the same readings
+     on a grid chosen to suit the span, and today is its raw tier, written every
+     report. The period files are the fallback, and only where a skin still writes
+     them: asking for one that is turned off is a 404 per card, per reload, for
+     everyone who opens the page. */
+  function chartSource(card) {
+    return windowFromArchive(card.dataset.group, +card.dataset.from, +card.dataset.to)
+      .then(function (meta) {
+        if (meta) return meta;
+        var hasPeriods = manifest && manifest.plots && manifest.plots.length;
+        return anchor === null && hasPeriods ? loadPlot(card.dataset.plot) : null;
+      });
+  }
+
   /* Bring every chart on screen up to the newest record.
 
      A span in the past cannot have changed, so there is nothing to do for one. Only
@@ -1263,22 +1160,32 @@
   function refreshCharts() {
     if (anchor !== null) return;
     cache.clear();
+    /* The archive answers the live view too, so its files and the index naming them
+       are what has just gone stale. */
+    archiveCache.clear();
+    archiveIndex = null;
     manifest = null;
     indexRefetched = false;
 
-    charts.forEach(function (entry) {
-      var name = entry.meta.name;
-      if (!name) return;
-      loadPlot(name).then(function (fresh) {
-        if (!fresh || !fresh.series || !fresh.series.length) return;
-        if (updateChart(entry, fresh)) return;
-        /* The plot has a series it did not have before. Draw the card again. */
+    /* The live window slides with the clock: at half past midnight "today" is not
+       the day it was when these cards were built. */
+    var win = currentWindow(currentPeriod);
+
+    loadArchiveIndex().then(function () {
+      charts.forEach(function (entry) {
         var card = entry.host.closest('.chart-card');
-        if (!card) return;
-        resizeObserver.unobserve(entry.host);
-        entry.plot.destroy();
-        charts = charts.filter(function (c) { return c !== entry; });
-        renderChart(card, fresh, card.dataset.period);
+        if (!card || !card.dataset.group) return;
+        card.dataset.from = win.from;
+        card.dataset.to = win.to;
+        chartSource(card).then(function (fresh) {
+          if (!fresh || !fresh.series || !fresh.series.length) return;
+          if (updateChart(entry, fresh)) return;
+          /* The plot has a series it did not have before. Draw the card again. */
+          resizeObserver.unobserve(entry.host);
+          entry.plot.dispose();
+          charts = charts.filter(function (c) { return c !== entry; });
+          renderChart(card, fresh, card.dataset.period);
+        });
       });
     });
 
@@ -1298,7 +1205,7 @@
   function clearCharts() {
     charts.forEach(function (c) {
       resizeObserver.unobserve(c.host);
-      c.plot.destroy();
+      c.plot.dispose();
     });
     charts = [];
     document.querySelectorAll('#charts .chart-card').forEach(function (card) {
@@ -1411,49 +1318,115 @@
       .catch(function () { archiveIndex = { groups: [] }; return archiveIndex; });
   }
 
-  function loadArchiveYear(group, year) {
-    var key = group + '-' + year;
-    if (archiveCache.has(key)) return Promise.resolve(archiveCache.get(key));
-    return fetch(DATA_DIR + '/archive/' + key + '.json', { cache: 'no-cache' })
+  function loadArchiveFile(name) {
+    if (archiveCache.has(name)) return Promise.resolve(archiveCache.get(name));
+    return fetch(DATA_DIR + '/archive/' + name + '.json', { cache: 'no-cache' })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) { archiveCache.set(key, j); return j; })
-      .catch(function () { archiveCache.set(key, null); return null; });
+      .then(function (j) { archiveCache.set(name, j); return j; })
+      .catch(function () { archiveCache.set(name, null); return null; });
   }
 
-  /* Archive files hold one reading an hour, which is the right trade over years but
-     flattens a single day. Where the generator has also written the closely spaced
-     monthly files, use those instead. Only for a span short enough for the difference
-     to show: a month or a year is what the hourly files are for. */
-  function fineMonthsFor(group, from, to) {
-    if (!archiveIndex || !archiveIndex.fine_interval) return null;
-    if ((to - from) > 8 * 86400) return null;
-    var entry = (archiveIndex.groups || []).filter(function (g) {
+  /* The archive is written on three grids: the station's own readings per day, a
+     closer grid per month, and one per calendar year that coarsens with age. They
+     overlap on purpose, so a span can be drawn from whichever of them suits it.
+
+     Finest first, and the first one that can cover the whole span wins. "Can" is two
+     things: the index has to name a file for every part of the span, since joining
+     two grids in one chart would draw a step where the spacing changes, and the
+     result has to be a sane number of points. A day from the raw tier is 1440 of
+     them; a year would be half a million, which is a download nobody wants for a
+     chart a thousand pixels wide. */
+  var MAX_POINTS = 20000;
+
+  var TIER_KEYS = [
+    { kind: 'raw', named: 'raw', grids: 'raw_intervals',
+      name: function (group, key) { return group + '-raw-' + key; },
+      keys: function (from, to) { return stampsIn(from, to, 'day'); } },
+    { kind: 'fine', named: 'fine', grids: 'fine_intervals',
+      name: function (group, key) { return group + '-fine-' + key; },
+      keys: function (from, to) { return stampsIn(from, to, 'month'); } },
+    { kind: 'year', named: 'covered', grids: 'intervals',
+      name: function (group, key) { return group + '-' + key; },
+      keys: function (from, to) { return stampsIn(from, to, 'year'); } }
+  ];
+
+  /* The keys of the files a span touches, as the index writes them. */
+  function stampsIn(from, to, unit) {
+    var out = [];
+    var cursor = new Date(from * 1000);
+    cursor.setHours(0, 0, 0, 0);
+    if (unit !== 'day') cursor.setDate(1);
+    if (unit === 'year') cursor.setMonth(0);
+    while (cursor.getTime() / 1000 < to) {
+      var y = cursor.getFullYear();
+      var m = cursor.getMonth() + 1;
+      var d = cursor.getDate();
+      var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+      if (unit === 'day') { out.push(y + '-' + pad(m) + '-' + pad(d)); cursor.setDate(d + 1); }
+      else if (unit === 'month') { out.push(y + '-' + pad(m)); cursor.setMonth(m); }
+      else { out.push(String(y)); cursor.setFullYear(y + 1); }
+      if (out.length > 400) break;
+    }
+    return out;
+  }
+
+  /* Does the stretch a key stands for overlap the readings the station has at all?
+     'YYYY', 'YYYY-MM' and 'YYYY-MM-DD' all say where they start and how far they run. */
+  function touchesRecord(key) {
+    if (!archiveIndex || !archiveIndex.first || !archiveIndex.last) return true;
+    var parts = key.split('-').map(Number);
+    var start = new Date(parts[0], (parts[1] || 1) - 1, parts[2] || 1);
+    var stop = new Date(start);
+    if (parts.length === 1) stop.setFullYear(start.getFullYear() + 1);
+    else if (parts.length === 2) stop.setMonth(start.getMonth() + 1);
+    else stop.setDate(start.getDate() + 1);
+    return stop.getTime() / 1000 > archiveIndex.first
+      && start.getTime() / 1000 < archiveIndex.last;
+  }
+
+  /* Which files to draw a span from, finest grid that fits. */
+  function filesFor(group, from, to) {
+    var entry = ((archiveIndex && archiveIndex.groups) || []).filter(function (g) {
       return g.name === group;
     })[0];
-    if (!entry || !entry.fine) return null;
+    if (!entry) return null;
 
-    var want = [];
-    var cursor = new Date(from * 1000);
-    cursor.setDate(1);
-    cursor.setHours(0, 0, 0, 0);
-    while (cursor.getTime() / 1000 < to) {
-      var month = cursor.getMonth() + 1;
-      var stamp = cursor.getFullYear() + '-' + (month < 10 ? '0' : '') + month;
-      /* One month missing, and the span would be joined from two spacings. */
-      if (!(stamp in entry.fine)) return null;
-      want.push(stamp);
-      cursor.setMonth(cursor.getMonth() + 1);
+    for (var t = 0; t < TIER_KEYS.length; t++) {
+      var tier = TIER_KEYS[t];
+      var have = entry[tier.named];
+      if (!have) continue;
+      var keys = tier.keys(from, to);
+      if (!keys.length) continue;
+
+      var grids = entry[tier.grids] || {};
+      var ok = true;
+      var interval = 0;
+      var present = [];
+      for (var i = 0; i < keys.length; i++) {
+        if (!(keys[i] in have)) {
+          /* A key the index does not name is either a stretch the station has no
+             readings for, which is nothing to hold against the tier, or a gap in what
+             this tier reaches back to, which disqualifies it: half a week drawn from
+             the day files and the rest missing is worse than the whole week drawn
+             from the month files. */
+          if (touchesRecord(keys[i])) { ok = false; break; }
+          continue;
+        }
+        var g = grids[keys[i]];
+        /* Two spacings in one chart would draw a step where they meet. */
+        if (g && interval && g !== interval) { ok = false; break; }
+        if (g) interval = g;
+        present.push(keys[i]);
+      }
+      if (!ok || !present.length) continue;
+      if (interval && (to - from) / interval > MAX_POINTS) continue;
+
+      return {
+        interval: interval,
+        names: present.map(function (k) { return tier.name(group, k); })
+      };
     }
-    return want.length ? want : null;
-  }
-
-  function loadArchiveFine(group, stamp) {
-    var key = group + '-fine-' + stamp;
-    if (archiveCache.has(key)) return Promise.resolve(archiveCache.get(key));
-    return fetch(DATA_DIR + '/archive/' + key + '.json', { cache: 'no-cache' })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) { archiveCache.set(key, j); return j; })
-      .catch(function () { archiveCache.set(key, null); return null; });
+    return null;
   }
 
   var daynightCache = new Map();
@@ -1503,27 +1476,17 @@
     });
   }
 
-  /* Build one span's series by joining the year files it reaches across. */
+  /* Build one span's series by joining the archive files it reaches across. */
   function windowFromArchive(group, from, to) {
-    /* index.json lists the years this group has a file for. Requesting any other
-       year puts a 404 in the console of everyone who opens the page. */
-    var known = null;
-    if (archiveIndex && archiveIndex.groups) {
-      var entry = archiveIndex.groups.find(function (g) { return g.name === group; });
-      if (entry && entry.years) known = entry.years;
-    }
+    var pick = filesFor(group, from, to);
+    if (!pick) return Promise.resolve(null);
 
     var years = [];
-    for (var y = new Date(from * 1000).getFullYear(); y <= new Date(to * 1000).getFullYear(); y++) {
-      if (!known || known.indexOf(y) >= 0) years.push(y);
-    }
-    if (!years.length) return Promise.resolve(null);
+    for (var y = new Date(from * 1000).getFullYear();
+         y <= new Date(to * 1000).getFullYear(); y++) years.push(y);
 
-    var fine = fineMonthsFor(group, from, to);
     return Promise.all([
-      Promise.all(fine
-        ? fine.map(function (m) { return loadArchiveFine(group, m); })
-        : years.map(function (y) { return loadArchiveYear(group, y); })),
+      Promise.all(pick.names.map(loadArchiveFile)),
       nightForWindow(from, to, years)
     ]).then(function (both) {
       var files = both[0];
@@ -1537,9 +1500,14 @@
         var slots = Math.ceil((to - start) / interval);
         if (slots < 2) return null;
 
+        /* Beside 'values' a series can carry more arrays of the same length: the two
+           components of a wind vector, and the extremes of a slot for the types where
+           an average hides what mattered. They are joined exactly as values are. */
+        var EXTRA = ['vector_x', 'vector_y', 'directions', 'min', 'max'];
+
         var template = present[0];
         var series = template.series.map(function (s) {
-          return {
+          var out = {
             obs_type: s.obs_type,
             label: s.label,
             color: s.color,
@@ -1547,6 +1515,13 @@
             time: [],
             values: new Array(slots).fill(null)
           };
+          if (s.vector_rotate !== undefined) out.vector_rotate = s.vector_rotate;
+          /* A bar totalled over more than one slot has to be drawn that wide. */
+          if (s.aggregate_interval) out.aggregate_interval = s.aggregate_interval;
+          EXTRA.forEach(function (key) {
+            if (s[key]) out[key] = new Array(slots).fill(null);
+          });
+          return out;
         });
 
         present.forEach(function (file) {
@@ -1555,8 +1530,14 @@
             for (var i = 0; i < s.values.length; i++) {
               var ts = file.start + i * file.interval;
               var slot = Math.round((ts - start) / interval);
-              if (slot >= 0 && slot < slots && s.values[i] !== null) {
-                series[si].values[slot] = s.values[i];
+              if (slot < 0 || slot >= slots) continue;
+              if (s.values[i] !== null) series[si].values[slot] = s.values[i];
+              for (var e = 0; e < EXTRA.length; e++) {
+                var key = EXTRA[e];
+                if (s[key] && series[si][key] && s[key][i] !== null
+                    && s[key][i] !== undefined) {
+                  series[si][key][slot] = s[key][i];
+                }
               }
             }
           });
@@ -1565,6 +1546,25 @@
         var times = new Array(slots);
         for (var k = 0; k < slots; k++) times[k] = start + k * interval;
         series.forEach(function (s) { s.time = times; });
+
+        /* The y axis comes from the files, not from the chart library. The generator
+           works it out
+           with the same function the ImageGenerator uses, which knows that a wind
+           vector is drawn about zero and that a direction runs 0 to 360. Left to
+           choose, a chart library gets both wrong. Joining several files takes the
+           widest of their axes, and the step from the first that states one. */
+        var yscale = null;
+        present.forEach(function (file) {
+          if (!file.yscale) return;
+          if (!yscale) { yscale = file.yscale.slice(); return; }
+          if (file.yscale[0] !== null && (yscale[0] === null || file.yscale[0] < yscale[0])) {
+            yscale[0] = file.yscale[0];
+          }
+          if (file.yscale[1] !== null && (yscale[1] === null || file.yscale[1] > yscale[1])) {
+            yscale[1] = file.yscale[1];
+          }
+          if (yscale[2] === null) yscale[2] = file.yscale[2];
+        });
 
         var out = {
           name: group,
@@ -1575,6 +1575,7 @@
           aggregate_interval: interval,
           series: series
         };
+        if (yscale) out.yscale = yscale;
         if (daynight) out.daynight = daynight;
         return out;
       })();
@@ -1639,14 +1640,13 @@
     var period = card.dataset.period;
     var empty = '<p class="chart-empty">' + escapeHtml(CFG.text.noData || 'No data') + '</p>';
 
-    /* The live span is served by the file the generator already wrote for it: every
-       reading the station took, with the sunrise and sunset times alongside. Any
-       other span is built from the archive files. */
-    var source = anchor === null
-      ? loadPlot(card.dataset.plot)
-      : windowFromArchive(card.dataset.group, +card.dataset.from, +card.dataset.to);
+    /* Every span comes from the archive, live or stepped back. It holds the same
+       readings on a grid chosen to suit the span, so there is nothing the four period
+       files could add: today is the raw tier, and it is written every report.
 
-    source.then(function (meta) {
+       They are still the fallback. A skin can leave 'periods' on, and a station whose
+       archive is still building has spans it cannot answer yet. */
+    chartSource(card).then(function (meta) {
       if (!meta || !meta.series || !meta.series.length) {
         card.querySelector('.chart-host').innerHTML = empty;
         return;
@@ -1776,12 +1776,14 @@
       /* Order the cards as 'plot_groups' in skin.conf lists them, not as the files
          happen to appear in index.json. */
       var wanted = groups.map(function (g) {
-        var snapshot = mf.plots.find(function (p) { return p.name === period + g; });
+        var snapshot = (mf.plots || []).find(function (p) { return p.name === period + g; });
         var archived = (ai.groups || []).find(function (p) { return p.name === g; });
-        if (live) {
-          return snapshot ? { group: g, name: snapshot.name, title: snapshot.title } : null;
+        /* The period files are optional. Where they are not written the archive is
+           the only source, live or not, and it is the one that names the group. */
+        if (live && snapshot) {
+          return { group: g, name: snapshot.name, title: snapshot.title };
         }
-        return archived ? { group: g, name: g, title: archived.title } : null;
+        return archived ? { group: g, name: period + g, title: archived.title } : null;
       }).filter(Boolean);
 
       container.innerHTML = '';
@@ -1825,6 +1827,96 @@
 
     remember('period', period);
     writeLocation(period);
+    showSpanOnCards(period);
+  }
+
+  /* The cards, for the span on screen.
+
+     A card shows the reading as it stands and what it did today. Over a week or a
+     year the reading as it stands says nothing about the span: it is one instant
+     out of thousands. So for those the card shows the mean instead, with the two
+     ends of the span under it -- which is what the numbers mean when the span is
+     longer than a day.
+
+     The figures are already in the page: the template wrote them into
+     'data-spans' when it rendered the card. Nothing is fetched, and the unit
+     conversion is the skin's own, run again over the values just swapped in. */
+  function showSpanOnCards(period) {
+    var panel = document.querySelector('[data-live-panel="current"]');
+    if (!panel) return;
+    var daily = period === 'day' || !period;
+    panel.dataset.span = period || 'day';
+
+    panel.querySelectorAll('[data-spans]').forEach(function (el) {
+      var held;
+      try {
+        held = JSON.parse(el.dataset.spans || '{}');
+      } catch (e) {
+        return;
+      }
+
+      /* What the server wrote is the day, and it is what we come back to. */
+      if (el.dataset.dayValue === undefined) {
+        el.dataset.dayValue = el.dataset.value || '';
+      }
+      var found = daily ? null : held[period];
+      if (!daily && !found) {
+        /* No figures for this span -- a sensor fitted yesterday, say. Leave the
+           card on the day rather than emptying it. */
+        found = null;
+      }
+      setSpanValue(el, found ? found.v : el.dataset.dayValue);
+
+      /* A heading that names the day cannot stand over a year. Rain is the one
+         that does: "Rain Today" is right for a day and wrong for everything
+         else, so the card carries both and the span picks. */
+      var tile = el.closest('div');
+      var heading = tile && tile.querySelector('[data-label-span]');
+      if (heading) {
+        heading.textContent = daily
+          ? heading.dataset.labelDay
+          : heading.dataset.labelSpan;
+      }
+
+      /* Where the wind mostly came from, in place of where the vane points now. */
+      var vane = tile && tile.querySelector('.wind-now');
+      if (vane) {
+        if (vane.dataset.asWritten === undefined) {
+          vane.dataset.asWritten = vane.textContent;
+        }
+        vane.textContent = (found && found.dir) || vane.dataset.asWritten;
+      }
+
+      /* The two ends belong to the same card and move with it. */
+      var range = tile ? tile.querySelector('.tile-range') : null;
+      if (!range) return;
+      ['lo', 'hi'].forEach(function (end) {
+        var cell = range.querySelector('[data-range="' + end + '"]');
+        if (!cell) return;
+        if (cell.dataset.dayValue === undefined) {
+          cell.dataset.dayValue = cell.dataset.value || '';
+        }
+        setSpanValue(cell, found ? found[end] : cell.dataset.dayValue);
+      });
+    });
+
+    applyUnitsToPanels(panel);
+  }
+
+  /* One figure swapped in, written as the server would have written it so that
+     the unit conversion has something to work from. */
+  function setSpanValue(el, value) {
+    if (value === null || value === undefined || value === '') {
+      el.removeAttribute('data-value');
+      return;
+    }
+    el.dataset.value = value;
+    /* 'as-written' is what the conversion falls back to, so it has to move too. */
+    var target = el.querySelector('[data-unit-value]') || el;
+    var digits = decimalsFor(el.dataset.unit);
+    var written = Number(value).toFixed(digits === undefined ? 1 : digits);
+    el.dataset.asWritten = written;
+    target.textContent = written;
   }
 
   /* The name of the calendar unit on screen: "Tuesday, 18 August 2026" for a day,
@@ -2286,7 +2378,7 @@
 
      A section is swapped if it carries 'data-live-panel'. A section that holds
      something the templates cannot render says so by not carrying the attribute: the
-     charts hold uPlot instances, the map holds a Google Maps object, and the report
+     charts hold chart instances, the map holds a Google Maps object, and the report
      picker holds the reader's choice of month. Each of those is brought forward its
      own way instead. */
   var pageFetch = false;
