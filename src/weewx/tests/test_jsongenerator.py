@@ -556,10 +556,9 @@ class TestPeriodFiles:
 
         assert run(skin_dict)['images'] is False
 
-        # SummaryImageGenerator has the word in its name and draws one picture of
-        # the current readings, not a plot per chart.
+        # A generator whose name merely holds the word draws no plots.
         skin_dict['Generators']['generator_list'] = \
-            'weewx.jsongenerator.JSONGenerator, weewx.summaryimage.SummaryImageGenerator'
+            'weewx.jsongenerator.JSONGenerator, user.gallery.ImageGalleryGenerator'
         assert run(skin_dict)['images'] is False
 
         skin_dict['Generators']['generator_list'] = \
@@ -1540,71 +1539,6 @@ class TestRebuildDue:
     def test_under_a_day_falls_back_to_elapsed_time(self):
         assert weewx.jsongenerator._rebuild_due(1000, 1000 + 3600, 3600)
         assert not weewx.jsongenerator._rebuild_due(1000, 1000 + 3599, 3600)
-
-
-class TestSummaryImage:
-    """The picture of the current readings, which is what people actually link to."""
-
-    @staticmethod
-    def _run(config_dict, tmp_path, **overrides):
-        import weewx.summaryimage
-
-        html_root = str(tmp_path)
-        skin_dict = build_skin_dict(html_root)
-        summary = {'enable': 'true', 'filename': 'current.png',
-                   'observations': 'outTemp, windSpeed, rain, barometer'}
-        summary.update(overrides)
-        skin_dict['SummaryImageGenerator'] = summary
-
-        config_dict = configobj.ConfigObj(config_dict.dict(), interpolation=False)
-        stn_info = weewx.station.StationInfo(**config_dict['Station'])
-
-        generator = weewx.summaryimage.SummaryImageGenerator(
-            config_dict, skin_dict, parameters.synthetic_dict['stop_ts'],
-            first_run=True, stn_info=stn_info)
-        try:
-            generator.start()
-        finally:
-            generator.finalize()
-        return os.path.join(html_root, summary['filename'])
-
-    def test_writes_an_image(self, config_dict, tmp_path):
-        from PIL import Image
-
-        path = self._run(config_dict, tmp_path)
-        assert os.path.exists(path), "no image written"
-
-        with Image.open(path) as img:
-            assert img.format == 'PNG'
-            # Default width is 900, drawn at 2x and downsampled back.
-            assert img.width == 900
-            # Tall enough for a title and two rows of readings, not a sliver.
-            assert 150 < img.height < 400
-
-    def test_disabled_by_default(self, config_dict, tmp_path):
-        path = self._run(config_dict, tmp_path, enable='false')
-        assert not os.path.exists(path)
-
-    def test_width_and_columns_are_honoured(self, config_dict, tmp_path):
-        from PIL import Image
-
-        one = self._run(config_dict, tmp_path, width='600', columns='1',
-                        filename='narrow.png')
-        with Image.open(one) as img:
-            assert img.width == 600
-            narrow_height = img.height
-
-        two = self._run(config_dict, tmp_path, width='600', columns='2',
-                        filename='wide.png')
-        with Image.open(two) as img:
-            # Same readings in two columns need fewer rows, so less height.
-            assert img.height < narrow_height
-
-    def test_survives_an_unknown_observation(self, config_dict, tmp_path):
-        """A type this station does not have must be skipped, not crash the report."""
-        path = self._run(config_dict, tmp_path,
-                         observations='outTemp, thisDoesNotExist, barometer')
-        assert os.path.exists(path)
 
 
 class TestSkinLocalization:

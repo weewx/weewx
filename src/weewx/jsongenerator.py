@@ -678,9 +678,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             generators = self.skin_dict['Generators']['generator_list']
         except (KeyError, TypeError):
             return False
-        # The dots keep 'summaryimage.SummaryImageGenerator' out. That name holds
-        # the word too, and it draws one picture of the current readings, not a
-        # PNG per plot.
+        # The dots are deliberate: a generator whose name merely holds the word
+        # 'image' is not one that writes a PNG per plot.
         return any('.imagegenerator.' in str(g).lower()
                    for g in weeutil.weeutil.option_as_list(generators))
 

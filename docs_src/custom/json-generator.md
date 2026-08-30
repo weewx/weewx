@@ -167,35 +167,6 @@ Horizon skin puts one in its masthead.
 Nothing needs configuring for this. If you would rather not have it, drop the
 switch from the template.
 
-## A picture of the current readings
-
-WeeWX has always been able to draw a time series. It has never been able to
-draw the *numbers*. A picture of the current readings is what people paste into
-a forum post, a signature, or a chat window, and unlike a screenshot, a file at
-a fixed URL stays current on its own.
-
-`weewx.summaryimage.SummaryImageGenerator` writes one, redrawn each report
-cycle:
-
-``` ini
-[Generators]
-    generator_list = …, weewx.summaryimage.SummaryImageGenerator
-
-[SummaryImageGenerator]
-    enable = true
-    filename = current.png
-    observations = outTemp, windSpeed, rain, barometer
-    width = 900
-    columns = 2
-```
-
-Labels, units and formatting come from the skin, so the image says the same
-thing, in the same language, as the page beside it. An observation type your
-station does not have costs you that one reading, not the image.
-
-Its options are in the reference,
-[_[SummaryImageGenerator]_](../reference/skin-options/summaryimagegenerator.md).
-
 ## Publishing over FTP or rsync
 
 Nothing special is needed. `FtpGenerator` and `RsyncGenerator` walk
