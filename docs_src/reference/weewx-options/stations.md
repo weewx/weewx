@@ -85,6 +85,25 @@ Valid station types include:
 | **WS28xx**        | La Crosse 28xx stations.                                                |
 
 
+#### loop_timeout
+
+The time (in seconds) WeeWX will wait for the station driver to answer. If the
+deadline passes, WeeWX logs the error, then waits `retry_wait` seconds and
+starts a new engine. No default: without this option WeeWX waits indefinitely.
+
+The deadline applies to every call to the driver, including the wait for the
+next LOOP packet. It must therefore be longer than the longest quiet spell your
+hardware produces.
+
+``` ini
+loop_timeout = 300
+```
+
+!!! note
+
+    Under this option the driver runs on a thread of its own. A driver that
+    registers signal handlers cannot be used with it.
+
 #### ==station_url==
 
 If you have a website, you may optionally specify an URL for its HTML server.

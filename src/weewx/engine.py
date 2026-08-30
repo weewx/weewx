@@ -21,11 +21,12 @@ import weeutil.config
 import weeutil.logger
 import weeutil.weeutil
 import weewx.accum
+import weewx.loopguard
 import weewx.manager
 import weewx.qc
 import weewx.station
 import weewx.units
-from weeutil.weeutil import to_bool, to_int, to_sorted_string
+from weeutil.weeutil import to_bool, to_float, to_int, to_sorted_string
 from weewx import all_service_groups
 
 log = logging.getLogger(__name__)
@@ -114,6 +115,12 @@ class StdEngine:
             loader_function = getattr(driver_module, 'loader')
             # Call it with the configuration dictionary as the only argument:
             self.console = loader_function(config_dict, self)
+            # Option 'loop_timeout' asks for the driver to be guarded, so that a
+            # station which stops answering cannot stall the main loop. See
+            # weewx.loopguard for what that catches, and what it costs.
+            loop_timeout = to_float(config_dict['Station'].get('loop_timeout'))
+            if loop_timeout:
+                self.console = weewx.loopguard.LoopGuard(self.console, loop_timeout)
         except Exception as ex:
             log.error("Import of driver failed: %s (%s)", ex, type(ex))
             weeutil.logger.log_traceback(log.critical, "    ****  ")
