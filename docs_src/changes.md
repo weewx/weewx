@@ -1,6 +1,14 @@
 WeeWX change history
 --------------------
 
+### 5.6.0
+
+Added option `loop_timeout`. If set, WeeWX gives up on a station driver that has
+stopped answering, then restarts the engine. Without it, a driver that blocks and
+never returns takes the archive, the reports and the uploads with it.
+[PR #1135](https://github.com/weewx/weewx/pull/1135).
+
+
 ### 5.5.0 6-Aug-2026
 
 Added the ability for services to bind to a `SHUTDOWN` event. This allows
