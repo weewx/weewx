@@ -260,14 +260,21 @@
     return unitChoices;
   }
 
-  /* The unit this series should be shown in, or null to leave it as it came. */
+  /* The unit this series should be shown in, or null to leave it as it came.
+
+     With no system chosen the report's own units apply. That matters for readings
+     the page fetches rather than renders: the forecast comes from Open-Meteo in
+     Celsius and km/h whatever the station is set to, and showing it in metric
+     beside a page of Fahrenheit is worse than either on its own. Everything the
+     server wrote is already in these units, so for those this converts nothing. */
   function targetUnit(obsType, fromUnit) {
     var table = unitTable();
     var system = recall('units', '');
-    if (!table || !system || !fromUnit) return null;
+    if (!table || !fromUnit) return null;
     var group = table.groups && table.groups[obsType];
-    var wanted = group && table.systems && table.systems[system]
-      && table.systems[system][group];
+    var wanted = group && (system
+      ? (table.systems && table.systems[system] && table.systems[system][group])
+      : (table.report && table.report[group]));
     if (!wanted || wanted === fromUnit) return null;
     if (!table.convert || !table.convert[fromUnit]
         || !table.convert[fromUnit][wanted]) return null;

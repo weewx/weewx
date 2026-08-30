@@ -594,6 +594,31 @@ class TestPeriodFiles:
         assert entry['obs_types'] == ['outTemp', 'dewpoint']
         assert entry['title']
 
+    def test_the_index_says_which_units_the_report_used(self, config_dict, tmp_path):
+        """A reading the page fetches for itself has to be put in the same units.
+
+        The forecast arrives in Celsius whichever source answered. Without this the
+        page can only convert once a reader has picked a system by hand, and
+        'Default' then means whatever the reading came in.
+        """
+        data_dir = run_generator(config_dict, tmp_path)
+        with open(os.path.join(data_dir, 'index.json'), encoding='utf-8') as fd:
+            index = json.load(fd)
+        units = index['units']
+
+        # Whatever the skin is set to, this has to be what the files were actually
+        # written in. Comparing against a fixed unit would only restate the test
+        # skin's configuration.
+        plot = next(p for p in index['plots'] if p['name'] == 'daytempdew')
+        with open(os.path.join(data_dir, 'daytempdew.json'), encoding='utf-8') as fd:
+            written = json.load(fd)['unit']
+        assert units['report'][units['groups']['outTemp']] == written
+        assert plot['obs_types'][0] == 'outTemp'
+
+        # Every group the page may show a reading from is named, or a reading the
+        # page fetches for itself has nothing to be converted into.
+        assert set(units['report']) >= set(units['groups'].values()) - {None}
+
 
 class TestArchive:
 

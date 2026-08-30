@@ -291,7 +291,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                              # The files hold one unit each, whichever the skin asked
                              # for, so without this a page cannot offer a second.
                              'units': _unit_choices(obs_types, units_seen,
-                                                    self.formatter),
+                                                    self.formatter, self.converter),
                              'plots': manifest},
                             indent)
             except OSError as e:
@@ -1455,7 +1455,7 @@ def _linear(convert, from_unit, to_unit):
     return [round(factor, 12), round(at_zero, 12)]
 
 
-def _unit_choices(obs_types, units_seen, formatter):
+def _unit_choices(obs_types, units_seen, formatter, converter):
     """What the page needs in order to show these readings in another unit.
 
     Everything a plot file carries is already converted, into whatever the skin asked
@@ -1468,11 +1468,14 @@ def _unit_choices(obs_types, units_seen, formatter):
         obs_types (set[str]): The observation types the page shows.
         units_seen (set[str]): The units those readings were written in.
         formatter (weewx.units.Formatter): The formatter the report was rendered with.
+        converter (weewx.units.Converter): The converter it was rendered with.
 
     Returns:
-        dict: Four keys. 'groups' maps an observation type to its unit group.
-            'systems' maps a system name to the unit it uses for each group.
-            'convert' maps a unit to each unit it can be turned into, as
+        dict: Six keys. 'groups' maps an observation type to its unit group.
+            'systems' maps a system name to the unit it uses for each group, and
+            'report' does the same for the report itself, so that a reading the
+            page adds after rendering can be put in the unit the server would have
+            used. 'convert' maps a unit to each unit it can be turned into, as
             [factor, offset]. 'labels' and 'formats' give the label and the number
             format for each unit, so that the page writes "18.5 °C" the way the
             server would have.
@@ -1540,8 +1543,19 @@ def _unit_choices(obs_types, units_seen, formatter):
         if fmt:
             formats[unit] = fmt
 
-    return {'groups': groups, 'systems': by_system, 'convert': convert,
-            'labels': labels, 'formats': formats}
+    # What the report itself renders in. Everything the server writes is already in
+    # these units, but a reading the page fetches for itself is not: the forecast
+    # arrives in Celsius whatever the station uses. Without this the page can only
+    # convert once a reader has picked a system by hand, and "Default" then means
+    # metric rather than what the skin is set to.
+    report = {}
+    for group in sorted(set(groups.values())):
+        unit = converter.group_unit_dict.get(group)
+        if unit:
+            report[group] = unit
+
+    return {'groups': groups, 'systems': by_system, 'report': report,
+            'convert': convert, 'labels': labels, 'formats': formats}
 
 
 def _write_json(path, payload, indent):
