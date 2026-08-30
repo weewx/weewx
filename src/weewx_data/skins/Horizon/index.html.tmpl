@@ -50,63 +50,21 @@
 #end if
       <div class="$columns">
 
+## Both columns are lists of .inc files from the skin directory, so a panel can be
+## moved from one to the other, or left out, without touching this template. The
+## charts are 'history' and the statistics are 'hilo', so those move too. Adding
+## your own means writing 'myPanel.inc' and naming it in one of the lists. Give
+## the panel's section a 'data-live-panel' attribute and it is refreshed with the
+## rest on a new record.
+#set $main_panels = $to_list($DisplayOptions.get('main_panels', ['history', 'hilo']))
+#set $panels = $to_list($DisplayOptions.get('panels', ['current', 'sunmoon', 'imagery', 'sensors', 'about']))
         <div class="stack">
-          <section class="panel">
-            <div class="panel-head">
-              <h2>$gettext("History")</h2>
-              <div class="tabs" id="period-tabs" role="tablist" aria-label="$gettext('Time span')">
-#for $period in $periods
-                <button type="button" role="tab" data-period="$period"
-                        aria-selected="#if $period == $periods[0] then 'true' else 'false'#"
-                        aria-controls="charts">$gettext($period.capitalize())</button>
+#for $panel in $main_panels
+          #include $panel + ".inc"
 #end for
-              </div>
-            </div>
-            <div class="range-bar">
-              <div class="range-nav">
-                <button type="button" id="range-back" class="range-button"
-                        aria-label="$gettext('Earlier')">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
-                </button>
-                <div class="range-label-wrap">
-                  <button type="button" id="range-label" class="range-label"
-                          aria-haspopup="dialog" aria-expanded="false"
-                          title="$gettext('Jump to a date')">$gettext("Now")</button>
-                  <div id="range-cal" class="range-cal" role="dialog" hidden
-                       aria-label="$gettext('Jump to a date')"></div>
-                </div>
-                <button type="button" id="range-fwd" class="range-button"
-                        aria-label="$gettext('Later')" disabled>
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
-                </button>
-              </div>
-              <div class="range-extra">
-                <button type="button" id="range-now" class="range-now" hidden>$gettext("Now")</button>
-                <button type="button" id="range-share" class="range-now"
-                        title="$gettext('Link to this view')">$gettext("Share")</button>
-              </div>
-            </div>
-
-            <div class="panel-body flush">
-              <div id="charts" class="charts" role="tabpanel" tabindex="-1"
-                   aria-live="polite" aria-busy="true">
-                <p class="chart-empty">$gettext("Loading charts")&hellip;</p>
-              </div>
-              <noscript>
-                <p class="chart-empty">$gettext("Charts need JavaScript. The statistics below work without it.")</p>
-              </noscript>
-            </div>
-          </section>
-
-          #include "hilo.inc"
         </div>
 
         <div class="stack">
-## Which panels appear beside the charts, and in what order. Each name is an .inc
-## file in the skin directory, so adding your own means writing that file and naming
-## it in this list. This template does not have to change. Give the panel's section a
-## 'data-live-panel' attribute and it is refreshed with the rest on a new record.
-#set $panels = $to_list($DisplayOptions.get('panels', ['current', 'sunmoon', 'imagery', 'sensors', 'about']))
 #for $panel in $panels
           #include $panel + ".inc"
 #end for

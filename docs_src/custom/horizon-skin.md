@@ -21,15 +21,20 @@ rest:
     sidebar_responsive = bottom         # or top, when there is only one
 
     plot_groups = tempdew, wind, rain, ...
+    main_panels = history, hilo
     panels      = current, forecast, sunmoon, planets, imagery, sensors, about
 ```
 
-`plot_groups` and `panels` set what appears and in what order. To take something
-out and keep it to hand, copy the line, comment one copy out, and edit the
-other.
+`plot_groups` sets which charts appear and in what order. To take something out
+and keep it to hand, copy the line, comment one copy out, and edit the other.
+
+The page is two columns of panels, and both are lists: `main_panels` is the wide
+one, `panels` the narrower one beside it. `history` is the charts with their span
+switcher and `hilo` the statistics table, so those can be moved or left out like
+any other. Only one `history` belongs on a page.
 
 A panel is an `.inc` file in the skin directory. Write your own, add its name to
-`panels`, and it appears. No template editing.
+either list, and it appears. No template editing.
 
 ## The cards
 
@@ -86,7 +91,8 @@ These are its own:
 |---|---|
 | `sidebar` | Which side the panels sit on, `right` or `left`, where there is room for two columns. |
 | `sidebar_responsive` | Where they go when there is not: `bottom` or `top`. |
-| `panels` | Which panels appear beside the charts, and in what order. Each name is an `.inc` file in the skin directory, so a panel of your own is a file plus a name in this list. |
+| `main_panels` | Which panels fill the wide column, and in what order. Default is `history, hilo`: the charts, then the statistics table. |
+| `panels` | Which panels appear beside them, and in what order. Each name in either list is an `.inc` file in the skin directory, so a panel of your own is a file plus a name in one of them. |
 | `dashboard_lead` | The one reading set large at the top of the current conditions card. Defaults to the first entry in `observations_headline`. |
 | `dashboard_readings` | The rows underneath it, in order. Defaults to `observations_current`. Anything the station does not record is skipped, so the list may name more than you have. |
 | `observations_headline` | The types shown large at the top of the page. Three or four is about right on a phone. |
