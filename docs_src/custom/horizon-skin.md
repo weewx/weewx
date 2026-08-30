@@ -194,8 +194,7 @@ browser or the theme toggle asks for a dark page.
 | `fs-xs` … `fs-huge` | type sizes, from the small print to the headline figure |
 
 The chart *line* colours are not here. They come from `chart_line_colors` in
-`[ImageGenerator]`, where the PNGs take them too, so a chart and the image of
-the same plot stay the same colour.
+`[JSONGenerator]`, beside the plot they belong to.
 
 ## Going beyond the names
 

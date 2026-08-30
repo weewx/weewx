@@ -55,28 +55,26 @@ So if you set `chart_background_color` and the charts stay as they were, this
 is why. Their colors come from the page, through `[[Theme]]` under
 `[DisplayOptions]`.
 
-The full split is listed in the skin's own `skin.conf`, at the head of the
-`[ImageGenerator]` section.
+The full split is listed in the skin's own `skin.conf`, with the plot
+definitions in `[JSONGenerator]`.
 
 ## Using a different set of plots
 
 Suppose you want the charts and the PNGs to show different things. Or suppose
 you run no Image generator at all, and would rather not keep a section named
-after one. Option
-[`source`](../reference/skin-options/jsongenerator.md#source) points the
-generator somewhere else:
+after one. Put the definitions in `[JSONGenerator]` and they are used instead:
 
 ``` ini hl_lines="2"
 [JSONGenerator]
-    source = MyPlots
-
-[MyPlots]
     chart_line_colors = "#118844"
     [[day_images]]
         [[[mything]]]
             time_length = 6h
             [[[[outTemp]]]]
 ```
+
+`[ImageGenerator]` is read only where this section holds no plots at all, so
+there is no mixing the two.
 
 Same syntax, same option names, nothing shared with the images.
 

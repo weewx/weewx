@@ -99,34 +99,25 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # Translated text strings:
         self.text_dict = self.skin_dict.get('Texts', {})
 
-        # Which section holds the plot definitions. [JSONGenerator] when the skin
-        # has one, [ImageGenerator] otherwise, so a skin written before this
-        # generator existed needs no new configuration. 'source' names a third
-        # section instead.
-        #
         # An empty section, not an empty dict: search_up() climbs the tree through
         # .parent, which a plain dict does not have.
         if 'JSONGenerator' not in self.skin_dict:
             self.skin_dict['JSONGenerator'] = {}
         self.gen_dict = self.skin_dict['JSONGenerator']
-        source = self.gen_dict.get('source')
-        if source:
-            named = True
-        else:
-            source, named = 'JSONGenerator', False
 
-        self.plot_dict = self.skin_dict.get(source, {})
-        if not _holds_plots(self.plot_dict):
-            if named:
-                log.error("Section [%s] holds no plot definitions. "
-                          "JSON generation skipped.", source)
-                self.plot_dict = {}
-            else:
-                self.plot_dict = self.skin_dict.get('ImageGenerator', {})
-                if not _holds_plots(self.plot_dict):
-                    log.error("No plot definitions found, in [JSONGenerator] or "
-                              "[ImageGenerator]. JSON generation skipped.")
-                    self.plot_dict = {}
+        # Where the plot definitions are. This section, when the skin puts them
+        # here, which is what a skin drawing only charts does. Otherwise
+        # [ImageGenerator], so that a skin drawing both defines each plot once and
+        # a skin written before this generator existed needs no new configuration.
+        self.plot_dict = {}
+        for name in ('JSONGenerator', 'ImageGenerator'):
+            section = self.skin_dict.get(name)
+            if section is not None and _holds_plots(section):
+                self.plot_dict = section
+                break
+        else:
+            log.error("No plot definitions found, in [JSONGenerator] or "
+                      "[ImageGenerator]. JSON generation skipped.")
 
         self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)

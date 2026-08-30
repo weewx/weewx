@@ -425,22 +425,22 @@ class TestPeriodFiles:
         data_dir = os.path.join(html_root, 'data')
         assert 'daytempdew.json' in os.listdir(data_dir)
 
-    def test_plots_can_come_from_another_section(self, config_dict, tmp_path):
-        """'source' points the generator at a section of its own.
+    def test_plots_can_live_in_this_generators_own_section(self, config_dict, tmp_path):
+        """A skin running no ImageGenerator keeps its plots here.
 
         Sharing [ImageGenerator] means a plot is defined once and both the image
-        and the chart have it. Anyone who would rather keep them apart, or who
-        runs no ImageGenerator at all, names their own section instead.
+        and the chart have it. A skin that draws only charts has no image
+        generator, and should not need a section named after one.
         """
         html_root = str(tmp_path)
         skin_dict = build_skin_dict(html_root)
-        skin_dict['JSONGenerator']['source'] = 'MyPlots'
-        skin_dict['MyPlots'] = {
+        skin_dict['JSONGenerator'].update({
             'chart_line_colors': '#118844',
             'day_images': {
                 'mything': {'time_length': '6h', 'outTemp': {'label': 'Mine'}},
             },
-        }
+        })
+        del skin_dict['ImageGenerator']
         cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
         stn_info = weewx.station.StationInfo(**cd['Station'])
 
@@ -462,11 +462,28 @@ class TestPeriodFiles:
         assert payload['series'][0]['color'] == '#118844'
         assert payload['stop'] - payload['start'] == 6 * 3600
 
-    def test_a_missing_source_section_is_reported(self, config_dict, tmp_path):
-        """Naming a section that is not there writes nothing, and says why."""
+    def test_the_image_generator_section_still_serves(self, config_dict, tmp_path):
+        """A skin written before this generator existed needs no new configuration."""
         html_root = str(tmp_path)
         skin_dict = build_skin_dict(html_root)
-        skin_dict['JSONGenerator']['source'] = 'NotThere'
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        stn_info = weewx.station.StationInfo(**cd['Station'])
+
+        generator = weewx.jsongenerator.JSONGenerator(
+            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
+            first_run=True, stn_info=stn_info)
+        try:
+            generator.start()
+        finally:
+            generator.finalize()
+
+        assert 'daytempdew.json' in os.listdir(os.path.join(html_root, 'data'))
+
+    def test_no_plot_definitions_anywhere_is_reported(self, config_dict, tmp_path):
+        """A skin with no plots at all writes nothing, and says why."""
+        html_root = str(tmp_path)
+        skin_dict = build_skin_dict(html_root)
+        del skin_dict['ImageGenerator']
         cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
         stn_info = weewx.station.StationInfo(**cd['Station'])
 
