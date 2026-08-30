@@ -37,7 +37,7 @@ default distribution.
 | `data_services`	   |                                                                                                                                          |
 | `process_services` | `weewx.engine.StdConvert` <br> `weewx.engine.StdCalibrate` <br> `weewx.engine.StdQC` <br> `weewx.wxservices.StdWXCalculate`              |
 | `xtype_services`   | `weewx.wxxtypes.StdWXXTypes` <br/> `weewx.wxxtypes.StdPressureCooker`<br/> `weewx.wxxtypes.StdRainRater` <br/> `weewx.wxxtypes.StdDelta` |
-| `archive_services` | `weewx.engine.StdArchiveGenerator` <br> `weewx.engine.StdArchiveStore`                                                                                                                                                         |
+| `archive_services` | `weewx.engine.StdArchiveCreator` <br> `weewx.engine.StdArchiveStore`                                                                                                                                                         |
 | `restful_services` | `weewx.restx.StdStationRegistry` <br>`weewx.restx.StdWunderground` <br>`weewx.restx.StdPWSweather` <br>`weewx.restx.StdCWOP` <br>`weewx.restx.StdWOW` <br>`weewx.restx.StdAWEKAS` |
 | `report_services`  | `weewx.engine.StdPrint` <br> `weewx.engine.StdReport`                                                                                                                             |
 
@@ -74,10 +74,10 @@ the data. Typically, they calculate derived variables such as `dewpoint`,
 
 Once data have been processed, services in this group archive them. There are two,
 and they talk to each other only through the `NEW_ARCHIVE_RECORD` event:
-`StdArchiveGenerator` turns LOOP packets into archive records and emits the event,
+`StdArchiveCreator` turns LOOP packets into archive records and emits the event,
 `StdArchiveStore` listens for it and writes to the database. Either one can be
 replaced on its own. An extension that builds records some other way takes the place
-of the generator; a second `StdArchiveStore`, given another data binding, saves the
+of the creator; a second `StdArchiveStore`, given another data binding, saves the
 same records to another database.
 
 `weewx.engine.StdArchive` does both jobs in one service. Configurations written

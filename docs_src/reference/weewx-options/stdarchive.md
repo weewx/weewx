@@ -1,6 +1,6 @@
 # [StdArchive]
 
-This section configures both of the archive services. `StdArchiveGenerator` makes
+This section configures both of the archive services. `StdArchiveCreator` makes
 archive records out of LOOP packets, `StdArchiveStore` puts them in a database, and
 they read the options below out of the same section.
 

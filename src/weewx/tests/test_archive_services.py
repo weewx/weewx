@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2026 the WeeWX contributors
+#    Copyright (c) 2026 Manuel Hilgert
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -147,7 +147,7 @@ class TestTheHalvesTogether:
 
     def test_records_reach_the_database(self):
         engine = Engine()
-        weewx.engine.StdArchiveGenerator(engine, config())
+        weewx.engine.StdArchiveCreator(engine, config())
         weewx.engine.StdArchiveStore(engine, config())
 
         manager = feed(engine, A_DAY)
@@ -165,7 +165,7 @@ class TestTheHalvesTogether:
 
     def test_the_database_is_prepared_once(self):
         engine = Engine()
-        weewx.engine.StdArchiveGenerator(engine, config())
+        weewx.engine.StdArchiveCreator(engine, config())
         weewx.engine.StdArchiveStore(engine, config())
 
         feed(engine, A_DAY)
@@ -179,7 +179,7 @@ class TestEitherHalfAlone:
     def test_the_generator_writes_nothing(self):
         """It emits the event. Without a store, nothing reaches the database."""
         engine = Engine()
-        weewx.engine.StdArchiveGenerator(engine, config())
+        weewx.engine.StdArchiveCreator(engine, config())
         seen = []
         engine.bind(weewx.NEW_ARCHIVE_RECORD, lambda e: seen.append(e.record))
 
@@ -233,7 +233,7 @@ class TestTheAccumulatorTravels:
 
     def test_it_arrives_with_the_record(self):
         engine = Engine()
-        weewx.engine.StdArchiveGenerator(engine, config())
+        weewx.engine.StdArchiveCreator(engine, config())
         weewx.engine.StdArchiveStore(engine, config())
 
         manager = feed(engine, A_DAY)
@@ -249,7 +249,7 @@ class TestTheAccumulatorTravels:
         old = {'dateTime': START - 10 * INTERVAL, 'usUnits': weewx.US,
                'outTemp': 1.0, 'interval': INTERVAL / 60}
         engine = Engine(console=HardwareConsole([old]))
-        weewx.engine.StdArchiveGenerator(engine, config(record_generation='hardware'))
+        weewx.engine.StdArchiveCreator(engine, config(record_generation='hardware'))
         weewx.engine.StdArchiveStore(engine, config(record_generation='hardware'))
 
         manager = feed(engine, A_DAY)
@@ -265,7 +265,7 @@ class TestAugmentation:
         ends_at = START + INTERVAL
         from_console = {'dateTime': ends_at, 'usUnits': weewx.US, 'interval': INTERVAL / 60}
         engine = Engine(console=HardwareConsole([from_console]))
-        weewx.engine.StdArchiveGenerator(engine, config(record_generation='hardware',
+        weewx.engine.StdArchiveCreator(engine, config(record_generation='hardware',
                                                         no_catchup='true'))
         seen = []
         engine.bind(weewx.NEW_ARCHIVE_RECORD, lambda e: seen.append(dict(e.record)))
@@ -281,9 +281,9 @@ class TestAugmentation:
         ends_at = START + INTERVAL
         from_console = {'dateTime': ends_at, 'usUnits': weewx.US, 'interval': INTERVAL / 60}
         engine = Engine(console=HardwareConsole([from_console]))
-        weewx.engine.StdArchiveGenerator(engine, config(record_generation='hardware',
-                                                        record_augmentation='false',
-                                                        no_catchup='true'))
+        weewx.engine.StdArchiveCreator(engine, config(record_generation='hardware',
+                                                     record_augmentation='false',
+                                                     no_catchup='true'))
         seen = []
         engine.bind(weewx.NEW_ARCHIVE_RECORD, lambda e: seen.append(dict(e.record)))
 
@@ -299,24 +299,24 @@ class TestConfiguration:
     def test_an_unknown_generation_is_refused_at_startup(self):
         engine = Engine()
         with pytest.raises(ValueError):
-            weewx.engine.StdArchiveGenerator(engine, config(record_generation='nonsense'))
+            weewx.engine.StdArchiveCreator(engine, config(record_generation='nonsense'))
 
     def test_a_delay_of_zero_is_refused(self):
         engine = Engine()
         with pytest.raises(weewx.ViolatedPrecondition):
-            weewx.engine.StdArchiveGenerator(engine, config(archive_delay='0'))
+            weewx.engine.StdArchiveCreator(engine, config(archive_delay='0'))
 
     def test_no_catchup_leaves_the_console_alone(self):
         console = HardwareConsole([{'dateTime': START - INTERVAL, 'usUnits': weewx.US}])
         engine = Engine(console=console)
-        weewx.engine.StdArchiveGenerator(engine, config(record_generation='hardware',
-                                                        no_catchup='true'))
+        weewx.engine.StdArchiveCreator(engine, config(record_generation='hardware',
+                                                     no_catchup='true'))
         engine.dispatchEvent(weewx.Event(weewx.STARTUP))
 
         assert console.asked_from == []
 
     def test_the_store_needs_no_generation_settings(self):
-        """It is the half that a replacement generator keeps, so it must not depend on
+        """It is the half that a replacement creator keeps, so it must not depend on
         how records are made."""
         engine = Engine()
         store = weewx.engine.StdArchiveStore(engine, config(record_generation='nonsense'))

@@ -551,7 +551,7 @@ class StdQC(StdService):
 #                    Class StdArchive
 # ==============================================================================
 
-class StdArchiveGenerator(StdService):
+class StdArchiveCreator(StdService):
     """Service that turns LOOP packets into archive records.
 
     It manages an "accumulator", which records high/lows and averages of LOOP packets
@@ -807,7 +807,7 @@ class StdArchiveStore(StdService):
 
     It listens for NEW_ARCHIVE_RECORD and knows nothing about where the record came
     from, so anything that emits that event is served: the accumulator in
-    StdArchiveGenerator, or an extension that replaces it.
+    StdArchiveCreator, or an extension that replaces it.
     """
 
     def __init__(self, engine, config_dict):
@@ -866,13 +866,13 @@ class StdArchive(StdService):
     """Generate archive records and save them, in one service.
 
     This is what a configuration written before v5.5 names, and it behaves as it always
-    has. A configuration that lists StdArchiveGenerator and StdArchiveStore separately
+    has. A configuration that lists StdArchiveCreator and StdArchiveStore separately
     can replace either half.
     """
 
     def __init__(self, engine, config_dict):
         super().__init__(engine, config_dict)
-        self.generator = StdArchiveGenerator(engine, config_dict)
+        self.creator = StdArchiveCreator(engine, config_dict)
         self.store = StdArchiveStore(engine, config_dict)
 
 
