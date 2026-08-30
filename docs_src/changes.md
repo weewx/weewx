@@ -1,6 +1,13 @@
 WeeWX change history
 --------------------
 
+### 5.6.0
+
+Added service `StdStationWatch`, which issues `STATION_DOWN` and `STATION_UP` as
+the archive data stops and starts. Set `max_age` to switch it on.
+[PR #1137](https://github.com/weewx/weewx/pull/1137).
+
+
 ### 5.5.0 6-Aug-2026
 
 Added the ability for services to bind to a `SHUTDOWN` event. This allows
