@@ -22,13 +22,12 @@ could no longer edit it, and the passwords in it became world-readable. [PR
 Removed the APRS "messaging-capable" packet flag from `restx.py`.
 [PR #1108](https://github.com/weewx/weewx/pull/1108), by `W0CHP`.
 
-
-### 5.5.0 6-Aug-2026
-
 Split `StdArchive` into `StdArchiveCreator`, which makes archive records, and
 `StdArchiveStore`, which saves them, so that either can be replaced on its own.
 `StdArchive` still runs both, so an existing configuration is unaffected.
 [PR #1129](https://github.com/weewx/weewx/issues/1129).
+
+### 5.5.0 6-Aug-2026
 
 Added the ability for services to bind to a `SHUTDOWN` event. This allows
 services to be notified when `weewxd` is being shutdown. 
