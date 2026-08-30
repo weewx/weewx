@@ -1340,6 +1340,12 @@ select.report-select {
 .stat-lo { color: var(--lo); }
 .when { display: block; font-size: var(--fs-xs); color: var(--ink-faint); font-weight: 400; }
 
+/* A high and a low each carry their own time, so the cell holds two stacked
+   pairs rather than two numbers with one timestamp between them. Aligned to the
+   top, or the pair whose time wrapped would drag the other one down with it. */
+.stat-pair { display: inline-block; vertical-align: top; }
+.stat-slash { display: inline-block; vertical-align: top; margin: 0 0.35rem; color: var(--ink-faint); }
+
 /* Two halves of one panel, side by side where the panel is wide enough for two
    and stacked where it is not. The rule between them is the panel's own division,
    so it runs the full height rather than stopping at the shorter half. */

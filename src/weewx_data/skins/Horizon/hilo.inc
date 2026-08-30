@@ -82,9 +82,9 @@
             <th scope="row" class="metric">$obs.label[$x] $stat_unit($x)</th>
       #for $timespan in $timespans
             <td class="num" data-label="$gettext($timespan.capitalize())">
-              <span class="stat-hi">$stat_cell($getVar('%s.%s.max' % ($timespan, $x)), $x)</span> /
-              <span class="stat-lo">$stat_cell($getVar('%s.%s.min' % ($timespan, $x)), $x)</span>
-              <span class="when">$getVar('%s.%s.maxtime' % ($timespan, $x))</span>
+              <span class="stat-pair"><span class="stat-hi">$stat_cell($getVar('%s.%s.max' % ($timespan, $x)), $x)</span><span class="when">$getVar('%s.%s.maxtime' % ($timespan, $x))</span></span>
+              <span class="stat-slash">/</span>
+              <span class="stat-pair"><span class="stat-lo">$stat_cell($getVar('%s.%s.min' % ($timespan, $x)), $x)</span><span class="when">$getVar('%s.%s.mintime' % ($timespan, $x))</span></span>
             </td>
       #end for
           </tr>
