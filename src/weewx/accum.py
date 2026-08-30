@@ -127,11 +127,18 @@ class FirstLastAccum:
 
     def getStatsTuple(self):
         """Return a stats-tuple. That is, a tuple containing the gathered statistics.
-        This tuple can be used to update the stats database"""
+        This tuple can be used to update the stats database
+
+        Returns: tuple. The gathered statistics.
+        """
         return FirstLastAccum.default_init
 
     def mergeHiLo(self, x_stats):
-        """Merge the highs and lows of another accumulator into myself."""
+        """Merge the highs and lows of another accumulator into myself.
+
+        x_stats (FirstLastAccum): The other accumulator, whose highs and lows are to be merged
+        into myself.
+        """
         if x_stats.firsttime is not None:
             if self.firsttime is None or x_stats.firsttime < self.firsttime:
                 self.firsttime = x_stats.firsttime
@@ -147,8 +154,8 @@ class FirstLastAccum:
 
     def addHiLo(self, val, ts):
         """Include a value in my stats.
-        val: A value of almost any type.
-        ts:  The timestamp.
+        val (object): A value of almost any type.
+        ts (float|int):  The timestamp.
         """
         if val is not None:
             if self.firsttime is None or ts < self.firsttime:
@@ -183,12 +190,19 @@ class ScalarStats(FirstLastAccum):
 
     def getStatsTuple(self):
         """Return a stats-tuple. That is, a tuple containing the gathered statistics.
-        This tuple can be used to update the stats database"""
+        This tuple can be used to update the stats database
+
+        Returns: tuple. The gathered statistics.
+        """
         return (self.min, self.mintime, self.max, self.maxtime,
                 self.sum, self.count, self.wsum, self.sumtime)
 
     def mergeHiLo(self, x_stats):
-        """Merge the highs and lows of another accumulator into myself."""
+        """Merge the highs and lows of another accumulator into myself.
+
+        x_stats (ScalarStats): The other accumulator, whose highs and lows are to be merged
+        into myself.
+        """
 
         # Call my superclass's version
         FirstLastAccum.mergeHiLo(self, x_stats)
@@ -211,8 +225,8 @@ class ScalarStats(FirstLastAccum):
 
     def addHiLo(self, val, ts):
         """Include a scalar value in my highs and lows.
-        val: A scalar value
-        ts:  The timestamp. """
+        val (float): A scalar value
+        ts (float|int):  The timestamp. """
 
         # Call my superclass's version:
         FirstLastAccum.addHiLo(self, val, ts)
@@ -233,7 +247,11 @@ class ScalarStats(FirstLastAccum):
                 self.maxtime = ts
 
     def addSum(self, val, weight=1):
-        """Add a scalar value to my running sum and count."""
+        """Add a scalar value to my running sum and count.
+
+        val (float): The scalar value to be added.
+        weight (float): The weight to be given the value.
+        """
 
         # If necessary, convert to float. Be prepared to catch an exception if not possible.
         try:
@@ -281,7 +299,10 @@ class VecStats:
          self.wsquaresum) = stats_tuple if stats_tuple else VecStats.default_init
 
     def getStatsTuple(self):
-        """Return a stats-tuple. That is, a tuple containing the gathered statistics."""
+        """Return a stats-tuple. That is, a tuple containing the gathered statistics.
+
+        Returns: tuple. The gathered statistics.
+        """
         return (self.min, self.mintime,
                 self.max, self.maxtime,
                 self.sum, self.count,
@@ -290,7 +311,11 @@ class VecStats:
                 self.dirsumtime, self.squaresum, self.wsquaresum)
 
     def mergeHiLo(self, x_stats):
-        """Merge the highs and lows of another accumulator into myself."""
+        """Merge the highs and lows of another accumulator into myself.
+
+        x_stats (VecStats): The other accumulator, whose highs and lows are to be merged into
+        myself.
+        """
         if x_stats.min is not None:
             if self.min is None or x_stats.min < self.min:
                 self.min = x_stats.min
@@ -306,7 +331,11 @@ class VecStats:
                 self.last = x_stats.last
 
     def mergeSum(self, x_stats):
-        """Merge the sum and count of another accumulator into myself."""
+        """Merge the sum and count of another accumulator into myself.
+
+        x_stats (VecStats): The other accumulator, whose sum and count are to be merged into
+        myself.
+        """
         self.sum += x_stats.sum
         self.count += x_stats.count
         self.wsum += x_stats.wsum
@@ -319,8 +348,8 @@ class VecStats:
 
     def addHiLo(self, val, ts):
         """Include a vector value in my highs and lows.
-        val: A vector value. It is a 2-way tuple (mag, dir).
-        ts:  The timestamp.
+        val (tuple): A vector value. It is a 2-way tuple (mag, dir).
+        ts (float|int):  The timestamp.
         """
         speed, dirN = val
 
@@ -349,7 +378,8 @@ class VecStats:
 
     def addSum(self, val, weight=1):
         """Add a vector value to my sum and squaresum.
-        val: A vector value. It is a 2-way tuple (mag, dir)
+        val (tuple): A vector value. It is a 2-way tuple (mag, dir)
+        weight (float): The weight to be given the value.
         """
         speed, dirN = val
 
@@ -412,8 +442,9 @@ class Accum(dict):
     def __init__(self, timespan, unit_system=None):
         """Initialize an Accum.
         
-        timespan: The time period over which stats will be accumulated.
-        unit_system: The unit system used by the accumulator"""
+        timespan (tuple[int|float, int|float]): The time period over which stats will be
+        accumulated.
+        unit_system (int|None): The unit system used by the accumulator"""
 
         self.timespan = timespan
         # Set the accumulator's unit system. Usually left unspecified until the
@@ -424,7 +455,12 @@ class Accum(dict):
     def addRecord(self, record, add_hilo=True, weight=1):
         """Add a record to my running statistics. 
         
-        The record must have keys 'dateTime' and 'usUnits'."""
+        The record must have keys 'dateTime' and 'usUnits'.
+
+        record (dict): The record to be added.
+        add_hilo (bool): True to update the high/low statistics, as well as the sum.
+        weight (float): The weight to be given the record.
+        """
 
         # Check to see if the record is within my observation timespan 
         if not self.timespan.includesArchiveTime(record['dateTime']):
@@ -438,7 +474,11 @@ class Accum(dict):
             func(self, record, obs_type, add_hilo, weight)
 
     def updateHiLo(self, accumulator):
-        """Merge the high/low stats of another accumulator into me."""
+        """Merge the high/low stats of another accumulator into me.
+
+        accumulator (Accum): The other accumulator, whose high/low stats are to be merged
+        into me.
+        """
         if accumulator.timespan.start < self.timespan.start \
                 or accumulator.timespan.stop > self.timespan.stop:
             raise OutOfSpan("Attempt to merge an accumulator whose timespan is not a subset")
@@ -455,7 +495,10 @@ class Accum(dict):
             func(self, accumulator, obs_type)
 
     def getRecord(self):
-        """Extract a record out of the results in the accumulator."""
+        """Extract a record out of the results in the accumulator.
+
+        Returns: dict. A record extracted from the results in the accumulator.
+        """
 
         # All records have a timestamp and unit type
         record = {'dateTime': self.timespan.stop,
@@ -486,7 +529,13 @@ class Accum(dict):
     #
 
     def add_value(self, record, obs_type, add_hilo, weight):
-        """Add a single observation to myself."""
+        """Add a single observation to myself.
+
+        record (dict): The incoming record.
+        obs_type (str): The observation type to be added.
+        add_hilo (bool): True to update the high/low statistics, as well as the sum.
+        weight (float): The weight to be given the value.
+        """
 
         val = record[obs_type]
 
@@ -498,7 +547,14 @@ class Accum(dict):
         self[obs_type].addSum(val, weight=weight)
 
     def add_wind_value(self, record, obs_type, add_hilo, weight):
-        """Add a single observation of type wind to myself."""
+        """Add a single observation of type wind to myself.
+
+        record (dict): The incoming record.
+        obs_type (str): The observation type. Must be one of 'windSpeed', 'windDir', 'windGust',
+        or 'windGustDir'.
+        add_hilo (bool): True to update the high/low statistics, as well as the sum.
+        weight (float): The weight to be given the value.
+        """
 
         if obs_type in ['windDir', 'windGust', 'windGustDir']:
             return
@@ -544,7 +600,11 @@ class Accum(dict):
         self[obs_type].mergeHiLo(x_accumulator[obs_type])
 
     def merge_avg(self, x_accumulator, obs_type):
-        """Merge value in another accumulator, using avg for max"""
+        """Merge value in another accumulator, using avg for max
+
+        x_accumulator (Accum): The other accumulator, to be merged into myself.
+        obs_type (str): The observation type to be merged.
+        """
         x_stats = x_accumulator[obs_type]
         if x_stats.min is not None:
             if self[obs_type].min is None or x_stats.min < self[obs_type].min:
@@ -564,7 +624,11 @@ class Accum(dict):
     #            
 
     def extract_wind(self, record, obs_type):
-        """Extract wind values from myself, and put in a record."""
+        """Extract wind values from myself, and put in a record.
+
+        record (dict): The record to receive the extracted wind values.
+        obs_type (str): The observation type holding the accumulated wind statistics.
+        """
         # Wind records must be flattened into the separate categories:
         if 'windSpeed' not in record:
             record['windSpeed'] = self[obs_type].avg
@@ -601,7 +665,10 @@ class Accum(dict):
     #
 
     def _init_type(self, obs_type):
-        """Add a given observation type to my dictionary."""
+        """Add a given observation type to my dictionary.
+
+        obs_type (str): The observation type to be added.
+        """
         # Do nothing if this type has already been initialized:
         if obs_type in self:
             return
@@ -681,7 +748,12 @@ def initialize(config_dict):
 
 
 def new_accumulator(obs_type):
-    """Instantiate an accumulator, appropriate for type 'obs_type'."""
+    """Instantiate an accumulator, appropriate for type 'obs_type'.
+
+    obs_type (str): The observation type for which an accumulator is required.
+
+    Returns: An instance of a subclass of FirstLastAccum, appropriate for the type.
+    """
     global accum_dict
     # Get the options for this type. Substitute the defaults if they have not been specified
     obs_options = accum_dict.get(obs_type, OBS_DEFAULTS)
@@ -693,7 +765,13 @@ def new_accumulator(obs_type):
 
 
 def get_add_function(obs_type):
-    """Get an adder function appropriate for type 'obs_type'."""
+    """Get an adder function appropriate for type 'obs_type'.
+
+    obs_type (str): The observation type for which an adder function is required.
+
+    Returns: callable. A function appropriate for adding values of type 'obs_type' to an
+    accumulator.
+    """
     global accum_dict
     # Get the options for this type. Substitute the defaults if they have not been specified
     obs_options = accum_dict.get(obs_type, OBS_DEFAULTS)
@@ -704,7 +782,12 @@ def get_add_function(obs_type):
 
 
 def get_merge_function(obs_type):
-    """Get a merge function appropriate for type 'obs_type'."""
+    """Get a merge function appropriate for type 'obs_type'.
+
+    obs_type (str): The observation type for which a merge function is required.
+
+    Returns: callable. A function appropriate for merging values of type 'obs_type'.
+    """
     global accum_dict
     # Get the options for this type. Substitute the defaults if they have not been specified
     obs_options = accum_dict.get(obs_type, OBS_DEFAULTS)
@@ -715,7 +798,13 @@ def get_merge_function(obs_type):
 
 
 def get_extract_function(obs_type):
-    """Get an extraction function appropriate for type 'obs_type'."""
+    """Get an extraction function appropriate for type 'obs_type'.
+
+    obs_type (str): The observation type for which an extraction function is required.
+
+    Returns: callable. A function appropriate for extracting values of type 'obs_type' from an
+    accumulator.
+    """
     global accum_dict
     # Get the options for this type. Substitute the defaults if they have not been specified
     obs_options = accum_dict.get(obs_type, OBS_DEFAULTS)

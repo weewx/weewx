@@ -89,7 +89,12 @@ CannotConnect = CannotConnectError
 
 def create(db_dict):
     """Create a database. If it already exists, an exception of type
-    weedb.DatabaseExistsError will be raised."""
+    weedb.DatabaseExistsError will be raised.
+
+    Args:
+        db_dict (dict): The database dictionary for the database to be created. It must
+            contain key 'driver', naming the Python module implementing the driver.
+    """
     driver_mod = importlib.import_module(db_dict['driver'])
     # See note above
     if hasattr(db_dict, "dict"):
@@ -100,7 +105,15 @@ def create(db_dict):
 
 def connect(db_dict):
     """Return a connection to a database. If the database does not
-    exist, an exception of type weedb.NoDatabaseError will be raised."""
+    exist, an exception of type weedb.NoDatabaseError will be raised.
+
+    Args:
+        db_dict (dict): The database dictionary for the database to connect to. It must
+            contain key 'driver', naming the Python module implementing the driver.
+
+    Returns:
+        Connection: A connection to the database.
+    """
     driver_mod = importlib.import_module(db_dict['driver'])
     # See note above
     if hasattr(db_dict, "dict"):
@@ -111,7 +124,12 @@ def connect(db_dict):
 
 def drop(db_dict):
     """Drop (delete) a database. If the database does not exist,
-    the exception weedb.NoDatabaseError will be raised."""
+    the exception weedb.NoDatabaseError will be raised.
+
+    Args:
+        db_dict (dict): The database dictionary for the database to be dropped. It must
+            contain key 'driver', naming the Python module implementing the driver.
+    """
     driver_mod = importlib.import_module(db_dict['driver'])
     # See note above
     if hasattr(db_dict, "dict"):
@@ -136,7 +154,12 @@ class Connection:
 
     def execute(self, sql_string, sql_tuple=()):
         """Execute a sql statement. This version does not return a cursor,
-        so it can only be used for statements that do not return a result set."""
+        so it can only be used for statements that do not return a result set.
+
+        Args:
+            sql_string (str): The SQL statement to be executed.
+            sql_tuple (tuple): A tuple containing the values to be used with the SQL statement.
+        """
 
         cursor = self.cursor()
         try:
@@ -211,9 +234,11 @@ class Cursor:
 
     def create_table(self, table_name, table_schema):
         """Create a table with the given name and columns.
-        table_name (str): The name of the table to be created.
-        table_schema (List[Tuple]): List of tuples, each tuple containing 
-            the column name and type.
+
+        Args:
+            table_name (str): The name of the table to be created.
+            table_schema (List[Tuple]): List of tuples, each tuple containing 
+                the column name and type.
         """
         # List comprehension of the types, joined together with commas.
         sqltypestr = ', '.join(["%s %s" % _type for _type in table_schema])

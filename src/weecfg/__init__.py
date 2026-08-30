@@ -110,8 +110,11 @@ def find_file(option_path=None, args=None, locations=None, file_name='weewx.conf
     return option_path
 
 
-def read_config(option_path, args=None, locations=DEFAULT_LOCATIONS,
-                file_name='weewx.conf', interpolation='ConfigParser'):
+def read_config(option_path,
+                args=None,
+                locations=DEFAULT_LOCATIONS,
+                file_name='weewx.conf',
+                interpolation='ConfigParser'):
     """Read the specified configuration file, return an instance of ConfigObj
     with the file contents. If no file is specified, look in the standard
     locations for weewx.conf. Returns the filename of the actual configuration
@@ -133,7 +136,7 @@ def read_config(option_path, args=None, locations=DEFAULT_LOCATIONS,
     Args:
         option_path (str|None): A path to the file, typically from a --config option.
             None if no option was specified.
-        args (list[str]|None): command-line arguments. If option_path is None, then the first not
+        args (list[str|None]|None): command-line arguments. If option_path is None, then the first not
             null value in args will be used.
         locations (list[str]): A list of directories to search.
         file_name (str): The name of the config file. Default is 'weewx.conf'
@@ -193,7 +196,7 @@ def save(config_dict, config_path, backup=False):
     """Save the config file, backing up as necessary.
 
     Args:
-        config_dict(dict): A configuration dictionary.
+        config_dict(configobj.ConfigObj): A configuration dictionary.
         config_path(str): Path to where the dictionary should be saved.
         backup(bool): True to save a timestamped version of the old config file, False otherwise.
     Returns:
@@ -264,7 +267,12 @@ def save(config_dict, config_path, backup=False):
 
 
 def inject_station_url(config_dict, url):
-    """Inject the option station_url into the [Station] section"""
+    """Inject the option station_url into the [Station] section
+
+    Args:
+        config_dict (dict): The configuration dictionary to be modified.
+        url (str): The URL to be used for the station_url option.
+    """
 
     if 'station_url' in config_dict['Station']:
         # Already injected. Just set the value
@@ -321,7 +329,14 @@ def get_version_info(config_dict):
 
 def reorder_sections(config_dict, src, dst, after=False):
     """Move the section with key src to just before (after=False) or after
-    (after=True) the section with key dst. """
+    (after=True) the section with key dst.
+
+    Args:
+        config_dict (configobj.Section): The configuration dictionary to be reordered.
+        src (str): The key of the section to be moved.
+        dst (str): The key of the section that src is to be moved before or after.
+        after (bool): If False, move src to just before dst. If True, move it to just after.
+    """
     bump = 1 if after else 0
     # We need both keys to procede:
     if src not in config_dict.sections or dst not in config_dict.sections:
@@ -341,7 +356,13 @@ def reorder_sections(config_dict, src, dst, after=False):
 
 
 def reorder_scalars(scalars, src, dst):
-    """Reorder so the src item is just before the dst item"""
+    """Reorder so the src item is just before the dst item
+
+    Args:
+        scalars (list): The list of scalar keys to be reordered.
+        src (str): The key of the item to be moved.
+        dst (str): The key of the item that src is to be moved just before.
+    """
     try:
         src_index = scalars.index(src)
     except ValueError:
@@ -357,7 +378,12 @@ def reorder_scalars(scalars, src, dst):
 
 
 def remove_and_prune(a_dict, b_dict):
-    """Remove fields from a_dict that are present in b_dict"""
+    """Remove fields from a_dict that are present in b_dict
+
+    Args:
+        a_dict (dict): The dictionary to be pruned.
+        b_dict (dict): The dictionary containing the fields to be removed from a_dict.
+    """
     for k in b_dict:
         if isinstance(b_dict[k], dict):
             if k in a_dict and type(a_dict[k]) is configobj.Section:
@@ -393,7 +419,7 @@ def get_driver_infos(driver_pkg_name='weewx.drivers'):
         driver_pkg_name (str): The name of the package holder the drivers.
             Default is 'weewx.drivers'
 
-    Returns
+    Returns:
         dict: The key is the driver module name, value is information about the driver.
             Typical entry:
             'weewx.drivers.acurite': {'module_name': 'weewx.drivers.acurite',
@@ -490,7 +516,7 @@ def prompt_for_driver(dflt_driver=None):
     """Get the information about each driver, return as a dictionary.
 
     Args:
-        dflt_driver (str): The default driver to offer. If not given, 'weewx.drivers.simulator'
+        dflt_driver (str|None): The default driver to offer. If not given, 'weewx.drivers.simulator'
             will be used
 
     Returns:
@@ -530,7 +556,16 @@ def prompt_for_driver(dflt_driver=None):
 
 def prompt_for_driver_settings(driver, stanza_dict):
     """Let the driver prompt for any required settings.  If the driver does
-    not define a method for prompting, return an empty dictionary."""
+    not define a method for prompting, return an empty dictionary.
+
+    Args:
+        driver (str): The name of the driver module, for example, 'weewx.drivers.vantage'.
+        stanza_dict (dict): The existing options for the driver, if any.
+
+    Returns:
+        configobj.ConfigObj: The settings supplied by the driver's configuration editor. An
+            empty ConfigObj is returned if the driver does not define a prompting method.
+    """
     settings = configobj.ConfigObj(interpolation=False)
     try:
         driver_module = importlib.import_module(driver)
@@ -640,16 +675,17 @@ def prompt_with_limits(prompt, default=None, low_limit=None, high_limit=None):
     """Ask the user for an input with an optional default value. The
     returned value must lie between optional upper and lower bounds.
 
-    prompt: A string to be used for a prompt.
+    Args:
+        prompt (str): A string to be used for a prompt.
+        default (str|None): A default value. If the user simply hits <enter>, this
+            is the value returned. Optional.
+        low_limit (int|float|None): The value must be equal to or greater than this value.
+            Optional.
+        high_limit (int|float|None): The value must be less than or equal to this value.
+            Optional.
 
-    default: A default value. If the user simply hits <enter>, this
-    is the value returned. Optional.
-
-    low_limit: The value must be equal to or greater than this value.
-    Optional.
-
-    high_limit: The value must be less than or equal to this value.
-    Optional.
+    Returns:
+        str: The chosen value.
     """
     msg = "%s [%s]: " % (prompt, default) if default is not None else "%s: " % prompt
     value = None
@@ -729,7 +765,11 @@ def add_path(new_path):
     """Put a directory at the front of sys.path for the duration of the block.
 
     A copy, not a reference: sys.path is mutated in place below, so keeping a
-    reference would restore the mutated list."""
+    reference would restore the mutated list.
+
+    Args:
+        new_path (str): The path to be inserted at the front of sys.path.
+    """
     old_path = list(sys.path)
     try:
         sys.path.insert(0, new_path)
@@ -739,7 +779,15 @@ def add_path(new_path):
 
 
 def get_extension_installer(extension_installer_dir):
-    """Get the installer in the given extension installer subdirectory"""
+    """Get the installer in the given extension installer subdirectory
+
+    Args:
+        extension_installer_dir (str): Path to the directory holding the extension's
+            'install.py' file.
+
+    Returns:
+        tuple[str, ExtensionInstaller]: A two-way tuple (path-to-install-module, installer).
+    """
     with add_path(extension_installer_dir):
         try:
             # Now I can import the extension's 'install' module:

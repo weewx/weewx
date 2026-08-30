@@ -313,7 +313,12 @@ def add_subparser(subparsers):
 
 # ------------------ Shims for calling database action functions ---------------- #
 def create_database(config_dict, namespace):
-    """Create the WeeWX database"""
+    """Create the WeeWX database
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        namespace (argparse.Namespace): The parsed command line namespace.
+    """
 
     weectllib.database_actions.create_database(config_dict,
                                                db_binding=namespace.binding,
@@ -322,7 +327,12 @@ def create_database(config_dict, namespace):
 
 
 def drop_daily(config_dict, namespace):
-    """Drop the daily summary from a WeeWX database"""
+    """Drop the daily summary from a WeeWX database
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        namespace (argparse.Namespace): The parsed command line namespace.
+    """
     weectllib.database_actions.drop_daily(config_dict,
                                           db_binding=namespace.binding,
                                           dry_run=namespace.dry_run,
@@ -330,7 +340,12 @@ def drop_daily(config_dict, namespace):
 
 
 def rebuild_daily(config_dict, namespace):
-    """Rebuild the daily summary in a WeeWX database"""
+    """Rebuild the daily summary in a WeeWX database
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        namespace (argparse.Namespace): The parsed command line namespace.
+    """
     weectllib.database_actions.rebuild_daily(config_dict,
                                              date=namespace.date,
                                              from_date=namespace.from_date,
@@ -342,7 +357,12 @@ def rebuild_daily(config_dict, namespace):
 
 
 def add_column(config_dict, namespace):
-    """Add a column to a WeeWX database"""
+    """Add a column to a WeeWX database
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        namespace (argparse.Namespace): The parsed command line namespace.
+    """
     column_type = namespace.column_type.upper()
     if column_type == 'INT':
         column_type = "INTEGER"
@@ -355,7 +375,12 @@ def add_column(config_dict, namespace):
 
 
 def rename_column(config_dict, namespace):
-    """Rename a column in a WeeWX database."""
+    """Rename a column in a WeeWX database.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        namespace (argparse.Namespace): The parsed command line namespace.
+    """
     weectllib.database_actions.rename_column(config_dict,
                                              from_name=namespace.from_name,
                                              to_name=namespace.to_name,
@@ -365,7 +390,12 @@ def rename_column(config_dict, namespace):
 
 
 def drop_columns(config_dict, namespace):
-    """Drop (remove) one or more columns in a WeeWX database."""
+    """Drop (remove) one or more columns in a WeeWX database.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        namespace (argparse.Namespace): The parsed command line namespace.
+    """
     weectllib.database_actions.drop_columns(config_dict,
                                             column_names=namespace.column_names,
                                             db_binding=namespace.binding,
@@ -374,7 +404,12 @@ def drop_columns(config_dict, namespace):
 
 
 def reconfigure_database(config_dict, namespace):
-    """Replicate a database, using current configuration settings."""
+    """Replicate a database, using current configuration settings.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        namespace (argparse.Namespace): The parsed command line namespace.
+    """
     weectllib.database_actions.reconfigure_database(config_dict,
                                                     db_binding=namespace.binding,
                                                     dry_run=namespace.dry_run,
@@ -382,7 +417,12 @@ def reconfigure_database(config_dict, namespace):
 
 
 def transfer_database(config_dict, namespace):
-    """Copy a database to a new database."""
+    """Copy a database to a new database.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        namespace (argparse.Namespace): The parsed command line namespace.
+    """
     weectllib.database_actions.transfer_database(config_dict,
                                                  dest_binding=namespace.dest_binding,
                                                  db_binding=namespace.binding,
@@ -391,7 +431,12 @@ def transfer_database(config_dict, namespace):
 
 
 def calc_missing(config_dict, namespace):
-    """Calculate derived variables in a database."""
+    """Calculate derived variables in a database.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        namespace (argparse.Namespace): The parsed command line namespace.
+    """
     weectllib.database_actions.calc_missing(config_dict,
                                             date=namespace.date,
                                             from_date=namespace.from_date,
@@ -416,7 +461,12 @@ def update_database(config_dict, namespace):
 
 
 def reweight_daily(config_dict, namespace):
-    """Recalculate the weights in a WeeWX database."""
+    """Recalculate the weights in a WeeWX database.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        namespace (argparse.Namespace): The parsed command line namespace.
+    """
     weectllib.database_actions.reweight_daily(config_dict,
                                               date=namespace.date,
                                               from_date=namespace.from_date,
@@ -427,7 +477,12 @@ def reweight_daily(config_dict, namespace):
 
 
 def _add_common_args(subparser):
-    """Add options used by most of the subparsers"""
+    """Add options used by most of the subparsers
+
+    Args:
+        subparser (argparse.ArgumentParser): The subparser to which the common
+            arguments will be added.
+    """
     subparser.add_argument('--config',
                            metavar='FILENAME',
                            help='Path to configuration file. '

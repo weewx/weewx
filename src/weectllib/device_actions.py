@@ -96,6 +96,13 @@ def _find_config(args):
         --config=foo
     or
         --config foo
+
+    Args:
+        args (list[str]): A list of command-line arguments, such as sys.argv.
+
+    Returns:
+        str|None: The path found after a --config option, or None if no --config option
+            was found.
     """
     for idx, arg in enumerate(args):
         # Look for a --config option

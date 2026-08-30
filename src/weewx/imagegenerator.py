@@ -89,7 +89,7 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
                     db_manager = self.db_binder.get_manager(binding)
                     plotgen_ts = db_manager.lastGoodStamp()
                     if not plotgen_ts:
-                        plotgen_ts = time.time()
+                        plotgen_ts = int(time.time() + 0.5)
 
                 image_root = os.path.join(self.config_dict['WEEWX_ROOT'],
                                           plot_options['HTML_ROOT'])
@@ -135,17 +135,18 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
         """Generate a single plot image.
 
         Args:
-            plotgen_ts: A timestamp for which the plot will be valid. This is generally the last
+            plotgen_ts (int): A timestamp for which the plot will be valid. This is generally the last
             datum to be plotted.
 
-            plot_options: A dictionary of plot options.
+            plot_options (dict): A dictionary of plot options.
 
-            plot_dict: A section in a ConfigObj. Each subsection will contain data about plots
+            plot_dict (ConfigObj.section): A section in a ConfigObj. Each subsection will contain data about plots
             to be generated
 
         Returns:
-            An instance of weeplot.genplot.TimePlot or None. If the former, it will be ready
-            to render. If None, then skip_if_empty was truthy and no valid data were found.
+            weeplot.genplot.TimePlot|None An instance of weeplot.genplot.TimePlot or None. If the
+            former, it will be ready to render. If None, then skip_if_empty was truthy and no valid
+             data were found.
         """
 
         # Create a new instance of a time plot and start adding to it
@@ -349,6 +350,14 @@ def _skip_this_plot(time_ts, plot_options, img_file):
 
     If a stale_age has been specified, then it can also be skipped if the file has been
     freshly generated.
+
+    Args:
+        time_ts (int|float): The time for which the plot is being generated.
+        plot_options (dict): The dictionary of options for this plot.
+        img_file (str): Path to the image file that would be generated.
+
+    Returns:
+        bool: True if the plot can be skipped, False otherwise.
     """
 
     # Convert from possible string to an integer:
@@ -387,6 +396,19 @@ def _skip_this_plot(time_ts, plot_options, img_file):
 
 
 def _get_check_domain(skip_if_empty, x_domain):
+    """
+    Return an appropriate time domain over which we should check for data or None if we shouldn't
+    check for data at all.
+    Args:
+        skip_if_empty (str | bool | None): Convert to a boolean. If it's nothing we recognize as
+          truthy or falsy, then interpret it as a time domain (such as 'month').
+        x_domain (TimeSpan): The time domain over which we should check for data.
+
+    Returns:
+        tuple[int, int] | None: The time domain over which we should check for data, or None if we
+        shouldn't check for data at all.
+
+    """
     # Convert to lower-case. It might not be a string, so be prepared for an AttributeError
     try:
         skip_if_empty = skip_if_empty.lower()
@@ -408,15 +430,16 @@ def _skip_if_empty(db_manager, var_type, check_domain):
     """
 
     Args:
-        db_manager: An open instance of weewx.manager.Manager, or a subclass.
+        db_manager (weewx.manager.Manager): An open instance of weewx.manager.Manager, or a
+            subclass.
 
-        var_type: An observation type to check (e.g., 'outTemp')
+        var_type (str): An observation type to check (e.g., 'outTemp')
 
-        check_domain: A two-way tuple of timestamps that contain the time domain to be checked
-        for non-null data.
+        check_domain (tuple[int|float, int|flat]|None): A two-way tuple of timestamps that contain the
+            time domain to be checked for non-null data.
 
     Returns:
-        True if there is no non-null data in the domain. False otherwise.
+        bool: True if there is no non-null data in the domain. False otherwise.
     """
     if check_domain is None:
         return False

@@ -107,6 +107,7 @@ import weewx.manager
 import weewx.units
 from weeutil.config import search_up, accumulateLeaves
 from weeutil.weeutil import to_int, to_float, to_bool, timestamp_to_string, to_sorted_string
+from weewx.units import ValueTuple
 
 log = logging.getLogger(__name__)
 
@@ -149,7 +150,12 @@ class StdRESTful(weewx.engine.StdService):
 
     @staticmethod
     def shutDown_thread(q, t):
-        """Function to shut down a thread."""
+        """Function to shut down a thread.
+
+        Args:
+            q (queue.Queue): The queue used to communicate with the thread.
+            t (threading.Thread): The thread to be shut down.
+        """
         if q and t.is_alive():
             # Put a None in the queue to signal the thread to shut down
             q.put(None)
@@ -361,6 +367,10 @@ class RESTThread(threading.Thread):
     def run_loop(self, dbmanager=None):
         """Runs a continuous loop, waiting for records to appear in the queue,
         then processing them.
+
+        Args:
+            dbmanager (weewx.manager.Manager|None): An instance of a database manager,
+                to be used to augment records. Default is None.
         """
 
         while True:
@@ -424,7 +434,13 @@ class RESTThread(threading.Thread):
         """Default version of process_record.
         
         This version uses HTTP GETs to do the post, which should work for many
-        protocols, but it can always be replaced by a specializing class."""
+        protocols, but it can always be replaced by a specializing class.
+
+        Args:
+            record (dict): A weewx record.
+            dbmanager (weewx.manager.Manager|None): An instance of a database manager, to be
+                used to augment the record.
+        """
 
         # Get the full record by querying the database ...
         _full_record = self.get_record(record, dbmanager)
@@ -463,7 +479,7 @@ class RESTThread(threading.Thread):
 
         Args:
             request (urllib.request.Request): An instance of urllib.request.Request
-            data (str|None): The body of the POST. If not given, the request will be done as a GET.
+            data (bytes|None): The body of the POST. If not given, the request will be done as a GET.
         """
         if self.delay_post:
             log.debug("%s: Delaying post by %d seconds", self.protocol_name, self.delay_post)
@@ -524,7 +540,12 @@ class RESTThread(threading.Thread):
                   % (self.protocol_name, count, code))
 
     def handle_exception(self, e, count):
-        """Check exception from HTTP post. """
+        """Check exception from HTTP post.
+
+        Args:
+            e (BaseException): The exception that was raised.
+            count (int): The number of attempts made so far.
+        """
         # If it's a 429 error ("TOO MANY REQUESTS") don't bother retrying.
         if getattr(e, 'code', None) == 429:
             log.debug("%s: Posting too frequently: %s" % (self.protocol_name, e))
@@ -540,10 +561,13 @@ class RESTThread(threading.Thread):
         Specializing versions can can catch any unusual exceptions that might
         get raised by their protocol.
         
-        request: An instance of urllib.request.Request
-        
-        data: If given, the request will be done as a POST. Otherwise, 
-        as a GET. [optional]
+        Args:
+            request (urllib.request.Request): An instance of urllib.request.Request
+            data (bytes|None): If given, the request will be done as a POST. Otherwise,
+                as a GET. [optional]
+
+        Returns:
+            http.client.HTTPResponse: The response to the post.
         """
         # Data might be a unicode string. Encode it first.
         if data is not None and not isinstance(data, bytes):
@@ -554,7 +578,14 @@ class RESTThread(threading.Thread):
         return _response
 
     def skip_this_post(self, time_ts):
-        """Check whether the post is current"""
+        """Check whether the post is current
+
+        Args:
+            time_ts (int|float): The timestamp of the record to be posted.
+
+        Returns:
+            bool: True if the post should be skipped, False otherwise.
+        """
         # Don't post if this record is too old
         if self.stale is not None:
             _how_old = time.time() - time_ts
@@ -583,6 +614,12 @@ class RESTThread(threading.Thread):
         is in (such as "application/json").
         
         Return a simple 'None' if there is no POST payload. This is the default.
+
+        Args:
+            record (dict): A weewx record.
+
+        Returns:
+            tuple|None: A 2-way tuple (payload, MIME type), or None if there is no payload.
         """
         # Maintain backwards compatibility with the old format_data() function.
         body = self.format_data(record)
@@ -597,7 +634,15 @@ class RESTThread(threading.Thread):
         """
         return None
 
-    def format_url(self, _):
+    def format_url(self, record):
+        """
+        Subclass and implement.
+        Args:
+            record (dict): The incoming record.
+
+        Returns:
+            str: The formatted URL.
+        """
         raise NotImplementedError
 
 
@@ -672,7 +717,11 @@ class StdWunderground(StdRESTful):
                      _ambient_dict['station'])
 
     def new_loop_packet(self, event):
-        """Puts new LOOP packets in the loop queue"""
+        """Puts new LOOP packets in the loop queue
+
+        Args:
+            event (weewx.Event): The event containing the new LOOP packet.
+        """
         if weewx.debug >= 3:
             log.debug("Raw packet: %s", to_sorted_string(event.packet))
         self.cached_values.update(event.packet, event.packet['dateTime'])
@@ -800,12 +849,12 @@ class AmbientThread(RESTThread):
 
         Parameters specific to this class:
           
-          station: The name of the station. For example, for the WU, this
+          station (str): The name of the station. For example, for the WU, this
           would be something like "KORHOODR3".
           
-          password: Password used for the station.
+          password (str): Password used for the station.
           
-          server_url: An url where the server for this protocol can be found.
+          server_url (str): An url where the server for this protocol can be found.
         """
         super().__init__(q,
                          protocol_name,
@@ -881,10 +930,17 @@ class AmbientThread(RESTThread):
         'inTemp': 'indoortempf=%.1f',
         'inHumidity': 'indoorhumidity=%.0f'}
 
-    def format_url(self, incoming_record):
-        """Return an URL for posting using the Ambient protocol."""
+    def format_url(self, record):
+        """Return an URL for posting using the Ambient protocol.
 
-        record = weewx.units.to_US(incoming_record)
+        Args:
+            record (dict): A weewx record.
+
+        Returns:
+            str: An url that can be used to post using the Ambient protocol.
+        """
+
+        record = weewx.units.to_US(record)
 
         _liststr = ["action=updateraw",
                     "ID=%s" % self.station,
@@ -923,7 +979,11 @@ class AmbientThread(RESTThread):
         return _url
 
     def check_response(self, response):
-        """Check the HTTP response for an Ambient related error."""
+        """Check the HTTP response for an Ambient related error.
+
+        Args:
+            response (http.client.HTTPResponse): The response to be checked.
+        """
         for line in response:
             # PWSweather signals a bad login with 'ERROR'
             if line.startswith(b'ERROR'):
@@ -968,7 +1028,7 @@ class AmbientLoopThread(AmbientThread):
 
         Parameters specific to this class:
           
-          rtfreq: Frequency of update in seconds for RapidFire
+          rtfreq (float|int): Frequency of update in seconds for RapidFire
         """
         super().__init__(q,
                          manager_dict=manager_dict,
@@ -1003,7 +1063,16 @@ class AmbientLoopThread(AmbientThread):
     }
 
     def get_record(self, record, dbmanager):
-        """Prepare a record for the Rapidfire protocol."""
+        """Prepare a record for the Rapidfire protocol.
+
+        Args:
+            record (dict): An incoming record that will be augmented.
+            dbmanager (weewx.manager.Manager|None): An instance of a database manager. If set
+                to None, then the record will not be augmented.
+
+        Returns:
+            dict: A dictionary of augmented weather values
+        """
 
         # Call the regular Ambient PWS version
         _record = AmbientThread.get_record(self, record, dbmanager)
@@ -1030,11 +1099,18 @@ class WOWThread(AmbientThread):
                 'hourRain': 'rainin=%.2f',
                 'dayRain': 'dailyrainin=%.3f'}
 
-    def format_url(self, incoming_record):
+    def format_url(self, record):
         """Return an URL for posting using WOW's version of the Ambient
-        protocol."""
+        protocol.
 
-        record = weewx.units.to_US(incoming_record)
+        Args:
+            record (dict): A weewx record.
+
+        Returns:
+            str: An url that can be used to post using the WOW protocol.
+        """
+
+        record = weewx.units.to_US(record)
 
         _liststr = ["action=updateraw",
                     "siteid=%s" % self.station,
@@ -1068,7 +1144,15 @@ class WOWThread(AmbientThread):
 
     def post_request(self, request, data=None):  # @UnusedVariable
         """Version of post_request() for the WOW protocol, which
-        uses a response error code to signal a bad login."""
+        uses a response error code to signal a bad login.
+
+        Args:
+            request (urllib.request.Request): An instance of urllib.request.Request
+            data (bytes|None): Not used by this version.
+
+        Returns:
+            http.client.HTTPResponse: The response to the post.
+        """
         try:
             _response = urllib.request.urlopen(request, timeout=self.timeout)
         except urllib.error.HTTPError as e:
@@ -1207,26 +1291,26 @@ class CWOPThread(RESTThread):
         
         Parameters specific to this class:
           
-          station: The name of the station. Something like "DW1234".
+          station (str): The name of the station. Something like "DW1234".
           
-          passcode: Some stations require a passcode.
+          passcode (str): Some stations require a passcode.
           
-          latitude: Latitude of the station in decimal degrees.
+          latitude (float): Latitude of the station in decimal degrees.
           
-          longitude: Longitude of the station in decimal degrees.
+          longitude (float): Longitude of the station in decimal degrees.
           
-          station_type: The type of station. Generally, this is the driver
+          station_type (str): The type of station. Generally, this is the driver
           symbolic name, such as "Vantage".
         
-          server_list: A list of strings holding the CWOP server name and
+          server_list (list): A list of strings holding the CWOP server name and
           port. Default is ['cwop.aprs.net:14580', 'cwop.aprs.net:23']
 
         Parameters customized for this class:
           
-          post_interval: How long to wait between posts.
+          post_interval (int): How long to wait between posts.
           Default is 600 (every 10 minutes).
           
-          stale: How old a record can be and still considered useful.
+          stale (int): How old a record can be and still considered useful.
           Default is 60 (one minute).
         """
         # Initialize my superclass
@@ -1252,7 +1336,13 @@ class CWOPThread(RESTThread):
         self.station_type = station_type
 
     def process_record(self, record, dbmanager):
-        """Process a record in accordance with the CWOP protocol."""
+        """Process a record in accordance with the CWOP protocol.
+
+        Args:
+            record (dict): A weewx record.
+            dbmanager (weewx.manager.Manager|None): An instance of a database manager, to be
+                used to augment the record.
+        """
 
         # Get the full record by querying the database ...
         _full_record = self.get_record(record, dbmanager)
@@ -1272,7 +1362,14 @@ class CWOPThread(RESTThread):
         return _login
 
     def get_tnc_packet(self, record):
-        """Form the TNC2 packet used by CWOP."""
+        """Form the TNC2 packet used by CWOP.
+
+        Args:
+            record (dict): A weewx record.
+
+        Returns:
+            str: The TNC2 packet used by CWOP.
+        """
 
         # Preamble to the TNC packet:
         _prefix = "%s>APWEE5,TCPIP*:" % self.station
@@ -1314,8 +1411,7 @@ class CWOPThread(RESTThread):
         else:
             # While everything else in the CWOP protocol is in US Customary,
             # they want the barometer in millibars.
-            _baro_vt = weewx.units.convert((_baro, 'inHg', 'group_pressure'),
-                                           'mbar')
+            _baro_vt = weewx.units.convert(ValueTuple(_baro, 'inHg', 'group_pressure'), 'mbar')
             _baro_str = "b%05d" % int(_baro_vt[0] * 10.0 + 0.5)
 
         # Humidity:
@@ -1392,7 +1488,15 @@ class CWOPThread(RESTThread):
                          % (len(self.server_list), self.max_tries))
 
     def _get_connect(self, server, port):
-        """Get a socket connection to a specific server and port."""
+        """Get a socket connection to a specific server and port.
+
+        Args:
+            server (str): The name of the server.
+            port (int): The port to be used.
+
+        Returns:
+            socket.socket: An open socket connected to the server and port.
+        """
 
         _sock = None
         try:
@@ -1409,7 +1513,16 @@ class CWOPThread(RESTThread):
         return _sock
 
     def _send(self, sock, msg, dbg_msg):
-        """Send a message to a specific socket."""
+        """Send a message to a specific socket.
+
+        Args:
+            sock (socket.socket): The socket to be used.
+            msg (str): The message to be sent.
+            dbg_msg (str): A short label for the message, used in debug logging.
+
+        Returns:
+            str|None: The response from the server, or None if none was received.
+        """
 
         # Convert from string to byte string
         msg_bytes = msg.encode('ascii')
@@ -1426,7 +1539,7 @@ class CWOPThread(RESTThread):
             except IOError as e:
                 log.debug("%s: Exception %s (%s) when looking for response to %s packet",
                           self.protocol_name, type(e), e, dbg_msg)
-                return
+                return None
 
 
 # ==============================================================================
@@ -1573,7 +1686,7 @@ class StationRegistryThread(RESTThread):
                       self.post_interval)
             self.post_interval = 86400
 
-    def format_url(self, _):
+    def format_url(self, record):
         return self.server_url
 
     def get_post_body(self, record):
@@ -1797,7 +1910,16 @@ class AWEKASThread(RESTThread):
         self.server_url = server_url
 
     def get_record(self, record, dbmanager):
-        """Ensure that rainRate is in the record."""
+        """Ensure that rainRate is in the record.
+
+        Args:
+            record (dict): An incoming record that will be augmented.
+            dbmanager (weewx.manager.Manager|None): An instance of a database manager. If set
+                to None, then the record will not be augmented.
+
+        Returns:
+            dict: A dictionary of augmented weather values
+        """
         # Have my superclass process the record first.
         record = super().get_record(record, dbmanager)
 
@@ -1826,11 +1948,18 @@ class AWEKASThread(RESTThread):
 
         return record
 
-    def format_url(self, in_record):
-        """Specialized version of format_url() for the AWEKAS protocol."""
+    def format_url(self, record):
+        """Specialized version of format_url() for the AWEKAS protocol.
+
+        Args:
+            record (dict): A weewx record.
+
+        Returns:
+            str: An url that can be used to post using the AWEKAS protocol.
+        """
 
         # Convert to units required by awekas
-        record = weewx.units.to_METRIC(in_record)
+        record = weewx.units.to_METRIC(record)
         if 'dayRain' in record and record['dayRain'] is not None:
             record['dayRain'] *= 10
         if 'rainRate' in record and record['rainRate'] is not None:
@@ -1883,7 +2012,11 @@ class AWEKASThread(RESTThread):
         return ''
 
     def check_response(self, response):
-        """Specialized version of check_response()."""
+        """Specialized version of check_response().
+
+        Args:
+            response (http.client.HTTPResponse): The response to be checked.
+        """
         for line in response:
             # Skip blank lines:
             if not line.strip():
@@ -1901,7 +2034,17 @@ class AWEKASThread(RESTThread):
 def get_site_dict(config_dict, service, *args):
     """Obtain the site options, with defaults from the StdRESTful section.
     If the service is not enabled, or if one or more required parameters is
-    not specified, then return None."""
+    not specified, then return None.
+
+    Args:
+        config_dict (configobj.ConfigObj): The configuration dictionary.
+        service (str): The name of the RESTful service, for example, 'StationRegistry'.
+        *args (str): Names of options that are required for the service to be enabled.
+
+    Returns:
+        dict|None: The site dictionary, or None if the service is not enabled or is
+            missing a required option.
+    """
 
     try:
         site_dict = accumulateLeaves(config_dict['StdRESTful'][service],

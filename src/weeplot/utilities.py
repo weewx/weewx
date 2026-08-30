@@ -347,11 +347,11 @@ class ScaledDraw:
         correspond to the scaled coordinate( 0.0, 1.0). The lower-right image coordinate
         would correspond to the scaled coordinate (10.0, 0.0).
         
-        draw: an instance of ImageDraw
-        
-        imagebox: a 2-tuple of the box coordinates on the image ((ulx, uly), (lrx, lry))
-        
-        scaledbox: a 2-tuple of the box coordinates of the scaled plot ((llx, lly), (urx, ury))
+        Args:
+            draw(ImageDraw): an instance of ImageDraw
+            imagebox(tuple): a 2-tuple of the box coordinates on the image ((ulx, uly), (lrx, lry))
+            scaledbox(tuple): a 2-tuple of the box coordinates of the scaled plot
+                ((llx, lly), (urx, ury))
         
         """
         uli = imagebox[0]
@@ -426,10 +426,10 @@ class ScaledDraw:
     def rectangle(self, box, **options):
         """Draw a scaled rectangle.
 
-        box: A pair of 2-way tuples for the lower-left, then upper-right corners of
-            the box [(llx, lly), (urx, ury)]
-
-        options: passed on to draw.rectangle. Usually contains 'fill' (the color)
+        Args:
+            box(tuple): A pair of 2-way tuples for the lower-left, then upper-right corners of
+                the box [(llx, lly), (urx, ury)]
+            options(dict): passed on to draw.rectangle. Usually contains 'fill' (the color)
         """
         # Unpack the box
         (llsx, llsy), (ursx, ursy) = box

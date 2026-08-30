@@ -38,35 +38,30 @@ class FtpUpload:
         """Initialize an instance of FtpUpload.
         
         After initializing, call method run() to perform the upload.
-        
-        server: The remote server to which the files are to be uploaded.
-        
-        user,
-        password : The username and password that are to be used.
-        
-        name: A unique name to be given for this FTP session. This allows more
-        than one session to be uploading from the same local directory. [Optional.
-        Default is 'FTP'.]
-        
-        passive: True to use passive mode; False to use active mode. [Optional.
-        Default is True (passive mode)]
-        
-        secure: Set to True to attempt an FTP over TLS (FTPS) session.
-        
-        debug: Set to 1 for extra debug information, 0 otherwise.
-        
-        secure_data: If a secure session is requested (option secure=True),
-        should we attempt a secure data connection as well? This option is useful
-        due to a bug in the Python FTP client library. See Issue #284. 
-        [Optional. Default is True]
 
-        reuse_ssl: Work around a bug in the Python library that closes ssl sockets that should
-        be reused. See https://bit.ly/3dKq4JY [Optional. Default is False]
-
-        encoding: The vast majority of FTP servers chat using UTF-8. However, there are a few
-        oddballs that use Latin-1.
-
-        ciphers: Explicitly set the cipher(s) to be used by the ssl sockets.
+        Args:
+            server (str): The remote server to which the files are to be uploaded.
+            user (str): The username that is to be used.
+            password (str): The password that is to be used.
+            local_root (str|Path): The local root directory, whose contents are to be uploaded.
+            remote_root (str|Path): The remote root directory, to which the files are to be uploaded.
+            port (int): The port to be used. [Optional. Default is 21.]
+            name (str): A unique name to be given for this FTP session. This allows more
+                than one session to be uploading from the same local directory. [Optional.
+                Default is 'FTP'.]
+            passive (bool): True to use passive mode; False to use active mode. [Optional.
+                Default is True (passive mode)]
+            secure (bool): Set to True to attempt an FTP over TLS (FTPS) session.
+            debug (int): Set to 1 for extra debug information, 0 otherwise.
+            secure_data (bool): If a secure session is requested (option secure=True),
+                should we attempt a secure data connection as well? This option is useful
+                due to a bug in the Python FTP client library. See Issue #284. 
+                [Optional. Default is True]
+            reuse_ssl (bool): Work around a bug in the Python library that closes ssl sockets
+                that should be reused. See https://bit.ly/3dKq4JY [Optional. Default is False]
+            encoding (str): The vast majority of FTP servers chat using UTF-8. However, there
+                are a few oddballs that use Latin-1.
+            ciphers (str|None): Explicitly set the cipher(s) to be used by the ssl sockets.
         """
         self.server = server
         self.user = user
@@ -88,8 +83,10 @@ class FtpUpload:
 
     def run(self):
         """Perform the actual upload.
-        
-        returns: the number of files uploaded."""
+
+        Returns:
+            int: The number of files uploaded.
+        """
 
         # Get the timestamp and members of the last upload:
         timestamp, fileset, hashdict = self.get_last_upload()
@@ -227,7 +224,12 @@ class FtpUpload:
         return n_uploaded
 
     def get_last_upload(self):
-        """Reads the time and members of the last upload from the local root"""
+        """Reads the time and members of the last upload from the local root
+
+        Returns:
+            tuple[float, set, dict]: The timestamp of the last upload, the set of files
+                uploaded, and a dictionary mapping a local path to the hash of the file.
+        """
 
         timestamp_file_path = os.path.join(self.local_root, "#%s.last" % self.name)
 
@@ -253,7 +255,13 @@ class FtpUpload:
         return timestamp, fileset, hashdict
 
     def save_last_upload(self, timestamp, fileset, hashdict):
-        """Saves the time and members of the last upload in the local root."""
+        """Saves the time and members of the last upload in the local root.
+
+        Args:
+            timestamp (float): The timestamp of the upload.
+            fileset (set): The set of files that were uploaded.
+            hashdict (dict): Maps a local path to the hash of the file that was uploaded.
+        """
         timestamp_file_path = os.path.join(self.local_root, "#%s.last" % self.name)
         with open(timestamp_file_path, "wb") as f:
             pickle.dump(timestamp, f)
@@ -262,7 +270,19 @@ class FtpUpload:
 
 
 def _skip_this_file(timestamp, fileset, hashdict, full_local_path, filehash):
-    """Determine whether to skip a specific file."""
+    """Determine whether to skip a specific file.
+
+    Args:
+        timestamp (float): The timestamp of the last upload.
+        fileset (set): The set of files uploaded as of the last upload.
+        hashdict (dict): Maps a local path to the hash of the file as of the last upload.
+        full_local_path (str): The full local path of the candidate file.
+        filehash (str|None): The hash of the candidate file, or None if hashing is not being
+            used.
+
+    Returns:
+        bool: True if the file should be skipped, False if it should be uploaded.
+    """
 
     filename = os.path.basename(full_local_path)
     if filename[-1] == '~' or filename[0] == '#':
@@ -293,7 +313,12 @@ def _skip_this_dir(local_dir):
 
 
 def _make_remote_dir(ftp_server, remote_dir_path):
-    """Make a remote directory if necessary."""
+    """Make a remote directory if necessary.
+
+    Args:
+        ftp_server (ftplib.FTP): The FTP connection to use.
+        remote_dir_path (str): The path of the remote directory to create.
+    """
 
     try:
         ftp_server.mkd(remote_dir_path)

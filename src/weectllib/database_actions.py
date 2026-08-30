@@ -23,7 +23,14 @@ def create_database(config_dict,
                     db_binding='wx_binding',
                     dry_run=False,
                     no_confirm=False):
-    """Create a new database."""
+    """Create a new database.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        db_binding (str): The data binding to use. Default is 'wx_binding'.
+        dry_run (bool): True to not actually do anything. Default is False.
+        no_confirm (bool): True to not ask for confirmation. Default is False.
+    """
 
     # Try a simple open. If it succeeds, that means the database
     # exists and is initialized. Otherwise, an exception will be raised.
@@ -32,6 +39,7 @@ def create_database(config_dict,
             print(f"Database '{dbmanager.database_name}' already exists. Nothing done.")
     except weedb.OperationalError:
         if not dry_run:
+            # noinspection Annotator
             ans = y_or_n("Create database (y/n)? ", noprompt=no_confirm)
             if ans == 'n':
                 print("Nothing done")
@@ -47,7 +55,14 @@ def drop_daily(config_dict,
                db_binding='wx_binding',
                dry_run=False,
                no_confirm=False):
-    """Drop the daily summary from a WeeWX database."""
+    """Drop the daily summary from a WeeWX database.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        db_binding (str): The data binding to use. Default is 'wx_binding'.
+        dry_run (bool): True to not actually do anything. Default is False.
+        no_confirm (bool): True to not ask for confirmation. Default is False.
+    """
 
     try:
         with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbmanager:
@@ -81,7 +96,20 @@ def rebuild_daily(config_dict,
                   db_binding='wx_binding',
                   dry_run=False,
                   no_confirm=False):
-    """Rebuild the daily summaries."""
+    """Rebuild the daily summaries.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        date (str|None): Rebuild for this date only, in the form YYYY-mm-dd. Default is
+            None.
+        from_date (str|None): Rebuild starting with this date. Default is None.
+        to_date (str|None): Rebuild ending with this date. Default is None.
+        key_set (list[str]|None): List of observation type(s) to be rebuilt. Default is None,
+            which rebuilds all types.
+        db_binding (str): The data binding to use. Default is 'wx_binding'.
+        dry_run (bool): True to not actually do anything. Default is False.
+        no_confirm (bool): True to not ask for confirmation. Default is False.
+    """
 
     manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, db_binding)
     database_name = manager_dict['database_dict']['database_name']
@@ -177,8 +205,14 @@ def add_column(config_dict,
                dry_run=False,
                no_confirm=False):
     """Add a single column to the database.
-    column_name: The name of the new column.
-    column_type: The type ("REAL"|"INTEGER") of the new column.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        column_name (str): The name of the new column.
+        column_type (str): The type ("REAL"|"INTEGER") of the new column.
+        db_binding (str): The data binding to use. Default is 'wx_binding'.
+        dry_run (bool): True to not actually do anything. Default is False.
+        no_confirm (bool): True to not ask for confirmation. Default is False.
     """
     manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, db_binding)
     database_name = manager_dict['database_dict']['database_name']
@@ -221,7 +255,15 @@ def drop_columns(config_dict,
                  db_binding='wx_binding',
                  dry_run=False,
                  no_confirm=False):
-    """Drop a set of columns from the database"""
+    """Drop a set of columns from the database
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        column_names (list[str]): A list with the names of the columns to be dropped.
+        db_binding (str): The data binding to use. Default is 'wx_binding'.
+        dry_run (bool): True to not actually do anything. Default is False.
+        no_confirm (bool): True to not ask for confirmation. Default is False.
+    """
     ans = y_or_n(f"Drop column(s) '{', '.join(column_names)}' from the database (y/n)? ",
                  noprompt=no_confirm)
     if ans == 'y':
@@ -248,7 +290,14 @@ def reconfigure_database(config_dict,
                          no_confirm=False):
     """Create a new database, then populate it with the contents of an old database, but use
     the current configuration options. The reconfigure action will create a new database with the
-     same name as the old, except with the suffix _new attached to the end."""
+     same name as the old, except with the suffix _new attached to the end.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        db_binding (str): The data binding to use. Default is 'wx_binding'.
+        dry_run (bool): True to not actually do anything. Default is False.
+        no_confirm (bool): True to not ask for confirmation. Default is False.
+    """
 
     manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, db_binding)
     # Make a copy for the new database (we will be modifying it)
@@ -320,7 +369,16 @@ def transfer_database(config_dict,
                       db_binding='wx_binding',
                       dry_run=False,
                       no_confirm=False):
-    """Transfer 'archive' data from one database to another"""
+    """Transfer 'archive' data from one database to another
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        dest_binding (str): The data binding of the destination database. Required.
+        db_binding (str): The data binding of the source database. Default is
+            'wx_binding'.
+        dry_run (bool): True to not actually do anything. Default is False.
+        no_confirm (bool): True to not ask for confirmation. Default is False.
+    """
 
     # do we have enough to go on, must have a dest binding
     if not dest_binding:
@@ -409,7 +467,7 @@ def transfer_database(config_dict,
                       "destination database '%s' in %.2f seconds."
                       % (nrecs, src_manager.database_name,
                          dest_manager.database_name, tdiff))
-        except ImportError as e:
+        except ImportError:
             # Probably when trying to load db driver
             print("Error accessing destination database '%s'."
                   % (dest_manager_dict['database_dict']['database_name'],),
@@ -434,7 +492,19 @@ def calc_missing(config_dict,
                  tranche=10,
                  dry_run=False,
                  no_confirm=False):
-    """Calculate any missing derived observations and save to database."""
+    """Calculate any missing derived observations and save to database.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        date (str|None): Calculate for this date only. Default is None.
+        from_date (str|None): Calculate starting with this datetime. Default is None.
+        to_date (str|None): Calculate ending with this datetime. Default is None.
+        db_binding (str): The data binding to use. Default is 'wx_binding'.
+        tranche (int): Perform database transactions on this many days of records at a
+            time. Default is 10.
+        dry_run (bool): True to not actually do anything. Default is False.
+        no_confirm (bool): True to not ask for confirmation. Default is False.
+    """
     import weecfg.database
 
     log.info("Preparing to calculate missing derived observations...")
@@ -522,7 +592,12 @@ def calc_missing(config_dict,
 
 
 def check(config_dict, db_binding='wx_binding'):
-    """Check the database for any issues."""
+    """Check the database for any issues.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        db_binding (str): The data binding to use. Default is 'wx_binding'.
+    """
 
     print("Checking daily summary tables version...")
     with weewx.manager.open_manager_with_config(config_dict, db_binding) as dbm:
@@ -552,6 +627,12 @@ def update_database(config_dict,
         applied
     -   recalculates windSpeed daily summary max and maxtime fields from
         archive
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        db_binding (str): The data binding to use. Default is 'wx_binding'.
+        dry_run (bool): True to not actually do anything. Default is False.
+        no_confirm (bool): True to not ask for confirmation. Default is False.
     """
 
     ans = y_or_n("The update process does not affect archive data, "
@@ -598,6 +679,11 @@ def _fix_wind(config_dict, db_binding, dry_run):
     Create a WindSpeedRecalculation object and call its run() method to
     recalculate the max and maxtime fields from archive data. This process is
     idempotent, so it can be called repeatedly with no ill effect.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        db_binding (str): The data binding to use.
+        dry_run (bool): True to not actually do anything.
     """
     import weecfg.database
 
@@ -640,7 +726,17 @@ def reweight_daily(config_dict,
                    db_binding='wx_binding',
                    dry_run=False,
                    no_confirm=False):
-    """Recalculate the weighted sums in the daily summaries."""
+    """Recalculate the weighted sums in the daily summaries.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        date (str|None): Recalculate for this date only. Default is None.
+        from_date (str|None): Recalculate starting with this date. Default is None.
+        to_date (str|None): Recalculate ending with this date. Default is None.
+        db_binding (str): The data binding to use. Default is 'wx_binding'.
+        dry_run (bool): True to not actually do anything. Default is False.
+        no_confirm (bool): True to not ask for confirmation. Default is False.
+    """
 
     manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, db_binding)
     database_name = manager_dict['database_dict']['database_name']

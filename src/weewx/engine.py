@@ -56,7 +56,7 @@ class StdEngine:
     def __init__(self, config_dict):
         """Initialize an instance of StdEngine.
         
-        config_dict: The configuration dictionary. """
+        config_dict (configobj.ConfigObj): The configuration dictionary. """
 
         # Set a default socket time out, in case FTP or HTTP hang:
         timeout = int(config_dict.get('socket_timeout', 20))
@@ -90,7 +90,10 @@ class StdEngine:
         self.loadServices(config_dict)
 
     def setupStation(self, config_dict):
-        """Set up the weather station hardware."""
+        """Set up the weather station hardware.
+
+        config_dict (configobj.ConfigObj): The configuration dictionary.
+        """
 
         # Get the hardware type from the configuration dictionary. This will be
         # a string such as "VantagePro"
@@ -114,7 +117,10 @@ class StdEngine:
             raise InitializationError(ex)
 
     def loadServices(self, config_dict):
-        """Set up the services to be run."""
+        """Set up the services to be run.
+
+        config_dict (configobj.ConfigObj): The configuration dictionary.
+        """
 
         # Make sure all service groups are lists (if there's just a single entry, ConfigObj
         # will parse it as a string if it did not have a trailing comma).
@@ -220,7 +226,13 @@ class StdEngine:
             raise exception
 
     def bind(self, event_type, callback):
-        """Binds an event to a callback function."""
+        """Binds an event to a callback function.
+
+        event_type (weewx.Event): The type of event to bind to, e.g., weewx.NEW_LOOP_PACKET.
+
+        callback (callable): The function to be called. It must accept a single argument,
+        an instance of weewx.Event.
+        """
 
         # Each event type has a list of callback functions to be called.
         # If we have not seen the event type yet, then create an empty list,
@@ -228,7 +240,10 @@ class StdEngine:
         self.callbacks.setdefault(event_type, []).append(callback)
 
     def dispatchEvent(self, event):
-        """Call all registered callbacks for an event."""
+        """Call all registered callbacks for an event.
+
+        event (weewx.Event): The event to be dispatched.
+        """
         # See if any callbacks have been registered for this event type:
         if event.event_type in self.callbacks:
             if self.log_events:
@@ -239,7 +254,10 @@ class StdEngine:
                 callback(event)
 
     def shutDown(self, exception=None):
-        """Run when an engine shutdown is requested."""
+        """Run when an engine shutdown is requested.
+
+        exception (BaseException|None): The exception, if any, that caused the shutdown.
+        """
 
         # Send out an event saying the engine is shutting down.
         error = {}
@@ -360,7 +378,10 @@ class StdConvert(StdService):
         log.info("StdConvert target unit is 0x%x", self.target_unit)
 
     def new_loop_packet(self, event):
-        """Do unit conversions for a LOOP packet"""
+        """Do unit conversions for a LOOP packet
+
+        event (weewx.Event): The event containing the LOOP packet to be converted.
+        """
         # No need to do anything if the packet is already in the target
         # unit system
         if event.packet['usUnits'] == self.target_unit:
@@ -373,7 +394,10 @@ class StdConvert(StdService):
         event.packet = converted_packet
 
     def new_archive_record(self, event):
-        """Do unit conversions for an archive record."""
+        """Do unit conversions for an archive record.
+
+        event (weewx.Event): The event containing the archive record to be converted.
+        """
         # No need to do anything if the record is already in the target
         # unit system
         if event.record['usUnits'] == self.target_unit:
@@ -443,7 +467,10 @@ class StdCalibrate(StdService):
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
     def new_loop_packet(self, event):
-        """Apply a calibration correction to a LOOP packet"""
+        """Apply a calibration correction to a LOOP packet
+
+        event (weewx.Event): The event containing the LOOP packet to be corrected.
+        """
         for obs_type in self.corrections:
             # If no directives were specified (self.which is empty), then always do the correction.
             # If a directive has been specified, do the correction if 'loop' is in the directive.
@@ -458,7 +485,10 @@ class StdCalibrate(StdService):
                     log.error("StdCalibrate value error in LOOP packet %s", e)
 
     def new_archive_record(self, event):
-        """Apply a calibration correction to an archive packet"""
+        """Apply a calibration correction to an archive packet
+
+        event (weewx.Event): The event containing the archive record to be corrected.
+        """
         for obs_type in self.corrections:
             # If a record was software-generated, then the correction has presumably been
             # already applied in the LOOP packet. So, unless told otherwise, do not do the
@@ -598,7 +628,10 @@ class StdArchive(StdService):
 
     def startup(self, _unused):
         """Called when the engine is starting up. Main task is to set up the database, backfill it,
-        then perform a catch-up if the hardware supports it. """
+        then perform a catch-up if the hardware supports it.
+
+        _unused (weewx.Event): Not used.
+        """
 
         # This will create the database if it doesn't exist:
         dbmanager = self.engine.db_binder.get_manager(self.data_binding, initialize=True)
@@ -624,7 +657,10 @@ class StdArchive(StdService):
                 pass
 
     def pre_loop(self, _event):
-        """Called before the main packet loop is entered."""
+        """Called before the main packet loop is entered.
+
+        _event (weewx.Event): Not used.
+        """
 
         # If this is the initial time through the loop, then the end of
         # the archive and delay periods need to be primed:
@@ -636,7 +672,10 @@ class StdArchive(StdService):
         self.old_accumulator = None
 
     def new_loop_packet(self, event):
-        """Called when A new LOOP record has arrived."""
+        """Called when A new LOOP record has arrived.
+
+        event (weewx.Event): The event containing the new LOOP packet.
+        """
 
         # Do we have an accumulator at all? If not, create one:
         if not self.accumulator:
@@ -656,7 +695,10 @@ class StdArchive(StdService):
 
     def check_loop(self, event):
         """Called after any loop packets have been processed. This is the opportunity
-        to break the main loop by throwing an exception."""
+        to break the main loop by throwing an exception.
+
+        event (weewx.Event): The event containing the LOOP packet just processed.
+        """
         # Is this the end of the archive period? If so, dispatch an
         # END_ARCHIVE_PERIOD event
         if event.packet['dateTime'] > self.end_archive_period_ts:
@@ -672,7 +714,10 @@ class StdArchive(StdService):
             raise BreakLoop
 
     def post_loop(self, _event):
-        """The main packet loop has ended, so process the old accumulator."""
+        """The main packet loop has ended, so process the old accumulator.
+
+        _event (weewx.Event): Not used.
+        """
         # If weewx happens to startup in the small time interval between the end of
         # the archive interval and the end of the archive delay period, then
         # there will be no old accumulator. Check for this.
@@ -698,7 +743,10 @@ class StdArchive(StdService):
 
     def new_archive_record(self, event):
         """Called when a new archive record has arrived.
-        Put it in the archive database."""
+        Put it in the archive database.
+
+        event (weewx.Event): The event containing the new archive record.
+        """
 
         # If requested, extract any extra information we can out of the accumulator and put it in
         # the record. Not necessary in the case of software record generation because it has
@@ -719,7 +767,11 @@ class StdArchive(StdService):
         """Pull any unarchived records off the console and archive them.
         
         If the hardware does not support hardware archives, an exception of
-        type NotImplementedError will be thrown."""
+        type NotImplementedError will be thrown.
+
+        generator (callable): A generator function that yields archive records (e.g.,
+        self.engine.console.genStartupRecords or genArchiveRecords).
+        """
 
         dbmanager = self.engine.db_binder.get_manager(self.data_binding)
         # Find out when the database was last updated.
@@ -852,6 +904,7 @@ class StdPrint(StdService):
 class StdReport(StdService):
     """Launches a separate thread to do reporting."""
 
+    # noinspection unused-imports
     def __init__(self, engine, config_dict):
         super().__init__(engine, config_dict)
         self.max_wait = int(config_dict['StdReport'].get('max_wait', 600))
@@ -876,7 +929,10 @@ class StdReport(StdService):
         self.record = event.record
 
     def launch_report_thread(self, _event):
-        """Called after the packet LOOP. Processes any new data."""
+        """Called after the packet LOOP. Processes any new data.
+
+        _event (weewx.Event): Not used.
+        """
         import weewx.reportengine
         # Do not launch the reporting thread if an old one is still alive.
         # To guard against a zombie thread (alive, but doing nothing) launch

@@ -43,7 +43,12 @@ class DatabaseFix:
     """
 
     def __init__(self, config_dict, fix_config_dict):
-        """A generic initialisation."""
+        """A generic initialisation.
+
+        Args:
+            config_dict (dict): The weewx configuration dictionary.
+            fix_config_dict (dict): Dictionary containing config data specific to the fix.
+        """
 
         # save our weewx config dict
         self.config_dict = config_dict
@@ -100,11 +105,11 @@ class DatabaseFix:
         """Obtain the timestamp of the earliest daily summary entry for an
         observation type.
 
-        Imput:
-            obs_type: The observation type whose daily summary is to be checked.
+        Args:
+            obs_type (str): The observation type whose daily summary is to be checked.
 
         Returns:
-            The timestamp of the earliest daily summary entry for obs_tpye
+            int|None: The timestamp of the earliest daily summary entry for obs_tpye
             observation. None is returned if no record culd be found.
         """
 
@@ -114,14 +119,18 @@ class DatabaseFix:
         return _row[0] if _row else None
 
     @staticmethod
-    def _progress(record, ts):
+    def _progress(record_number, ts):
         """Utility function to show our progress while processing the fix.
 
             Override in derived class to provide a different progress display.
             To do nothing override with a pass statement.
+
+        Args:
+            record_number (int): The number of the record currently being processed.
+            ts (float|int): The epoch timestamp of the record currently being processed.
         """
 
-        _msg = "Fixing database record: %d; Timestamp: %s\r" % (record, timestamp_to_string(ts))
+        _msg = "Fixing database record: %d; Timestamp: %s\r" % (record_number, timestamp_to_string(ts))
         print(_msg, end='', file=sys.stdout)
         sys.stdout.flush()
 
@@ -159,7 +168,12 @@ class WindSpeedRecalculation(DatabaseFix):
     """
 
     def __init__(self, config_dict, fix_config_dict):
-        """Initialise our WindSpeedRecalculation object."""
+        """Initialise our WindSpeedRecalculation object.
+
+        Args:
+            config_dict (dict): The weewx configuration dictionary.
+            fix_config_dict (dict): Dictionary containing config data specific to the fix.
+        """
 
         # call our parents __init__
         super().__init__(config_dict, fix_config_dict)
@@ -315,11 +329,16 @@ class WindSpeedRecalculation(DatabaseFix):
             _cursor.close()
 
     @staticmethod
-    def _progress(ndays, last_time):
-        """Utility function to show our progress while processing the fix."""
+    def _progress(record_number, ts):
+        """Utility function to show our progress while processing the fix.
+
+        Args:
+            record_number (int): The number of days processed so far.
+            ts (float|int): The epoch timestamp of the last record processed.
+        """
 
         _msg = "Updating 'windSpeed' daily summary: %d; " \
-               "Timestamp: %s\r" % (ndays, timestamp_to_string(last_time, format_str="%Y-%m-%d"))
+               "Timestamp: %s\r" % (record_number, timestamp_to_string(ts, format_str="%Y-%m-%d"))
         print(_msg, end='', file=sys.stdout)
         sys.stdout.flush()
 
@@ -446,7 +465,7 @@ class CalcMissing(DatabaseFix):
                             p_msg = "Processing record: %d; Last record: %s" \
                                     % (total_records_processed,
                                        timestamp_to_string(record['dateTime']))
-                            self._progress(p_msg)
+                            self._calc_missing_progress(p_msg)
                     # update the total records updated
                     total_records_updated += records_updated
                     # if we updated any records on this day increment the count
@@ -459,7 +478,7 @@ class CalcMissing(DatabaseFix):
         # so the total tallies with the log
         p_msg = "Processing record: %d; Last record: %s" % (total_records_processed,
                                                             timestamp_to_string(tr_stop_ts))
-        self._progress(p_msg, overprint=False)
+        self._calc_missing_progress(p_msg, overprint=False)
         # now update the daily summaries, but only if this is not a dry run
         if not self.dry_run:
             print("Recalculating daily summaries...")
@@ -515,7 +534,7 @@ class CalcMissing(DatabaseFix):
         Args:
             ts (float): epoch timestamp of the record to be updated
             record (dict): dictionary containing the updated data in field name-value pairs
-            cursor (weedb.Cursor): sqlite cursor
+            cursor (weedb.Cursor|None): sqlite cursor
 
         Returns:
             int: The number of records updated.
@@ -557,7 +576,7 @@ class CalcMissing(DatabaseFix):
         return 0
 
     @staticmethod
-    def _progress(message, overprint=True):
+    def _calc_missing_progress(message, overprint=True):
         """Utility function to show our progress."""
 
         if overprint:

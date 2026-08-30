@@ -31,7 +31,14 @@ from weeutil.weeutil import to_int, to_bool
 
 
 def guard(fn):
-    """Decorator function that converts sqlite exceptions into weedb exceptions."""
+    """Decorator function that converts sqlite exceptions into weedb exceptions.
+
+    Args:
+        fn(callable): The function to be decorated.
+
+    Returns:
+        callable: The decorated function.
+    """
 
     def guarded_fn(*args, **kwargs):
         try:
@@ -66,7 +73,14 @@ def connect(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVari
 @guard
 def create(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVariable
     """Create the database specified by the db_dict. If it already exists,
-    an exception of type DatabaseExistsError will be thrown."""
+    an exception of type DatabaseExistsError will be thrown.
+
+    Args:
+        database_name(str): The name of the Sqlite database. This is generally the file name.
+        SQLITE_ROOT(str): The path to the directory holding the database.
+        driver(str): The name of the weedb driver. Unused for sqlite databases.
+        **argv: Additional keyword arguments, such as 'timeout' and 'isolation_level'.
+    """
     file_path = _get_filepath(SQLITE_ROOT, database_name, **argv)
     # Check whether the database file exists:
     if os.path.exists(file_path):
@@ -100,7 +114,17 @@ def drop(database_name='', SQLITE_ROOT='', driver='', **argv):  # @UnusedVariabl
 
 
 def _get_filepath(SQLITE_ROOT, database_name, **argv):
-    """Utility function to calculate the path to the sqlite database file."""
+    """Utility function to calculate the path to the sqlite database file.
+
+    Args:
+        SQLITE_ROOT(str): The path to the directory holding the database.
+        database_name(str): The name of the Sqlite database. This is generally the file name.
+        **argv: Additional keyword arguments. May include 'root', an alternative way of
+            specifying SQLITE_ROOT.
+
+    Returns:
+        str: The full path to the sqlite database file.
+    """
     if database_name == ':memory:':
         return database_name
     # For backwards compatibility, allow the keyword 'root', if 'SQLITE_ROOT' is
@@ -117,12 +141,11 @@ class Connection(weedb.Connection):
         """Initialize an instance of Connection.
 
         Args:
-        
-            database_name: The name of the Sqlite database. This is generally the file name
-            SQLITE_ROOT: The path to the directory holding the database. Joining "SQLITE_ROOT" with
+            database_name(str): The name of the Sqlite database. This is generally the file name
+            SQLITE_ROOT(str): The path to the directory holding the database. Joining "SQLITE_ROOT" with
               "database_name" results in the full path to the sqlite file.
-            pragmas: Any pragma statements, in the form of a dictionary.
-            timeout: The amount of time, in seconds, to wait for a lock to be released.
+            pragmas(dict): Any pragma statements, in the form of a dictionary.
+            timeout(int): The amount of time, in seconds, to wait for a lock to be released.
               Optional. Default is 5.
             isolation_level(str): The type of isolation level to use. One of None,
               DEFERRED, IMMEDIATE, or EXCLUSIVE. Default is None (autocommit mode).
@@ -160,7 +183,11 @@ class Connection(weedb.Connection):
 
     @guard
     def tables(self):
-        """Returns a list of tables in the database."""
+        """Returns a list of tables in the database.
+
+        Returns:
+            list[str]: A list of the table names in the database.
+        """
 
         table_list = list()
         for row in self.connection.execute("SELECT tbl_name FROM sqlite_master "
@@ -174,7 +201,15 @@ class Connection(weedb.Connection):
     def genSchemaOf(self, table):
         """Return a summary of the schema of the specified table.
         
-        If the table does not exist, an exception of type weedb.OperationalError is raised."""
+        If the table does not exist, an exception of type weedb.OperationalError is raised.
+
+        Args:
+            table(str): The name of the table to be examined.
+
+        Yields:
+            tuple: A 6-way tuple: (column_number, column_name, column_type, can_be_null,
+                default_value, is_primary_key).
+        """
         for row in self.connection.execute("""PRAGMA table_info(%s);""" % table):
             if row[2].upper().startswith('CHAR'):
                 coltype = 'STR'
@@ -184,7 +219,14 @@ class Connection(weedb.Connection):
 
     def columnsOf(self, table):
         """Return a list of columns in the specified table. If the table does not exist,
-        None is returned."""
+        None is returned.
+
+        Args:
+            table(str): The name of the table to be examined.
+
+        Returns:
+            list[str]: A list of the column names in the table.
+        """
 
         column_list = [row[1] for row in self.genSchemaOf(table)]
 
@@ -266,10 +308,10 @@ class Cursor(sqlite3.Cursor, weedb.Cursor):
     def drop_columns(self, table, column_names):
         """Drop the set of 'column_names' from table 'table'.
 
-        table: The name of the table from which the column(s) are to be dropped.
-
-        column_names: A set (or list) of column names to be dropped. It is not an error to try to
-        drop a non-existent column.
+        Args:
+            table(str): The name of the table from which the column(s) are to be dropped.
+            column_names(set|list[str]): A set (or list) of column names to be dropped. It is not
+                an error to try to drop a non-existent column.
         """
 
         existing_column_set = set()

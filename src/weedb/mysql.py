@@ -53,7 +53,14 @@ exception_map = {
 
 
 def guard(fn):
-    """Decorator function that converts MySQL exceptions into weedb exceptions."""
+    """Decorator function that converts MySQL exceptions into weedb exceptions.
+
+    Args:
+        fn (callable): The function to be decorated.
+
+    Returns:
+        callable: The decorated function.
+    """
 
     def guarded_fn(*args, **kwargs):
         try:
@@ -83,7 +90,21 @@ def connect(host='localhost', user='', password='', database_name='',
 def create(host='localhost', user='', password='', database_name='',
            driver='', port=3306, engine=DEFAULT_ENGINE, autocommit=True, **kwargs):
     """Create the specified database. If it already exists,
-    an exception of type weedb.DatabaseExistsError will be raised."""
+    an exception of type weedb.DatabaseExistsError will be raised.
+
+    Args:
+        host (str): IP or hostname hosting the mysql database.
+            Alternatively, the path to the socket mount. (required)
+        user (str): The username (required)
+        password (str): The password for the username (required)
+        database_name (str): The name of the database to be created. (required)
+        driver (str): The name of the weedb driver. Unused for MySQL databases.
+        port (int): Its port number (optional; default is 3306)
+        engine (str): The MySQL database engine to use (optional; default is 'INNODB')
+        autocommit (bool): If True, autocommit is enabled (default is True)
+        **kwargs: Any extra arguments you may wish to pass on to the MySQL
+            connect statement.
+    """
 
     # Open up a connection w/o specifying the database.
     with Connection(host=host,
@@ -100,7 +121,21 @@ def create(host='localhost', user='', password='', database_name='',
 def drop(host='localhost', user='', password='', database_name='',
          driver='', port=3306, engine=DEFAULT_ENGINE, autocommit=True,
          **kwargs):
-    """Drop (delete) the specified database."""
+    """Drop (delete) the specified database.
+
+    Args:
+        host (str): IP or hostname hosting the mysql database.
+            Alternatively, the path to the socket mount. (required)
+        user (str): The username (required)
+        password (str): The password for the username (required)
+        database_name (str): The name of the database to be dropped. (required)
+        driver (str): The name of the weedb driver. Unused for MySQL databases.
+        port (int): Its port number (optional; default is 3306)
+        engine (str): The MySQL database engine to use (optional; default is 'INNODB')
+        autocommit (bool): If True, autocommit is enabled (default is True)
+        **kwargs: Any extra arguments you may wish to pass on to the MySQL
+            connect statement. (optional).
+    """
 
     with Connection(host=host,
                     port=int(port),
@@ -152,7 +187,11 @@ class Connection(weedb.Connection):
 
     @guard
     def tables(self):
-        """Returns a list of tables in the database."""
+        """Returns a list of tables in the database.
+
+        Returns:
+            list[str]: A list of the table names in the database.
+        """
 
         table_list = list()
         # Get a cursor directly from MySQL
@@ -169,7 +208,15 @@ class Connection(weedb.Connection):
     def genSchemaOf(self, table):
         """Return a summary of the schema of the specified table.
         
-        If the table does not exist, an exception of type weedb.OperationalError is raised."""
+        If the table does not exist, an exception of type weedb.OperationalError is raised.
+
+        Args:
+            table (str): The name of the table to be examined.
+
+        Yields:
+            tuple: A 6-way tuple: (column_number, column_name, column_type, can_be_null,
+                default_value, is_primary_key).
+        """
 
         with self.connection.cursor() as cursor:
             # If the table does not exist, this will raise a MySQL ProgrammingError exception,
@@ -192,7 +239,7 @@ class Connection(weedb.Connection):
                     coltype = str(row[1]).upper()
                 is_primary = True if row[3] == 'PRI' else False
                 can_be_null = False if row[2] == '' else to_bool(row[2])
-                yield (irow, colname, coltype, can_be_null, row[4], is_primary)
+                yield irow, colname, coltype, can_be_null, row[4], is_primary
                 irow += 1
 
     @guard
@@ -245,8 +292,10 @@ class Cursor(weedb.Cursor):
     @guard
     def __init__(self, connection):
         """Initialize a Cursor from a connection.
-        
-        connection: An instance of db.mysql.Connection"""
+
+        Args:
+            connection (Connection): An instance of db.mysql.Connection
+        """
 
         # Get the MySQLdb cursor and store it internally:
         self.cursor = connection.connection.cursor()
@@ -254,11 +303,15 @@ class Cursor(weedb.Cursor):
     @guard
     def execute(self, sql_string, sql_tuple=()):
         """Execute a SQL statement on the MySQL server.
-        
-        sql_string: A SQL statement to be executed. It should use ? as
-        a placeholder.
-        
-        sql_tuple: A tuple with the values to be used in the placeholders."""
+
+        Args:
+            sql_string (str): A SQL statement to be executed. It should use ? as
+                a placeholder.
+            sql_tuple (tuple): A tuple with the values to be used in the placeholders.
+
+        Returns:
+            Cursor: self, to allow chaining.
+        """
 
         # MySQL uses '%s' as placeholders, so replace the ?'s with %s
         mysql_string = sql_string.replace('?', '%s')
@@ -285,10 +338,11 @@ class Cursor(weedb.Cursor):
     def drop_columns(self, table, column_names):
         """Drop the set of 'column_names' from table 'table'.
 
-        table: The name of the table from which the column(s) are to be dropped.
+        Args:
+            table (str): The name of the table from which the column(s) are to be dropped.
 
-        column_names: A set (or list) of column names to be dropped. It is not an error to try to drop
-        a non-existent column.
+            column_names (set|list[str]): A set (or list) of column names to be dropped. It is
+            not an error to try to drop a non-existent column.
         """
         for column_name in column_names:
             self.execute("ALTER TABLE %s DROP COLUMN %s;" % (table, column_name))
@@ -330,7 +384,12 @@ def _massage(seq):
 
 
 def set_engine(connect, engine):
-    """Set the default MySQL storage engine."""
+    """Set the default MySQL storage engine.
+
+    Args:
+        connect (MySQLdb.Connection): A MySQLdb connection object.
+        engine (str): The name of the MySQL storage engine to be used, e.g., 'INNODB'.
+    """
     try:
         server_version = connect._server_version
     except AttributeError:

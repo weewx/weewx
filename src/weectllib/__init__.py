@@ -89,8 +89,8 @@ def _do_dispatch(namespace, extra_args=None):
     and invokes the configured action function with optional extra args.
 
     Args:
-        namespace: The parsed command line namespace.
-        extra_args: Optional extra command line arguments (if any). Set to None
+        namespace(argparse.Namespace): The parsed command line namespace.
+        extra_args(list[str]|None): Optional extra command line arguments (if any). Set to None
         if there cannot be any.
     """
 

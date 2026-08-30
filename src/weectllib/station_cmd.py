@@ -79,7 +79,12 @@ LIST_DRIVERS_DESCRIPTION = f"""List all of the available device drivers."""
 
 
 def add_subparser(subparsers):
-    """Add the parsers used to implement the 'station' command. """
+    """Add the parsers used to implement the 'station' command.
+
+    Args:
+        subparsers (argparse._SubParsersAction): The subparsers object to which the
+            'station' subcommand parser will be added.
+    """
     station_parser = subparsers.add_parser('station',
                                            usage=station_usage,
                                            description='Manages the station data area, including '
@@ -297,7 +302,11 @@ def add_subparser(subparsers):
 
 
 def create_station(namespace):
-    """Map 'namespace' to a call to station_create()"""
+    """Map 'namespace' to a call to station_create()
+
+    Args:
+        namespace (argparse.Namespace): The parsed command line namespace.
+    """
     try:
         _config_dict = weectllib.station_actions.station_create(
             weewx_root=namespace.weewx_root,
@@ -323,7 +332,12 @@ def create_station(namespace):
 
 
 def reconfigure_station(config_dict, namespace):
-    """Map namespace to a call to station_reconfigure()"""
+    """Map namespace to a call to station_reconfigure()
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        namespace (argparse.Namespace): The parsed command line namespace.
+    """
     try:
         weectllib.station_actions.station_reconfigure(config_dict=config_dict,
                                                       driver=namespace.driver,

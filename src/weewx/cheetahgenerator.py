@@ -57,7 +57,6 @@ Example:
 
 """
 
-import datetime
 import json
 import logging
 import os.path
@@ -65,9 +64,9 @@ import time
 import unicodedata
 
 import Cheetah.Filters
-import Cheetah.Template
 import Cheetah.NameMapper
 import Cheetah.Parser
+import Cheetah.Template
 
 import weedb
 import weeutil.logger
@@ -130,7 +129,14 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                    'SummaryByYear' : "%Y"}
 
     def __init__(self, config_dict, skin_dict, *args, **kwargs):
-        """Initialize an instance of CheetahGenerator"""
+        """Initialize an instance of CheetahGenerator
+
+        Args:
+            config_dict (dict): The weewx configuration dictionary.
+            skin_dict (ConfigObj): The skin dictionary.
+            *args: Additional positional arguments passed to the superclass ReportGenerator.
+            **kwargs: Additional keyword arguments passed to the superclass ReportGenerator.
+        """
         # Initialize my superclass
         weewx.reportengine.ReportGenerator.__init__(self, config_dict, skin_dict, *args, **kwargs)
 
@@ -175,7 +181,12 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                      ngen, self.skin_dict['REPORT_NAME'], elapsed_time)
 
     def init_extensions(self, gen_dict):
-        """Load the search list"""
+        """Load the search list
+
+        Args:
+            gen_dict (dict): The configuration dictionary for this generator, containing
+                options such as 'search_list' and 'search_list_extensions'.
+        """
 
         # Build the search list. Start with user extensions:
         search_list = weeutil.weeutil.option_as_list(gen_dict.get('search_list_extensions', []))
@@ -208,11 +219,15 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         """Generate one or more reports for the indicated section.  Each
         section in a period is a report.  A report has one or more templates.
 
-        section: A ConfigObj dictionary, holding the templates to be
-        generated.  Any subsections in the dictionary will be recursively
-        processed as well.
-        
-        gen_ts: The report will be current to this time.
+        Args:
+            section (ConfigObj): A ConfigObj dictionary, holding the templates to be
+                generated.  Any subsections in the dictionary will be recursively
+                processed as well.
+            section_name (str): The name of the section being processed.
+            gen_ts (int|None): The report will be current to this time.
+
+        Returns:
+            int: The number of files generated.
         """
 
         ngen = 0
@@ -391,7 +406,19 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         return ngen
 
     def _getSearchList(self, encoding, timespan, default_binding, section_name, file_name):
-        """Get the complete search list to be used by Cheetah."""
+        """Get the complete search list to be used by Cheetah.
+
+        Args:
+            encoding (str): The encoding to be used, such as 'html_entities'.
+            timespan (weeutil.weeutil.TimeSpan): The time period for which the search list
+                is valid.
+            default_binding (str): The default data binding to be used.
+            section_name (str): The name of the section being processed.
+            file_name (str): The name of the file being generated.
+
+        Returns:
+            list: The complete search list to be used by Cheetah.
+        """
 
         # Get the basic search list
         timespan_start_tt = time.localtime(timespan.start)
@@ -413,7 +440,15 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
     def _prepGen(self, report_dict):
         """Get the template, destination directory, encoding, and default
-        binding."""
+        binding.
+
+        Args:
+            report_dict (dict): The dictionary of options for this report.
+
+        Returns:
+            tuple(str, str, str, str): A 4-way tuple (template, destination_dir, encoding,
+                default_binding).
+        """
 
         # -------- Template ---------
         template = os.path.join(self.config_dict['WEEWX_ROOT'],
@@ -442,7 +477,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         # ------ Default binding ---------
         default_binding = report_dict['data_binding']
 
-        return (template, destination_dir, encoding, default_binding)
+        return template, destination_dir, encoding, default_binding
 
 
 # =============================================================================
@@ -698,6 +733,12 @@ class PlotInfo(SearchList):
         """
         Given a plot name, return the set of observations in that plot.
         If there is no plot by the indicated name, return an empty set.
+
+        Args:
+            plot_name (str): The name of the plot.
+
+        Returns:
+            set: The set of observation names used by the plot.
         """
         obs = set()
         # If there is no [ImageGenerator] section, return the empty set.
@@ -762,7 +803,16 @@ class AssureUnicode(Cheetah.Filters.Filter):
     Unicode. """
 
     def filter(self, val, **kwargs):
-        """Convert the expression 'val' to a string (unicode)."""
+        """Convert the expression 'val' to a string (unicode).
+
+        Args:
+            val (str|bytes|object|None): The value to be converted.
+            **kwargs: Additional keyword arguments, such as 'rawExpr' holding the raw
+                Cheetah expression.
+
+        Returns:
+            str: The value converted to a string.
+        """
         if val is None:
             return u''
 
