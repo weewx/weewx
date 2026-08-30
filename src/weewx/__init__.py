@@ -147,6 +147,25 @@ class SHUTDOWN:
     The event contains attribute 'error', a dictionary. If this shut down is due to an exception,
     it contains the keys 'exception' and 'stacktrace', otherwise it is empty. """
 
+class STATION_DOWN:
+    """Event issued when the archive data has stopped arriving. The event
+    contains attribute 'last_record', the timestamp of the newest record, 'age',
+    how many seconds old it is, and 'gap', which is zero.
+
+    Issued from the thread of StdStationWatch, not from the main loop: the main
+    loop only comes round when a LOOP packet arrives, which is what has stopped
+    happening. Anything bound to it must not touch the console."""
+
+
+class STATION_UP:
+    """Event issued when archive data has started arriving again. The event
+    contains attribute 'last_record', the timestamp of the newest record, 'age',
+    how many seconds old it is, and 'gap', how many seconds are missing in front
+    of it.
+
+    Issued from the thread of StdStationWatch. See STATION_DOWN."""
+
+
 # =============================================================================
 #                       Service groups.
 # =============================================================================

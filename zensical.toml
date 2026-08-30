@@ -104,6 +104,7 @@ nav = [
             { "[StdWXCalculate]" = "reference/weewx-options/stdwxcalculate.md" },
             { "[StdArchive]" = "reference/weewx-options/stdarchive.md" },
             { "[StdTimeSynch]" = "reference/weewx-options/stdtimesynch.md" },
+            { "[StdStationWatch]" = "reference/weewx-options/stdstationwatch.md" },
             { "[DataBindings]" = "reference/weewx-options/data-bindings.md" },
             { "[Databases]" = "reference/weewx-options/databases.md" },
             { "[DatabaseTypes]" = "reference/weewx-options/database-types.md" },
