@@ -875,6 +875,16 @@ class StdArchive(StdService):
         self.creator = StdArchiveCreator(engine, config_dict)
         self.store = StdArchiveStore(engine, config_dict)
 
+    def shutDown(self):
+        """Shut both halves down.
+
+        The engine calls shutDown() on the services it loaded, and it loaded this
+        one, not the two it holds. Neither has anything to release today. This is
+        so that neither has to remember it when one of them does.
+        """
+        self.creator.shutDown()
+        self.store.shutDown()
+
 
 # ==============================================================================
 #                    Class StdTimeSynch
