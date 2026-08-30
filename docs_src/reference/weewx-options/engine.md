@@ -78,7 +78,8 @@ and they talk to each other only through the `NEW_ARCHIVE_RECORD` event:
 `StdArchiveStore` listens for it and writes to the database. Either one can be
 replaced on its own. An extension that builds records some other way takes the place
 of the creator; a second `StdArchiveStore`, given another data binding, saves the
-same records to another database.
+same records to another database. A replacement reads `[StdArchive]` for the options
+both halves share, and a stanza of its own for anything else it needs.
 
 `weewx.engine.StdArchive` does both jobs in one service. Configurations written
 before v5.5 name it, and it behaves as it always has.

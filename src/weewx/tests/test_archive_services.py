@@ -18,7 +18,7 @@ import pytest
 import weewx
 import weewx.accum
 import weewx.engine
-from weeutil.weeutil import startOfInterval
+from weeutil.weeutil import startOfInterval, to_int
 
 INTERVAL = 300
 DELAY = 15
@@ -323,3 +323,59 @@ class TestConfiguration:
 
         assert not hasattr(store, 'record_generation')
         assert not hasattr(store, 'archive_interval')
+
+
+class TestAnExtensionOfEitherHalf:
+    """What a replacement does about options that [StdArchive] does not have.
+
+    Nothing in the two services provides for this, and nothing needs to: a subclass
+    calls up to the constructor it is replacing, which reads [StdArchive], and then
+    reads its own stanza for whatever else it wants. The shared options stay shared.
+    """
+
+    def test_it_keeps_the_shared_options_and_adds_its_own(self):
+        class Creator(weewx.engine.StdArchiveCreator):
+            def __init__(self, engine, config_dict):
+                super().__init__(engine, config_dict)
+                mine = config_dict.get('MyCreator', {})
+                self.smoothing = to_int(mine.get('smoothing', 0))
+
+        cfg = config()
+        cfg['MyCreator'] = {'smoothing': '3'}
+        creator = Creator(Engine(), cfg)
+
+        assert creator.smoothing == 3
+        assert creator.archive_delay == DELAY          # from [StdArchive]
+        assert creator.data_binding == 'wx_binding'
+
+    def test_it_can_override_a_shared_option_for_itself(self):
+        class Store(weewx.engine.StdArchiveStore):
+            def __init__(self, engine, config_dict):
+                super().__init__(engine, config_dict)
+                mine = config_dict.get('MyStore', {})
+                self.data_binding = mine.get('data_binding', self.data_binding)
+
+        cfg = config()
+        cfg['MyStore'] = {'data_binding': 'other_binding'}
+        store = Store(Engine(), cfg)
+
+        assert store.data_binding == 'other_binding'
+
+    def test_a_replacement_that_shares_nothing_still_serves_the_other_half(self):
+        """The event is the whole contract, so a replacement need not inherit at all."""
+        class Creator(weewx.engine.StdService):
+            def __init__(self, engine, config_dict):
+                super().__init__(engine, config_dict)
+                self.mine = config_dict['MyCreator']['whatever']
+
+        cfg = config()
+        cfg['MyCreator'] = {'whatever': 'yes'}
+        engine = Engine()
+        creator = Creator(engine, cfg)
+        weewx.engine.StdArchiveStore(engine, cfg)
+
+        assert creator.mine == 'yes'
+        engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
+                                         record={'dateTime': START, 'usUnits': weewx.US},
+                                         origin='software'))
+        assert len(engine.manager.records) == 1
