@@ -626,12 +626,14 @@ def pick_language(languages, default='en'):
     Given a choice of languages, pick one.
 
     Args:
-        languages (dict): As returned by function get_languages() above
+        languages (dict|None): As returned by function get_languages() above
         default (str): The language code of the default
 
     Returns:
         str: The chosen language code
     """
+    if not languages:
+        return default
     keys = sorted(languages.keys())
     if default not in keys:
         default = None
