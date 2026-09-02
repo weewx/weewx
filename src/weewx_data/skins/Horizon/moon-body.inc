@@ -12,10 +12,10 @@
 ## NASA's, rendered from Lunar Reconnaissance Orbiter data. See moon/LICENSE.txt.
 ##
 #if $almanac.hasExtras
-#set $AU_KM = 149597870.7
-#set $SYNODIC = 29.530588
-#set $age_days = ($current.dateTime.raw - $almanac.previous_new_moon.raw) / 86400.0
-#set $frame = '%02d' % (int(round($age_days / $SYNODIC * 32)) % 32)
+  #set $AU_KM = 149597870.7
+  #set $SYNODIC = 29.530588
+  #set $age_days = ($current.dateTime.raw - $almanac.previous_new_moon.raw) / 86400.0
+  #set $frame = '%02d' % (int(round($age_days / $SYNODIC * 32)) % 32)
 
     <img class="moon-image" src="moon/moon-${frame}.webp" width="216" height="216"
          loading="lazy" alt="$almanac.moon_phase, $almanac.moon_fullness%">
@@ -31,8 +31,8 @@
       <dd>$almanac.moon.rise</dd>
       <dt>$gettext("Moonset")</dt>
       <dd>$almanac.moon.set</dd>
-      #set $to_full = int(round(($almanac.next_full_moon.raw - $current.dateTime.raw) / 86400.0))
-      #set $to_new = int(round(($almanac.next_new_moon.raw - $current.dateTime.raw) / 86400.0))
+  #set $to_full = int(round(($almanac.next_full_moon.raw - $current.dateTime.raw) / 86400.0))
+  #set $to_new = int(round(($almanac.next_new_moon.raw - $current.dateTime.raw) / 86400.0))
       <dt>$gettext("Full moon")</dt>
       <dd>$almanac.next_full_moon <span class="hint">${$to_full == 0 and $gettext("today") or ($gettext("in %d days") % $to_full)}</span></dd>
       <dt>$gettext("New moon")</dt>

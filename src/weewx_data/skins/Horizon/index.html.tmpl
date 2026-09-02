@@ -18,9 +18,9 @@
     <link rel="icon" href="favicon.ico" sizes="any">
     <link rel="stylesheet" href="horizon.css">
     #include "theme.inc"
-    #if $station.station_url
+#if $station.station_url
     <link rel="canonical" href="$station.station_url/$filename">
-    #end if
+#end if
     <script>
       /* Apply the saved theme before first paint, so the page never flashes. */
       (function () {
@@ -43,10 +43,10 @@
 ## when there is only one column.
 #set $columns = 'columns'
 #if $DisplayOptions.get('sidebar', 'right') == 'left'
-#set $columns = $columns + ' sidebar-left'
+  #set $columns = $columns + ' sidebar-left'
 #end if
 #if $DisplayOptions.get('sidebar_responsive', 'bottom') == 'top'
-#set $columns = $columns + ' sidebar-responsive-top'
+  #set $columns = $columns + ' sidebar-responsive-top'
 #end if
       <div class="$columns">
 
@@ -97,7 +97,7 @@
         latitude: ${'%.3f' % $station.latitude_f},
         longitude: ${'%.3f' % $station.longitude_f},
         forecast: {
-          #set $fc = $DisplayOptions.get('Forecast', {})
+#set $fc = $DisplayOptions.get('Forecast', {})
           fetch: #if $to_bool($fc.get('browser_fetch', True)) then 'true' else 'false'#,
           file: #if $to_bool($fc.get('file', False)) then 'true' else 'false'#,
           hours: $to_int($fc.get('hours', 8)),
@@ -106,23 +106,23 @@
           ## script: a station is read by the people who live near it, and the
           ## skin's language files are where its words belong. The script keeps
           ## only the codes and the pictures, which are the same everywhere.
-          #set $sky = {}
-          #for $code, $said in [(0, 'Clear sky'), (1, 'Mainly clear'),
-                                (2, 'Partly cloudy'), (3, 'Overcast'),
-                                (45, 'Fog'), (48, 'Freezing fog'),
-                                (51, 'Light drizzle'), (53, 'Drizzle'),
-                                (55, 'Heavy drizzle'), (56, 'Light freezing drizzle'),
-                                (57, 'Freezing drizzle'), (61, 'Light rain'),
-                                (63, 'Rain'), (65, 'Heavy rain'),
-                                (66, 'Light freezing rain'), (67, 'Freezing rain'),
-                                (71, 'Light snow'), (73, 'Snow'), (75, 'Heavy snow'),
-                                (77, 'Snow grains'), (80, 'Light rain showers'),
-                                (81, 'Rain showers'), (82, 'Violent rain showers'),
-                                (85, 'Light snow showers'), (86, 'Snow showers'),
-                                (95, 'Thunderstorm'), (96, 'Thunderstorm with light hail'),
-                                (99, 'Thunderstorm with hail')]
-          #silent $sky[$str($code)] = $gettext($said)
-          #end for
+#set $sky = {}
+#for $code, $said in [(0, 'Clear sky'), (1, 'Mainly clear'),
+                      (2, 'Partly cloudy'), (3, 'Overcast'),
+                      (45, 'Fog'), (48, 'Freezing fog'),
+                      (51, 'Light drizzle'), (53, 'Drizzle'),
+                      (55, 'Heavy drizzle'), (56, 'Light freezing drizzle'),
+                      (57, 'Freezing drizzle'), (61, 'Light rain'),
+                      (63, 'Rain'), (65, 'Heavy rain'),
+                      (66, 'Light freezing rain'), (67, 'Freezing rain'),
+                      (71, 'Light snow'), (73, 'Snow'), (75, 'Heavy snow'),
+                      (77, 'Snow grains'), (80, 'Light rain showers'),
+                      (81, 'Rain showers'), (82, 'Violent rain showers'),
+                      (85, 'Light snow showers'), (86, 'Snow showers'),
+                      (95, 'Thunderstorm'), (96, 'Thunderstorm with light hail'),
+                      (99, 'Thunderstorm with hail')]
+  #silent $sky[$str($code)] = $gettext($said)
+#end for
           sky: $jsonize($sky)
         },
         ## null leaves it to the page, which reads index.json to see whether PNGs

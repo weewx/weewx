@@ -21,40 +21,40 @@
 ## and a guess short enough to help a five-minute station would dim a slower one
 ## every cycle.
 #if $current.interval.raw is not None
-#set $ignore = $fields.update({'interval': $current.interval.raw})
+  #set $ignore = $fields.update({'interval': $current.interval.raw})
 #end if
 ## Two forms of each reading. The string is what the page puts on screen when the
 ## reader has asked for no unit of their own, already formatted in the report's
 ## language. The number and its unit are what the page converts when they have.
 #for $x in $observations
-#if $getVar('year.%s.has_data' % $x, False)
-#set $ignore = $fields.update({$x: $getVar('current.%s' % $x).format(add_label=False)})
-#if $getVar('current.%s.raw' % $x) is not None
-#set $ignore = $fields.update({$x + '_v': $getVar('current.%s.raw' % $x),
-                               $x + '_u': $getVar('unit.unit_type.%s' % $x)})
-#end if
-#end if
+  #if $getVar('year.%s.has_data' % $x, False)
+    #set $ignore = $fields.update({$x: $getVar('current.%s' % $x).format(add_label=False)})
+    #if $getVar('current.%s.raw' % $x) is not None
+      #set $ignore = $fields.update({$x + '_v': $getVar('current.%s.raw' % $x),
+                                     $x + '_u': $getVar('unit.unit_type.%s' % $x)})
+    #end if
+  #end if
 #end for
 ## The colour of the headline follows the temperature, and the client works it out
 ## from degrees C so that it does not depend on what the page displays in.
 #if $current.outTemp.degree_C.raw is not None
-#set $ignore = $fields.update({'outTemp_c': $round($current.outTemp.degree_C.raw, 2)})
+  #set $ignore = $fields.update({'outTemp_c': $round($current.outTemp.degree_C.raw, 2)})
 #end if
 #set $ignore = $fields.update({'rainToday': $day.rain.sum.format(add_label=False)})
 #if $day.rain.sum.raw is not None
-#set $ignore = $fields.update({'rainToday_v': $day.rain.sum.raw,
-                               'rainToday_u': $unit.unit_type.rain})
+  #set $ignore = $fields.update({'rainToday_v': $day.rain.sum.raw,
+                                 'rainToday_u': $unit.unit_type.rain})
 #end if
 ## The day's ends move with the reading, and the card shows them next to it.
 #set $lead = $DisplayOptions.get('dashboard_lead') or 'outTemp'
 #set $lead_day = $getVar('day.%s' % $lead, None)
 #if $lead_day is not None and $lead_day.min.raw is not None and $lead_day.max.raw is not None
-#set $ignore = $fields.update({'day_min': $str($lead_day.min.format(add_label=False)),
-                               'day_max': $str($lead_day.max.format(add_label=False)),
-                               'day_min_v': $lead_day.min.raw,
-                               'day_max_v': $lead_day.max.raw,
-                               'day_unit': $getVar('unit.unit_type.%s' % $lead),
-                               'day_mintime': $lead_day.mintime.format("%H:%M"),
-                               'day_maxtime': $lead_day.maxtime.format("%H:%M")})
+  #set $ignore = $fields.update({'day_min': $str($lead_day.min.format(add_label=False)),
+                                 'day_max': $str($lead_day.max.format(add_label=False)),
+                                 'day_min_v': $lead_day.min.raw,
+                                 'day_max_v': $lead_day.max.raw,
+                                 'day_unit': $getVar('unit.unit_type.%s' % $lead),
+                                 'day_mintime': $lead_day.mintime.format("%H:%M"),
+                                 'day_maxtime': $lead_day.maxtime.format("%H:%M")})
 #end if
 $jsonize($fields)

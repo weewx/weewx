@@ -150,14 +150,14 @@
     #if $getattr($recent, $x, None) and $getattr($recent, $x).has_data
                 <dt>$obs.label[$x]</dt>
                 <dd>
-                  #set $v = $getVar('current.%s.raw' % $x)
-                  #if $v is None
+      #set $v = $getVar('current.%s.raw' % $x)
+      #if $v is None
                   <span class="status-dot status-unknown"></span>$gettext("UNKNOWN")
-                  #elif $v
+      #elif $v
                   <span class="status-dot status-low"></span>$gettext("LOW")
-                  #else
+      #else
                   <span class="status-dot status-ok"></span>$gettext("OK")
-                  #end if
+      #end if
                 </dd>
     #end if
   #end for

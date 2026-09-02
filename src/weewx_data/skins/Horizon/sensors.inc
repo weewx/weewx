@@ -25,33 +25,33 @@
   </div>
   <div class="panel-body">
     <dl class="readings">
-#for $x in $connections
-  #if $getVar('day.%s.has_data' % $x, False)
+  #for $x in $connections
+    #if $getVar('day.%s.has_data' % $x, False)
       <dt>$obs.label[$x]</dt>
       <dd>$getVar('current.' + $x)</dd>
-  #end if
-#end for
-#for $x in $batteries
-  #if $getVar('day.%s.has_data' % $x, False)
+    #end if
+  #end for
+  #for $x in $batteries
+    #if $getVar('day.%s.has_data' % $x, False)
       <dt>$obs.label[$x]</dt>
       <dd>
-        #set $v = $getVar('current.%s.raw' % $x)
-        #if $v is None
+      #set $v = $getVar('current.%s.raw' % $x)
+      #if $v is None
         <span class="status-dot status-unknown"></span>$gettext("UNKNOWN")
-        #elif $v
+      #elif $v
         <span class="status-dot status-low"></span>$gettext("LOW")
-        #else
+      #else
         <span class="status-dot status-ok"></span>$gettext("OK")
-        #end if
+      #end if
       </dd>
-  #end if
-#end for
-#for $x in $voltages
-  #if $getVar('day.%s.has_data' % $x, False)
+    #end if
+  #end for
+  #for $x in $voltages
+    #if $getVar('day.%s.has_data' % $x, False)
       <dt>$obs.label[$x]</dt>
       <dd>$getVar('current.' + $x)</dd>
-  #end if
-#end for
+    #end if
+  #end for
     </dl>
   </div>
 </section>

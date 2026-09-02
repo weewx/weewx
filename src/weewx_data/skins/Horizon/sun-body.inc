@@ -19,12 +19,12 @@
 #from math import asin, sin, cos, radians, degrees
 #from time import localtime, mktime
 #if $almanac.hasExtras
-#set $AU_KM = 149597870.7
-#set $AU_LIGHT_S = 499.005
-#set $lat = $station.latitude_f
-#set $W = 260
-#set $BASE = 76
-#set $SCALE = 0.62
+  #set $AU_KM = 149597870.7
+  #set $AU_LIGHT_S = 499.005
+  #set $lat = $station.latitude_f
+  #set $W = 260
+  #set $BASE = 76
+  #set $SCALE = 0.62
 ##
 ## Three curves: the two solstices, and today. #def is no use inside #if, so they
 ## are built here and read out below.
@@ -42,47 +42,47 @@
 ## The two curves are named for the month rather than the season. At the June
 ## solstice the sun stands at dec +23.44 whatever the latitude, and the latitude
 ## decides which curve comes out on top. South of the equator, June is the low one.
-#set $curves = {}
-#for $name, $when in [('june', $almanac.next_summer_solstice.raw),
-                      ('december', $almanac.next_winter_solstice.raw),
-                      ('today', $current.dateTime.raw)]
-#set $alm = $almanac(almanac_time=$when)
-#set $lt = localtime($when)
-#set $midnight = mktime(($lt.tm_year, $lt.tm_mon, $lt.tm_mday, 0, 0, 0, 0, 0, -1))
+  #set $curves = {}
+  #for $name, $when in [('june', $almanac.next_summer_solstice.raw),
+                        ('december', $almanac.next_winter_solstice.raw),
+                        ('today', $current.dateTime.raw)]
+    #set $alm = $almanac(almanac_time=$when)
+    #set $lt = localtime($when)
+    #set $midnight = mktime(($lt.tm_year, $lt.tm_mon, $lt.tm_mday, 0, 0, 0, 0, 0, -1))
 ## The day the clocks go forward is 23 hours long, the day they go back is 25.
 ## Asking mktime() for the next midnight rather than adding 86400 gets both right,
 ## and the axis keeps meaning "this day, end to end".
-#set $next_mid = mktime(($lt.tm_year, $lt.tm_mon, $lt.tm_mday + 1, 0, 0, 0, 0, 0, -1))
-#set $span_h = ($next_mid - $midnight) / 3600.0
-#set $transit_h = ($alm.sun.transit.raw - $midnight) / 3600.0
-#set $dec = $alm.sun.dec
-#set $pts = []
-#for $i in range(0, 97)
-#set $hour = $i * $span_h / 96.0
-#set $ha = radians(15.0 * ($hour - $transit_h))
-#set $alt = degrees(asin(sin(radians($lat)) * sin(radians($dec))
-                       + cos(radians($lat)) * cos(radians($dec)) * cos($ha)))
-#silent $pts.append("%.1f,%.1f" % ($i * $W / 96.0, $BASE - $alt * $SCALE))
-#end for
-#silent $curves[$name] = ' '.join($pts)
-#if $name == 'today'
-#set $day_start = $midnight
-#set $day_seconds = $next_mid - $midnight
-#set $noon_x = $W * (12.0 / $span_h)
-#end if
-#end for
+    #set $next_mid = mktime(($lt.tm_year, $lt.tm_mon, $lt.tm_mday + 1, 0, 0, 0, 0, 0, -1))
+    #set $span_h = ($next_mid - $midnight) / 3600.0
+    #set $transit_h = ($alm.sun.transit.raw - $midnight) / 3600.0
+    #set $dec = $alm.sun.dec
+    #set $pts = []
+    #for $i in range(0, 97)
+      #set $hour = $i * $span_h / 96.0
+      #set $ha = radians(15.0 * ($hour - $transit_h))
+      #set $alt = degrees(asin(sin(radians($lat)) * sin(radians($dec))
+                             + cos(radians($lat)) * cos(radians($dec)) * cos($ha)))
+      #silent $pts.append("%.1f,%.1f" % ($i * $W / 96.0, $BASE - $alt * $SCALE))
+    #end for
+    #silent $curves[$name] = ' '.join($pts)
+    #if $name == 'today'
+      #set $day_start = $midnight
+      #set $day_seconds = $next_mid - $midnight
+      #set $noon_x = $W * (12.0 / $span_h)
+    #end if
+  #end for
 ## The band is the area between the two solstices: summer along the top, winter
 ## back along the bottom.
-#set $band = $curves.june + ' ' + ' '.join(reversed($curves.december.split(' ')))
+  #set $band = $curves.june + ' ' + ' '.join(reversed($curves.december.split(' ')))
 ##
-#set $frac = ($current.dateTime.raw - $day_start) / float($day_seconds)
-#set $today_light = $almanac.sun.visible.raw
-#set $yesterday_light = $almanac(almanac_time=$current.dateTime.raw - 86400).sun.visible.raw
-#set $delta_min = ($today_light - $yesterday_light) / 60.0
-#set $max_alt = degrees(asin(sin(radians($lat)) * sin(radians($almanac.sun.dec))
-                            + cos(radians($lat)) * cos(radians($almanac.sun.dec))))
-#set $civil = $almanac(horizon=-6).sun(use_center=1)
-#set $sun_light = $almanac.sun.earth_distance * $AU_LIGHT_S
+  #set $frac = ($current.dateTime.raw - $day_start) / float($day_seconds)
+  #set $today_light = $almanac.sun.visible.raw
+  #set $yesterday_light = $almanac(almanac_time=$current.dateTime.raw - 86400).sun.visible.raw
+  #set $delta_min = ($today_light - $yesterday_light) / 60.0
+  #set $max_alt = degrees(asin(sin(radians($lat)) * sin(radians($almanac.sun.dec))
+                              + cos(radians($lat)) * cos(radians($almanac.sun.dec))))
+  #set $civil = $almanac(horizon=-6).sun(use_center=1)
+  #set $sun_light = $almanac.sun.earth_distance * $AU_LIGHT_S
 
     <svg class="sunarc" viewBox="0 0 $W 92" role="img"
          aria-label="$gettext('The sun through the day')">
@@ -94,10 +94,10 @@
         <polyline class="sunarc-today" points="$curves.today"/>
       </g>
       <line class="sunarc-horizon" x1="0" y1="$BASE" x2="$W" y2="$BASE"/>
-      #if 0 <= $frac <= 1
+  #if 0 <= $frac <= 1
       <line class="sunarc-now" x1="${'%.1f' % ($frac * $W)}" y1="2"
             x2="${'%.1f' % ($frac * $W)}" y2="$BASE"/>
-      #end if
+  #end if
       ## The axis is the local day, so noon is its middle. Sunrise and sunset are
       ## not: they go where the curve actually crosses the horizon.
       ## Not quite the middle on the day the clocks change, when the day is 23 or
@@ -106,12 +106,12 @@
       <text class="sunarc-label" x="${'%.1f' % $noon_x}" y="88" text-anchor="middle">12</text>
       ## North of the arctic circle there are days with neither, and the almanac
       ## returns None for them.
-      #if $almanac.sun.rise.raw is not None and $almanac.sun.set.raw is not None
-      #set $x_rise = ($almanac.sun.rise.raw - $day_start) / float($day_seconds) * $W
-      #set $x_set = ($almanac.sun.set.raw - $day_start) / float($day_seconds) * $W
+  #if $almanac.sun.rise.raw is not None and $almanac.sun.set.raw is not None
+    #set $x_rise = ($almanac.sun.rise.raw - $day_start) / float($day_seconds) * $W
+    #set $x_set = ($almanac.sun.set.raw - $day_start) / float($day_seconds) * $W
       <text class="sunarc-label" x="${'%.1f' % max(16, $x_rise)}" y="88" text-anchor="middle">$almanac.sun.rise</text>
       <text class="sunarc-label" x="${'%.1f' % min($W - 16, $x_set)}" y="88" text-anchor="middle">$almanac.sun.set</text>
-      #end if
+  #end if
     </svg>
 
     <dl class="readings">

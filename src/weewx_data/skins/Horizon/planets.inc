@@ -12,8 +12,8 @@
 ## four in the morning is the point of the table. The altitude says which is which,
 ## and a planet that is up is marked.
 #if $almanac.hasExtras
-#set $bodies = $to_list($DisplayOptions.get('planets',
-                        ['mercury', 'venus', 'mars', 'jupiter', 'saturn']))
+  #set $bodies = $to_list($DisplayOptions.get('planets',
+                          ['mercury', 'venus', 'mars', 'jupiter', 'saturn']))
 <section class="panel" data-live-panel="planets">
   <div class="panel-head">
     <h2><a href="celestial.html">$gettext("Planets")</a></h2>
@@ -30,20 +30,20 @@
         </tr>
       </thead>
       <tbody>
-#for $body in $bodies
-#set $b = $getVar('almanac.%s' % $body, None)
-#if $b is not None
-#set $up = $b.alt > 0 and '1' or '0'
-#set $label = $gettext($body.capitalize())
-#set $alt = '%.0f' % $b.alt
+  #for $body in $bodies
+    #set $b = $getVar('almanac.%s' % $body, None)
+    #if $b is not None
+      #set $up = $b.alt > 0 and '1' or '0'
+      #set $label = $gettext($body.capitalize())
+      #set $alt = '%.0f' % $b.alt
         <tr>
           <th scope="row"><span class="planet-mark" data-up="$up" aria-hidden="true"></span>$label</th>
           <td class="num">$alt&deg;</td>
           <td class="num">$b.rise</td>
           <td class="num">$b.set</td>
         </tr>
-#end if
-#end for
+    #end if
+  #end for
       </tbody>
     </table>
 

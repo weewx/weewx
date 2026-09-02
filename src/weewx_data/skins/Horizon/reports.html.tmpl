@@ -7,11 +7,11 @@
 ## comprehension inside $jsonize(), so build the lists here.
 #set $month_list = []
 #for $m in $SummaryByMonth
-#silent $month_list.append($str($m))
+  #silent $month_list.append($str($m))
 #end for
 #set $year_list = []
 #for $y in $SummaryByYear
-#silent $year_list.append($str($y))
+  #silent $year_list.append($str($y))
 #end for
 
 #set $refresh = $to_int($DisplayOptions.get('refresh_interval', 60))

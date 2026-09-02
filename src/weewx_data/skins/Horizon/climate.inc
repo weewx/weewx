@@ -123,27 +123,27 @@
           <tr>
             <th scope="col">$gettext("Kind of day")</th>
             <th scope="col" class="num">$gettext("Days")</th>
-#for $name in $month_names
+  #for $name in $month_names
             <th scope="col" class="num">$name</th>
-#end for
+  #end for
           </tr>
         </thead>
         <tbody>
-#for $spec in $climate_days
-#set $name, $wording = $day_text[$spec['key']]
+  #for $spec in $climate_days
+    #set $name, $wording = $day_text[$spec['key']]
           <tr>
             <th scope="row" class="metric">
               $name
               <span class="climate-rule">$(wording % $threshold_of($spec))</span>
             </th>
             <td class="num climate-total">$day_counts[$spec['key']].format(add_label=False)</td>
-#for $count in $day_months[$spec['key']]
-#set $n = $count.raw
+    #for $count in $day_months[$spec['key']]
+      #set $n = $count.raw
             <td class="num#if not $n then ' climate-none' else ''#">#slurp
-#if $n then $count.format(add_label=False) else '&ndash;'#</td>
-#end for
+      #if $n then $count.format(add_label=False) else '&ndash;'#</td>
+    #end for
           </tr>
-#end for
+  #end for
         </tbody>
       </table>
     </div>
@@ -236,23 +236,23 @@
 ##
 ## The series is one query. Asking the daily summaries day by day would be 365.
 #if $has_rain or $has_temp
-#set $heat_kinds = []
-#if $has_rain
-#silent $heat_kinds.append(('rain', $gettext("Rainfall")))
-#end if
-#if $has_temp
-#silent $heat_kinds.append(('temp', $gettext("Mean temperature")))
-#silent $heat_kinds.append(('tmin', $gettext("Lowest temperature")))
-#silent $heat_kinds.append(('tmax', $gettext("Highest temperature")))
-#end if
+  #set $heat_kinds = []
+  #if $has_rain
+    #silent $heat_kinds.append(('rain', $gettext("Rainfall")))
+  #end if
+  #if $has_temp
+    #silent $heat_kinds.append(('temp', $gettext("Mean temperature")))
+    #silent $heat_kinds.append(('tmin', $gettext("Lowest temperature")))
+    #silent $heat_kinds.append(('tmax', $gettext("Highest temperature")))
+  #end if
 <section class="panel" data-live-panel="climate-heatmap">
   <div class="panel-head">
     <h2>$gettext("Day by day")</h2>
     <div class="tabs" id="heat-tabs" role="tablist" aria-label="$gettext('Metric')">
-#for $i, $kind in $enumerate($heat_kinds)
+  #for $i, $kind in $enumerate($heat_kinds)
       <button type="button" role="tab" data-heat="$kind[0]"
               aria-selected="#if $i == 0 then 'true' else 'false'#">$kind[1]</button>
-#end for
+  #end for
     </div>
   </div>
   <div class="panel-body">
@@ -272,26 +272,26 @@
 ## progress. The years that have ended are written once and skipped after that.
 #set $record_rows = [y for y in $alltime.years]
 #if len($record_rows) > 0
-#set $matrix = [
-  {'key': 'temp_avg', 'title': $gettext("Mean temperature"), 'obs': 'outTemp', 'agg': 'avg'},
-  {'key': 'temp_min', 'title': $gettext("Lowest temperature"), 'obs': 'outTemp', 'agg': 'min'},
-  {'key': 'temp_max', 'title': $gettext("Highest temperature"), 'obs': 'outTemp', 'agg': 'max'},
-  {'key': 'rain_sum', 'title': $gettext("Rainfall"), 'obs': 'rain', 'agg': 'sum'},
-  {'key': 'et_sum', 'title': $gettext("Evapotranspiration"), 'obs': 'ET', 'agg': 'sum'},
-]
-#set $matrix = [x for x in $matrix if $getVar('alltime.%s.has_data' % x['obs'], False)]
+  #set $matrix = [
+    {'key': 'temp_avg', 'title': $gettext("Mean temperature"), 'obs': 'outTemp', 'agg': 'avg'},
+    {'key': 'temp_min', 'title': $gettext("Lowest temperature"), 'obs': 'outTemp', 'agg': 'min'},
+    {'key': 'temp_max', 'title': $gettext("Highest temperature"), 'obs': 'outTemp', 'agg': 'max'},
+    {'key': 'rain_sum', 'title': $gettext("Rainfall"), 'obs': 'rain', 'agg': 'sum'},
+    {'key': 'et_sum', 'title': $gettext("Evapotranspiration"), 'obs': 'ET', 'agg': 'sum'},
+  ]
+  #set $matrix = [x for x in $matrix if $getVar('alltime.%s.has_data' % x['obs'], False)]
 <section class="panel" data-live-panel="climate-record">
   <div class="panel-head">
     <h2>$gettext("The whole record")</h2>
     <div class="tabs" id="record-tabs" role="tablist" aria-label="$gettext('Metric')">
-#for $i, $spec in $enumerate($matrix)
+  #for $i, $spec in $enumerate($matrix)
       <button type="button" role="tab" data-record="$spec['key']"
               aria-selected="#if $i == 0 then 'true' else 'false'#">$spec['title']</button>
-#end for
+  #end for
     </div>
   </div>
   <div class="panel-body flush">
-#for $i, $spec in $enumerate($matrix)
+  #for $i, $spec in $enumerate($matrix)
     <div class="table-scroll" data-record-panel="$spec['key']"#if $i > 0 then ' hidden' else ''#>
       <table class="data-table climate-record">
         <caption class="visually-hidden">$spec['title']</caption>
@@ -302,39 +302,39 @@
                     data-unit="$getVar('unit.unit_type.%s' % $spec['obs'])"><small
                     data-unit-label>$getVar('unit.label.%s' % $spec['obs'])</small></span>
             </th>
-#for $name in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    #for $name in ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
             <th scope="col" class="num">$gettext($name)</th>
-#end for
+    #end for
             <th scope="col" class="num">$gettext("Year")</th>
           </tr>
         </thead>
         <tbody>
-#for $y in $record_rows
+    #for $y in $record_rows
           <tr>
             <th scope="row" class="metric">$y.dateTime.format("%Y")</th>
-#set $by_month = {}
-#for $m in $y.months
-#silent $by_month.__setitem__($int($m.dateTime.format("%m")),
-                              $getattr($getattr($m, $spec['obs']), $spec['agg']))
-#end for
-#set $cell_unit = $getVar('unit.unit_type.%s' % $spec['obs'])
-#for $mon in range(1, 13)
-#set $cell = $by_month.get($mon)
-#if $cell is None or $cell.raw is None
+      #set $by_month = {}
+      #for $m in $y.months
+        #silent $by_month.__setitem__($int($m.dateTime.format("%m")),
+                                      $getattr($getattr($m, $spec['obs']), $spec['agg']))
+      #end for
+      #set $cell_unit = $getVar('unit.unit_type.%s' % $spec['obs'])
+      #for $mon in range(1, 13)
+        #set $cell = $by_month.get($mon)
+        #if $cell is None or $cell.raw is None
             <td class="num climate-none">&ndash;</td>
-#else
+        #else
             <td class="num" data-obs="$spec['obs']" data-value="$cell.raw"
                 data-unit="$cell_unit"><span data-unit-value>$cell.format(add_label=False)</span></td>
-#end if
-#end for
-#set $whole = $getattr($getattr($y, $spec['obs']), $spec['agg'])
+        #end if
+      #end for
+      #set $whole = $getattr($getattr($y, $spec['obs']), $spec['agg'])
             <td class="num climate-total"#if $whole.raw is not None then ' data-obs="%s" data-value="%s" data-unit="%s"' % ($spec['obs'], $whole.raw, $cell_unit) else ''#><span data-unit-value>$whole.format(add_label=False)</span></td>
           </tr>
-#end for
+    #end for
         </tbody>
       </table>
     </div>
-#end for
+  #end for
   </div>
 </section>
 #end if

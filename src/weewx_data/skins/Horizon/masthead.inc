@@ -91,7 +91,7 @@
 ## Paths in [[Languages]] are relative to the station's top directory. 'lang_root' is
 ## the way from this rendering back up to it, and $prefix the way out of a
 ## subdirectory, so a page in one and a page at the top both link correctly.
-#set $lang_root = $DisplayOptions.get('lang_root', '.')
+  #set $lang_root = $DisplayOptions.get('lang_root', '.')
           <label class="visually-hidden" for="lang-picker">$gettext("Language")</label>
           <select id="lang-picker" class="lang-select"
                   onchange="if(this.value) window.location = this.value;">
@@ -117,33 +117,33 @@
 ## 2009 sees 2009 and nothing after it, so every year but the last was left without a
 ## picker. Not $alltime.years either: it ends at the report time, and on a page for a
 ## year that has ended, that is the end of the year.
-#set $climate_years = []
-#for $y in range($int($alltime.start.format("%Y")), $int($latest.dateTime.format("%Y")) + 1)
-#silent $climate_years.append($str($y))
-#end for
-#if $climate_year not in $climate_years
-#silent $climate_years.append($climate_year)
-#end if
-#if len($climate_years) > 1
+  #set $climate_years = []
+  #for $y in range($int($alltime.start.format("%Y")), $int($latest.dateTime.format("%Y")) + 1)
+    #silent $climate_years.append($str($y))
+  #end for
+  #if $climate_year not in $climate_years
+    #silent $climate_years.append($climate_year)
+  #end if
+  #if len($climate_years) > 1
 ## The value is the page to fetch. A reader without JavaScript still gets a working
 ## control, because the script only takes over if it is there.
           <label class="visually-hidden" for="climate-year">$gettext("Year")</label>
           <select id="climate-year" class="lang-select">
-#for $y in reversed($climate_years)
-#if $y == $current.dateTime.format("%Y")
+    #for $y in reversed($climate_years)
+      #if $y == $current.dateTime.format("%Y")
             <option value="${prefix}climate.html"#if $y == $climate_year then ' selected' else ''#>$y</option>
-#else
+      #else
             <option value="${prefix}climate/climate-${y}.html"#if $y == $climate_year then ' selected' else ''#>$y</option>
-#end if
-#end for
+      #end if
+    #end for
           </select>
           <noscript>
             <a class="masthead-link" href="${prefix}climate.html">$gettext("Year")</a>
           </noscript>
-#end if
+  #end if
 #end if
 #for $item in $nav
-#set $mark = ' aria-current="page"' if $item['page'] == $here else ''
+  #set $mark = ' aria-current="page"' if $item['page'] == $here else ''
           <a class="masthead-link" href="${prefix}$item['href']"$mark>$item['label']</a>
 #end for
         </div>
