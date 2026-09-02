@@ -10,18 +10,11 @@ A skin that draws its charts with JavaScript needs this generator. The
 generator_](../../custom/json-generator.md) for what the files look like and
 how a page reads them.
 
-## Where the plots are defined
-
-In this section, or in `[ImageGenerator]`, whichever holds them. This one is
-looked at first, so a skin that draws only charts keeps its plots here and needs
-no section named after a generator it does not run. A skin that draws both keeps
-them in `[ImageGenerator]`, where each plot is then defined once and the chart
-and the PNG show the same thing.
-
-Either way the syntax is the Image generator's. See
-[_[ImageGenerator]_](imagegenerator.md).
-
 ## General options
+
+#### source
+
+The section the plot definitions are read from. Default is `ImageGenerator`.
 
 #### json_dest_dir
 
@@ -133,9 +126,9 @@ have the files rewritten anyway, for a station whose history has been edited.
 
 #### source_group
 
-The subsection of the plot definitions the groups are taken from. The archive
-covers every span itself, so one set of definitions is enough. Default is
-`day_images`.
+The subsection of [`source`](#source) the plot definitions are taken from. The
+archive covers every span itself, so one set of definitions is enough. Default
+is `day_images`.
 
 #### strip_prefix
 

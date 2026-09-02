@@ -28,6 +28,7 @@
 ## the hardest it came down. Three rows of mostly zeroes said that badly.
 #set $has_rain = 'rain' in $rest
 #set $rest = [$x for $x in $rest if $x not in ('rain', 'rainRate')]
+#set $summary_image = $to_bool($DisplayOptions.get('show_summary_image', True))
 ##
 ## A glyph for each reading, from 'icons/'. Only a hint at what the row is about,
 ## so a reading with no icon of its own simply has none: the label already says
@@ -85,6 +86,14 @@
 #end for
 ##
 <section class="panel headline" data-live-panel="current" aria-label="$gettext('Current Conditions')">
+#if $summary_image
+  <a class="headline-share" href="current.png"
+     title="$gettext('An image of these readings, for sharing')">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M21 16l-5-5-4 4-2-2-7 6"/></svg>
+    <span class="visually-hidden">$gettext("An image of these readings, for sharing")</span>
+  </a>
+#end if
+
 #if $getVar('year.%s.has_data' % $lead, False)
   <div class="lead-block">
   <h2 class="lead-label">$getVar('obs.label.%s' % $lead)</h2>

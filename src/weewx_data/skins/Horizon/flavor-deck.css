@@ -621,6 +621,7 @@ dl.companions > div > dd.tile-range .range-key,
    the rest. */
 .deck-has-sidebar .panel.headline .span-title,
 .deck-has-sidebar .panel.headline .span-today,
+.deck-has-sidebar .panel.headline .headline-share { display: none; }
 
 /* Which band the reading fell into. Written by the template, from degrees
    Celsius whatever the page displays in, so the same weather tints the same

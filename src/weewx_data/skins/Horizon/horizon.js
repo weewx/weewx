@@ -1790,13 +1790,7 @@
         if (live && snapshot) {
           return { group: g, name: snapshot.name, title: snapshot.title };
         }
-        /* Being named in the index means the group has readings somewhere, not
-           that it has any in the span on screen. A sensor that stopped reporting
-           three years ago stays named, because the years it did report are still
-           in the archive, and its card would be drawn empty on every span since.
-           Ask instead for the files this span would actually be drawn from. */
-        if (!archived || !filesFor(g, from, to)) return null;
-        return { group: g, name: period + g, title: archived.title };
+        return archived ? { group: g, name: period + g, title: archived.title } : null;
       }).filter(Boolean);
 
       container.innerHTML = '';

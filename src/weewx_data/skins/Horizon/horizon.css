@@ -574,6 +574,30 @@ select.report-select {
   stroke-linejoin: round;
 }
 
+/* Quiet link to the shareable image of these readings. */
+.headline-share {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  color: var(--ink-faint);
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity .15s, color .15s;
+}
+.headline:hover .headline-share,
+.headline-share:focus-visible { opacity: 1; }
+@media (hover: none) { .headline-share { opacity: 1; } }
+.headline-share:hover { color: var(--accent); background: var(--surface-sunk); }
+.headline-share svg {
+  width: 1.1rem; height: 1.1rem; fill: none; stroke: currentColor;
+  stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+}
+
 .headline-item { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
 
 .headline-item .label {
@@ -662,6 +686,30 @@ select.report-select {
 .trend-up::before   { content: "\2191\FE0E"; color: var(--hi); margin-right: 0.2em; }
 .trend-down::before { content: "\2193\FE0E"; color: var(--lo); margin-right: 0.2em; }
 .trend-flat::before { content: "\2192\FE0E"; color: var(--ink-faint); margin-right: 0.2em; }
+
+/* Quiet link to the shareable image of these readings. */
+.headline-share {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  color: var(--ink-faint);
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity .15s, color .15s;
+}
+.headline:hover .headline-share,
+.headline-share:focus-visible { opacity: 1; }
+@media (hover: none) { .headline-share { opacity: 1; } }
+.headline-share:hover { color: var(--accent); background: var(--surface-sunk); }
+.headline-share svg {
+  width: 1.1rem; height: 1.1rem; fill: none; stroke: currentColor;
+  stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
+}
 
 @media (max-width: 34rem) {
   :root {
@@ -1291,12 +1339,6 @@ select.report-select {
 .stat-hi { color: var(--hi); }
 .stat-lo { color: var(--lo); }
 .when { display: block; font-size: var(--fs-xs); color: var(--ink-faint); font-weight: 400; }
-
-/* A high and a low each carry their own time, so the cell holds two stacked
-   pairs rather than two numbers with one timestamp between them. Aligned to the
-   top, or the pair whose time wrapped would drag the other one down with it. */
-.stat-pair { display: inline-block; vertical-align: top; }
-.stat-slash { display: inline-block; vertical-align: top; margin: 0 0.35rem; color: var(--ink-faint); }
 
 /* Two halves of one panel, side by side where the panel is wide enough for two
    and stacked where it is not. The rule between them is the panel's own division,
