@@ -3,21 +3,14 @@ WeeWX change history
 
 ### 5.6.0 dd-Mmm-2026
 
-The `Horizon` skin draws its charts with ECharts, which brings bars, wind
-arrows and night shading that uPlot needed code of its own for. Added a
-forecast panel, a planets panel, and a second look for the skin. Each reading
-now carries its range for the span on screen. [PR
-#1133](https://github.com/weewx/weewx/pull/1133). Thanks again to Manuel!
-
-Fixed a gap between two of the JSON generator's raw archive files. A finished
-day held one slot more than its day, and nothing could ever fill it. [PR
-#1133](https://github.com/weewx/weewx/pull/1133).
-
 Added `weewx.jsongenerator.JSONGenerator`, which writes the plots defined for
-the `ImageGenerator` as JSON, so a skin can draw its charts in the browser.
-Added the skin `Horizon`, which does that and can step back through the entire
-station history. The skin also includes a climate page summary. [PR
-#1128](https://github.com/weewx/weewx/issues/1128). Huge thanks to user Manuel!
+the `ImageGenerator` as JSON. Added the skin `Horizon`, which leverages the JSON
+data, allowing it to step backwards through the entire station history. The skin
+also includes various panels, including a forecast panel, and a climate page
+summary, all of which can be arranged in a custom order. 
+[PR #1128](https://github.com/weewx/weewx/issues/1128) and 
+[PR #1133](https://github.com/weewx/weewx/pull/1133). Huge thanks to user 
+Manuel!
 
 Diagnose situations at runtime where the Vantage logger appears to be corrupted.
 Link to the fix. Fixes [Issue #1105](https://github.com/weewx/weewx/issues/1105).
@@ -26,8 +19,9 @@ Another thanks to user Manuel!
 Do not change the configuration file mode or ownership when reconfiguring a
 station. Under certain situations the ownership and permissions of `weewx.conf`
 was left as `root:weewx 0644`, instead of `weewx:weewx 0660`. The `weewx` user
-could no longer edit it, and the passwords in it became world-readable. [PR
-#1118](https://github.com/weewx/weewx/pull/1118). Still another thanks to Manuel!
+could no longer edit it, and the passwords in it became world-readable. 
+[PR #1118](https://github.com/weewx/weewx/pull/1118). Still another 
+thanks to Manuel!
 
 Removed the APRS "messaging-capable" packet flag from `restx.py`.
 [PR #1108](https://github.com/weewx/weewx/pull/1108), by `W0CHP`.
