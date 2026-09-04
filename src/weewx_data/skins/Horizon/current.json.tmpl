@@ -1,0 +1,60 @@
+## Copyright (c) 2026 Manuel Hilgert
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+#encoding UTF-8
+##
+## Kept small: it is fetched every refresh_interval seconds, and most of the time
+## nothing in it has changed.
+##
+## Each reading appears twice. '<name>' is the formatted number, in the report's own
+## unit and language, and without the unit label: the page has an element of its own
+## for that, and writing it twice put it on screen twice. '<name>_v' and '<name>_u'
+## are the number and the unit it is in, which is what the page converts when the
+## reader has asked for another unit.
+##
+#set $observations = $to_list($DisplayOptions.get('observations_current', ['outTemp', 'barometer']))
+#set $fields = {}
+#silent $fields.update({'dateTime': $str($current.dateTime), 'dateTime_raw': $current.dateTime.raw})
+## How far apart this station's records are, in minutes. The page uses it to tell a
+## slow archive interval from a station that has stopped sending. Two records' worth
+## of silence is a fault. Without this the page would have to guess where that is,
+## and a guess short enough to help a five-minute station would dim a slower one
+## every cycle.
+#if $current.interval.raw is not None
+  #silent $fields.update({'interval': $current.interval.raw})
+#end if
+## Two forms of each reading. The string is what the page puts on screen when the
+## reader has asked for no unit of their own, already formatted in the report's
+## language. The number and its unit are what the page converts when they have.
+#for $x in $observations
+  #if $getVar('year.%s.has_data' % $x, False)
+    #silent $fields.update({$x: $getVar('current.%s' % $x).format(add_label=False)})
+    #if $getVar('current.%s.raw' % $x) is not None
+      #silent $fields.update({$x + '_v': $getVar('current.%s.raw' % $x),
+                              $x + '_u': $getVar('unit.unit_type.%s' % $x)})
+    #end if
+  #end if
+#end for
+## The colour of the headline follows the temperature, and the client works it out
+## from degrees C so that it does not depend on what the page displays in.
+#if $current.outTemp.degree_C.raw is not None
+  #silent $fields.update({'outTemp_c': $round($current.outTemp.degree_C.raw, 2)})
+#end if
+#silent $fields.update({'rainToday': $day.rain.sum.format(add_label=False)})
+#if $day.rain.sum.raw is not None
+  #silent $fields.update({'rainToday_v': $day.rain.sum.raw,
+                          'rainToday_u': $unit.unit_type.rain})
+#end if
+## The day's ends move with the reading, and the card shows them next to it.
+#set $lead = $DisplayOptions.get('dashboard_lead') or 'outTemp'
+#set $lead_day = $getVar('day.%s' % $lead, None)
+#if $lead_day is not None and $lead_day.min.raw is not None and $lead_day.max.raw is not None
+  #silent $fields.update({'day_min': $str($lead_day.min.format(add_label=False)),
+                          'day_max': $str($lead_day.max.format(add_label=False)),
+                          'day_min_v': $lead_day.min.raw,
+                          'day_max_v': $lead_day.max.raw,
+                          'day_unit': $getVar('unit.unit_type.%s' % $lead),
+                          'day_mintime': $lead_day.mintime.format("%H:%M"),
+                          'day_maxtime': $lead_day.maxtime.format("%H:%M")})
+#end if
+$jsonize($fields)

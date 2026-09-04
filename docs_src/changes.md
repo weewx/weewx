@@ -1,26 +1,31 @@
 WeeWX change history
 --------------------
 
-### 5.6.0 n-Month-2026
+### 5.6.0 dd-Mmm-2026
 
-`weectl extension uninstall` no longer removes a configuration section that is still
-in use. A section was pruned as soon as it had no subsections left, so uninstalling
-any driver extension took all of `[Station]` with it, including the location and the
-coordinates. Fixes [Issue #1131](https://github.com/weewx/weewx/issues/1131).
-[PR #1132](https://github.com/weewx/weewx/pull/1132).
+Added `weewx.jsongenerator.JSONGenerator`, which writes the plots defined for
+the `ImageGenerator` as JSON. Added the skin `Horizon`, which leverages the JSON
+data, allowing it to step backwards through the entire station history. The skin
+also includes various panels, including a forecast panel, and a climate page
+summary, all of which can be arranged in a custom order. 
+[PR #1128](https://github.com/weewx/weewx/issues/1128) and 
+[PR #1133](https://github.com/weewx/weewx/pull/1133). Huge thanks to user 
+Manuel!
 
-Say so in the log when a Vantage logger returns far fewer archive records than it
-said it would, which is what corrupt logger memory looks like, and link to the fix.
-Fixes [Issue #1105](https://github.com/weewx/weewx/issues/1105).
+Diagnose situations at runtime where the Vantage logger appears to be corrupted.
+Link to the fix. Fixes [Issue #1105](https://github.com/weewx/weewx/issues/1105).
+Another thanks to user Manuel!
 
-Saving the configuration file no longer changes its mode or ownership. Under a
-package installation, `weectl extension install`, `weectl extension uninstall`,
-`weectl station reconfigure` and `weectl station upgrade` were leaving
-`weewx.conf` as `root:weewx 0644` instead of `weewx:weewx 0660`, so the `weewx`
-user could no longer edit it and the passwords in it became world-readable.
+Do not change the configuration file mode or ownership when reconfiguring a
+station. Under certain situations the ownership and permissions of `weewx.conf`
+was left as `root:weewx 0644`, instead of `weewx:weewx 0660`. The `weewx` user
+could no longer edit it, and the passwords in it became world-readable. 
+[PR #1118](https://github.com/weewx/weewx/pull/1118). Still another 
+thanks to Manuel!
 
 Removed the APRS "messaging-capable" packet flag from `restx.py`.
 [PR #1108](https://github.com/weewx/weewx/pull/1108), by `W0CHP`.
+
 
 ### 5.5.0 6-Aug-2026
 
