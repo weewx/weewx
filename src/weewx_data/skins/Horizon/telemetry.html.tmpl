@@ -1,0 +1,227 @@
+## Copyright 2017 Tom Keffer, Matthew Wall
+## Copyright (c) 2026 Manuel Hilgert
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+#encoding UTF-8
+
+#set $connections = $to_list($DisplayOptions.get('sensor_connections', []))
+#set $batteries = $to_list($DisplayOptions.get('sensor_batteries', []))
+#set $voltages = $to_list($DisplayOptions.get('sensor_voltages', []))
+#set $telemetry_groups = $to_list($DisplayOptions.get('telemetry_plot_groups', ['rx', 'volt']))
+#set $periods = $to_list($DisplayOptions.get('periods', ['day', 'week', 'month', 'year']))
+#set $recent = $span($day_delta=30, boundary='midnight')
+#set $refresh = $to_int($DisplayOptions.get('refresh_interval', 60))
+
+## A configured field is not the same as a field with readings. Check the data, so
+## the page does not show three empty boxes on a station with no radio sensors.
+## (Written out rather than as a #def: a Cheetah #def gets its own namespace and
+## cannot see $recent.)
+#set $have_connections = False
+#for $f in $connections
+  #if $getattr($recent, $f, None) and $getattr($recent, $f).has_data
+    #set $have_connections = True
+    #break
+  #end if
+#end for
+
+#set $have_batteries = False
+#for $f in $batteries
+  #if $getattr($recent, $f, None) and $getattr($recent, $f).has_data
+    #set $have_batteries = True
+    #break
+  #end if
+#end for
+
+#set $have_voltages = False
+#for $f in $voltages
+  #if $getattr($recent, $f, None) and $getattr($recent, $f).has_data
+    #set $have_voltages = True
+    #break
+  #end if
+#end for
+
+#set $have_any = $have_connections or $have_batteries or $have_voltages
+
+## What the masthead says. See masthead.inc.
+#set global $page_title = $gettext("Telemetry")
+
+<!DOCTYPE html>
+<html lang="$lang">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>$gettext("Telemetry") &ndash; $station.location</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="stylesheet" href="horizon.css">
+    #include "theme.inc"
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('weewx.horizon.theme');
+          if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
+    #include "analytics.inc"
+  </head>
+  <body>
+    <div class="wrap">
+      #include "masthead.inc"
+
+#if not $have_any
+      <section class="panel">
+        <div class="panel-body">
+          <p class="chart-empty">$gettext("This station reports no telemetry.")</p>
+        </div>
+      </section>
+#end if
+
+      <div class="columns">
+
+        <div class="stack">
+          <section class="panel">
+            <div class="panel-head">
+              <h2>$gettext("History")</h2>
+              <div class="tabs" id="period-tabs" role="tablist" aria-label="$gettext('Time span')">
+#for $period in $periods
+                <button type="button" role="tab" data-period="$period"
+                        aria-selected="#if $period == $periods[0] then 'true' else 'false'#"
+                        aria-controls="charts">$gettext($period.capitalize())</button>
+#end for
+              </div>
+            </div>
+            <div class="range-bar">
+              <div class="range-nav">
+                <button type="button" id="range-back" class="range-button"
+                        aria-label="$gettext('Earlier')">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+                </button>
+                <div class="range-label-wrap">
+                  <button type="button" id="range-label" class="range-label"
+                          aria-haspopup="dialog" aria-expanded="false"
+                          title="$gettext('Jump to a date')">$gettext("Now")</button>
+                  <div id="range-cal" class="range-cal" role="dialog" hidden
+                       aria-label="$gettext('Jump to a date')"></div>
+                </div>
+                <button type="button" id="range-fwd" class="range-button"
+                        aria-label="$gettext('Later')" disabled>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+              <div class="range-extra">
+                <button type="button" id="range-now" class="range-now" hidden>$gettext("Now")</button>
+                <button type="button" id="range-share" class="range-now"
+                        title="$gettext('Link to this view')">$gettext("Share")</button>
+              </div>
+            </div>
+            <div class="panel-body flush">
+              <div id="charts" class="charts" role="tabpanel" tabindex="-1"
+                   aria-live="polite" aria-busy="true">
+                <p class="chart-empty">$gettext("Loading charts")&hellip;</p>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="stack">
+#if $have_connections
+          <section class="panel" data-live-panel="connectivity">
+            <div class="panel-head"><h2>$gettext("Connectivity")</h2></div>
+            <div class="panel-body">
+              <dl class="readings">
+  #for $x in $connections
+    #if $getattr($recent, $x, None) and $getattr($recent, $x).has_data
+                <dt>$obs.label[$x]</dt>
+                <dd>$getVar('current.' + $x)</dd>
+    #end if
+  #end for
+              </dl>
+            </div>
+          </section>
+#end if
+
+#if $have_batteries
+          <section class="panel" data-live-panel="battery">
+            <div class="panel-head"><h2>$gettext("Battery Status")</h2></div>
+            <div class="panel-body">
+              <dl class="readings">
+  #for $x in $batteries
+    #if $getattr($recent, $x, None) and $getattr($recent, $x).has_data
+                <dt>$obs.label[$x]</dt>
+                <dd>
+      #set $v = $getVar('current.%s.raw' % $x)
+      #if $v is None
+                  <span class="status-dot status-unknown"></span>$gettext("UNKNOWN")
+      #elif $v
+                  <span class="status-dot status-low"></span>$gettext("LOW")
+      #else
+                  <span class="status-dot status-ok"></span>$gettext("OK")
+      #end if
+                </dd>
+    #end if
+  #end for
+              </dl>
+            </div>
+          </section>
+#end if
+
+#if $have_voltages
+          <section class="panel" data-live-panel="voltage">
+            <div class="panel-head"><h2>$gettext("Voltage")</h2></div>
+            <div class="panel-body">
+              <dl class="readings">
+  #for $x in $voltages
+    #if $getattr($recent, $x, None) and $getattr($recent, $x).has_data
+                <dt>$obs.label[$x]</dt>
+                <dd>$getVar('current.' + $x)</dd>
+    #end if
+  #end for
+              </dl>
+            </div>
+          </section>
+#end if
+        </div>
+
+      </div>
+
+      <p class="footer">
+        $gettext("This station is controlled by <a href='https://weewx.com'>WeeWX</a>, an experimental weather software system written in Python.")
+      </p>
+    </div>
+
+    #include "top.inc"
+
+    <script src="echarts.min.js"></script>
+    <script>
+      window.HORIZON = {
+        dataDir: "data",
+        periods: $jsonize($periods),
+        plotGroups: $jsonize($telemetry_groups),
+        refreshInterval: $refresh,
+        generated: $current.dateTime.raw,
+        station: "$station.location",
+        weekStart: $station.week_start,
+        hasImages: #if $to_bool($DisplayOptions.get('show_image_links', True)) then 'true' else 'false'#,
+        text: {
+          noData: "$gettext('No data for this period')",
+          showData: "$gettext('Show data as table')",
+          time: "$gettext('Time')",
+          now: "$gettext('Now')",
+          asConfigured: "$gettext('Default')",
+          earlier: "$gettext('Earlier')",
+          later: "$gettext('Later')",
+          thinned: "$gettext('thinned')",
+          linkCopied: "$gettext('Link copied')",
+          copyLink: "$gettext('Copy this link:')",
+          saveImage: "$gettext('Save image')",
+          imageLink: "$gettext('PNG')",
+          imageLinkTitle: "$gettext('Permanent link to the rendered image')",
+          toDark: "$gettext('Switch to dark theme')",
+          toLight: "$gettext('Switch to light theme')"
+        }
+      };
+    </script>
+    <script src="horizon.js"></script>
+  </body>
+</html>

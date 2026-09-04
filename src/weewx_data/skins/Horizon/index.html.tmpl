@@ -1,0 +1,154 @@
+## Copyright 2009-2018 Tom Keffer, Matthew Wall
+## Copyright (c) 2026 Manuel Hilgert
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+#encoding UTF-8
+
+#set $periods = $to_list($DisplayOptions.get('periods', ['day', 'week', 'month', 'year']))
+#set $plot_groups = $to_list($DisplayOptions.get('plot_groups', ['tempdew', 'wind', 'rain']))
+#set $refresh = $to_int($DisplayOptions.get('refresh_interval', 60))
+
+<!DOCTYPE html>
+<html lang="$lang">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>$station.location</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="stylesheet" href="horizon.css">
+    #include "theme.inc"
+#if $station.station_url
+    <link rel="canonical" href="$station.station_url/$filename">
+#end if
+    <script>
+      /* Apply the saved theme before first paint, so the page never flashes. */
+      (function () {
+        try {
+          var t = localStorage.getItem('weewx.horizon.theme');
+          if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
+    #include "analytics.inc"
+  </head>
+
+  <body>
+    <div class="wrap">
+
+      #include "masthead.inc"
+
+
+## Where the panels sit: which side on a wide screen, above or below the charts
+## when there is only one column.
+#set $columns = 'columns'
+#if $DisplayOptions.get('sidebar', 'right') == 'left'
+  #set $columns = $columns + ' sidebar-left'
+#end if
+#if $DisplayOptions.get('sidebar_responsive', 'bottom') == 'top'
+  #set $columns = $columns + ' sidebar-responsive-top'
+#end if
+      <div class="$columns">
+
+## Both columns are lists of .inc files from the skin directory, so a panel can be
+## moved from one to the other, or left out, without touching this template. The
+## charts are 'history' and the statistics are 'hilo', so those move too. Adding
+## your own means writing 'myPanel.inc' and naming it in one of the lists. Give
+## the panel's section a 'data-live-panel' attribute and it is refreshed with the
+## rest on a new record.
+#set $main_panels = $to_list($DisplayOptions.get('main_panels', ['history', 'hilo']))
+#set $panels = $to_list($DisplayOptions.get('panels', ['current', 'sunmoon', 'imagery', 'sensors', 'about']))
+        <div class="stack">
+#for $panel in $main_panels
+          #include $panel + ".inc"
+#end for
+        </div>
+
+        <div class="stack">
+#for $panel in $panels
+          #include $panel + ".inc"
+#end for
+        </div>
+
+      </div>
+
+      <p class="footer">
+        $gettext("This station is controlled by <a href='https://weewx.com'>WeeWX</a>, an experimental weather software system written in Python.")
+      </p>
+
+    </div>
+
+    #include "top.inc"
+
+    <script src="echarts.min.js"></script>
+    <script>
+      window.HORIZON = {
+        dataDir: "data",
+        periods: $jsonize($periods),
+        plotGroups: $jsonize($plot_groups),
+        refreshInterval: $refresh,
+        generated: $current.dateTime.raw,
+        station: "$station.location",
+        weekStart: $station.week_start,
+        ## Where the station stands, for a forecast fetched by the page itself.
+        ## Rounded: a forecast is for a district, and three decimals is a hundred
+        ## metres, which is as close as any model resolves. It also keeps the
+        ## exact position of somebody's house out of a third party's logs.
+        latitude: ${'%.3f' % $station.latitude_f},
+        longitude: ${'%.3f' % $station.longitude_f},
+        forecast: {
+#set $fc = $DisplayOptions.get('Forecast', {})
+          fetch: #if $to_bool($fc.get('browser_fetch', True)) then 'true' else 'false'#,
+          file: #if $to_bool($fc.get('file', False)) then 'true' else 'false'#,
+          hours: $to_int($fc.get('hours', 8)),
+          days: $to_int($fc.get('days', 7)),
+          ## What each WMO 4677 code is called, translated here rather than in the
+          ## script: a station is read by the people who live near it, and the
+          ## skin's language files are where its words belong. The script keeps
+          ## only the codes and the pictures, which are the same everywhere.
+#set $sky = {}
+#for $code, $said in [(0, 'Clear sky'), (1, 'Mainly clear'),
+                      (2, 'Partly cloudy'), (3, 'Overcast'),
+                      (45, 'Fog'), (48, 'Freezing fog'),
+                      (51, 'Light drizzle'), (53, 'Drizzle'),
+                      (55, 'Heavy drizzle'), (56, 'Light freezing drizzle'),
+                      (57, 'Freezing drizzle'), (61, 'Light rain'),
+                      (63, 'Rain'), (65, 'Heavy rain'),
+                      (66, 'Light freezing rain'), (67, 'Freezing rain'),
+                      (71, 'Light snow'), (73, 'Snow'), (75, 'Heavy snow'),
+                      (77, 'Snow grains'), (80, 'Light rain showers'),
+                      (81, 'Rain showers'), (82, 'Violent rain showers'),
+                      (85, 'Light snow showers'), (86, 'Snow showers'),
+                      (95, 'Thunderstorm'), (96, 'Thunderstorm with light hail'),
+                      (99, 'Thunderstorm with hail')]
+  #silent $sky[$str($code)] = $gettext($said)
+#end for
+          sky: $jsonize($sky)
+        },
+        ## null leaves it to the page, which reads index.json to see whether PNGs
+        ## are being written at all. Set 'show_image_links' in skin.conf to decide
+        ## it here instead, on a station whose PNGs come from elsewhere.
+        hasImages: #if $DisplayOptions.get('show_image_links') is None then 'null' else ($to_bool($DisplayOptions.show_image_links) and 'true' or 'false')#,
+        text: {
+          noData: "$gettext('No data for this period')",
+          showData: "$gettext('Show data as table')",
+          time: "$gettext('Time')",
+          now: "$gettext('Now')",
+          asConfigured: "$gettext('Default')",
+          earlier: "$gettext('Earlier')",
+          later: "$gettext('Later')",
+          thinned: "$gettext('thinned')",
+          linkCopied: "$gettext('Link copied')",
+          copyLink: "$gettext('Copy this link:')",
+          saveImage: "$gettext('Save image')",
+          imageLink: "$gettext('PNG')",
+          imageLinkTitle: "$gettext('Permanent link to the rendered image')",
+          toDark: "$gettext('Switch to dark theme')",
+          toLight: "$gettext('Switch to light theme')"
+        }
+      };
+    </script>
+    <script src="horizon.js"></script>
+    <script src="forecast.js" defer></script>
+  </body>
+</html>

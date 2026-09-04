@@ -1,0 +1,69 @@
+## Copyright (c) 2026 Manuel Hilgert
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+#encoding UTF-8
+##
+## The year in progress. Rendered on every report cycle, because it changes on every
+## report cycle. The years that have ended are the same page, written once each by
+## climate/climate-%Y.html.tmpl.
+##
+#set $refresh = $to_int($DisplayOptions.get('refresh_interval', 60))
+## 'global', because masthead.inc and climate.inc are included at run time and are
+## compiled on their own. A plain '#set' does not reach them.
+#set global $climate_year = $year.dateTime.format("%Y")
+#set global $page_root = '.'
+#set global $page_title = '{0} {1}'.format($gettext("Climate"), $climate_year)
+
+<!DOCTYPE html>
+<html lang="$lang">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>$gettext("Climate") &ndash; $station.location</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="stylesheet" href="horizon.css">
+    #include "theme.inc"
+    <script>
+      /* Apply the saved theme before first paint, so the page never flashes. */
+      (function () {
+        try {
+          var t = localStorage.getItem('weewx.horizon.theme');
+          if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
+    #include "analytics.inc"
+  </head>
+
+  <body>
+    <div class="wrap">
+      #include "masthead.inc"
+      #include "climate.inc"
+
+      <p class="footer">
+        $gettext("This station is controlled by <a href='https://weewx.com'>WeeWX</a>, an experimental weather software system written in Python.")
+      </p>
+    </div>
+
+    #include "top.inc"
+
+    <script src="echarts.min.js"></script>
+    <script>
+      window.HORIZON = {
+        /* Where index.json lives. The unit table is in it, and the picker above
+           cannot offer anything without it. */
+        dataDir: "data",
+        refreshInterval: $refresh,
+        generated: $current.dateTime.raw,
+        weekStart: $station.week_start,
+        text: {
+          noData: "$gettext('No data for this period')",
+          asConfigured: "$gettext('Default')"
+        }
+      };
+    </script>
+    <script src="horizon.js"></script>
+    <script src="climate.js"></script>
+  </body>
+</html>

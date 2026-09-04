@@ -1,0 +1,70 @@
+## Copyright (c) 2026 Manuel Hilgert
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+#encoding UTF-8
+##
+## One year that has ended. WeeWX writes a summary page only while its period is still
+## running, so each of these is rendered once and then left alone. A station with
+## fourteen years of record therefore pays for one page per cycle, not fourteen.
+##
+## The page itself is climate.inc, the same one the year in progress uses.
+##
+#set $refresh = 0
+## $current is empty on a summary page: it reads the record at the report time,
+## and that is not what an archive page is about. $latest takes the last record
+## the database holds. 'null' keeps the object literal valid on an empty one.
+#set $generated_ts = $latest.dateTime.raw or 'null'
+## 'global', so that the two includes below can see them. See climate.html.tmpl.
+#set global $climate_year = $year.dateTime.format("%Y")
+#set global $page_root = '..'
+#set global $page_title = '{0} {1}'.format($gettext("Climate"), $climate_year)
+
+<!DOCTYPE html>
+<html lang="$lang">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>$gettext("Climate") $climate_year &ndash; $station.location</title>
+    <link rel="icon" href="$page_root/favicon.ico" sizes="any">
+    <link rel="stylesheet" href="$page_root/uplot.min.css">
+    <link rel="stylesheet" href="$page_root/horizon.css">
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('weewx.horizon.theme');
+          if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+
+  <body>
+    <div class="wrap">
+      #include "masthead.inc"
+      #include "climate.inc"
+
+      <p class="footer">
+        $gettext("This station is controlled by <a href='https://weewx.com'>WeeWX</a>, an experimental weather software system written in Python.")
+      </p>
+    </div>
+
+    #include "top.inc"
+
+    <script src="$page_root/uplot.min.js"></script>
+    <script>
+      window.HORIZON = {
+        dataDir: "$page_root/data",
+        refreshInterval: 0,
+        generated: $generated_ts,
+        weekStart: $station.week_start,
+        text: {
+          noData: "$gettext('No data for this period')",
+          asConfigured: "$gettext('Default')"
+        }
+      };
+    </script>
+    <script src="$page_root/horizon.js"></script>
+    <script src="$page_root/climate.js"></script>
+  </body>
+</html>

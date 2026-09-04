@@ -1,0 +1,96 @@
+## Copyright 2017 Tom Keffer, Matthew Wall
+## Copyright (c) 2026 Manuel Hilgert
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+#encoding UTF-8
+
+#set $refresh = $to_int($DisplayOptions.get('refresh_interval', 60))
+
+## What the masthead says. See masthead.inc. Nothing here is a reading in a unit
+## the picker knows how to convert, so the page does without it.
+#set global $page_title = $gettext("Celestial")
+#set global $page_units = False
+
+<!DOCTYPE html>
+<html lang="$lang">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>$gettext("Celestial") &ndash; $station.location</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="stylesheet" href="horizon.css">
+    #include "theme.inc"
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('weewx.horizon.theme');
+          if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
+    #include "analytics.inc"
+  </head>
+  <body>
+    <div class="wrap">
+      #include "masthead.inc"
+
+#if $almanac.hasExtras
+      <div class="columns">
+        <section class="panel" data-live-panel="sun">
+          <div class="panel-head"><h2>$gettext("Sun")</h2></div>
+          <div class="panel-body">
+            <dl class="readings">
+              <dt>$gettext("Start civil twilight")</dt><dd>$almanac(horizon=-6).sun(use_center=1).rise</dd>
+              <dt>$gettext("Sunrise")</dt><dd>$almanac.sun.rise</dd>
+              <dt>$gettext("Transit")</dt><dd>$almanac.sun.transit</dd>
+              <dt>$gettext("Sunset")</dt><dd>$almanac.sun.set</dd>
+              <dt>$gettext("End civil twilight")</dt><dd>$almanac(horizon=-6).sun(use_center=1).set</dd>
+              <dt>$gettext("Azimuth")</dt><dd>$("%.1f" % $almanac.sun.az)&deg;</dd>
+              <dt>$pgettext("Astronomical", "Altitude")</dt><dd>$("%.1f" % $almanac.sun.alt)&deg;</dd>
+              <dt>$gettext("Total daylight")</dt>
+              <dd>$almanac.sun.visible.long_form(format_string="%(hour)d%(hour_label)s, %(minute)d%(minute_label)s")</dd>
+              <dt>$gettext("Equinox")</dt><dd>$almanac.next_equinox</dd>
+              <dt>$gettext("Solstice")</dt><dd>$almanac.next_solstice</dd>
+            </dl>
+          </div>
+        </section>
+
+        <section class="panel" data-live-panel="moon">
+          <div class="panel-head"><h2>$gettext("Moon")</h2></div>
+          <div class="panel-body">
+            <dl class="readings">
+              <dt>$gettext("Rise")</dt><dd>$almanac.moon.rise</dd>
+              <dt>$gettext("Transit")</dt><dd>$almanac.moon.transit</dd>
+              <dt>$gettext("Set")</dt><dd>$almanac.moon.set</dd>
+              <dt>$gettext("Azimuth")</dt><dd>$("%.1f" % $almanac.moon.az)&deg;</dd>
+              <dt>$pgettext("Astronomical", "Altitude")</dt><dd>$("%.1f" % $almanac.moon.alt)&deg;</dd>
+              <dt>$gettext("Phase")</dt>
+              <dd>$almanac.moon_phase, $almanac.moon_fullness% $gettext("full")</dd>
+              <dt>$gettext("New moon")</dt><dd>$almanac.next_new_moon</dd>
+              <dt>$gettext("Full moon")</dt><dd>$almanac.next_full_moon</dd>
+            </dl>
+          </div>
+        </section>
+      </div>
+#else
+      <section class="panel">
+        <div class="panel-body">
+          <p>$gettext("Extended celestial information requires the pyephem module.")</p>
+        </div>
+      </section>
+#end if
+
+      <p class="footer">
+        $gettext("This station is controlled by <a href='https://weewx.com'>WeeWX</a>, an experimental weather software system written in Python.")
+      </p>
+    </div>
+
+    #include "top.inc"
+
+    <script>
+      window.HORIZON = { refreshInterval: $refresh, generated: $current.dateTime.raw };
+    </script>
+    <script src="horizon.js"></script>
+  </body>
+</html>

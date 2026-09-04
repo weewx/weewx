@@ -1,0 +1,1720 @@
+/* Copyright (c) 2026 Manuel Hilgert
+ * Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Light palette. Neutrals carry a slight blue cast so they sit with the
+     steel blue that WeeWX has used for its charts since forever. */
+  --bg: #efeee7;
+  --surface: #f7f6f1;
+  --surface-sunk: #e6e4db;
+  --ink: #1a1f26;
+  --ink-muted: #5c636d;
+  --ink-faint: #8e939b;
+  --border: #e0ded3;
+  --border-strong: #cfcdc0;
+  --accent: #2c5d86;
+  --accent-bright: #3f78a6;
+  --hi: #b2503c;
+  --lo: #2f6f9e;
+  --ok: #4a7a45;
+  --sun: #a8761c;
+  --warn: #a8761c;
+  --shadow: 0 1px 2px rgb(0 0 0 / 4%);
+
+  /* Chart surfaces, read by horizon.js so canvas and page agree. */
+  --chart-grid: rgb(0 0 0 / 5.5%);
+  --chart-axis: #8e939b;
+  --chart-night: #e8ecf3;
+
+  /* Nine bands from cold to hot, for the reading that leads the page. */
+  --cool:   #6b8f7e;
+  --warm-0: #2e5a8a;
+  --warm-1: #3f78a6;
+  --warm-2: #5292b0;
+  --warm-3: #6aa5a8;
+  --warm-4: #6f8f7f;
+  --warm-5: #9a8f52;
+  --warm-6: #c0863f;
+  --warm-7: #b2503c;
+  --warm-8: #8f2f28;
+
+  --radius: 10px;
+  --gap: clamp(0.75rem, 2.2vw, 1.25rem);
+  /* The margin either side of the page. A phone has little width to give away;
+     a desktop has plenty and looks bare without it. */
+  --edge: clamp(0.4rem, 2.2vw, 1.25rem);
+
+  --fs-xs:   0.75rem;
+  --fs-sm:   0.8125rem;
+  --fs-base: 0.9375rem;
+  --fs-md:   1.0625rem;
+  --fs-lg:   clamp(1.15rem, 1.05rem + 0.5vw, 1.4rem);
+  --fs-xl:   clamp(1.75rem, 1.4rem + 1.7vw, 2.6rem);
+  --fs-huge: clamp(2.6rem, 1.9rem + 3.4vw, 4rem);
+
+  /* Three roles, not one. Headings in a serif carry the page; readings in a
+     monospace line up under each other, which is what a column of numbers is
+     for. All three resolve to something already on the machine, so nothing is
+     fetched. Override any of them under [[Theme]]. */
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14181d;
+    --surface: #1a1f25;
+    --surface-sunk: #0f1317;
+    --ink: #e7e5dd;
+    --ink-muted: #9aa1aa;
+    --ink-faint: #6c737c;
+    --border: #212830;
+    --border-strong: #2c333b;
+    --accent: #7fb2df;
+    --accent-bright: #6aa8d8;
+    --hi: #e08262;
+    --lo: #6aa8d8;
+    --ok: #6ea765;
+    --sun: #d9a441;
+    --warn: #d3a13f;
+    --shadow: 0 1px 2px rgb(0 0 0 / 30%);
+    --chart-grid: rgb(255 255 255 / 6%);
+    --chart-axis: #6c737c;
+    --chart-night: #0f1317;
+    --cool: #8bbba4;
+  }
+}
+
+/* The theme toggle has to move this too, not only the custom properties. Everything
+   the browser draws itself reads it: the date picker and its calendar, the drop-downs,
+   the scrollbars, the focus rings. Left saying "light dark" while the page is dark, a
+   reader who switched to dark on a light system gets a white calendar on a dark panel,
+   which is the one part of the page the stylesheet cannot reach. */
+:root[data-theme="dark"] { color-scheme: dark; }
+:root[data-theme="light"] { color-scheme: light; }
+
+:root[data-theme="dark"] {
+  --bg: #14181d;
+  --surface: #1a1f25;
+  --surface-sunk: #0f1317;
+  --ink: #e7e5dd;
+  --ink-muted: #9aa1aa;
+  --ink-faint: #6c737c;
+  --border: #212830;
+  --border-strong: #2c333b;
+  --accent: #7fb2df;
+  --accent-bright: #6aa8d8;
+  --hi: #e08262;
+  --lo: #6aa8d8;
+  --ok: #6ea765;
+  --sun: #d9a441;
+  --warn: #d3a13f;
+  --shadow: 0 1px 2px rgb(0 0 0 / 30%);
+  --chart-grid: rgb(255 255 255 / 6%);
+  --chart-axis: #6c737c;
+  --chart-night: #0f1317;
+  --cool: #8bbba4;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+a { color: var(--accent); text-underline-offset: 2px; }
+
+:where(a, button, select, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ---------------------------------------------------------------- shell */
+
+.wrap {
+  max-width: 84rem;
+  margin: 0 auto;
+  padding: var(--gap) var(--edge);
+  /* Nothing reaches past the edge of the page. Not 'clip' or 'hidden' on an
+     ancestor of the panels: either would take the sticky head with it. */
+  max-width: min(84rem, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+/* ---------------------------------------------------------------- header */
+
+.masthead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  /* Narrow between columns, because two of them are buttons standing side by side.
+     What keeps the heading clear of them is the auto margin below, not this. */
+  gap: 0.5rem 0.4rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.masthead h1 {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.masthead .updated {
+  font-size: var(--fs-sm);
+  color: var(--ink-muted);
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.masthead { position: relative; }
+
+.masthead-tools { display: flex; align-items: center; gap: 0.4rem; margin-left: auto; order: 1; }
+
+/* The theme switch stands outside the menu, so the order has to put it back where it
+   stood while it was inside: at the end of the row, with the menu button after it.
+
+   Both are centred against the row rather than sat on its baseline. A 2.25rem button
+   is taller than the links beside it, and a shared baseline then leaves it standing
+   a few pixels high. It used to be centred inside .masthead-tools, and this is what
+   keeps it looking the same now that it is not. */
+.masthead > .icon-button,
+.masthead-tools { align-self: center; }
+.masthead > .icon-button { flex: none; }
+.masthead > .theme-toggle { order: 2; }
+.masthead > .nav-toggle { order: 3; }
+
+/* The menu button, hidden until the controls stop fitting. Both class names, because
+   .icon-button sets display too and is declared further down. */
+.icon-button.nav-toggle { display: none; }
+
+/* The controls do not fit across a phone, and a masthead wider than the page is a
+   page that scrolls sideways. Below this width they fold into a panel under the
+   button, leaving the two buttons alone on the row.
+
+   The panel is positioned against .masthead rather than against the page, so it opens
+   under the button wherever the heading has pushed it. */
+@media (max-width: 40rem) {
+  .icon-button.nav-toggle {
+    display: inline-flex;
+  }
+
+  /* The pair is pushed across together, so the switch carries the margin. */
+  .masthead > .theme-toggle { margin-left: auto; }
+
+  /* The heading gives way before the buttons do. A page other than the front one
+     carries a way back and a timestamp on the same line, and at its own width that
+     leaves room for one button: flex wraps before it shrinks, so the menu button
+     ended up on a line of its own. A basis of zero lets the heading take what is
+     left instead of asking for what it wants. */
+  .masthead > div:first-child {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .masthead-tools {
+    display: none;
+    position: absolute;
+    top: calc(100% - 0.4rem);
+    right: 0;
+    z-index: 30;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.15rem;
+    min-width: 11rem;
+    max-width: min(16rem, calc(100vw - 2rem));
+    padding: 0.4rem;
+    margin: 0;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    box-shadow: 0 6px 24px rgb(0 0 0 / 18%);
+  }
+
+  .masthead-tools[data-open] { display: flex; }
+
+  /* Full-width rows in the panel, rather than the chips they are on a wide screen. */
+  .masthead-tools .masthead-link {
+    padding: 0.5rem 0.6rem;
+    border-radius: var(--radius);
+  }
+  .masthead-tools select {
+    width: 100%;
+    max-width: none;
+    padding: 0.5rem 0.6rem;
+    font-size: var(--fs-sm);
+  }
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-muted);
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.icon-button:hover { color: var(--ink); border-color: var(--border-strong); }
+.icon-button svg { width: 1.15rem; height: 1.15rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+/* The two theme glyphs swap depending on the resolved theme. */
+.icon-button .glyph-dark { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .icon-button .glyph-light { display: none; }
+  :root:not([data-theme="light"]) .icon-button .glyph-dark  { display: block; }
+}
+:root[data-theme="dark"] .icon-button .glyph-light { display: none; }
+:root[data-theme="dark"] .icon-button .glyph-dark  { display: block; }
+
+/* Deliberately quiet: a reader who needs it will look for it, and everyone else
+   should not have to see it. */
+select.lang-select {
+  font: inherit;
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  background: none;
+  border: 0;
+  padding: 0.25rem 0.15rem;
+  cursor: pointer;
+  max-width: 8rem;
+}
+select.lang-select:hover { color: var(--ink); }
+
+/* The list that drops out of a select is drawn by the browser, and it takes the
+   colour from the select while taking the background from the system. On a dark page
+   under a light system that is grey text on white, which is the one combination that
+   cannot be read. Naming both on the options settles it. */
+select.lang-select option,
+select.unit-select option {
+  background-color: var(--surface);
+  color: var(--ink);
+}
+
+/* The same, for the unit picker beside it. Both change what the whole page says
+   without being anything the page is about. */
+select.unit-select {
+  font: inherit;
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  background: none;
+  border: 0;
+  padding: 0.25rem 0.15rem;
+  cursor: pointer;
+  max-width: 8rem;
+}
+select.unit-select:hover { color: var(--ink); }
+
+.masthead-link {
+  font-family: var(--font);
+  font-size: var(--fs-sm);
+  color: var(--ink-muted);
+  text-decoration: none;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--radius);
+  white-space: nowrap;
+}
+.masthead-link:hover { color: var(--ink); background: var(--surface); }
+
+/* The page the reader is already on. Marked rather than left out: a menu whose
+   entries come and go as you move through it is one that has to be read again on
+   every page. */
+.masthead-link[aria-current="page"] {
+  color: var(--ink);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+/* NOAA summaries: fixed-pitch, and allowed to scroll sideways on a phone
+   rather than forcing the whole page to. */
+.report-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--fs-sm);
+  line-height: 1.45;
+  margin: 0;
+  overflow-x: auto;
+  color: var(--ink);
+  tab-size: 4;
+}
+
+.imagery img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+#map_canvas {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--surface-sunk);
+}
+
+select.report-select {
+  font: inherit;
+  font-size: var(--fs-sm);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.35rem 0.5rem;
+  max-width: 10rem;
+}
+
+/* ---------------------------------------------------------------- headline */
+
+/* One card read from the top, not a row of tiles: the reading leads, the day's
+   range sits under it, and everything else follows in two quiet columns.
+
+   It sits in the sidebar, so it is a panel and keeps a panel's width. Across
+   the whole page the reading would grow to the size of a poster and the two
+   columns would drift apart. */
+.headline { position: relative; padding: clamp(1rem, 3vw, 1.4rem); }
+.headline .lead-value { font-size: clamp(4.6rem, 17vw, 6rem); }
+.headline .lead-unit { font-size: clamp(1.25rem, 4vw, 1.6rem); }
+.headline .lead-trend { width: 1.9rem; height: 1.9rem; }
+
+/* The temperature carries the range bar, so it needs the width of two on a
+   phone and stays with the others once there is room. */
+/* Which way it is going. A caret, not a word: the number beside it is the
+   reading, and a second number would compete with it. */
+.trend {
+  width: 0.34em;
+  height: 0.34em;
+  margin-left: 0.12em;
+  margin-top: 0.16em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.8;
+}
+.trend-up { color: var(--hi); }
+.trend-down { transform: rotate(180deg); }
+.trend-flat { transform: rotate(90deg); }
+.trend-up, .lead-trend.trend-up { stroke: var(--hi); color: var(--hi); }
+.trend-down, .lead-trend.trend-down { stroke: var(--lo); color: var(--lo); }
+.trend-flat, .lead-trend.trend-flat { stroke: var(--ink-faint); color: var(--ink-faint); }
+
+/* Where today has been, and where in it the reading sits now.
+
+   The track is the scale and the fill is what was measured inside it. Today
+   those are the same, since the day's own range is all there is to draw; kept
+   apart because a forecast belongs in the same track, and then they differ.
+
+   Three pixels. A bar this thin is a rule with a mark on it, which is what it
+   is: anything taller starts to look like a quantity. */
+.span-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  margin: 1.25rem 0 0;
+}
+.span-today { margin-bottom: 0.2rem; }
+.span-track {
+  position: relative;
+  height: 9px;
+  border-radius: 5px;
+  background: var(--surface-sunk);
+  margin: 0.35rem 0 0.4rem;
+}
+.span-fill {
+  position: absolute;
+  height: 100%;
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--span-from, var(--cool)), var(--span-to, var(--hi)));
+}
+.span-now {
+  position: absolute;
+  top: -3px;
+  width: 3px;
+  height: 15px;
+  margin-left: -1.5px;
+  border-radius: 1.5px;
+  background: var(--span-at, var(--ink));
+  /* The mark sits on the colour it is reporting, so it needs an edge of its own. */
+  box-shadow: 0 0 0 1px var(--surface);
+}
+.span-ends {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: var(--fs-sm);
+}
+.span-end b { font-family: var(--font-mono); font-weight: 500; }
+.span-end small { color: var(--ink-muted); margin-left: 0.1em; }
+.span-end--right { text-align: right; }
+.span-caption {
+  font-size: var(--fs-xs);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.faint { color: var(--ink-faint); }
+
+/* Everything that is not the reading: two columns, all of it the same weight. */
+.companions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 1.4rem;
+  margin: 1.5rem 0 0;
+}
+.companions dt {
+  font-size: 0.688rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  /* German has words like Aussenluftfeuchte, and two columns on a phone are
+     narrow. Let them break rather than run into the next column. */
+  overflow-wrap: anywhere;
+}
+.companions dd {
+  margin: 0.1rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
+  /* The arrow belongs to the number, not to a line of its own -- but a column
+     that will not wrap runs into its neighbour instead, so it may. */
+  overflow-wrap: anywhere;
+}
+/* A second line under a reading: the same thing measured another way. */
+.sub-reading {
+  font-size: 0.85rem !important;
+  color: var(--ink-muted);
+  margin-top: 0.15rem !important;
+}
+
+.companions dd small,
+.lead-unit small { font-size: 0.62em; color: var(--ink-muted); margin-left: 0.15em; }
+.companions dd .faint { font-family: var(--font); font-size: 0.72em; margin-left: 0.3em; }
+.companions .trend { width: 0.7em; height: 0.7em; margin-left: 0.35em; }
+
+/* The reading itself. */
+.lead-label {
+  font-size: 0.688rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  font-weight: 600;
+  font-family: var(--font);
+  margin: 0;
+}
+.lead {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-top: 0.3rem;
+}
+.lead-value {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(5rem, 17vw, 8.5rem);
+  line-height: 0.82;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+  color: var(--warm-6);
+}
+.lead-value[data-band="0"] { color: var(--warm-0); }
+.lead-value[data-band="1"] { color: var(--warm-1); }
+.lead-value[data-band="2"] { color: var(--warm-2); }
+.lead-value[data-band="3"] { color: var(--warm-3); }
+.lead-value[data-band="4"] { color: var(--warm-4); }
+.lead-value[data-band="5"] { color: var(--warm-5); }
+.lead-value[data-band="6"] { color: var(--warm-6); }
+.lead-value[data-band="7"] { color: var(--warm-7); }
+.lead-value[data-band="8"] { color: var(--warm-8); }
+
+/* Just over half the size, hanging from the same top edge. On the baseline it
+   reads as an index belonging to another line. */
+.lead-dec {
+  font-size: 0.68em;
+  letter-spacing: -0.02em;
+  opacity: 0.85;
+  position: relative;
+  top: -0.22em;
+}
+.lead-unit {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  color: var(--ink-muted);
+  margin-top: 0.55rem;
+}
+.lead-trend {
+  width: clamp(1.6rem, 5vw, 2.6rem);
+  height: clamp(1.6rem, 5vw, 2.6rem);
+  margin: 0.2rem 0 0 0.3rem;
+  fill: none;
+  stroke: var(--ink-muted);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.headline-item { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+
+.headline-item .label {
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+.headline-item .value {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xl);
+  font-weight: 300;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* The reading that leads the page is set like a headline, not like a number in
+   a table: display face, room to breathe, and a colour that says roughly how
+   warm before anyone reads the digits. The bands are degrees C whatever the
+   page displays in. */
+.headline-item:has(.range) .value {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.2rem;
+  flex-wrap: wrap;
+  font-family: var(--font-display);
+  font-size: clamp(5rem, 17vw, 8.5rem);
+  font-weight: 400;
+  line-height: 0.82;
+  letter-spacing: -0.035em;
+  margin: 0.2rem 0 0.1rem;
+}
+
+/* The decimals, a little over half the size, hanging from the same top edge.
+   Sitting on the baseline they read as an index belonging to another line. */
+.value-dec {
+  font-size: 0.68em;
+  letter-spacing: -0.02em;
+  opacity: 0.85;
+  position: relative;
+  top: -0.22em;
+}
+
+.headline-item:has(.range) .unit {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  color: var(--ink-muted);
+  margin-top: 0.55rem;
+  font-weight: 400;
+}
+.value[data-band] { color: var(--warm-6); }
+.value[data-band="0"] { color: var(--warm-0); }
+.value[data-band="1"] { color: var(--warm-1); }
+.value[data-band="2"] { color: var(--warm-2); }
+.value[data-band="3"] { color: var(--warm-3); }
+.value[data-band="4"] { color: var(--warm-4); }
+.value[data-band="5"] { color: var(--warm-5); }
+.value[data-band="6"] { color: var(--warm-6); }
+.value[data-band="7"] { color: var(--warm-7); }
+.value[data-band="8"] { color: var(--warm-8); }
+
+/* The unit belongs to the figure but should not compete with it: at full weight
+   "mbar" carries as much visual load as "1026.4". */
+.headline-item .unit {
+  font-size: 0.44em;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--ink-muted);
+  margin-left: 0.18em;
+  white-space: nowrap;
+}
+
+/* The first headline item is the lead reading and gets more room. */
+.headline-item:first-child .value { font-size: var(--fs-huge); }
+
+.headline-item .sub {
+  font-size: var(--fs-sm);
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.trend-up::before   { content: "\2191\FE0E"; color: var(--hi); margin-right: 0.2em; }
+.trend-down::before { content: "\2193\FE0E"; color: var(--lo); margin-right: 0.2em; }
+.trend-flat::before { content: "\2192\FE0E"; color: var(--ink-faint); margin-right: 0.2em; }
+
+@media (max-width: 34rem) {
+  :root {
+    --fs-xs:   0.8125rem;
+    --fs-sm:   0.9375rem;
+    --fs-base: 1.0625rem;
+    --fs-md:   1.1875rem;
+  }
+  .companions { gap: 1.2rem 1rem; }
+  .companions dt { font-size: 0.78rem; letter-spacing: 0.08em; }
+  .companions dd { font-size: 1.5rem; }
+  .companions dd small { font-size: 0.55em; }
+  .lead-label { font-size: 0.82rem; }
+  .span-title { font-size: 1rem; }
+  .span-ends { font-size: var(--fs-sm); }
+  .panel-body, .panel-head { padding-left: 0.85rem; padding-right: 0.85rem; }
+}
+
+/* ---------------------------------------------------------------- layout */
+
+.columns {
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+/* One column, and the panels come after the charts. 'sidebar_responsive = top' puts
+   them first instead, for anyone who wants the current readings before the
+   history. The panels stay second in the markup either way, which is the order a
+   screen reader should hear them in. */
+.columns.sidebar-responsive-top > .stack:last-child { order: -1; }
+
+@media (min-width: 62.5rem) {
+  .chart-skeleton { height: 340px; }
+}
+
+@media (min-width: 60rem) {
+  .columns { grid-template-columns: minmax(0, 1fr) 21rem; }
+
+  /* Two columns now, so the narrow rule above stops applying and 'sidebar'
+     decides the side. */
+  .columns.sidebar-responsive-top > .stack:last-child { order: 0; }
+  .columns.sidebar-left { grid-template-columns: 21rem minmax(0, 1fr); }
+  .columns.sidebar-left > .stack:last-child { order: -1; }
+}
+
+.stack { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+
+/* ------------------------------------------------------------- sun & moon */
+
+.sunarc { width: 100%; height: auto; display: block; margin-bottom: var(--gap); }
+
+/* Between the two solstices: everything the sun does here in a year. */
+.sunarc-band { fill: var(--sun); opacity: 0.12; stroke: none; }
+.sunarc-edge { fill: none; stroke: var(--sun); stroke-width: 0.8; opacity: 0.35; }
+.sunarc-today { fill: none; stroke: var(--sun); stroke-width: 2.2; }
+.sunarc-horizon { stroke: var(--border-strong); stroke-width: 1; }
+.sunarc-now { stroke: var(--ink-faint); stroke-width: 1; stroke-dasharray: 2 2; }
+.sunarc-noon { stroke: var(--border-strong); stroke-width: 1; }
+.sunarc-label { fill: var(--ink-faint); font-size: 9px; font-family: var(--font); }
+
+/* A quieter aside next to a reading: "in 3 days" behind a date. */
+.hint { color: var(--ink-faint); font-size: var(--fs-xs); }
+
+.moon-image {
+  display: block;
+  margin: 0 auto var(--gap);
+  width: 9rem;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---------------------------------------------------------------- panels */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* Any overflow other than visible makes the panel the frame a sticky child
+   sticks inside, so the history head stayed put relative to its own panel and
+   scrolled away with it. That panel gets visible, and its corners are rounded
+   on the children that reach them instead. */
+.panel:has(.range-bar) { overflow: visible; }
+.panel:has(.range-bar) > .panel-head {
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+.panel:has(.range-bar) > *:last-child {
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem clamp(0.85rem, 2.5vw, 1.15rem);
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-head h2 {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: 0;
+}
+.panel-head h2 a { color: inherit; text-decoration: none; }
+.panel-head h2 a:hover { color: var(--accent); }
+
+.panel-body { padding: clamp(0.85rem, 2.5vw, 1.15rem); }
+.panel-body.flush { padding: 0; }
+
+/* ---------------------------------------------------------------- tabs */
+
+.tabs {
+  display: flex;
+  gap: 0.15rem;
+  padding: 0.25rem;
+  background: var(--surface-sunk);
+  border-radius: var(--radius);
+}
+
+.tabs button {
+  flex: 1 1 auto;
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--ink-muted);
+  background: none;
+  border: 0;
+  border-radius: calc(var(--radius) - 3px);
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+.tabs button:hover { color: var(--ink); }
+.tabs button[aria-selected="true"] {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+}
+
+/* ---------------------------------------------------------- time navigation */
+
+/* Three tracks: the middle one holds the arrows and stays put, whatever appears
+   beside it. Without this, the "Now" button showing up on the first click shifted
+   the arrows sideways -- and the next click landed on nothing. */
+.range-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  /* No fill: a shaded strip between the panel head and the first chart reads as a
+     separate object. This belongs to the charts below it. */
+  background: none;
+}
+
+/* Below this the three columns do not fit: the label needs its width, the two
+   arrows theirs, and Now and Share were left overlapping the forward arrow.
+   Two rows instead, arrows over buttons. */
+@media (max-width: 34rem) {
+  /* The panel head no longer clips, so its contents have to fit by themselves:
+     the tabs wrap under the title rather than off the side of the page. */
+  .panel:has(.range-bar) > .panel-head { flex-wrap: wrap; row-gap: 0.35rem; }
+  .panel:has(.range-bar) > .panel-head .tabs { margin-left: auto; }
+  .range-bar { grid-template-columns: minmax(0, 1fr); gap: 0.2rem; }
+  .range-nav, .range-extra { grid-column: 1; justify-content: center; padding-left: 0; }
+  .range-extra:empty { display: none; }
+}
+
+/* The head of the history panel stays put. Scrolling through eleven charts
+   otherwise loses both which day is on screen and the means to change it. */
+.panel:has(.range-bar) .panel-head,
+.range-bar {
+  position: sticky;
+  z-index: 3;
+  background: var(--surface);
+}
+.panel:has(.range-bar) .panel-head { top: 0; }
+.range-bar { top: var(--head-height, 2.9rem); border-bottom: 1px solid var(--border); }
+
+/* A row of tabs wider than its panel. On a phone the record tables offer five, which
+   is about twice what fits. They scroll rather than being cut off: a tab nobody can
+   reach is a tab that is not there. The scrollbar itself is left out, because the row
+   is short and a bar under it would take a third of its height. */
+.tabs {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tabs > button { flex: none; }
+
+.range-nav {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+/* The date between the two arrows opens the calendar.
+
+   A separate control would be a second thing on a row that is already full, saying
+   the same date the label says. So the label is the control, marked as one by a
+   dotted underline and nothing else. */
+.range-label-wrap { position: relative; display: inline-block; }
+
+.range-label-wrap .range-label {
+  font: inherit;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+.range-label-wrap .range-label:hover,
+.range-label-wrap .range-label[aria-expanded="true"] {
+  text-decoration-color: var(--accent);
+}
+
+/* The calendar itself, drawn by the skin rather than by the browser. What a browser
+   drops out of <input type="date"> cannot be styled at all: on a themed page it
+   arrives white, with its own fonts and its own blue, and it offers every date since
+   the calendar began. This one takes the page's colours and greys out the days the
+   station has no readings for. */
+.range-cal {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  width: 17rem;
+  padding: 0.6rem;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 18%);
+  font-size: var(--fs-sm);
+  /* The row it hangs from is sticky and centred; on a narrow screen the panel would
+     otherwise reach past the edge of the page. */
+  max-width: calc(100vw - 1.5rem);
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem;
+  margin-bottom: 0.45rem;
+}
+
+.cal-title {
+  font-weight: 600;
+  color: var(--ink);
+  text-align: center;
+  flex: 1;
+}
+
+.cal-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  padding: 0;
+  flex: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.cal-step:hover { background: var(--surface-sunk); color: var(--ink); }
+.cal-step svg {
+  width: 1rem; height: 1rem; fill: none; stroke: currentColor;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+}
+
+.cal-dow {
+  text-align: center;
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  padding-bottom: 0.25rem;
+}
+
+.cal-day {
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+.cal-day:hover:not(:disabled) { background: var(--surface-sunk); }
+
+/* Days before the first reading, and days after the last. Nothing to show for them. */
+.cal-day:disabled { color: var(--ink-faint); opacity: 0.4; cursor: default; }
+
+/* The days either side of the month, kept so the weeks line up. */
+.cal-other:not(:disabled) { color: var(--ink-faint); }
+
+/* The day the readings end. Marked, but not selected: the live view is not a day. */
+.cal-today { box-shadow: inset 0 0 0 1px var(--border-strong); }
+
+.cal-selected,
+.cal-selected:hover { background: var(--accent); color: #fff; }
+
+.range-extra {
+  grid-column: 3;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  min-width: 0;
+  padding-left: 0.5rem;
+}
+
+.range-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+.range-button:hover:not(:disabled) { color: var(--ink); border-color: var(--border-strong); }
+.range-button:disabled { opacity: 0.35; cursor: default; }
+.range-button svg { width: 1rem; height: 1rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Fixed width, not just a minimum: the label swings between "Now" and
+   "Saturday, 22 August 2026", and a growing label would push the arrows around
+   just as surely as an appearing button does. */
+.range-label {
+  width: clamp(7rem, 38vw, 15rem);
+  text-align: center;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.range-now {
+  font: inherit;
+  font-size: var(--fs-xs);
+  color: var(--accent);
+  background: none;
+  border: 0;
+  padding: 0.2rem 0.4rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.range-now:hover { text-decoration: underline; }
+
+/* ---------------------------------------------------------------- charts */
+
+.charts { display: flex; flex-direction: column; }
+
+.chart-card { border-top: 1px solid var(--border); }
+.chart-card:first-child { border-top: 0; }
+
+.chart-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem clamp(0.85rem, 2.5vw, 1.15rem) 0.25rem;
+}
+
+.chart-title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+  text-wrap: balance;
+}
+
+/* The legend is the title: series names carry their own colour swatch. */
+.chart-legend { display: flex; flex-wrap: wrap; gap: 0.15rem 0.9rem; font-size: var(--fs-sm); }
+.chart-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.chart-legend i { width: 0.75rem; height: 0.2rem; border-radius: 1px; background: currentColor; flex: none; }
+.chart-legend .series-name { color: var(--ink); font-weight: 500; }
+
+/* Ways out of a chart: the view on screen, and the file the server rendered.
+   Kept quiet until the card is hovered or something in it has focus. */
+.chart-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  flex: none;
+  opacity: 0;
+  transition: opacity .15s;
+}
+
+.chart-card:hover .chart-actions,
+.chart-card:focus-within .chart-actions { opacity: 1; }
+
+/* Touch has no hover, so never hide them there. */
+@media (hover: none) {
+  .chart-actions { opacity: 1; }
+}
+
+.chart-action {
+  font: inherit;
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  background: none;
+  border: 0;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.chart-action:hover { color: var(--accent); background: var(--surface-sunk); }
+
+.chart-host { padding: 0 clamp(0.5rem, 2vw, 0.85rem) 0.6rem; }
+/* The chart container, not the tooltip that also lives in here. */
+.chart-host > div[_echarts_instance_] { width: 100% !important; }
+
+/* uPlot brings its own stylesheet; align it with ours. */
+.u-legend { display: none; }
+.u-cursor-pt { mix-blend-mode: normal; }
+.u-tooltip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 10;
+  background: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  box-shadow: var(--shadow);
+  padding: 0.4rem 0.55rem;
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  transition: opacity .1s;
+}
+.u-tooltip .t-time { color: var(--ink-muted); margin-bottom: 0.15rem; }
+.u-tooltip .t-row { display: flex; align-items: center; gap: 0.4rem; }
+.u-tooltip .t-row i { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: currentColor; flex: none; }
+.u-tooltip .t-row b { font-weight: 600; margin-left: auto; padding-left: 0.6rem; }
+
+/* Placeholder that holds the card's height until its data arrives. */
+/* The same height the chart will be, or the page grows under the reader as the
+   charts load in and whatever they were looking at moves. chartHeight() in
+   horizon.js computes the same number. */
+.chart-skeleton {
+  height: 290px;
+  border-radius: 6px;
+  background: linear-gradient(100deg, var(--surface-sunk) 30%, var(--border) 50%, var(--surface-sunk) 70%);
+  background-size: 300% 100%;
+  animation: chart-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes chart-shimmer {
+  from { background-position: 130% 0; }
+  to   { background-position: -30% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-skeleton { animation: none; background: var(--surface-sunk); }
+}
+
+.chart-empty, .chart-error {
+  padding: 1.5rem clamp(0.85rem, 2.5vw, 1.15rem);
+  color: var(--ink-faint);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+.chart-error { color: var(--hi); }
+
+/* The accessible text alternative to each canvas. */
+.chart-data { padding: 0 clamp(0.85rem, 2.5vw, 1.15rem) 0.85rem; }
+.chart-data summary {
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  cursor: pointer;
+  padding: 0.2rem 0;
+}
+.chart-data summary:hover { color: var(--ink-muted); }
+/* Roomy enough that a day's readings need little or no scrolling. */
+.chart-data .scroller {
+  max-height: min(75vh, 42rem);
+  overflow: auto;
+  margin-top: 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.chart-data .table-note {
+  margin: 0.4rem 0 0;
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+}
+
+/* Two or three columns of readings side by side where the width allows, so a
+   long series does not turn into one endless strip. */
+.chart-data .scroller .data-table { min-width: 0; }
+
+/* ---------------------------------------------------------------- tables */
+
+.data-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+
+.data-table th, .data-table td { padding: 0.35rem 0.5rem; text-align: right; }
+.data-table th:first-child, .data-table td:first-child { text-align: left; }
+
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--border);
+  z-index: 1;
+}
+
+.data-table tbody tr + tr td { border-top: 1px solid var(--border); }
+.data-table td { font-variant-numeric: tabular-nums; }
+.data-table td.metric { color: var(--ink-muted); text-align: left; }
+.data-table .num { font-weight: 500; }
+
+.table-scroll { overflow-x: auto; }
+
+/* Below this width a five-column statistics table is unreadable: the head scrolls
+   out of sight and you can no longer tell which figure belongs to which span. Turn
+   each row into a card instead, with every value carrying its own label. The markup
+   stays a table, so it still reads correctly to a screen reader. */
+@media (max-width: 44rem) {
+  .table-scroll { overflow-x: visible; }
+
+  .data-table.stats,
+  .data-table.stats tbody,
+  .data-table.stats tr,
+  .data-table.stats th,
+  .data-table.stats td { display: block; }
+
+  .data-table.stats { min-width: 0; }
+  .data-table.stats thead { display: none; }
+
+  /* The panel body is flush for the table, so the cards have to bring their own
+     side padding -- the same value the other panels use. */
+  .data-table.stats tr {
+    padding: 0.85rem clamp(0.85rem, 2.5vw, 1.15rem);
+    border-top: 1px solid var(--border);
+  }
+  .data-table.stats tr:first-child { border-top: 0; }
+  .data-table.stats tbody tr + tr td { border-top: 0; }
+
+  /* The metric name becomes the card's heading. */
+  .data-table.stats th[scope="row"] {
+    font-size: var(--fs-base);
+    font-weight: 600;
+    color: var(--ink);
+    text-transform: none;
+    letter-spacing: 0;
+    padding: 0 0 0.5rem;
+    border-bottom: 0;
+    text-align: left;
+  }
+
+  /* Block, not grid: a grid would make every child of the cell its own column, and
+     these cells hold several -- a high, a slash, a low, a timestamp. */
+  .data-table.stats td {
+    display: block;
+    padding: 0.28rem 0;
+    border-top: 0;
+    text-align: left;
+    line-height: 1.5;
+  }
+
+  .data-table.stats td::before {
+    content: attr(data-label);
+    display: inline-block;
+    width: 5.5rem;
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+
+  /* A cell with no reading adds nothing on a card. */
+  .data-table.stats td:empty { display: none; }
+
+  /* Timestamps sit beside the value rather than under it, where there is room. */
+  .data-table.stats .when {
+    display: inline;
+    margin-left: 0.4rem;
+  }
+}
+
+.stat-hi { color: var(--hi); }
+.stat-lo { color: var(--lo); }
+.when { display: block; font-size: var(--fs-xs); color: var(--ink-faint); font-weight: 400; }
+
+/* A high and a low each carry their own time, so the cell holds two stacked
+   pairs rather than two numbers with one timestamp between them. Aligned to the
+   top, or the pair whose time wrapped would drag the other one down with it. */
+.stat-pair { display: inline-block; vertical-align: top; }
+.stat-slash { display: inline-block; vertical-align: top; margin: 0 0.35rem; color: var(--ink-faint); }
+
+/* Two halves of one panel, side by side where the panel is wide enough for two
+   and stacked where it is not. The rule between them is the panel's own division,
+   so it runs the full height rather than stopping at the shorter half. */
+/* Measured against the panel rather than the window: the same 1024px window holds
+   a panel wide enough for two halves when it is alone and one that is not when
+   there are three across. 'auto-fit' is no help either -- it counts tracks the
+   width allows, not the two children there are, and lays out an empty third. */
+.split-two {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(0.85rem, 2.5vw, 1.15rem);
+}
+
+@container (min-width: 34rem) {
+  .split-two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+.split-two > * + * {
+  border-left: 1px solid var(--border);
+  padding-left: clamp(0.85rem, 2.5vw, 1.15rem);
+}
+
+/* Stacked, the rule belongs above rather than beside. */
+@container (max-width: 34rem) {
+  .split-two > * + * {
+    border-left: 0;
+    border-top: 1px solid var(--border);
+    padding-left: 0;
+    padding-top: clamp(0.85rem, 2.5vw, 1.15rem);
+  }
+}
+
+/* What the halves are measured against. */
+[data-live-panel="sunmoon"] { container-type: inline-size; }
+
+/* The planets, one row each. */
+table.planets { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+table.planets th,
+table.planets td { padding: 0.4rem clamp(0.85rem, 2.5vw, 1.15rem); text-align: left; }
+table.planets thead th {
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--border);
+}
+table.planets tbody th { font-weight: 500; color: var(--ink); }
+table.planets tbody tr + tr th,
+table.planets tbody tr + tr td { border-top: 1px solid var(--border); }
+table.planets .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Filled while the planet is above the horizon, hollow while it is not. Which of
+   them can be seen right now is the first thing anyone asks of such a table. */
+.planet-mark {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  margin-right: 0.5em;
+  border: 1px solid var(--ink-faint);
+  border-radius: 50%;
+  vertical-align: 0.05em;
+}
+
+.planet-mark[data-up="1"] { background: var(--sun); border-color: var(--sun); }
+
+/* ---------------------------------------------------------------- forecast */
+
+/* Days along the top, hours beneath them, both scrolling sideways rather than
+   wrapping: a forecast reads as a sequence, and a week broken over two lines
+   reads as two weeks. */
+/* The days, and the hours of whichever day is chosen. They wrap rather than
+   scroll: a scrollbar hides half the week behind a gesture, and a forecast is
+   meant to be taken in at a glance. */
+.forecast-days,
+.forecast-hours {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.forecast-hours {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.forecast-day,
+.forecast-hour {
+  flex: 1 0 auto;
+  min-width: 6.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.6rem 0.4rem;
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.forecast-hour { min-width: 5rem; }
+
+/* A day is a button: it chooses which day the hours below are showing. It has to
+   look like the rest of the row until it is used, so the styling it gets from
+   being a button is taken back off. */
+.forecast-day {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.forecast-day:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+
+.forecast-day:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The day being shown below, and the hour we are in. */
+.forecast-day[aria-pressed="true"],
+.forecast-hour[data-now] { background: var(--surface-sunk); }
+
+.forecast-when { font-size: var(--fs-sm); color: var(--ink-muted); }
+.forecast-day[aria-pressed="true"] .forecast-when,
+.forecast-hour[data-now] .forecast-when { color: var(--accent); font-weight: 600; }
+
+/* Drawn as a mask, which is what lets one grey set of shapes carry a colour: the
+   picture is the cut-out and the background behind it is the paint. */
+.forecast-icon {
+  width: 2rem;
+  height: 2rem;
+  background: var(--sky, var(--ink-muted));
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+
+/* A sky has a colour, and it is not the colour of the text beside it. Sun warm,
+   rain and snow cold, a thunderstorm the one that says look at me. Overcast and
+   fog keep the page's own grey, which is what they are. */
+.forecast-icon[data-symbol="clear"],
+.forecast-icon[data-symbol="mostly-clear"] { --sky: var(--sun); }
+.forecast-icon[data-symbol="partly-cloudy"] { --sky: var(--warn); }
+.forecast-icon[data-symbol^="clear-night"],
+.forecast-icon[data-symbol$="-night"] { --sky: var(--ink-faint); }
+.forecast-icon[data-symbol="drizzle"],
+.forecast-icon[data-symbol="rain"],
+.forecast-icon[data-symbol="showers"],
+.forecast-icon[data-symbol="sleet"] { --sky: var(--lo); }
+.forecast-icon[data-symbol="snow"],
+.forecast-icon[data-symbol="snow-showers"] { --sky: var(--accent-bright); }
+.forecast-icon[data-symbol^="thunderstorm"] { --sky: var(--hi); }
+
+.forecast-what {
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+  text-wrap: balance;
+}
+
+.forecast-temps { font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+.forecast-temps b { color: var(--ink); font-weight: 600; }
+.forecast-temps > span { color: var(--ink-faint); margin-left: 0.35rem; }
+
+/* The unit rides with its number, a size down: '20.6 °C' is one reading, not a
+   number and a word. */
+.forecast-temps small,
+.forecast-wind small {
+  font-size: 0.8em;
+  font-weight: 400;
+  margin-left: 0.1em;
+}
+
+.forecast-rain,
+.forecast-wind {
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A card with no rain to report is one line shorter than its neighbours. The
+   wind line is pushed to the foot instead, so the row stays level. */
+.forecast-day { justify-content: flex-start; }
+.forecast-day .forecast-wind { margin-top: auto; }
+
+.forecast-rain { color: var(--lo); }
+
+/* A glyph beside the label. Drawn as a mask filled with the text colour, so it
+   follows the theme without a second file per palette. */
+.tile-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin-right: 0.35em;
+  background: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+  opacity: 0.75;
+  flex: none;
+}
+
+/* How far the reading has been today, under the reading itself. */
+.tile-range {
+  display: flex;
+  gap: 1.2rem;
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+  margin: 0.15rem 0 0;
+}
+
+.tile-range .range-key { color: var(--ink-faint); }
+
+/* Readings list, used for current conditions and station info. Rows are separated by
+   a hairline rather than by spacing alone: at eight or twenty entries the eye needs
+   something to track along, and the value sits far from its label. */
+.readings {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  margin: 0;
+  font-size: var(--fs-sm);
+  align-items: baseline;
+}
+
+.readings dt {
+  color: var(--ink-muted);
+  padding: 0.4rem 0.9rem 0.4rem 0;
+  min-width: 0;
+  font-size: 0.95em;
+  letter-spacing: 0.01em;
+}
+
+.readings dd {
+  margin: 0;
+  padding: 0.4rem 0;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Hairline between rows, but not above the first. Both cells of a row carry it so
+   the line runs the full width. */
+.readings dt:not(:first-of-type),
+.readings dd:not(:first-of-type) {
+  border-top: 1px solid var(--border);
+}
+
+/* ---------------------------------------------------------------- status */
+
+.status-dot { display: inline-block; width: 0.55rem; height: 0.55rem; border-radius: 50%; margin-right: 0.35rem; vertical-align: baseline; }
+.status-ok      { background: var(--ok); }
+.status-low     { background: var(--hi); }
+.status-unknown { background: var(--border-strong); }
+
+/* ---------------------------------------------------------------- footer */
+
+.footer {
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  text-align: center;
+  padding: 0.5rem 0 1.5rem;
+}
+.footer a { color: var(--ink-muted); }
+
+/* ------------------------------------------------------------ back to top */
+
+/* A page of readings is a long way down, and the way back should not be a swipe
+   repeated twenty times. The button is faint on purpose: it is a convenience laid
+   over the page, not a part of it, and it firms up under the pointer.
+
+   It is kept invisible rather than absent, so that the fade has something to fade.
+   'visibility' is what takes it out of the tab order and off a screen reader while
+   it is gone; opacity alone would leave a button there to be found. */
+.to-top {
+  position: fixed;
+  right: max(var(--edge), 0.75rem);
+  bottom: max(var(--edge), 0.75rem);
+  z-index: 25;
+  opacity: 0;
+  visibility: hidden;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+  transition: opacity .2s, visibility .2s, color .15s, border-color .15s;
+}
+.to-top[data-show] { opacity: 0.45; visibility: visible; }
+.to-top[data-show]:hover,
+.to-top:focus-visible { opacity: 1; }
+
+/* ---------------------------------------------------------------- misc */
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.is-stale { opacity: 0.55; transition: opacity .3s; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+
+/* ---------------------------------------------------------------- climate */
+
+/* The counted days, and the record year by year. Both are wide tables of numbers, so
+   the row heading carries its own definition and the months stay narrow. */
+.climate-days th[scope="row"],
+.climate-record th[scope="row"] { white-space: nowrap; }
+
+.climate-rule {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+/* The unit a row of the statistics tables is written in. Without it the numbers
+   change when the reader picks another unit and nothing says why. */
+.stat-unit {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+/* The year's own total, which is what most readers came for. */
+.climate-total { font-weight: 600; color: var(--ink); }
+
+/* A month with none of that kind of day. Present, so the row keeps its shape, and
+   quiet, so the months that do have some are what the eye lands on. */
+.climate-none { color: var(--ink-faint); }
+
+.climate-chart { width: 100%; min-height: 260px; }
+
+/* One line saying how to read the picture above it. */
+.climate-note {
+  margin: 0.4rem 0 0;
+  font-size: var(--fs-sm);
+  color: var(--ink-muted);
+}
+
+/* One square per day of the year: a column per week, a row per weekday. The colour
+   runs from the page's own surface to the colour it uses for cold and wet. */
+.climate-heatmap { display: flex; flex-direction: column; gap: 0.3rem; }
+
+.hm-grid, .hm-months {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.hm-months { font-size: var(--fs-xs); color: var(--ink-faint); }
+
+/* Rows of a fixed height rather than a share of the panel: a square that grows with
+   the width of the page stops looking like a day and starts looking like a block. */
+.hm-grid { grid-template-rows: repeat(7, 0.85rem); }
+
+.hm-cell {
+  border-radius: 2px;
+  /* --hm is 0 for a dry day and 1 for the wettest of the year. */
+  background: color-mix(in oklab, var(--lo) calc(var(--hm, 0) * 100%), var(--surface-sunk));
+}
+
+/* The days at either end that belong to the year before or after. Kept so that every
+   column is a whole week, and left blank so they are not read as readings. */
+.hm-outside { background: none; }
+
+/* A day inside the year that the station did not record. Outlined rather than
+   filled: a day with no reading is not a day with a reading of nothing. */
+.hm-empty {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.hm-dow, .hm-month {
+  grid-column: 1;
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  display: flex;
+  align-items: center;
+}
+
+.hm-month { justify-content: flex-start; }
+
+.hm-key {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  margin-left: 2.2rem;
+}
+
+.hm-ramp {
+  width: 6rem;
+  height: 0.55rem;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--surface-sunk), var(--lo));
+}
+
+/* Temperature runs through the same nine steps as the reading on the front page,
+   rather than from nothing to one colour. */
+.hm-ramp--temp {
+  background: linear-gradient(90deg, var(--warm-0), var(--warm-2), var(--warm-4),
+                              var(--warm-6), var(--warm-8));
+}
+
+/* A phone cannot show 53 columns of squares and still have squares. It scrolls. */
+@media (max-width: 40rem) {
+  .climate-heatmap { overflow-x: auto; }
+  .hm-grid, .hm-months { min-width: 34rem; }
+}
+
+@media print {
+  .masthead-tools, .tabs, .chart-data { display: none; }
+  .panel { break-inside: avoid; box-shadow: none; }
+  body { background: #fff; }
+}
