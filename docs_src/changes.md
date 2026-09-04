@@ -13,6 +13,11 @@ Say so in the log when a Vantage logger returns far fewer archive records than i
 said it would, which is what corrupt logger memory looks like, and link to the fix.
 Fixes [Issue #1105](https://github.com/weewx/weewx/issues/1105).
 
+The FineOffset USB driver no longer calls `datetime.utcnow()` or
+`datetime.utcfromtimestamp()`, which Python 3.12 deprecates. Its datetimes are now
+aware UTC. Fixes [Issue #1052](https://github.com/weewx/weewx/issues/1052).
+[PR #1117](https://github.com/weewx/weewx/pull/1117).
+
 Saving the configuration file no longer changes its mode or ownership. Under a
 package installation, `weectl extension install`, `weectl extension uninstall`,
 `weectl station reconfigure` and `weectl station upgrade` were leaving
