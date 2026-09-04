@@ -21,18 +21,20 @@ rest:
     sidebar_responsive = bottom         # or top, when there is only one
 
     plot_groups = tempdew, wind, rain, ...
+    main_panels = history, hilo
     panels      = current, forecast, sunmoon, planets, imagery, sensors, about
-
-    hide_plot_groups = tempin, humin
-    hide_panels      = imagery
 ```
 
-`plot_groups` and `panels` set what appears and in what order.
-`hide_plot_groups` and `hide_panels` take things out without editing those
-lists, so you still have them to put back.
+`plot_groups` sets which charts appear and in what order. To take something out
+and keep it to hand, copy the line, comment one copy out, and edit the other.
+
+The page is two columns of panels, and both are lists: `main_panels` is the wide
+one, `panels` the narrower one beside it. `history` is the charts with their span
+switcher and `hilo` the statistics table, so those can be moved or left out like
+any other. Only one `history` belongs on a page.
 
 A panel is an `.inc` file in the skin directory. Write your own, add its name to
-`panels`, and it appears. No template editing.
+either list, and it appears. No template editing.
 
 ## The cards
 
@@ -89,9 +91,8 @@ These are its own:
 |---|---|
 | `sidebar` | Which side the panels sit on, `right` or `left`, where there is room for two columns. |
 | `sidebar_responsive` | Where they go when there is not: `bottom` or `top`. |
-| `panels` | Which panels appear beside the charts, and in what order. Each name is an `.inc` file in the skin directory, so a panel of your own is a file plus a name in this list. |
-| `hide_panels` | Panels to leave out, without editing the list above. |
-| `hide_plot_groups` | Charts to leave out, without editing `plot_groups`. |
+| `main_panels` | Which panels fill the wide column, and in what order. Default is `history, hilo`: the charts, then the statistics table. |
+| `panels` | Which panels appear beside them, and in what order. Each name in either list is an `.inc` file in the skin directory, so a panel of your own is a file plus a name in one of them. |
 | `dashboard_lead` | The one reading set large at the top of the current conditions card. Defaults to the first entry in `observations_headline`. |
 | `dashboard_readings` | The rows underneath it, in order. Defaults to `observations_current`. Anything the station does not record is skipped, so the list may name more than you have. |
 | `observations_headline` | The types shown large at the top of the page. Three or four is about right on a phone. |
@@ -156,7 +157,7 @@ The value is the name of a file in `icons/`, without the extension. A type with
 no entry simply has no symbol. The symbols are from the IBM Carbon set, under
 the Apache 2.0 licence; see `icons/LICENSE-Carbon.txt`.
 
-## Theming: how it works
+## Changing the colours and fonts
 
 Under `[DisplayOptions]`:
 
@@ -178,7 +179,7 @@ anything `horizon.css` defines can be replaced, and nothing else is emitted.
 `[[[Light]]]` applies everywhere; `[[[Dark]]]` overrides it where the reader's
 browser or the theme toggle asks for a dark page.
 
-## What there is
+## The names you can set
 
 | Name | What it colours |
 |---|---|
@@ -193,10 +194,9 @@ browser or the theme toggle asks for a dark page.
 | `fs-xs` … `fs-huge` | type sizes, from the small print to the headline figure |
 
 The chart *line* colours are not here. They come from `chart_line_colors` in
-`[ImageGenerator]`, where the PNGs take them too, so a chart and the image of
-the same plot stay the same colour.
+`[JSONGenerator]`, beside the plot they belong to.
 
-## When the names are not enough
+## Going beyond the names
 
 Name a stylesheet of your own:
 

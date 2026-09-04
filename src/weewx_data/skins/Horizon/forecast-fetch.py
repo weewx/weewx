@@ -48,7 +48,14 @@ HOURLY = "weather_code,temperature_2m,precipitation_probability"
 
 
 def fetch(lat, lon, days, timeout):
-    """Ask Open-Meteo, and return what it says."""
+    """Ask Open-Meteo, and return what it says.
+
+    Args:
+        lat (float): The station latitude, in degrees north.
+        lon (float): Its longitude, in degrees east.
+        days (int): How many days to ask for.
+        timeout (int): How long to wait for an answer, in seconds.
+    """
     query = urllib.parse.urlencode({
         'latitude': lat,
         'longitude': lon,
@@ -85,6 +92,9 @@ def to_horizon(said):
 
     'days' and 'hours' may be empty; the panel shows what it is given and hides
     itself when that is nothing.
+
+    Args:
+        said (dict[str, Any]): Open-Meteo's answer, as it came back.
     """
     daily = said.get('daily') or {}
     hourly = said.get('hourly') or {}
@@ -126,7 +136,12 @@ def to_horizon(said):
 
 
 def write(payload, path):
-    """Into place in one step, so a reader never sees half a file."""
+    """Into place in one step, so a reader never sees half a file.
+
+    Args:
+        payload (dict[str, Any]): What to write.
+        path (str): Where to write it.
+    """
     folder = os.path.dirname(os.path.abspath(path)) or '.'
     handle, temporary = tempfile.mkstemp(dir=folder, suffix='.tmp')
     try:
