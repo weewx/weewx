@@ -1,4 +1,4 @@
-# Copyright 2012-2024 Matthew Wall
+# Copyright 2012-2026 Matthew Wall
 # See the file LICENSE.txt for your full rights.
 #
 # Thanks to Jim Easterbrook for pywws.  This implementation includes
@@ -226,15 +226,18 @@ import weewx.wxformulas
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'FineOffsetUSB'
-DRIVER_VERSION = '1.3'
+DRIVER_VERSION = '1.4'
 
-# Every datetime in this driver is aware UTC. None of them leave it: loop packets are
-# rebuilt by pywws2weewx() with a dateTime of its own, and genArchiveRecords() converts
-# back to epoch seconds before yielding. So the representation is the driver's to
-# choose, and the one that carries its time zone is the one that cannot be mixed up:
-# sync() compares and subtracts the two bounds below against times read from the
-# station, and doing that across a naive and an aware value raises "can't subtract
-# offset-naive and offset-aware datetimes".
+# Every datetime that carries an observation time is aware UTC. None of them leave the
+# driver: loop packets are rebuilt by pywws2weewx() with a dateTime of its own, and
+# genArchiveRecords() converts back to epoch seconds before yielding. So the
+# representation is the driver's to choose, and the one that carries its time zone is
+# the one that cannot be mixed up: sync() compares and subtracts the two bounds below
+# against times read from the station, and doing that across a naive and an aware value
+# raises "can't subtract offset-naive and offset-aware datetimes".
+#
+# The station's own clock is local wall clock time, so set_clock() and the configurator
+# keep naive local datetimes on purpose.
 UTC = datetime.timezone.utc
 DT_MIN = datetime.datetime.min.replace(tzinfo=UTC)
 DT_MAX = datetime.datetime.max.replace(tzinfo=UTC)
