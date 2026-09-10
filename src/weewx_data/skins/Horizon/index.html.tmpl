@@ -99,7 +99,6 @@
         forecast: {
 #set $fc = $DisplayOptions.get('Forecast', {})
           fetch: #if $to_bool($fc.get('browser_fetch', True)) then 'true' else 'false'#,
-          file: #if $to_bool($fc.get('file', False)) then 'true' else 'false'#,
           hours: $to_int($fc.get('hours', 8)),
           days: $to_int($fc.get('days', 7)),
           ## What each WMO 4677 code is called, translated here rather than in the

@@ -109,7 +109,6 @@ Open-Meteo itself if there is not. Under `[DisplayOptions]`:
 [DisplayOptions]
     [[Forecast]]
         browser_fetch = true
-        file = false
         days = 7
         hours = 8
 ```
@@ -117,14 +116,8 @@ Open-Meteo itself if there is not. Under `[DisplayOptions]`:
 | Option | What it does |
 |---|---|
 | `browser_fetch` | Whether the page may ask Open-Meteo directly. Default is `True`. |
-| `file` | Whether something on this station writes `data/forecast.json`. Default is `False`. |
 | `days` | How many days to show. Default is `7`. |
 | `hours` | How many of the hours ahead, shown every third one. Default is `8`. |
-
-The two settings answer different questions. `file` says whether the page should
-look for a file at all: where nothing writes one, asking for it puts a 404 in
-every reader's console. `browser_fetch` says whether the page may go out to
-Open-Meteo when there is no file.
 
 Where the page fetches the forecast itself, each reader's browser talks to
 Open-Meteo, and their address reaches a third party. On a station published to
