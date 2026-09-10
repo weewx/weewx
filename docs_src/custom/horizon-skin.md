@@ -6,8 +6,8 @@ before that, in CSS custom properties. Everything you see is one of them: the
 surfaces, the type sizes, the corner radius, the colours the charts read for
 their grid and axes.
 
-Any of them can be overridden from `skin.conf`, so restyling the skin is a
-change to your configuration and not to a file that the next upgrade will
+Any of them can be overridden from a stylesheet of your own, so restyling the
+skin is a file you keep and not a change to one that the next upgrade will
 overwrite.
 
 ## Layout
@@ -147,29 +147,54 @@ The value is the name of a file in `icons/`, without the extension. A type with
 no entry simply has no symbol. The symbols are from the IBM Carbon set, under
 the Apache 2.0 licence; see `icons/LICENSE-Carbon.txt`.
 
-## Changing the colours and fonts
+## The two looks
 
-Under `[DisplayOptions]`:
+As it ships, the skin is painted by `horizon.css` and then by `flavor-deck.css`
+on top of it: flat and dense, one sans throughout, an edge around every block,
+the navigation in a column. `flavor-deck.js` is what moves the navigation and
+puts the station's particulars in a footer. Both are named in `skin.conf`:
 
 ``` ini
 [DisplayOptions]
-    [[Theme]]
-        [[[Light]]]
-            accent  = "#7a4b2c"
-            bg      = "#faf6f2"
-            radius  = 2px
-            font    = Georgia, "Times New Roman", serif
-        [[[Dark]]]
-            accent  = "#d8a77a"
-            bg      = "#1a1512"
+    custom_css = flavor-deck.css
+    custom_js  = flavor-deck.js
 ```
 
-There is no fixed list of names. Whatever you write becomes `--name`, so
-anything `horizon.css` defines can be replaced, and nothing else is emitted.
-`[[[Light]]]` applies everywhere; `[[[Dark]]]` overrides it where the reader's
-browser or the theme toggle asks for a dark page.
+Take those two lines out and `horizon.css` stands alone: rounded cards with a
+shadow, the navigation in a row across the top.
+
+## Changing the colours and fonts
+
+Add a stylesheet of your own after the one the skin ships with:
+
+``` ini
+[DisplayOptions]
+    custom_css = flavor-deck.css, my-station.css
+```
+
+Put the file in the skin directory and add it to `copy_once` in
+`[CopyGenerator]`, or it will not be installed. It is loaded last, so whatever
+it sets wins. The look is a set of CSS custom properties, and a colour changes
+by setting one:
+
+``` css
+:root {
+  --accent: #7a4b2c;
+  --bg: #faf6f2;
+  --radius: 2px;
+  --font: Georgia, "Times New Roman", serif;
+}
+
+/* Where the reader's browser asks for a dark page, or the theme toggle does. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --accent: #d8a77a; --bg: #1a1512; }
+}
+:root[data-theme="dark"] { --accent: #d8a77a; --bg: #1a1512; }
+```
 
 ## The names you can set
+
+Each of these is `--name` in the stylesheet.
 
 | Name | What it colours |
 |---|---|
@@ -186,44 +211,15 @@ browser or the theme toggle asks for a dark page.
 The chart *line* colours are not here. They come from `chart_line_colors` in
 `[JSONGenerator]`, beside the plot they belong to.
 
-## Going beyond the names
+## A script of your own
 
-Name a stylesheet of your own:
-
-``` ini
-[DisplayOptions]
-    custom_css = my-station.css
-```
-
-It is loaded after `horizon.css` and after `[[Theme]]`, so it wins over both.
-Put the file in the skin directory and add it to `copy_once` in
-`[CopyGenerator]`, or it will not be installed.
-
-`custom_js` works the same way for a script:
+`custom_js` works the same way:
 
 ``` ini
 [DisplayOptions]
-    custom_js = my-station.js
+    custom_js = flavor-deck.js, my-station.js
 ```
 
 It is deferred, so it runs after the skin's own script has wired up the page.
 Use it for the things a stylesheet cannot do, such as moving a part of the page
 somewhere else.
-
-## A second look
-
-The skin ships with one. `flavor-deck.css` and `flavor-deck.js` give it a
-flatter, denser appearance: one sans throughout, an edge around every block, and
-the navigation in a column rather than a row.
-
-``` ini
-[DisplayOptions]
-    custom_css = flavor-deck.css
-    custom_js  = flavor-deck.js
-```
-
-Both files are already in `copy_once`. The stylesheet does the paint. The script
-moves the navigation into a column and puts the station's particulars in a
-footer. On a narrow screen that column joins the menu the skin already has.
-
-Without those two lines the skin looks as it did.
