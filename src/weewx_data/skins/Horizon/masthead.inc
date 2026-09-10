@@ -30,22 +30,14 @@
 #set $title = $getVar('page_title', '')
 #set $show_units = $to_bool($getVar('page_units', True))
 ##
-## Every page the skin writes, in the order the menu shows them. Three are optional,
-## and a station that has switched one off should not be offered a link to a page
-## that was never written.
+## Every page the skin writes, in the order the menu shows them.
 #set $nav = []
-#if $to_bool($DisplayOptions.get('show_climate', True))
 #silent $nav.append({'page': 'climate', 'href': 'climate.html', 'label': $gettext("Climate")})
-#end if
 #silent $nav.append({'page': 'statistics', 'href': 'statistics.html', 'label': $gettext("Statistics")})
 #silent $nav.append({'page': 'celestial', 'href': 'celestial.html', 'label': $gettext("Celestial")})
-#if $to_bool($DisplayOptions.get('show_reports', True))
 #silent $nav.append({'page': 'reports', 'href': 'reports.html', 'label': $gettext("Reports")})
-#end if
 #silent $nav.append({'page': 'telemetry', 'href': 'telemetry.html', 'label': $gettext("Telemetry")})
-#if $to_bool($DisplayOptions.get('show_rss', True))
 #silent $nav.append({'page': 'rss', 'href': 'rss.xml', 'label': $gettext("RSS")})
-#end if
 ##
       <header class="masthead">
         <div>

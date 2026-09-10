@@ -99,7 +99,6 @@
         forecast: {
 #set $fc = $DisplayOptions.get('Forecast', {})
           fetch: #if $to_bool($fc.get('browser_fetch', True)) then 'true' else 'false'#,
-          file: #if $to_bool($fc.get('file', False)) then 'true' else 'false'#,
           hours: $to_int($fc.get('hours', 8)),
           days: $to_int($fc.get('days', 7)),
           ## What each WMO 4677 code is called, translated here rather than in the
@@ -125,10 +124,6 @@
 #end for
           sky: $jsonize($sky)
         },
-        ## null leaves it to the page, which reads index.json to see whether PNGs
-        ## are being written at all. Set 'show_image_links' in skin.conf to decide
-        ## it here instead, on a station whose PNGs come from elsewhere.
-        hasImages: #if $DisplayOptions.get('show_image_links') is None then 'null' else ($to_bool($DisplayOptions.show_image_links) and 'true' or 'false')#,
         text: {
           noData: "$gettext('No data for this period')",
           showData: "$gettext('Show data as table')",
@@ -141,8 +136,6 @@
           linkCopied: "$gettext('Link copied')",
           copyLink: "$gettext('Copy this link:')",
           saveImage: "$gettext('Save image')",
-          imageLink: "$gettext('PNG')",
-          imageLinkTitle: "$gettext('Permanent link to the rendered image')",
           toDark: "$gettext('Switch to dark theme')",
           toLight: "$gettext('Switch to light theme')"
         }

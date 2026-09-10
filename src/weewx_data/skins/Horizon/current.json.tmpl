@@ -45,8 +45,10 @@
   #silent $fields.update({'rainToday_v': $day.rain.sum.raw,
                           'rainToday_u': $unit.unit_type.rain})
 #end if
-## The day's ends move with the reading, and the card shows them next to it.
-#set $lead = $DisplayOptions.get('dashboard_lead') or 'outTemp'
+## The day's ends move with the reading, and the card shows them next to it. The
+## reading is the one current.inc sets large, chosen the same way.
+#set $wanted = $to_list($DisplayOptions.get('observations_current', ['outTemp', 'barometer']))
+#set $lead = ($wanted and $wanted[0]) or 'outTemp'
 #set $lead_day = $getVar('day.%s' % $lead, None)
 #if $lead_day is not None and $lead_day.min.raw is not None and $lead_day.max.raw is not None
   #silent $fields.update({'day_min': $str($lead_day.min.format(add_label=False)),
