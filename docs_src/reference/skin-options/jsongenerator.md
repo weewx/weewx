@@ -93,8 +93,7 @@ The grid the older year files are written on. A year at four hours is about
 #### fine_months
 
 How many calendar months, counting back from this one, are written on a closer
-grid than the year files. This is what a week or a month view is drawn from.
-Default is `2`.
+grid than the year files. Default is `2`.
 
 #### fine_resolution
 

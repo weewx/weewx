@@ -97,7 +97,7 @@ These are its own:
 | `planets` | Which planets the planets panel lists, and in what order. Any body `pyephem` knows can be named. Default is `mercury, venus, mars, jupiter, saturn`. |
 | `custom_css` | A stylesheet of your own. See below. |
 | `custom_js` | A script of your own. See below. |
-| `lang_root` | For a rendering in a subdirectory: how it gets back to the top. See the language switcher in `skin.conf`. |
+| `lang_root` | For a rendering in a subdirectory: how it gets back to the top. See [More than one language](#more-than-one-language). |
 
 ## The forecast
 
@@ -146,6 +146,41 @@ The value is the name of a file in `icons/`, without the extension. A type with
 no entry simply has no symbol. The symbols are from the IBM Carbon set, under
 the Apache 2.0 licence; see `icons/LICENSE-Carbon.txt`.
 
+## More than one language
+
+WeeWX renders a page in one language. To offer two, run the report twice in
+`weewx.conf`, each with its own `lang` and `HTML_ROOT`:
+
+``` ini
+[StdReport]
+    [[HorizonReport]]
+        skin = Horizon
+        lang = de
+    [[HorizonReportEN]]
+        skin = Horizon
+        lang = en
+        HTML_ROOT = public_html/en
+        [[[DisplayOptions]]]
+            lang_root = ..
+```
+
+`lang_root` is how the rendering in the subdirectory finds its way back to the
+top. Then list the renderings under `[[Languages]]` in `skin.conf`, each with
+the path from the top directory to it:
+
+``` ini
+[DisplayOptions]
+    [[Languages]]
+        [[[de]]]
+            label = Deutsch
+            path = .
+        [[[en]]]
+            label = English
+            path = en
+```
+
+The switcher appears in the masthead as soon as there is more than one entry.
+
 ## The two looks
 
 As it ships, the skin is painted by `horizon.css` and then by `flavor-deck.css`
@@ -159,8 +194,8 @@ puts the station's particulars in a footer. Both are named in `skin.conf`:
     custom_js  = flavor-deck.js
 ```
 
-Take those two lines out and `horizon.css` stands alone: rounded cards with a
-shadow, the navigation in a row across the top.
+Take those two lines out and `horizon.css` stands alone: the navigation in a
+row across the top, and the panels in a column beside the charts.
 
 ## Changing the colours and fonts
 
