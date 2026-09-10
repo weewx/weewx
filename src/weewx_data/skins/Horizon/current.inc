@@ -7,19 +7,12 @@
 ## and then everything else in two quiet columns. The reading leads because it is
 ## what anyone came for; the rest is the same size as itself and does not compete.
 ##
-## What the card shows, and in what order.
-##
-##   dashboard_lead     the one reading set large at the top
-##   dashboard_readings the rows underneath
-##
-## Where neither option is set, the card falls back to the lists the skin already
-## keeps, so a configuration that names neither still gets a sensible card. The
-## 'has_data' test drops the rest: a station with no UV sensor never shows that row,
-## and nobody has to maintain a second list of what is fitted.
-#set $headline = $to_list($DisplayOptions.get('observations_headline', ['outTemp']))
-#set $lead = $DisplayOptions.get('dashboard_lead') or ($headline and $headline[0]) or 'outTemp'
-#set $wanted = $to_list($DisplayOptions.get('dashboard_readings',
-                        $DisplayOptions.get('observations_current', ['outTemp', 'barometer'])))
+## What the card shows is 'observations_current': the first type set large at the
+## top, the rest in rows underneath. The 'has_data' test drops what the station does
+## not record: a station with no UV sensor never shows that row, and nobody has to
+## maintain a second list of what is fitted.
+#set $wanted = $to_list($DisplayOptions.get('observations_current', ['outTemp', 'barometer']))
+#set $lead = ($wanted and $wanted[0]) or 'outTemp'
 ## 'lead' carries no '$' on purpose. Cheetah would look the name up in the calling
 ## frame, and until Python 3.12 a comprehension has a frame of its own, which a
 ## '#set' never reaches. Plain Python finds it through the closure, everywhere.

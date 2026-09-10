@@ -43,7 +43,7 @@ it:
 
 | Panel | What it shows |
 |---|---|
-| `current` | The reading set large, the day's range under it, and everything else the station records in two columns. `dashboard_lead` and `dashboard_readings` decide what. |
+| `current` | The first of `observations_current` set large, the day's range under it, and the rest of the list in two columns. |
 | `forecast` | Seven days ahead, and the hours of whichever day is chosen. See [The forecast](#the-forecast) below. |
 | `sun` | The sun's arc through the day, with the band behind it covering the year between the solstices. Daylight, how much that has changed since yesterday, the highest the sun reaches, when it is light enough to see by, and the distance. |
 | `moon` | The moon as NASA rendered it, one of 32 frames picked by age since the last new moon. Illumination, phase, age, rise and set, and the next full and new moon. |
@@ -93,9 +93,6 @@ These are its own:
 | `sidebar_responsive` | Where they go when there is not: `bottom` or `top`. |
 | `main_panels` | Which panels fill the wide column, and in what order. Default is `history, hilo`: the charts, then the statistics table. |
 | `panels` | Which panels appear beside them, and in what order. Each name in either list is an `.inc` file in the skin directory, so a panel of your own is a file plus a name in one of them. |
-| `dashboard_lead` | The one reading set large at the top of the current conditions card. Defaults to the first entry in `observations_headline`. |
-| `dashboard_readings` | The rows underneath it, in order. Defaults to `observations_current`. Anything the station does not record is skipped, so the list may name more than you have. |
-| `observations_headline` | The types shown large at the top of the page. Three or four is about right on a phone. |
 | `refresh_interval` | How often the page re-fetches current conditions, in seconds. `0` turns it off. There is no point going below your archive interval, since nothing new appears until the next record is archived. |
 | `show_image_links` | Offer the server-rendered PNG next to each chart. Set it to `False` if you drop the ImageGenerator from `[Generators]`, or the links point at files nobody writes. |
 | `planets` | Which planets the planets panel lists, and in what order. Any body `pyephem` knows can be named. Default is `mercury, venus, mars, jupiter, saturn`. |
