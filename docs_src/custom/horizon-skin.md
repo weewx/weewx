@@ -94,7 +94,6 @@ These are its own:
 | `main_panels` | Which panels fill the wide column, and in what order. Default is `history, hilo`: the charts, then the statistics table. |
 | `panels` | Which panels appear beside them, and in what order. Each name in either list is an `.inc` file in the skin directory, so a panel of your own is a file plus a name in one of them. |
 | `refresh_interval` | How often the page re-fetches current conditions, in seconds. `0` turns it off. There is no point going below your archive interval, since nothing new appears until the next record is archived. |
-| `show_image_links` | Offer the server-rendered PNG next to each chart. Set it to `False` if you drop the ImageGenerator from `[Generators]`, or the links point at files nobody writes. |
 | `planets` | Which planets the planets panel lists, and in what order. Any body `pyephem` knows can be named. Default is `mercury, venus, mars, jupiter, saturn`. |
 | `custom_css` | A stylesheet of your own. See below. |
 | `custom_js` | A script of your own. See below. |
