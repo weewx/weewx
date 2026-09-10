@@ -82,8 +82,8 @@ Most of the section is shared with *Seasons* and documented in the reference
 under [_[DisplayOptions]_](../reference/skin-options/displayoptions.md):
 `plot_groups`, `periods`, `observations_current`, `observations_stats`,
 `observations_rss`, `obs_type_sum`, `obs_type_max`, `telemetry_plot_groups`,
-`sensor_connections`, `sensor_batteries`, `sensor_voltages`, `show_rss` and
-`show_reports`. Horizon reads them the same way.
+`sensor_connections`, `sensor_batteries` and `sensor_voltages`. Horizon reads
+them the same way.
 
 These are its own:
 
