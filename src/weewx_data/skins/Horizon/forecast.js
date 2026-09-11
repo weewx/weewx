@@ -1,24 +1,11 @@
 /*    Copyright (c) 2026 Manuel Hilgert
  *    Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
  *
- * The forecast panel. Two sources, tried in this order:
- *
- *   'data/forecast.json', if something on the station writes one. Nothing
- *   leaves the reader's browser, the model is fetched once for the station
- *   rather than once per visitor, and the source can be anything: Open-Meteo,
- *   DWD MOSMIX through weewx-dwd, weewx-forecast, a script of your own. See
- *   'forecast-fetch.py' beside this file for one that writes the format.
- *
- *   Open-Meteo, fetched by the page. No key, nothing to install, works
- *   anywhere. The cost is that every reader's browser asks Open-Meteo, so their
- *   address reaches a third party. On a station published to the world that is
- *   worth a thought, and 'browser_fetch = false' in skin.conf turns it off.
- *
- * The answer is kept for an hour. Models run three-hourly at best, so asking
- * again on each page view returns the same numbers at somebody else's expense.
- *
- * The panel stays hidden until there is something in it, so a station with no
- * forecast has no empty box on it.
+ * Fills the forecast panel. The forecast comes from data/forecast.json where the
+ * station writes that file. Otherwise the browser asks Open-Meteo, if
+ * `browser_fetch` is true. forecast-fetch.py documents the format of the file. See
+ * "Customizing the Horizon skin" in the Customization Guide for the choice between
+ * the two sources.
  */
 
 (function () {
@@ -29,12 +16,8 @@
   var STORE = 'weewx.horizon.forecast';
   var HOUR = 3600 * 1000;
 
-  /* Which picture goes with which WMO 4677 code.
-
-     Only the picture: what the code is called comes from the page, in the
-     station's own language, because the skin's language files are where its
-     words belong. A code that reaches here without a word simply shows the
-     picture, which is still most of the message. */
+  /* The icon for each WMO 4677 code, as a file name in icons/forecast/. The text
+     for a code comes from CFG.forecast.sky, which scripts.inc translates. */
   var SYMBOLS = {
     0: 'clear', 1: 'mostly-clear', 2: 'partly-cloudy', 3: 'overcast',
     45: 'fog', 48: 'fog',
@@ -46,17 +29,21 @@
     95: 'thunderstorm', 96: 'thunderstorm-hail', 99: 'thunderstorm-hail'
   };
 
-  /* A clear night is not a sun. Drawing one looks broken rather than wrong. */
+  /* The night icons, which show the moon, for the three icons that show the sun. */
   var NIGHT = {
     clear: 'clear-night', 'mostly-clear': 'mostly-clear-night',
     'partly-cloudy': 'partly-cloudy-night'
   };
 
+  /* Returns the text and the icon for a WMO code, e.g., { text: 'Light rain',
+     symbol: 'rain' } for 61. With `dark` true, a sun icon becomes its night icon. */
   function described(code, dark) {
     var said = (OPTS.sky || {})[code] || '';
     var symbol = SYMBOLS[code];
     if (!symbol) {
-      /* Codes not listed fall back to the nearest ten: 62 is rain like 61. */
+      /* A code missing from SYMBOLS takes the icon of the lowest listed code in the
+         same group of ten, e.g., 62 takes the icon of 61. Where CFG.forecast.sky has
+         no text for the missing code, the text of that listed code is used. */
       var near = Math.floor(code / 10) * 10;
       for (var i = 0; i < 10 && !symbol; i++) {
         symbol = SYMBOLS[near + i];
@@ -72,15 +59,16 @@
   /* -------------------------------------------------------------- fetching */
 
   function fromFile() {
-    /* Whatever the station writes wins over what the page could fetch. A station
-       that writes nothing answers 404, and that is the same as no forecast. */
+    /* Where the station does not write data/forecast.json, the request ends in a
+       404. The 404 is expected and means that this source has no forecast. */
     return fetch((CFG.dataDir || 'data') + '/forecast.json', { cache: 'no-cache' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; });
   }
 
-  /* Open-Meteo's fields, turned into the shape the file has, so everything below
-     works the same whichever source answered. */
+  /* Asks Open-Meteo and returns the answer in the format of data/forecast.json (see
+     to_horizon() in forecast-fetch.py), so that draw() handles both sources alike.
+     Returns null where `browser_fetch` is false or the request fails. */
   function fromOpenMeteo() {
     if (!OPTS.fetch || CFG.latitude === undefined) return Promise.resolve(null);
 
@@ -126,19 +114,21 @@
       .catch(function () { return null; });
   }
 
-  /* Kept for an hour: a reader who opens four pages should cost one request. */
+  /* Returns the forecast that keep() stored less than an hour ago, or null. A reader
+     who opens the front page several times within the hour causes one request, not
+     one per visit. */
   function cached() {
     try {
       var held = JSON.parse(localStorage.getItem(STORE) || 'null');
       if (held && Date.now() - held.at < HOUR) return held.data;
-    } catch (e) { /* private mode, or nothing there */ }
+    } catch (e) { /* Storage is blocked, or the stored text is not JSON. */ }
     return null;
   }
 
   function keep(data) {
     try {
       localStorage.setItem(STORE, JSON.stringify({ at: Date.now(), data: data }));
-    } catch (e) { /* not worth failing over */ }
+    } catch (e) { /* Without storage, every page view fetches the forecast. */ }
   }
 
   /* ------------------------------------------------------------- rendering */
@@ -147,8 +137,7 @@
     var span = document.createElement('span');
     span.className = 'forecast-icon';
     span.setAttribute('aria-hidden', 'true');
-    /* Named, so the stylesheet can give a sky its own colour: a sun is not the
-       same grey as a cloud, and a page that draws it so reads as switched off. */
+    /* horizon.css colours the icon by its data-symbol. */
     span.dataset.symbol = symbol;
     span.style.setProperty('--icon', 'url(icons/forecast/' + symbol + '.svg)');
     return span;
@@ -160,14 +149,10 @@
       { minimumFractionDigits: digits, maximumFractionDigits: digits });
   }
 
-  /* A reading in whatever unit the reader has asked the page for.
-
-     The forecast arrives in Celsius and km/h whichever source answered, and the
-     rest of the page may be showing Fahrenheit. Putting the two side by side
-     without saying which is which is worse than either on its own, so the same
-     conversion the charts use is applied here, through the skin's own table.
-
-     Returns the number and the label, both already written out. */
+  /* Returns { text, label } for a value in `fromUnit`, written in the unit system the
+     reader chose or, without a choice, in the report unit system, e.g.,
+     { text: '68.0', label: '°F' }. The callers pass every forecast temperature as
+     degree_C and every wind speed as km_per_hour. */
   function reading(value, fromUnit, obsType, digits) {
     if (value === null || value === undefined) return { text: '', label: '' };
     var units = (window.HORIZON || {}).units;
@@ -182,11 +167,13 @@
     };
   }
 
-  /* What to call the units the forecast comes in, where the page has no opinion
-     because the reader has not chosen a system. */
+  /* The labels of the units the forecast arrives in, for where CFG.units converts
+     nothing: the page shows the same units, or horizon.js has not loaded
+     data/index.json yet. */
   var DEFAULT_LABELS = { degree_C: '°C', km_per_hour: 'km/h' };
 
-  /* Number and unit together, the unit smaller: '20.6 °C' reads as one thing. */
+  /* Appends to `into` a `tag` element that holds the value and, in a <small>, its
+     unit label, e.g., <b>20.6<small>°C</small></b>. Returns the new element. */
   function withUnit(into, value, fromUnit, obsType, digits, tag) {
     var said = reading(value, fromUnit, obsType, digits);
     var host = document.createElement(tag || 'span');
@@ -209,8 +196,8 @@
   }
 
   function dayCard(day, index, units) {
-    /* A button, because it does something: it decides which day the row of hours
-       below is showing. Keyboard and screen reader get that for free. */
+    /* The day is a button, because a click on the day makes the row below show the
+       hours of that day, and the keyboard can reach and press a button. */
     var card = document.createElement('button');
     card.type = 'button';
     card.className = 'forecast-day';
@@ -229,8 +216,8 @@
     withUnit(temps, day.high, 'degree_C', 'outTemp', 1, 'b');
     withUnit(temps, day.low, 'degree_C', 'outTemp', 1, 'span');
 
-    /* A zero says nothing that the picture has not already said, and a column of
-       them reads as data where there is none. */
+    /* A chance of rain of 0 % is left out, because the icon already shows a dry
+       day. */
     if (day.rain) part(card, 'forecast-rain', number(day.rain, 0) + '%');
     if (day.wind !== null && day.wind !== undefined) {
       withUnit(part(card, 'forecast-wind'), day.wind, 'km_per_hour', 'windSpeed', 1);
@@ -238,11 +225,9 @@
     return card;
   }
 
-  /* The hours of one day, every third one. Twenty-four in a row is a wall of
-     numbers, and three hours is as fine as the models resolve anyway.
-
-     Today starts from the hour we are in rather than from midnight: the hours
-     already past are not a forecast. Any other day is shown whole. */
+  /* Shows the hours of `date`, one every three hours, up to OPTS.hours of them.
+     Today's hours start at the current hour, because an hour already past is not a
+     forecast. Any other day starts at midnight. */
   function hourCards(hours, into, date) {
     var now = Date.now();
     var today = new Date().toISOString().slice(0, 10);
@@ -305,8 +290,8 @@
   function start() {
     if (!document.getElementById('forecast-panel')) return;
 
-    /* Drawn again when the reader picks another unit. The numbers do not change,
-       only what they are written in, so the answer already fetched is enough. */
+    /* When the reader chooses another unit system, the forecast already fetched is
+       drawn again in the new units. */
     var last = null;
     var show = function (data) { last = data; draw(data); };
     document.addEventListener('horizon:units', function () {
@@ -324,9 +309,7 @@
       });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', start);
-  } else {
-    start();
-  }
+  /* start() runs at once. scripts.inc loads this file after the page's markup and
+     after horizon.js, which provides CFG.units. */
+  start();
 })();

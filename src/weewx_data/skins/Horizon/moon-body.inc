@@ -3,14 +3,9 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
-## What the moon panel holds, without a panel around it.
-## Included by moon.inc, which gives it one of its own, and by
-## sunmoon.inc, which puts this and the other one in a single panel. The
-## figures are worked out here, so either caller gets them.
-##
-## One of 32 images, chosen by the moon's age since the last new moon. The images are
-## NASA's, rendered from Lunar Reconnaissance Orbiter data. See moon/LICENSE.txt.
-##
+## The content of the moon panel, for moon.inc and sunmoon.inc. The picture is one of
+## the 32 images in 'moon/', chosen by the moon's age since the last new moon;
+## moon/LICENSE.txt gives their source.
 #if $almanac.hasExtras
   #set $AU_KM = 149597870.7
   #set $SYNODIC = 29.530588

@@ -3,26 +3,18 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
-## One year, read as climate rather than as weather. The other pages answer "what is
-## it doing now"; this one answers "what kind of year was it".
+## The panels of a climate page. climate.html.tmpl includes this file for the year in
+## progress, and climate-%Y.html.tmpl for each year of the archive. On both pages
+## '$year' is the year shown. Every panel reads from '$year' except climate-record,
+## which lists every year of '$alltime'.
 ##
-## Included by two templates. climate.html.tmpl renders the year in progress on every
-## report cycle. climate/climate-%Y.html.tmpl renders one page per year, and WeeWX
-## writes a year that has ended only once, so a station with a long record does not
-## pay for its history every five minutes. Both leave $year on the year being shown,
-## so everything below reads from $year and works either way.
+## ------------------------------------------------------------------ climate-days
 ##
-## The counted days. Each is a name, an observation, an aggregate and a threshold.
-##
-##   agg   how the counting is done. WeeWX counts days four ways: max_ge, max_le,
-##         min_ge and min_le test the daily maximum or minimum, and sum_ge tests the
-##         daily total.
-##
-## The thresholds are metric whatever the station records in, because that is how the
-## definitions read: a summer day is 25 C, and 77 F is the same day under another
-## name. WeeWX converts.
-## The threshold is a full ValueTuple, (number, unit, group). Two of the three would
-## be enough to convert it, but weewx.xtypes reads the group as well.
+## The kinds of day that the panel climate-days counts. 'agg' and 'value' are an
+## aggregation type and its ValueTuple argument, as described under "Aggregation
+## types" in the Reference Guide. The thresholds are in metric units because the
+## definitions are metric, e.g., a summer day reaches 25 degree_C. A page in US units
+## therefore shows the summer day's threshold as 77 degree_F.
 #set $climate_days = [
   {'key': 'rain_day',     'obs': 'rain',     'agg': 'sum_ge',
    'value': (0.2, 'mm', 'group_rain')},
@@ -41,18 +33,13 @@
   {'key': 'frost_day',    'obs': 'outTemp',  'agg': 'min_le',
    'value': (0.0, 'degree_C', 'group_temperature')},
 ]
-## What the station does not record is left out, so a station without a wind sensor
-## shows no storm days rather than a row of zeroes.
-##
-## No '$' on the loop variable inside the filter. Cheetah would look the name up in
-## the calling frame, and until Python 3.12 a comprehension has a frame of its own
-## that a '#set' never reaches. Plain Python finds it through the closure, on every
-## version. The same rule applies to every comprehension in this skin.
+## A kind of day whose type has no data this year is left out, so that a station
+## without a wind sensor shows no row of zero storm days.
 #set $climate_days = [d for d in $climate_days
                       if $getVar('year.%s.has_data' % d['obs'], False)]
 ##
-## The name and the wording of the definition, one entry each, so a translation
-## reaches both. The threshold itself is filled in below, formatted by the skin.
+## The name and the definition of each kind of day, both translated. threshold_of()
+## below fills in the '%s'.
 #set $day_text = {
   'rain_day':     ($gettext("Rain days"),       $gettext("Daily rainfall at or above %s")),
   'summer_day':   ($gettext("Summer days"),     $gettext("Daily maximum at or above %s")),
@@ -64,41 +51,37 @@
   'frost_day':    ($gettext("Frost days"),      $gettext("Daily minimum at or below %s")),
 }
 ##
-## Count them. One query against the daily summaries for the year, twelve more for the
-## months. Done once here and read twice below, rather than asked again per table.
-##
-## getattr() twice rather than $getVar(): the month is a loop variable, and getVar
-## resolves names against the template's namespace, which a loop variable is not part
-## of.
+## The number of days of each kind in the year and in each month: one query on the
+## daily summaries for the year, and one for each month.
 #set $months_of_year = [m for m in $year.months]
 #set $day_counts = {}
 #set $day_months = {}
 #for $spec in $climate_days
 #set $of_year = $getattr($getattr($year, $spec['obs']), $spec['agg'])($spec['value'])
 #silent $day_counts.__setitem__($spec['key'], $of_year)
-## Neither name carries a '$'. Both are resolved inside the comprehension's own
-## frame, which a Cheetah '#set' does not reach before Python 3.12. This is the same
-## trap that cost a release on 3.7 once already.
+## Inside the comprehension, 'spec' is written without '$'. On Python before 3.12 a
+## comprehension runs in a frame of its own. Cheetah looks up a '$' name in that
+## frame, which does not hold the template's '#set' and '#for' names, so the lookup
+## fails with NotFound. Without '$', Python finds 'spec' in the template's frame on
+## every version. The same holds for every '#set' or '#for' name inside a
+## comprehension in this skin. Only the iterable after the first 'in', e.g.,
+## '$months_of_year' below, may keep its '$', because Python evaluates that iterable
+## in the template's frame.
+##
+## getattr() rather than $getVar(): $getVar() looks only in the searchList, and the
+## month 'm' is a loop variable, which is not in it.
 #set $per_month = [getattr(getattr(m, spec['obs']), spec['agg'])(spec['value'])
                    for m in $months_of_year]
 #silent $day_months.__setitem__($spec['key'], $per_month)
 #end for
 ##
-## The months that exist in this year, as short names for the column headings.
 #set $month_names = [m.dateTime.format("%b") for m in $months_of_year]
-##
-## The thresholds are shown in whatever unit the page is written in, so a station
-## reporting Fahrenheit reads its summer day as 77 rather than 25. The definition
-## stays 25 C. This is the same temperature under the name its reader uses.
-##
-## $unit.unit_type, $unit.format and $unit.label say what the skin does with that
-## observation, so the threshold comes out looking like every other reading on the
-## page rather than like a number from the code.
 #from weewx.units import ValueTuple, convert
-## The threshold, as an element rather than as a number inside a sentence. It carries
-## the reading the way every other reading on the page does, so the unit picker
-## reaches it: 25 C stays 25 C when the reader asks for Celsius, and reads 77 F when
-## they ask for Fahrenheit.
+##
+## threshold_of() returns the threshold of a kind of day as an element with
+## 'data-value' and 'data-unit', like every other reading on the page. The threshold
+## is converted to the report unit system and formatted with '$unit.format' for its
+## type, and the unit picker can convert it further.
 #def threshold_of($spec)
 #set $obs = $spec['obs']
 #set $vt = $ValueTuple(*$spec['value'])
@@ -108,7 +91,7 @@
 #return '<span data-obs="%s" data-value="%s" data-unit="%s"><span data-unit-value>%s</span><small data-unit-label>%s</small></span>' % ($obs, $shown[0], $target, $text, $getVar('unit.label.%s' % $obs))
 #end def
 ##
-<section class="panel" data-live-panel="climate-days">
+<section class="panel wide" data-live-panel="climate-days">
   <div class="panel-head">
     <h2>$gettext("Climatological days")</h2>
   </div>
@@ -151,48 +134,35 @@
   </div>
 </section>
 
-## ---------------------------------------------------------------- the year's shape
+## --------------------------------------------------------------- climate-diagram
 ##
-## A climate diagram: the month's mean temperature as a line, the month's rainfall as
-## bars behind it. The two share one picture because that is the pair that describes a
-## climate, and the shape of the pair is what a reader recognises.
-##
-## The rainfall axis runs at twice the temperature axis, which is Walter and Lieth's
-## convention: where the rain bar falls below the temperature line, the month is dry.
-## That crossing is the whole point of drawing them together.
+## A climate diagram after Walter and Lieth: each month's mean temperature as a line
+## and its rainfall as bars. The rainfall axis has 2 mm for each degree_C, so a month
+## whose bar stays below the line is dry.
 #set $has_temp = $getVar('year.outTemp.has_data', False)
 #set $has_rain = $getVar('year.rain.has_data', False)
-## Gathered here, before the first panel, because the script block at the end of the
-## file reads the same lists. None where the station does not record it, which the
-## page reads as "leave that part out".
-## In degrees Celsius and millimetres, whatever the page reads in. The climate
-## diagram below is defined on those units: Walter and Lieth draw the rainfall axis
-## at twice the temperature axis, which is 10 degrees against 20 mm. Plot Fahrenheit
-## against inches at 2:1 and the crossing that makes the diagram readable lands
-## somewhere else entirely.
-##
-## The axis labels are converted back, so the reader still sees the unit they set.
+## The monthly figures go into the script element at the end of this file, and are
+## None where the type has no data; climate.js then leaves that part out. The figures
+## are in degree_C and mm whatever the report unit system, because the diagram's 2:1
+## ratio holds only in those units.
 #set $month_temp = [m.outTemp.avg.degree_C.raw for m in $months_of_year] if $has_temp else None
 #set $month_low = [m.outTemp.min.degree_C.raw for m in $months_of_year] if $has_temp else None
 #set $month_high = [m.outTemp.max.degree_C.raw for m in $months_of_year] if $has_temp else None
 #set $month_rain = [m.rain.sum.mm.raw for m in $months_of_year] if $has_rain else None
-## Two lists rather than the SeriesHelper's own JSON: that method returns a string,
-## which $jsonize would then quote a second time. The start of each day and the total
-## for it is all the picture needs.
+## The daily figures for the heat map take one query for each series rather than one
+## for each day. The script element gets the start times of the days as one list and
+## the values of each series as another, because a series' own json() returns a
+## string, which $jsonize would quote a second time.
 #set $rain_series = $year.rain.series(aggregate_type='sum', aggregate_interval='day') if $has_rain else None
 #set $daily_start = $rain_series.start.raw if $has_rain else None
-## The heatmap has no ratio to honour, so its days stay in the unit the page reads in.
 #set $daily_rain = $rain_series.data.raw if $has_rain else None
 ##
-## What fell against what left again. Rain minus evapotranspiration is the water the
-## ground actually kept, which is the figure a garden runs on and the one no other
-## page here shows. In millimetres, like the diagram above, so that the two pictures
-## agree with each other.
+## The monthly evapotranspiration for the water balance is in mm, like the monthly
+## rain, so that climate.js can subtract one from the other.
 #set $has_et = $getVar('year.ET.has_data', False)
 #set $month_et = [m.ET.sum.mm.raw for m in $months_of_year] if $has_et else None
 ##
-## The other three the calendar can show. One query each, the same as the rain, and
-## the reader picks between them. A year of daily figures is 365 numbers.
+## The daily mean, lowest and highest temperature for the heat map.
 #set $temp_series = $year.outTemp.series(aggregate_type='avg', aggregate_interval='day') if $has_temp else None
 #set $tmin_series = $year.outTemp.series(aggregate_type='min', aggregate_interval='day') if $has_temp else None
 #set $tmax_series = $year.outTemp.series(aggregate_type='max', aggregate_interval='day') if $has_temp else None
@@ -201,7 +171,7 @@
 #set $daily_tmax = $tmax_series.data.raw if $has_temp else None
 #set $daily_temp_start = $temp_series.start.raw if $has_temp else None
 #if $has_temp or $has_rain
-<section class="panel" data-live-panel="climate-diagram">
+<section class="panel wide" data-live-panel="climate-diagram">
   <div class="panel-head">
     <h2>$gettext("The year's shape")</h2>
   </div>
@@ -211,13 +181,9 @@
 </section>
 #end if
 ##
-## ------------------------------------------------------------- the water balance
-##
-## Only where the station records evapotranspiration. Most do not: it is computed
-## from radiation, wind and humidity, and a station without those sensors has no
-## figure to show.
+## ----------------------------------------------------------------- climate-water
 #if $has_rain and $has_et
-<section class="panel" data-live-panel="climate-water">
+<section class="panel wide" data-live-panel="climate-water">
   <div class="panel-head">
     <h2>$gettext("Water balance")</h2>
   </div>
@@ -228,13 +194,10 @@
 </section>
 #end if
 ##
-## ------------------------------------------------------------------- day by day
+## --------------------------------------------------------------- climate-heatmap
 ##
-## One square per day of the year, laid out as the calendar lays them out: a column
-## per week, a row per weekday. A year of weather in one picture, at the only
-## resolution where a single day is still visible.
-##
-## The series is one query. Asking the daily summaries day by day would be 365.
+## A heat map with one square for each day of the year, a column for each week and a
+## row for each weekday. The tabs choose the type that the squares show.
 #if $has_rain or $has_temp
   #set $heat_kinds = []
   #if $has_rain
@@ -245,7 +208,7 @@
     #silent $heat_kinds.append(('tmin', $gettext("Lowest temperature")))
     #silent $heat_kinds.append(('tmax', $gettext("Highest temperature")))
   #end if
-<section class="panel" data-live-panel="climate-heatmap">
+<section class="panel wide" data-live-panel="climate-heatmap">
   <div class="panel-head">
     <h2>$gettext("Day by day")</h2>
     <div class="tabs" id="heat-tabs" role="tablist" aria-label="$gettext('Metric')">
@@ -261,15 +224,12 @@
 </section>
 #end if
 ##
-## ------------------------------------------------------------- the whole record
+## ---------------------------------------------------------------- climate-record
 ##
-## Every year the station has run, month by month. This is the table that answers
-## "was this August unusual", which none of the other pages can: they all end at the
-## last reading.
-##
-## Cost: one query per cell. A station with fourteen years pays 168 of them per
-## figure, against the daily summaries, once per report cycle for the year in
-## progress. The years that have ended are written once and skipped after that.
+## Every year of the archive, month by month, in one table for each type. Each cell
+## is one query on the daily summaries, i.e., 13 for each year and type. WeeWX writes
+## climate.html and the climate year page of the year in progress on every report
+## cycle, and both pages run these queries each time.
 #set $record_rows = [y for y in $alltime.years]
 #if len($record_rows) > 0
   #set $matrix = [
@@ -280,9 +240,9 @@
     {'key': 'et_sum', 'title': $gettext("Evapotranspiration"), 'obs': 'ET', 'agg': 'sum'},
   ]
   #set $matrix = [x for x in $matrix if $getVar('alltime.%s.has_data' % x['obs'], False)]
-<section class="panel" data-live-panel="climate-record">
+<section class="panel wide" data-live-panel="climate-record">
   <div class="panel-head">
-    <h2>$gettext("The whole record")</h2>
+    <h2>$gettext("The whole archive")</h2>
     <div class="tabs" id="record-tabs" role="tablist" aria-label="$gettext('Metric')">
   #for $i, $spec in $enumerate($matrix)
       <button type="button" role="tab" data-record="$spec['key']"
@@ -339,9 +299,9 @@
 </section>
 #end if
 ##
-## What the two pictures above are drawn from. Written here rather than fetched,
-## because it is one year of months and one year of days: a few kilobytes, and the
-## page already had to read them to render the tables.
+## climate.js draws the charts from '$climate_data'. The data goes into the page
+## rather than into a file of its own, because one year of months and days is only a
+## few kilobytes.
 #set $climate_data = {}
 #silent $climate_data.update({'year': $int($climate_year), 'months': $month_names})
 #silent $climate_data.update({'temp': $month_temp, 'tempLow': $month_low,
@@ -349,9 +309,10 @@
                               'et': $month_et})
 #silent $climate_data.update({'tempLabel': $getVar('unit.label.outTemp', '').strip(),
                               'rainLabel': $getVar('unit.label.rain', '').strip()})
-## From Celsius and millimetres back to whatever the page reads in, as a factor and
-## an offset. Measured at 0 and at 1, which is exact for a conversion that is linear,
-## and every one of these is.
+## 'tempBack' and 'rainBack' convert degree_C and mm to the report unit system, as
+## [factor, offset], so that climate.js can label the charts in that unit system. Two
+## points, 0 and 1, give the exact factor and offset, because both conversions are
+## linear.
 #set $t_unit = $getVar('unit.unit_type.outTemp')
 #set $r_unit = $getVar('unit.unit_type.rain')
 #set $t0 = $convert($ValueTuple(0.0, 'degree_C', 'group_temperature'), $t_unit)[0]
@@ -363,16 +324,18 @@
                               'dayRain': $daily_rain, 'dayTemp': $daily_temp,
                               'dayMin': $daily_tmin, 'dayMax': $daily_tmax,
                               'weekStart': $station.week_start})
-## Which unit each of those is in, so the page can show them in another. The daily
-## figures are in the unit the report was rendered in, unlike the monthly ones above.
+## The daily figures are in the report unit system, unlike the monthly ones.
+## 'rainUnit' and 'tempUnit' name those units, so that the unit picker can convert
+## the daily figures.
 #silent $climate_data.update({'rainUnit': $getVar('unit.unit_type.rain', None),
                               'tempUnit': $getVar('unit.unit_type.outTemp', None)})
-## What the tooltips call each figure. In the page's language, like everything else.
+## The translated names that climate.js shows in its tooltips.
 #silent $climate_data.update({'meanText': $gettext("Mean temperature"),
                               'rainText': $gettext("Rainfall"),
                               'etText': $gettext("Evapotranspiration"),
                               'keptText': $gettext("Water balance")})
-## 'data-live-panel' on a script tag: the live update replaces it like any other
-## marked element, which is what carries the new day into the pictures below.
+## The script element has 'data-live-panel', so that horizon.js replaces the element
+## on each new archive record like a panel, and climate.js redraws the charts from
+## the new data.
 <script id="climate-data" type="application/json"
         data-live-panel="climate-data">$jsonize($climate_data)</script>

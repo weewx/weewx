@@ -3,29 +3,28 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
-## Kept small: it is fetched every refresh_interval seconds, and most of the time
-## nothing in it has changed.
+## The readings for the live update. horizon.js fetches this file every
+## 'refresh_interval' seconds, so the file holds only what the live update shows: the
+## time of the archive record and the readings of the current conditions. For
+## example:
 ##
-## Each reading appears twice. '<name>' is the formatted number, in the report's own
-## unit and language, and without the unit label: the page has an element of its own
-## for that, and writing it twice put it on screen twice. '<name>_v' and '<name>_u'
-## are the number and the unit it is in, which is what the page converts when the
-## reader has asked for another unit.
+##   {"dateTime": "09/03/2010 11:00:00 AM", "dateTime_raw": 1283536800,
+##    "interval": 30, "outTemp": "52.2", "outTemp_v": 52.208, "outTemp_u": "degree_F",
+##    ..., "rainToday": "0.00", "rainToday_v": 0.0, "rainToday_u": "inch"}
 ##
+## '<name>' is the reading as the report formats it, without the unit label, because
+## the page shows the unit label in an element of its own. '<name>_v' and '<name>_u'
+## are the number and its unit, which horizon.js converts when the reader has chosen
+## a unit system.
 #set $observations = $to_list($DisplayOptions.get('observations_current', ['outTemp', 'barometer']))
 #set $fields = {}
 #silent $fields.update({'dateTime': $str($current.dateTime), 'dateTime_raw': $current.dateTime.raw})
-## How far apart this station's records are, in minutes. The page uses it to tell a
-## slow archive interval from a station that has stopped sending. Two records' worth
-## of silence is a fault. Without this the page would have to guess where that is,
-## and a guess short enough to help a five-minute station would dim a slower one
-## every cycle.
+## 'interval' is the archive interval, in minutes. horizon.js uses the interval to
+## decide how long to wait for a new archive record before it marks the readings as
+## stale.
 #if $current.interval.raw is not None
   #silent $fields.update({'interval': $current.interval.raw})
 #end if
-## Two forms of each reading. The string is what the page puts on screen when the
-## reader has asked for no unit of their own, already formatted in the report's
-## language. The number and its unit are what the page converts when they have.
 #for $x in $observations
   #if $getVar('year.%s.has_data' % $x, False)
     #silent $fields.update({$x: $getVar('current.%s' % $x).format(add_label=False)})
@@ -35,28 +34,9 @@
     #end if
   #end if
 #end for
-## The colour of the headline follows the temperature, and the client works it out
-## from degrees C so that it does not depend on what the page displays in.
-#if $current.outTemp.degree_C.raw is not None
-  #silent $fields.update({'outTemp_c': $round($current.outTemp.degree_C.raw, 2)})
-#end if
 #silent $fields.update({'rainToday': $day.rain.sum.format(add_label=False)})
 #if $day.rain.sum.raw is not None
   #silent $fields.update({'rainToday_v': $day.rain.sum.raw,
                           'rainToday_u': $unit.unit_type.rain})
-#end if
-## The day's ends move with the reading, and the card shows them next to it. The
-## reading is the one current.inc sets large, chosen the same way.
-#set $wanted = $to_list($DisplayOptions.get('observations_current', ['outTemp', 'barometer']))
-#set $lead = ($wanted and $wanted[0]) or 'outTemp'
-#set $lead_day = $getVar('day.%s' % $lead, None)
-#if $lead_day is not None and $lead_day.min.raw is not None and $lead_day.max.raw is not None
-  #silent $fields.update({'day_min': $str($lead_day.min.format(add_label=False)),
-                          'day_max': $str($lead_day.max.format(add_label=False)),
-                          'day_min_v': $lead_day.min.raw,
-                          'day_max_v': $lead_day.max.raw,
-                          'day_unit': $getVar('unit.unit_type.%s' % $lead),
-                          'day_mintime': $lead_day.mintime.format("%H:%M"),
-                          'day_maxtime': $lead_day.maxtime.format("%H:%M")})
 #end if
 $jsonize($fields)

@@ -4,31 +4,28 @@
 #
 """Write the forecast file the Horizon skin reads.
 
-The skin looks for 'forecast.json' beside its other data. If it is there, the
-page uses it and nothing leaves the reader's browser; if it is not, the page
-asks Open-Meteo itself, once per reader. This script is the other half of that
-choice: run it on the station and the model is fetched once for everybody.
+The Horizon skin reads the file data/forecast.json under the HTML_ROOT of its
+report. Where the file exists, no reader's browser asks a third party for the
+forecast. Where the file does not exist, each reader's browser asks Open-Meteo,
+unless browser_fetch is false. This script asks Open-Meteo once, and writes the
+file for every reader:
 
-    forecast-fetch.py --lat 47.801 --lon 11.011 \\
-                      --out /var/www/html/weewx/data/forecast.json
+    python3 forecast-fetch.py --lat 47.801 --lon 11.011 \\
+        --out /var/www/html/weewx/horizon/data/forecast.json
 
-Hourly is often enough. From cron:
+Once an hour is often enough, because the browser keeps a forecast for an hour.
+The following crontab line runs the script at seven minutes past every hour.
+Replace '...' with the options shown above:
 
-    7 * * * * /usr/share/weewx/skins/Horizon/forecast-fetch.py \\
-              --lat 47.801 --lon 11.011 --out .../data/forecast.json
+    7 * * * * python3 /etc/weewx/skins/Horizon/forecast-fetch.py ...
 
-It writes through a temporary file in the same directory and renames it into
-place, so a page fetching the file never catches it half written.
+The script uses Open-Meteo because Open-Meteo needs no key and covers the whole
+world. The file is in the skin's own format, not in Open-Meteo's, and
+to_horizon() documents that format. Any program that writes the same format can
+take the place of this script.
 
-Open-Meteo is the source here because it needs no key and covers the world. The
-format it is written in is the skin's, not Open-Meteo's -- see the docstring of
-'to_horizon' below. Anything that can produce that shape will do: weewx-dwd for
-Germany's MOSMIX, weewx-forecast for the American services, a script of your own
-against whatever your country's weather service publishes.
-
-Nothing here imports WeeWX. It is a plain script on purpose: it can run from
-cron, from a systemd timer, or by hand, and it does not care whether WeeWX is
-installed on the same machine as the web server.
+The script imports nothing from WeeWX, so that it also runs on a machine without
+WeeWX, e.g., the web server that serves the pages.
 """
 
 import argparse
@@ -42,19 +39,28 @@ import urllib.request
 
 API = "https://api.open-meteo.com/v1/forecast"
 
+# The fields to_horizon() reads. forecast.js asks Open-Meteo for the same fields.
 DAILY = ("weather_code,temperature_2m_max,temperature_2m_min,"
          "precipitation_probability_max,wind_speed_10m_max")
 HOURLY = "weather_code,temperature_2m,precipitation_probability"
 
 
 def fetch(lat, lon, days, timeout):
-    """Ask Open-Meteo, and return what it says.
+    """Ask Open-Meteo for a forecast.
 
     Args:
         lat (float): The station latitude, in degrees north.
-        lon (float): Its longitude, in degrees east.
+        lon (float): The station longitude, in degrees east.
         days (int): How many days to ask for.
-        timeout (int): How long to wait for an answer, in seconds.
+        timeout (float): How long to wait for the answer, in seconds.
+
+    Returns:
+        dict: Open-Meteo's answer, decoded from JSON.
+
+    Raises:
+        OSError: If the request fails or times out. urllib.error.URLError is an
+            OSError.
+        ValueError: If the answer is not JSON.
     """
     query = urllib.parse.urlencode({
         'latitude': lat,
@@ -72,29 +78,37 @@ def fetch(lat, lon, days, timeout):
 
 
 def to_horizon(said):
-    """Open-Meteo's answer in the shape the skin reads.
+    """Convert Open-Meteo's answer into the format of forecast.json.
 
-    The format, in full:
+    forecast.js reads this format, and fromOpenMeteo() in forecast.js converts an
+    answer from Open-Meteo into the same format. The format, in full:
 
-        {"source": str,             where it came from, for the record
+        {"source": str,             the name of the source, for information
          "run":    str|null,        when the model ran, ISO 8601, if known
          "units":  {"temperature": str, "wind": str},
          "days":   [{"date": "YYYY-MM-DD", "code": int,
                      "high": float, "low": float,
-                     "rain": int|null,     per cent
+                     "rain": int|null,     chance of rain, in per cent
                      "wind": float|null}],
          "hours":  [{"time": "YYYY-MM-DDTHH:MM", "code": int,
                      "temperature": float, "rain": int|null}]}
 
-    'code' is a WMO 4677 present-weather code. The skin knows that vocabulary
-    and nothing else, so a source that speaks its own dialect has to translate
-    on the way in rather than inventing a code of its own.
+    Dates and times are the station's local time, without a time zone.
+    Temperatures are in degrees Celsius. 'wind' is the highest wind speed of the
+    day, in km/h. 'units' names these two units; the skin does not read the
+    field. The page shows 'run', so that a reader can tell a stale forecast from
+    a current one.
 
-    'days' and 'hours' may be empty; the panel shows what it is given and hides
-    itself when that is nothing.
+    'code' is a WMO 4677 present-weather code. The skin has icons and texts for
+    these codes only, so a source that uses other codes must convert them.
+
+    'hours' may be empty. Where 'days' is empty, the forecast panel stays hidden.
 
     Args:
-        said (dict[str, Any]): Open-Meteo's answer, as it came back.
+        said (dict): Open-Meteo's answer, as fetch() returns it.
+
+    Returns:
+        dict: The forecast, in the format above.
     """
     daily = said.get('daily') or {}
     hourly = said.get('hourly') or {}
@@ -122,9 +136,7 @@ def to_horizon(said):
 
     return {
         'source': 'open-meteo',
-        # Open-Meteo does not say which run this is. A source that does should
-        # put it here: the page shows it, and a forecast without a time on it
-        # cannot be told from a stale one.
+        # Open-Meteo does not say when its model ran.
         'run': None,
         'units': {
             'temperature': units.get('temperature_2m_max', '°C'),
@@ -136,11 +148,14 @@ def to_horizon(said):
 
 
 def write(payload, path):
-    """Into place in one step, so a reader never sees half a file.
+    """Write payload to path as JSON, replacing the file in one step.
+
+    A browser that fetches the file at the same moment gets the previous file or
+    the new one, never a partly written one.
 
     Args:
-        payload (dict[str, Any]): What to write.
-        path (str): Where to write it.
+        payload (dict): The forecast, as to_horizon() returns it.
+        path (str): The file to write.
     """
     folder = os.path.dirname(os.path.abspath(path)) or '.'
     handle, temporary = tempfile.mkstemp(dir=folder, suffix='.tmp')
@@ -154,7 +169,8 @@ def write(payload, path):
         except OSError:
             pass
         raise
-    # mkstemp makes it readable by its owner alone, which a web server is not.
+    # mkstemp() creates the file readable by its owner only, and the web server
+    # usually runs as another user.
     os.chmod(path, 0o644)
 
 
@@ -175,9 +191,8 @@ def main(argv=None):
     try:
         said = fetch(args.lat, args.lon, args.days, args.timeout)
     except (urllib.error.URLError, OSError, ValueError) as e:
-        # An old forecast is better than none: leave whatever is there and say
-        # why. From cron this reaches the log, and the page carries on with the
-        # file it already has.
+        # A file written before stays in place, because an old forecast is better
+        # than none.
         print("forecast: %s" % e, file=sys.stderr)
         return 1
 

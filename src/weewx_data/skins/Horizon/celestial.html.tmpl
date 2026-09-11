@@ -3,40 +3,22 @@
 ## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
 #errorCatcher Echo
 #encoding UTF-8
-
-#set $refresh = $to_int($DisplayOptions.get('refresh_interval', 60))
-
-## What the masthead says. See masthead.inc. Nothing here is a reading in a unit
-## the picker knows how to convert, so the page does without it.
+##
+## No figure on this page is in a unit that the unit picker converts, so the page has
+## no unit picker.
 #set global $page_title = $gettext("Celestial")
 #set global $page_units = False
-
 <!DOCTYPE html>
 <html lang="$lang">
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="light dark">
-    <title>$gettext("Celestial") &ndash; $station.location</title>
-    <link rel="icon" href="favicon.ico" sizes="any">
-    <link rel="stylesheet" href="horizon.css">
-    #include "theme.inc"
-    <script>
-      (function () {
-        try {
-          var t = localStorage.getItem('weewx.horizon.theme');
-          if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
-        } catch (e) {}
-      })();
-    </script>
-    #include "analytics.inc"
+    #include "head.inc"
   </head>
   <body>
-    <div class="wrap">
+    <div class="page">
       #include "masthead.inc"
-
+      #include "nav.inc"
+      <main class="board" id="content">
 #if $almanac.hasExtras
-      <div class="columns">
         <section class="panel" data-live-panel="sun">
           <div class="panel-head"><h2>$gettext("Sun")</h2></div>
           <div class="panel-body">
@@ -55,7 +37,6 @@
             </dl>
           </div>
         </section>
-
         <section class="panel" data-live-panel="moon">
           <div class="panel-head"><h2>$gettext("Moon")</h2></div>
           <div class="panel-body">
@@ -72,25 +53,16 @@
             </dl>
           </div>
         </section>
-      </div>
 #else
-      <section class="panel">
-        <div class="panel-body">
-          <p>$gettext("Extended celestial information requires the pyephem module.")</p>
-        </div>
-      </section>
+        <section class="panel wide">
+          <div class="panel-body">
+            <p>$gettext("Extended celestial information requires the pyephem module.")</p>
+          </div>
+        </section>
 #end if
-
-      <p class="footer">
-        $gettext("This station is controlled by <a href='https://weewx.com'>WeeWX</a>, an experimental weather software system written in Python.")
-      </p>
+      </main>
+      #include "footer.inc"
     </div>
-
-    #include "top.inc"
-
-    <script>
-      window.HORIZON = { refreshInterval: $refresh, generated: $current.dateTime.raw };
-    </script>
-    <script src="horizon.js"></script>
+    #include "scripts.inc"
   </body>
 </html>

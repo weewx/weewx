@@ -3,8 +3,8 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
-## The moon on its own. To have both in one panel, name
-## "sunmoon" in the 'panels' list instead of "sun" and "moon".
+## The moon panel. moon-body.inc holds the panel's content, so that sunmoon.inc can
+## show the same content beside the sun.
 #if $almanac.hasExtras
 <section class="panel" data-live-panel="moon">
   <div class="panel-head">

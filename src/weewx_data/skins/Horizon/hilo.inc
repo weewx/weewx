@@ -10,11 +10,11 @@
 #set $obs_type_sum = $to_list($DisplayOptions.get('obs_type_sum', ['rain']))
 #set $obs_type_max = $to_list($DisplayOptions.get('obs_type_max', ['rainRate']))
 
-## Use a recent span to decide whether an observation is worth a row at all.
+## Use this span to determine whether there are any data to consider.
 #set $recent = $span($day_delta=30, boundary='midnight')
 ##
-## Two helpers, so that every number in this table carries the reading behind it
-## and the unit that reading is in. The unit picker converts whatever does.
+## stat_cell() writes a figure with its 'data-value' and 'data-unit', and stat_unit()
+## writes the unit label of a row, so that the unit picker can convert the table.
 #def stat_cell($vh, $obs)
 #if $vh.raw is None
 #return $vh.format(add_label=False)
@@ -26,7 +26,7 @@
 #end def
 
 
-<section class="panel" data-live-panel="stats">
+<section class="panel wide" data-live-panel="stats">
   <div class="panel-head">
     <h2><a href="statistics.html">$gettext("Statistics")</a></h2>
   </div>

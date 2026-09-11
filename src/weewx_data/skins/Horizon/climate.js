@@ -1,11 +1,10 @@
 /* Copyright (c) 2026 Manuel Hilgert
  * Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
  *
- * The two pictures on the climate page, and the switch between the tables under them.
- *
- * The data are in the page, in a script tag the server filled in. Nothing is fetched:
- * a year is twelve months and three hundred and sixty-five days, which the template
- * had already read in order to draw the tables.
+ * Draws the three charts of the climate page (the climate diagram, the water
+ * balance and the day-by-day heat map) and switches the tabs above the heat map
+ * (#heat-tabs) and above the whole-archive tables (#record-tabs).
+ * climate.inc writes the data into the page, in the script element #climate-data.
  */
 
 (function () {
@@ -15,8 +14,8 @@
   var CFG = window.HORIZON || {};
   var DATA = null;
 
-  /* Read again rather than once. The live update replaces the script tag along with
-     the panels, so what was parsed at load is last cycle's numbers. */
+  /* Returns the data in #climate-data, or null. The data are parsed again on every
+     draw, because horizon.js replaces #climate-data on each new archive record. */
   function readData() {
     var node = document.getElementById('climate-data');
     if (!node) return null;
@@ -27,12 +26,15 @@
     }
   }
 
-  /* Which of the four the calendar is showing. Kept here rather than read off the
-     buttons, so it survives the buttons being replaced. */
+  /* The key of the HEAT entry that the heat map shows. The choice is kept in this
+     variable and not read from the tabs, because horizon.js replaces the tabs on
+     each new archive record, and the new tabs mark the first entry as selected.
+     draw() marks the chosen tab again through markHeatTabs(). */
   var heatKind = null;
 
-  /* One reading in the unit the reader chose, or unchanged where they chose none.
-     The conversion lives in horizon.js, which owns the table and the choice. */
+  /* Returns `value`, which is in `unit`, converted to the unit shown. Here and below,
+     'the unit shown' is the unit the page shows for `obsType`: from the unit system
+     the reader chose or, where the reader chose none, from the report unit system. */
   function inReaderUnit(value, unit, obsType) {
     if (value === null || value === undefined) return value;
     if (!CFG.units || !unit) return value;
@@ -40,14 +42,15 @@
     return out ? out.value : value;
   }
 
+  /* Returns the unit shown for a value in `unit`. */
   function readerUnit(unit, obsType) {
     if (!CFG.units || !unit) return unit;
     return CFG.units.target(obsType, unit) || unit;
   }
 
-  /* The label to write beside a reading. Where the reader has chosen a unit, it is
-     that unit's; otherwise it is the one the server rendered the page in, which the
-     template sent along. */
+  /* Returns the label of the unit shown for a value in `unit`. Where no conversion
+     applies, the label is `asRendered`, which climate.inc wrote for the report unit
+     system. */
   function unitLabel(unit, obsType, asRendered) {
     if (CFG.units && unit) {
       var out = CFG.units.convert(1, unit, obsType);
@@ -56,14 +59,15 @@
     return asRendered || '';
   }
 
-  /* From Celsius and millimetres to whatever is on screen, as a factor and an
-     offset. Without a choice by the reader that is the report's own unit, which the
-     template worked out and sent along. With one it is theirs.
+  /* Returns [factor, offset] that convert a value in `metricUnit`, degree_C or mm,
+     into the unit shown. Where the reader has chosen no unit system, the answer is
+     `asRendered`, which climate.inc computed for the report unit system. Otherwise
+     the answer is measured with CFG.units at 0 and at 1, which is exact because every
+     conversion between these units is linear.
 
-     Measured at 0 and at 1. Where the answer is null the target is the metric unit
-     itself, and the conversion is the identity: a reader who asks for Celsius on a
-     page rendered in Fahrenheit must not be given the page's factor, and a reader who
-     asks for millimetres on a page rendered in inches must not be given the page's. */
+     CFG.units.target() returns null where the unit system the reader chose uses
+     `metricUnit` itself. The answer is then [1, 0], not `asRendered`: a reader who
+     chooses METRICWX on a page in US units must see degree_C and mm. */
   function backOf(metricUnit, obs, asRendered) {
     if (!CFG.units || !CFG.units.chosen()) return asRendered || [1, 0];
     var target = CFG.units.target(obs, metricUnit);
@@ -73,13 +77,16 @@
     return (at0 && at1) ? [at1.value - at0.value, at0.value] : [1, 0];
   }
 
-  /* Millimetres are read as whole numbers, inches are not. Where the unit on screen
-     is a small fraction of the metric one, a tick without a decimal reads zero. */
+  /* Returns the number of decimals for the axis labels: one where a metric unit is
+     less than half of the unit shown, as a millimetre is of an inch, and none
+     otherwise. Without a decimal, axis labels 10 mm apart would read 0, 0, 1, 1 in
+     inches. */
   function digitsFor(back) {
     return back[0] < 0.5 ? 1 : 0;
   }
 
-  /* One reading, written in the unit on screen. */
+  /* Returns a function that writes a metric value in the unit shown, with `digits`
+     decimals. */
   function scaled(back, digits) {
     return function (v) {
       return (v * back[0] + back[1]).toLocaleString(LOCALE, {
@@ -93,25 +100,21 @@
     return v || fallback;
   }
 
-  /* ------------------------------------------------------------ the year's shape */
+  /* -------------------------------------------------------- climate diagram */
 
-  /* A climate diagram, after Walter and Lieth: the month's mean temperature as a
-     line, the month's rainfall as bars behind it, and the rainfall axis running at
-     twice the temperature axis. Where the bars fall below the line, the month is dry.
-     That crossing is why the two are drawn together rather than side by side.
-
-     The 2:1 ratio is the convention, and it is stated in degrees Celsius: 10 degrees
-     against 20 mm. On a page in Fahrenheit and inches the same ratio would put the
-     crossing somewhere else, so the axes are scaled from the data instead, and the
-     rule is applied to the axis rather than to the numbers. */
+  /* The climate diagram of Walter and Lieth (see climate.inc). Both axes are laid
+     out in degree_C and mm, the units in which climate.inc writes the lists. Only
+     the axis labels and the tooltip are converted to the unit shown, through
+     backOf(). */
   var diagram = null;
 
   function drawDiagram() {
     var host = document.getElementById('climate-diagram');
     if (!host || !window.echarts) return;
     if (!DATA.temp && !DATA.rain) return;
-    /* Called again after a unit change, on the element that still holds the last
-       one. Take it down first, or the two are drawn on top of each other. */
+    /* After a unit change, #climate-diagram still holds the previous chart.
+       echarts.init() would return that chart, and setOption() would merge the new
+       option into the previous one, keeping a series the new option leaves out. */
     if (diagram) {
       diagram.dispose();
       diagram = null;
@@ -120,9 +123,9 @@
     var temps = (DATA.temp || []).slice();
     var rains = (DATA.rain || []).slice();
 
-    /* The values are in Celsius and millimetres. The rainfall axis runs at exactly
-       twice the temperature axis, which is the convention, so a bar that falls below
-       the line marks a dry month wherever the reader lives. */
+    /* The temperature axis reaches up to the warmest month's mean or to half the
+       wettest month's rainfall, whichever is higher, because the rainfall axis at
+       twice the scale must hold the wettest month's bar. */
     var real = function (list) { return list.filter(function (v) { return v !== null; }); };
     var tMax = Math.max.apply(null, real(temps).concat([0]));
     var tMin = Math.min.apply(null, real(temps).concat([0]));
@@ -199,9 +202,7 @@
                        formatter: scaled(backT, digitsFor(backT)) }
         },
         {
-          /* Exactly twice the temperature axis. That is the whole point of the
-             diagram: where the rain bar drops below the temperature line, the month
-             is dry. */
+          /* The rainfall axis, at twice the scale of the temperature axis. */
           type: 'value', min: bottom * 2, max: top * 2,
           name: rainUnit,
           nameTextStyle: { color: rainColor, fontFamily: family, fontSize: 12 },
@@ -223,12 +224,10 @@
 
   /* ------------------------------------------------------------ water balance */
 
-  /* What fell against what left again, month by month. Rain stands above the line,
-     evapotranspiration below it, and the line between them is what the ground kept.
-
-     Two bars and a line rather than one bar of the difference: a dry month and a
-     month where a lot fell and a lot evaporated both come out near zero, and they are
-     not the same month. */
+  /* The water balance, month by month: rainfall as a bar above zero,
+     evapotranspiration as a bar below zero, and their difference as a line. One bar
+     of the difference alone would put a dry month and a month with much rain and
+     much evapotranspiration both near zero. */
   var water = null;
 
   function drawWater() {
@@ -297,6 +296,7 @@
           itemStyle: { color: themeColor('--lo', '#2f6f9e') }, animation: false },
         { name: DATA.etText || 'Evapotranspiration',
           type: 'bar', data: lost, barMaxWidth: 30,
+          /* In the same column as the rainfall bar, below zero. */
           barGap: '-100%',
           itemStyle: { color: themeColor('--sun', '#a8761c') }, animation: false },
         { name: DATA.keptText || 'Water balance',
@@ -312,15 +312,16 @@
     }).observe(host);
   }
 
-  /* --------------------------------------------------------------- day by day */
+  /* --------------------------------------------------------------- heat map */
 
-  /* One square per day, in the shape a calendar has: a column per week, a row per
-     weekday. Drawn as elements rather than onto a canvas, so each day keeps its own
-     tooltip and its own place in the page for a screen reader.
+  /* The heat map: one square per day, a column per week and a row per weekday. Each
+     square is an element with its own title, which the browser shows as a tooltip;
+     a canvas would have no title per day.
 
-     Four things can be shown in it. Rain runs from the page's dry colour to its wet
-     one. The three temperatures use the same nine steps as the reading at the top of
-     the front page, so a warm day is the same colour wherever it appears. */
+     Each HEAT entry names the list in DATA, the key in DATA of that list's unit, the
+     observation type, and whether the list is coloured as rain or as temperature.
+     A temperature takes its colour from CFG.tempColour, which mixes the colours
+     --warm-0 to --warm-8 that also tint the outside temperature tile. */
   var HEAT = {
     rain: { list: 'dayRain', unit: 'rainUnit', obs: 'rain', kind: 'rain' },
     temp: { list: 'dayTemp', unit: 'tempUnit', obs: 'outTemp', kind: 'temp' },
@@ -349,9 +350,10 @@
     var label = unitLabel(unit, spec.obs,
                           spec.kind === 'rain' ? DATA.rainLabel : DATA.tempLabel);
 
-    /* Each day twice: as the reader sees it, and as the data hold it. The colour
-       scale for temperature is defined in Celsius, and converting back from what is
-       on screen would go through two conversions to arrive where it started. */
+    /* Each day keeps two values: `shown` in the unit shown, for the title and the
+       legend, and `raw` in the report unit system, for the colour. toCelsius()
+       below turns `raw` into the degree_C that CFG.tempColour takes, which saves a
+       conversion back from the unit shown. */
     var byDay = {};
     var lo = null, hi = null;
     DATA.dayStart.forEach(function (start, i) {
@@ -363,7 +365,7 @@
       if (hi === null || v > hi) hi = v;
     });
     if (lo === null) return;
-    /* Rain is measured from nothing, not from the driest day of the year. */
+    /* The rain scale starts at 0, not at the smallest daily total. */
     if (spec.kind === 'rain') lo = 0;
 
     var toCelsius = function (v) {
@@ -372,16 +374,19 @@
       return v;
     };
 
+    /* WeeWX numbers the weekdays from Monday = 0, JavaScript from Sunday = 0. */
     var startDow = DATA.weekStart === undefined ? 0 : Number(DATA.weekStart);
     var jsStart = (startDow + 1) % 7;
 
     var first = new Date(DATA.year, 0, 1);
     var last = new Date(DATA.year, 11, 31);
-    /* Back to the start of the week the year begins in, so every column is a whole
-       week and the rows line up with the weekday names. */
+    /* The heat map starts on the first day of the week that holds 1 January, so that
+       every column is a whole week and every row is one weekday. */
     var cursor = new Date(first);
     cursor.setDate(cursor.getDate() - ((first.getDay() - jsStart + 7) % 7));
 
+    /* 7 January 2024 was a Sunday, so day 7 + n of that month is weekday n in
+       JavaScript's numbering. */
     var names = [];
     for (var i = 0; i < 7; i++) {
       names.push(new Date(2024, 0, 7 + ((jsStart + i) % 7))
@@ -415,9 +420,9 @@
           if (spec.kind === 'temp' && CFG.tempColour) {
             style += ';background:' + CFG.tempColour(toCelsius(value.raw));
           } else {
-            /* The fourth root of the share of the range. On a linear scale nearly
-               every wet day lands in the palest step, because most of a year's rain
-               falls on few of its days. */
+            /* `--hm` is the fourth root of the day's share of the range, because most
+               of a year's rain falls on a few days. On a linear scale nearly every
+               rainy day would get the palest colour. */
             style += ';--hm: '
               + Math.pow(Math.max(0, value.shown - lo) / span, 0.25).toFixed(3);
           }
@@ -438,7 +443,8 @@
     }
 
     var labels = names.map(function (name, i) {
-      /* Every other one. Seven labels in the height of seven squares do not fit. */
+      /* Only every other weekday gets a label, because seven labels do not fit in
+         the height of seven squares. */
       return '<span class="hm-dow" style="grid-row:' + (i + 1) + '">'
         + (i % 2 === 0 ? escapeHtml(name) : '') + '</span>';
     });
@@ -469,13 +475,11 @@
     });
   }
 
-  /* ------------------------------------------------------------- the record */
+  /* ------------------------------------------------------------------- tabs */
 
-  /* ------------------------------------------------------------- switching */
-
-  /* Both sets of tabs are bound to the document rather than to the tab strip. The
-     live update replaces whole panels, and a listener bound to an element inside one
-     goes with it: the tabs would still be drawn and no longer do anything. */
+  /* One click listener on the document serves both sets of tabs. horizon.js
+     replaces the panels that hold the tabs on each new archive record, and a
+     listener on an element inside a replaced panel is lost with that element. */
   document.addEventListener('click', function (e) {
     var record = e.target.closest('#record-tabs button[data-record]');
     if (record) {
@@ -502,74 +506,6 @@
     });
   }
 
-  /* ---------------------------------------------------------------- years */
-
-  /* Stepping back through the record. Each year is its own page, written once when
-     the year ended, so the picker fetches the wanted one and puts its panels in place
-     of these rather than loading it. What the reader has open stays open: the tabs,
-     the unit, the scroll position.
-
-     A year is around six kilobytes over the wire. Holding every year in every page
-     would be a quarter of a megabyte on a station with fourteen years of record, and
-     the page is rendered again on every report cycle. */
-  var loading = false;
-
-  function setupYearPicker() {
-    var picker = document.getElementById('climate-year');
-    if (!picker) return;
-    picker.addEventListener('change', function () {
-      if (!picker.value || loading) return;
-      showYear(picker.value, true);
-    });
-
-    /* Back and forward, once a year has been fetched. */
-    window.addEventListener('popstate', function (e) {
-      if (e.state && e.state.climateYear) showYear(e.state.climateYear, false);
-    });
-  }
-
-  function showYear(url, push) {
-    loading = true;
-    var body = document.querySelector('.wrap');
-    if (body) body.setAttribute('aria-busy', 'true');
-
-    fetch(url, { cache: 'no-cache' })
-      .then(function (r) { return r.ok ? r.text() : null; })
-      .then(function (html) {
-        loading = false;
-        if (body) body.removeAttribute('aria-busy');
-        if (!html) return;
-        var fresh = new DOMParser().parseFromString(html, 'text/html');
-
-        /* The panels, and the data block that feeds the pictures. Same mechanism the
-           live update uses, so a panel that gains a 'data-live-panel' tomorrow is
-           carried across here without anything being added. */
-        document.querySelectorAll('[data-live-panel]').forEach(function (old) {
-          var next = fresh.querySelector('[data-live-panel="' + old.dataset.livePanel + '"]');
-          if (next && old.parentNode) {
-            old.parentNode.replaceChild(document.importNode(next, true), old);
-          }
-        });
-
-        /* The heading says which year is on screen. */
-        var head = document.querySelector('.masthead h1');
-        var freshHead = fresh.querySelector('.masthead h1');
-        if (head && freshHead) head.textContent = freshHead.textContent;
-        document.title = fresh.title || document.title;
-
-        if (push) {
-          history.pushState({ climateYear: url }, '', url);
-        }
-        draw();
-      })
-      .catch(function () {
-        loading = false;
-        if (body) body.removeAttribute('aria-busy');
-        /* The page is still there and still readable. Fall back to loading it. */
-        window.location = url;
-      });
-  }
-
   /* ------------------------------------------------------------------ start */
 
   function draw() {
@@ -581,22 +517,14 @@
     drawHeatmap();
   }
 
-  /* The panels have been replaced, taking the pictures with them. Draw them again,
-     from the data that arrived with them. */
+  /* horizon.js has replaced the panels and #climate-data after a new archive
+     record, and the new chart elements are empty. */
   document.addEventListener('horizon:panels', draw);
 
-  /* The reader has changed unit. Nothing has to be fetched; the same numbers are
-     shown in another one. */
+  /* The reader has chosen another unit system. */
   document.addEventListener('horizon:units', draw);
 
-  function start() {
-    setupYearPicker();
-    draw();
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', start, { once: true });
-  } else {
-    start();
-  }
+  /* draw() runs at once. scripts.inc loads this file after the page's markup and
+     after horizon.js, which provides CFG.units and CFG.tempColour. */
+  draw();
 })();
