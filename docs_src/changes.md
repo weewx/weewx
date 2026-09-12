@@ -9,9 +9,20 @@ any driver extension took all of `[Station]` with it, including the location and
 coordinates. Fixes [Issue #1131](https://github.com/weewx/weewx/issues/1131).
 [PR #1132](https://github.com/weewx/weewx/pull/1132).
 
+`weectl extension uninstall` no longer removes a configuration section that is still
+in use. A section was pruned as soon as it had no subsections left, so uninstalling
+any driver extension took all of `[Station]` with it, including the location and the
+coordinates. Fixes [Issue #1131](https://github.com/weewx/weewx/issues/1131).
+[PR #1132](https://github.com/weewx/weewx/pull/1132).
+
 Say so in the log when a Vantage logger returns far fewer archive records than it
 said it would, which is what corrupt logger memory looks like, and link to the fix.
 Fixes [Issue #1105](https://github.com/weewx/weewx/issues/1105).
+
+The FineOffset USB driver no longer calls `datetime.utcnow()` or
+`datetime.utcfromtimestamp()`, which Python 3.12 deprecates. Its datetimes are now
+aware UTC. Fixes [Issue #1052](https://github.com/weewx/weewx/issues/1052).
+[PR #1117](https://github.com/weewx/weewx/pull/1117).
 
 Saving the configuration file no longer changes its mode or ownership. Under a
 package installation, `weectl extension install`, `weectl extension uninstall`,
