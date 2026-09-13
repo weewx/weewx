@@ -11,6 +11,7 @@
 # The doctest examples work under Python 3 only!!
 #
 
+import collections
 import json
 import locale
 import logging
@@ -528,7 +529,7 @@ complex_conversions = {
     'polar': lambda c: weeutil.weeutil.Polar.from_complex(c) if c is not None else None,
 }
 
-class ValueTuple(tuple):
+class ValueTuple(collections.namedtuple('ValueTuple', ['value', 'unit', 'group'])):
     """
     A value, along with the unit it is in, can be represented by a 3-way tuple called a value
     tuple. All weewx routines can accept a simple unadorned 3-way tuple as a value tuple, but they
@@ -546,20 +547,7 @@ class ValueTuple(tuple):
     It is also valid to have a unit type of None (meaning there is no information about the unit
     the value is in). In this case, you won't be able to convert it to another unit.
     """
-    def __new__(cls, *args):
-        return tuple.__new__(cls, args)
-
-    @property
-    def value(self):
-        return self[0]
-
-    @property
-    def unit(self):
-        return self[1]
-
-    @property
-    def group(self):
-        return self[2]
+    __slots__ = ()
 
     # ValueTuples have some modest math abilities: subtraction and addition.
     def __sub__(self, other):
@@ -988,14 +976,16 @@ class Converter:
     def getTargetUnit(self, obs_type, agg_type=None):
         """Given an observation type and an aggregation type, return the 
         target unit type and group, or (None, None) if they cannot be determined.
+
+        Args:
+            obs_type(str): An observation type ('outTemp', 'rain', etc.)
+
+            agg_type(str|None): Type of aggregation ('mintime', 'count', etc.)
+            [Optional. default is no aggregation]
         
-        obs_type: An observation type ('outTemp', 'rain', etc.)
-        
-        agg_type: Type of aggregation ('mintime', 'count', etc.)
-        [Optional. default is no aggregation]
-        
-        returns: A 2-way tuple holding the unit type and the unit group
-        or (None, None) if they cannot be determined.
+        Returns:
+            tuple[str|None, str|None]: A 2-way tuple containing the unit type
+                and unit group, or `(None, None)` if they cannot be determined.
         """
         unit_group = _getUnitGroup(obs_type, agg_type)
         if unit_group in self.group_unit_dict:
@@ -1531,15 +1521,15 @@ def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
         (None, None)
 
     Args:
-        target_std_unit_system (int): A standardized unit system. If None, then
+        target_std_unit_system (int|None): A standardized unit system. If None, then
             the output units are indeterminate, so (None, None) is returned.
 
         obs_type (str): An observation type, e.g., 'outTemp'
 
-        agg_type (str): An aggregation type, e.g., 'mintime', or 'avg'.
+        agg_type (str|None): An aggregation type, e.g., 'mintime', or 'avg'.
     
     Returns:
-         tuple. A 2-way tuple containing the target units, and the target group.
+         tuple(int|None, str|None). A 2-way tuple containing the target units, and the target group.
     """
 
     if target_std_unit_system is not None:

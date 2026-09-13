@@ -134,7 +134,7 @@ class FtpUpload:
                     # parameter. Be prepared to catch the TypeError that may 
                     # occur with python 3.8 and earlier.
                     try:
-                        ftp_server = ftplib.FTP_TLS(encoding=self.encoding)
+                        ftp_server = ftplib.FTP_TLS(encoding=self.encoding) # novermin
                     except TypeError:
                         # we likely have python 3.8 or earlier, so try again
                         # without encoding
@@ -152,7 +152,7 @@ class FtpUpload:
                 # Be prepared to catch the TypeError that may occur with 
                 # python 3.8 and earlier.
                 try:
-                    ftp_server = ftplib.FTP(encoding=self.encoding)
+                    ftp_server = ftplib.FTP(encoding=self.encoding) # novermin
                 except TypeError:
                     # we likely have python 3.8 or earlier, so try again
                     # without encoding
