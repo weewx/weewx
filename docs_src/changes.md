@@ -3,16 +3,6 @@ WeeWX change history
 
 ### 5.5.n n-Month-2026
 
-Setting `rtfreq` in `[[Wunderground]]` no longer stops weewxd from
-starting, and the rapidfire thread goes to the rapidfire endpoint again
-when both `rapidfire` and `archive_post` are enabled. `rtfreq` was left
-in the dictionary of options handed to `AmbientThread`, which does not
-accept it, so building the service raised a `TypeError` and took the
-other RESTful services down with it. With both modes enabled,
-`server_url` was set on that same shared dictionary, so the rapidfire
-thread picked up the archive endpoint.
-[PR #1145](https://github.com/weewx/weewx/pull/1145).
-
 `weectl extension uninstall` no longer removes a configuration section that is still
 in use. A section was pruned as soon as it had no subsections left, so uninstalling
 any driver extension took all of `[Station]` with it, including the location and the
@@ -36,6 +26,12 @@ user could no longer edit it and the passwords in it became world-readable.
 
 Removed the APRS "messaging-capable" packet flag from `restx.py`.
 [PR #1108](https://github.com/weewx/weewx/pull/1108), by `W0CHP`.
+
+Fixed problem where RESTful services would fail to start if both options
+`rtfreq` and `archive_post` were set in `[[Wunderground]]`. Also fixed problem
+where the Rapidfire mode would use the archive endpoint even if `server_url` was
+set.  [PR #1145](https://github.com/weewx/weewx/pull/1145). Thanks to user
+Robert!
 
 ### 5.5.0 6-Aug-2026
 

@@ -260,7 +260,7 @@ class TestAmbient:
 
 
 class TestWunderground:
-    """Test the StdWunderground service setup"""
+    """Test the StdWunderground service setup. Regression test for PR #1145"""
 
     station = 'KBZABCDEF3'
     password = 'somepassword'
