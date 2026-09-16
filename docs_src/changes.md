@@ -27,6 +27,12 @@ user could no longer edit it and the passwords in it became world-readable.
 Removed the APRS "messaging-capable" packet flag from `restx.py`.
 [PR #1108](https://github.com/weewx/weewx/pull/1108), by `W0CHP`.
 
+Fixed problem where RESTful services would fail to start if both options
+`rtfreq` and `archive_post` were set in `[[Wunderground]]`. Also fixed problem
+where the Rapidfire mode would use the archive endpoint even if `server_url` was
+set.  [PR #1145](https://github.com/weewx/weewx/pull/1145). Thanks to user
+Robert!
+
 ### 5.5.0 6-Aug-2026
 
 Added the ability for services to bind to a `SHUTDOWN` event. This allows
