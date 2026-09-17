@@ -33,6 +33,9 @@ where the Rapidfire mode would use the archive endpoint even if `server_url` was
 set.  [PR #1145](https://github.com/weewx/weewx/pull/1145). Thanks to user
 Robert!
 
+Added a bash completion script for `weectl`, and a script to install it.
+[PR #1110](https://github.com/weewx/weewx/pull/1110), by `evilbunny2008`.
+
 ### 5.5.0 6-Aug-2026
 
 Added the ability for services to bind to a `SHUTDOWN` event. This allows
