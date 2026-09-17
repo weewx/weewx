@@ -1,16 +1,18 @@
 #!/bin/sh
 #
-# Install the bash completion for weectl.
+# Install bash completion for weectl.
 #
-# Run it without privileges to install the completion for yourself:
+# Run this script without privileges to install completion for yourself:
 #
 #   sh ~/weewx-data/scripts/setup-bash-completion.sh
 #
-# Run it with sudo to install the completion for every user on the system:
+# Run this script with sudo to install completion for every user on the system:
 #
 #   sudo sh ~/weewx-data/scripts/setup-bash-completion.sh
 #
-# Add 'uninstall' to remove it again.
+# Add 'uninstall' to the command line to remove the script. For example:
+#
+#   sudo sh ~/weewx-data/scripts/setup-bash-completion.sh uninstall
 #
 set -e
 

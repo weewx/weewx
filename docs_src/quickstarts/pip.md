@@ -318,15 +318,17 @@ WeeWX must be restarted for the changes to take effect.
 ## Command-line completion
 
 If you use bash, it can complete `weectl` subcommands and options for you.
-Install the completion for your own account:
+To install the completion for your own account, use this:
 
 ```{ .shell .copy }
 sh ~/weewx-data/scripts/setup-bash-completion.sh
 ```
 
-Use `sudo` to install it for every user on the system instead. Either way there
-is nothing to add to `.bashrc`: bash reads the completion the first time you
-type `weectl` in a new shell.
+If you wish to install it for every user on the system add `sudo` in front: 
+
+```{ .shell .copy }
+sudo sh ~/weewx-data/scripts/setup-bash-completion.sh
+```
 
 
 ## Upgrade
