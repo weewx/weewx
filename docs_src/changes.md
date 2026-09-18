@@ -12,20 +12,45 @@ summary, all of which can be arranged in a custom order.
 [PR #1133](https://github.com/weewx/weewx/pull/1133). Huge thanks to user 
 Manuel!
 
-Diagnose situations at runtime where the Vantage logger appears to be corrupted.
-Link to the fix. Fixes [Issue #1105](https://github.com/weewx/weewx/issues/1105).
-Another thanks to user Manuel!
+`weectl extension uninstall` no longer removes a configuration section that is still
+in use. A section was pruned as soon as it had no subsections left, so uninstalling
+any driver extension took all of `[Station]` with it, including the location and the
+coordinates. Fixes [Issue #1131](https://github.com/weewx/weewx/issues/1131).
+[PR #1132](https://github.com/weewx/weewx/pull/1132).
 
-Do not change the configuration file mode or ownership when reconfiguring a
-station. Under certain situations the ownership and permissions of `weewx.conf`
-was left as `root:weewx 0644`, instead of `weewx:weewx 0660`. The `weewx` user
-could no longer edit it, and the passwords in it became world-readable. 
-[PR #1118](https://github.com/weewx/weewx/pull/1118). Still another 
-thanks to Manuel!
+Say so in the log when a Vantage logger returns far fewer archive records than it
+said it would, which is what corrupt logger memory looks like, and link to the fix.
+Fixes [Issue #1105](https://github.com/weewx/weewx/issues/1105).
+
+The FineOffset USB driver no longer calls `datetime.utcnow()` or
+`datetime.utcfromtimestamp()`, which Python 3.12 deprecates. Its datetimes are now
+aware UTC. Fixes [Issue #1052](https://github.com/weewx/weewx/issues/1052).
+[PR #1117](https://github.com/weewx/weewx/pull/1117).
+
+Fixed problem that prevented WeeWX from being installed on openSUSE Leap 16.
+Unfortunately, the dependency `python3-ephem` is not available on Leap 16, so
+that must be added manually using pip. Fixes 
+[Issue #1065](https://github.com/weewx/weewx/issues/1065). 
+[PR #1121](https://github.com/weewx/weewx/pull/1121).
+
+Saving the configuration file no longer changes its mode or ownership. Under a
+package installation, `weectl extension install`, `weectl extension uninstall`,
+`weectl station reconfigure` and `weectl station upgrade` were leaving
+`weewx.conf` as `root:weewx 0644` instead of `weewx:weewx 0660`, so the `weewx`
+user could no longer edit it and the passwords in it became world-readable.
 
 Removed the APRS "messaging-capable" packet flag from `restx.py`.
 [PR #1108](https://github.com/weewx/weewx/pull/1108), by `W0CHP`.
 
+
+Fixed problem where RESTful services would fail to start if both options
+`rtfreq` and `archive_post` were set in `[[Wunderground]]`. Also fixed problem
+where the Rapidfire mode would use the archive endpoint even if `server_url` was
+set.  [PR #1145](https://github.com/weewx/weewx/pull/1145). Thanks to user
+Robert!
+
+Added a bash completion script for `weectl`, and a script to install it.
+[PR #1110](https://github.com/weewx/weewx/pull/1110), by `evilbunny2008`.
 
 ### 5.5.0 6-Aug-2026
 

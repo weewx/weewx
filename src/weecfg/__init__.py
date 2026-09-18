@@ -388,7 +388,7 @@ def remove_and_prune(a_dict, b_dict):
         if isinstance(b_dict[k], dict):
             if k in a_dict and type(a_dict[k]) is configobj.Section:
                 remove_and_prune(a_dict[k], b_dict[k])
-                if not a_dict[k].sections:
+                if not a_dict[k].sections and not a_dict[k].scalars:
                     a_dict.pop(k)
         elif k in a_dict:
             a_dict.pop(k)
