@@ -24,6 +24,12 @@ The FineOffset USB driver no longer calls `datetime.utcnow()` or
 aware UTC. Fixes [Issue #1052](https://github.com/weewx/weewx/issues/1052).
 [PR #1117](https://github.com/weewx/weewx/pull/1117).
 
+Fixed problem that prevented WeeWX from being installed on openSUSE Leap 16.
+Unfortunately, the dependency `python3-ephem` is not available on Leap 16, so
+that must be added manually using pip. Fixes 
+[Issue #1065](https://github.com/weewx/weewx/issues/1065). 
+[PR #1121](https://github.com/weewx/weewx/pull/1121).
+
 Saving the configuration file no longer changes its mode or ownership. Under a
 package installation, `weectl extension install`, `weectl extension uninstall`,
 `weectl station reconfigure` and `weectl station upgrade` were leaving
@@ -32,6 +38,15 @@ user could no longer edit it and the passwords in it became world-readable.
 
 Removed the APRS "messaging-capable" packet flag from `restx.py`.
 [PR #1108](https://github.com/weewx/weewx/pull/1108), by `W0CHP`.
+
+Fixed problem where RESTful services would fail to start if both options
+`rtfreq` and `archive_post` were set in `[[Wunderground]]`. Also fixed problem
+where the Rapidfire mode would use the archive endpoint even if `server_url` was
+set.  [PR #1145](https://github.com/weewx/weewx/pull/1145). Thanks to user
+Robert!
+
+Added a bash completion script for `weectl`, and a script to install it.
+[PR #1110](https://github.com/weewx/weewx/pull/1110), by `evilbunny2008`.
 
 ### 5.5.0 6-Aug-2026
 
