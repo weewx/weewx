@@ -715,6 +715,7 @@ suse-package-via-vagrant:
 	make vagrant-sync-src VM_GUEST=$(SUSE_VM)
 	make vagrant-build VM_GUEST=$(SUSE_VM) VM_TGT=suse-package GPG_KEYID=$(GPG_KEYID)
 	make vagrant-pull-pkg VM_GUEST=$(SUSE_VM) VM_PKG=$(SUSE15_PKG)
+	make vagrant-pull-pkg VM_GUEST=$(SUSE_VM) VM_PKG=$(SUSE16_PKG)
 	make vagrant-teardown VM_GUEST=$(SUSE_VM)
 
 # The package repositories must be updated using tools on their respective

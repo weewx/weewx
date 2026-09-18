@@ -18,9 +18,11 @@ The FineOffset USB driver no longer calls `datetime.utcnow()` or
 aware UTC. Fixes [Issue #1052](https://github.com/weewx/weewx/issues/1052).
 [PR #1117](https://github.com/weewx/weewx/pull/1117).
 
-Added packaging for openSUSE Leap 16. The dependency `python3-ephem` is not
-available on Leap 16, so that must be added using pip.
-Fixes [Issue #1065](https://github.com/weewx/weewx/issues/1065).
+Fixed problem that prevented WeeWX from being installed on openSUSE Leap 16.
+Unfortunately, the dependency `python3-ephem` is not available on Leap 16, so
+that must be added manually using pip. Fixes 
+[Issue #1065](https://github.com/weewx/weewx/issues/1065). 
+[PR #1121](https://github.com/weewx/weewx/pull/1121).
 
 Saving the configuration file no longer changes its mode or ownership. Under a
 package installation, `weectl extension install`, `weectl extension uninstall`,
