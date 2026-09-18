@@ -381,10 +381,13 @@ rpm-package-rh10:
 suse-changelog:
 	make rpm-changelog RPMOS=suse
 
-suse-package: rpm-package-suse15
+suse-package: rpm-package-suse15 rpm-package-suse16
 
 rpm-package-suse15:
 	make rpm-package RPMOS=suse OSREL=15
+
+rpm-package-suse16:
+	make rpm-package RPMOS=suse OSREL=16
 
 # run rpmlint on the rpm package
 check-rpm:
@@ -401,8 +404,13 @@ check-rh9:
 check-rh10:
 	make check-rpm RPMOS=el OSREL=10
 
-check-suse:
+check-suse: check-suse15 check-suse16
+
+check-suse15:
 	make check-rpm RPMOS=suse OSREL=15
+
+check-suse16:
+	make check-rpm RPMOS=suse OSREL=16
 
 upload-rpm:
 	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
@@ -427,6 +435,7 @@ RHEL8_PKG=weewx-$(RPMVER).el8.$(RPMARCH).rpm
 RHEL9_PKG=weewx-$(RPMVER).el9.$(RPMARCH).rpm
 RHEL10_PKG=weewx-$(RPMVER).el10.$(RPMARCH).rpm
 SUSE15_PKG=weewx-$(RPMVER).suse15.$(RPMARCH).rpm
+SUSE16_PKG=weewx-$(RPMVER).suse16.$(RPMARCH).rpm
 upload-pkgs:
 	scp $(DSTDIR)/$(SRCPKG) \
  $(DSTDIR)/$(DEB3_PKG) \
@@ -434,13 +443,14 @@ upload-pkgs:
  $(DSTDIR)/$(RHEL9_PKG) \
  $(DSTDIR)/$(RHEL10_PKG) \
  $(DSTDIR)/$(SUSE15_PKG) \
+ $(DSTDIR)/$(SUSE16_PKG) \
  $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # move files from the upload directory to the release directory and set up the
 # symlinks to them from the download root directory
 DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
 RELDIR=$(WEEWX_DOWNLOADS)/released_versions
-ARTIFACTS=$(DEB3_PKG) $(RHEL8_PKG) $(RHEL9_PKG) $(RHEL10_PKG) $(SUSE15_PKG) $(SRCPKG)
+ARTIFACTS=$(DEB3_PKG) $(RHEL8_PKG) $(RHEL9_PKG) $(RHEL10_PKG) $(SUSE15_PKG) $(SUSE16_PKG) $(SRCPKG)
 release-pkgs:
 	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
 	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
