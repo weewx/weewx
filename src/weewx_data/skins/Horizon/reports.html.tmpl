@@ -1,0 +1,180 @@
+## Copyright (c) 2026 Manuel Hilgert
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+#encoding UTF-8
+
+## $SummaryByMonth and $SummaryByYear are iterators. Cheetah will not evaluate a list
+## comprehension inside $jsonize(), so build the lists here.
+#set $month_list = []
+#for $m in $SummaryByMonth
+  #silent $month_list.append($str($m))
+#end for
+#set $year_list = []
+#for $y in $SummaryByYear
+  #silent $year_list.append($str($y))
+#end for
+
+#set $refresh = $to_int($DisplayOptions.get('refresh_interval', 60))
+
+## What the masthead says. See masthead.inc. The NOAA summaries are text as the
+## report wrote them, so there is nothing for the unit picker to convert.
+#set global $page_title = $gettext("Reports")
+#set global $page_units = False
+
+<!DOCTYPE html>
+<html lang="$lang">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <title>$gettext("Reports") &ndash; $station.location</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="stylesheet" href="horizon.css">
+    #include "theme.inc"
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('weewx.horizon.theme');
+          if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+        } catch (e) {}
+      })();
+    </script>
+    #include "analytics.inc"
+  </head>
+  <body>
+    <div class="wrap">
+      #include "masthead.inc"
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2 id="report-title">$gettext("Monthly Reports")</h2>
+          <div class="tabs" id="report-kind" role="tablist" aria-label="$gettext('Time span')">
+            <button type="button" role="tab" data-kind="month" aria-selected="true"
+                    aria-controls="report-body">$gettext("Month")</button>
+            <button type="button" role="tab" data-kind="year" aria-selected="false"
+                    aria-controls="report-body">$gettext("Year")</button>
+          </div>
+        </div>
+
+        <div class="range-bar">
+          <button type="button" id="report-back" class="range-button"
+                  aria-label="$gettext('Earlier')">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+          </button>
+          <label class="visually-hidden" for="report-pick">$gettext("Reports")</label>
+          <select id="report-pick" class="report-select"></select>
+          <button type="button" id="report-fwd" class="range-button"
+                  aria-label="$gettext('Later')">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+
+        <div class="panel-body">
+          <pre id="report-body" class="report-text" role="tabpanel"
+               aria-live="polite">$gettext("Loading charts")&hellip;</pre>
+        </div>
+      </section>
+
+      <p class="footer">
+        $gettext("This station is controlled by <a href='https://weewx.com'>WeeWX</a>, an experimental weather software system written in Python.")
+      </p>
+    </div>
+
+    #include "top.inc"
+
+    <script>
+      (function () {
+        'use strict';
+
+        var MONTHS = $jsonize($month_list);
+        var YEARS  = $jsonize($year_list);
+        var TEXT = {
+          month: "$gettext('Monthly Reports')",
+          year: "$gettext('Yearly Reports')",
+          missing: "$gettext('No data for this period')"
+        };
+
+        var kind = 'month';
+        var pick = document.getElementById('report-pick');
+        var body = document.getElementById('report-body');
+        var title = document.getElementById('report-title');
+
+        function list() { return kind === 'month' ? MONTHS : YEARS; }
+
+        function fill(selected) {
+          var items = list().slice().reverse();     // newest first
+          pick.innerHTML = items.map(function (v) {
+            return '<option value="' + v + '"' + (v === selected ? ' selected' : '') + '>'
+              + v + '</option>';
+          }).join('');
+          title.textContent = TEXT[kind];
+        }
+
+        function show(name) {
+          if (!name) { body.textContent = TEXT.missing; return; }
+          fetch('NOAA/NOAA-' + name + '.txt', { cache: 'no-cache' })
+            .then(function (r) { return r.ok ? r.text() : null; })
+            .then(function (t) { body.textContent = t === null ? TEXT.missing : t; })
+            .catch(function () { body.textContent = TEXT.missing; });
+          if (location.hash !== '#' + name) {
+            history.replaceState(null, '', location.pathname + '#' + name);
+          }
+        }
+
+        function step(direction) {
+          var items = list();
+          var at = items.indexOf(pick.value);
+          var next = at + direction;
+          if (next < 0 || next >= items.length) return;
+          pick.value = items[next];
+          show(pick.value);
+          sync();
+        }
+
+        function sync() {
+          var items = list();
+          var at = items.indexOf(pick.value);
+          document.getElementById('report-back').disabled = at <= 0;
+          document.getElementById('report-fwd').disabled = at < 0 || at >= items.length - 1;
+        }
+
+        document.getElementById('report-kind').addEventListener('click', function (e) {
+          var b = e.target.closest('button[data-kind]');
+          if (!b || b.dataset.kind === kind) return;
+          kind = b.dataset.kind;
+          document.querySelectorAll('#report-kind button').forEach(function (x) {
+            x.setAttribute('aria-selected', String(x.dataset.kind === kind));
+          });
+          fill(null);
+          show(pick.value);
+          sync();
+        });
+
+        pick.addEventListener('change', function () { show(pick.value); sync(); });
+        document.getElementById('report-back').addEventListener('click', function () { step(-1); });
+        document.getElementById('report-fwd').addEventListener('click', function () { step(1); });
+
+        /* A link may name a report directly: reports.html#2026-07 */
+        var wanted = decodeURIComponent(location.hash.replace(/^#/, ''));
+        if (wanted && YEARS.indexOf(wanted) >= 0) kind = 'year';
+        document.querySelectorAll('#report-kind button').forEach(function (x) {
+          x.setAttribute('aria-selected', String(x.dataset.kind === kind));
+        });
+        fill(list().indexOf(wanted) >= 0 ? wanted : null);
+        show(pick.value);
+        sync();
+
+        /* The report for the month in progress is rewritten every archive cycle.
+           The picker holds the viewer's choice, so this panel is not one the script
+           swaps out wholesale; it listens for the record instead and fetches the
+           text it is already showing. */
+        document.addEventListener('horizon:update', function () { show(pick.value); });
+      })();
+    </script>
+
+    <script>
+      window.HORIZON = { refreshInterval: $refresh, generated: $current.dateTime.raw };
+    </script>
+    <script src="horizon.js"></script>
+  </body>
+</html>

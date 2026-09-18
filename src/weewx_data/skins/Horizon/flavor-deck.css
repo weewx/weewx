@@ -1,0 +1,789 @@
+/*    Copyright (c) 2026 Manuel Hilgert
+ *    Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+ *
+ * A second look for Horizon: flatter, denser, and drawn in outlines rather than
+ * in space. Where the default skin separates things by leaving room between them
+ * and sets its headings in a serif, this one gives every block a border of its
+ * own and keeps one sans throughout.
+ *
+ * It is only a stylesheet. No template changes, no different data, and the chart
+ * code is untouched -- horizon.js reads the same custom properties either way, so
+ * the canvas follows along on its own.
+ *
+ * To use it, in skin.conf:
+ *
+ *     [DisplayOptions]
+ *         custom_css = flavor-deck.css
+ *
+ * The file is already in 'copy_once', so it is installed either way.
+ *
+ * One thing a stylesheet cannot reach: the colour of the chart lines themselves.
+ * Those come from 'chart_line_colors' in [ImageGenerator], because the PNGs take
+ * them from the same place. To match, set there:
+ *
+ *     chart_line_colors = "#4a90d9", "#d9534f", "#5cb85c", "#e2a03f"
+ */
+
+/* -------------------------------------------------------------- the palette */
+
+:root {
+  --bg: #f6f8fa;
+  --surface: #ffffff;
+  --surface-sunk: #f0f3f6;
+  --ink: #1f2328;
+  --ink-muted: #656d76;
+  --ink-faint: #8c959f;
+  --border: #d8dee4;
+  --border-strong: #c2c9d1;
+  --accent: #0969da;
+  --accent-bright: #218bff;
+  --hi: #cf222e;
+  --lo: #0969da;
+  --ok: #1a7f37;
+  --sun: #bf8700;
+  --warn: #9a6700;
+
+  /* Just enough to lift a card off the page. Two soft shadows rather than one
+     hard: the near one draws the edge, the far one the space under it. */
+  --shadow: 0 1px 2px rgb(31 35 40 / 6%), 0 1px 1px rgb(31 35 40 / 4%);
+
+  --chart-grid: rgb(31 35 40 / 8%);
+  --chart-axis: #8c959f;
+  --chart-night: #eaeef2;
+
+  --radius: 8px;
+
+  /* One sans for everything. The default skin sets headings in a serif and
+     readings in a monospace, three voices on a page; this is the other choice,
+     where nothing changes voice and the weight does the work. Figures still
+     line up, because 'tabular-nums' is asked for below rather than got for
+     free from a monospace. */
+  --font-display: var(--font);
+  --font-mono: var(--font);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --shadow: 0 1px 2px rgb(1 4 9 / 40%), 0 1px 1px rgb(1 4 9 / 30%);
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface-sunk: #10151c;
+    --ink: #e6edf3;
+    --ink-muted: #8b949e;
+    --ink-faint: #6e7681;
+    --border: #262c36;
+    --border-strong: #3d444d;
+    --accent: #4493f8;
+    --accent-bright: #6cb6ff;
+    --hi: #ff7b72;
+    --lo: #4493f8;
+    --ok: #3fb950;
+    --sun: #d29922;
+    --warn: #d29922;
+    --chart-grid: rgb(230 237 243 / 7%);
+    --chart-axis: #6e7681;
+    --chart-night: #10151c;
+  }
+}
+
+:root[data-theme="dark"] {
+    --shadow: 0 1px 2px rgb(1 4 9 / 40%), 0 1px 1px rgb(1 4 9 / 30%);
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface-sunk: #10151c;
+  --ink: #e6edf3;
+  --ink-muted: #8b949e;
+  --ink-faint: #6e7681;
+  --border: #262c36;
+  --border-strong: #3d444d;
+  --accent: #4493f8;
+  --accent-bright: #6cb6ff;
+  --hi: #ff7b72;
+  --lo: #4493f8;
+  --ok: #3fb950;
+  --sun: #d29922;
+  --warn: #d29922;
+  --chart-grid: rgb(230 237 243 / 7%);
+  --chart-axis: #6e7681;
+  --chart-night: #10151c;
+}
+
+/* ---------------------------------------------------------------- the shapes */
+
+/* Figures line up under each other without a monospace doing it. */
+.num,
+.metric,
+.readings,
+.stat-hi,
+.stat-lo { font-variant-numeric: tabular-nums; }
+
+.panel {
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.panel-head {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+/* Charts as separate cards in a grid, rather than one list divided by rules.
+   A card carries its own edge, so two of them side by side still read as two. */
+#charts {
+  display: grid;
+  gap: var(--gap);
+  /* Two columns when there is room for two, one when there is not, decided by
+     the space the charts actually have rather than by the width of the window.
+     A media query cannot tell the difference: the same 1440px window holds one
+     comfortable column beside the readings panel and two without it. Below the
+     floor the chart code hits its minimum height and the axis labels crowd. */
+  /* One column, or two, and never three: 30rem is the floor, and the page is
+     bounded above so that a third never has room. 'min(..., 100%)' keeps the
+     floor from pushing a phone sideways.
+
+     A percentage inside minmax() is no help here. It reads as a share of the
+     grid container, whose width depends on the tracks being sized -- the browser
+     leaves it unresolved and falls back to the fixed part, so a rule written to
+     cap the count silently does nothing. The cap comes from the page width. */
+  grid-template-columns: repeat(auto-fit, minmax(min(30rem, 100%), 1fr));
+}
+
+#charts > .chart-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding-bottom: 0.35rem;
+}
+
+/* The rule between cards belonged to the list they used to be. */
+#charts > .chart-card:first-child { border: 1px solid var(--border); }
+
+.chart-head { padding-top: 0.85rem; }
+
+.chart-title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+/* An empty-state message spans the whole grid rather than sitting in column one. */
+#charts > .chart-empty { grid-column: 1 / -1; }
+
+/* The masthead reads as the bar it is, not as text floating above the page. */
+.masthead {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding-inline: var(--edge);
+  margin-inline: calc(var(--edge) * -1);
+}
+
+.masthead-link[aria-current="page"] {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-radius: var(--radius);
+}
+
+.tabs button[aria-selected="true"] {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-radius: calc(var(--radius) - 2px);
+}
+
+/* ------------------------------------------------------- sidebar and tiles */
+
+/* Both need flavor-deck.js, which puts the elements where these rules expect
+   them. Without it nothing below matches and the page keeps its own layout. */
+
+.deck-has-sidebar .wrap {
+  /* Wider than the skin's own 84rem, because a navigation column now takes
+     15rem of it, but still bounded. Past about this width the page stops using
+     the room and starts spreading into it: ten tiles come out as seven and
+     three, and a chart becomes a quarter of the screen wide. Centred, so what is
+     left over falls either side rather than all on one. */
+  max-width: 105rem;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  column-gap: var(--gap);
+  align-items: start;
+}
+
+.deck-has-sidebar .masthead { grid-column: 1 / -1; }
+
+/* The row below the masthead. Only the start is given: '2 / -1' would count back
+   to the single explicit line this grid has, which puts the end before the start
+   and lands the column beside the masthead rather than under it. */
+.deck-sidebar { grid-column: 1; grid-row-start: 2; }
+
+/* Placed by column only. Naming one area for all of them would stack every
+   section in the same cell, one on top of the next, and the page would read as a
+   single screen with the rest showing through it. */
+.deck-has-sidebar .wrap > *:not(.masthead):not(.deck-sidebar) { grid-column: 2; }
+
+/* On a phone the column becomes the menu the skin already has.
+
+   The button in the masthead sets 'data-open' on the tools beside it, and the
+   navigation is the next element after the masthead, so it can be shown from the
+   same state without a second switch, a second button or a line of script. It
+   sits over the page rather than pushing it down: a list of eleven entries above
+   the readings would be the whole first screen. */
+@media (max-width: 60rem) {
+  .deck-has-sidebar .wrap { grid-template-columns: minmax(0, 1fr); }
+  .deck-has-sidebar .wrap > *:not(.masthead):not(.deck-sidebar) { grid-column: 1; }
+
+  .deck-has-sidebar .deck-sidebar {
+    position: absolute;
+    z-index: 20;
+    left: var(--edge);
+    right: var(--edge);
+    width: auto;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+    display: none;
+  }
+
+  /* The column itself is empty on a phone: its groups are in the menu. */
+  .deck-nav-in-menu .deck-sidebar { display: none; }
+
+  .deck-has-sidebar #masthead-tools .deck-nav-group { width: 100%; }
+  .deck-has-sidebar #masthead-tools .deck-nav-group h2 {
+    padding-inline: 0.5rem;
+    margin-bottom: 0.2rem;
+  }
+  .deck-has-sidebar #masthead-tools .deck-nav-list > button,
+  .deck-has-sidebar #masthead-tools .deck-nav-list > .masthead-link {
+    padding: 0.45rem 0.5rem;
+  }
+
+  .deck-has-sidebar .deck-nav-group h2 { padding-inline: 0.5rem; }
+}
+
+.deck-sidebar {
+  position: sticky;
+  top: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  padding: 0.5rem 0.75rem 1rem 0;
+  /* A rule where the navigation ends and the readings begin. Without it the two
+     columns are only space apart, and on a dark ground that reads as one wide
+     column with a gap in it. */
+  border-right: 1px solid var(--border);
+}
+
+.deck-nav-group h2 {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 0.4rem;
+  padding-inline: 0.75rem;
+}
+
+.deck-nav-list { display: flex; flex-direction: column; gap: 0.15rem; }
+
+/* The glyph beside an entry, drawn as a mask so it takes the entry's own colour
+   and turns with it when the entry is the current one. */
+.nav-icon {
+  display: inline-block;
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+  background: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+  opacity: 0.7;
+}
+
+/* The period buttons and the page links are different elements doing the same
+   job here, so they are given the same shape. */
+.deck-nav-list > button,
+.deck-nav-list > .masthead-link {
+  font: inherit;
+  font-size: var(--fs-md);
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--ink-muted);
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+}
+
+.deck-nav-list > button:hover,
+.deck-nav-list > .masthead-link:hover {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+/* The one you are on: a filled block rather than a colour change alone, and the
+   glyph turns with the text. */
+.deck-nav-list > button[aria-selected="true"],
+.deck-nav-list > .masthead-link[aria-current="page"] {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.deck-nav-list > button[aria-selected="true"] .nav-icon,
+.deck-nav-list > .masthead-link[aria-current="page"] .nav-icon { opacity: 1; }
+
+/* The readings go above the history rather than beside it, across the full
+   width, which is what gives them room to be a row of tiles instead of a column
+   of rows. The skin's own layout puts them in a 21rem sidebar; here that column
+   is the navigation instead. */
+/* Written against '.deck-has-sidebar', which the script sets. That keeps these
+   rules from applying when the script is absent, and it outweighs the skin's own
+   '.columns.sidebar-responsive-top > .stack:last-child', which would otherwise
+   put the readings back beside the charts. */
+/* Only where the readings sit beside the charts, which is the front page. The
+   other pages put their panels straight into '.columns' and mean the two columns
+   they ask for: on the celestial page that is the sun beside the moon, and one
+   column would stack them for no reason. */
+.deck-has-sidebar .columns:has(> .stack) { grid-template-columns: minmax(0, 1fr); }
+
+/* Sun, Moon and the station panel sit side by side under the readings. Stacked
+   they would push the charts a screen and a half down the page. */
+.deck-has-sidebar .columns:has(> .stack) > .stack:last-child {
+  order: -1;
+  display: grid;
+  /* Three tracks at the full width: sun and moon take two and the planets the
+     third, and the row comes out full rather than leaving a gap beside them. */
+  grid-template-columns: repeat(auto-fit, minmax(min(21rem, 100%), 1fr));
+  gap: var(--gap);
+  align-items: start;
+}
+
+/* The current conditions are the point of the page, so they take the whole row
+   above the rest. */
+.deck-has-sidebar .columns:has(> .stack) > .stack:last-child > .panel.headline {
+  grid-column: 1 / -1;
+}
+
+/* The readings as separate tiles: label on top, figure below, each in its own
+   bordered box rather than in a run of rows. The skin already wraps each pair in
+   a <div>, so there is something to put a border around. */
+dl.companions {
+  display: grid;
+  /* Five across at the widest the page goes, fewer as it narrows. The count is
+     set by this floor against the bounded page width, not by a rule that counts
+     tracks: 15.5rem into the 1370px the content gets at 105rem is five, and
+     five tiles of 260px read better than seven of 220px. */
+  grid-template-columns: repeat(auto-fit, minmax(min(17.5rem, 100%), 1fr));
+  gap: 0.75rem;
+}
+
+dl.companions > div {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+dl.companions > div > dt {
+  font-size: var(--fs-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+dl.companions > div > dd {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* A second reading in the same tile, such as the rain rate under the total. */
+dl.companions > div > dd.sub-reading {
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  color: var(--ink-muted);
+  border-top: 1px solid var(--border);
+  padding-top: 0.35rem;
+  margin-top: 0.15rem;
+}
+
+/* The tiles, as this flavour draws them: the label plainly written, the reading
+   large under it beside its glyph, and the day's range below a rule. That rule is
+   the tile's own division, so it is drawn edge to edge rather than inset. */
+.deck-has-sidebar dl.companions > div > dt,
+.deck-has-sidebar .panel.headline .lead-label {
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Whether a reading is following the station or standing still is worth saying
+   once per tile. The mark goes on the label, but only the value knows, so the
+   tile is asked about its own contents. */
+.deck-has-sidebar [data-span="day"] dl.companions > div:has(dd[data-live]) > dt::after,
+.deck-has-sidebar [data-span="day"] .lead-block:has([data-live]) .lead-label::after {
+  content: "LIVE";
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 15%, transparent);
+  border-radius: 999px;
+  padding: 0.1rem 0.4rem;
+}
+
+.deck-has-sidebar dl.companions > div > dd:not(.tile-range):not(.sub-reading),
+.deck-has-sidebar .lead {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.45rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+/* A number is one word. Four digits and a unit do not always fit a tile, and the
+   unit may wrap to the next line, but '992.0' must never come apart. */
+.deck-has-sidebar dl.companions > div > dd [data-unit-value],
+.deck-has-sidebar dl.companions > div > dd small,
+.deck-has-sidebar .lead-value,
+.deck-has-sidebar .lead-unit { white-space: nowrap; }
+
+/* The glyph beside the reading, at the size of the figure it stands for. */
+.deck-has-sidebar .tile-icon {
+  width: 1.15em;
+  height: 1.15em;
+  margin: 0;
+  opacity: 0.85;
+}
+
+/* The unit is part of the reading but not of its weight. */
+.deck-has-sidebar dl.companions > div > dd small,
+.deck-has-sidebar .lead-unit {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+dl.companions > div > dd.tile-range,
+.deck-has-sidebar .lead-block > .tile-range {
+  border-top: 1px solid var(--border);
+  margin: 0.75rem -1rem 0;
+  padding: 0.6rem 1rem 0;
+  gap: 0;
+}
+
+/* One size for every figure in a range line, whatever element carries it. The
+   lead tile writes its range as a <div> and the others as a <dd>, and the skin
+   styles <dd> on its own, so without this the lead's numbers come out smaller
+   than the rest. */
+.deck-has-sidebar .tile-range { font-size: var(--fs-sm); }
+.deck-has-sidebar .tile-range .range-key {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  color: var(--ink-faint);
+}
+.deck-has-sidebar .tile-range [data-obs] {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+.deck-has-sidebar .tile-range small {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+/* The tinted tile carries the reading in the page's own ink. The band is behind
+   it now, and a coloured figure on a coloured ground reads as neither. */
+.deck-has-sidebar .lead-value[data-band] { color: var(--ink); }
+
+/* Pushed to the bottom of its tile, so the rule sits at the same height across a
+   row whatever is above it. */
+.deck-has-sidebar dl.companions > div > dd.tile-range,
+.deck-has-sidebar .lead-block > .tile-range { margin-top: auto; }
+
+dl.companions > div > dd.tile-range > span,
+.deck-has-sidebar .lead-block > .tile-range > span {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+dl.companions > div > dd.tile-range .range-key,
+.deck-has-sidebar .lead-block > .tile-range .range-key {
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+}
+
+/* One grid for all the readings, the lead among them rather than above them.
+   'display: contents' lifts the tiles out of their list so they land in the same
+   grid as the lead block; the list itself stays in the markup, which is where a
+   description list belongs.
+
+   Set at four times their size the lead was the page. Here every reading has the
+   same weight and the numbers speak. The bar under it goes too: it measured one
+   reading against its day, which is what the range line now says in words. */
+.deck-has-sidebar .panel.headline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(13.5rem, 100%), 1fr));
+  /* Every tile in a row the same height, which stretch does on its own, but each
+     row only as tall as it needs. '1fr' here would make all rows the height of
+     the tallest tile anywhere: one reading with an extra line under it -- rain
+     with its rate, a sensor with a second figure -- and two dozen tiles grow with
+     it. Measured: 146px to 212px across the board for one such tile. */
+  grid-auto-rows: min-content;
+  gap: 0.75rem;
+  /* No card behind the cards. Each tile carries its own edge, and a panel around
+     them would draw a second one around the lot. */
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  overflow: visible;
+}
+
+.deck-has-sidebar .panel.headline > dl.companions { display: contents; }
+
+.deck-has-sidebar .panel.headline .lead-block {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  /* Tinted by the reading itself rather than by decoration. The skin already
+     sorts the temperature into nine bands and colours the figure by it; the same
+     band colours the tile behind it, so a cold morning and a hot afternoon are
+     not the same card with a different number on it. */
+  background:
+    linear-gradient(135deg,
+                    color-mix(in srgb, var(--tint, var(--accent)) 22%, var(--surface)) 0%,
+                    var(--surface) 62%);
+  box-shadow: var(--shadow);
+  padding: 0.9rem 1rem;
+  min-width: 0;
+}
+
+.deck-has-sidebar .lead-label {
+  display: flex;
+  align-items: center;
+  font-family: var(--font);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin: 0 0 0.25rem;
+}
+
+.deck-has-sidebar .lead { margin: 0; }
+.deck-has-sidebar .lead-value { font-size: inherit; font-weight: inherit; }
+/* The decimal hangs from the top edge in the default skin, where the figure is
+   eight rem tall and the two digits after the point would otherwise float. At
+   tile size that lift only makes the number look broken, so it comes back down
+   and joins the rest of it. */
+.deck-has-sidebar .lead-dec {
+  font-size: inherit;
+  letter-spacing: inherit;
+  opacity: 1;
+  position: static;
+  top: auto;
+}
+
+/* The lead reading carries its own trend, under a name of its own. It belongs to
+   the day like the others do. */
+.panel.headline[data-span]:not([data-span="day"]) .lead-trend { display: none; }
+.deck-has-sidebar .lead-trend { width: 0.9em; height: 0.9em; }
+
+
+/* The day bar and the share link belong to the layout that put one reading above
+   the rest. */
+.deck-has-sidebar .panel.headline .span-title,
+.deck-has-sidebar .panel.headline .span-today,
+
+/* Which band the reading fell into. Written by the template, from degrees
+   Celsius whatever the page displays in, so the same weather tints the same
+   whichever unit the reader has chosen. */
+.deck-has-sidebar .lead-block:has([data-band="0"]) { --tint: var(--warm-0); }
+.deck-has-sidebar .lead-block:has([data-band="1"]) { --tint: var(--warm-1); }
+.deck-has-sidebar .lead-block:has([data-band="2"]) { --tint: var(--warm-2); }
+.deck-has-sidebar .lead-block:has([data-band="3"]) { --tint: var(--warm-3); }
+.deck-has-sidebar .lead-block:has([data-band="4"]) { --tint: var(--warm-4); }
+.deck-has-sidebar .lead-block:has([data-band="5"]) { --tint: var(--warm-5); }
+.deck-has-sidebar .lead-block:has([data-band="6"]) { --tint: var(--warm-6); }
+.deck-has-sidebar .lead-block:has([data-band="7"]) { --tint: var(--warm-7); }
+.deck-has-sidebar .lead-block:has([data-band="8"]) { --tint: var(--warm-8); }
+
+/* The station's own particulars belong at the foot of the page, the way a
+   colophon does: worth having, not worth the space beside the readings.
+   flavor-deck.js moves it there; this draws it as a footer rather than as
+   another panel. */
+/* A footer, not another card: a rule across the page, the particulars set in
+   columns under it, and the colophon last. Quiet enough to be skipped and close
+   enough to hand to be read. */
+.deck-footer {
+  margin-top: calc(var(--gap) * 2);
+  padding-top: var(--gap);
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-xs);
+  color: var(--ink-muted);
+}
+
+/* Label above value rather than beside it: at this size a row of pairs across
+   the page is easier to read down than along. */
+.deck-footer .readings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(9rem, 45%), 1fr));
+  gap: 0.75rem var(--gap);
+  align-items: start;
+  border: 0;
+}
+
+.deck-footer .readings > div { min-width: 0; }
+
+.deck-footer .readings dt,
+.deck-footer .readings dd {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.deck-footer .readings dt {
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+}
+
+.deck-footer .readings dd {
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: var(--ink);
+  text-align: left;
+}
+
+.deck-footer p.footer {
+  margin: var(--gap) 0 0;
+  padding: 0 0 1.5rem;
+  text-align: left;
+  color: var(--ink-faint);
+}
+
+/* Sun and moon take two of the tracks where there are two to take, so that their
+   own two halves have room to sit side by side. In one track they stack, which is
+   a tall panel next to a short one and a column of white space beside it. */
+@media (min-width: 78rem) {
+  /* Sun and moon take two tracks across and two rows down, which leaves the
+     third track free for the panels beside it: the planets above, the sensors
+     under them. Without the second row those two would sit in a line of their
+     own with the sky panel towering beside them. */
+  .deck-has-sidebar [data-live-panel="sunmoon"] {
+    grid-column: span 2;
+    grid-row: span 2;
+  }
+}
+
+/* A trend is what a reading did in the last three hours. Beside the mean of a
+   year it says nothing, so it goes with the day it belongs to. */
+.panel.headline[data-span]:not([data-span="day"]) .trend { display: none; }
+
+/* The forecast runs the whole width. It is a row of days, and a row cut into a
+   third of the page becomes a thing to scroll rather than a week to read. */
+.deck-has-sidebar #forecast-panel { grid-column: 1 / -1; }
+
+/* A time is one word. "06:27 AM" split over two lines doubles the height of every
+   row in the table. */
+table.planets td { white-space: nowrap; }
+
+@media (max-width: 60rem) {
+  .deck-has-sidebar .deck-sidebar { border-right: 0; }
+}
+
+/* ------------------------------------------------------------- statistics */
+
+/* Laid out in fixed columns. Left to itself the table gives the first column
+   whatever the others do not take, and with four short spans that is half the
+   width: the labels sit alone on the left and the figures against the right
+   edge, a hand's breadth from the heading they belong to. */
+.deck-has-sidebar .data-table.stats {
+  table-layout: fixed;
+  font-size: var(--fs-base);
+}
+
+.deck-has-sidebar .data-table.stats th:first-child { width: 15rem; }
+
+.deck-has-sidebar .data-table.stats th,
+.deck-has-sidebar .data-table.stats td {
+  padding: 0.55rem 1rem;
+  vertical-align: baseline;
+}
+
+/* The figures read down a column, so they are set on one grid: a decimal point
+   under a decimal point, and a minus sign that does not shift the number beside
+   it out of line. */
+.deck-has-sidebar .data-table.stats td.num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* The row under the pointer, so that the eye keeps its line across four spans. */
+.deck-has-sidebar .data-table.stats tbody tr:hover td,
+.deck-has-sidebar .data-table.stats tbody tr:hover th {
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+}
+
+/* High and low, told apart by weight and colour rather than by colour alone. The
+   pair belongs together, so the slash between them is quieter than either. */
+.deck-has-sidebar .data-table.stats .stat-hi > span:first-child { color: var(--hi); }
+.deck-has-sidebar .data-table.stats .stat-lo { color: var(--lo); }
+
+.deck-has-sidebar .data-table.stats .when {
+  font-size: var(--fs-xs);
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+  margin-top: 0.1rem;
+}
+
+/* The name of the reading carries the row; its unit is an aside. */
+.deck-has-sidebar .data-table.stats tbody th.metric {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.deck-has-sidebar .data-table.stats .stat-unit {
+  font-weight: 400;
+  color: var(--ink-faint);
+}
+
+.deck-has-sidebar .data-table.stats thead th {
+  font-size: var(--fs-xs);
+  background: transparent;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+/* Over a week or a year a card shows the mean of the span, not the reading as it
+   stands, so the label says what it is showing. The mark for "this is following
+   the station" belongs to the day alone, and is set on the day above. */
+.panel.headline[data-span]:not([data-span="day"]) .tile-range .range-key::after,
+.panel.headline[data-span]:not([data-span="day"]) .lead-block .range-key::after {
+  content: "";
+}

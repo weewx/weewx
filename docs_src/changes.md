@@ -1,13 +1,16 @@
 WeeWX change history
 --------------------
 
-### 5.6.0 n-Month-2026
+### 5.6.0 dd-Mmm-2026
 
-`weectl extension uninstall` no longer removes a configuration section that is still
-in use. A section was pruned as soon as it had no subsections left, so uninstalling
-any driver extension took all of `[Station]` with it, including the location and the
-coordinates. Fixes [Issue #1131](https://github.com/weewx/weewx/issues/1131).
-[PR #1132](https://github.com/weewx/weewx/pull/1132).
+Added `weewx.jsongenerator.JSONGenerator`, which writes the plots defined for
+the `ImageGenerator` as JSON. Added the skin `Horizon`, which leverages the JSON
+data, allowing it to step backwards through the entire station history. The skin
+also includes various panels, including a forecast panel, and a climate page
+summary, all of which can be arranged in a custom order. 
+[PR #1128](https://github.com/weewx/weewx/issues/1128) and 
+[PR #1133](https://github.com/weewx/weewx/pull/1133). Huge thanks to user 
+Manuel!
 
 `weectl extension uninstall` no longer removes a configuration section that is still
 in use. A section was pruned as soon as it had no subsections left, so uninstalling
@@ -38,6 +41,7 @@ user could no longer edit it and the passwords in it became world-readable.
 
 Removed the APRS "messaging-capable" packet flag from `restx.py`.
 [PR #1108](https://github.com/weewx/weewx/pull/1108), by `W0CHP`.
+
 
 Fixed problem where RESTful services would fail to start if both options
 `rtfreq` and `archive_post` were set in `[[Wunderground]]`. Also fixed problem
