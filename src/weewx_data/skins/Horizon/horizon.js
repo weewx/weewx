@@ -1071,9 +1071,7 @@
     charts.push(entry);
     resizeObserver.observe(host);
 
-    /* Saving the chart. Where the skin also runs the ImageGenerator there is a
-       second button, linking to the file it wrote, because a file on the server has
-       a URL that can be pasted somewhere. */
+    /* Saving the chart. */
     var actions = card.querySelector('.chart-actions');
     if (actions) {
       var save = document.createElement('button');
@@ -1082,21 +1080,6 @@
       save.textContent = CFG.text.saveImage || 'Save image';
       save.addEventListener('click', function () { exportChart(entry, card); });
       actions.appendChild(save);
-
-      /* Most stations run one skin, and this one does not draw PNGs unless asked.
-         So the link appears only where index.json says they are being written, or
-         where 'show_image_links' says so outright. */
-      var offerImage = CFG.hasImages === null || CFG.hasImages === undefined
-        ? !!(manifest && manifest.images)
-        : CFG.hasImages;
-      if (anchor === null && offerImage && meta.name) {
-        var link = document.createElement('a');
-        link.className = 'chart-action';
-        link.href = meta.name + '.png';
-        link.textContent = CFG.text.imageLink || 'PNG';
-        link.title = CFG.text.imageLinkTitle || 'Permanent link to the rendered image';
-        actions.appendChild(link);
-      }
     }
 
     if (details) {

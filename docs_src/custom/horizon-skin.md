@@ -6,8 +6,8 @@ before that, in CSS custom properties. Everything you see is one of them: the
 surfaces, the type sizes, the corner radius, the colours the charts read for
 their grid and axes.
 
-Any of them can be overridden from `skin.conf`, so restyling the skin is a
-change to your configuration and not to a file that the next upgrade will
+Any of them can be overridden from a stylesheet of your own, so restyling the
+skin is a file you keep and not a change to one that the next upgrade will
 overwrite.
 
 ## Layout
@@ -43,7 +43,7 @@ it:
 
 | Panel | What it shows |
 |---|---|
-| `current` | The reading set large, the day's range under it, and everything else the station records in two columns. `dashboard_lead` and `dashboard_readings` decide what. |
+| `current` | The first of `observations_current` set large, the day's range under it, and the rest of the list in two columns. |
 | `forecast` | Seven days ahead, and the hours of whichever day is chosen. See [The forecast](#the-forecast) below. |
 | `sun` | The sun's arc through the day, with the band behind it covering the year between the solstices. Daylight, how much that has changed since yesterday, the highest the sun reaches, when it is light enough to see by, and the distance. |
 | `moon` | The moon as NASA rendered it, one of 32 frames picked by age since the last new moon. Illumination, phase, age, rise and set, and the next full and new moon. |
@@ -82,8 +82,8 @@ Most of the section is shared with *Seasons* and documented in the reference
 under [_[DisplayOptions]_](../reference/skin-options/displayoptions.md):
 `plot_groups`, `periods`, `observations_current`, `observations_stats`,
 `observations_rss`, `obs_type_sum`, `obs_type_max`, `telemetry_plot_groups`,
-`sensor_connections`, `sensor_batteries`, `sensor_voltages`, `show_rss` and
-`show_reports`. Horizon reads them the same way.
+`sensor_connections`, `sensor_batteries` and `sensor_voltages`. Horizon reads
+them the same way.
 
 These are its own:
 
@@ -93,15 +93,11 @@ These are its own:
 | `sidebar_responsive` | Where they go when there is not: `bottom` or `top`. |
 | `main_panels` | Which panels fill the wide column, and in what order. Default is `history, hilo`: the charts, then the statistics table. |
 | `panels` | Which panels appear beside them, and in what order. Each name in either list is an `.inc` file in the skin directory, so a panel of your own is a file plus a name in one of them. |
-| `dashboard_lead` | The one reading set large at the top of the current conditions card. Defaults to the first entry in `observations_headline`. |
-| `dashboard_readings` | The rows underneath it, in order. Defaults to `observations_current`. Anything the station does not record is skipped, so the list may name more than you have. |
-| `observations_headline` | The types shown large at the top of the page. Three or four is about right on a phone. |
 | `refresh_interval` | How often the page re-fetches current conditions, in seconds. `0` turns it off. There is no point going below your archive interval, since nothing new appears until the next record is archived. |
-| `show_image_links` | Offer the server-rendered PNG next to each chart. Set it to `False` if you drop the ImageGenerator from `[Generators]`, or the links point at files nobody writes. |
 | `planets` | Which planets the planets panel lists, and in what order. Any body `pyephem` knows can be named. Default is `mercury, venus, mars, jupiter, saturn`. |
 | `custom_css` | A stylesheet of your own. See below. |
 | `custom_js` | A script of your own. See below. |
-| `lang_root` | For a rendering in a subdirectory: how it gets back to the top. See the language switcher in `skin.conf`. |
+| `lang_root` | For a rendering in a subdirectory: how it gets back to the top. See [More than one language](#more-than-one-language). |
 
 ## The forecast
 
@@ -112,7 +108,6 @@ Open-Meteo itself if there is not. Under `[DisplayOptions]`:
 [DisplayOptions]
     [[Forecast]]
         browser_fetch = true
-        file = false
         days = 7
         hours = 8
 ```
@@ -120,14 +115,8 @@ Open-Meteo itself if there is not. Under `[DisplayOptions]`:
 | Option | What it does |
 |---|---|
 | `browser_fetch` | Whether the page may ask Open-Meteo directly. Default is `True`. |
-| `file` | Whether something on this station writes `data/forecast.json`. Default is `False`. |
 | `days` | How many days to show. Default is `7`. |
 | `hours` | How many of the hours ahead, shown every third one. Default is `8`. |
-
-The two settings answer different questions. `file` says whether the page should
-look for a file at all: where nothing writes one, asking for it puts a 404 in
-every reader's console. `browser_fetch` says whether the page may go out to
-Open-Meteo when there is no file.
 
 Where the page fetches the forecast itself, each reader's browser talks to
 Open-Meteo, and their address reaches a third party. On a station published to
@@ -157,29 +146,89 @@ The value is the name of a file in `icons/`, without the extension. A type with
 no entry simply has no symbol. The symbols are from the IBM Carbon set, under
 the Apache 2.0 licence; see `icons/LICENSE-Carbon.txt`.
 
-## Changing the colours and fonts
+## More than one language
 
-Under `[DisplayOptions]`:
+WeeWX renders a page in one language. To offer two, run the report twice in
+`weewx.conf`, each with its own `lang` and `HTML_ROOT`:
+
+``` ini
+[StdReport]
+    [[HorizonReport]]
+        skin = Horizon
+        lang = de
+    [[HorizonReportEN]]
+        skin = Horizon
+        lang = en
+        HTML_ROOT = public_html/en
+        [[[DisplayOptions]]]
+            lang_root = ..
+```
+
+`lang_root` is how the rendering in the subdirectory finds its way back to the
+top. Then list the renderings under `[[Languages]]` in `skin.conf`, each with
+the path from the top directory to it:
 
 ``` ini
 [DisplayOptions]
-    [[Theme]]
-        [[[Light]]]
-            accent  = "#7a4b2c"
-            bg      = "#faf6f2"
-            radius  = 2px
-            font    = Georgia, "Times New Roman", serif
-        [[[Dark]]]
-            accent  = "#d8a77a"
-            bg      = "#1a1512"
+    [[Languages]]
+        [[[de]]]
+            label = Deutsch
+            path = .
+        [[[en]]]
+            label = English
+            path = en
 ```
 
-There is no fixed list of names. Whatever you write becomes `--name`, so
-anything `horizon.css` defines can be replaced, and nothing else is emitted.
-`[[[Light]]]` applies everywhere; `[[[Dark]]]` overrides it where the reader's
-browser or the theme toggle asks for a dark page.
+The switcher appears in the masthead as soon as there is more than one entry.
+
+## The two looks
+
+As it ships, the skin is painted by `horizon.css` and then by `flavor-deck.css`
+on top of it: flat and dense, one sans throughout, an edge around every block,
+the navigation in a column. `flavor-deck.js` is what moves the navigation and
+puts the station's particulars in a footer. Both are named in `skin.conf`:
+
+``` ini
+[DisplayOptions]
+    custom_css = flavor-deck.css
+    custom_js  = flavor-deck.js
+```
+
+Take those two lines out and `horizon.css` stands alone: the navigation in a
+row across the top, and the panels in a column beside the charts.
+
+## Changing the colours and fonts
+
+Add a stylesheet of your own after the one the skin ships with:
+
+``` ini
+[DisplayOptions]
+    custom_css = flavor-deck.css, my-station.css
+```
+
+Put the file in the skin directory and add it to `copy_once` in
+`[CopyGenerator]`, or it will not be installed. It is loaded last, so whatever
+it sets wins. The look is a set of CSS custom properties, and a colour changes
+by setting one:
+
+``` css
+:root {
+  --accent: #7a4b2c;
+  --bg: #faf6f2;
+  --radius: 2px;
+  --font: Georgia, "Times New Roman", serif;
+}
+
+/* Where the reader's browser asks for a dark page, or the theme toggle does. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --accent: #d8a77a; --bg: #1a1512; }
+}
+:root[data-theme="dark"] { --accent: #d8a77a; --bg: #1a1512; }
+```
 
 ## The names you can set
+
+Each of these is `--name` in the stylesheet.
 
 | Name | What it colours |
 |---|---|
@@ -196,44 +245,15 @@ browser or the theme toggle asks for a dark page.
 The chart *line* colours are not here. They come from `chart_line_colors` in
 `[JSONGenerator]`, beside the plot they belong to.
 
-## Going beyond the names
+## A script of your own
 
-Name a stylesheet of your own:
-
-``` ini
-[DisplayOptions]
-    custom_css = my-station.css
-```
-
-It is loaded after `horizon.css` and after `[[Theme]]`, so it wins over both.
-Put the file in the skin directory and add it to `copy_once` in
-`[CopyGenerator]`, or it will not be installed.
-
-`custom_js` works the same way for a script:
+`custom_js` works the same way:
 
 ``` ini
 [DisplayOptions]
-    custom_js = my-station.js
+    custom_js = flavor-deck.js, my-station.js
 ```
 
 It is deferred, so it runs after the skin's own script has wired up the page.
 Use it for the things a stylesheet cannot do, such as moving a part of the page
 somewhere else.
-
-## A second look
-
-The skin ships with one. `flavor-deck.css` and `flavor-deck.js` give it a
-flatter, denser appearance: one sans throughout, an edge around every block, and
-the navigation in a column rather than a row.
-
-``` ini
-[DisplayOptions]
-    custom_css = flavor-deck.css
-    custom_js  = flavor-deck.js
-```
-
-Both files are already in `copy_once`. The stylesheet does the paint. The script
-moves the navigation into a column and puts the station's particulars in a
-footer. On a narrow screen that column joins the menu the skin already has.
-
-Without those two lines the skin looks as it did.

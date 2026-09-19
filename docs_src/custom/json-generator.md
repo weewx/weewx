@@ -52,11 +52,10 @@ colors, anti-aliasing, marker shapes, label formats: these all describe how to
 draw an image on a canvas of a given size, and a browser is not doing that.
 
 So if you set `chart_background_color` and the charts stay as they were, this
-is why. Their colors come from the page, through `[[Theme]]` under
-`[DisplayOptions]`.
+is why. Their colors come from the page's stylesheet.
 
-The full split is listed in the skin's own `skin.conf`, with the plot
-definitions in `[JSONGenerator]`.
+The full list is in the reference, under
+[_[JSONGenerator]_](../reference/skin-options/jsongenerator.md).
 
 ## Using a different set of plots
 

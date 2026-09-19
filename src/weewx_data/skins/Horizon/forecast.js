@@ -72,10 +72,8 @@
   /* -------------------------------------------------------------- fetching */
 
   function fromFile() {
-    /* Only where something writes the file. Asking for it regardless puts a 404
-       in every reader's console on every station that has no such script, which
-       is most of them. */
-    if (!OPTS.file) return Promise.resolve(null);
+    /* Whatever the station writes wins over what the page could fetch. A station
+       that writes nothing answers 404, and that is the same as no forecast. */
     return fetch((CFG.dataDir || 'data') + '/forecast.json', { cache: 'no-cache' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; });
