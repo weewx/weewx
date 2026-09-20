@@ -24,9 +24,8 @@
 %define platform suse
 # leap 16 ships python 3.13. the modules are packaged as python313-*, but each
 # provides the python3-* name, so these resolve.
-# ephem is not packaged for leap 16. weewx falls back to its own almanac
-# calculations without it.
-%define deps python3, python3-importlib_resources, python3-configobj, python3-Cheetah3, python3-Pillow, python3-pyserial, python3-usb
+# ephem is not available for leap 16
+%define deps python3, python3-importlib_resources, python3-configobj, python3-Cheetah3, python3-Pillow, python3-pyserial, python3-pyusb
 %define python python3
 %endif
 
