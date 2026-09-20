@@ -566,23 +566,28 @@ release-yum-repo:
 SUSE_DIR=/var/tmp/repo-suse
 SUSE_REPO=$(SUSE_DIR)/weewx
 suse-repo:
-	mkdir -p $(SUSE_REPO)/{suse12,suse15}/RPMS
+	mkdir -p $(SUSE_REPO)/{suse12,suse15,suse16}/RPMS
 	cp -p pkg/index-suse.html $(SUSE_DIR)/index.html
 	cp -p pkg/weewx-suse.repo $(SUSE_DIR)/weewx.repo
 	cp -p pkg/weewx-suse12.repo $(SUSE_DIR)
 	cp -p pkg/weewx-suse15.repo $(SUSE_DIR)
+	cp -p pkg/weewx-suse16.repo $(SUSE_DIR)
 
 pull-suse-repo:
 	make pull-repo REPO_NAME=suse REPO_DIR=$(SUSE_DIR)
 
 update-suse-repo:
-	mkdir -p $(SUSE_REPO)/suse15/RPMS
-	cp -p $(DSTDIR)/weewx-$(RPMVER).suse15.$(RPMARCH).rpm $(SUSE_REPO)/suse15/RPMS
-	createrepo $(SUSE_REPO)/suse15
+	for os in suse15 suse16; do \
+  mkdir -p $(SUSE_REPO)/suse15/RPMS; \
+  cp -p $(DSTDIR)/weewx-$(RPMVER).$$os.$(RPMARCH).rpm $(SUSE_REPO)/$$os/RPMS; \
+  createrepo $(SUSE_REPO)/$$os; \
+done
 ifneq ("$(GPG_KEYID)","")
-	gpg --export --armor > $(SUSE_REPO)/suse15/repodata/repomd.xml.key
-	gpg -abs -o $(SUSE_REPO)/suse15/repodata/repomd.xml.asc.new $(SUSE_REPO)/suse15/repodata/repomd.xml
-	mv $(SUSE_REPO)/suse15/repodata/repomd.xml.asc.new $(SUSE_REPO)/suse15/repodata/repomd.xml.asc
+	for os in suse15 suse16; do \
+  gpg --export --armor > $(SUSE_REPO)/$$os/repodata/repomd.xml.key; \
+  gpg -abs -o $(SUSE_REPO)/$$os/repodata/repomd.xml.asc.new $(SUSE_REPO)/$$os/repodata/repomd.xml; \
+  mv $(SUSE_REPO)/$$os/repodata/repomd.xml.asc.new $(SUSE_REPO)/$$os/repodata/repomd.xml.asc; \
+done
 endif
 
 push-suse-repo:
@@ -756,6 +761,7 @@ suse-repo-via-vagrant:
 	make vagrant-sync-gpg VM_GUEST=$(SUSE_VM)
 	make vagrant-sync-src VM_GUEST=$(SUSE_VM)
 	make vagrant-push-pkg VM_GUEST=$(SUSE_VM) VM_PKG=$(SUSE15_PKG)
+	make vagrant-push-pkg VM_GUEST=$(SUSE_VM) VM_PKG=$(SUSE16_PKG)
 	make vagrant-push-repo VM_GUEST=$(SUSE_VM) REPO_DIR=$(SUSE_DIR)
 	make vagrant-update-repo VM_GUEST=$(SUSE_VM) VM_REPO_TGT=update-suse-repo GPG_KEYID=$(GPG_KEYID)
 	make vagrant-pull-repo VM_GUEST=$(SUSE_VM) REPO_DIR=$(SUSE_DIR)
