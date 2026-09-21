@@ -28,6 +28,12 @@ WEEWX_HTMLDIR="${WEEWX_HTMLDIR:-/var/www/html/weewx}"
 WEEWX_USERDIR=/etc/weewx/bin/user
 WEEWX_INSTANCES="${WEEWX_INSTANCES:-weewx}"
 
+# get the version of the package being installed, without the debian revisions
+get_new_pkg_version() {
+    v=$(dpkg-query -W -f='${Version}' "$DPKG_MAINTSCRIPT_PACKAGE" | sed -e 's/-.*//')
+    echo $v
+}
+
 # insert the driver and stanza into the configuration file
 insert_driver() {
     if [ ! -f $cfgfile ]; then
@@ -219,26 +225,20 @@ install_weewxconf() {
 #   weewx.conf-old-new   - old config upgraded to this version
 #
 merge_weewxconf() {
-    if [ ! -f $cfgfile ]; then
-        return
-    fi
-
+    OLDVER=$1
+    NEWVER=$2
     if [ -f $cfgfile ]; then
-        NEWVER=$($cfgapp --version | cut -d' ' -f2)
-        OLDVER=$(get_conf_version $cfgfile)
-        if dpkg --compare-versions $OLDVER lt $NEWVER; then
-            # this is an old config, so create a maintainer's version
-            if [ -f $cfgfile-$NEWVER ]; then
-	        MNT=$OLDVER-$NEWVER
-                echo "Creating maintainer config file as $cfgfile-$MNT"
-                cp -p $cfgfile $cfgfile-$MNT
-                $cfgapp station upgrade --config=$cfgfile-$MNT --dist-config=$cfgfile-$NEWVER --what=config --no-backup --yes
-            fi
+        # create a maintainer's version from the existing config file
+        if [ -f $cfgfile-$NEWVER ]; then
+	    MNT=$OLDVER-$NEWVER
+            echo "Creating maintainer config file as $cfgfile-$MNT"
+            cp -p $cfgfile $cfgfile-$MNT
+            $cfgapp station upgrade --config=$cfgfile-$MNT --dist-config=$cfgfile-$NEWVER --what=config --no-backup --yes
         else
-            # this is a new config, so just insert debconf values into it
-            echo "Using debconf configuration values from previous install"
-            install_weewxconf
+            echo "Maintainer file skipped, no new config $cfgfile-$NEWVER"
         fi
+    else
+        echo "Maintainer file skipped, no config file $cfgfile"
     fi
 }
 
@@ -249,16 +249,6 @@ precompile() {
         echo "Pre-compile failed!"
         echo "$rc"
     fi
-}
-
-# get the version number from the specified file, without the debian revisions
-get_conf_version() {
-    v=$(grep '^version.*=' $1 | sed -e 's/\s*version\s*=\s*//' | sed -e 's/-.*//')
-    if [ "$v" = "" ]; then
-        # someone might have messed with the version string
-        v="xxx"
-    fi
-    echo $v
 }
 
 set_permissions() {
@@ -563,8 +553,10 @@ case "$1" in
         setup_bash_completion
 
         if [ "$2" != "" ]; then
+            OLDVER=$2
+            NEWVER=$(get_new_pkg_version)
             # this is an upgrade so create a maintainers version by merging
-            merge_weewxconf
+            merge_weewxconf $OLDVER $NEWVER
             # migrate any extensions from V4 location to V5
             migrate_extensions
 	    # remove any previous init configuration that might interfere
