@@ -220,7 +220,7 @@ fi
 %post
 
 get_old_pkg_version() {
-    v=$(rpm -q --queryformat '%{VERSION}' %{name} | sed -e 's/-.*//')
+    v=$(rpm -q --qf "%%{VERSION}\n" %{name} | grep -v "%{version}" | head -n 1)
     echo $v
 }
 
