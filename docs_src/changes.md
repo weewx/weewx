@@ -5,8 +5,8 @@ WeeWX change history
 
 `weectl extension uninstall` no longer removes a configuration section that is
 still in use. A section was pruned as soon as it had no subsections left, so
-uninstalling any driver extension took all of `[Station]` with it, including the
-location and the coordinates. 
+uninstalling any driver extension took all of `[Station]` with it, including
+the location and the coordinates. 
 Fixes [Issue #1131](https://github.com/weewx/weewx/issues/1131). 
 [PR #1132](https://github.com/weewx/weewx/pull/1132).
 
@@ -34,12 +34,17 @@ Removed the APRS "messaging-capable" packet flag from `restx.py`.
 
 Fixed problem where RESTful services would fail to start if both options
 `rtfreq` and `archive_post` were set in `[[Wunderground]]`. Also fixed problem
-where the Rapidfire mode would use the archive endpoint even if `server_url` was
-set.  [PR #1145](https://github.com/weewx/weewx/pull/1145). Thanks to user
+where the Rapidfire mode would use the archive endpoint even if `server_url`
+was set.  [PR #1145](https://github.com/weewx/weewx/pull/1145). Thanks to user
 Robert!
 
 Added a bash completion script for `weectl`, and a script to install it.
 [PR #1110](https://github.com/weewx/weewx/pull/1110), by `evilbunny2008`.
+
+Fixed the version check implementation for generating maintainer version of
+the config file in debian, redhat, and suse packages.
+[PR #944](https://github.com/weewx/weewx/issues/944)
+
 
 ### 5.5.0 6-Aug-2026
 
