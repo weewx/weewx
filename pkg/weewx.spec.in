@@ -24,9 +24,8 @@
 %define platform suse
 # leap 16 ships python 3.13. the modules are packaged as python313-*, but each
 # provides the python3-* name, so these resolve.
-# ephem is not packaged for leap 16. weewx falls back to its own almanac
-# calculations without it.
-%define deps python3, python3-importlib_resources, python3-configobj, python3-Cheetah3, python3-Pillow, python3-pyserial, python3-usb
+# ephem is not available for leap 16
+%define deps python3, python3-importlib_resources, python3-configobj, python3-Cheetah3, python3-Pillow, python3-pyserial, python3-pyusb
 %define python python3
 %endif
 
@@ -220,6 +219,11 @@ fi
 
 %post
 
+get_old_pkg_version() {
+    v=$(rpm -q --qf "%%{VERSION}\n" %{name} | grep -v "%{version}" | head -n 1)
+    echo $v
+}
+
 # create a sane configuration file with simulator as the station type
 install_weewxconf() {
     %{cfgapp} station reconfigure --config=%{cfg_file} --driver=weewx.drivers.simulator --no-prompt --no-backup > /dev/null
@@ -233,14 +237,19 @@ install_weewxconf() {
 #   weewx.conf-old-new  - user's conf upgraded to this weewx version
 #   weewx.conf.rpmnew   - new conf from this rpm (created by rpm rules)
 merge_weewxconf() {
+    OLDVER=$1
+    NEWVER=$2
     if [ -f %{cfg_file}.prev ]; then
-        OLDVER=$(get_conf_version %{cfg_file}.prev)
-        if [ -f %{cfg_file}-%{weewx_version} ]; then
-            MNT=${OLDVER}-%{weewx_version}
+        if [ -f %{cfg_file}-$NEWVER ]; then
+            MNT=${OLDVER}-${NEWVER}
             echo Creating maintainer config file as %{cfg_file}-$MNT
             cp -p %{cfg_file}.prev %{cfg_file}-$MNT
-            %{cfgapp} station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg_file}-%{weewx_version} --what=config --no-backup --yes > /dev/null
+            %{cfgapp} station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg_file}-$NEWVER --what=config --no-backup --yes > /dev/null
+        else
+            echo Maintainer file skipped, no new config %{cfg_file}-$NEWVER
         fi
+    else
+        echo Maintainer file skipped, no config file %{cfg_file}.prev
     fi
 }
 
@@ -250,16 +259,6 @@ precompile() {
         echo "Pre-compile failed!"
         echo "$rc"
     fi
-}
-
-# get the version number from the specified file, without the rpm revisions
-get_conf_version() {
-    v=$(grep '^version.*=' $1 | sed -e 's/\s*version\s*=\s*//' | sed -e 's/-.*//')
-    if [ "$v" = "" ]; then
-        # someone might have messed with the version string
-        v="xxx"
-    fi
-    echo $v
 }
 
 set_permissions() {
@@ -474,8 +473,10 @@ if [ "$1" = "1" ]; then
     # this is a new install so create a config file
     install_weewxconf
 elif [ $1 -gt 1 ]; then
+    OLDVER=$(get_old_pkg_version)
+    NEWVER=%{weewx_version}
     # this is an upgrade so create a maintainers version by merging the config
-    merge_weewxconf
+    merge_weewxconf $OLDVER $NEWVER
     # migrate any extensions from V4 location to V5
     migrate_extensions
     # remove any previous init configuration that might interfere
