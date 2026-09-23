@@ -58,12 +58,7 @@ def main():
     # Import the "cmd" module for each subcommand, then add its individual subparser.
     for subcommand in SUBCOMMANDS:
         module = importlib.import_module(f'weectllib.{subcommand}_cmd')
-        try:
-            module.add_subparser(subparsers)
-        except TypeError:
-            # deal with subparsers that are not backward-compatible with older
-            # versions of python, specifically the 'required' key.
-            pass
+        module.add_subparser(subparsers)
 
     # Parse what we can. This gives us access to the namespace.
     namespace, extra_args = parser.parse_known_args()

@@ -1,6 +1,15 @@
 WeeWX change history
 --------------------
 
+### 5.5.2 23-Sep-2026
+
+Fixed the version check implementation for generating maintainer version of
+the config file in debian, redhat, and suse packages. Fixes 
+[Issue #944](https://github.com/weewx/weewx/issues/944)
+
+Fixed problem that prevented `weectl` from running under Python 3.6.
+
+
 ### 5.5.1 19-Sep-2026
 
 `weectl extension uninstall` no longer removes a configuration section that is
@@ -40,10 +49,6 @@ Robert!
 
 Added a bash completion script for `weectl`, and a script to install it.
 [PR #1110](https://github.com/weewx/weewx/pull/1110), by `evilbunny2008`.
-
-Fixed the version check implementation for generating maintainer version of
-the config file in debian, redhat, and suse packages.
-[PR #944](https://github.com/weewx/weewx/issues/944)
 
 
 ### 5.5.0 6-Aug-2026
