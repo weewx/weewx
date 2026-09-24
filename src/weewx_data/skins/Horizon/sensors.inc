@@ -9,7 +9,8 @@
 #set $batteries = $to_list($DisplayOptions.get('sensor_batteries', []))
 #set $voltages = $to_list($DisplayOptions.get('sensor_voltages', []))
 
-## Only build the panel if at least one of these fields actually carries data.
+## The panel appears only if at least one type in 'sensor_connections',
+## 'sensor_batteries' or 'sensor_voltages' has data today.
 #set $any_sensor = False
 #for $x in $connections + $batteries + $voltages
   #if $getVar('day.%s.has_data' % $x, False)

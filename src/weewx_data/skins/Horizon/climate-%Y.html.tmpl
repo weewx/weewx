@@ -3,8 +3,11 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
-## The climate page of the year in progress, written on every report cycle. The
-## panels are in climate.inc, which climate-%Y.html.tmpl uses for each year.
+## The climate page of one year, with the panels from climate.inc. WeeWX writes the
+## page on every report cycle while its year is running, and for the last time when
+## the year has ended. On this page ('$page' is 'climate_year') the includes
+## therefore leave out what would go stale: the time of update, the station's
+## particulars in the footer, the live update and the year picker.
 #set global $climate_year = $year.dateTime.format("%Y")
 #set global $page_title = '{0} {1}'.format($gettext("Climate"), $climate_year)
 #set global $page_units = True

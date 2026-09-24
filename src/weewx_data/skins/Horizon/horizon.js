@@ -2,6 +2,14 @@
  * Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
  */
 
+/* horizon.js draws the charts of the history panel, switches the time span of the
+   charts and of the current conditions, converts units, runs the live update, and
+   handles the menu, theme and back-to-top buttons. The charts are drawn from the
+   JSON files that the JSON generator writes (see "The JSON generator" in the
+   Customization Guide): the archive files, and the plot files, one for each plot and
+   time span, which the JSON generator writes only when `periods` in [JSONGenerator]
+   is true. */
+
 (function () {
   'use strict';
 
@@ -11,8 +19,28 @@
 
   /* ------------------------------------------------------------- storage */
 
+  /* remember() and recall() keep the reader's choice of theme, units and time span
+     in localStorage. Nothing the page needs in order to draw itself is kept there.
+     If storage fails, the page forgets the choice and the caller's default wins.
+
+     The Web Storage API reports failure by throwing, and both helpers catch every
+     exception on purpose. Each one is a normal condition in some browser:
+
+       SecurityError       The user blocks site data, or the page has no origin
+                           (e.g., opened as file://). Merely reading the
+                           `localStorage` property throws, so getItem() fails as
+                           well as setItem().
+       QuotaExceededError  The quota is used up, or the browser sets it to zero on
+                           purpose, as some private modes do.
+       TypeError           The embedding context has removed `localStorage`, so it
+                           is undefined.
+
+     JavaScript cannot catch by type. Rethrowing everything that is not a
+     DOMException would rethrow the TypeError and stop this script. A preference
+     that cannot be saved would then cost the page its charts. */
+
   function remember(key, value) {
-    try { localStorage.setItem(STORE + key, value); } catch (e) { /* private mode */ }
+    try { localStorage.setItem(STORE + key, value); } catch (e) { /* see above */ }
   }
 
   function recall(key, fallback) {
@@ -37,8 +65,8 @@
       axis: s.getPropertyValue('--chart-axis').trim() || '#8397a7',
       night: s.getPropertyValue('--chart-night').trim() || '#eaeef3',
       ink: s.getPropertyValue('--ink').trim() || '#16222e',
-      /* The tooltip is a panel over the page, so it takes the page's own panel
-         colours. Hard-coded white here is a white box on a dark page. */
+      /* The tooltip takes its background and border from the stylesheet, so that
+         the tooltip is not a white box in the dark theme. */
       surface: s.getPropertyValue('--surface').trim() || '#ffffff',
       border: s.getPropertyValue('--border').trim()
               || s.getPropertyValue('--chart-grid').trim() || '#e3eaf1',
@@ -46,44 +74,66 @@
     };
   }
 
-  /* The menu the masthead controls fold into on a phone. The stylesheet decides
-     whether there is a button at all; this only opens and closes it. */
+  /* ------------------------------------------------------------ page shell */
+
+  /* The menu button opens the navigation over the page, as a menu, and closes it
+     again. horizon.css shows the button only at 60rem and narrower, so this
+     function does not check the width. */
   function setupNavToggle() {
     var button = document.getElementById('nav-toggle');
-    var tools = document.getElementById('masthead-tools');
-    if (!button || !tools) return;
+    var nav = document.getElementById('site-nav');
+    if (!button || !nav) return;
 
+    var isOpen = function () { return nav.dataset.open !== undefined; };
     var close = function () {
-      delete tools.dataset.open;
+      delete nav.dataset.open;
       button.setAttribute('aria-expanded', 'false');
     };
 
-    button.addEventListener('click', function (e) {
-      e.stopPropagation();
-      if (tools.dataset.open === undefined) {
-        tools.dataset.open = '';
-        button.setAttribute('aria-expanded', 'true');
-      } else {
+    button.addEventListener('click', function () {
+      if (isOpen()) {
         close();
+      } else {
+        nav.dataset.open = '';
+        button.setAttribute('aria-expanded', 'true');
+        /* horizon.css limits the menu's height by --menu-top (see .site-nav). */
+        nav.style.setProperty('--menu-top', Math.round(nav.getBoundingClientRect().top) + 'px');
       }
     });
 
-    /* A tap anywhere else, or Escape, puts it away. Not a tap inside it: choosing a
-       unit there should leave it open to choose something else. */
+    /* A click outside the menu, or Escape, closes the menu. A click inside does
+       not, so that the reader can choose a unit and then a language. */
     document.addEventListener('click', function (e) {
-      if (tools.dataset.open !== undefined && !tools.contains(e.target)) close();
+      if (isOpen() && !nav.contains(e.target) && !button.contains(e.target)) close();
     });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape' && tools.dataset.open !== undefined) {
+      if (e.key === 'Escape' && isOpen()) {
         close();
         button.focus();
       }
     });
 
-    /* Following a link leaves the page anyway, and leaving it open would have it
-       flash back into view on the way out. */
-    tools.addEventListener('click', function (e) {
-      if (e.target.closest('a')) close();
+    /* The menu also closes when the focus moves to an element outside the menu and
+       the button, e.g., with Tab past the last link, because the open menu would
+       cover that element. A focusout with no element receiving the focus
+       (relatedTarget null), as after a click on plain text, is left to the click
+       handler. */
+    var leaving = function (e) {
+      var to = e.relatedTarget;
+      if (isOpen() && to && !nav.contains(to) && !button.contains(to)) close();
+    };
+    nav.addEventListener('focusout', leaving);
+    button.addEventListener('focusout', leaving);
+
+    /* On the front page a time span link is a bare hash, so following the link
+       loads no page, and the menu would stay open over the charts. A click on any
+       link closes the menu and puts the focus back on the button, because the link
+       that had the focus is hidden with the menu. */
+    nav.addEventListener('click', function (e) {
+      if (isOpen() && e.target.closest('a')) {
+        close();
+        button.focus();
+      }
     });
   }
 
@@ -103,14 +153,12 @@
       remember('theme', next);
       syncLabel();
       redrawAll();
-      paintSpan();
     });
 
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function () {
       if (!document.documentElement.getAttribute('data-theme')) {
         syncLabel();
         redrawAll();
-        paintSpan();
       }
     });
 
@@ -122,9 +170,9 @@
     }
   }
 
-  /* The way back to the top of a long page. The stylesheet keeps the button out of
-     sight until this shows it, which is why it is safe to write it on every page:
-     without a script there is nothing to see and nothing to tab to. */
+  /* Shows the back-to-top button of top.inc, by setting `data-show`, while the
+     page is scrolled down. horizon.css hides the button until then, from the tab
+     order too, so without JavaScript the button is neither seen nor reached. */
   function setupToTop() {
     var button = document.getElementById('to-top');
     if (!button) return;
@@ -132,12 +180,12 @@
     var shown = false;
     var queued = false;
 
-    /* A scroll event fires far more often than the page can paint, and all this has
-       to decide is whether one attribute is set. One look per frame is enough. */
+    /* Scroll events fire more often than the browser paints, so check() runs at
+       most once per animation frame. */
     function check() {
       queued = false;
-      /* A screen of page behind the reader. Less than that and the button would be
-         offering a trip that a flick of the thumb already makes. */
+      /* The button appears once the page is scrolled by more than one viewport
+         height. A shorter way back up is as quick to scroll by hand. */
       var want = (window.pageYOffset || document.documentElement.scrollTop || 0)
                  > window.innerHeight;
       if (want === shown) return;
@@ -156,9 +204,17 @@
     button.addEventListener('click', function () {
       var still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       window.scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' });
+      /* At the top of the page the button hides itself, and the focus would fall to
+         <body>. The focus goes to the page's heading instead, so that the keyboard
+         and a screen reader continue from the top. */
+      var heading = document.querySelector('.masthead h1');
+      if (heading) {
+        heading.setAttribute('tabindex', '-1');
+        heading.focus({ preventScroll: true });
+      }
     });
 
-    /* A page opened at an anchor, or returned to, is already scrolled. */
+    /* A page opened at an anchor, or with the back button, starts scrolled. */
     check();
   }
 
@@ -173,7 +229,8 @@
     });
   }
 
-  /* Pick a sensible number of decimals from the spread of the data. */
+  /* Returns the number of decimals for a chart's axis labels, tooltip and data
+     table, from the spread of its readings. */
   function digitsFor(series) {
     var span = 0;
     series.forEach(function (s) {
@@ -197,15 +254,14 @@
     return d.toLocaleString(LOCALE, opts);
   }
 
-  /* One label for one tick on the x axis. A chart library's own date formatter
-     writes English
-     and a 12-hour clock. This one writes the reader's locale, and keeps the labels
-     short enough that they do not run into each other. */
+  /* Returns the label of one x axis tick. ECharts writes month names in English
+     whatever the page's language. fmtTick writes the names of months and days in
+     the page's language, and keeps the labels short enough not to overlap. */
   function fmtTick(ts, period, splits) {
     var d = new Date(ts * 1000);
-    /* Seconds between ticks, which is what the label has to suit. The name of the
-       period does not say it. A year view of a station three weeks old has every tick
-       inside one month, where twelve labels reading "Aug" say nothing. */
+    /* The form of the label depends on the seconds between ticks, not on the
+       time span: on the Year chart of a station three weeks old, all ticks fall in
+       one month, and every label would read "Aug". */
     var step = (splits && splits.length > 1) ? (splits[1] - splits[0]) : null;
     if (period === 'day') {
       return d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
@@ -215,9 +271,8 @@
         ? d.toLocaleDateString(LOCALE, { weekday: 'short' })
         : d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
     }
-    /* Ticks less than a day apart need a clock time on them, whatever the period is
-       called. A month or a year view of a station running for three days has all its
-       ticks inside those days. Without the time, every label reads the same. */
+    /* Ticks less than a day apart get a clock time, as on the Month chart of a
+       station three days old, where a date alone would repeat on every label. */
     if (step !== null && step < 86400) {
       return d.getHours() === 0 && d.getMinutes() === 0
         ? d.toLocaleDateString(LOCALE, { day: '2-digit', month: 'short' })
@@ -235,38 +290,39 @@
 
   /* ---------------------------------------------------------------- units */
 
-  /* The plot files hold readings already converted, into whichever unit the skin was
-     configured for. That is one unit, decided on the server, and a reader who thinks
-     in the other one is stuck with it.
+  /* WeeWX writes the JSON files in the report unit system. data/index.json also
+     carries a unit table, from which the browser converts any reading to the unit
+     system the reader chose, without fetching anything. The unit table, in part:
 
-     index.json carries what it takes to change that: the unit group each observation
-     belongs to, the unit each unit system uses for that group, and the factor and
-     offset between any two units. So the page can redraw the same readings in
-     Fahrenheit or in Celsius without fetching anything.
+       groups:  {"outTemp": "group_temperature", ...}
+       systems: {"METRIC": {"group_temperature": "degree_C", ...}, ...}
+       report:  {"group_temperature": "degree_F", ...}
+       convert: {"degree_F": {"degree_C": [0.5556, -17.7778]}, ...}
+       labels:  {"degree_C": "°C", ...}
+       formats: {"degree_C": "%.1f", ...}
 
-     Only the charts. The panels are rendered by the server, in the report's own unit,
-     and moving those would mean rebuilding WeeWX's formatting in JavaScript. So the
-     control sits on the history panel, next to the span it applies to, rather than in
-     the masthead where it would look like it governed the page. */
+     A conversion multiplies by the first number of a pair in 'convert' and adds the
+     second. */
 
-  /* Kept apart from the manifest, and not cleared with it. A new record empties the
-     manifest so that a plot added since is noticed, and the conversions would go with
-     it: the reader's choice of unit would fall back to the server's for as long as it
-     took the index to arrive again. The table itself changes only when the station is
-     reconfigured. */
+  /* `unitChoices` holds the unit table from data/index.json. `manifest` holds all of
+     data/index.json (see "plot files" below), and refreshCharts empties `manifest` on
+     each new archive record, so that data/index.json is read again. The unit table
+     is kept in its own variable, so that the readings stay in the chosen unit system
+     while data/index.json loads again. The unit table changes only when the
+     station's configuration changes. */
   var unitChoices = null;
 
   function unitTable() {
     return unitChoices;
   }
 
-  /* The unit this series should be shown in, or null to leave it as it came.
+  /* Returns the unit in which a reading of `obsType` in `fromUnit` is shown, or null
+     where the reading stays in `fromUnit`.
 
-     With no system chosen the report's own units apply. That matters for readings
-     the page fetches rather than renders: the forecast comes from Open-Meteo in
-     Celsius and km/h whatever the station is set to, and showing it in metric
-     beside a page of Fahrenheit is worse than either on its own. Everything the
-     server wrote is already in these units, so for those this converts nothing. */
+     Without a chosen unit system the target is the report unit system. A reading
+     that WeeWX wrote is then already in the target unit. The forecast, however,
+     arrives from Open-Meteo in degree_C and km_per_hour, and is converted to match
+     the rest of the page. */
   function targetUnit(obsType, fromUnit) {
     var table = unitTable();
     var system = recall('units', '');
@@ -281,20 +337,18 @@
     return wanted;
   }
 
-  /* Rewrite a plot's readings, axis and labels in the reader's chosen unit.
-
-     Done to a copy, never to what came off the wire: the cached file has to stay in
-     the unit it was written in, or switching back and forth would convert a converted
-     reading. */
+  /* Returns a copy of the plot data `meta` with its readings, y axis and unit label
+     in the unit system the reader chose. `meta` itself stays in the unit it was
+     written in. If `meta` were converted in place, the next unit change would
+     convert its readings a second time. */
   function inChosenUnit(meta) {
     var table = unitTable();
     if (!table || !meta || !meta.series || !meta.series.length) return shallow(meta);
 
     var to = targetUnit(meta.series[0].obs_type, meta.unit);
-    /* A copy even when there is nothing to convert. Returning the argument would make
-       entry.meta and entry.raw the same object, and the next conversion would write
-       its result into the file it was meant to convert from. Switching unit twice
-       would then convert an already converted reading. */
+    /* Return a copy even here: returning `meta` itself would make entry.meta and
+       entry.raw one object, and updateChart would then write converted data into
+       entry.raw. */
     if (!to) return shallow(meta);
     var steps = table.convert[meta.unit][to];
     var factor = steps[0], offset = steps[1];
@@ -306,9 +360,8 @@
     out.unit = to;
     out.unit_label = (table.labels && table.labels[to]) || '';
 
-    /* The axis moves with the readings. Its step is a distance, not a reading, so it
-       takes the factor and not the offset: 5 degrees Celsius of spacing is 9 degrees
-       Fahrenheit of spacing, not 41. */
+    /* The step of the y axis is a difference, so the step takes the factor but not
+       the offset: a step of 5 degree_C is 9 degree_F, not 41. */
     if (meta.yscale) {
       out.yscale = [apply(meta.yscale[0]), apply(meta.yscale[1]),
                     meta.yscale[2] * Math.abs(factor)];
@@ -320,12 +373,11 @@
       copy.unit = to;
       copy.unit_label = out.unit_label;
       copy.values = s.values.map(apply);
-      /* The extremes are readings on the same axis, so they take the offset too. */
+      /* `min` and `max` are readings, so they take the offset as well. */
       ['min', 'max'].forEach(function (k) {
         if (s[k]) copy[k] = s[k].map(apply);
       });
-      /* Wind arrows are drawn from these, and they are lengths, not readings: a
-         length of five degrees Celsius is nine of Fahrenheit, not forty-one. */
+      /* The wind vector components are lengths, so they take the factor alone. */
       ['vector_x', 'vector_y'].forEach(function (k) {
         if (s[k]) copy[k] = s[k].map(function (v) {
           return v === null ? null : v * factor;
@@ -336,8 +388,8 @@
     return out;
   }
 
-  /* A copy one level deep. Enough here: what gets replaced is always a whole property,
-     never something inside one. */
+  /* Returns a copy of `obj` one level deep. The callers replace whole properties of
+     the copy and change nothing inside one. */
   function shallow(obj) {
     if (!obj) return obj;
     var out = {};
@@ -345,9 +397,9 @@
     return out;
   }
 
-  /* How many decimals to write, taken from the format string the skin uses for that
-     unit: "%.1f" means one. Without it, a temperature converted to Celsius comes out
-     as 17.72222222222222. */
+  /* Returns the number of decimals the report writes for `unit`, from its format in
+     the unit table: "%.1f" gives 1. Without decimalsFor, 63.9 degree_F converted to
+     degree_C would be written as 17.72222222222222. */
   function decimalsFor(unit, fallback) {
     var table = unitTable();
     var fmt = table && table.formats && table.formats[unit];
@@ -355,8 +407,8 @@
     return m ? parseInt(m[1], 10) : (fallback === undefined ? 1 : fallback);
   }
 
-  /* One reading, in the unit the reader asked for. Returns the number as it should be
-     shown and the label to put beside it, or null where nothing has to change. */
+  /* Converts one reading to the unit system the reader chose. Returns {value, unit,
+     label}, or null where the reading stays as it is. */
   function convertReading(value, fromUnit, obsType) {
     if (value === null || value === undefined || isNaN(value)) return null;
     var to = targetUnit(obsType, fromUnit);
@@ -370,24 +422,25 @@
     };
   }
 
-  /* A label spaced the way the one it replaces was spaced. */
+  /* Returns the unit label `now`, with a space in front if the label `was` had one.
+     The skin writes some unit labels with a space in front and some without, and
+     the labels in the unit table have none, so a converted label copies the
+     spacing of the label it replaces. */
   function respace(was, now) {
     if (!now) return now;
     var lead = was && /^\s/.test(was) ? ' ' : '';
     return lead + now.replace(/^\s+/, '');
   }
 
-  /* Rewrite the readings the server put on the page.
-
-     Each of them carries the number as the database holds it and the unit that number
-     is in, so the page can show it in another unit without asking for it again. The
-     text stays as the server wrote it until a reader chooses otherwise, which is what
-     a reader without JavaScript sees, and what everyone sees first. */
+  /* Converts the readings WeeWX wrote into the page, within `root` or the whole
+     document, to the unit system the reader chose. Each reading carries its number
+     in `data-value` and its unit in `data-unit`. The text WeeWX wrote is kept in
+     `data-as-written`, and shown again when no unit system is chosen. */
   function applyUnitsToPanels(root) {
     var scope = root || document;
 
-    /* A column heading that names the unit for the column under it, and carries no
-       reading of its own. Only the label moves; there is no number here to convert. */
+    /* An element with `data-unit` but no `data-value`, such as a column heading,
+       has a unit label and no number. Converting 1 gives the target unit's label. */
     scope.querySelectorAll('[data-unit]:not([data-value])').forEach(function (el) {
       var label = el.querySelector('[data-unit-label]');
       if (!label) return;
@@ -401,9 +454,9 @@
     });
 
     scope.querySelectorAll('[data-unit][data-value]').forEach(function (el) {
-      /* 'data-obs' first: it names the observation type, while 'data-live' names the
-         field in current.json. They differ where one is derived from the other, as
-         'rainToday' is from 'rain', and only the type is in the unit table. */
+      /* `data-obs` names the observation type, `data-live` the field in
+         current.json. The two differ where a field is derived, e.g., 'rainToday' from
+         'rain', and only the observation type is in the unit table. */
       var obs = el.dataset.obs || el.dataset.live;
       var out = convertReading(parseFloat(el.dataset.value), el.dataset.unit, obs);
       var target = el.querySelector('[data-unit-value]') || el;
@@ -411,8 +464,8 @@
         || (el.parentNode && el.parentNode.querySelector('[data-unit-label]'));
 
       if (!out) {
-        /* Back to what the server wrote. Kept on the element for exactly this. */
-        if (el.dataset.asWritten !== undefined) setLive(target, el.dataset.asWritten);
+        /* No conversion: show the text WeeWX wrote. */
+        if (el.dataset.asWritten !== undefined) target.textContent = el.dataset.asWritten;
         if (label && label.dataset.asWritten !== undefined) {
           label.textContent = label.dataset.asWritten;
         }
@@ -424,39 +477,34 @@
       if (label && label.dataset.asWritten === undefined) {
         label.dataset.asWritten = label.textContent;
       }
-      setLive(target, fmtNumber(out.value, decimalsFor(out.unit)));
-      /* The skin writes some labels with a leading space and some without, and the
-         unit table strips them all. Put back whatever the server had used here, so a
-         converted reading is spaced like the one it replaced. */
+      target.textContent = fmtNumber(out.value, decimalsFor(out.unit));
       if (label) label.textContent = respace(label.dataset.asWritten, out.label);
     });
   }
 
-  /* What another script on the page needs in order to show its own numbers in the
-     reader's unit. Four functions and nothing else: the tables and the reader's
-     choice stay in here, so there is one of each on the page.
-
-     Used by climate.js, which draws from data the server put in the page rather than
-     from the plot files, and so cannot go through the chart path above. */
+  /* The unit conversion for climate.js and forecast.js, which draw readings that
+     are not in the JSON files. Only these four functions are shared, so that the
+     unit table and the reader's choice exist once on the page. */
   CFG.units = {
-    /* The unit this reading should be shown in, or null to leave it alone. */
+    /* target(obsType, fromUnit) returns the unit to show, or null. */
     target: targetUnit,
-    /* {value, unit, label} in that unit, or null where nothing has to change. */
+    /* convert(value, fromUnit, obsType) returns {value, unit, label}, or null. */
     convert: convertReading,
-    /* How many decimals the skin writes for that unit. */
+    /* decimals(unit, fallback) returns the number of decimals for `unit`. */
     decimals: decimalsFor,
-    /* Whether a reader has chosen a unit system at all. */
+    /* chosen() returns the unit system the reader chose, or ''. */
     chosen: function () { return recall('units', ''); }
   };
 
-  /* The colour this skin gives a temperature, so that the same reading is the same
-     colour wherever it appears. Celsius in, CSS colour out. */
+  /* tempColour(celsius) returns the CSS colour for a temperature in degree_C, from
+     the palette of the tiles (see WARM_AT). climate.js colours its heat map with
+     CFG.tempColour. */
   CFG.tempColour = function (celsius) {
     return tempColour(celsius, warmStops());
   };
 
-  /* Which systems this station's readings can be shown in. Empty where the station
-     publishes no unit table, which is any skin whose generator predates it. */
+  /* Returns the names of the unit systems in the unit table, e.g., ['US', 'METRIC',
+     'METRICWX'], or [] where data/index.json has no unit table. */
   function availableSystems() {
     var table = unitTable();
     if (!table || !table.systems) return [];
@@ -465,18 +513,14 @@
     });
   }
 
-  /* The control, in the masthead beside the language picker and the theme toggle.
-
-     It belongs there rather than on the history panel: it governs every reading on
-     the page, the card at the top as much as the charts. A control over the charts
-     alone would leave the card saying 63.9 while the chart under it said 17.7. */
+  /* Fills the unit picker in the navigation with the unit systems of the unit table,
+     and shows the picker where there are at least two. The unit picker converts
+     every reading on the page, the tiles as well as the charts. */
   function setupUnitPicker() {
     var picker = document.getElementById('unit-picker');
     if (!picker) return;
 
     var chosen = recall('units', '');
-    /* Convert whatever is already on the page, before the manifest arrives. The
-       readings carry their own units, so this does not wait for anything. */
     if (chosen) applyUnitsAll();
 
     loadManifest().then(function () {
@@ -489,7 +533,9 @@
           return '<option value="' + name + '"'
             + (name === recall('units', '') ? ' selected' : '') + '>' + name + '</option>';
         })).join('');
-      picker.hidden = false;
+      /* nav.inc writes the `.nav-field` hidden, label included, so the field is
+         shown and not the select alone. */
+      (picker.closest('.nav-field') || picker).hidden = false;
       if (recall('units', '')) applyUnitsAll();
     });
 
@@ -499,23 +545,23 @@
     });
   }
 
-  /* Everything on the page that carries a reading. Nothing is fetched: the numbers
-     are already here, and only the arithmetic on them changes. */
+  /* Converts every reading on the page to the unit system the reader chose,
+     without fetching anything: the panels, the charts, and, through the event
+     'horizon:units', whatever climate.js and forecast.js drew. */
   function applyUnitsAll() {
     applyUnitsToPanels();
     charts.forEach(function (entry) {
       if (entry.raw) updateChart(entry, entry.raw);
     });
-    /* For anything on the page that holds numbers of its own. */
     document.dispatchEvent(new CustomEvent('horizon:units'));
   }
 
   /* -------------------------------------------------------------- shaping */
 
-  /* The data table draws every series against one array of timestamps. The series
-     in a plot
-     usually already carry the same ones. Where they do not, build the union of all
-     their timestamps and put each series' values at the right positions in it. */
+  /* Returns the columns of the data table: [times, values of series 1, values of
+     series 2, ...]. The series of one plot usually share their times. Where the
+     times differ, `times` is the union of all of them, and a series has null at a
+     time it has no reading for. */
   function align(series) {
     var first = series[0].time;
     var same = series.every(function (s) {
@@ -544,27 +590,6 @@
     return out;
   }
 
-  /* The CSS keyword 'transparent' means rgba(0,0,0,0), which is black. A gradient
-     that fades a colour out through it therefore passes through grey on the way.
-     Return the same colour at zero alpha, which fades without changing hue. */
-  function fadeOut(color) {
-    var c = color.trim();
-    var m = c.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
-    if (m) {
-      var h = m[1];
-      if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
-      return 'rgba(' + parseInt(h.slice(0, 2), 16) + ','
-        + parseInt(h.slice(2, 4), 16) + ','
-        + parseInt(h.slice(4, 6), 16) + ',0)';
-    }
-    m = c.match(/^rgba?\(([^)]+)\)$/i);
-    if (m) {
-      var parts = m[1].split(',').slice(0, 3).map(function (x) { return x.trim(); });
-      return 'rgba(' + parts.join(',') + ',0)';
-    }
-    return 'rgba(0,0,0,0)';
-  }
-
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -573,26 +598,31 @@
 
   /* ----------------------------------------------------------- chart pieces */
 
-  /* Every chart on the page, as {plot, host, meta, raw, period}. Kept so that a new
-     record, a theme change or a unit change can be put into the instances that are
-     already drawn rather than building them again. */
+  /* Every chart drawn on the page, as {plot, host, meta, raw, period}: the ECharts
+     instance, its element, the plot data in the chosen unit system, the plot data
+     as fetched, and the time span. A new archive record, a theme change and a unit
+     change update these instances in place.
+
+     A chart card is the `section.chart-card` that showPeriod makes for each plot
+     group: the chart's title, the chart and its data table. */
   var charts = [];
 
-  /* The stretches of darkness, as areas the chart can shade.
+  /* Returns the nights of `meta.daynight` as bands for the chart's markArea. The
+     JSON generator writes `daynight` beside the readings, e.g.
 
-     Worked out from the sunrise and sunset times the generator wrote beside the
-     readings, so the shading follows the real day rather than a fixed hour. Read
-     fresh on every build: a record arriving at the turn of a day brings new times
-     with it. */
+       {"first": "night", "transitions": [1230824814, 1230856303, ...],
+        "twilight": [{"dir": "dawn", "from": 1230822770, "to": 1230824814}, ...]}
+
+     where `transitions` holds the times of sunrise and sunset, and `first` says
+     whether the chart starts at night. */
   function nightAreas(meta) {
     var dn = meta.daynight;
     if (!dn || !dn.transitions || !dn.transitions.length) return [];
 
-    /* How long the light takes to go, at this latitude and this time of year. The
-       generator writes the civil twilight either side of each sunrise and sunset, so
-       the shading can fade over the time the sky actually took rather than over a
-       fixed number of minutes. Half the fade sits either side of the boundary, which
-       is where the eye puts it. */
+    /* The bands fade in over the length of a dusk and out over the length of a
+       dawn, both from `twilight`, or over 1800 seconds where the file has no
+       twilight. The last dusk and dawn in `twilight` serve for every band, since
+       the length of a twilight changes only slowly over the year. */
     var fade = {};
     (dn.twilight || []).forEach(function (b) {
       if (b && b.from && b.to) fade[b.dir === 'dawn' ? 'dawn' : 'dusk'] = b.to - b.from;
@@ -604,14 +634,14 @@
     var night = dn.first === 'night';
     var from = meta.start;
     var push = function (a, b) {
-      /* Grown by half a twilight at each end, so the gradient below can reach full
-         darkness at the boundary itself. */
+      /* The band starts half of `dusk` before sunset and ends half of `dawn` after
+         sunrise, so that each fade is centred on sunset or sunrise. */
       var lo = a - dusk / 2, hi = b + dawn / 2;
       var span = hi - lo;
       if (span <= 0) return;
       out.push({
         span: span,
-        /* Where in the band the sky is fully dark. */
+        /* The band is fully dark between the fractions in1 and in2 of its width. */
         in1: Math.min(0.5, dusk / span),
         in2: Math.max(0.5, 1 - dawn / span),
         pair: [{ xAxis: lo * 1000 }, { xAxis: hi * 1000 }]
@@ -627,10 +657,11 @@
     return out;
   }
 
-  /* One shaded band, faded in and out across its own twilight. */
+  /* Returns the markArea entry for one band of nightAreas, in `colour` with a
+     gradient that fades in and out at the ends. */
   function nightBand(band, colour) {
-    /* The same colour at zero opacity, not a transparent black: fading to black
-       puts a grey cast in the middle of the gradient. */
+    /* The ends fade to `colour` at zero opacity. Fading to 'transparent', which is
+       black at zero opacity, would put a grey cast in the middle of each fade. */
     var clear = /^#[0-9a-f]{6}$/i.test(colour) ? colour + '00'
       : colour.replace(/^rgb\(/i, 'rgba(').replace(/\)$/, ', 0)');
     var stops = [
@@ -645,12 +676,11 @@
     return pair;
   }
 
-  /* How wide to draw a bar, in pixels.
-
-     A bar totalled over an hour sits on the grid every nth slot, and a chart library
-     sizes bars from the closest pair of points it can see. Left alone that makes an
-     hour's rain a hairline. The width is therefore worked out from the span the bar
-     stands for against the span on screen. */
+  /* Returns the width of a bar in pixels: the time the bar totals, as a share of
+     the time span, times the chart's width, less 15% for the gap between bars.
+     ECharts would size a bar from the smallest gap between two points. For hourly
+     totals on a finer interval, e.g., rain in an archive file, every bar would then
+     be as narrow as that finer interval. */
   function barWidthPx(meta, s, hostWidth) {
     var covered = s.aggregate_interval || meta.aggregate_interval;
     var span = (meta.stop || 0) - (meta.start || 0);
@@ -658,11 +688,10 @@
     return Math.max(1, Math.floor((covered / span) * hostWidth * 0.85));
   }
 
-  /* One wind arrow per reading, drawn from the two components.
-
-     A line through the speeds would say nothing about direction, which is the whole
-     point of the plot. Each arrow starts on the zero line and points where the wind
-     came from, scaled so the longest reaches the top of the axis. */
+  /* Returns the renderItem of an ECharts custom series, for the plot type 'vector'.
+     Each reading is a line from the zero line, as long as the wind speed on the y
+     axis, in the direction of `vector_x` and `vector_y` turned by `vector_rotate`
+     degrees. */
   function vectorRenderItem(s, meta) {
     var rotate = (s.vector_rotate || 0) * Math.PI / 180;
     return function (params, api) {
@@ -676,7 +705,6 @@
       var len = base[1] - tip[1];
       if (!len) return;
 
-      /* The components give the direction; the axis gives how long to draw it. */
       var mag = Math.sqrt(x * x + y * y) || 1;
       var ux = (x / mag), uy = (y / mag);
       var ca = Math.cos(rotate), sa = Math.sin(rotate);
@@ -693,9 +721,9 @@
 
   /* --------------------------------------------------------------- charting */
 
-  /* The gaps a person picks when dividing an axis by hand, whatever the decimal
-     point does. Four and a half is here for the eighths of a compass; 1.27, which is
-     what a twentieth of an inch of rain comes to in millimetres, is not. */
+  /* The first digits of a step between gridlines that reads as round, at any power
+     of ten. 4.5 is in the list for 45 degrees, an eighth of the compass. A step that
+     a conversion produces, e.g., 1.27 mm from 0.05 inch, is not round. */
   var ROUND_STEPS = [1, 1.5, 2, 2.5, 3, 4, 4.5, 5, 6, 7.5, 9];
 
   function isRound(v) {
@@ -705,14 +733,11 @@
     return ROUND_STEPS.some(function (m) { return Math.abs(lead - m) < 1e-9; });
   }
 
-  /* Whether the generator's own step still divides its own axis.
-
-     It always does as it leaves the generator. A conversion into the reader's unit
-     can break it: multiplying a fifth of an inch of mercury gives 6.77 hectopascals
-     against ends of 989.49 and 1030.13, and Fahrenheit adds an offset on top, so
-     ten degrees Celsius becomes a step of eighteen starting at minus four. Where the
-     ends are still whole multiples the step was meant, however unusual it looks:
-     forty-five degrees is an eighth of the compass. */
+  /* Returns whether both ends of the y axis, `lo` and `hi`, are whole multiples of
+     `step`. The `yscale` that the JSON generator works out passes, but after a
+     conversion with an offset it can fail: a step of 5 degree_C becomes 9 degree_F,
+     which ROUND_STEPS accepts, while ends of 0 and 40 degree_C become 32 and 104
+     degree_F, which are not multiples of 9. */
   function divides(lo, hi, step) {
     if (!step) return false;
     var whole = function (v) {
@@ -722,16 +747,17 @@
     return whole(lo) && whole(hi);
   }
 
-  /* The gap between gridlines. Null where there is nothing to scale, which leaves the
-     choice to the chart. */
+  /* Returns the step between the y axis gridlines of a chart `height` pixels high,
+     or null to let ECharts choose. The step of `meta.yscale` is kept where the step
+     is round, divides the axis, and leaves room between the labels. */
   function gridStep(meta, height) {
     if (!meta.yscale || !meta.yscale[2]) return null;
     var step = meta.yscale[2];
     var span = meta.yscale[1] - meta.yscale[0];
     if (!(span > 0)) return step;
 
-    /* A label is one line of twelve pixel type. Twenty-four leaves it as much air
-       again, which is enough to read a column of numbers down an axis. */
+    /* The labels are 12 px high, and a gridline every 24 px leaves as much space
+       again between them. */
     var room = Math.max(2, Math.floor((height - 40) / 24));
 
     if (span / step <= room && isRound(step)
@@ -739,7 +765,8 @@
       return step;
     }
 
-    /* Otherwise the smallest step a person would have picked that still fits. */
+    /* Otherwise take the smallest of 1, 2, 2.5 and 5 times a power of ten that
+       needs no more than `room` gridlines. */
     var least = span / room;
     var mag = Math.pow(10, Math.floor(Math.log(least) / Math.LN10));
     var nice = [1, 2, 2.5, 5, 10, 20].map(function (m) { return m * mag; })
@@ -747,28 +774,32 @@
     return nice || step;
   }
 
-  /* One end of the y axis, on a whole step. Widened, never narrowed: a reading must
-     not fall outside the axis drawn for it. */
+  /* Returns the lower or upper end of the y axis (`which` is 'min' or 'max'), moved
+     outward to a whole multiple of `step`, so that no reading falls outside the
+     axis. After a conversion the ends of `meta.yscale` are seldom multiples, e.g.
+     29.0 inHg is 982.05 mbar, and ECharts would put the gridlines at 982.05,
+     992.05, and so on. */
   function axisEnd(meta, step, which) {
     if (!meta.yscale) return null;
     var v = meta.yscale[which === 'min' ? 0 : 1];
     if (v === null || v === undefined || !step) return v === undefined ? null : v;
     var snapped = which === 'min' ? Math.floor(v / step) * step
                                   : Math.ceil(v / step) * step;
-    /* Away from floating point dust: 0.30000000000000004 is not a tick label. */
+    /* Remove floating-point error, e.g., 0.30000000000000004, from the label. */
     return Math.round(snapped * 1e6) / 1e6;
   }
 
   function chartHeight(width) {
-    /* The floor is what a chart in a narrow column gets, and it decides how many
-       gridlines fit: at 180 a pressure axis had room for four labels. */
+    /* A chart is 0.32 times as high as it is wide, and between 270 px and 360 px
+       high. A lower chart has room for too few gridlines, e.g., for four labels on
+       a pressure axis at 180 px. horizon.css gives `.chart-skeleton` the same
+       270 px. */
     return Math.max(270, Math.min(360, Math.round(width * 0.32)));
   }
 
-  /* Save the chart as a picture, with its title and the station's name on it.
-
-     A chart pasted into a forum post has to say what it is without the page around
-     it. */
+  /* Saves the chart as a PNG, with the chart title and the end of the time span
+     above the chart, so that the picture says what it shows when it is posted
+     elsewhere. */
   function exportChart(entry, card) {
     var url = entry.plot.getDataURL({
       pixelRatio: window.devicePixelRatio || 2,
@@ -812,10 +843,9 @@
     img.src = url;
   }
 
-  /* The options one chart is drawn from.
-
-     Rebuilt whenever the readings or the theme change, and handed to the instance
-     with setOption(), which keeps the reader's zoom and their place in the data. */
+  /* Returns the ECharts options for one chart. The options are built again on each
+     change of readings, unit or theme, and passed to setOption() of the existing
+     instance. */
   function chartOptions(meta, period, hostWidth) {
     var colors = themeColors();
     var family = getComputedStyle(document.body).fontFamily;
@@ -845,8 +875,9 @@
         animation: false,
         symbol: 'none',
         connectNulls: false,
-        /* A day of one minute readings is 1440 points, a year of hourly ones 8760.
-           Drawing every one of them says nothing a screen can show. */
+        /* A day of one-minute readings is 1440 points and a year of hourly ones
+           8760, more than a chart has pixels across. 'lttb' draws the points that
+           keep the shape of the line. */
         sampling: 'lttb',
         large: true
       };
@@ -859,8 +890,8 @@
         out.lineStyle = { color: s.color || colors.ink, width: 1.2 };
         out.itemStyle = { color: s.color || colors.ink };
       }
-      /* The shading goes on the first series that can carry it. Behind everything:
-         it is the backdrop, and drawn on top it hides the zero line and the grid. */
+      /* The night shading goes on the first series, at z -1: in front of the
+         gridlines the shading would hide them and the zero line. */
       if (i === 0 && areas.length) {
         var night = colors.night || 'rgba(0,0,0,0.05)';
         out.markArea = {
@@ -880,10 +911,9 @@
         trigger: 'axis',
         axisPointer: { type: 'line', lineStyle: { color: colors.axis, width: 1,
                                                   type: [4, 3] } },
-        /* Parked in a top corner rather than following the cursor: a box that moves
-           with the pointer covers the very readings being compared, and jumps from
-           one side to the other as it runs out of room. It sits opposite the hand,
-           so it never hides what is being pointed at. */
+        /* The tooltip stays in the top corner on the side away from the pointer.
+           A tooltip that follows the pointer covers the readings being compared,
+           and jumps to the other side at the edge of the chart. */
         position: function (point, params, dom, rect, size) {
           var wide = size.viewSize[0];
           var box = size.contentSize[0];
@@ -902,14 +932,14 @@
           var rows = params.map(function (p) {
             var s = meta.series[p.seriesIndex];
             var extra = '';
-            /* A wind reading is a speed and a bearing. The speed alone is half of it. */
+            /* A wind series carries `directions`, shown after the speed. */
             if (s && s.directions) {
               var d = s.directions[p.dataIndex];
               if (d !== null && d !== undefined) extra = ' · ' + fmtNumber(d, 0) + '°';
             }
-            /* Where the series carries the extremes of its slot, they belong here:
-               an average of an hour with a gust of twice it in the middle is not the
-               hour the reader thinks it was. */
+            /* Where the series carries `min` and `max`, the tooltip shows them after
+               the average: an hour with an average wind of 10 mph can have a
+               maximum of 20. */
             if (s && s.max) {
               var lo = s.min && s.min[p.dataIndex], hi = s.max[p.dataIndex];
               if (hi !== null && hi !== undefined) {
@@ -933,8 +963,8 @@
         axisTick: { lineStyle: { color: colors.grid } },
         splitLine: { show: true, lineStyle: { color: colors.grid } },
         axisLabel: {
-          /* The muted ink rather than the axis colour: an axis line may fade into
-             the background, but the numbers on it are meant to be read. */
+          /* --ink-muted rather than --chart-axis: the axis line may be faint, but
+             its labels must be readable. */
           color: colors.muted, fontFamily: family, fontSize: 12,
           formatter: function (value) { return fmtTick(value / 1000, period, null); },
           hideOverlap: true
@@ -942,21 +972,16 @@
       },
       yAxis: {
         type: 'value',
-        /* The unit, above the axis it belongs to. A column of numbers says nothing
-           on its own, and the reader can change what they mean. */
         name: meta.unit_label || '',
         nameLocation: 'end',
         nameGap: 12,
         nameTextStyle: {
           color: colors.muted, fontFamily: family, fontSize: 12, align: 'left'
         },
-        /* Worked out by the generator with the function the ImageGenerator uses.
-           Left to choose, a chart library gives axes that reach 400 degrees of wind
-           direction, or 5 m/s for wind that never passed 2.3.
-
-           The ends are widened to whole steps. In the reader's unit the generator's
-           are no longer round: 29.2 inches of mercury is 989.49 hectopascals, and an
-           axis starting there is labelled 989.5, 1009.5, 1029.5. */
+        /* `meta.yscale` comes from the JSON generator, which scales the y axis as
+           the ImageGenerator does. Left to itself, ECharts runs a wind direction
+           axis to 400 degrees, or a wind speed axis to 5 m/s for wind that never
+           passed 2.3. */
         min: axisEnd(meta, step, 'min'),
         max: axisEnd(meta, step, 'max'),
         interval: step,
@@ -981,23 +1006,23 @@
     return { plot: plot, meta: meta, host: host, period: period };
   }
 
-  /* The range label is written short or long depending on how much room there is.
-     Turning a phone sideways has to rewrite it, or the short form stays. */
+  /* unitLabel writes the date between the arrows (#range-label) in a short form
+     below 34rem and in a long form above. Crossing 34rem, e.g., by turning a phone,
+     calls showPeriod to write the date again. */
   window.matchMedia('(min-width: 34rem)').addEventListener('change', function () {
     if (currentPeriod) showPeriod(currentPeriod);
   });
 
   function redrawAll() {
-    /* The colours are read when the options are built, so a theme change means
-       building them again. Everything else about the chart stays as it is. */
+    /* chartOptions reads the colours from the stylesheet, so a theme change
+       builds the options again. */
     charts.forEach(function (c) {
       c.plot.setOption(chartOptions(c.meta, c.period, c.host.clientWidth || 600));
     });
   }
 
-  /* Resize a chart when the element holding it changes size. One observer watches
-     every chart, rather than one observer each. A bar's width is worked out in
-     pixels, so it has to be worked out again at the new width. */
+  /* One ResizeObserver for all charts. At a new width a chart gets a new height and
+     new series, because barWidthPx gives the width of a bar in pixels. */
   var resizeObserver = new ResizeObserver(function (entries) {
     entries.forEach(function (entry) {
       var c = charts.find(function (x) { return x.host === entry.target; });
@@ -1018,9 +1043,9 @@
       + '</tr>';
     var data = align(meta.series);
     var rows = [];
-    /* One row per reading. An aggregated plot has a few hundred readings at most.
-       Only a long span of raw readings runs past the limit, and the table says so
-       in its caption when it does. */
+    /* At most LIMIT rows. Above LIMIT readings the table shows every nth reading,
+       and a note above the table says so. Only a long time span of raw readings
+       has more than LIMIT. */
     var LIMIT = 1500;
     var total = data[0].length;
     var step = total > LIMIT ? Math.ceil(total / LIMIT) : 1;
@@ -1044,8 +1069,8 @@
   }
 
   function renderChart(card, raw, period) {
-    /* Convert here, and keep 'raw' on the entry below. Switching unit reruns the
-       conversion from the file as it was written, never from a converted copy. */
+    /* entry.raw keeps the plot data as fetched, so that a unit change converts
+       from entry.raw and not from converted data. */
     var meta = inChosenUnit(raw);
     var host = card.querySelector('.chart-host');
     var legend = card.querySelector('.chart-title');
@@ -1058,9 +1083,8 @@
       return;
     }
 
-    /* The card's title is also its legend: each series name in the colour of its
-       line. A separate legend would repeat those names on a second line, and on a
-       phone that line is one the chart could have had. */
+    /* The chart title is the legend: each series name in the colour of its line.
+       An ECharts legend would take a line of the chart's height on a phone. */
     legend.innerHTML = meta.series.map(function (s) {
       return '<span style="color:' + (s.color || 'currentColor') + '"><i></i>'
         + '<span class="series-name">' + escapeHtml(s.label) + '</span></span>';
@@ -1071,9 +1095,6 @@
     charts.push(entry);
     resizeObserver.observe(host);
 
-    /* Saving the chart. Where the skin also runs the ImageGenerator there is a
-       second button, linking to the file it wrote, because a file on the server has
-       a URL that can be pasted somewhere. */
     var actions = card.querySelector('.chart-actions');
     if (actions) {
       var save = document.createElement('button');
@@ -1082,21 +1103,6 @@
       save.textContent = CFG.text.saveImage || 'Save image';
       save.addEventListener('click', function () { exportChart(entry, card); });
       actions.appendChild(save);
-
-      /* Most stations run one skin, and this one does not draw PNGs unless asked.
-         So the link appears only where index.json says they are being written, or
-         where 'show_image_links' says so outright. */
-      var offerImage = CFG.hasImages === null || CFG.hasImages === undefined
-        ? !!(manifest && manifest.images)
-        : CFG.hasImages;
-      if (anchor === null && offerImage && meta.name) {
-        var link = document.createElement('a');
-        link.className = 'chart-action';
-        link.href = meta.name + '.png';
-        link.textContent = CFG.text.imageLink || 'PNG';
-        link.title = CFG.text.imageLinkTitle || 'Permanent link to the rendered image';
-        actions.appendChild(link);
-      }
     }
 
     if (details) {
@@ -1105,31 +1111,27 @@
     }
   }
 
-  /* Put a new record into a chart that is already on screen.
+  /* Updates a drawn chart with the plot data `raw`, after a new archive record or a
+     unit change. setOption() on the existing instance moves the x axis and adds the
+     new reading without clearing the chart. A new instance would draw the chart
+     from scratch, and the chart would flicker on every new archive record.
 
-     Rebuilding the chart instead would make a new instance, which clears the canvas,
-     drops the reader's zoom and their place in the data table, and shows an empty
-     plot for as long as the fetch takes. All of that once a minute. Handing the new
-     options to the instance leaves it alone: the x axis moves to the left by one
-     record and the new reading is drawn on the right.
-
-     Returns false where the shape of the plot has changed. The caller rebuilds those.
-     It happens when a series that has never had a reading gets its first one. */
+     Returns false where the number of series has changed, e.g., when a series gets
+     its first reading. The caller then draws the chart again. */
   function updateChart(entry, raw) {
     var plot = entry.plot;
     var fresh = inChosenUnit(raw);
     if (!fresh.series || fresh.series.length !== entry.meta.series.length) return false;
 
-    /* The options are built from entry.meta, so replacing its contents is what
-       carries the new sunrise times, unit label and axis range into the redraw. */
+    /* The new data is copied into entry.meta rather than replacing the object,
+       because renderTable reads `_period`, which buildChart set on entry.meta. */
     Object.keys(fresh).forEach(function (key) { entry.meta[key] = fresh[key]; });
     entry.raw = raw;
     plot.setOption(chartOptions(entry.meta, entry.period,
                                 entry.host.clientWidth || 600));
 
-    /* The table is built from the data, so it is rebuilt as well. A closed one is
-       marked instead of rebuilt, and built again when the reader opens it: rebuilding
-       eleven tables nobody is looking at, once a minute, is work for nothing. */
+    /* An open data table is built again now. A closed data table gets
+       `data-stale`, and is built when the reader opens it (see setupPeriods). */
     var card = entry.host.closest('.chart-card');
     var details = card && card.querySelector('.chart-data');
     if (details) {
@@ -1144,13 +1146,12 @@
     return true;
   }
 
-  /* Where one card's readings come from.
-
-     The archive answers every span, live or stepped back: it holds the same readings
-     on a grid chosen to suit the span, and today is its raw tier, written every
-     report. The period files are the fallback, and only where a skin still writes
-     them: asking for one that is turned off is a 404 per card, per reload, for
-     everyone who opens the page. */
+  /* Returns a promise of the plot data for one chart card, or of null. The archive
+     files serve every time span, including the live view, i.e., the time span that
+     ends at the newest archive record. The plot files are the fallback for the live
+     view, e.g., while the JSON generator is still building the archive files. Plot
+     files are requested only where data/index.json lists some: a request for a plot
+     file that is not written costs a 404 for each chart on each page load. */
   function chartSource(card) {
     return windowFromArchive(card.dataset.group, +card.dataset.from, +card.dataset.to)
       .then(function (meta) {
@@ -1160,22 +1161,20 @@
       });
   }
 
-  /* Bring every chart on screen up to the newest record.
-
-     A span in the past cannot have changed, so there is nothing to do for one. Only
-     the live view follows the clock. */
+  /* Updates the charts to the newest archive record. Only the live view changes;
+     a time span in the past stays as it is. */
   function refreshCharts() {
     if (anchor !== null) return;
     cache.clear();
-    /* The archive answers the live view too, so its files and the index naming them
-       are what has just gone stale. */
+    /* The live view is drawn from the archive files too, so their cache and
+       data/archive/index.json are read again as well. */
     archiveCache.clear();
     archiveIndex = null;
     manifest = null;
     indexRefetched = false;
 
-    /* The live window slides with the clock: at half past midnight "today" is not
-       the day it was when these cards were built. */
+    /* The live view ends at the newest archive record, so each chart card gets a
+       new start and end. */
     var win = currentWindow(currentPeriod);
 
     loadArchiveIndex().then(function () {
@@ -1187,7 +1186,7 @@
         chartSource(card).then(function (fresh) {
           if (!fresh || !fresh.series || !fresh.series.length) return;
           if (updateChart(entry, fresh)) return;
-          /* The plot has a series it did not have before. Draw the card again. */
+          /* The number of series changed: draw the chart card again. */
           resizeObserver.unobserve(entry.host);
           entry.plot.dispose();
           charts = charts.filter(function (c) { return c !== entry; });
@@ -1196,10 +1195,9 @@
       });
     });
 
-    /* Cards further down the page have no chart yet, and cards whose plot had no
-       readings were left empty. Both have to look again, because the file behind them
-       has changed. Those still waiting to be scrolled into view do so on their own,
-       out of the cache that was just emptied. */
+    /* A chart card that was fetched but had no readings to draw fetches again,
+       since the new archive record may bring some. A chart card not yet scrolled
+       into view fetches when the reader scrolls to it, from the emptied cache. */
     document.querySelectorAll('#charts .chart-card').forEach(function (card) {
       var drawn = charts.some(function (c) { return c.host === card.querySelector('.chart-host'); });
       if (!drawn && card.dataset.loaded) {
@@ -1220,58 +1218,63 @@
     });
   }
 
-  /* --------------------------------------------------------------- periods */
+  /* ------------------------------------------------------------ plot files */
 
+  /* `manifest` holds data/index.json: the lengths of the time spans (`spans`), the
+     unit table (`units`) and the list of plot files (`plots`). `cache` holds the
+     plot files fetched so far, by name. */
   var cache = new Map();
   var manifest = null;
 
-  /* ------------------------------------------------------- history archive */
+  /* --------------------------------------------------------- archive files */
 
-  /* The day, week, month and year files all end at the last reading, so none of them
-     reaches further back than a year. Spans before that come from the archive files
-     instead: one per plot group and calendar year, with readings evenly spaced in
-     time. Only the years a span touches are fetched, and each is kept after that. */
+  /* The archive files, in data/archive/, hold the readings of each plot group over
+     the whole archive, in three tiers (see MAX_POINTS). data/archive/index.json
+     lists the files that exist. A time span fetches only the files it touches, and
+     archiveCache keeps each file until refreshCharts empties the cache. */
 
   var archiveIndex = null;
-  var archiveCache = new Map();           // "group-year" -> the file's contents
+  var archiveCache = new Map();           // file name -> file contents
 
-  /* The end of the span on screen, as a timestamp. null means the live view, which is
-     the only one that follows the clock. Every other span is fixed to a moment, so a
-     link to one still shows the same days tomorrow. */
+  /* A timestamp inside the calendar unit on screen, i.e., the day, week, month or
+     year of the calendar that the charts show. null means the live view, which
+     moves with each new archive record. Any other time span stays fixed, so a link
+     to it shows the same days tomorrow. */
   var anchor = null;
 
-  /* How many seconds each span covers. Used for the live view alone, because the live
-     view slides: at half past midnight the reader wants last evening, not an empty
-     "today". Every span reached by the arrows is a whole calendar unit instead, such
-     as Tuesday, week 33, July or 2025, which is what "back" means to a reader.
+  /* The length of the live view of each time span, in seconds. The live view ends
+     at the newest archive record and reaches back this far, so that shortly after
+     midnight the Day chart still shows the evening before. A time span reached with
+     the arrows or the calendar is a calendar unit instead, e.g., Tuesday, week 33,
+     July or 2025.
 
-     These four are fallbacks. The real lengths arrive in index.json, which takes them
-     from 'time_length' in skin.conf, so that option reaches the chart and not only
-     the PNGs of a skin that draws them. */
+     These values are defaults. adoptSpans replaces them with the `time_length` of
+     [[day_images]], [[week_images]] and so on in skin.conf, which data/index.json
+     carries as `spans`. */
   var PERIOD_SECONDS = { day: 27 * 3600, week: 7 * 86400, month: 30 * 86400, year: 365 * 86400 };
 
   function adoptSpans(manifest) {
     if (!manifest || !manifest.spans) return;
     Object.keys(manifest.spans).forEach(function (group) {
-      /* index.json uses the skin.conf section name, 'day_images'. The page uses the
-         period name, 'day'. */
+      /* data/index.json names a time span by its section in skin.conf, e.g.
+         'day_images', and the page names it 'day'. */
       var period = group.replace(/_images$/, '');
       var seconds = parseInt(manifest.spans[group], 10);
       if (seconds > 0) PERIOD_SECONDS[period] = seconds;
     });
   }
 
-  /* There are two "nows" here, and using one where the other belongs moves the
-     calendar by a day.
+  /* There are two current times here, and using one where the other belongs moves
+     the calendar by a day.
 
-     dataTs() is the time of the last reading in the report. The arrows measure from
-     it. The live view ends there, so the calendar unit holding that reading is the
-     unit on screen, and "back" means the unit before it.
+     dataTs() is the time of the newest archive record in the report
+     (`window.HORIZON.generated`). The live view ends at that time, and the arrows
+     step from the calendar unit that holds it.
 
-     nowTs() is the reader's own clock. It decides one thing only: whether the live
-     view can still be labelled "Now". The two times differ when the station was off
-     overnight, when the page has been open past midnight, or when a cache is serving
-     an older copy of the site. */
+     nowTs() is the browser's clock, and decides only whether the live view is
+     labelled "Now" (see liveLabel). The two times differ when the station was off
+     overnight, when the page has been open past midnight, or when a cache serves an
+     older copy of the page. */
   function nowTs() {
     return Math.floor(Date.now() / 1000);
   }
@@ -1280,7 +1283,8 @@
     return CFG.generated || nowTs();
   }
 
-  /* The start and end of the calendar unit of `period` that holds `ts`. */
+  /* Returns {from, to}, the start and end of the calendar unit of `period` that
+     holds `ts`. */
   function calendarWindow(period, ts) {
     var d = new Date(ts * 1000);
     var y = d.getFullYear(), m = d.getMonth(), day = d.getDate();
@@ -1306,7 +1310,7 @@
     return { from: Math.floor(from.getTime() / 1000), to: Math.floor(to.getTime() / 1000) };
   }
 
-  /* The span currently on screen, as a start, an end, and whether it is live. */
+  /* Returns the time span on screen as {from, to, live}. */
   function currentWindow(period) {
     if (anchor === null) {
       var to = dataTs();
@@ -1333,16 +1337,18 @@
       .catch(function () { archiveCache.set(name, null); return null; });
   }
 
-  /* The archive is written on three grids: the station's own readings per day, a
-     closer grid per month, and one per calendar year that coarsens with age. They
-     overlap on purpose, so a span can be drawn from whichever of them suits it.
+  /* The archive files come in three tiers, which overlap in time. The raw tier holds
+     the station's own readings, one file per day. The fine tier holds readings at a
+     longer interval, one file per month. The year tier holds readings at a still
+     longer interval, which grows with age, one file per calendar year. TIER_KEYS
+     lists the tiers finest first, with the keys of data/archive/index.json that list
+     each tier's files (`named`) and their intervals (`grids`).
 
-     Finest first, and the first one that can cover the whole span wins. "Can" is two
-     things: the index has to name a file for every part of the span, since joining
-     two grids in one chart would draw a step where the spacing changes, and the
-     result has to be a sane number of points. A day from the raw tier is 1440 of
-     them; a year would be half a million, which is a download nobody wants for a
-     chart a thousand pixels wide. */
+     filesFor takes the finest tier that covers the whole time span. A tier covers a
+     time span where data/archive/index.json names a file for every part of it, and
+     where the time span comes to no more than MAX_POINTS readings. At a one-minute
+     archive interval, a day of the raw tier is 1440 readings, and a year would be
+     half a million, far more than a chart 1000 px wide can show. */
   var MAX_POINTS = 20000;
 
   var TIER_KEYS = [
@@ -1357,7 +1363,9 @@
       keys: function (from, to) { return stampsIn(from, to, 'year'); } }
   ];
 
-  /* The keys of the files a span touches, as the index writes them. */
+  /* Returns the keys of the files that the time span from `from` to `to` touches,
+     as data/archive/index.json writes them: '2026-07-13' for `unit` 'day',
+     '2026-07' for 'month' and '2026' for 'year'. */
   function stampsIn(from, to, unit) {
     var out = [];
     var cursor = new Date(from * 1000);
@@ -1377,8 +1385,10 @@
     return out;
   }
 
-  /* Does the stretch a key stands for overlap the readings the station has at all?
-     'YYYY', 'YYYY-MM' and 'YYYY-MM-DD' all say where they start and how far they run. */
+  /* Returns whether the year, month or day that `key` names ('2026', '2026-07' or
+     '2026-07-13') overlaps the archive, from `first` to `last` in
+     data/archive/index.json. Returns true where the index has no `first` and
+     `last`. */
   function touchesRecord(key) {
     if (!archiveIndex || !archiveIndex.first || !archiveIndex.last) return true;
     var parts = key.split('-').map(Number);
@@ -1391,7 +1401,8 @@
       && start.getTime() / 1000 < archiveIndex.last;
   }
 
-  /* Which files to draw a span from, finest grid that fits. */
+  /* Returns {interval, names}, the archive files to draw a time span from, taken
+     from the finest tier that covers the time span, or null where no tier does. */
   function filesFor(group, from, to) {
     var entry = ((archiveIndex && archiveIndex.groups) || []).filter(function (g) {
       return g.name === group;
@@ -1411,16 +1422,16 @@
       var present = [];
       for (var i = 0; i < keys.length; i++) {
         if (!(keys[i] in have)) {
-          /* A key the index does not name is either a stretch the station has no
-             readings for, which is nothing to hold against the tier, or a gap in what
-             this tier reaches back to, which disqualifies it: half a week drawn from
-             the day files and the rest missing is worse than the whole week drawn
-             from the month files. */
+          /* A key that the index does not name is harmless where the archive has
+             no readings for that time. Otherwise the tier does not reach back far
+             enough, and the next tier is tried: a whole week from the fine tier is
+             better than half a week from the raw tier. */
           if (touchesRecord(keys[i])) { ok = false; break; }
           continue;
         }
         var g = grids[keys[i]];
-        /* Two spacings in one chart would draw a step where they meet. */
+        /* The files must share one interval: a chart joined from two intervals
+           changes its detail abruptly where they meet. */
         if (g && interval && g !== interval) { ok = false; break; }
         if (g) interval = g;
         present.push(keys[i]);
@@ -1440,7 +1451,7 @@
 
   function loadDayNight(year) {
     if (daynightCache.has(year)) return Promise.resolve(daynightCache.get(year));
-    /* Only the years the archive holds. */
+    /* No request for a year before the first archive record. */
     if (archiveIndex && archiveIndex.first
         && year < new Date(archiveIndex.first * 1000).getFullYear()) {
       daynightCache.set(year, null);
@@ -1452,9 +1463,10 @@
       .catch(function () { daynightCache.set(year, null); return null; });
   }
 
-  /* Night shading is readable only on a span short enough to show single days. Over a
-     month or a year the bands are a pixel or two wide and read as grey haze. The PNGs
-     leave the shading off on those spans for the same reason. */
+  /* Returns a promise of the `daynight` data (see nightAreas) for a time span of up
+     to 9 days, from the daynight files of `years`, or of null. On a longer time span
+     a night is one or two pixels wide and the shading blurs into grey. Seasons draws
+     no night shading on its month and year images either. */
   function nightForWindow(from, to, years) {
     if ((to - from) > 9 * 86400) return Promise.resolve(null);
     return Promise.all(years.map(loadDayNight)).then(function (files) {
@@ -1463,15 +1475,15 @@
       var first = null;
       files.filter(Boolean).forEach(function (f) {
         if (first === null) {
-          /* Whether `from` falls in daylight or darkness. Day and night alternate,
-             so counting the crossings before it settles which. */
+          /* Day and night alternate, so the number of transitions before `from`
+             says whether `from` is in the day or in the night. */
           var before = f.transitions.filter(function (t) { return t <= from; }).length;
           var startState = f.first === 'day' ? 'day' : 'night';
           first = (before % 2 === 0) ? startState : (startState === 'day' ? 'night' : 'day');
         }
         all = all.concat(f.transitions.filter(function (t) { return t > from && t < to; }));
-        /* The twilight times have to be carried across with the crossings. Without
-           them the archive view steps from day to night where the live view fades. */
+        /* The twilight times go with the transitions, so that the nights fade over
+           the real length of a twilight and not over the default of 1800 seconds. */
         bands = bands.concat((f.twilight || []).filter(function (b) {
           return b.to > from && b.from < to;
         }));
@@ -1483,7 +1495,8 @@
     });
   }
 
-  /* Build one span's series by joining the archive files it reaches across. */
+  /* Returns a promise of the plot data for one time span of plot group `group`,
+     joined from the archive files that the time span touches, or of null. */
   function windowFromArchive(group, from, to) {
     var pick = filesFor(group, from, to);
     if (!pick) return Promise.resolve(null);
@@ -1507,9 +1520,10 @@
         var slots = Math.ceil((to - start) / interval);
         if (slots < 2) return null;
 
-        /* Beside 'values' a series can carry more arrays of the same length: the two
-           components of a wind vector, and the extremes of a slot for the types where
-           an average hides what mattered. They are joined exactly as values are. */
+        /* Besides `values`, a series can carry arrays of the same length: the wind
+           vector components, the wind directions, and `min` and `max` for the types
+           whose average hides the extremes. The extra arrays are joined like
+           `values`. */
         var EXTRA = ['vector_x', 'vector_y', 'directions', 'min', 'max'];
 
         var template = present[0];
@@ -1523,7 +1537,8 @@
             values: new Array(slots).fill(null)
           };
           if (s.vector_rotate !== undefined) out.vector_rotate = s.vector_rotate;
-          /* A bar totalled over more than one slot has to be drawn that wide. */
+          /* barWidthPx needs `aggregate_interval` for a bar that totals more than
+             one interval. */
           if (s.aggregate_interval) out.aggregate_interval = s.aggregate_interval;
           EXTRA.forEach(function (key) {
             if (s[key]) out[key] = new Array(slots).fill(null);
@@ -1554,12 +1569,8 @@
         for (var k = 0; k < slots; k++) times[k] = start + k * interval;
         series.forEach(function (s) { s.time = times; });
 
-        /* The y axis comes from the files, not from the chart library. The generator
-           works it out
-           with the same function the ImageGenerator uses, which knows that a wind
-           vector is drawn about zero and that a direction runs 0 to 360. Left to
-           choose, a chart library gets both wrong. Joining several files takes the
-           widest of their axes, and the step from the first that states one. */
+        /* The joined y axis covers the widest range of the files' axes, and takes
+           the step of the first file that has one. */
         var yscale = null;
         present.forEach(function (file) {
           if (!file.yscale) return;
@@ -1602,15 +1613,12 @@
       .catch(function () { manifest = { plots: [] }; return manifest; });
   }
 
-  /* index.json lists the plot files that existed when the report last ran, and it can
-     end up naming one that is not there. A file deleted by hand does it. So does a
-     publish over FTP or rsync that carries index.json across before the file it names,
-     which leaves a window of a few seconds on every cycle.
-
-     There is no way for the page to prevent that, so it recovers from it instead. A
-     404 on a file the index names means the index is the thing that is wrong, so fetch
-     it again. Once, until the next record arrives: a station that really is missing a
-     file would otherwise re-read the index for every card on the page, every time. */
+  /* data/index.json can list a plot file that does not exist: one deleted by hand,
+     or one that FTP or rsync has not uploaded yet, although the new index.json is
+     already uploaded. loadPlot answers a 404 for a listed plot file by fetching
+     index.json again, but only once until refreshCharts clears the flag on the next
+     archive record. Otherwise a station that really lacks a plot file would fetch
+     index.json again for every chart card on every page load. */
   var indexRefetched = false;
 
   function loadPlot(name) {
@@ -1629,8 +1637,9 @@
       .catch(function () { cache.set(name, null); return null; });
   }
 
-  /* Draw a card's chart when the card first comes near the screen. On a phone that
-     is one or two files fetched on load, rather than twenty. */
+  /* A chart card fetches and draws its chart when the chart card comes within
+     300 px of the viewport. On a phone the page then fetches one or two files on
+     load instead of twenty. */
   var lazyObserver = new IntersectionObserver(function (entries) {
     entries.forEach(function (entry) {
       if (!entry.isIntersecting) return;
@@ -1647,12 +1656,6 @@
     var period = card.dataset.period;
     var empty = '<p class="chart-empty">' + escapeHtml(CFG.text.noData || 'No data') + '</p>';
 
-    /* Every span comes from the archive, live or stepped back. It holds the same
-       readings on a grid chosen to suit the span, so there is nothing the four period
-       files could add: today is the raw tier, and it is written every report.
-
-       They are still the fallback. A skin can leave 'periods' on, and a station whose
-       archive is still building has spans it cannot answer yet. */
     chartSource(card).then(function (meta) {
       if (!meta || !meta.series || !meta.series.length) {
         card.querySelector('.chart-host').innerHTML = empty;
@@ -1673,14 +1676,11 @@
 
   /* ------------------------------------------------------------ shared links */
 
-  /* A PNG on the server can be linked to, because the web server hands it out as a
-     file. A chart saved from the canvas cannot: it exists only in the browser that
-     made it. What can be shared is the view, as a link that reopens it. That is
-     usually what is meant anyway, and it arrives current, in the reader's own
-     language and theme.
-
-     The link names a date rather than an offset. "Three weeks back" points somewhere
-     else next week. "The week ending 2 August 2026" does not move. */
+  /* Writes the view into the URL hash, e.g., #week for the live view or
+     #month/2026-07 for July 2026, so that the Share button can copy a link to the
+     view. A chart drawn in the browser has no file of its own to link to. The hash
+     names a calendar unit rather than an offset such as three weeks back, so that
+     the link shows the same days next week. */
   function writeLocation(period) {
     var hash = '#' + period;
     if (anchor !== null) {
@@ -1708,12 +1708,11 @@
 
     if (!parts[1]) return { period: period, anchor: null };
 
-    /* Accepts 2026, 2026-07 and 2026-07-13, whichever suits the period. Any date
-       inside a unit selects that unit, so a link typed by hand still works. */
+    /* 2026, 2026-07 and 2026-07-13 are accepted for any time span, and select the
+       calendar unit that holds the date, so that a link typed by hand works too. */
     var m = parts[1].match(/^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?(?:T\d{1,2})?$/);
     if (!m) {
-      /* An older form of the link counted units back, as "-3". Read it rather than
-         dropping the reader at the live view. */
+      /* #week/-3 means three weeks back from the newest archive record. */
       var n = parseInt(parts[1].replace(/^-/, ''), 10);
       if (!isNaN(n) && n > 0) {
         var span = PERIOD_SECONDS[period] || PERIOD_SECONDS.day;
@@ -1729,72 +1728,61 @@
     return { period: period, anchor: unit.to > dataTs() ? null : ts };
   }
 
-  /* The range bar sticks to the window under the panel head, so it has to be told how
-     tall that head is. A fixed value in the stylesheet holds for one font size and one
-     row of tabs. At any other size the two overlap. */
-  function measureStickyHead() {
-    var panels = document.querySelectorAll('.panel');
-    for (var i = 0; i < panels.length; i++) {
-      var head = panels[i].querySelector('.panel-head');
-      var bar = panels[i].querySelector('.range-bar');
-      if (head && bar) {
-        panels[i].style.setProperty('--head-height', head.offsetHeight + 'px');
-      }
-    }
-  }
-
-  /* Scroll back to the first chart after the span changed. Changing it from halfway
-     down the page leaves the reader among charts that have just been replaced, at a
-     scroll position that no longer means anything. Only scroll if they were past the
-     first chart: at the top of the page, nothing should move. Called once the cards
-     are in place, because until then the page is too short to scroll. */
+  /* After a change of time span, scrolls the page up to the first chart if the
+     reader had scrolled past the first chart, because all charts have been
+     replaced. A reader above the first chart is not moved. showPeriod calls
+     backToFirstChart once the chart cards are in place; before that, the page is
+     too short to scroll. The head of the history panel (`.history-head`) is sticky,
+     so the first chart goes just below the head. */
   function backToFirstChart(container) {
-    var panel = container.closest('.panel');
-    if (!panel) return;
-    var head = panel.querySelector('.panel-head');
-    var bar = panel.querySelector('.range-bar');
-    var stuck = (head ? head.offsetHeight : 0) + (bar ? bar.offsetHeight : 0);
+    var head = document.querySelector('.history-head');
+    var stuck = head ? head.offsetHeight : 0;
     var top = window.scrollY + container.getBoundingClientRect().top - stuck - 8;
     if (window.scrollY > top + 4) {
       window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     }
   }
 
-  function showPeriod(period, newAnchor, keepPlace) {
+  function showPeriod(period, newAnchor) {
     var container = document.getElementById('charts');
     if (!container) return;
 
     if (newAnchor !== undefined) anchor = newAnchor;
     if (period !== currentPeriod && newAnchor === undefined) {
-      anchor = null;                               // switching span returns to now
+      anchor = null;                               // live view of the new time span
     }
     currentPeriod = period;
 
     clearCharts();
     container.setAttribute('aria-busy', 'true');
 
-    var win = currentWindow(period);
-    var from = win.from, to = win.to, live = win.live;
-
     Promise.all([loadManifest(), loadArchiveIndex()]).then(function (res) {
       var mf = res[0], ai = res[1];
       var groups = CFG.plotGroups || [];
+      /* The time span on screen is measured once data/index.json has loaded,
+         because adoptSpans then replaces the defaults in PERIOD_SECONDS with the
+         `time_length` of skin.conf. Measured earlier, the first Year chart after a
+         page load would take the default of 365 days instead of the 365.25 days of
+         '1y'. */
+      var win = currentWindow(period);
+      var from = win.from, to = win.to, live = win.live;
 
-      /* Order the cards as 'plot_groups' in skin.conf lists them, not as the files
-         happen to appear in index.json. */
+      /* The chart cards follow the order of `plot_groups` in skin.conf, not the
+         order of data/index.json. */
       var wanted = groups.map(function (g) {
         var snapshot = (mf.plots || []).find(function (p) { return p.name === period + g; });
         var archived = (ai.groups || []).find(function (p) { return p.name === g; });
-        /* The period files are optional. Where they are not written the archive is
-           the only source, live or not, and it is the one that names the group. */
+        /* In the live view, a plot file that data/index.json lists gives the chart
+           card its name and title. */
         if (live && snapshot) {
           return { group: g, name: snapshot.name, title: snapshot.title };
         }
-        /* Being named in the index means the group has readings somewhere, not
-           that it has any in the span on screen. A sensor that stopped reporting
-           three years ago stays named, because the years it did report are still
-           in the archive, and its card would be drawn empty on every span since.
-           Ask instead for the files this span would actually be drawn from. */
+        /* Otherwise the archive files are the only source, and
+           data/archive/index.json gives the title. data/archive/index.json lists
+           every group with readings anywhere in the archive, not only in this time
+           span. A sensor that stopped three years ago is still listed, and its
+           chart would be empty on every time span since. So a chart card is made
+           only where filesFor finds files for this time span. */
         if (!archived || !filesFor(g, from, to)) return null;
         return { group: g, name: period + g, title: archived.title };
       }).filter(Boolean);
@@ -1831,11 +1819,15 @@
       });
 
       container.setAttribute('aria-busy', 'false');
-      if (!keepPlace) backToFirstChart(container);
+      backToFirstChart(container);
     });
 
-    document.querySelectorAll('#period-tabs button').forEach(function (b) {
-      b.setAttribute('aria-selected', String(b.dataset.period === period));
+    /* Only links to this page's own charts are marked. On any other page than the
+       front page, the navigation's time span links go to 'index.html#week' and the
+       like, i.e., to the charts of the front page. */
+    document.querySelectorAll('a[data-period][href^="#"]').forEach(function (a) {
+      if (a.dataset.period === period) a.setAttribute('aria-current', 'true');
+      else a.removeAttribute('aria-current');
     });
 
     remember('period', period);
@@ -1843,22 +1835,24 @@
     showSpanOnCards(period);
   }
 
-  /* The cards, for the span on screen.
+  /* Shows the current conditions for the time span `period`. On Day each tile shows
+     the current reading, with the day's low and high. On Week, Month and Year a tile
+     shows the mean over that time span with its low and high, or the total for a
+     type that is summed, such as rain.
 
-     A card shows the reading as it stands and what it did today. Over a week or a
-     year the reading as it stands says nothing about the span: it is one instant
-     out of thousands. So for those the card shows the mean instead, with the two
-     ends of the span under it -- which is what the numbers mean when the span is
-     longer than a day.
-
-     The figures are already in the page: the template wrote them into
-     'data-spans' when it rendered the card. Nothing is fetched, and the unit
-     conversion is the skin's own, run again over the values just swapped in. */
+     The time span is always the calendar unit that holds the newest archive record,
+     even when the charts have been stepped back, because current.inc writes figures
+     only for that calendar unit, into `data-spans`. current.inc describes the format
+     of `data-spans`. */
   function showSpanOnCards(period) {
     var panel = document.querySelector('[data-live-panel="current"]');
     if (!panel) return;
     var daily = period === 'day' || !period;
     panel.dataset.span = period || 'day';
+    /* `data-anchored` says that the charts show a time span in the past, which the
+       tiles do not follow, and horizon.css then hides the Live badges. */
+    if (anchor === null) delete panel.dataset.anchored;
+    else panel.dataset.anchored = '';
 
     panel.querySelectorAll('[data-spans]').forEach(function (el) {
       var held;
@@ -1868,22 +1862,16 @@
         return;
       }
 
-      /* What the server wrote is the day, and it is what we come back to. */
-      if (el.dataset.dayValue === undefined) {
-        el.dataset.dayValue = el.dataset.value || '';
-      }
-      var found = daily ? null : held[period];
-      if (!daily && !found) {
-        /* No figures for this span -- a sensor fitted yesterday, say. Leave the
-           card on the day rather than emptying it. */
-        found = null;
-      }
-      setSpanValue(el, found ? found.v : el.dataset.dayValue);
+      /* Where `data-spans` has no entry for this time span, the tile shows the
+         day's figures. */
+      var found = daily ? null : (held[period] || null);
+      keepDay(el);
+      if (found) setSpanValue(el, found.v, found.t);
+      else setSpanValue(el, el.dataset.dayValue, el.dataset.dayText);
 
-      /* A heading that names the day cannot stand over a year. Rain is the one
-         that does: "Rain Today" is right for a day and wrong for everything
-         else, so the card carries both and the span picks. */
-      var tile = el.closest('div');
+      /* "Rain Today" is wrong over any other time span, so the rain tile carries
+         both headings, in `data-label-day` and `data-label-span`. */
+      var tile = el.closest('.tile');
       var heading = tile && tile.querySelector('[data-label-span]');
       if (heading) {
         heading.textContent = daily
@@ -1891,8 +1879,9 @@
           : heading.dataset.labelSpan;
       }
 
-      /* Where the wind mostly came from, in place of where the vane points now. */
-      var vane = tile && tile.querySelector('.wind-now');
+      /* Over a longer time span the wind tile shows the compass point of the
+         vector averaged direction. */
+      var vane = tile && tile.querySelector('.wind-dir');
       if (vane) {
         if (vane.dataset.asWritten === undefined) {
           vane.dataset.asWritten = vane.textContent;
@@ -1900,47 +1889,61 @@
         vane.textContent = (found && found.dir) || vane.dataset.asWritten;
       }
 
-      /* The two ends belong to the same card and move with it. */
+      /* Where the entry has no `lo` and `hi`, as for a total, the low and high
+         under the reading (.tile-range) are hidden: the day's low and high would be
+         wrong beside that total. */
       var range = tile ? tile.querySelector('.tile-range') : null;
       if (!range) return;
-      ['lo', 'hi'].forEach(function (end) {
-        var cell = range.querySelector('[data-range="' + end + '"]');
+      var ends = !found || (found.lo !== undefined && found.hi !== undefined);
+      range.hidden = !ends;
+      if (!ends) return;
+      [['lo', 'lot'], ['hi', 'hit']].forEach(function (end) {
+        var cell = range.querySelector('[data-range="' + end[0] + '"]');
         if (!cell) return;
-        if (cell.dataset.dayValue === undefined) {
-          cell.dataset.dayValue = cell.dataset.value || '';
-        }
-        setSpanValue(cell, found ? found[end] : cell.dataset.dayValue);
+        keepDay(cell);
+        if (found) setSpanValue(cell, found[end[0]], found[end[1]]);
+        else setSpanValue(cell, cell.dataset.dayValue, cell.dataset.dayText);
       });
     });
 
     applyUnitsToPanels(panel);
   }
 
-  /* One figure swapped in, written as the server would have written it so that
-     the unit conversion has something to work from. */
-  function setSpanValue(el, value) {
-    if (value === null || value === undefined || value === '') {
-      el.removeAttribute('data-value');
-      return;
+  /* Stores the day's figure of `el` in `data-day-value` and `data-day-text`, once,
+     for showSpanOnCards to show again on Day. From then on the live update keeps
+     both current. The text comes from `data-as-written` where present, because an
+     element whose reading is converted shows another unit. */
+  function keepDay(el) {
+    if (el.dataset.dayValue === undefined) {
+      el.dataset.dayValue = el.dataset.value || '';
     }
-    el.dataset.value = value;
-    /* 'as-written' is what the conversion falls back to, so it has to move too. */
-    var target = el.querySelector('[data-unit-value]') || el;
-    var digits = decimalsFor(el.dataset.unit);
-    var written = Number(value).toFixed(digits === undefined ? 1 : digits);
-    el.dataset.asWritten = written;
-    target.textContent = written;
+    if (el.dataset.dayText === undefined) {
+      var shown = el.querySelector('[data-unit-value]') || el;
+      el.dataset.dayText = el.dataset.asWritten !== undefined
+        ? el.dataset.asWritten : shown.textContent.trim();
+    }
   }
 
-  /* The name of the calendar unit on screen: "Tuesday, 18 August 2026" for a day,
-     "11–17 Aug 2026" for a week, "July 2026" for a month, "2025" for a year. */
+  /* Shows one figure in `el`: `text` as the report formatted it, and `value`, the
+     number for the unit conversion. `data-as-written` gets `text` as well, because
+     applyUnitsToPanels shows `data-as-written` when the reader chooses Default
+     again. A stale `data-as-written` would bring back another time span's figure. */
+  function setSpanValue(el, value, text) {
+    el.dataset.value = value;
+    el.dataset.asWritten = text;
+    (el.querySelector('[data-unit-value]') || el).textContent = text;
+  }
+
+  /* Returns the name of the calendar unit on screen, e.g., "Tuesday, 18 August 2026"
+     for a day, the first and last date for a week, "July 2026" for a month and
+     "2025" for a year. */
   function unitLabel(period, from, to) {
     var start = new Date(from * 1000);
     var end = new Date((to - 1) * 1000);
 
-    /* "Sunday, 23 August 2026" does not fit between the two arrows on a phone. It
-       pushed the Now button underneath the forward arrow. The long form is kept on a
-       wide screen, where there is room for it. */
+    /* Below 34rem the long form, e.g., "Sunday, 23 August 2026", is wider than the
+       date button between the arrows, whose width horizon.css fixes: at 390px the
+       button is 148px wide, and the long form needs 181px. */
     var roomy = window.matchMedia('(min-width: 34rem)').matches;
 
     if (period === 'day') {
@@ -1951,9 +1954,9 @@
     if (period === 'week') {
       var opts = roomy ? { day: 'numeric', month: 'short', year: 'numeric' }
                        : { day: 'numeric', month: 'short' };
-      /* formatRange() knows how each language writes a span of dates: "10.–16. Aug.
-         2026" in German, "10 – 16 Aug 2026" in English. Formatting both dates and
-         joining them with a dash gets the punctuation wrong in most languages. */
+      /* formatRange() writes a range of dates the way the page's language does.
+         Two dates joined with a dash, the fallback below, have the wrong
+         punctuation in most languages. */
       try {
         return new Intl.DateTimeFormat(LOCALE, opts).formatRange(start, end);
       } catch (e) {
@@ -1968,10 +1971,11 @@
     return String(start.getFullYear());
   }
 
-  /* The word "Now" holds only while the last reading falls in the calendar unit the
-     reader's clock is in. Where it does not, the live view shows Sunday and calls it
-     now, and stepping back to Saturday looks as though it skipped a day. So label it
-     with the name of the unit instead. */
+  /* The live view is labelled "Now" only while the newest archive record falls in
+     the same calendar unit as the browser's clock. Otherwise, e.g., on a Monday with
+     the newest archive record from Sunday, "Now" would stand for Sunday, and a step
+     back to Saturday would look like a skipped day. The label then names the
+     calendar unit. */
   function liveLabel(period) {
     var d = calendarWindow(period, dataTs());
     return d.from === calendarWindow(period, nowTs()).from
@@ -1979,7 +1983,8 @@
       : unitLabel(period, d.from, d.to);
   }
 
-  /* Label the span on screen, and grey out an arrow that would leave the record. */
+  /* Labels the time span on screen, and disables an arrow that would leave the
+     archive. */
   function updateRange(period, from, to, ai) {
     var label = document.getElementById('range-label');
     var back = document.getElementById('range-back');
@@ -1994,18 +1999,17 @@
     if (fwd) fwd.disabled = anchor === null;
     if (now) now.hidden = anchor === null;
 
-    /* There is nothing before the first reading in the database. */
     if (back && ai && ai.first) {
       back.disabled = from <= ai.first;
     }
 
-    /* An open calendar follows the span it was opened from. */
+    /* An open calendar is drawn again for the new time span. */
     drawCalendar();
   }
 
-  /* A timestamp as YYYY-MM-DD in local time, which is the only form a date input
-     takes. toISOString() would give the date in UTC, which is the day before for
-     anyone west of Greenwich for part of every day. */
+  /* Returns the date of `ts` as YYYY-MM-DD in the browser's time zone.
+     toISOString() would give the date in UTC, which in any other time zone is a
+     different date for part of every day. */
   function isoDate(ts) {
     var d = new Date(ts * 1000);
     return d.getFullYear()
@@ -2013,33 +2017,30 @@
       + '-' + String(d.getDate()).padStart(2, '0');
   }
 
-  /* Move one whole calendar unit. From the live view, "back" lands on the last unit
-     that has ended. Stepping forward into the unit still running returns to the live
-     view, which follows the clock. */
+  /* Steps the charts one calendar unit back (`direction` < 0) or forward. Back from
+     the live view goes to the last calendar unit that has ended. Forward into the
+     calendar unit that holds the newest archive record returns to the live view. */
   function step(direction) {
     var here = calendarWindow(currentPeriod, anchor === null ? dataTs() : anchor);
     var target = direction < 0 ? here.from - 1 : here.to + 1;
-    /* The unit the readings end in is the live view. readLocation() applies the same
-       rule to a pasted link. Test the unit, not the instant: testing the instant
-       leaves "forward" one step short, landing on the current unit as a fixed span,
-       from where it takes a second press to reach the live view. */
+    /* Test the end of the target's calendar unit against dataTs(), as readLocation
+       does, and not the target itself. Testing the target would stop a step forward
+       on the running calendar unit as a fixed time span, and a second step would be
+       needed to reach the live view. */
     var unit = calendarWindow(currentPeriod, target);
     showPeriod(currentPeriod, unit.to > dataTs() ? null : target);
   }
 
   /* ------------------------------------------------------------- calendar */
 
-  /* Reaching a date. The arrows step one calendar unit at a time, which is a long way
-     back to last March.
+  /* The calendar opens from the date between the arrows (#range-label) and jumps to
+     any date, while the arrows move one calendar unit at a time. The calendar is
+     drawn here rather than with <input type="date">, whose drop-down cannot be
+     styled and shows as a white box in the browser's own fonts on a dark page. The
+     drop-down also offers every date, while this calendar disables the dates before
+     the first archive record and after the newest one. */
 
-     Drawn here rather than handed to <input type="date">. The panel a browser drops
-     out of that input cannot be styled at all, so on a themed page it arrives as a
-     white box with its own fonts and its own blue. It also knows nothing about this
-     station: it offers every date since the calendar began, including the years
-     before the station was built. This one greys those out, and it marks the day the
-     readings end. */
-
-  var calShown = null;                       // first of the month on display
+  var calShown = null;                       // the first day of the month shown
 
   function setupCalendar() {
     var button = document.getElementById('range-label');
@@ -2062,8 +2063,8 @@
       }
       var day = e.target.closest('[data-cal-day]');
       if (!day || day.disabled) return;
-      /* Midday, not midnight. A date taken as local midnight and then moved by an
-         hour of summer time lands on the day before. */
+      /* Take midday of the chosen date, not midnight: midnight moved back by the
+         hour of daylight saving time falls on the day before. */
       var parts = day.dataset.calDay.split('-').map(Number);
       var ts = Math.floor(new Date(parts[0], parts[1] - 1, parts[2], 12).getTime() / 1000);
       var unit = calendarWindow(currentPeriod, ts);
@@ -2071,7 +2072,7 @@
       showPeriod(currentPeriod, unit.to > dataTs() ? null : ts);
     });
 
-    /* A click anywhere else, or Escape, closes it. */
+    /* A click outside the calendar, or Escape, closes the calendar. */
     document.addEventListener('click', function () {
       if (!panel.hidden) closeCalendar();
     });
@@ -2096,8 +2097,8 @@
     document.getElementById('range-label').setAttribute('aria-expanded', 'false');
   }
 
-  /* One month. The week starts on the day the station's configuration says, which is
-     not Monday everywhere, and the day names come from the reader's locale. */
+  /* Draws the month `calShown` into the calendar. The week starts on `week_start`
+     of weewx.conf, and the names of the days are in the page's language. */
   function drawCalendar() {
     var panel = document.getElementById('range-cal');
     if (!panel || panel.hidden) return;
@@ -2112,9 +2113,8 @@
     var startDow = (CFG.weekStart === undefined ? 0 : +CFG.weekStart);
     var jsStart = (startDow + 1) % 7;                    // JS counts Sunday as 0
 
-    /* Day names, in the reader's language, from a week that is known to begin on a
-       Sunday. Reading them out of Intl rather than listing them keeps this working in
-       every language the skin is translated into. */
+    /* 7 January 2024 was a Sunday, so the dates from there give the names of the
+       days in order, in the page's language. */
     var names = [];
     for (var i = 0; i < 7; i++) {
       var d = new Date(2024, 0, 7 + ((jsStart + i) % 7));
@@ -2139,7 +2139,7 @@
         + (tooEarly || tooLate ? ' disabled' : '')
         + (iso === selected ? ' aria-current="date"' : '')
         + '>' + day.getDate() + '</button>');
-      /* Stop after a whole week that has left the month behind. */
+      /* Stop after the week that holds the last day of the month. */
       if (n % 7 === 6 && new Date(year, month, 1 - lead + n + 1).getMonth() !== month) break;
     }
 
@@ -2184,14 +2184,15 @@
         if (navigator.clipboard && window.isSecureContext) {
           navigator.clipboard.writeText(url).then(done, function () { prompt(url); });
         } else {
-          /* The clipboard API needs a secure context, and most stations are served
-             over plain http. Show the link for the reader to copy. */
+          /* The clipboard API needs a secure context, i.e., HTTPS or localhost, and
+             many stations are served over plain HTTP, so the link is shown for the
+             reader to copy. */
           window.prompt(CFG.text.copyLink || 'Copy this link:', url);
         }
       });
     }
 
-    /* With the chart area focused, the left and right arrow keys step through time. */
+    /* With `#charts` focused, the left and right arrow keys step back and forward. */
     var container = document.getElementById('charts');
     if (container) {
       container.addEventListener('keydown', function (e) {
@@ -2202,42 +2203,35 @@
   }
 
   function setupPeriods() {
-    var tabs = document.getElementById('period-tabs');
-    if (!tabs) return;
-    tabs.addEventListener('click', function (e) {
-      var b = e.target.closest('button[data-period]');
-      if (b) showPeriod(b.dataset.period);
-    });
-
-    /* Opening the table on a card whose chart has not been drawn yet has to produce
-       a table all the same. */
     var container = document.getElementById('charts');
-    if (container) {
-      container.addEventListener('toggle', function (e) {
-        if (!e.target.matches('details.chart-data') || !e.target.open) return;
-        var card = e.target.closest('.chart-card');
-        if (!card) return;
-        /* Never drawn: fetch and draw it, table and all. */
-        if (!card.dataset.loaded) {
-          hydrate(card);
-          return;
+    if (!container) return;
+
+    /* Opening a data table builds the table where it is missing or stale. */
+    container.addEventListener('toggle', function (e) {
+      if (!e.target.matches('details.chart-data') || !e.target.open) return;
+      var card = e.target.closest('.chart-card');
+      if (!card) return;
+      /* A chart card not yet scrolled into view has no chart and no table yet. */
+      if (!card.dataset.loaded) {
+        hydrate(card);
+        return;
+      }
+      /* updateChart sets `data-stale` where new data or another unit arrived while
+         the table was closed. */
+      if (e.target.dataset.stale) {
+        var entry = charts.find(function (c) {
+          return c.host === card.querySelector('.chart-host');
+        });
+        if (entry) {
+          e.target.querySelector('.scroller-host').innerHTML =
+            renderTable(entry.meta, digitsFor(entry.meta.series));
         }
-        /* Drawn, but the data or the unit moved on while this was closed. */
-        if (e.target.dataset.stale) {
-          var entry = charts.find(function (c) {
-            return c.host === card.querySelector('.chart-host');
-          });
-          if (entry) {
-            e.target.querySelector('.scroller-host').innerHTML =
-              renderTable(entry.meta, digitsFor(entry.meta.series));
-          }
-          delete e.target.dataset.stale;
-        }
-      }, true);
-    }
+        delete e.target.dataset.stale;
+      }
+    }, true);
     setupRangeNav();
 
-    /* A span named in the link beats the one this browser last looked at. */
+    /* A time span in the URL hash takes precedence over the one in localStorage. */
     var linked = readLocation();
     if (linked) {
       currentPeriod = linked.period;
@@ -2248,7 +2242,10 @@
       showPeriod(start, null);
     }
 
-    /* The browser's back and forward buttons, and a link pasted into this tab. */
+    /* The time span links are bare hashes such as '#week', written by nav.inc on
+       the front page and by history.inc on the other pages with charts, so
+       following one fires hashchange. The browser's back and forward buttons fire
+       hashchange too, as does a link pasted into the tab. */
     window.addEventListener('hashchange', function () {
       var loc = readLocation();
       if (loc && (loc.period !== currentPeriod || loc.anchor !== anchor)) {
@@ -2258,43 +2255,13 @@
     });
   }
 
-  /* ------------------------------------------------------------ live update */
-
-  /* Write one live value into one element. The headline is set in two sizes, with the
-     decimals smaller than the whole units, so its number arrives as one string and has
-     to be split again here. Every other element takes the string as it is. */
-  function setLive(el, text) {
-    if (!el.classList.contains('lead-value')) {
-      el.textContent = text;
-      return;
-    }
-    var match = /^\s*([-+]?[\d.,]+)/.exec(text);
-    var number = match ? match[1] : text.trim();
-    var point = number.search(/[.,]/);
-    if (point < 0) {
-      el.textContent = number;
-      return;
-    }
-    var decimals = el.querySelector('.lead-dec');
-    if (!decimals) {
-      decimals = document.createElement('span');
-      decimals.className = 'lead-dec';
-    }
-    decimals.textContent = number.slice(point);
-    el.textContent = number.slice(0, point);
-    el.appendChild(decimals);
-  }
-
   /* ------------------------------------------------------- temperature colour */
 
-  /* The stylesheet defines nine colours, --warm-0 to --warm-8, one per temperature
-     band. BAND_EDGES holds the temperatures where one band ends and the next begins,
-     in degrees Celsius. WARM_AT holds the temperature at the middle of each band,
-     which is where that colour is exact. Reading the colours from the stylesheet
-     rather than repeating them here keeps one palette for the page, and moves the
-     bar and the headline together when the theme changes. */
+  /* horizon.css defines nine colours, --warm-0 to --warm-8, one per temperature
+     band, and current.inc sets the band edges. WARM_AT holds the middle of each band
+     in degree_C, where the band's colour applies exactly. The colours are read from
+     the stylesheet, so that the page has one palette. */
   var WARM_AT = [-15, -5, 2.5, 8.5, 15, 20.5, 25.5, 30.5, 36];
-  var BAND_EDGES = [-10, 0, 5, 12, 18, 23, 28, 33];
 
   function warmStops() {
     var css = getComputedStyle(document.documentElement);
@@ -2318,9 +2285,9 @@
     return null;
   }
 
-  /* The colour for one temperature, mixed from the two band colours it falls between.
-     Mixed rather than rounded to the nearer band, so that the mark on the bar and the
-     headline both take the colour the bar is actually showing at that point. */
+  /* Returns the colour of the temperature `celsius`, mixed from the colours of the
+     two band middles it falls between. Two readings a degree apart then differ by a
+     shade, not by a whole band. */
   function tempColour(celsius, stops) {
     if (!stops.length) return null;
     if (celsius <= stops[0].c) return rgbText(stops[0].rgb);
@@ -2340,60 +2307,20 @@
     return 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')';
   }
 
-  /* Colour the bar under the headline by the temperatures it spans. Its ends take the
-     colours of the day's lowest and highest readings. Every band edge between them
-     gets a gradient stop at the position that temperature occupies on the bar. A day
-     from 13 to 14 degrees comes out one colour. A day from 2 to 30 runs through all
-     nine. */
-  function paintSpan() {
-    var track = document.querySelector('.span-track[data-lo]');
-    if (!track) return;
-    var lo = parseFloat(track.dataset.lo);
-    var hi = parseFloat(track.dataset.hi);
-    if (isNaN(lo) || isNaN(hi) || hi <= lo) return;
-
-    var stops = warmStops();
-    if (!stops.length) return;
-
-    var parts = [tempColour(lo, stops) + ' 0%'];
-    BAND_EDGES.forEach(function (edge) {
-      if (edge > lo && edge < hi) {
-        parts.push(tempColour(edge, stops)
-                   + ' ' + ((edge - lo) / (hi - lo) * 100).toFixed(1) + '%');
-      }
-    });
-    parts.push(tempColour(hi, stops) + ' 100%');
-
-    var fill = track.querySelector('.span-fill');
-    if (fill) fill.style.background = 'linear-gradient(90deg, ' + parts.join(', ') + ')';
-
-    var now = parseFloat(track.dataset.now);
-    if (isNaN(now)) return;
-    var colour = tempColour(now, stops);
-    var mark = track.querySelector('.span-now');
-    if (mark) mark.style.setProperty('--span-at', colour);
-    /* The headline shows the same temperature as the mark, so it takes its colour. */
-    var lead = document.querySelector('.lead-value[data-band]');
-    if (lead) lead.style.color = colour;
-  }
-
   /* --------------------------------------------------------- panel refresh */
 
-  /* Bring every panel forward when a new record arrives, by fetching the page again
-     and putting each freshly rendered section in place of the one on screen.
+  /* On a new archive record, fetches the page again and replaces each element with
+     `data-live-panel` by its new version. current.json carries only the current
+     readings. Without the page fetch, the day's low and high, the trend arrows, the
+     almanac, the statistics and the uptime would keep the values of the first page
+     load, and a tile could show a reading above the day's high.
 
-     Only elements carrying 'data-live' used to be updated, which meant the readings
-     and nothing else. The day's high and low, the times they were reached, the mark
-     showing where the reading sits between them, the trend arrows, the almanac and
-     the statistics all stood as the template first rendered them. Left open for an
-     afternoon, the card contradicted itself: a reading well above a day that, by the
-     line under it, never got that warm.
-
-     A section is swapped if it carries 'data-live-panel'. A section that holds
-     something the templates cannot render says so by not carrying the attribute: the
-     charts hold chart instances, the map holds a Google Maps object, and the report
-     picker holds the reader's choice of month. Each of those is brought forward its
-     own way instead. */
+     An element whose content must survive a new archive record has no
+     `data-live-panel`: the history panel with its charts, the imagery panels with
+     the Google Maps object, and the report panel with the report the reader picked.
+     Each of these is updated by its own code: refreshCharts, refreshImages and the
+     script of the reports page. The climate panels do have `data-live-panel`, and
+     climate.js draws their charts again on 'horizon:panels'. */
   var pageFetch = false;
 
   function refreshPanels() {
@@ -2419,25 +2346,23 @@
           touched = true;
         });
         if (touched) {
-          paintSpan();
-          measureStickyHead();
-          /* The sections just swapped in were rendered by the server, in the report's
-             own unit. */
+          /* WeeWX wrote the new elements for Day and in the report unit system, so
+             the time span and the chosen unit system are applied again. */
+          showSpanOnCards(currentPeriod || 'day');
           applyUnitsToPanels();
-          /* Anything that drew into a panel has just had its drawing thrown away,
-             along with any listener it had bound to an element inside one. This says
-             the swap is finished and the new elements are in the document. The event
-             on the live update announces the record; this one announces the DOM. */
+          /* 'horizon:panels' tells other scripts, e.g., climate.js, that the new
+             elements are in the document: a drawing in a replaced panel is gone, and
+             so is any listener on an element inside one. 'horizon:update' fires
+             earlier, when the new archive record arrives. */
           document.dispatchEvent(new CustomEvent('horizon:panels'));
         }
       })
       .catch(function () { pageFetch = false; });
   }
 
-  /* What the viewer did inside the panel that its freshly rendered twin cannot
-     know about. One thing so far: how far a table too wide for its column has been
-     pushed sideways. Set after the swap, since until then there is no layout to
-     scroll. */
+  /* Copies the sideways scroll position of each `.table-scroll` from the panel `old`
+     to its replacement `fit`. refreshPanels calls carryOver after the swap, since an
+     element outside the document cannot be scrolled. */
   function carryOver(old, fit) {
     var was = old.querySelectorAll('.table-scroll');
     var now = fit.querySelectorAll('.table-scroll');
@@ -2446,9 +2371,10 @@
     }
   }
 
-  /* Radar and satellite pictures come from somewhere else and carry cache headers
-     of their own, so on a page left open all afternoon the picture is still the
-     morning's. Asking again under a new query string gets the current one. */
+  /* Images with `data-live-src`, e.g., radar and satellite images from other sites,
+     have cache headers of their own, and the browser may show the morning's image
+     all afternoon. A new query string on each archive record makes the browser
+     fetch each image again. */
   function refreshImages(version) {
     document.querySelectorAll('img[data-live-src]').forEach(function (img) {
       var base = img.dataset.liveSrc;
@@ -2464,15 +2390,12 @@
 
     var stamp = document.querySelector('[data-live="dateTime"]');
     var seen = String((stamp && stamp.dataset.raw) || CFG.generated || '');
-    /* A reading that has stopped arriving should look like one, rather than sit
-       there being read as current. Counted in polls since the last new record and
-       not from the clock, so a station whose clock is a few minutes out is not
-       declared dead on the strength of it.
-
-       How long to wait comes from the station: current.json says how far apart its
-       records are, and two records' worth of silence is a fault. Guessing that
-       would mean calling a ten-minute archive interval a fault every time. Ten
-       minutes stands in until the first record says otherwise. */
+    /* The current conditions and the time in the masthead are marked stale
+       (`is-stale`) when no new archive record has come for 2.5 archive intervals.
+       The wait is counted in live updates, not read from the clock, so that a
+       station whose clock is a few minutes off is not marked stale. current.json
+       gives the archive interval in minutes as `interval`; until the first answer,
+       600 seconds is assumed. */
     var quiet = 0;
     var patience = Math.ceil(600 / seconds);
     var busy = false;
@@ -2491,59 +2414,47 @@
             patience = Math.max(3, Math.ceil(minutes * 60 * 2.5 / seconds));
           }
 
-          /* The readings that have an element of their own. Cheap, and on its own
-             enough for a station whose current.json is written between records.
-
-             Each arrives twice: as the string the server formatted, and as the number
-             behind it. The number goes onto the element, so that a reader who has
-             chosen another unit keeps it through the update. */
+          /* On every live update, each element with `data-live` shows its field
+             from current.json. current.json carries each reading as text, number
+             and unit (see current.json.tmpl), and the number and unit go on the
+             element for applyUnitsToPanels. */
           document.querySelectorAll('[data-live]').forEach(function (el) {
             var key = el.dataset.live;
             if (data[key] === undefined || data[key] === null) return;
-            var target = el.querySelector('[data-unit-value]') || el;
-            setLive(target, String(data[key]));
+            var text = String(data[key]);
+            var value = data[key + '_v'];
+            var known = value !== undefined && value !== null;
+
+            /* On Week, Month or Year the tile shows that time span's figure, and the
+               new reading is only stored, for showSpanOnCards to show on Day. */
+            if (el.dataset.spans !== undefined) {
+              el.dataset.dayText = text;
+              if (known) el.dataset.dayValue = value;
+              var tiles = el.closest('[data-span]');
+              if (tiles && tiles.dataset.span !== 'day') return;
+            }
+
+            (el.querySelector('[data-unit-value]') || el).textContent = text;
             delete el.dataset.asWritten;
-            if (data[key + '_v'] !== undefined && data[key + '_v'] !== null) {
-              el.dataset.value = data[key + '_v'];
+            if (known) {
+              el.dataset.value = value;
               if (data[key + '_u']) el.dataset.unit = data[key + '_u'];
             }
           });
 
-          /* The day's high and low, and the times they were reached. They sit either
-             side of the bar under the headline and move with it. */
-          if (data.day_unit) {
-            [['span-end', 'min'], ['span-end--right', 'max']].forEach(function (pair) {
-              var el = document.querySelector('.' + pair[0]);
-              if (!el || data['day_' + pair[1]] === undefined) return;
-              var value = el.querySelector('[data-unit-value]');
-              var when = el.querySelector('.faint');
-              if (value) value.textContent = data['day_' + pair[1]];
-              if (when && data['day_' + pair[1] + 'time']) {
-                when.textContent = data['day_' + pair[1] + 'time'];
-              }
-              delete el.dataset.asWritten;
-              el.dataset.value = data['day_' + pair[1] + '_v'];
-              el.dataset.unit = data.day_unit;
-            });
-          }
-
-          /* Back into the reader's unit, since the strings just written are in the
-             report's. Returns at once where they have not chosen one. */
+          /* The new text is in the report unit system. */
           applyUnitsToPanels();
-          if (data.outTemp_c !== undefined && data.outTemp_c !== null) {
-            var track = document.querySelector('.span-track[data-lo]');
-            if (track) track.dataset.now = data.outTemp_c;
-            paintSpan();
-          }
 
           if (!data.dateTime_raw || String(data.dateTime_raw) === seen) {
             if (++quiet >= patience) markStale(true);
             return;
           }
 
-          /* A new archive record. The page was re-rendered before current.json was
-             written, so everything on it can be brought forward, not just the
-             readings. */
+          /* A changed `dateTime_raw` means a new archive record. [[[current_json]]]
+             comes last in [[ToDate]] in skin.conf, so the Cheetah generator has
+             already written the new pages, and refreshPanels finds the new panels.
+             The JSON generator runs after the Cheetah generator, so refreshCharts
+             may still get the JSON files of the previous archive record. */
           quiet = 0;
           markStale(false);
           seen = String(data.dateTime_raw);
@@ -2552,8 +2463,8 @@
           refreshImages(seen);
           refreshCharts();
 
-          /* Anything else on the page keeping state of its own, and wanting to
-             know that there is something new to fetch. */
+          /* 'horizon:update' tells other scripts, e.g., the one on the reports page,
+             that there is a new archive record. */
           document.dispatchEvent(new CustomEvent('horizon:update', {
             detail: { dateTime: data.dateTime_raw }
           }));
@@ -2565,16 +2476,19 @@
     }
 
     function markStale(stale) {
-      var card = document.querySelector('.panel.headline');
-      if (card) card.classList.toggle('is-stale', stale);
+      var tiles = document.querySelector('[data-live-panel="current"]');
+      if (tiles) tiles.classList.toggle('is-stale', stale);
       if (stamp) stamp.classList.toggle('is-stale', stale);
     }
 
+    /* `data-polling` on <html> makes horizon.css show the Live badges. A page
+       without live updates, or without JavaScript, shows the readings WeeWX wrote,
+       and no badge. */
+    document.documentElement.dataset.polling = '';
     setInterval(tick, seconds * 1000);
 
-    /* A tab in the background has its timers throttled, so what it shows is as old
-       as the last time the browser felt like running one. Ask once on the way back
-       rather than leaving yesterday's weather up while the viewer reads it. */
+    /* Browsers slow down timers in a background tab, so a tab brought back to the
+       front runs a live update at once instead of showing old readings. */
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden) tick();
     });
@@ -2590,14 +2504,10 @@
     setupUnitPicker();
     setupPeriods();
     setupLiveUpdate();
-    measureStickyHead();
-    window.addEventListener('resize', measureStickyHead);
-    paintSpan();
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init, { once: true });
-  } else {
-    init();
-  }
+  /* init() runs at once, not on DOMContentLoaded: scripts.inc loads horizon.js at
+     the end of <body>, after all markup, and a script named in `custom_js`, loaded
+     after horizon.js, finds the page set up. */
+  init();
 })();

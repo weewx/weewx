@@ -52,11 +52,10 @@ colors, anti-aliasing, marker shapes, label formats: these all describe how to
 draw an image on a canvas of a given size, and a browser is not doing that.
 
 So if you set `chart_background_color` and the charts stay as they were, this
-is why. Their colors come from the page, through `[[Theme]]` under
-`[DisplayOptions]`.
+is why. Their colors come from the page's stylesheet.
 
-The full split is listed in the skin's own `skin.conf`, with the plot
-definitions in `[JSONGenerator]`.
+The full list is in the reference, under
+[_[JSONGenerator]_](../reference/skin-options/jsongenerator.md).
 
 ## Using a different set of plots
 
@@ -159,11 +158,11 @@ PNGs do. See [*Mixed units*](custom-reports.md#mixed-units).
 
 The difference is that the reader can change it afterwards. Alongside the
 readings, the generator writes the arithmetic needed to convert between units,
-so a page can offer a unit switch that works without fetching anything. The
-Horizon skin puts one in its masthead.
+so a page can offer a unit picker that works without fetching anything. The
+Horizon skin has one, in its navigation.
 
 Nothing needs configuring for this. If you would rather not have it, drop the
-switch from the template.
+unit picker from the template.
 
 ## Publishing over FTP or rsync
 
