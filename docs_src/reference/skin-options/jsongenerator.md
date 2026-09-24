@@ -21,6 +21,18 @@ and the PNG show the same thing.
 Either way the syntax is the Image generator's. See
 [_[ImageGenerator]_](imagegenerator.md).
 
+## Which plot options apply
+
+A plot definition can carry any option the Image generator knows. This
+generator reads the ones that say what the plot is: `time_length`,
+`aggregate_type`, `aggregate_interval`, `data_binding`, `data_type`, `unit`,
+`label`, `plot_type`, `color`, `fill_color`, `chart_line_colors`,
+`chart_fill_colors`, `yscale`, `y_nticks`, `x_interval`, `vector_rotate`,
+`rose_label`, `line_gap_fraction`, `show_daynight` and `skip_if_empty`.
+
+Everything else describes how to draw an image, such as fonts, image sizes and
+marker shapes, and is ignored.
+
 ## General options
 
 #### json_dest_dir
@@ -81,8 +93,7 @@ The grid the older year files are written on. A year at four hours is about
 #### fine_months
 
 How many calendar months, counting back from this one, are written on a closer
-grid than the year files. This is what a week or a month view is drawn from.
-Default is `2`.
+grid than the year files. Default is `2`.
 
 #### fine_resolution
 

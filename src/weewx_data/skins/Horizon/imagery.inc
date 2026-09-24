@@ -3,15 +3,14 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
-## All three are opt-in: they only appear if the corresponding entry exists in
-## [Extras]. See skin.conf for the option names.
+## Up to three panels: radar ('radar_img', linked to 'radar_url' if set), satellite
+## ('satellite_img', linked to 'satellite_url' if set) and a map
+## ('google_map_apikey'). Each panel appears only if its option is set in [Extras].
 ##
-## These panels carry no 'data-live-panel', unlike the others. Replacing the map
-## panel would throw away the Google Maps object inside it. The radar and satellite
-## pictures come from someone else's server, with cache headers of their own, so
-## re-rendering this panel would not fetch a newer one. 'data-live-src' names the
-## picture to request again, which the script does under a fresh query string once
-## a new record arrives.
+## The panels have no 'data-live-panel': replacing the map panel would discard the
+## Google Maps object in it, and a new <img> with the same URL would show the picture
+## from the browser's cache. Instead, on each new archive record, horizon.js requests
+## each 'data-live-src' picture again with a new query string.
 
 #if 'radar_img' in $Extras
 <section class="panel">

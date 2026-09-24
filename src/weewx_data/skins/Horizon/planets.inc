@@ -3,14 +3,9 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
-## The naked-eye planets: where each one is now, and when it rises and sets.
-##
-## Which ones, and in what order, comes from 'planets' under [DisplayOptions]. Any
-## body pyephem knows can be named there, so a station that wants Uranus can have it.
-##
-## A planet below the horizon is still worth a row: knowing that Jupiter is up at
-## four in the morning is the point of the table. The altitude says which is which,
-## and a planet that is up is marked.
+## The planets panel: for each body in 'planets', its altitude now and its rise and
+## set times. Any body that pyephem knows can be named. A planet below the horizon
+## keeps its row. 'data-up' is 1 for a planet above the horizon and 0 for one below.
 #if $almanac.hasExtras
   #set $bodies = $to_list($DisplayOptions.get('planets',
                           ['mercury', 'venus', 'mars', 'jupiter', 'saturn']))

@@ -3,13 +3,11 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
-## Sun and moon in one panel, side by side where there is room for two columns and
-## stacked where there is not. Both halves are the same files the separate panels
-## use, so there is one place to change either of them.
-##
-## Name "sunmoon" in 'panels' instead of "sun" and "moon" to use this.
+## The sun and the moon in one panel, side by side where the panel is wide enough.
+## The content comes from sun-body.inc and moon-body.inc, which sun.inc and moon.inc
+## use as well.
 #if $almanac.hasExtras
-<section class="panel" data-live-panel="sunmoon">
+<section class="panel double" data-live-panel="sunmoon">
   <div class="panel-head">
     <h2><a href="celestial.html">$gettext("Sun and moon")</a></h2>
   </div>
