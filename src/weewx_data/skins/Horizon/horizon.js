@@ -19,8 +19,28 @@
 
   /* ------------------------------------------------------------- storage */
 
+  /* remember() and recall() keep the reader's choice of theme, units and time span
+     in localStorage. Nothing the page needs in order to draw itself is kept there.
+     If storage fails, the page forgets the choice and the caller's default wins.
+
+     The Web Storage API reports failure by throwing, and both helpers catch every
+     exception on purpose. Each one is a normal condition in some browser:
+
+       SecurityError       The user blocks site data, or the page has no origin
+                           (e.g., opened as file://). Merely reading the
+                           `localStorage` property throws, so getItem() fails as
+                           well as setItem().
+       QuotaExceededError  The quota is used up, or the browser sets it to zero on
+                           purpose, as some private modes do.
+       TypeError           The embedding context has removed `localStorage`, so it
+                           is undefined.
+
+     JavaScript cannot catch by type. Rethrowing everything that is not a
+     DOMException would rethrow the TypeError and stop this script. A preference
+     that cannot be saved would then cost the page its charts. */
+
   function remember(key, value) {
-    try { localStorage.setItem(STORE + key, value); } catch (e) { /* private mode */ }
+    try { localStorage.setItem(STORE + key, value); } catch (e) { /* see above */ }
   }
 
   function recall(key, fallback) {
