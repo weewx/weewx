@@ -5,10 +5,8 @@
 /* horizon.js draws the charts of the history panel, switches the time span of the
    charts and of the current conditions, converts units, runs the live update, and
    handles the menu, theme and back-to-top buttons. The charts are drawn from the
-   JSON files that the JSON generator writes (see "The JSON generator" in the
-   Customization Guide): the archive files, and the plot files, one for each plot and
-   time span, which the JSON generator writes only when `periods` in [JSONGenerator]
-   is true. */
+   archive files of the JSON generator (see "The JSON generator" in the
+   Customization Guide). */
 
 (function () {
   'use strict';
@@ -304,12 +302,11 @@
      A conversion multiplies by the first number of a pair in 'convert' and adds the
      second. */
 
-  /* `unitChoices` holds the unit table from data/index.json. `manifest` holds all of
-     data/index.json (see "plot files" below), and refreshCharts empties `manifest` on
-     each new archive record, so that data/index.json is read again. The unit table
-     is kept in its own variable, so that the readings stay in the chosen unit system
-     while data/index.json loads again. The unit table changes only when the
-     station's configuration changes. */
+  /* `unitChoices` holds the unit table from data/index.json. refreshCharts empties
+     `manifest` on each new archive record, so that data/index.json is read again.
+     `unitChoices` survives that, so the readings stay in the chosen unit system
+     while data/index.json loads. The unit table changes only when the station's
+     configuration changes. */
   var unitChoices = null;
 
   function unitTable() {
@@ -1146,32 +1143,18 @@
     return true;
   }
 
-  /* Returns a promise of the plot data for one chart card, or of null. The archive
-     files serve every time span, including the live view, i.e., the time span that
-     ends at the newest archive record. The plot files are the fallback for the live
-     view, e.g., while the JSON generator is still building the archive files. Plot
-     files are requested only where data/index.json lists some: a request for a plot
-     file that is not written costs a 404 for each chart on each page load. */
+  /* Returns a promise of the plot data for one chart card, or of null. */
   function chartSource(card) {
-    return windowFromArchive(card.dataset.group, +card.dataset.from, +card.dataset.to)
-      .then(function (meta) {
-        if (meta) return meta;
-        var hasPeriods = manifest && manifest.plots && manifest.plots.length;
-        return anchor === null && hasPeriods ? loadPlot(card.dataset.plot) : null;
-      });
+    return windowFromArchive(card.dataset.group, +card.dataset.from, +card.dataset.to);
   }
 
   /* Updates the charts to the newest archive record. Only the live view changes;
      a time span in the past stays as it is. */
   function refreshCharts() {
     if (anchor !== null) return;
-    cache.clear();
-    /* The live view is drawn from the archive files too, so their cache and
-       data/archive/index.json are read again as well. */
     archiveCache.clear();
     archiveIndex = null;
     manifest = null;
-    indexRefetched = false;
 
     /* The live view ends at the newest archive record, so each chart card gets a
        new start and end. */
@@ -1218,12 +1201,10 @@
     });
   }
 
-  /* ------------------------------------------------------------ plot files */
+  /* ------------------------------------------------------------ index.json */
 
-  /* `manifest` holds data/index.json: the lengths of the time spans (`spans`), the
-     unit table (`units`) and the list of plot files (`plots`). `cache` holds the
-     plot files fetched so far, by name. */
-  var cache = new Map();
+  /* `manifest` holds data/index.json: the length of each time span (`spans`) and
+     the unit table (`units`). */
   var manifest = null;
 
   /* --------------------------------------------------------- archive files */
@@ -1605,36 +1586,12 @@
     return fetch(DATA_DIR + '/index.json', { cache: 'no-cache' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (json) {
-        manifest = json || { plots: [] };
+        manifest = json || {};
         adoptSpans(manifest);
         if (manifest.units) unitChoices = manifest.units;
         return manifest;
       })
-      .catch(function () { manifest = { plots: [] }; return manifest; });
-  }
-
-  /* data/index.json can list a plot file that does not exist: one deleted by hand,
-     or one that FTP or rsync has not uploaded yet, although the new index.json is
-     already uploaded. loadPlot answers a 404 for a listed plot file by fetching
-     index.json again, but only once until refreshCharts clears the flag on the next
-     archive record. Otherwise a station that really lacks a plot file would fetch
-     index.json again for every chart card on every page load. */
-  var indexRefetched = false;
-
-  function loadPlot(name) {
-    if (cache.has(name)) return Promise.resolve(cache.get(name));
-    return fetch(DATA_DIR + '/' + name + '.json', { cache: 'no-cache' })
-      .then(function (r) {
-        if (r.ok) return r.json();
-        if (r.status === 404 && !indexRefetched) {
-          indexRefetched = true;
-          manifest = null;
-          return loadManifest().then(function () { return null; });
-        }
-        return null;
-      })
-      .then(function (json) { cache.set(name, json); return json; })
-      .catch(function () { cache.set(name, null); return null; });
+      .catch(function () { manifest = {}; return manifest; });
   }
 
   /* A chart card fetches and draws its chart when the chart card comes within
@@ -1757,7 +1714,7 @@
     container.setAttribute('aria-busy', 'true');
 
     Promise.all([loadManifest(), loadArchiveIndex()]).then(function (res) {
-      var mf = res[0], ai = res[1];
+      var ai = res[1];
       var groups = CFG.plotGroups || [];
       /* The time span on screen is measured once data/index.json has loaded,
          because adoptSpans then replaces the defaults in PERIOD_SECONDS with the
@@ -1765,26 +1722,18 @@
          page load would take the default of 365 days instead of the 365.25 days of
          '1y'. */
       var win = currentWindow(period);
-      var from = win.from, to = win.to, live = win.live;
+      var from = win.from, to = win.to;
 
       /* The chart cards follow the order of `plot_groups` in skin.conf, not the
          order of data/index.json. */
       var wanted = groups.map(function (g) {
-        var snapshot = (mf.plots || []).find(function (p) { return p.name === period + g; });
         var archived = (ai.groups || []).find(function (p) { return p.name === g; });
-        /* In the live view, a plot file that data/index.json lists gives the chart
-           card its name and title. */
-        if (live && snapshot) {
-          return { group: g, name: snapshot.name, title: snapshot.title };
-        }
-        /* Otherwise the archive files are the only source, and
-           data/archive/index.json gives the title. data/archive/index.json lists
-           every group with readings anywhere in the archive, not only in this time
-           span. A sensor that stopped three years ago is still listed, and its
+        /* data/archive/index.json lists every group with readings anywhere in the
+           archive. A sensor that stopped three years ago is still listed, and its
            chart would be empty on every time span since. So a chart card is made
            only where filesFor finds files for this time span. */
         if (!archived || !filesFor(g, from, to)) return null;
-        return { group: g, name: period + g, title: archived.title };
+        return { group: g, title: archived.title };
       }).filter(Boolean);
 
       container.innerHTML = '';
@@ -1800,7 +1749,6 @@
       wanted.forEach(function (entry) {
         var card = document.createElement('section');
         card.className = 'chart-card';
-        card.dataset.plot = entry.name;
         card.dataset.group = entry.group;
         card.dataset.period = period;
         card.dataset.from = from;
