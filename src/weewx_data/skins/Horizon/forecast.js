@@ -60,7 +60,7 @@
 
   function fromFile() {
     /* Where the station does not write data/forecast.json, the request ends in a
-       404. The 404 is expected and means that this source has no forecast. */
+       404. fromFile() then returns null, and start() asks Open-Meteo instead. */
     return fetch((CFG.dataDir || 'data') + '/forecast.json', { cache: 'no-cache' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; });
@@ -167,9 +167,9 @@
     };
   }
 
-  /* The labels of the units the forecast arrives in, for where CFG.units converts
-     nothing: the page shows the same units, or horizon.js has not loaded
-     data/index.json yet. */
+  /* The labels of degree_C and km_per_hour, the units the forecast arrives in.
+     reading() uses DEFAULT_LABELS where CFG.units converts nothing, i.e., where the
+     page shows the same units or horizon.js has not loaded data/index.json yet. */
   var DEFAULT_LABELS = { degree_C: '°C', km_per_hour: 'km/h' };
 
   /* Appends to `into` a `tag` element that holds the value and, in a <small>, its
