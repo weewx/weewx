@@ -33,10 +33,10 @@ That is all it takes. Without any further configuration, the generator reads
 your existing `[ImageGenerator]` section, so every plot you have ever defined,
 including ones you added by hand years ago, is available as JSON straight away.
 
-The files go into a `data` subdirectory of `HTML_ROOT`, one per plot, named
-after the plot. There is also an `index.json`, which lists what was written. A
-page reads that first, and then knows exactly which files exist. It never has
-to guess, and it never asks for a sensor your station does not have.
+The files go into a `data` subdirectory of `HTML_ROOT`. The readings are in
+`data/archive`, which covers your whole record, back to your first reading.
+There is also an `index.json`, which says how long each time span is and which
+units the readings can be shown in. A page reads that first.
 
 ## What the charts take from the images
 
@@ -77,21 +77,11 @@ there is no mixing the two.
 
 Same syntax, same option names, nothing shared with the images.
 
-## Showing more than the last four spans
+## Going back through the record
 
-The files above cover the same four windows the Image generator draws: the last
-day, week, month and year, each ending now. None of them can answer *"show me
-last March"*, because last March was never one of the four.
-
-The archive covers your whole record instead. Turn it on with:
-
-``` ini hl_lines="3"
-[JSONGenerator]
-    [[Archive]]
-        enable = true
-```
-
-Now a page can show any span you have data for, back to your first reading.
+The Image generator draws four windows: the last day, week, month and year,
+each ending now. None of them can answer *"show me last March"*. The archive
+can, because it covers your whole record.
 
 The archive is not one big file. It is cut into pieces, on three levels of
 detail, and a page fetches only the pieces it is showing:
@@ -125,17 +115,16 @@ weectl report run HorizonReport
 
 ## Reports that take too long
 
-The first report after you enable the archive has your whole record in front of
+The first report after you add the generator has your whole record in front of
 it. On a Raspberry Pi with ten years of data, that is a report that runs for
 minutes, and WeeWX skips the reports queued behind a long one.
 
 Option [`budget`](../reference/skin-options/jsongenerator.md#budget) is the way
 out. It caps how many seconds a report may spend building the archive:
 
-``` ini hl_lines="4"
+``` ini hl_lines="3"
 [JSONGenerator]
     [[Archive]]
-        enable = true
         budget = 30
 ```
 
@@ -170,10 +159,9 @@ Nothing special is needed. `FtpGenerator` and `RsyncGenerator` walk
 `HTML_ROOT`, so the `data` directory goes along with everything else.
 
 What matters is how much goes up *each cycle*, because that happens every
-archive interval. Two things keep it small. A plot built on aggregated data
-says the same thing at 10:05 as it did at 10:00, so it is not rewritten, and an
-unchanged file is not uploaded. And a finished year in the archive is written
-once, so it is uploaded once.
+archive interval. A file is rewritten only when it has a new reading, and an
+unchanged file is not uploaded. A finished year is written once, so it is
+uploaded once.
 
 On a slow line, the PNGs are usually the thing to look at first, not the JSON.
 The Horizon skin renders them at 1000×360 rather than the classic 500×180,

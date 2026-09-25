@@ -81,7 +81,7 @@ data_binding = wx_binding
 """
 
 
-def build_skin_dict(html_root, archive=False, archive_options=None):
+def build_skin_dict(html_root, archive_options=None):
     """A skin dictionary complete enough for the generator to run against."""
     # The delta-time formats contain things like %(minute_label)s, which ConfigObj would
     # otherwise try to resolve as interpolation. The report engine turns interpolation
@@ -90,12 +90,10 @@ def build_skin_dict(html_root, archive=False, archive_options=None):
 
     mine = configobj.ConfigObj(PLOT_CONF.splitlines(), interpolation=False)
 
-    json_conf = {'json_dest_dir': 'data', 'round': '3'}
-    if archive:
-        json_conf['Archive'] = {'enable': 'true',
-                                'resolution': str(ARCHIVE_RESOLUTION),
-                                'stale_age': '3600'}
-        json_conf['Archive'].update(archive_options or {})
+    json_conf = {'json_dest_dir': 'data', 'round': '3',
+                 'Archive': {'resolution': str(ARCHIVE_RESOLUTION),
+                             'stale_age': '3600'}}
+    json_conf['Archive'].update(archive_options or {})
 
     # Assemble as a plain dict, then hand the whole thing to ConfigObj at once.
     # accumulateLeaves() walks the parent chain up to the root, and only a
@@ -114,12 +112,10 @@ def build_skin_dict(html_root, archive=False, archive_options=None):
     return skin_dict
 
 
-def run_generator(config_dict, tmp_path, archive=False, gen_ts=None,
-                  archive_options=None):
+def run_generator(config_dict, tmp_path, gen_ts=None, archive_options=None):
     """Run the generator against the test database and return its output directory."""
     html_root = str(tmp_path)
-    skin_dict = build_skin_dict(html_root, archive=archive,
-                                archive_options=archive_options)
+    skin_dict = build_skin_dict(html_root, archive_options=archive_options)
 
     # WEEWX_ROOT is left as the test configuration set it, so the database is still
     # found. HTML_ROOT is absolute, and os.path.join() ignores the prefix for those.
@@ -139,485 +135,189 @@ def run_generator(config_dict, tmp_path, archive=False, gen_ts=None,
     return os.path.join(html_root, 'data')
 
 
-class TestPeriodFiles:
+class TestPlotDefinitions:
 
-    def test_writes_a_file_per_plot(self, config_dict, tmp_path):
-        data_dir = run_generator(config_dict, tmp_path)
-        written = {f for f in os.listdir(data_dir) if f.endswith('.json')}
-        assert 'daytempdew.json' in written
-        assert 'dayrain.json' in written
-        assert 'weektempdew.json' in written
-
-    def test_skips_plots_without_data(self, config_dict, tmp_path):
-        # soilMoist4 is not in the test database, and skip_if_empty is set.
-        data_dir = run_generator(config_dict, tmp_path)
-        assert not os.path.exists(os.path.join(data_dir, 'daynothing.json'))
-
-    def test_series_arrays_are_parallel(self, config_dict, tmp_path):
-        data_dir = run_generator(config_dict, tmp_path)
-        with open(os.path.join(data_dir, 'daytempdew.json'), encoding='utf-8') as fd:
-            payload = json.load(fd)
-
-        assert payload['name'] == 'daytempdew'
-        assert len(payload['series']) == 2
-        for series in payload['series']:
-            assert len(series['time']) == len(series['values'])
-            assert len(series['time']) > 0
-            # Timestamps are integers; gaps are null, never NaN.
-            assert all(isinstance(t, int) for t in series['time'])
-            assert all(v is None or isinstance(v, (int, float)) for v in series['values'])
-
-    def test_observation_types_and_labels(self, config_dict, tmp_path):
-        data_dir = run_generator(config_dict, tmp_path)
-        with open(os.path.join(data_dir, 'daytempdew.json'), encoding='utf-8') as fd:
-            payload = json.load(fd)
-
-        assert [s['obs_type'] for s in payload['series']] == ['outTemp', 'dewpoint']
-        # Labels come from [Labels][Generic], not from the raw observation name.
-        assert payload['series'][0]['label'] == 'Outside Temperature'
-
-    def test_colors_come_from_the_skin_palette(self, config_dict, tmp_path):
-        data_dir = run_generator(config_dict, tmp_path)
-        with open(os.path.join(data_dir, 'daytempdew.json'), encoding='utf-8') as fd:
-            payload = json.load(fd)
-
-        assert payload['series'][0]['color'] == '#4282b4'
-        assert payload['series'][1]['color'] == '#b44242'
-
-    def test_units_are_converted(self, config_dict, tmp_path):
-        # The test database is US; the skin asks for metricwx.
-        data_dir = run_generator(config_dict, tmp_path)
-        with open(os.path.join(data_dir, 'daytempdew.json'), encoding='utf-8') as fd:
-            payload = json.load(fd)
-
-        assert payload['unit'] == 'degree_C'
-        values = [v for v in payload['series'][0]['values'] if v is not None]
-        # Synthetic data runs roughly -20..40 C. Anything in Fahrenheit would blow past.
-        assert all(-60 < v < 60 for v in values)
-
-    def test_rounding_is_applied(self, config_dict, tmp_path):
-        data_dir = run_generator(config_dict, tmp_path)
-        with open(os.path.join(data_dir, 'daytempdew.json'), encoding='utf-8') as fd:
-            payload = json.load(fd)
-
-        for series in payload['series']:
-            for v in series['values']:
-                if v is not None:
-                    assert round(v, 3) == v
-
-    def test_bar_plots_carry_their_width(self, config_dict, tmp_path):
-        data_dir = run_generator(config_dict, tmp_path)
-        with open(os.path.join(data_dir, 'dayrain.json'), encoding='utf-8') as fd:
-            payload = json.load(fd)
-
-        series = payload['series'][0]
-        assert series['plot_type'] == 'bar'
-        assert series['aggregate_type'] == 'sum'
-        assert series['aggregate_interval'] == 3600
-        assert len(series['bar_width']) == len(series['values'])
-
-    def test_daynight_transitions_are_emitted(self, config_dict, tmp_path):
-        data_dir = run_generator(config_dict, tmp_path)
-        with open(os.path.join(data_dir, 'daytempdew.json'), encoding='utf-8') as fd:
-            payload = json.load(fd)
-
-        assert 'daynight' in payload
-        assert payload['daynight']['first'] in ('day', 'night')
-        # 27 hours must contain at least one sunrise or sunset outside the polar circles.
-        assert len(payload['daynight']['transitions']) >= 1
-        for ts in payload['daynight']['transitions']:
-            assert payload['start'] <= ts <= payload['stop']
-
-    def test_twilight_bands_are_emitted(self, config_dict, tmp_path):
-        data_dir = run_generator(config_dict, tmp_path)
-        with open(os.path.join(data_dir, 'daytempdew.json'), encoding='utf-8') as fd:
-            payload = json.load(fd)
-
-        bands = payload['daynight']['twilight']
-        assert bands, "no civil twilight emitted"
-        for band in bands:
-            assert band['dir'] in ('dawn', 'dusk')
-            assert band['from'] < band['to']
-            # Civil twilight at 45 degrees latitude runs roughly 25-40 minutes. Allow
-            # a generous window, but catch anything absurd.
-            minutes = (band['to'] - band['from']) / 60.0
-            assert 15 < minutes < 90, "implausible twilight of %.0f minutes" % minutes
-
-        # Dawn ends at sunrise and dusk starts at sunset, so each band boundary that
-        # falls inside the window must be one of the horizon crossings.
-        crossings = set(payload['daynight']['transitions'])
-        for band in bands:
-            edge = band['to'] if band['dir'] == 'dawn' else band['from']
-            if payload['start'] < edge < payload['stop']:
-                assert edge in crossings
-
-    def test_vector_plot_carries_components_and_rotation(self, config_dict, tmp_path):
-        """A vector plot needs the components, and the rotation the PNGs use.
-
-        The ImageGenerator negates vector_rotate before handing it to weeplot. Passing
-        it through unnegated draws every arrow mirrored against the PNG of the same
-        data -- which looks plausible until you put the two side by side.
-        """
-        data_dir = run_generator(config_dict, tmp_path)
-        with open(os.path.join(data_dir, 'daywindvec.json'), encoding='utf-8') as fd:
-            payload = json.load(fd)
-
-        series = payload['series'][0]
-        assert series['plot_type'] == 'vector'
-
-        # Components, one per sample, alongside the magnitude.
-        assert len(series['vector_x']) == len(series['values'])
-        assert len(series['vector_y']) == len(series['values'])
-
-        # Magnitude has to agree with the components it was derived from.
-        for vx, vy, mag in zip(series['vector_x'], series['vector_y'], series['values']):
-            if vx is None or mag is None:
-                continue
-            assert mag == pytest.approx((vx ** 2 + vy ** 2) ** 0.5, abs=0.01)
-
-        # The skin configures 90; what reaches the client must be -90.
-        assert series['vector_rotate'] == -90.0
-
-    def test_time_axis_matches_the_image_generator(self, config_dict, tmp_path):
-        """The two generators must agree on the window, or a chart and the PNG of the
-        same plot show different days."""
-        html_root = str(tmp_path)
-        skin_dict = build_skin_dict(html_root)
+    @staticmethod
+    def run(config_dict, skin_dict, stop_event=True):
         cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
-        stn_info = weewx.station.StationInfo(**cd['Station'])
-        gen_ts = parameters.synthetic_dict['stop_ts']
-
-        img_gen = weewx.imagegenerator.ImageGenerator(
-            cd, skin_dict, gen_ts, first_run=True, stn_info=stn_info)
-        img_gen.start()
-        try:
-            plot = img_gen.gen_plot(gen_ts,
-                                    accumulateLeaves(
-                                        skin_dict['ImageGenerator']['day_images']['daytempdew']),
-                                    skin_dict['ImageGenerator']['day_images']['daytempdew'])
-        finally:
-            img_gen.finalize()
-        xmin, xmax, xinc = plot.xscale
-
-        data_dir = run_generator(config_dict, tmp_path)
-        with open(os.path.join(data_dir, 'daytempdew.json'), encoding='utf-8') as fd:
-            payload = json.load(fd)
-
-        assert payload['start'] == int(xmin)
-        assert payload['stop'] == int(xmax)
-        assert payload['x_interval'] == int(xinc)
-
-        # The window is snapped, so it is not simply now minus time_length. Without that
-        # snapping this test would pass for the wrong reason.
-        assert payload['stop'] != int(gen_ts)
-
-    def test_explicit_x_interval_wins(self, config_dict, tmp_path):
-        html_root = str(tmp_path)
-        skin_dict = build_skin_dict(html_root)
-        skin_dict['ImageGenerator']['day_images']['daytempdew']['x_interval'] = '2h'
-        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
-        stn_info = weewx.station.StationInfo(**cd['Station'])
-
         generator = weewx.jsongenerator.JSONGenerator(
-            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
-            first_run=True, stn_info=stn_info)
+            cd, skin_dict, parameters.synthetic_dict['stop_ts'], first_run=True,
+            stn_info=weewx.station.StationInfo(**cd['Station']))
+        if not stop_event:
+            del generator.stop_event
         try:
             generator.start()
         finally:
             generator.finalize()
+        return os.path.join(skin_dict['HTML_ROOT'], 'data')
 
-        with open(os.path.join(html_root, 'data', 'daytempdew.json'),
-                  encoding='utf-8') as fd:
-            payload = json.load(fd)
-        assert payload['x_interval'] == 7200
-
-    @pytest.mark.parametrize('plot', ['daytempdew', 'dayrain', 'daywindvec'])
-    def test_y_axis_matches_the_image_generator(self, config_dict, tmp_path, plot):
-        """A line, a bar plot and a vector plot must all land on the PNG's axis."""
-        html_root = str(tmp_path)
-        skin_dict = build_skin_dict(html_root)
-        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
-        stn_info = weewx.station.StationInfo(**cd['Station'])
-        gen_ts = parameters.synthetic_dict['stop_ts']
-
-        img_gen = weewx.imagegenerator.ImageGenerator(
-            cd, skin_dict, gen_ts, first_run=True, stn_info=stn_info)
-        img_gen.start()
-        try:
-            section = skin_dict['ImageGenerator']['day_images'][plot]
-            image_plot = img_gen.gen_plot(gen_ts, accumulateLeaves(section), section)
-            image_plot.render()          # this is what works the y scaling out
-        finally:
-            img_gen.finalize()
-
-        data_dir = run_generator(config_dict, tmp_path)
-        with open(os.path.join(data_dir, '%s.json' % plot), encoding='utf-8') as fd:
-            payload = json.load(fd)
-
-        assert payload['yscale'] == pytest.approx(list(image_plot.yscale))
-
-    def test_configured_yscale_is_honoured(self, config_dict, tmp_path):
-        html_root = str(tmp_path)
-        skin_dict = build_skin_dict(html_root)
-        skin_dict['ImageGenerator']['day_images']['daytempdew']['yscale'] = \
-            ['0.0', '360.0', '45.0']
-        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
-        stn_info = weewx.station.StationInfo(**cd['Station'])
-
-        generator = weewx.jsongenerator.JSONGenerator(
-            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
-            first_run=True, stn_info=stn_info)
-        try:
-            generator.start()
-        finally:
-            generator.finalize()
-
-        with open(os.path.join(html_root, 'data', 'daytempdew.json'),
-                  encoding='utf-8') as fd:
-            assert json.load(fd)['yscale'] == [0.0, 360.0, 45.0]
+    @staticmethod
+    def archived(data_dir):
+        """The plot groups with an archive file for 2010."""
+        return sorted(f[:-len('-2010.json')]
+                      for f in os.listdir(os.path.join(data_dir, 'archive'))
+                      if f.endswith('-2010.json') and not f.startswith('daynight'))
 
     def test_its_own_section_comes_first(self, config_dict, tmp_path):
-        """Plots defined under [JSONGenerator] win over [ImageGenerator].
-
-        A skin that draws only in the browser should not have to keep a section
-        named after images it never generates.
-        """
-        html_root = str(tmp_path)
-        skin_dict = build_skin_dict(html_root)
+        """Plots under [JSONGenerator] win over [ImageGenerator]."""
+        skin_dict = build_skin_dict(str(tmp_path))
         skin_dict['JSONGenerator']['day_images'] = {
-            'ownplot': {'time_length': '6h', 'outTemp': {'label': 'Own'}},
+            'dayown': {'time_length': '6h', 'outTemp': {'label': 'Own'}},
         }
-        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
-        stn_info = weewx.station.StationInfo(**cd['Station'])
-
-        generator = weewx.jsongenerator.JSONGenerator(
-            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
-            first_run=True, stn_info=stn_info)
-        try:
-            generator.start()
-        finally:
-            generator.finalize()
-
-        data_dir = os.path.join(html_root, 'data')
-        assert sorted(f for f in os.listdir(data_dir) if f.endswith('.json')) \
-                == ['index.json', 'ownplot.json']
+        assert self.archived(self.run(config_dict, skin_dict)) == ['own']
 
     def test_settings_are_not_mistaken_for_plots(self, config_dict, tmp_path):
-        """[[Archive]] is a subsection too, and defines no plots.
+        """[[Archive]] is a subsection of [JSONGenerator], but defines no plots.
 
-        Counting subsections alone would take it for a time span and leave the
-        generator with nothing to draw, silently.
+        Counted as a time span, [[Archive]] would leave the generator nothing to
+        draw, and no error in the log.
         """
-        html_root = str(tmp_path)
-        skin_dict = build_skin_dict(html_root, archive=True)
-        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
-        stn_info = weewx.station.StationInfo(**cd['Station'])
-
-        generator = weewx.jsongenerator.JSONGenerator(
-            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
-            first_run=True, stn_info=stn_info)
-        try:
-            generator.start()
-        finally:
-            generator.finalize()
-
-        # Falls back to [ImageGenerator] and writes its plots, not nothing.
-        data_dir = os.path.join(html_root, 'data')
-        assert 'daytempdew.json' in os.listdir(data_dir)
+        data_dir = self.run(config_dict, build_skin_dict(str(tmp_path)))
+        assert 'tempdew' in self.archived(data_dir)
 
     def test_plots_can_live_in_this_generators_own_section(self, config_dict, tmp_path):
-        """A skin running no ImageGenerator keeps its plots here.
-
-        Sharing [ImageGenerator] means a plot is defined once and both the image
-        and the chart have it. A skin that draws only charts has no image
-        generator, and should not need a section named after one.
-        """
-        html_root = str(tmp_path)
-        skin_dict = build_skin_dict(html_root)
+        """A skin without an ImageGenerator keeps its plots in [JSONGenerator]."""
+        skin_dict = build_skin_dict(str(tmp_path))
         skin_dict['JSONGenerator'].update({
             'chart_line_colors': '#118844',
             'day_images': {
-                'mything': {'time_length': '6h', 'outTemp': {'label': 'Mine'}},
+                'daymything': {'time_length': '6h', 'outTemp': {'label': 'Mine'}},
             },
         })
         del skin_dict['ImageGenerator']
-        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
-        stn_info = weewx.station.StationInfo(**cd['Station'])
+        data_dir = self.run(config_dict, skin_dict)
 
-        generator = weewx.jsongenerator.JSONGenerator(
-            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
-            first_run=True, stn_info=stn_info)
-        try:
-            generator.start()
-        finally:
-            generator.finalize()
-
-        data_dir = os.path.join(html_root, 'data')
-        written = sorted(f for f in os.listdir(data_dir) if f.endswith('.json'))
-        assert written == ['index.json', 'mything.json']
-
-        with open(os.path.join(data_dir, 'mything.json'), encoding='utf-8') as fd:
-            payload = json.load(fd)
-        assert payload['series'][0]['label'] == 'Mine'
-        assert payload['series'][0]['color'] == '#118844'
-        assert payload['stop'] - payload['start'] == 6 * 3600
+        assert self.archived(data_dir) == ['mything']
+        with open(os.path.join(data_dir, 'archive', 'mything-2010.json'),
+                  encoding='utf-8') as fd:
+            series = json.load(fd)['series'][0]
+        assert series['label'] == 'Mine'
+        assert series['color'] == '#118844'
+        with open(os.path.join(data_dir, 'index.json'), encoding='utf-8') as fd:
+            assert json.load(fd)['spans'] == {'day_images': 6 * 3600}
 
     def test_the_image_generator_section_still_serves(self, config_dict, tmp_path):
-        """A skin written before this generator existed needs no new configuration."""
-        html_root = str(tmp_path)
-        skin_dict = build_skin_dict(html_root)
-        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
-        stn_info = weewx.station.StationInfo(**cd['Station'])
-
-        generator = weewx.jsongenerator.JSONGenerator(
-            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
-            first_run=True, stn_info=stn_info)
-        try:
-            generator.start()
-        finally:
-            generator.finalize()
-
-        assert 'daytempdew.json' in os.listdir(os.path.join(html_root, 'data'))
+        """A skin written before the JSON generator needs no new configuration."""
+        data_dir = self.run(config_dict, build_skin_dict(str(tmp_path)))
+        assert self.archived(data_dir) == ['rain', 'tempdew', 'windvec']
 
     def test_no_plot_definitions_anywhere_is_reported(self, config_dict, tmp_path):
-        """A skin with no plots at all writes nothing, and says why."""
-        html_root = str(tmp_path)
-        skin_dict = build_skin_dict(html_root)
+        """A skin without plots writes nothing."""
+        skin_dict = build_skin_dict(str(tmp_path))
         del skin_dict['ImageGenerator']
-        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
-        stn_info = weewx.station.StationInfo(**cd['Station'])
-
-        generator = weewx.jsongenerator.JSONGenerator(
-            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
-            first_run=True, stn_info=stn_info)
-        try:
-            generator.start()
-        finally:
-            generator.finalize()
-
-        assert not os.path.isdir(os.path.join(html_root, 'data'))
+        self.run(config_dict, skin_dict)
+        assert not os.path.isdir(os.path.join(str(tmp_path), 'data'))
 
     def test_a_skin_without_a_json_section_runs(self, config_dict, tmp_path):
-        """[ImageGenerator] on its own is enough, which is what the module promises.
+        """[ImageGenerator] alone is enough.
 
-        search_up() climbs the section tree through .parent. An empty dict standing
-        in for a missing section has none, so every option read that way raises.
+        search_up() climbs the section tree through .parent. A plain dict in place
+        of [JSONGenerator] has no .parent, and every search_up() on it raises.
         """
-        html_root = str(tmp_path)
-        skin_dict = build_skin_dict(html_root)
+        skin_dict = build_skin_dict(str(tmp_path))
         del skin_dict['JSONGenerator']
-        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
-        stn_info = weewx.station.StationInfo(**cd['Station'])
-
-        generator = weewx.jsongenerator.JSONGenerator(
-            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
-            first_run=True, stn_info=stn_info)
-        try:
-            generator.start()
-        finally:
-            generator.finalize()
-
-        written = {f for f in os.listdir(os.path.join(html_root, 'data'))
-                   if f.endswith('.json')}
-        assert written
+        data_dir = self.run(config_dict, skin_dict)
+        assert os.path.exists(os.path.join(data_dir, 'index.json'))
+        assert self.archived(data_dir)
 
     def test_it_runs_where_there_is_no_stop_event(self, config_dict, tmp_path):
         """ReportGenerator gained stop_event in v5.5.0.
 
-        Under an earlier WeeWX the attribute is never set, and the generator runs
+        Under an earlier WeeWX, stop_event is never set. The JSON generator runs
         there as an extension.
         """
-        html_root = str(tmp_path)
-        skin_dict = build_skin_dict(html_root)
-        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
-        stn_info = weewx.station.StationInfo(**cd['Station'])
+        data_dir = self.run(config_dict, build_skin_dict(str(tmp_path)),
+                            stop_event=False)
+        assert self.archived(data_dir)
 
-        generator = weewx.jsongenerator.JSONGenerator(
-            cd, skin_dict, parameters.synthetic_dict['stop_ts'],
-            first_run=True, stn_info=stn_info)
-        del generator.stop_event
-        try:
-            generator.start()
-        finally:
-            generator.finalize()
 
-        written = {f for f in os.listdir(os.path.join(html_root, 'data'))
-                   if f.endswith('.json')}
-        assert written
+class TestIndex:
 
-    def test_manifest_says_whether_images_are_drawn(self, config_dict, tmp_path):
-        """A page offering a link to a PNG needs to know if anyone writes it.
+    @staticmethod
+    def index(data_dir):
+        with open(os.path.join(data_dir, 'index.json'), encoding='utf-8') as fd:
+            return json.load(fd)
 
-        The skin says once, in [Generators]. Telling the page a second time in
-        [DisplayOptions] gives two answers that can disagree.
-        """
-        html_root = str(tmp_path)
-        skin_dict = build_skin_dict(html_root)
+    def test_the_index_says_whether_images_are_drawn(self, config_dict, tmp_path):
+        """The skin says it once, in [Generators]."""
+        skin_dict = build_skin_dict(str(tmp_path))
         skin_dict['Generators'] = {
             'generator_list': 'weewx.jsongenerator.JSONGenerator',
         }
-        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
-        stn_info = weewx.station.StationInfo(**cd['Station'])
 
-        def run(sd):
-            gen = weewx.jsongenerator.JSONGenerator(
-                cd, sd, parameters.synthetic_dict['stop_ts'],
-                first_run=True, stn_info=stn_info)
-            try:
-                gen.start()
-            finally:
-                gen.finalize()
-            with open(os.path.join(html_root, 'data', 'index.json'),
-                      encoding='utf-8') as fd:
-                return json.load(fd)
+        def images():
+            return self.index(TestPlotDefinitions.run(config_dict, skin_dict))['images']
 
-        assert run(skin_dict)['images'] is False
+        assert images() is False
 
-        # A generator whose name merely holds the word draws no plots.
+        # A generator with 'image' in its name is not the ImageGenerator.
         skin_dict['Generators']['generator_list'] = \
             'weewx.jsongenerator.JSONGenerator, user.gallery.ImageGalleryGenerator'
-        assert run(skin_dict)['images'] is False
+        assert images() is False
 
         skin_dict['Generators']['generator_list'] = \
             'weewx.jsongenerator.JSONGenerator, weewx.imagegenerator.ImageGenerator'
-        assert run(skin_dict)['images'] is True
+        assert images() is True
 
-    def test_manifest_lists_what_exists(self, config_dict, tmp_path):
-        data_dir = run_generator(config_dict, tmp_path)
-        with open(os.path.join(data_dir, 'index.json'), encoding='utf-8') as fd:
-            index = json.load(fd)
-
-        names = {p['name'] for p in index['plots']}
-        assert 'daytempdew' in names
-        assert 'daynothing' not in names          # skipped, so not advertised
-        entry = next(p for p in index['plots'] if p['name'] == 'daytempdew')
-        assert entry['obs_types'] == ['outTemp', 'dewpoint']
-        assert entry['title']
+    def test_the_index_gives_the_length_of_each_span(self, config_dict, tmp_path):
+        index = self.index(run_generator(config_dict, tmp_path))
+        assert index['spans'] == {'day_images': 27 * 3600, 'week_images': 7 * 86400}
 
     def test_the_index_says_which_units_the_report_used(self, config_dict, tmp_path):
-        """A reading the page fetches for itself has to be put in the same units.
+        """The forecast arrives in Celsius. The page converts it into the report's unit.
 
-        The forecast arrives in Celsius whichever source answered. Without this the
-        page can only convert once a reader has picked a system by hand, and
-        'Default' then means whatever the reading came in.
+        Without units['report'], the page converts the forecast only after the reader
+        picks a unit system by hand.
         """
         data_dir = run_generator(config_dict, tmp_path)
-        with open(os.path.join(data_dir, 'index.json'), encoding='utf-8') as fd:
-            index = json.load(fd)
-        units = index['units']
+        units = self.index(data_dir)['units']
 
-        # Whatever the skin is set to, this has to be what the files were actually
-        # written in. Comparing against a fixed unit would only restate the test
-        # skin's configuration.
-        plot = next(p for p in index['plots'] if p['name'] == 'daytempdew')
-        with open(os.path.join(data_dir, 'daytempdew.json'), encoding='utf-8') as fd:
+        # Compared with the unit of an archive file, not with a fixed unit. A fixed
+        # unit would only restate the test skin's configuration.
+        with open(os.path.join(data_dir, 'archive', 'tempdew-2010.json'),
+                  encoding='utf-8') as fd:
             written = json.load(fd)['unit']
         assert units['report'][units['groups']['outTemp']] == written
-        assert plot['obs_types'][0] == 'outTemp'
 
-        # Every group the page may show a reading from is named, or a reading the
-        # page fetches for itself has nothing to be converted into.
+        # Every unit group that appears has a unit in units['report'].
         assert set(units['report']) >= set(units['groups'].values()) - {None}
+
+
+class TestDayNight:
+
+    @staticmethod
+    def daynight(data_dir):
+        with open(os.path.join(data_dir, 'archive', 'daynight-2010.json'),
+                  encoding='utf-8') as fd:
+            return json.load(fd)
+
+    def test_sunrise_and_sunset_are_written(self, config_dict, tmp_path):
+        dn = self.daynight(run_generator(config_dict, tmp_path))
+
+        assert dn['first'] in ('day', 'night')
+        assert dn['transitions']
+        assert dn['transitions'] == sorted(dn['transitions'])
+        assert dn['start'] <= dn['transitions'][0]
+
+    def test_twilight_bands_are_written(self, config_dict, tmp_path):
+        dn = self.daynight(run_generator(config_dict, tmp_path))
+
+        bands = dn['twilight']
+        assert bands, "no civil twilight written"
+        for band in bands:
+            assert band['dir'] in ('dawn', 'dusk')
+            assert band['from'] < band['to']
+            # Civil twilight at 45 degrees latitude lasts about 25 to 40 minutes.
+            minutes = (band['to'] - band['from']) / 60.0
+            assert 15 < minutes < 90, "implausible twilight of %.0f minutes" % minutes
+
+        # Dawn ends at sunrise, and dusk starts at sunset.
+        crossings = set(dn['transitions'])
+        last = dn['transitions'][-1]
+        for band in bands:
+            edge = band['to'] if band['dir'] == 'dawn' else band['from']
+            if dn['start'] < edge < last:
+                assert edge in crossings
 
 
 class TestArchive:
@@ -630,8 +330,7 @@ class TestArchive:
         file costs to run. The tests below look at the same output instead of each
         building their own; the ones that need a second run still make it.
         """
-        data_dir = run_generator(config_dict, tmp_path_factory.mktemp('archive'),
-                                 archive=True)
+        data_dir = run_generator(config_dict, tmp_path_factory.mktemp('archive'))
         return os.path.join(data_dir, 'archive')
 
     def test_writes_one_file_per_group_and_year(self, archive_dir):
@@ -668,23 +367,23 @@ class TestArchive:
         This is the case that matters in practice: reports run every archive interval,
         and the archive must cost almost nothing on all the runs after the first.
         """
-        data_dir = run_generator(config_dict, tmp_path, archive=True)
+        data_dir = run_generator(config_dict, tmp_path)
         path = os.path.join(data_dir, 'archive', 'tempdew-2010.json')
         before = os.path.getmtime(path)
 
-        run_generator(config_dict, tmp_path, archive=True)
+        run_generator(config_dict, tmp_path)
 
         assert os.path.getmtime(path) == before
 
     def test_a_new_grid_slot_rewrites_the_file(self, config_dict, tmp_path):
         """The current year is rewritten once the data reach into the next slot."""
         stop_ts = parameters.synthetic_dict['stop_ts']
-        data_dir = run_generator(config_dict, tmp_path, archive=True,
+        data_dir = run_generator(config_dict, tmp_path,
                                  gen_ts=stop_ts - ARCHIVE_RESOLUTION)
         path = os.path.join(data_dir, 'archive', 'tempdew-2010.json')
         before = os.path.getmtime(path)
 
-        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts)
+        run_generator(config_dict, tmp_path, gen_ts=stop_ts)
 
         assert os.path.getmtime(path) != before
 
@@ -696,14 +395,14 @@ class TestArchive:
         missing a day of data. Reported by tkeffer in #1111.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        data_dir = run_generator(config_dict, tmp_path, archive=True,
+        data_dir = run_generator(config_dict, tmp_path,
                                  gen_ts=stop_ts - 2 * 86400)
         path = os.path.join(data_dir, 'archive', 'tempdew-2010.json')
         with open(path, encoding='utf-8') as fd:
             before = json.load(fd)
 
         # The file is seconds old at this point. Only the data have moved.
-        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts)
+        run_generator(config_dict, tmp_path, gen_ts=stop_ts)
         with open(path, encoding='utf-8') as fd:
             after = json.load(fd)
 
@@ -719,7 +418,7 @@ class TestArchive:
         A finished year is otherwise written once and skipped forever, so imported
         history would never show up.
         """
-        data_dir = run_generator(config_dict, tmp_path, archive=True)
+        data_dir = run_generator(config_dict, tmp_path)
         index_path = os.path.join(data_dir, 'archive', 'index.json')
         path = os.path.join(data_dir, 'archive', 'tempdew-2010.json')
         before = os.path.getmtime(path)
@@ -732,12 +431,12 @@ class TestArchive:
         with open(index_path, 'w', encoding='utf-8') as fd:
             json.dump(index, fd)
 
-        run_generator(config_dict, tmp_path, archive=True)
+        run_generator(config_dict, tmp_path)
 
         assert os.path.getmtime(path) != before
 
     def test_archive_index_lists_years(self, config_dict, tmp_path):
-        data_dir = run_generator(config_dict, tmp_path, archive=True)
+        data_dir = run_generator(config_dict, tmp_path)
         with open(os.path.join(data_dir, 'archive', 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
 
@@ -748,7 +447,7 @@ class TestArchive:
 
     def test_a_finer_grid_is_written_for_the_recent_past(self, config_dict, tmp_path):
         """An hourly grid flattens a single day, so recent months also get a fine one."""
-        data_dir = run_generator(config_dict, tmp_path, archive=True,
+        data_dir = run_generator(config_dict, tmp_path,
                                  archive_options={'fine_months': '2',
                                                   'fine_resolution': '300'})
         archive_dir = os.path.join(data_dir, 'archive')
@@ -773,7 +472,7 @@ class TestArchive:
 
     def test_a_grid_that_is_not_finer_is_refused(self, config_dict, tmp_path):
         """'5m' means five months. Silently writing that would be worse than saying so."""
-        data_dir = run_generator(config_dict, tmp_path, archive=True,
+        data_dir = run_generator(config_dict, tmp_path,
                                  archive_options={'fine_months': '2',
                                                   'fine_resolution': '28800'})
         archive_dir = os.path.join(data_dir, 'archive')
@@ -819,7 +518,7 @@ class TestArchiveExtension:
         gen_ts = first_ts
         data_dir = None
         while True:
-            data_dir = run_generator(config_dict, root, archive=True, gen_ts=gen_ts,
+            data_dir = run_generator(config_dict, root, gen_ts=gen_ts,
                                      archive_options=options)
             if gen_ts >= last_ts:
                 break
@@ -838,7 +537,7 @@ class TestArchiveExtension:
         grown = self.walk_forward(config_dict, tmp_path_factory.mktemp('grown'),
                                   first_ts, stop_ts, ARCHIVE_RESOLUTION)
         built = os.path.join(
-            run_generator(config_dict, tmp_path_factory.mktemp('built'), archive=True,
+            run_generator(config_dict, tmp_path_factory.mktemp('built'),
                           gen_ts=stop_ts),
             'archive')
 
@@ -865,7 +564,7 @@ class TestArchiveExtension:
                                   first_ts, last_ts, ARCHIVE_RESOLUTION)
         built = os.path.join(
             run_generator(config_dict, tmp_path_factory.mktemp('dst_built'),
-                          archive=True, gen_ts=last_ts), 'archive')
+                          gen_ts=last_ts), 'archive')
 
         assert self.payloads(grown) == self.payloads(built)
 
@@ -886,7 +585,7 @@ class TestArchiveExtension:
                                   first_ts, stop_ts, 3600, options)
         built = os.path.join(
             run_generator(config_dict, tmp_path_factory.mktemp('fine_built'),
-                          archive=True, gen_ts=stop_ts, archive_options=options),
+                          gen_ts=stop_ts, archive_options=options),
             'archive')
 
         grown_files = self.payloads(grown, only=current_month)
@@ -897,7 +596,7 @@ class TestArchiveExtension:
                                                     monkeypatch):
         """The whole point. A year's file must not cost a query per slot in the year."""
         stop_ts = parameters.synthetic_dict['stop_ts']
-        run_generator(config_dict, tmp_path, archive=True,
+        run_generator(config_dict, tmp_path,
                       gen_ts=stop_ts - ARCHIVE_RESOLUTION,
                       archive_options={'rebuild': '0'})
 
@@ -907,14 +606,13 @@ class TestArchiveExtension:
                             lambda *args, **kwargs: calls.append(args[1])
                             or original(*args, **kwargs))
 
-        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                       archive_options={'rebuild': '0'})
 
         assert calls, "the second run asked for nothing at all"
-        # gen_json() is in here too, and its longest plot is a week. Anything longer
-        # than that is the archive asking for a span of the year, which is what
-        # carrying the file forward is supposed to have made unnecessary.
-        assert max(span.stop - span.start for span in calls) <= 8 * 86400
+        # A call over more than a day is the archive working out the year again.
+        # Carrying the file forward makes that unnecessary.
+        assert max(span.stop - span.start for span in calls) <= 86400
 
     def test_a_rebuild_happens_once_a_calendar_day(self, config_dict, tmp_path):
         """Anything that changed further back than the last report needs this."""
@@ -922,23 +620,23 @@ class TestArchiveExtension:
         index_path = lambda d: os.path.join(d, 'archive', 'index.json')
         rebuilt_at = lambda d: json.load(open(index_path(d), encoding='utf-8'))['rebuilt']
 
-        data_dir = run_generator(config_dict, tmp_path, archive=True,
+        data_dir = run_generator(config_dict, tmp_path,
                                  gen_ts=stop_ts - 86400)
         first = rebuilt_at(data_dir)
         assert first is not None
 
         # Later the same day: carried forward, so the stamp does not move.
-        run_generator(config_dict, tmp_path, archive=True,
+        run_generator(config_dict, tmp_path,
                       gen_ts=stop_ts - 86400 + ARCHIVE_RESOLUTION)
         assert rebuilt_at(data_dir) == first
 
         # The next day: rebuilt, so it does.
-        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts)
+        run_generator(config_dict, tmp_path, gen_ts=stop_ts)
         assert rebuilt_at(data_dir) != first
 
     def test_rebuilding_can_be_turned_off(self, config_dict, tmp_path):
         stop_ts = parameters.synthetic_dict['stop_ts']
-        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts - 86400,
+        run_generator(config_dict, tmp_path, gen_ts=stop_ts - 86400,
                       archive_options={'rebuild': '0'})
         path = os.path.join(str(tmp_path), 'data', 'archive', 'index.json')
         with open(path, encoding='utf-8') as fd:
@@ -952,7 +650,7 @@ class TestArchiveExtension:
         one's label.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        run_generator(config_dict, tmp_path, archive=True,
+        run_generator(config_dict, tmp_path,
                       gen_ts=stop_ts - ARCHIVE_RESOLUTION,
                       archive_options={'rebuild': '0'})
         path = os.path.join(str(tmp_path), 'data', 'archive', 'tempdew-2010.json')
@@ -964,7 +662,7 @@ class TestArchiveExtension:
         with open(path, 'w', encoding='utf-8') as fd:
             json.dump(payload, fd)
 
-        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                       archive_options={'rebuild': '0'})
 
         with open(path, encoding='utf-8') as fd:
@@ -1087,9 +785,9 @@ class TestArchiveMemory:
         stop_ts = parameters.synthetic_dict['stop_ts']
         options = {'fine_months': '2', 'fine_resolution': '3600'}
         # Two runs a month apart, so the first month falls out of the window.
-        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts - 45 * 86400,
+        run_generator(config_dict, tmp_path, gen_ts=stop_ts - 45 * 86400,
                       archive_options=options)
-        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
 
         archive_dir = os.path.join(data_dir, 'archive')
@@ -1112,7 +810,7 @@ class TestArchiveMemory:
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         options = {'fine_months': '2', 'fine_resolution': '3600'}
-        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
         archive_dir = os.path.join(data_dir, 'archive')
         index_path = os.path.join(archive_dir, 'index.json')
@@ -1120,7 +818,7 @@ class TestArchiveMemory:
             before = json.load(fd)
 
         os.remove(index_path)
-        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                       archive_options=options)
 
         with open(index_path, encoding='utf-8') as fd:
@@ -1139,9 +837,9 @@ class TestArchiveMemory:
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         options = {'fine_months': '2', 'fine_resolution': '3600'}
-        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts - 45 * 86400,
+        run_generator(config_dict, tmp_path, gen_ts=stop_ts - 45 * 86400,
                       archive_options=options)
-        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
         archive_dir = os.path.join(data_dir, 'archive')
 
@@ -1155,7 +853,7 @@ class TestArchiveMemory:
         for name in gone:
             os.remove(os.path.join(archive_dir, name))
 
-        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                       archive_options=options)
 
         with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
@@ -1167,7 +865,7 @@ class TestArchiveMemory:
     def test_the_index_records_the_grid_of_each_file(self, config_dict, tmp_path):
         """Files are not all on the same grid, so the reader is told per file."""
         stop_ts = parameters.synthetic_dict['stop_ts']
-        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts)
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts)
         with open(os.path.join(data_dir, 'archive', 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
 
@@ -1187,7 +885,7 @@ class TestRawTier:
 
     def test_one_file_per_day(self, config_dict, tmp_path):
         stop_ts = parameters.synthetic_dict['stop_ts']
-        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=self.OPTIONS)
         archive_dir = os.path.join(data_dir, 'archive')
 
@@ -1199,7 +897,7 @@ class TestRawTier:
         """0 means 'as fine as the record', read off a record rather than a setting."""
         stop_ts = parameters.synthetic_dict['stop_ts']
         options = {'raw_days': '2', 'raw_resolution': '0'}
-        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
         archive_dir = os.path.join(data_dir, 'archive')
         name = [f for f in os.listdir(archive_dir) if '-raw-' in f][0]
@@ -1211,12 +909,12 @@ class TestRawTier:
     def test_days_that_fall_out_of_the_window_are_removed(self, config_dict, tmp_path):
         """The one tier with a horizon. Left alone it would grow a file a day forever."""
         stop_ts = parameters.synthetic_dict['stop_ts']
-        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts - 3 * 86400,
+        run_generator(config_dict, tmp_path, gen_ts=stop_ts - 3 * 86400,
                       archive_options=self.OPTIONS)
         archive_dir = os.path.join(str(tmp_path), 'data', 'archive')
         before = self.days(archive_dir)
 
-        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                       archive_options=self.OPTIONS)
         after = self.days(archive_dir)
 
@@ -1229,7 +927,7 @@ class TestRawTier:
 
     def test_the_index_names_the_raw_days(self, config_dict, tmp_path):
         stop_ts = parameters.synthetic_dict['stop_ts']
-        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=self.OPTIONS)
         with open(os.path.join(data_dir, 'archive', 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
@@ -1239,7 +937,7 @@ class TestRawTier:
         assert set(groups['tempdew']['raw_intervals'].values()) == {1800}
 
     def test_it_is_off_unless_asked_for(self, config_dict, tmp_path):
-        data_dir = run_generator(config_dict, tmp_path, archive=True)
+        data_dir = run_generator(config_dict, tmp_path)
         archive_dir = os.path.join(data_dir, 'archive')
         assert not [f for f in os.listdir(archive_dir) if '-raw-' in f]
 
@@ -1255,7 +953,7 @@ class TestBudget:
         if 'count' not in cls._whole:
             import tempfile
             target = tempfile.mkdtemp(prefix='whole-')
-            data_dir = run_generator(config_dict, target, archive=True,
+            data_dir = run_generator(config_dict, target,
                                      gen_ts=parameters.synthetic_dict['stop_ts'])
             with open(os.path.join(data_dir, 'archive', 'tempdew-2010.json'),
                       encoding='utf-8') as fd:
@@ -1275,7 +973,7 @@ class TestBudget:
         name = os.path.join('data', 'archive', 'tempdew-2010.json')
         path = os.path.join(str(tmp_path), name)
 
-        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                       archive_options={'budget': '1'})
         with open(path, encoding='utf-8') as fd:
             first = json.load(fd)
@@ -1284,7 +982,7 @@ class TestBudget:
 
         seen = [first['count']]
         for _ in range(3):
-            run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+            run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                           archive_options={'budget': '1'})
             with open(path, encoding='utf-8') as fd:
                 seen.append(json.load(fd)['count'])
@@ -1295,7 +993,7 @@ class TestBudget:
     def test_the_short_file_says_how_far_it_got(self, config_dict, tmp_path):
         """'covered' has to be the truth, or the next run thinks it is done."""
         stop_ts = parameters.synthetic_dict['stop_ts']
-        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                       archive_options={'budget': '1'})
         path = os.path.join(str(tmp_path), 'data', 'archive', 'tempdew-2010.json')
         with open(path, encoding='utf-8') as fd:
@@ -1311,10 +1009,10 @@ class TestBudget:
         stop_ts = parameters.synthetic_dict['stop_ts']
         pieces = tmp_path_factory.mktemp('pieces')
         for _ in range(40):
-            run_generator(config_dict, pieces, archive=True, gen_ts=stop_ts,
+            run_generator(config_dict, pieces, gen_ts=stop_ts,
                           archive_options={'budget': '1'})
         whole = tmp_path_factory.mktemp('whole')
-        run_generator(config_dict, whole, archive=True, gen_ts=stop_ts)
+        run_generator(config_dict, whole, gen_ts=stop_ts)
 
         name = os.path.join('data', 'archive', 'tempdew-2010.json')
         with open(os.path.join(str(pieces), name), encoding='utf-8') as fd:
@@ -1333,14 +1031,14 @@ class TestBudget:
         happens to reach it again.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        full = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts)
+        full = run_generator(config_dict, tmp_path, gen_ts=stop_ts)
         index_path = os.path.join(full, 'archive', 'index.json')
         with open(index_path, encoding='utf-8') as fd:
             before = json.load(fd)
 
         # Nothing is due now, and the budget is spent at once. The index must come out
         # the same anyway, because every file is still there.
-        run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                       archive_options={'budget': '1'})
         with open(index_path, encoding='utf-8') as fd:
             after = json.load(fd)
@@ -1354,38 +1052,13 @@ class TestBudget:
         """The raw tier is what the page draws today from. It is not metered."""
         stop_ts = parameters.synthetic_dict['stop_ts']
         data_dir = run_generator(
-            config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+            config_dict, tmp_path, gen_ts=stop_ts,
             archive_options={'budget': '1', 'raw_days': '3', 'raw_resolution': '1800'})
         archive_dir = os.path.join(data_dir, 'archive')
 
         days = {f.split('-raw-')[1][:-len('.json')]
                 for f in os.listdir(archive_dir) if '-raw-' in f}
         assert len(days) == 3, days
-
-
-class TestPeriodSwitch:
-
-    def test_periods_can_be_turned_off(self, config_dict, tmp_path):
-        """A skin drawing from the archive does not need the four period files."""
-        data_dir = run_generator(config_dict, tmp_path, archive=True)
-        assert os.path.exists(os.path.join(data_dir, 'daytempdew.json'))
-
-        fresh = os.path.join(str(tmp_path), 'off')
-        skin_dict = build_skin_dict(fresh, archive=True)
-        skin_dict['JSONGenerator']['periods'] = 'false'
-        cfg = configobj.ConfigObj(config_dict.dict(), interpolation=False)
-        generator = weewx.jsongenerator.JSONGenerator(
-            cfg, skin_dict, parameters.synthetic_dict['stop_ts'], first_run=True,
-            stn_info=weewx.station.StationInfo(**cfg['Station']))
-        try:
-            generator.start()
-        finally:
-            generator.finalize()
-
-        data = os.path.join(fresh, 'data')
-        assert not os.path.exists(os.path.join(data, 'daytempdew.json'))
-        # The archive is untouched by the switch.
-        assert os.path.exists(os.path.join(data, 'archive', 'tempdew-2010.json'))
 
 
 class TestArchiveSeriesShapes:
@@ -1398,7 +1071,7 @@ class TestArchiveSeriesShapes:
         and the page would need a second source just for it.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts)
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts)
         with open(os.path.join(data_dir, 'archive', 'windvec-2010.json'),
                   encoding='utf-8') as fd:
             payload = json.load(fd)
@@ -1424,7 +1097,7 @@ class TestArchiveSeriesShapes:
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         options = {'raw_days': '2', 'raw_resolution': '900'}
-        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
         archive_dir = os.path.join(data_dir, 'archive')
         name = [f for f in os.listdir(archive_dir) if f.startswith('rain-raw-')][0]
@@ -1450,7 +1123,7 @@ class TestArchiveSeriesShapes:
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         options = {'raw_days': '5', 'raw_resolution': '900'}
-        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
         archive_dir = os.path.join(data_dir, 'archive')
 
@@ -1479,7 +1152,7 @@ class TestArchiveSeriesShapes:
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         options = {'raw_days': '5', 'raw_resolution': '900'}
-        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
         archive_dir = os.path.join(data_dir, 'archive')
 
@@ -1502,7 +1175,7 @@ class TestArchiveSeriesShapes:
 
     def test_named_types_carry_their_extremes(self, config_dict, tmp_path):
         stop_ts = parameters.synthetic_dict['stop_ts']
-        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts,
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options={'extremes': 'outTemp'})
         with open(os.path.join(data_dir, 'archive', 'tempdew-2010.json'),
                   encoding='utf-8') as fd:
@@ -1522,7 +1195,7 @@ class TestArchiveSeriesShapes:
 
     def test_extremes_are_off_by_default(self, config_dict, tmp_path):
         stop_ts = parameters.synthetic_dict['stop_ts']
-        data_dir = run_generator(config_dict, tmp_path, archive=True, gen_ts=stop_ts)
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts)
         with open(os.path.join(data_dir, 'archive', 'tempdew-2010.json'),
                   encoding='utf-8') as fd:
             payload = json.load(fd)
@@ -1536,10 +1209,10 @@ class TestArchiveSeriesShapes:
 
         grown = tmp_path_factory.mktemp('shapes_grown')
         for n in range(4, 0, -1):
-            run_generator(config_dict, grown, archive=True, archive_options=options,
+            run_generator(config_dict, grown, archive_options=options,
                           gen_ts=stop_ts - (n - 1) * ARCHIVE_RESOLUTION)
         built = tmp_path_factory.mktemp('shapes_built')
-        run_generator(config_dict, built, archive=True, gen_ts=stop_ts,
+        run_generator(config_dict, built, gen_ts=stop_ts,
                       archive_options=options)
 
         for name in ('tempdew-2010.json', 'windvec-2010.json'):
@@ -1660,13 +1333,6 @@ class TestHelpers:
         assert weewx.jsongenerator._normalize_color('0xnothex') == '0xnothex'
         assert weewx.jsongenerator._normalize_color(None) is None
 
-    def test_round_seq_keeps_gaps(self):
-        out = weewx.jsongenerator._round_seq([1.23456, None, 2.0], 2)
-        assert out == [1.23, None, 2.0]
-
-    def test_round_seq_without_rounding(self):
-        assert weewx.jsongenerator._round_seq([1.23456, None], None) == [1.23456, None]
-
     def test_split_vectors_leaves_scalars_alone(self):
         values, directions = weewx.jsongenerator._split_vectors([1.0, None, 3.0])
         assert values == [1.0, None, 3.0]
@@ -1681,114 +1347,3 @@ class TestHelpers:
         assert directions[1] is None
         assert 0 <= directions[0] <= 360
 
-
-# ==============================================================================
-#                        points that carry nothing
-# ==============================================================================
-
-def entry_with(times, values, **extra):
-    e = {'obs_type': 'extraTemp1', 'time': list(times), 'values': list(values)}
-    e.update(extra)
-    return e
-
-
-def test_empty_points_are_left_out():
-    """A source reporting every five minutes fills one archive record in five."""
-    times = [1000 + n * 60 for n in range(10)]
-    values = [None] * 10
-    for n in (0, 5):
-        values[n] = 20.0 + n
-
-    entry = entry_with(times, values)
-    weewx.jsongenerator._drop_empty_points(entry, 86400, None)
-
-    assert entry['values'] == [20.0, 25.0]
-    assert entry['time'] == [1000, 1300]
-
-
-def test_a_duration_string_is_understood():
-    """time_length may be '27h', the same as everywhere else it is read."""
-    entry = entry_with([1000 + n * 60 for n in range(40)],
-                       [20.0] + [None] * 38 + [21.0])
-
-    weewx.jsongenerator._drop_empty_points(entry, '27h', 0.1)
-
-    assert entry['values'] == [20.0, 21.0]
-
-
-def test_the_source_rhythm_decides_what_a_gap_is():
-    """Ten minutes between readings is a break for one station and normal for another."""
-    # A source on a ten-minute rhythm, one archive record in ten carrying its reading.
-    times = [1000 + n * 60 for n in range(41)]
-    values = [None] * 41
-    for n in range(0, 41, 10):
-        values[n] = 20.0 + n
-
-    entry = entry_with(times, values)
-    weewx.jsongenerator._drop_empty_points(entry, 86400, None)
-
-    # Its own rhythm, so the line runs through: no gap anywhere.
-    assert entry['values'] == [20.0, 30.0, 40.0, 50.0, 60.0]
-    assert None not in entry['values']
-
-
-def test_a_silence_several_times_the_rhythm_is_a_gap():
-    times = [1000 + n * 60 for n in range(80)]
-    values = [None] * 80
-    for n in (0, 10, 20, 30):          # ten-minute rhythm ...
-        values[n] = 20.0
-    values[79] = 21.0                  # ... then nothing for 49 minutes
-
-    entry = entry_with(times, values)
-    weewx.jsongenerator._drop_empty_points(entry, 86400, None)
-
-    assert entry['values'].count(None) == 1
-    assert entry['values'][-1] == 21.0
-
-
-def test_a_long_silence_stays_a_gap():
-    """Without this a sensor that stopped for hours would be drawn as a straight line."""
-    times = [1000 + n * 60 for n in range(40)]
-    values = [None] * 40
-    values[0] = 20.0
-    values[39] = 21.0
-
-    entry = entry_with(times, values)
-    # A tenth of a day is 8640 s; the silence here is 38 minutes, so it is not a gap.
-    # Two points are too few to measure a rhythm from, so nothing else applies.
-    weewx.jsongenerator._drop_empty_points(entry, 86400, 0.1)
-    assert entry['values'] == [20.0, 21.0]
-
-    entry = entry_with(times, values)
-    # Against a one-hour plot the same silence is most of it, so it is.
-    weewx.jsongenerator._drop_empty_points(entry, 3600, 0.1)
-    assert entry['values'] == [20.0, None, 21.0]
-
-
-def test_leading_and_trailing_nothing_is_dropped():
-    entry = entry_with([1, 2, 3, 4, 5], [None, None, 7.0, None, None])
-    weewx.jsongenerator._drop_empty_points(entry, 86400, 0.1)
-
-    assert entry['values'] == [7.0]
-    assert entry['time'] == [3]
-
-
-def test_parallel_sequences_are_filtered_along():
-    """bar_width and the vector components line up with values, index for index."""
-    entry = entry_with([1, 2, 3], [5.0, None, 7.0],
-                       bar_width=[3600, 3600, 3600],
-                       vector_x=[1.0, 2.0, 3.0], vector_y=[4.0, 5.0, 6.0])
-    weewx.jsongenerator._drop_empty_points(entry, 86400, None)
-
-    assert entry['values'] == [5.0, 7.0]
-    assert entry['bar_width'] == [3600, 3600]
-    assert entry['vector_x'] == [1.0, 3.0]
-    assert entry['vector_y'] == [4.0, 6.0]
-
-
-def test_a_full_series_is_left_exactly_as_it_was():
-    entry = entry_with([1, 2, 3], [5.0, 6.0, 7.0])
-    weewx.jsongenerator._drop_empty_points(entry, 86400, 0.1)
-
-    assert entry['values'] == [5.0, 6.0, 7.0]
-    assert entry['time'] == [1, 2, 3]

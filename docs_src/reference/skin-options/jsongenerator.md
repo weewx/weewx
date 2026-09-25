@@ -26,9 +26,8 @@ Either way the syntax is the Image generator's. See
 A plot definition can carry any option the Image generator knows. This
 generator reads the ones that say what the plot is: `time_length`,
 `aggregate_type`, `aggregate_interval`, `data_binding`, `data_type`, `unit`,
-`label`, `plot_type`, `color`, `fill_color`, `chart_line_colors`,
-`chart_fill_colors`, `yscale`, `y_nticks`, `x_interval`, `vector_rotate`,
-`rose_label`, `line_gap_fraction`, `show_daynight` and `skip_if_empty`.
+`label`, `y_label`, `plot_type`, `color`, `chart_line_colors`, `yscale`,
+`y_nticks` and `vector_rotate`.
 
 Everything else describes how to draw an image, such as fonts, image sizes and
 marker shapes, and is ignored.
@@ -39,19 +38,10 @@ marker shapes, and is ignored.
 
 Where the files go, relative to `HTML_ROOT`. Default is `data`.
 
-#### periods
-
-Whether to write one file per plot per time span, holding every reading in it.
-These are the four files named after the spans in `[[day_images]]`,
-`[[week_images]]` and so on. Default is `True`.
-
-Set it to `False` where `[[Archive]]` is enabled. The archive covers the same
-spans on grids chosen to suit them, and reaches back as far as the record goes.
-
 #### round
 
-How many decimal places a reading is written with. Three is plenty for weather
-data and keeps the files small. Default is `3`.
+How many decimal places a reading is written with, where `[[Archive]]` sets no
+`round` of its own. Default is `2`.
 
 #### include_daynight
 
@@ -64,10 +54,6 @@ The archive is the whole record, cut into files a page can fetch one at a time.
 It is written on three grids: the station's own readings for the last few days,
 a closer grid per month, and one per calendar year that coarsens with age. A
 page picks the finest grid that covers the span it is showing.
-
-#### enable
-
-Whether to write the archive at all. Default is `False`.
 
 #### aggregate_type
 
@@ -164,4 +150,5 @@ Where the archive files go, relative to `HTML_ROOT`. Default is
 
 #### round
 
-How many decimal places an archive reading is written with. Default is `2`.
+How many decimal places an archive reading is written with. Default is
+[`round`](#round) of `[JSONGenerator]`.

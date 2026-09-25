@@ -5,51 +5,23 @@
 #
 """Generate JSON time series, for a page that draws its own charts.
 
-This generator is the data-only counterpart to `weewx.imagegenerator`. It reads the same
-plot definitions, fetches the same series through `weewx.xtypes.get_series()`, applies the
-same unit conversion and label lookup, then writes the result as JSON instead of rendering
-it into a PNG.
-
-The syntax is the ImageGenerator's, so a plot already defined for a PNG is available as
-JSON without any change to the configuration.
+This generator is the data-only counterpart to `weewx.imagegenerator`. It reads plot
+definitions in the ImageGenerator's syntax, fetches the series through
+`weewx.xtypes.get_series()`, applies the same unit conversion and label lookup, then writes
+the result as JSON instead of rendering it into a PNG.
 
 "The page", throughout this module, means whatever reads these files and draws the chart.
 For the skin that ships with WeeWX that is JavaScript running in the reader's browser.
 
-Configuration
+It writes into `<HTML_ROOT>/<json_dest_dir>`:
 
-  By default the generator reads section `[ImageGenerator]`, so an existing skin needs no
-  new configuration at all. Add it to a skin like this:
+  index.json   The length of each time span, whether the ImageGenerator runs, and the
+               unit table. See gen_index().
+  archive/     The readings of each plot group over the whole record, one file per day,
+               month or year. See gen_archive().
 
-    [Generators]
-        generator_list = weewx.cheetahgenerator.CheetahGenerator, weewx.jsongenerator.JSONGenerator
-
-  Options, all optional, and all honouring the usual inheritance down the section tree:
-
-    source          = ImageGenerator   # which section holds the plot definitions
-    json_dest_dir   = data             # subdirectory of HTML_ROOT to write into
-    round           = 3                # decimal places; None to keep full precision
-    json_indent     = None             # passed to json.dump(); 2 for readable output
-    include_daynight = true            # emit sunrise/sunset transitions for shading
-
-The output for a plot named 'daytempdew' lands in `<HTML_ROOT>/<json_dest_dir>/daytempdew.json`
-and looks like this:
-
-    {
-      "name": "daytempdew",
-      "generated": 1755950000,
-      "start": 1755863600, "stop": 1755950000,
-      "aggregate_interval": null,
-      "unit": "degree_C", "unit_label": " °C",
-      "daynight": {"first": "night", "transitions": [...]},
-      "series": [
-        {"obs_type": "outTemp", "label": "Outside Temperature", "plot_type": "line",
-         "color": "#4282b4", "time": [...], "values": [...]}
-      ]
-    }
-
-Times and values are written as two arrays of the same length rather than as a list of
-pairs. That is about 30% smaller, and it is the shape charting libraries take.
+The options are under [JSONGenerator] in the Reference Guide. What an archive file holds
+is shown in _archive_span().
 """
 
 import calendar
@@ -71,8 +43,7 @@ from weeutil.config import search_up, accumulateLeaves
 from weeutil.weeutil import to_bool, to_int, TimeSpan
 # The ImageGenerator's helpers, used rather than copied, so that a fix to "is this plot
 # empty?" reaches both generators.
-from weewx.imagegenerator import _get_check_domain, _skip_if_empty, _skip_this_plot
-from weewx.units import ValueTuple
+from weewx.imagegenerator import _skip_if_empty
 
 log = logging.getLogger(__name__)
 
@@ -82,7 +53,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
     def run(self):
         self.setup()
-        self.gen_json(self.gen_ts)
+        # No plot definitions. setup() has logged the error.
+        if not self.plot_dict:
+            return
+        self.gen_index(self.gen_ts)
         self.gen_archive(self.gen_ts)
 
     def setup(self):
@@ -122,193 +96,75 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
 
-    def gen_json(self, gen_ts):
-        """Walk the plot definitions and write one JSON file per plot.
+    def gen_index(self, gen_ts):
+        """Write index.json from the plot definitions.
 
-        One file per plot per time span, holding every reading in it. These follow the
-        ImageGenerator's plot definitions, so they cover whatever the PNGs cover: the
-        last day, week, month and year, each ending now.
-
-        A skin whose archive covers the same spans does not need them, and says so
-        with 'periods = false'.
+        index.json holds the length of each time span, whether the ImageGenerator
+        runs, and the unit table. The page reads index.json before it draws a chart.
+        Nothing in index.json comes from the database.
 
         Args:
-            gen_ts (int | None): The time the report is being run for.
+            gen_ts (int|None): The time the report is being run for.
         """
-        t1 = time.time()
-        ngen = 0
-
-        if not self.plot_dict:
-            return
-        # 'periods = false' turns off the data files, not the manifest. The manifest
-        # says what the skin is: which spans it offers and how long each one is, which
-        # units its readings can be shown in, whether there are PNGs to link to. A
-        # page needs all of that whatever it draws the readings from.
-        write_periods = to_bool(self.gen_dict.get('periods', True))
-
-        log_success = to_bool(search_up(self.gen_dict, 'log_success', True))
-
-        # Where to write. Default to a 'data' subdirectory so JSON does not litter the
-        # top level next to the HTML.
         dest_dir = self.gen_dict.get('json_dest_dir', 'data')
         indent = to_int(self.gen_dict.get('json_indent'))
 
-        # One entry per plot written. At the end of this method they go into
-        # 'index.json', with each plot's title, units and observation types. The page
-        # reads it first and lays out its charts from that, rather than requesting
-        # each plot to find out whether it is there. A station without a UV sensor
-        # has no UV plot, and nothing asks for the file.
-        manifest = []
-        manifest_root = None
-        nskipped = 0
-        # How many seconds each time span covers, from 'time_length' in the plot
-        # definitions: 86400 for [[day_images]], and so on. It goes into index.json
-        # because the page draws the x axis itself, and this is the only statement of
-        # how wide a "day" plot is meant to be.
+        json_root = None
+        # Seconds per time span, from 'time_length': 86400 for [[day_images]], and so
+        # on. The page draws the x axis itself and takes its width from span_lengths.
         span_lengths = {}
-        # Observation types the skin plots, gathered from the definitions when there
-        # are no files to read them off.
-        described = set()
+        # Every observation type in the plot definitions. _unit_choices() builds the
+        # unit table from obs_types.
+        obs_types = set()
 
-        # Last run's index.json. A plot skipped as unchanged still belongs in the new
-        # index. Its entry is copied from here, rather than rebuilt by opening the
-        # file it describes.
-        previous = {}
-        try:
-            prev_path = os.path.join(self.config_dict['WEEWX_ROOT'],
-                                     search_up(self.skin_dict, 'HTML_ROOT', 'public_html'),
-                                     dest_dir, 'index.json')
-            with open(prev_path, encoding='utf-8') as fd:
-                for entry in json.load(fd).get('plots', []):
-                    previous[entry['name']] = entry
-        except (OSError, ValueError, KeyError):
-            pass
-
-        # Loop over each time span class (day, week, month, etc.):
         for timespan in self.plot_dict.sections:
-
-            # Loop over all plot names in this time span class:
             for plotname in self.plot_dict[timespan].sections:
-
-                if self.stop_event and self.stop_event.is_set():
-                    log.debug("Stop event set. Stopping JSON for plot '%s'", plotname)
-                    return
-
                 plot_options = accumulateLeaves(self.plot_dict[timespan][plotname])
-
-                plotgen_ts = gen_ts
-                if not plotgen_ts:
-                    db_manager = self.db_binder.get_manager(plot_options['data_binding'])
-                    plotgen_ts = db_manager.lastGoodStamp() or time.time()
-
                 json_root = os.path.join(self.config_dict['WEEWX_ROOT'],
                                          plot_options['HTML_ROOT'],
                                          dest_dir)
-                json_file = os.path.join(json_root, '%s.json' % plotname)
+                span_lengths[timespan] = to_int(weeutil.weeutil.nominal_spans(
+                    plot_options.get('time_length', 86400)))
+                for line_name in self.plot_dict[timespan][plotname].sections:
+                    line_options = accumulateLeaves(
+                        self.plot_dict[timespan][plotname][line_name])
+                    obs_types.add(line_options.get('data_type', line_name))
 
-                if not write_periods:
-                    # No data file, but the manifest still has to describe the skin.
-                    # The span's length is where the page gets how wide a "week" is,
-                    # and the observation types are what the unit switch is built
-                    # from. Both come from the definitions, not from any reading.
-                    manifest_root = json_root
-                    span_lengths[timespan] = to_int(weeutil.weeutil.nominal_spans(
-                        plot_options.get('time_length', 86400)))
-                    for line_name in self.plot_dict[timespan][plotname].sections:
-                        line_options = accumulateLeaves(
-                            self.plot_dict[timespan][plotname][line_name])
-                        described.add(line_options.get('data_type', line_name))
-                    continue
+        if json_root is None:
+            return
 
-                # An aggregated plot only changes when its aggregation interval
-                # rolls over: a year plot of daily averages says the same thing at
-                # 10:05 as it did at 10:00. Rewriting it costs a database read, and
-                # on a station publishing over FTP, an upload every cycle. This is
-                # the test the ImageGenerator applies to its PNGs.
-                if _skip_this_plot(plotgen_ts, plot_options, json_file) \
-                        and plotname in previous:
-                    nskipped += 1
-                    # Still advertise it: the file is there, just unchanged.
-                    manifest.append(previous[plotname])
-                    manifest_root = json_root
-                    span_lengths[timespan] = to_int(weeutil.weeutil.nominal_spans(
-                        plot_options.get('time_length', 86400)))
-                    continue
-
-                payload = self.gen_plot_data(plotgen_ts,
-                                             plot_options,
-                                             self.plot_dict[timespan][plotname],
-                                             plotname)
-
-                # 'payload' is None if skip_if_empty was truthy and nothing had data.
-                if payload is None:
-                    continue
-
-                try:
-                    _write_json(json_file, payload, indent)
-                    ngen += 1
-                    manifest_root = json_root
-                    manifest.append({
-                        'name': plotname,
-                        'group': timespan,
-                        'title': ', '.join(s['label'] for s in payload['series']),
-                        'unit': payload['unit'],
-                        'unit_label': payload['unit_label'],
-                        'obs_types': [s['obs_type'] for s in payload['series']],
-                    })
-                    span_lengths[timespan] = to_int(weeutil.weeutil.nominal_spans(
-                        plot_options.get('time_length', 86400)))
-                except OSError as e:
-                    log.error("Unable to save to file '%s': %s", json_file, e)
-
-        # index.json: the list described at the top of this method.
-        if manifest_root:
-            index_file = os.path.join(manifest_root, 'index.json')
-            obs_types = set(described)
-            units_seen = set()
-            for entry in manifest:
-                obs_types.update(entry.get('obs_types') or [])
-                if entry.get('unit'):
-                    units_seen.add(entry['unit'])
-            # Without files there is nothing to read a unit off, so ask the converter
-            # what these readings would have been written in.
-            for obs in described:
-                try:
-                    unit = self.converter.getTargetUnit(obs)[0]
-                except (KeyError, TypeError, weewx.UnknownType):
-                    continue
-                if unit:
-                    units_seen.add(unit)
+        # gen_index() reads no data. The converter says which unit each type is shown in.
+        units_seen = set()
+        for obs in obs_types:
             try:
-                _write_json(index_file,
-                            {'generated': int(gen_ts or time.time()),
-                             'spans': span_lengths,
-                             # Whether the PNGs of these plots are being written at
-                             # all. A page that offers a link to the PNG has to know
-                             # before it points at a file nobody writes.
-                             'images': self._images_are_generated(),
-                             # What it takes to show these readings in another unit.
-                             # The files hold one unit each, whichever the skin asked
-                             # for, so without this a page cannot offer a second.
-                             'units': _unit_choices(obs_types, units_seen,
-                                                    self.formatter, self.converter),
-                             'plots': manifest},
-                            indent)
-            except OSError as e:
-                log.error("Unable to save to file '%s': %s", index_file, e)
+                unit = self.converter.getTargetUnit(obs)[0]
+            except (KeyError, TypeError, weewx.UnknownType):
+                continue
+            if unit:
+                units_seen.add(unit)
 
-        t2 = time.time()
-        if log_success:
-            log.info("Generated %d JSON files (%d unchanged) for report %s in %.2f seconds",
-                     ngen, nskipped, self.skin_dict['REPORT_NAME'], t2 - t1)
+        index_file = os.path.join(json_root, 'index.json')
+        try:
+            _write_json(index_file,
+                        {'generated': int(gen_ts or time.time()),
+                         'spans': span_lengths,
+                         # True if the ImageGenerator runs. Only then does the
+                         # page link to a PNG.
+                         'images': self._images_are_generated(),
+                         # Each archive file holds one unit. With the unit table
+                         # the page converts to any other.
+                         'units': _unit_choices(obs_types, units_seen,
+                                                self.formatter, self.converter)},
+                        indent)
+        except OSError as e:
+            log.error("Unable to save to file '%s': %s", index_file, e)
 
     def gen_archive(self, gen_ts):
         """Write the whole record, one file per plot group and calendar year.
 
-        Where gen_json() writes four windows each ending now, this covers the whole
-        database. A year that has ended never changes, so its file is written once and
-        skipped from then on, and a page fetches only the years it is showing. See "The
-        JSON generator" in the Customization Guide for the format and the cost.
+        A year that has ended never changes, so its file is written once and skipped
+        from then on, and a page fetches only the years it is showing. See "The JSON
+        generator" in the Customization Guide for the format and the cost.
 
         A file is rewritten when its newest reading moves into the next slot, not when
         it reaches a given age. The two agree while the station is running. They differ
@@ -325,8 +181,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             gen_ts (int | None): The time the report is being run for.
         """
         arch_dict = self.gen_dict.get('Archive', {})
-        if not to_bool(arch_dict.get('enable', False)):
-            return
 
         t1 = time.time()
 
@@ -407,8 +261,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     'first': None, 'last': None, 'daynight': False}
         index = {}
 
-        # What already exists, from the index the last run left behind. One file, read
-        # once, the way gen_json() reads its own index.
+        # The archive index the last run wrote.
         known = self._read_archive_index(dest_dir)
         self._reconcile_index(known, os.path.join(
             self.config_dict['WEEWX_ROOT'],
@@ -1207,222 +1060,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             'series': series_out,
         }
 
-    def gen_plot_data(self, plotgen_ts, plot_options, plot_dict, plotname):
-        """Assemble the data for a single plot.
-
-        Mirrors ImageGenerator.gen_plot(), minus everything to do with drawing. Unlike
-        _archive_span() above, every reading carries its own timestamp here, because
-        the readings are as the station took them and not evenly spaced.
-
-        Args:
-            plotgen_ts (int): The time the plot is being drawn for.
-            plot_options (dict[str, Any]): The options that apply to it.
-            plot_dict (dict): Its section, holding one subsection per line.
-            plotname (str): Its name, which the file is named after.
-
-        Returns:
-            dict|None: The file's contents, in the shape shown at the top of this
-                module. None if no series had data and skip_if_empty was set.
-        """
-        time_length = weeutil.weeutil.nominal_spans(plot_options.get('time_length', 86400))
-        # Move the ends of the span onto round boundaries, using the same function the
-        # ImageGenerator calls. Taken unrounded, a "day" starts at whatever minute the
-        # last record happened to land on, and the axis labels fall between the hours.
-        minstamp, maxstamp, timeinc = weeplot.utilities.scaletime(plotgen_ts - time_length,
-                                                                  plotgen_ts)
-        x_domain = TimeSpan(int(minstamp), int(maxstamp))
-
-        # Override the tick interval if the user has given an explicit one, exactly as
-        # the ImageGenerator does.
-        timeinc_user = to_int(weeutil.weeutil.nominal_spans(plot_options.get('x_interval')))
-        if timeinc_user is not None:
-            timeinc = timeinc_user
-
-        check_domain = _get_check_domain(plot_options.get('skip_if_empty', False), x_domain)
-
-        # Default colors, so the client can inherit the skin's palette instead of
-        # inventing its own.
-        default_colors = weeutil.weeutil.option_as_list(
-            plot_options.get('chart_line_colors', [])) or []
-        default_fills = weeutil.weeutil.option_as_list(
-            plot_options.get('chart_fill_colors', [])) or []
-
-        rounding = to_int(plot_options.get('round', 3))
-
-        series_out = []
-        unit = unit_label = None
-        aggregate_interval_out = None
-
-        for idx, line_name in enumerate(plot_dict.sections):
-
-            line_options = accumulateLeaves(plot_dict[line_name])
-            var_type = line_options.get('data_type', line_name)
-
-            db_manager = self.db_binder.get_manager(line_options['data_binding'])
-
-            if _skip_if_empty(db_manager, var_type, check_domain):
-                continue
-
-            # Look for aggregation type:
-            aggregate_type = line_options.get('aggregate_type')
-            if aggregate_type in (None, '', 'None', 'none'):
-                aggregate_type = aggregate_interval = None
-            else:
-                try:
-                    aggregate_interval = weeutil.weeutil.nominal_spans(
-                        line_options['aggregate_interval'])
-                except KeyError:
-                    log.error("Aggregate interval required for aggregate type %s",
-                              aggregate_type)
-                    log.error("Line type %s skipped", var_type)
-                    continue
-
-            # Pass the remaining line options through to the xtype, exactly as the
-            # ImageGenerator does.
-            option_dict = dict(line_options)
-            option_dict.pop('aggregate_type', None)
-            option_dict.pop('aggregate_interval', None)
-            option_dict['plotgen_ts'] = plotgen_ts
-
-            try:
-                start_vec_t, stop_vec_t, data_vec_t = weewx.xtypes.get_series(
-                    var_type,
-                    x_domain,
-                    db_manager,
-                    aggregate_type=aggregate_type,
-                    aggregate_interval=aggregate_interval,
-                    **option_dict)
-            except (weewx.UnknownType, weewx.UnknownAggregation):
-                log.debug("Unknown type or aggregation for '%s'. Skipped.", var_type)
-                continue
-
-            plot_type = line_options.get('plot_type', 'line').lower()
-            if plot_type not in {'line', 'bar', 'vector'}:
-                log.error("Unknown plot type '%s'. Ignored", plot_type)
-                continue
-
-            # get_series() timestamps an aggregate at the end of its interval. For a
-            # line, the point belongs in the middle of the interval it averages, which
-            # is where the ImageGenerator puts it.
-            if aggregate_type and plot_type != 'bar':
-                stop_vec_t = ValueTuple(
-                    [x - aggregate_interval / 2.0 for x in stop_vec_t[0]],
-                    stop_vec_t[1], stop_vec_t[2])
-
-            # Convert to the requested units:
-            if plot_options.get('unit'):
-                new_data_vec_t = weewx.units.convert(data_vec_t, plot_options['unit'])
-            else:
-                new_data_vec_t = self.converter.convert(data_vec_t)
-
-            unit = new_data_vec_t[1]
-            unit_label = line_options.get(
-                'y_label', self.formatter.get_label_string(new_data_vec_t[1]))
-
-            # Resolve the label, preferring an explicit one, then a translation, then
-            # the observation type itself.
-            label = line_options.get('label')
-            if label:
-                label = self.text_dict.get(label, label)
-            else:
-                label = self.generic_dict.get(var_type, var_type)
-
-            color = line_options.get('color')
-            if color is None and default_colors:
-                color = default_colors[idx % len(default_colors)]
-            fill_color = line_options.get('fill_color')
-            if fill_color is None and plot_type == 'bar' and default_fills:
-                fill_color = default_fills[idx % len(default_fills)]
-
-            times = [None if t is None else int(t) for t in stop_vec_t[0]]
-
-            # Wind arrives as complex numbers (x + yj). Split each into a speed and a
-            # compass bearing, which is what the vector plot draws and what a reader
-            # of the JSON can use without knowing WeeWX's internal representation.
-            magnitudes, directions = _split_vectors(new_data_vec_t[0])
-            values = _round_seq(magnitudes, rounding)
-            components = _vector_components(new_data_vec_t[0])
-
-            entry = {
-                'obs_type': var_type,
-                'label': label,
-                'plot_type': plot_type,
-                'unit': new_data_vec_t[1],
-                'unit_label': (unit_label or '').strip(),
-                'time': times,
-                'values': values,
-            }
-            if directions is not None:
-                entry['directions'] = _round_seq(directions, 1)
-            if color:
-                entry['color'] = _normalize_color(color)
-            if fill_color:
-                entry['fill_color'] = _normalize_color(fill_color)
-            if aggregate_type:
-                entry['aggregate_type'] = aggregate_type
-                entry['aggregate_interval'] = aggregate_interval
-                aggregate_interval_out = aggregate_interval
-            if plot_type == 'bar':
-                # How many seconds each bar spans, so the page can draw it that wide.
-                # Bars are not all one width: an aggregate over a month is wider than
-                # one over February.
-                entry['bar_width'] = [b - a for a, b in zip(start_vec_t[0], stop_vec_t[0])]
-            if plot_type == 'vector':
-                # A vector plot draws each reading as an arrow from the zero line, so
-                # the page needs the two components and not just the speed. Sending
-                # them saves it computing them back from speed and bearing.
-                if components:
-                    entry['vector_x'] = _round_seq(components[0], rounding)
-                    entry['vector_y'] = _round_seq(components[1], rounding)
-                vr = line_options.get('vector_rotate')
-                if vr is not None:
-                    # Negated, as the ImageGenerator negates it. The option is written
-                    # for PIL, which turns the other way round from a canvas.
-                    entry['vector_rotate'] = -float(vr)
-                # The letter on the compass rose the PNGs draw in the corner. Without
-                # it nothing on the plot says which bearing the arrows point from.
-                entry['rose_label'] = self.text_dict.get(
-                    'rose_label', plot_options.get('rose_label', 'N'))
-
-            # Last, so that 'directions', 'bar_width' and the rest are already in
-            # 'entry' and get shortened along with the values they belong to.
-            _drop_empty_points(entry, plot_options.get('time_length', 86400),
-                               line_options.get('line_gap_fraction'))
-
-            series_out.append(entry)
-
-        if not series_out:
-            return None
-
-        payload = {
-            'name': plotname,
-            'generated': int(plotgen_ts),
-            'start': int(x_domain.start),
-            'stop': int(x_domain.stop),
-            'x_interval': int(timeinc),
-            'yscale': _yscale(plot_options, series_out),
-            'aggregate_interval': aggregate_interval_out,
-            'unit': unit,
-            'unit_label': (unit_label or '').strip(),
-            'series': series_out,
-        }
-
-        # The PNGs shade the hours of darkness. Send what the page needs to do the same.
-        if to_bool(plot_options.get('show_daynight', False)) \
-                and to_bool(self.gen_dict.get('include_daynight', True)):
-            try:
-                dn = _daynight(x_domain.start, x_domain.stop,
-                               self.stn_info.latitude_f, self.stn_info.longitude_f)
-                if dn:
-                    payload['daynight'] = dn
-            except Exception as e:
-                # Night shading is decorative, so a failure here must not stop the
-                # report. Log it: without a line in the log, a plot that quietly
-                # loses its shading looks like a skin problem.
-                log.warning("Could not compute day/night for '%s': %s", plotname, e)
-
-        return payload
-
 
 def _linear(convert, from_unit, to_unit):
     """The factor and offset that turn a reading in one unit into the other.
@@ -1458,7 +1095,7 @@ def _linear(convert, from_unit, to_unit):
 def _unit_choices(obs_types, units_seen, formatter, converter):
     """What the page needs in order to show these readings in another unit.
 
-    Everything a plot file carries is already converted, into whatever the skin asked
+    Everything an archive file carries is already converted, into whatever the skin asked
     for, and a page offering Fahrenheit next to Celsius cannot get there from the
     numbers alone. This is the missing half: which group each observation belongs to,
     which unit each system uses for that group, and the arithmetic between any two of
@@ -1501,7 +1138,7 @@ def _unit_choices(obs_types, units_seen, formatter, converter):
             groups[obs_type] = group
 
     # Which units the page may have to deal with. That is more than the units the
-    # plot files were written in: a viewer can switch the page to any unit system,
+    # archive files were written in: a viewer can switch the page to any unit system,
     # so every unit that any system uses for any group that appears has to be here.
     wanted = set(units_seen)
     by_system = {}
@@ -1993,79 +1630,6 @@ def _yscale(plot_options, series_out):
         return None
     nsteps = to_int(plot_options.get('y_nticks', 10))
     return list(weeplot.utilities.scale(ymin, ymax, prescale, nsteps=nsteps))
-
-
-def _drop_empty_points(entry, time_length, gap_fraction, gap_factor=3.0):
-    """Leave out the points that carry nothing, keeping real gaps visible.
-
-    A sensor reporting every ten minutes has a reading in one archive record out of
-    ten and null in the other nine. Sent as they are, the page draws a line broken in
-    hundreds of places, in a file many times larger than the readings in it.
-
-    A run of nulls counts as a gap by the sensor's own interval, not the width of the
-    plot: ten minutes without a reading is a fault at an eight second interval and
-    normal at a ten minute one. So the interval is measured, and only a run several
-    times longer is kept as a gap. 'line_gap_fraction' wins where it is set, which is
-    the ImageGenerator's fixed threshold.
-
-    Args:
-        entry (dict[str, Any]): The series to thin.
-        time_length (int): The span it covers, in seconds.
-        gap_fraction (float | None): The plot option of the same name.
-        gap_factor (float): How many archive intervals count as a gap.
-    """
-    times, values = entry['time'], entry['values']
-    if len(times) != len(values):
-        return
-
-    kept = [i for i, v in enumerate(values) if v is not None]
-    if not kept:
-        return
-
-    threshold = None
-    if gap_fraction and time_length:
-        # 'time_length' may be a duration such as '27h', the same as everywhere else
-        # it is read.
-        span = weeutil.weeutil.nominal_spans(time_length)
-        if span:
-            threshold = float(gap_fraction) * float(span)
-    if threshold is None and len(kept) >= 3:
-        spacings = sorted(times[b] - times[a] for a, b in zip(kept, kept[1:]))
-        usual = spacings[len(spacings) // 2]
-        if usual > 0:
-            threshold = gap_factor * usual
-
-    keep = []
-    for position, i in enumerate(kept):
-        if position and threshold is not None:
-            previous = kept[position - 1]
-            if times[i] - times[previous] >= threshold:
-                # Long enough to be a break in the readings rather than the sensor's
-                # normal spacing. Keep one null in the middle of the run, which is
-                # what breaks the line; the other nulls would draw nothing.
-                keep.append(previous + (i - previous) // 2)
-        keep.append(i)
-
-    if len(keep) == len(values):
-        return
-    entry['time'] = [times[i] for i in keep]
-    entry['values'] = [values[i] for i in keep]
-    for extra in ('directions', 'bar_width', 'vector_x', 'vector_y'):
-        seq = entry.get(extra)
-        if isinstance(seq, list) and len(seq) == len(values):
-            entry[extra] = [seq[i] for i in keep]
-
-
-def _round_seq(seq, ndigits):
-    """Round a sequence, leaving None (gaps in the data) intact.
-
-    Args:
-        seq (list[float | None]): The readings.
-        ndigits (int | None): Decimal places, or None to leave them alone.
-    """
-    if ndigits is None:
-        return list(seq)
-    return [None if v is None else round(v, ndigits) for v in seq]
 
 
 def _vector_components(seq):

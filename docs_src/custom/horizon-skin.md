@@ -113,8 +113,7 @@ other.
 `history` holds the charts. Which charts `history` shows, and in what order, is
 set by [`plot_groups`](../reference/skin-options/displayoptions.md#plot_groups).
 What each chart shows is set by its plot definition in `[[day_images]]` under
-`[JSONGenerator]`, in the syntax of the Image generator. With `periods = false`
-under `[JSONGenerator]`, as the skin comes, `[[week_images]]`,
+`[JSONGenerator]`, in the syntax of the Image generator. `[[week_images]]`,
 `[[month_images]]` and `[[year_images]]` set only how long each time span is.
 See [The JSON generator](json-generator.md).
 
