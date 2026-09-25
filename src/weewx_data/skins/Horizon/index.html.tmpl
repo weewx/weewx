@@ -4,8 +4,8 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
-## The front page: the panels named in 'panels', in that order, each from the .inc
-## file of the same name. The default list here is the same as in skin.conf.
+## The front page shows the panels named in 'panels', in that order. Each panel
+## comes from the .inc file of the same name. The default list matches skin.conf.
 #set $panels = $to_list($DisplayOptions.get('panels', ['current', 'forecast', 'sunmoon', 'planets', 'imagery', 'sensors', 'history', 'hilo']))
 #set global $page_units = True
 <!DOCTYPE html>

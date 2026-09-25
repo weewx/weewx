@@ -3,15 +3,14 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
-## Current conditions: one tile for each type in 'observations_current', in that
-## order, except that the rain tile comes last. A tile shows the reading and, where
-## they exist, the day's low and high and the trend over the last three hours. A type
-## without data this year gets no tile.
+## Current conditions. Each type in 'observations_current' gets one tile, in that
+## order, but the rain tile always comes last. A tile shows the reading and, if the
+## data exist, the day's low and high and the three-hour trend. A type without data
+## this year gets no tile.
 #set $wanted = $to_list($DisplayOptions.get('observations_current', ['outTemp', 'barometer']))
 #set $shown = [$x for $x in $wanted if $getVar('year.%s.has_data' % $x, False)]
-## 'rain' gets one tile, with today's total, which comes last whatever the order in
-## 'observations_current'. The rain tile also shows the current 'rainRate' when the
-## station has rain rate data this year. 'rainRate' gets no tile of its own.
+## The rain tile shows today's total. It also shows the current 'rainRate' if the
+## station has 'rainRate' data this year, so 'rainRate' gets no tile of its own.
 #set $tiles = [$x for $x in $shown if $x not in ('rain', 'rainRate')]
 #if 'rain' in $shown
   #silent $tiles.append('rain')
@@ -31,17 +30,17 @@
                   'lightning_strike_count': 'lightning', 'snowDepth': 'snow'}
 #silent $icon_map.update($DisplayOptions.get('Icons', {}))
 ##
-## Each tile carries, as 'data-spans', its figures for the week, the month and the
-## year so far, so that horizon.js can switch the time span without fetching anything.
+## Each tile carries its figures for the week, the month and the year so far in
+## 'data-spans'. horizon.js can then switch the time span without fetching a file.
 ## For outTemp:
 ##
 ##   {"week": {"v": 39.53, "t": "39.5", "lo": 18.54, "lot": "18.5",
 ##             "hi": 61.63, "hit": "61.6"}, "month": {...}, "year": {...}}
 ##
-## 'v', 'lo' and 'hi' are the mean, the low and the high as numbers in the unit that
-## 'data-unit' names; 't', 'lot' and 'hit' are the same figures as the report formats
-## them. Rain and any type in 'obs_type_sum' have only 'v' and 't', the total. A time
-## span without data is left out, and the tile then keeps showing the day's figures.
+## 'v', 'lo' and 'hi' are the mean, the low and the high, as numbers in the unit of
+## 'data-unit'. 't', 'lot' and 'hit' are the same figures, formatted by the report.
+## Rain and any type in 'obs_type_sum' have only 'v' and 't', the total. A time span
+## without data is left out, and the tile then keeps showing the day's figures.
 #set $sums = $to_list($DisplayOptions.get('obs_type_sum', ['rain']))
 #set $spans = {}
 #for $x in $tiles
@@ -80,17 +79,17 @@
 #end for
 ##
 ## 'data-value' and 'data-unit' carry each reading as a number and its unit in the
-## report unit system, so that horizon.js can convert the reading to the unit system
-## the reader chose. The element's text is the reading as the report formats it.
+## report unit system. horizon.js reads both attributes to convert the reading to the
+## unit system the reader chose. The element's text is the reading as the report
+## formats it.
 <section class="tiles wide" data-live-panel="current" data-span="day"
          aria-labelledby="current-heading">
   <h2 class="visually-hidden" id="current-heading">$gettext("Current Conditions")</h2>
   <dl class="tile-grid">
 #for $i, $x in $enumerate($tiles)
-## When the first tile is 'outTemp', the tile gets 'data-band', 0 to 8, which
-## horizon.css uses to tint the tile on the Day time span. The band edges are in
-## degree_C whatever the report unit system, so that a temperature gets the same
-## colour in every unit system.
+## If the first tile is 'outTemp', the tile gets 'data-band', a number from 0 to 8.
+## horizon.css tints the tile by 'data-band' on the Day time span. The band edges are
+## in degree_C, so a temperature gets the same colour in every unit system.
   #set $band = ''
   #if $i == 0 and $x == 'outTemp' and $current.outTemp.degree_C.raw is not None
     #set $edges = [-10, 0, 5, 12, 18, 23, 28, 33]

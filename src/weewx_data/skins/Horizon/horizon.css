@@ -1,9 +1,8 @@
 /* Copyright (c) 2026 Manuel Hilgert
  * Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
  *
- * A station can override the custom properties of the tokens section below from a
- * stylesheet of its own, named in 'custom_css'. Renaming one of these properties
- * would break such a stylesheet.
+ * A stylesheet named in 'custom_css' may override the custom properties in the
+ * tokens section below. Renaming a token would break such a stylesheet.
  */
 
 /* ----------------------------------------------------------------- tokens */
@@ -30,10 +29,10 @@
   --shadow: 0 1px 2px rgb(31 35 40 / 6%), 0 1px 1px rgb(31 35 40 / 4%);
 
   /* The temperature bands, cold to hot. current.inc sorts the outside temperature
-     into band 0 to 8 by edges in degree_C, and '.tile[data-band]' below tints the
-     outside temperature tile with the matching colour. horizon.js mixes the --warm-
-     colours for the climate heat map and reads only #rrggbb and rgb(): a colour
-     written any other way is left out. */
+     into bands 0 to 8 by edges in degree_C. '.tile[data-band]' below tints the
+     outside temperature tile with the band's colour. horizon.js mixes the --warm-
+     colours for the climate heat map and reads only #rrggbb and rgb(). horizon.js
+     leaves out a colour written any other way. */
   --warm-0: #2e5a8a;
   --warm-1: #3f78a6;
   --warm-2: #5292b0;
@@ -82,9 +81,10 @@
   }
 }
 
-/* The dark colours, defined twice: for a system set to dark where the reader has
-   not chosen a theme, and for a reader who chose dark with the theme button. Both
-   definitions are for screens only, so a page always prints in the light colours. */
+/* The dark colours are defined twice. The first block applies when the system is
+   dark and the reader has chosen no theme. The second applies when the reader chose
+   dark with the theme button. Both blocks are for screens only, so a page always
+   prints in the light colours. */
 @media screen and (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #0d1117;
@@ -134,9 +134,9 @@
   }
 }
 
-/* The theme button sets color-scheme as well as the colours, so what the browser
-   draws itself, such as scrollbars and the open list of a select, follows the
-   reader's choice. */
+/* The theme button sets color-scheme as well as the colours. What the browser draws
+   itself then follows the reader's choice, e.g., scrollbars and the open list of a
+   select. */
 :root[data-theme="light"] { color-scheme: light; }
 
 /* ------------------------------------------------------------------- base */
@@ -174,8 +174,8 @@ a { color: var(--accent); text-underline-offset: 2px; }
 
 .hint { color: var(--ink-faint); font-size: var(--fs-xs); }
 
-/* Without scripts, <html> has no class 'js' (see head.inc). The controls that do
-   nothing without a script are then hidden, and so is the text "Loading charts",
+/* Without scripts, <html> has no class 'js' (see head.inc). The rule below then
+   hides the controls that need a script. The rule also hides "Loading charts",
    which #charts shows until horizon.js draws the charts. */
 :root:not(.js) :is(#theme-toggle, .range-bar, #charts > .chart-empty, #report-kind,
                    #climate-year, #heat-tabs, #record-tabs, .nav-settings) { display: none; }
@@ -184,8 +184,8 @@ a { color: var(--accent); text-underline-offset: 2px; }
    record for a while. */
 .is-stale { opacity: 0.55; transition: opacity 0.3s; }
 
-/* The markup names an SVG file in --icon, and the icon is drawn as a mask over the
-   text colour, so one file serves both themes. */
+/* The markup names an SVG file in --icon. The icon is a mask over the text colour,
+   so one file serves both themes. */
 .nav-icon,
 .tile-icon {
   width: 1.15em;
@@ -217,8 +217,8 @@ a { color: var(--accent); text-underline-offset: 2px; }
 
 /* The masthead's background and bottom border reach both edges of the window,
    beyond the 105rem of '.page'. The border image paints the background and the
-   border 100vmax to either side, and a border image drawn outside its box does not
-   make the page scroll sideways. */
+   border 100vmax to either side. A border image outside its box does not make the
+   page scroll sideways. */
 .masthead {
   grid-column: 1 / -1;
   grid-row: 1;
@@ -274,8 +274,8 @@ a { color: var(--accent); text-underline-offset: 2px; }
 .nav-toggle { display: none; }
 
 /* The 5rem in max-height is the masthead's height, measured at 78px. max-height
-   also leaves a gap above and below the navigation, so the unit and language
-   settings at its foot are inside the window before the page is scrolled. */
+   also leaves a gap above and below the navigation. The unit and language settings
+   at the navigation's foot thus fit in the window before the page scrolls. */
 .site-nav {
   grid-column: 1;
   grid-row: 2 / -1;
@@ -368,10 +368,9 @@ a { color: var(--accent); text-underline-offset: 2px; }
   /* '.page' is position: relative, so the grid area under the masthead is the
      containing block of the menu. z-index 30 puts the menu above the sticky head
      of the history panel (3) and the to-top button (25). The menu's top depends
-     on the height of the masthead, which is 78px on the front page of a phone and
-     123px on the climate page. horizon.js therefore sets --menu-top to the menu's
-     top when it opens the menu, so that the menu ends 0.5rem above the bottom of
-     the window. */
+     on the masthead's height, e.g., 78px on the front page of a phone and 123px
+     on the climate page. When horizon.js opens the menu, it sets --menu-top to the
+     menu's top. The menu then ends 0.5rem above the bottom of the window. */
   .js .site-nav {
     position: absolute;
     grid-area: 2 / 1 / 3 / 2;
@@ -498,8 +497,8 @@ a { color: var(--accent); text-underline-offset: 2px; }
 .select:hover { border-color: var(--border-strong); }
 
 /* Some browsers draw the open list of a select in the select's text colour on the
-   system's background, which is light text on white when the page is dark and the
-   system light. Setting both colours here keeps the list readable. */
+   system's background. With a dark page on a light system, the list shows light
+   text on white. Setting both colours keeps the list readable. */
 .select option { background-color: var(--surface); color: var(--ink); }
 
 /* Where the tabs are wider than their panel, as the climate tabs are on a phone,
@@ -612,10 +611,10 @@ a { color: var(--accent); text-underline-offset: 2px; }
 /* ------------------------------------------------------------- front page */
 
 /* '.board' is the grid of panels in <main>, on every page. The grid does not use
-   'grid-auto-flow: dense', so the panels stay in the order of the markup ('panels'
-   on the front page), which is also the order the keyboard and a screen reader
-   follow. '.board' is a size container, so the '.double' rule below measures
-   '.board' rather than the window, whose width includes the navigation. */
+   'grid-auto-flow: dense', so the panels keep the order of the markup ('panels' on
+   the front page). The keyboard and a screen reader follow the same order. '.board'
+   is a size container, so the '.double' rule below measures '.board' rather than
+   the window, whose width includes the navigation. */
 .board {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(21rem, 100%), 1fr));
@@ -706,10 +705,11 @@ a { color: var(--accent); text-underline-offset: 2px; }
   font-weight: 400;
 }
 
-/* The Live badge shows only while the tiles show the latest readings: horizon.js
-   runs the live update ('data-polling'), the tiles show the Day time span, and the
-   charts have not been stepped back to an earlier day ('data-anchored'). The badge
-   shows on screen only, because a printed page is not updated. */
+/* The Live badge shows only while the tiles show the latest readings, i.e., when
+   - horizon.js runs the live update ('data-polling'),
+   - the tiles show the Day time span, and
+   - the charts are not stepped back to an earlier day ('data-anchored').
+   A printed page is not updated, so the badge shows on screen only. */
 .tiles .badge { display: none; }
 
 @media screen {
@@ -717,8 +717,8 @@ a { color: var(--accent); text-underline-offset: 2px; }
 }
 
 /* The trend arrows, the rain rate and the temperature tint describe the present.
-   Over a week, a month or a year the tiles show means and sums, so the arrows, the
-   rate and the tint appear only while the tiles show the day. */
+   Over a week, a month or a year the tiles show means and sums. The arrows, the
+   rate and the tint therefore appear only while the tiles show the day. */
 .tiles:not([data-span="day"]) .trend, .tiles:not([data-span="day"]) .tile-sub { display: none; }
 
 .tiles[data-span="day"] .tile[data-band] {
@@ -742,9 +742,9 @@ a { color: var(--accent); text-underline-offset: 2px; }
 
 /* ---------------------------------------------------------------- history */
 
-/* '.panel' clips with overflow: hidden, and the history panel must not: a sticky
-   element inside a clipping ancestor sticks to that ancestor instead of the
-   window, and the calendar extends below the history head. The history head
+/* '.panel' clips with overflow: hidden, which the history panel must not do. A
+   sticky element inside a clipping ancestor sticks to that ancestor, not to the
+   window. The calendar also reaches below the history head. The history head
    therefore rounds its own top corners. */
 .history { overflow: visible; }
 
@@ -777,8 +777,9 @@ a { color: var(--accent); text-underline-offset: 2px; }
 /* Below 34rem the arrows take a row of their own. At 400px, with "Now" shown, the
    heading, the arrows and the buttons would be 37px too wide for one row.
    horizon.js uses the same 34rem to write the date between the arrows in its short
-   form. The time span links then take the second row and the arrows the third:
-   at 390px the links need 230px, and the middle of the first row has 130px. */
+   form. With time span links in the head, the links take the second row and the
+   arrows the third. At 390px the links need 230px, and the middle of the first row
+   has 130px. */
 @media (max-width: 34rem) {
   .history-head .range-nav { grid-area: 2 / 1 / 3 / -1; }
   .history-head > .tabs { grid-area: 2 / 1 / 3 / -1; justify-self: center; }
@@ -787,9 +788,9 @@ a { color: var(--accent); text-underline-offset: 2px; }
 
 .range-label-wrap { position: relative; }
 
-/* The date between the arrows has a fixed width, not a minimum, because the text
-   changes from "Now" to "Saturday, 22 August 2026", and a label that grew would
-   move the arrows. */
+/* The date between the arrows has a fixed width rather than a minimum. The text
+   changes from "Now" to "Saturday, 22 August 2026", and a growing label would move
+   the arrows. */
 .range-label {
   width: clamp(7rem, 38vw, 15rem);
   overflow: hidden;
@@ -898,8 +899,8 @@ a { color: var(--accent); text-underline-offset: 2px; }
 .cal-today { box-shadow: inset 0 0 0 1px var(--border-strong); }
 .cal-selected, .cal-selected:hover { background: var(--accent); color: #fff; }
 
-/* At the page's max-width the charts are about 86rem wide, so a minimum of 30rem
-   per chart card allows two chart cards side by side and never three.
+/* At the page's max-width the charts are about 86rem wide. A minimum of 30rem per
+   chart card then allows two chart cards side by side, never three.
    'align-items: start' keeps a chart card with its data table open from
    stretching the chart card beside it. */
 .charts {
@@ -976,9 +977,9 @@ a { color: var(--accent); text-underline-offset: 2px; }
 .chart-action:hover { background: var(--surface-sunk); color: var(--accent); }
 .chart-host { padding: 0 clamp(0.5rem, 2vw, 0.85rem) 0.6rem; }
 
-/* The skeleton holds the chart host at 270px, the height that chartHeight() in
-   horizon.js gives a chart up to about 840px wide, so on a phone the page does not
-   grow as the charts load. The 270px include the host's 0.6rem bottom padding. */
+/* The skeleton holds the chart host at 270px, so that on a phone the page does not
+   grow as the charts load. chartHeight() in horizon.js gives 270px to a chart up to
+   about 840px wide. The 270px include the host's 0.6rem bottom padding. */
 .chart-skeleton {
   height: calc(270px - 0.6rem);
   border-radius: calc(var(--radius) - 2px);
@@ -1087,7 +1088,7 @@ a { color: var(--accent); text-underline-offset: 2px; }
 
 /* The sun and the moon in sunmoon.inc sit side by side once the panel is 34rem
    wide. The container query measures the panel, not the window, because the panel
-   is one track or two tracks wide depending on the width of '.board'. */
+   spans one or two tracks, depending on the width of '.board'. */
 .double { container-type: inline-size; }
 .split-two { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--pad); }
 .split-two > * + * { padding-top: var(--pad); border-top: 1px solid var(--border); }
@@ -1179,8 +1180,8 @@ table.planets tbody tr + tr > * { border-top: 1px solid var(--border); }
 
 /* Below 44rem each row of the statistics table becomes a block: the name of the
    reading, then one labelled line per time span. Just above 44rem the five
-   time-span columns of the statistics page are 86px wide, and a high and a low no
-   longer fit side by side. The cells carry the side padding and the row only the
+   time-span columns are 86px wide, too narrow for a high and a low side by side.
+   The cells carry the side padding and the row only the
    top and bottom, so no padding is applied twice. */
 @media (max-width: 44rem) {
   .data-table.stats, .data-table.stats :is(tbody, tr, th, td) { display: block; }
@@ -1222,7 +1223,7 @@ table.planets tbody tr + tr > * { border-top: 1px solid var(--border); }
 /* ---------------------------------------------------------------- reports */
 
 /* On the reports page the range bar is a row under the panel head. In the history
-   head the range bar has display: contents, so this rule has no effect there. */
+   head '.range-bar' has display: contents, so its padding and border vanish there. */
 .range-bar {
   display: flex;
   justify-content: center;
@@ -1268,8 +1269,8 @@ table.planets tbody tr + tr > * { border-top: 1px solid var(--border); }
 
 /* climate.js writes the heat map as a grid with a cell per day, a column per week
    and a row per weekday. For rain, climate.js sets --hm on each cell to a share
-   between 0 and 1, and .hm-cell mixes --lo into --surface-sunk by that share. For
-   a temperature, climate.js sets the cell's background itself. */
+   between 0 and 1. '.hm-cell' mixes --lo into --surface-sunk by that share. For a
+   temperature, climate.js sets the cell's background itself. */
 .climate-heatmap { display: flex; flex-direction: column; gap: 0.3rem; }
 .hm-grid, .hm-months { display: grid; gap: 2px; min-width: 0; }
 

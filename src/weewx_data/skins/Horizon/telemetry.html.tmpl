@@ -8,9 +8,9 @@
 #set $voltages = $to_list($DisplayOptions.get('sensor_voltages', []))
 #set $recent = $span($day_delta=30, boundary='midnight')
 ##
-## The page shows a panel only for the types in 'sensor_connections',
-## 'sensor_batteries' and 'sensor_voltages' that have data in the last 30 days, so
-## that a station without such sensors gets no empty panels.
+## A panel appears only if one of its types in 'sensor_connections',
+## 'sensor_batteries' or 'sensor_voltages' has data in the last 30 days. A station
+## without such sensors thus gets no empty panel.
 #set $have_connections = False
 #for $f in $connections
   #if $getattr($recent, $f, None) and $getattr($recent, $f).has_data

@@ -3,14 +3,14 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
-## The navigation, the same on every page except for the entry marked as current. On
+## Every page has the same navigation; only the entry marked as current differs. On
 ## a narrow screen the menu button in the masthead opens the navigation over the page.
 ##
-## The time span links switch the charts and the tiles on the front page. horizon.js
-## switches the time span only where the page has charts, so the links appear only
-## when 'panels' includes 'history'. On the front page each link is a bare hash such
-## as '#week': horizon.js switches the charts on 'hashchange' and marks the link with
-## 'aria-current'. A link to 'index.html#week' would load the front page again when
+## The time span links switch the charts and the tiles on the front page. The links
+## appear only when 'panels' includes 'history', because horizon.js switches the time
+## span only where the page has charts. On the front page each link is a bare hash
+## such as '#week'. horizon.js switches the charts on 'hashchange' and marks the link
+## with 'aria-current'. A link to 'index.html#week' would reload the front page when
 ## the front page is served as '/'.
 #set $periods = $to_list($DisplayOptions.get('periods', ['day', 'week', 'month', 'year']))
 #set $has_charts = 'history' in $to_list($DisplayOptions.get('panels', ['history']))
@@ -59,7 +59,7 @@
 #if $show_units or len($languages) > 1
         <div class="nav-settings">
   #if $show_units
-## The unit picker, on every page whose '$page_units' is not False. horizon.js fills
+## Every page whose '$page_units' is not False gets the unit picker. horizon.js fills
 ## the list from 'data/index.json' and unhides the field when index.json offers at
 ## least two unit systems.
           <p class="nav-field" hidden>
@@ -70,8 +70,8 @@
   #if len($languages) > 1
 ## Each 'path' in [[Languages]] is relative to the top directory of the station's
 ## pages. 'lang_root' is the path from this report's HTML_ROOT back to that top
-## directory, e.g., '..' for a report that writes to 'en'. autocomplete="off" is
-## there for the reason given at the year picker in masthead.inc.
+## directory, e.g., '..' for a report that writes to 'en'. The comment at the year
+## picker in masthead.inc explains autocomplete="off".
     #set $lang_root = $DisplayOptions.get('lang_root', '.')
           <p class="nav-field">
             <label for="lang-picker">$gettext("Language")</label>

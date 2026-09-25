@@ -3,9 +3,9 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
-## The masthead of every page: the heading, the time of the latest archive record,
-## and at the right the year picker (climate.html only), the theme toggle and the
-## menu button.
+## The masthead holds the heading and the time of the latest archive record. At the
+## right are the year picker (climate.html only), the theme toggle and the menu
+## button.
 ##
 ## On a page that sets '$page_title', the title is the heading, and the line under it
 ## starts with a link to the front page. The front page sets no '$page_title', so its
@@ -30,9 +30,9 @@
         </div>
         <div class="masthead-tools">
 #if $page == 'climate'
-## The year picker. The list runs from the year of the first archive record to the
-## year of the latest one, because WeeWX writes a climate year page for every year
-## in that range, whether or not the year has data.
+## The year picker lists every year from the first archive record to the latest one.
+## WeeWX writes a climate year page for each year in that range, with or without
+## data.
 ##
 ## Only climate.html has the picker. climate.html is written on every report cycle,
 ## so its list always includes the newest year. A list on a climate year page would
@@ -62,8 +62,8 @@
           </select>
   #end if
 #end if
-## The theme toggle is in the masthead rather than in the navigation, so that it can
-## be reached on a narrow screen without opening the menu.
+## The theme toggle sits in the masthead, so that it stays reachable on a narrow
+## screen with the menu closed.
           <button type="button" id="theme-toggle" class="icon-button"
                   aria-label="$gettext('Switch theme')">
             <svg class="glyph-light" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.5 1.5m11.2 11.2l1.5 1.5M19.1 4.9l-1.5 1.5M6.4 17.6l-1.5 1.5"/></svg>
