@@ -611,9 +611,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
         Args:
             var_type (str): The observation type.
-            tail (str): Which end is wanted, `min` or `max`.
+            tail (weeutil.weeutil.TimeSpan): The span to look in.
             mgr (weewx.manager.Manager): The open database.
-            which (weeutil.weeutil.TimeSpan): The span to look in.
+            which (str): Which end is wanted, `min` or `max`.
             resolution (int): The grid, in seconds.
             option_dict (dict[str, Any]): The options of the line being written.
             plot_options (dict[str, Any]): The options of the plot it belongs to.
