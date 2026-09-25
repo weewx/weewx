@@ -1,0 +1,120 @@
+## Copyright 2017 Tom Keffer, Matthew Wall
+## Copyright (c) 2026 Manuel Hilgert
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+#encoding UTF-8
+#set $connections = $to_list($DisplayOptions.get('sensor_connections', []))
+#set $batteries = $to_list($DisplayOptions.get('sensor_batteries', []))
+#set $voltages = $to_list($DisplayOptions.get('sensor_voltages', []))
+#set $recent = $span($day_delta=30, boundary='midnight')
+##
+## The page shows a panel only for the types in 'sensor_connections',
+## 'sensor_batteries' and 'sensor_voltages' that have data in the last 30 days, so
+## that a station without such sensors gets no empty panels.
+#set $have_connections = False
+#for $f in $connections
+  #if $getattr($recent, $f, None) and $getattr($recent, $f).has_data
+    #set $have_connections = True
+    #break
+  #end if
+#end for
+##
+#set $have_batteries = False
+#for $f in $batteries
+  #if $getattr($recent, $f, None) and $getattr($recent, $f).has_data
+    #set $have_batteries = True
+    #break
+  #end if
+#end for
+##
+#set $have_voltages = False
+#for $f in $voltages
+  #if $getattr($recent, $f, None) and $getattr($recent, $f).has_data
+    #set $have_voltages = True
+    #break
+  #end if
+#end for
+##
+#set $have_any = $have_connections or $have_batteries or $have_voltages
+##
+#set global $page_title = $gettext("Telemetry")
+#set global $page_units = True
+<!DOCTYPE html>
+<html lang="$lang">
+  <head>
+    #include "head.inc"
+  </head>
+  <body>
+    <div class="page">
+      #include "masthead.inc"
+      #include "nav.inc"
+      <main class="board" id="content">
+#if not $have_any
+        <section class="panel wide">
+          <div class="panel-body">
+            <p class="chart-empty">$gettext("This station reports no telemetry.")</p>
+          </div>
+        </section>
+#else
+  #if $have_connections
+        <section class="panel" data-live-panel="connectivity">
+          <div class="panel-head"><h2>$gettext("Connectivity")</h2></div>
+          <div class="panel-body">
+            <dl class="readings">
+    #for $x in $connections
+      #if $getattr($recent, $x, None) and $getattr($recent, $x).has_data
+              <dt>$obs.label[$x]</dt>
+              <dd>$getVar('current.' + $x)</dd>
+      #end if
+    #end for
+            </dl>
+          </div>
+        </section>
+  #end if
+  #if $have_batteries
+        <section class="panel" data-live-panel="battery">
+          <div class="panel-head"><h2>$gettext("Battery Status")</h2></div>
+          <div class="panel-body">
+            <dl class="readings">
+    #for $x in $batteries
+      #if $getattr($recent, $x, None) and $getattr($recent, $x).has_data
+              <dt>$obs.label[$x]</dt>
+              <dd>
+        #set $v = $getVar('current.%s.raw' % $x)
+        #if $v is None
+                <span class="status-dot status-unknown"></span>$gettext("UNKNOWN")
+        #elif $v
+                <span class="status-dot status-low"></span>$gettext("LOW")
+        #else
+                <span class="status-dot status-ok"></span>$gettext("OK")
+        #end if
+              </dd>
+      #end if
+    #end for
+            </dl>
+          </div>
+        </section>
+  #end if
+  #if $have_voltages
+        <section class="panel" data-live-panel="voltage">
+          <div class="panel-head"><h2>$gettext("Voltage")</h2></div>
+          <div class="panel-body">
+            <dl class="readings">
+    #for $x in $voltages
+      #if $getattr($recent, $x, None) and $getattr($recent, $x).has_data
+              <dt>$obs.label[$x]</dt>
+              <dd>$getVar('current.' + $x)</dd>
+      #end if
+    #end for
+            </dl>
+          </div>
+        </section>
+  #end if
+        #include "history.inc"
+#end if
+      </main>
+      #include "footer.inc"
+    </div>
+    #include "scripts.inc"
+  </body>
+</html>

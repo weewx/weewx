@@ -1,0 +1,42 @@
+## Copyright (c) 2026 Manuel Hilgert
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+#encoding UTF-8
+##
+## The readings for the live update. horizon.js fetches this file every
+## 'refresh_interval' seconds, so the file holds only what the live update shows: the
+## time of the archive record and the readings of the current conditions. For
+## example:
+##
+##   {"dateTime": "09/03/2010 11:00:00 AM", "dateTime_raw": 1283536800,
+##    "interval": 30, "outTemp": "52.2", "outTemp_v": 52.208, "outTemp_u": "degree_F",
+##    ..., "rainToday": "0.00", "rainToday_v": 0.0, "rainToday_u": "inch"}
+##
+## '<name>' is the reading as the report formats it, without the unit label, because
+## the page shows the unit label in an element of its own. '<name>_v' and '<name>_u'
+## are the number and its unit, which horizon.js converts when the reader has chosen
+## a unit system.
+#set $observations = $to_list($DisplayOptions.get('observations_current', ['outTemp', 'barometer']))
+#set $fields = {}
+#silent $fields.update({'dateTime': $str($current.dateTime), 'dateTime_raw': $current.dateTime.raw})
+## 'interval' is the archive interval, in minutes. horizon.js uses the interval to
+## decide how long to wait for a new archive record before it marks the readings as
+## stale.
+#if $current.interval.raw is not None
+  #silent $fields.update({'interval': $current.interval.raw})
+#end if
+#for $x in $observations
+  #if $getVar('year.%s.has_data' % $x, False)
+    #silent $fields.update({$x: $getVar('current.%s' % $x).format(add_label=False)})
+    #if $getVar('current.%s.raw' % $x) is not None
+      #silent $fields.update({$x + '_v': $getVar('current.%s.raw' % $x),
+                              $x + '_u': $getVar('unit.unit_type.%s' % $x)})
+    #end if
+  #end if
+#end for
+#silent $fields.update({'rainToday': $day.rain.sum.format(add_label=False)})
+#if $day.rain.sum.raw is not None
+  #silent $fields.update({'rainToday_v': $day.rain.sum.raw,
+                          'rainToday_u': $unit.unit_type.rain})
+#end if
+$jsonize($fields)

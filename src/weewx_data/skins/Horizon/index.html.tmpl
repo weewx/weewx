@@ -1,0 +1,29 @@
+## Copyright 2009-2018 Tom Keffer, Matthew Wall
+## Copyright (c) 2026 Manuel Hilgert
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+#encoding UTF-8
+##
+## The front page: the panels named in 'panels', in that order, each from the .inc
+## file of the same name. The default list here is the same as in skin.conf.
+#set $panels = $to_list($DisplayOptions.get('panels', ['current', 'forecast', 'sunmoon', 'planets', 'imagery', 'sensors', 'history', 'hilo']))
+#set global $page_units = True
+<!DOCTYPE html>
+<html lang="$lang">
+  <head>
+    #include "head.inc"
+  </head>
+  <body>
+    <div class="page">
+      #include "masthead.inc"
+      #include "nav.inc"
+      <main class="board" id="content">
+#for $panel in $panels
+        #include $panel + ".inc"
+#end for
+      </main>
+      #include "footer.inc"
+    </div>
+    #include "scripts.inc"
+  </body>
+</html>
