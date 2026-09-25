@@ -1140,7 +1140,9 @@ class TestArchiveSeriesShapes:
 
         # The last file is the day still filling up, so it stops where the readings do.
         for (name, start, count, interval), (_, later, _, _) in zip(spans, spans[1:]):
-            assert start + count * interval == later,                 "%s ends at %d, but the next file starts at %d"                 % (name, start + count * interval, later)
+            assert start + count * interval == later, (
+                "%s ends at %d, but the next file starts at %d"
+                % (name, start + count * interval, later))
 
     def test_a_finished_day_holds_nothing_from_the_next(self, config_dict, tmp_path):
         """A bar totalled over an hour must not be filed a slot early.
@@ -1170,8 +1172,11 @@ class TestArchiveSeriesShapes:
             if len(filled) < 2:
                 continue
             gaps = {b - a for a, b in zip(filled, filled[1:])}
-            assert min(gaps) >= every,                 "%s files an hourly bar %d slots after the last, not %d: %s"                 % (name, min(gaps), every, filled[-6:])
-            assert max(filled) < payload['count'],                 "%s fills slot %d of %d" % (name, max(filled), payload['count'])
+            assert min(gaps) >= every, (
+                "%s files an hourly bar %d slots after the last, not %d: %s"
+                % (name, min(gaps), every, filled[-6:]))
+            assert max(filled) < payload['count'], (
+                "%s fills slot %d of %d" % (name, max(filled), payload['count']))
 
     def test_named_types_carry_their_extremes(self, config_dict, tmp_path):
         stop_ts = parameters.synthetic_dict['stop_ts']
