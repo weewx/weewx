@@ -246,12 +246,8 @@
   /* Returns the label of one x axis tick. ECharts writes month names in English
      whatever the page's language. fmtTick writes the names of months and days in
      the page's language, and keeps the labels short enough not to overlap. */
-  function fmtTick(ts, period, splits) {
+  function fmtTick(ts, period) {
     var d = new Date(ts * 1000);
-    /* The form of the label depends on `step`, the seconds between ticks, as well
-       as on `period`. On the Year chart of a station three weeks old, all ticks
-       fall in one month. Labelled by `period` alone, every tick would read "Aug". */
-    var step = (splits && splits.length > 1) ? (splits[1] - splits[0]) : null;
     if (period === 'day') {
       return d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
     }
@@ -260,19 +256,8 @@
         ? d.toLocaleDateString(LOCALE, { weekday: 'short' })
         : d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
     }
-    /* Ticks less than a day apart get a clock time. On the Month chart of a
-       station three days old, a date alone would repeat on every label. */
-    if (step !== null && step < 86400) {
-      return d.getHours() === 0 && d.getMinutes() === 0
-        ? d.toLocaleDateString(LOCALE, { day: '2-digit', month: 'short' })
-        : d.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit',
-                                         hourCycle: 'h23' });
-    }
     if (period === 'month') {
       return d.toLocaleDateString(LOCALE, { day: '2-digit', month: '2-digit' });
-    }
-    if (step !== null && step < 25 * 86400) {
-      return d.toLocaleDateString(LOCALE, { day: '2-digit', month: 'short' });
     }
     return d.toLocaleDateString(LOCALE, { month: 'short' });
   }
@@ -959,7 +944,7 @@
           /* The labels take --ink-muted, not --chart-axis, because the axis line
              may be faint but its labels must be readable. */
           color: colors.muted, fontFamily: family, fontSize: 12,
-          formatter: function (value) { return fmtTick(value / 1000, period, null); },
+          formatter: function (value) { return fmtTick(value / 1000, period); },
           hideOverlap: true
         }
       },
