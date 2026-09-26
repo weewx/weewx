@@ -59,34 +59,33 @@ page picks the finest grid that covers the span it is showing.
 
 How readings are combined into a slot. Default is `avg`.
 
-#### resolution
-
-The grid a year file is written on, for the years named by
-[`recent_years`](#recent_years). May be a number of seconds or a duration such
-as `1h`. Default is `1h`.
-
-#### recent_years
+#### years
 
 How many calendar years, counting back from this one, are written at
-[`resolution`](#resolution). Older years use
-[`coarse_resolution`](#coarse_resolution). Default is `2`.
+[`year_resolution`](#year_resolution). Older years use
+[`old_year_resolution`](#old_year_resolution). Default is `2`.
 
-#### coarse_resolution
+#### year_resolution
+
+The grid a year file is written on, for the years named by [`years`](#years).
+May be a number of seconds or a duration such as `1h`. Default is `1h`.
+
+#### old_year_resolution
 
 The grid the older year files are written on. A year at four hours is about
 2,200 slots. Default is `4h`.
 
-#### fine_months
+#### months
 
 How many calendar months, counting back from this one, are written on a closer
-grid than the year files. Default is `2`.
+grid than the year files, one file per month. Default is `2`.
 
-#### fine_resolution
+#### month_resolution
 
-The grid those months are written on. Default is `900`, that is, fifteen
+The grid the month files are written on. Default is `900`, that is, fifteen
 minutes.
 
-#### raw_days
+#### days
 
 How many days are written at the station's own archive interval, one file per
 day. This is what the day view is drawn from. Default is `30`.
@@ -94,10 +93,10 @@ day. This is what the day view is drawn from. Default is `30`.
 Files older than this are removed on the next run, so the disk cost of this
 tier does not grow.
 
-#### raw_resolution
+#### day_resolution
 
-The grid the raw files are written on. `0`, the default, uses the station's
-archive interval, which is what makes the tier raw.
+The grid the day files are written on. `0`, the default, uses the station's
+archive interval.
 
 #### budget
 
@@ -108,7 +107,7 @@ Where a report runs out of budget, the file it was working on is written
 holding what was worked out, and the next report carries on from there. No
 single report runs long, however much history there is behind it.
 
-The raw tier is never deferred. It is what the day view is drawn from, and a
+The day tier is never deferred. It is what the day view is drawn from, and a
 page without today is of little use.
 
 #### extremes

@@ -96,9 +96,9 @@ You do not have to choose between them. The page picks the finest level that
 covers the span it is showing.
 
 How far each level reaches is yours to set:
-[`raw_days`](../reference/skin-options/jsongenerator.md#raw_days),
-[`fine_months`](../reference/skin-options/jsongenerator.md#fine_months) and
-[`recent_years`](../reference/skin-options/jsongenerator.md#recent_years).
+[`days`](../reference/skin-options/jsongenerator.md#days),
+[`months`](../reference/skin-options/jsongenerator.md#months) and
+[`years`](../reference/skin-options/jsongenerator.md#years).
 The defaults suit a station reporting every five minutes.
 
 Because a year that has ended never changes, its file is written once and then

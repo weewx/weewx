@@ -1299,30 +1299,26 @@
       .catch(function () { archiveCache.set(name, null); return null; });
   }
 
-  /* The archive files come in three tiers, which overlap in time. The raw tier holds
-     the station's own readings, one file per day. The fine tier holds readings at a
+  /* The archive files come in three tiers, which overlap in time. The day tier holds
+     the station's own readings, one file per day. The month tier holds readings at a
      longer interval, one file per month. The year tier holds readings at a still
-     longer interval, which grows with age, one file per calendar year. TIER_KEYS
-     lists the tiers finest first, with the keys of data/archive/index.json that list
-     each tier's files (`named`) and their intervals (`grids`).
+     longer interval, which grows with age, one file per calendar year. A file is
+     named after its plot group and the day, month or year it covers, e.g.,
+     'tempdew-2026-07'. TIER_KEYS lists the tiers finest first, with the keys of
+     data/archive/index.json that list each tier's files (`named`) and their
+     intervals (`grids`).
 
      filesFor takes the finest tier that covers the whole time span. A tier covers a
      time span where data/archive/index.json names a file for every part of the
      time span, and the time span comes to no more than MAX_POINTS readings. At a
-     one-minute archive interval, a day of the raw tier is 1440 readings. A year
+     one-minute archive interval, a day of the day tier is 1440 readings. A year
      would be half a million, far more than a chart 1000 px wide can show. */
   var MAX_POINTS = 20000;
 
   var TIER_KEYS = [
-    { kind: 'raw', named: 'raw', grids: 'raw_intervals',
-      name: function (group, key) { return group + '-raw-' + key; },
-      keys: function (from, to) { return stampsIn(from, to, 'day'); } },
-    { kind: 'fine', named: 'fine', grids: 'fine_intervals',
-      name: function (group, key) { return group + '-fine-' + key; },
-      keys: function (from, to) { return stampsIn(from, to, 'month'); } },
-    { kind: 'year', named: 'covered', grids: 'intervals',
-      name: function (group, key) { return group + '-' + key; },
-      keys: function (from, to) { return stampsIn(from, to, 'year'); } }
+    { named: 'days', grids: 'day_intervals', unit: 'day' },
+    { named: 'months', grids: 'month_intervals', unit: 'month' },
+    { named: 'years', grids: 'year_intervals', unit: 'year' }
   ];
 
   /* Returns the keys of the files that the time span from `from` to `to` touches,
@@ -1375,7 +1371,7 @@
       var tier = TIER_KEYS[t];
       var have = entry[tier.named];
       if (!have) continue;
-      var keys = tier.keys(from, to);
+      var keys = stampsIn(from, to, tier.unit);
       if (!keys.length) continue;
 
       var grids = entry[tier.grids] || {};
@@ -1387,7 +1383,7 @@
           /* A key that data/archive/index.json does not name is harmless where the
              archive has no readings for that time. Otherwise the tier does not
              reach back far enough, and filesFor tries the next tier. A whole week
-             from the fine tier is better than half a week from the raw tier. */
+             from the month tier is better than half a week from the day tier. */
           if (touchesRecord(keys[i])) { ok = false; break; }
           continue;
         }
@@ -1403,7 +1399,7 @@
 
       return {
         interval: interval,
-        names: present.map(function (k) { return tier.name(group, k); })
+        names: present.map(function (k) { return group + '-' + k; })
       };
     }
     return null;

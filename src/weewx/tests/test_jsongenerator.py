@@ -90,7 +90,7 @@ def build_skin_dict(html_root, archive_options=None):
     mine = configobj.ConfigObj(PLOT_CONF.splitlines(), interpolation=False)
 
     json_conf = {'json_dest_dir': 'data', 'round': '3',
-                 'Archive': {'resolution': str(ARCHIVE_RESOLUTION),
+                 'Archive': {'year_resolution': str(ARCHIVE_RESOLUTION),
                              'stale_age': '3600'}}
     json_conf['Archive'].update(archive_options or {})
 
@@ -131,6 +131,22 @@ def run_generator(config_dict, tmp_path, gen_ts=None, archive_options=None):
         generator.finalize()
 
     return os.path.join(html_root, 'data')
+
+
+def tier_files(archive_dir, kind, group=None):
+    """Return the sorted names of the archive files of one tier, e.g., 'days'."""
+    names = []
+    for name in os.listdir(archive_dir):
+        parsed = weewx.jsongenerator._parse_archive_name(name)
+        if parsed and parsed[0] != 'daynight' and parsed[1] == kind \
+                and group in (None, parsed[0]):
+            names.append(name)
+    return sorted(names)
+
+
+def stamp_of(name):
+    """Return the stamp in the name of an archive file, e.g., '2010-08'."""
+    return weewx.jsongenerator._parse_archive_name(name)[2]
 
 
 class TestPlotDefinitions:
@@ -389,7 +405,7 @@ class TestArchive:
         with open(path, encoding='utf-8') as fd:
             after = json.load(fd)
 
-        assert after['covered'] > before['covered']
+        assert after['newest'] > before['newest']
         filled = lambda p: sum(1 for v in p['series'][0]['values'] if v is not None)
         # Two days of catch-up, so nearly two days of grid slots have to fill in.
         slots = 2 * 86400 // ARCHIVE_RESOLUTION
@@ -426,23 +442,23 @@ class TestArchive:
         assert index['interval'] == ARCHIVE_RESOLUTION
         groups = {g['name']: g for g in index['groups']}
         assert 'tempdew' in groups
-        assert 2010 in groups['tempdew']['years']
+        assert '2010' in groups['tempdew']['years']
 
     def test_a_finer_grid_is_written_for_the_recent_past(self, config_dict, tmp_path):
         """An hourly grid flattens a single day, so recent months also get a fine one."""
         data_dir = run_generator(config_dict, tmp_path,
-                                 archive_options={'fine_months': '2',
-                                                  'fine_resolution': '300'})
+                                 archive_options={'months': '2',
+                                                  'month_resolution': '300'})
         archive_dir = os.path.join(data_dir, 'archive')
-        fine = sorted(f for f in os.listdir(archive_dir) if '-fine-' in f)
-        assert fine, "no fine files written"
+        fine = tier_files(archive_dir, 'months')
+        assert fine, "no month files written"
 
         with open(os.path.join(archive_dir, fine[0]), encoding='utf-8') as fd:
             payload = json.load(fd)
         assert payload['interval'] == 300
 
         # The coarse file for the same group is still there, on the wide grid.
-        group = fine[0].split('-fine-')[0]
+        group = weewx.jsongenerator._parse_archive_name(fine[0])[0]
         with open(os.path.join(archive_dir, '%s-2010.json' % group), encoding='utf-8') as fd:
             assert json.load(fd)['interval'] == ARCHIVE_RESOLUTION
 
@@ -450,19 +466,19 @@ class TestArchive:
             index = json.load(fd)
         assert index['fine_interval'] == 300
         groups = {g['name']: g for g in index['groups']}
-        # The month the fine file covers is named, so a client knows to ask for it.
-        assert fine[0].split('-fine-')[1][:-5] in groups[group]['fine']
+        # The month the month file covers is named, so a client knows to ask for it.
+        assert stamp_of(fine[0]) in groups[group]['months']
 
     def test_a_grid_that_is_not_finer_is_refused(self, config_dict, tmp_path):
-        """A fine_resolution that is not finer than resolution writes no fine files.
+        """A month_resolution that is not finer than year_resolution writes no month files.
 
         The usual cause is '5m', which means five months.
         """
         data_dir = run_generator(config_dict, tmp_path,
-                                 archive_options={'fine_months': '2',
-                                                  'fine_resolution': '28800'})
+                                 archive_options={'months': '2',
+                                                  'month_resolution': '28800'})
         archive_dir = os.path.join(data_dir, 'archive')
-        assert not [f for f in os.listdir(archive_dir) if '-fine-' in f]
+        assert not tier_files(archive_dir, 'months')
 
 
 class TestArchiveExtension:
@@ -475,7 +491,7 @@ class TestArchiveExtension:
     # Keys that record when a file was written, not what it holds. A run whose slot
     # has not moved skips the file. So after a chain of reports, these keys can come
     # from an earlier run than in a single rebuild. The page draws none of them.
-    BOOKKEEPING = ('covered', 'resume_ts', 'resume_slot')
+    BOOKKEEPING = ('newest', 'resume_ts', 'resume_slot')
 
     @classmethod
     def payloads(cls, archive_dir, only=None):
@@ -555,9 +571,9 @@ class TestArchiveExtension:
         kept, so its start depends on the run that wrote it.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'fine_months': '2', 'fine_resolution': '3600'}
+        options = {'months': '2', 'month_resolution': '3600'}
         first_ts = stop_ts - 4 * 3600
-        current_month = '-fine-%s' % time.strftime('%Y-%m', time.localtime(stop_ts))
+        current_month = '-%s.json' % time.strftime('%Y-%m', time.localtime(stop_ts))
 
         grown = self.walk_forward(config_dict, tmp_path_factory.mktemp('fine_grown'),
                                   first_ts, stop_ts, 3600, options)
@@ -567,7 +583,7 @@ class TestArchiveExtension:
             'archive')
 
         grown_files = self.payloads(grown, only=current_month)
-        assert grown_files, "no fine file for the month in progress"
+        assert grown_files, "no month file for the month in progress"
         assert grown_files == self.payloads(built, only=current_month)
 
     def test_extending_costs_one_query_per_new_slot(self, config_dict, tmp_path,
@@ -704,9 +720,10 @@ class TestTiers:
     """Which grid a calendar year's file is written on."""
 
     @staticmethod
-    def grid(year, this_year=2026, recent=2, fine=3600, coarse=14400, existing=None):
-        return weewx.jsongenerator._year_grid(year, this_year, recent, fine, coarse,
-                                              existing)
+    def grid(year, this_year=2026, years=2, year_resolution=3600,
+             old_year_resolution=14400, existing=None):
+        return weewx.jsongenerator._year_grid(year, this_year, years, year_resolution,
+                                              old_year_resolution, existing)
 
     def test_the_recent_years_get_the_finer_grid(self):
         assert self.grid(2026) == 3600
@@ -717,7 +734,7 @@ class TestTiers:
         assert self.grid(2016) == 14400
 
     def test_without_a_recent_window_every_year_is_the_same(self):
-        assert self.grid(2016, recent=0) == 3600
+        assert self.grid(2016, years=0) == 3600
 
     def test_a_file_already_finer_keeps_what_it_has(self):
         """Coarsening a year would cost a year of queries to end up with less."""
@@ -755,13 +772,13 @@ class TestArchiveMemory:
     """What the archive knows about files it did not write this run."""
 
     def test_finished_months_stay_available(self, config_dict, tmp_path):
-        """The index still names finished months outside the fine_months window.
+        """The index still names finished months outside the 'months' window.
 
-        Only the months inside the window are written. Older fine files on disk must
+        Only the months inside the window are written. Older month files on disk must
         stay in the index, or the page cannot see them.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'fine_months': '2', 'fine_resolution': '3600'}
+        options = {'months': '2', 'month_resolution': '3600'}
         # Two runs a month apart, so the first month falls out of the window.
         run_generator(config_dict, tmp_path, gen_ts=stop_ts - 45 * 86400,
                       archive_options=options)
@@ -769,15 +786,15 @@ class TestArchiveMemory:
                                  archive_options=options)
 
         archive_dir = os.path.join(data_dir, 'archive')
-        on_disk = {f for f in os.listdir(archive_dir) if '-fine-' in f}
-        assert on_disk, "no fine files at all"
+        on_disk = set(tier_files(archive_dir, 'months'))
+        assert on_disk, "no month files at all"
 
         with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
         named = set()
         for group in index['groups']:
-            for stamp in group.get('fine', {}):
-                named.add('%s-fine-%s.json' % (group['name'], stamp))
+            for stamp in group.get('months', {}):
+                named.add('%s-%s.json' % (group['name'], stamp))
         assert on_disk <= named, "files on disk that the index does not name"
 
     def test_a_lost_index_is_rebuilt_from_the_directory(self, config_dict, tmp_path):
@@ -786,7 +803,7 @@ class TestArchiveMemory:
         Otherwise, deleting index.json would mean calculating the whole record again.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'fine_months': '2', 'fine_resolution': '3600'}
+        options = {'months': '2', 'month_resolution': '3600'}
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
         archive_dir = os.path.join(data_dir, 'archive')
@@ -801,8 +818,8 @@ class TestArchiveMemory:
         with open(index_path, encoding='utf-8') as fd:
             after = json.load(fd)
         named = lambda idx: {(g['name'], y) for g in idx['groups']
-                             for y in list(g.get('covered', {}))
-                             + list(g.get('fine', {}))}
+                             for y in list(g.get('years', {}))
+                             + list(g.get('months', {}))}
         assert named(after) == named(before)
 
     def test_the_index_drops_files_that_have_gone(self, config_dict, tmp_path):
@@ -812,7 +829,7 @@ class TestArchiveMemory:
         window is written again, so the test deletes a month outside the window.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'fine_months': '2', 'fine_resolution': '3600'}
+        options = {'months': '2', 'month_resolution': '3600'}
         run_generator(config_dict, tmp_path, gen_ts=stop_ts - 45 * 86400,
                       archive_options=options)
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
@@ -821,10 +838,10 @@ class TestArchiveMemory:
 
         with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
-        months = sorted({m for g in index['groups'] for m in g.get('fine', {})})
+        months = sorted({m for g in index['groups'] for m in g.get('months', {})})
         assert len(months) > 1, "only one month written, nothing is out of the window"
         oldest = months[0]
-        gone = [f for f in os.listdir(archive_dir) if f.endswith('-fine-%s.json' % oldest)]
+        gone = [f for f in os.listdir(archive_dir) if f.endswith('-%s.json' % oldest)]
         assert gone
         for name in gone:
             os.remove(os.path.join(archive_dir, name))
@@ -835,7 +852,7 @@ class TestArchiveMemory:
         with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
         for group in index['groups']:
-            assert oldest not in group.get('fine', {}), \
+            assert oldest not in group.get('months', {}), \
                 "index still names %s for %s" % (oldest, group['name'])
 
     def test_the_index_records_the_grid_of_each_file(self, config_dict, tmp_path):
@@ -846,18 +863,17 @@ class TestArchiveMemory:
             index = json.load(fd)
 
         groups = {g['name']: g for g in index['groups']}
-        assert groups['tempdew']['intervals']['2010'] == ARCHIVE_RESOLUTION
+        assert groups['tempdew']['year_intervals']['2010'] == ARCHIVE_RESOLUTION
 
 
-class TestRawTier:
+class TestDayTier:
     """The station's own readings, one file per day, kept for a while and then not."""
 
-    OPTIONS = {'raw_days': '5', 'raw_resolution': '1800'}
+    OPTIONS = {'days': '5', 'day_resolution': '1800'}
 
     @staticmethod
     def days(archive_dir):
-        return sorted({f.split('-raw-')[1][:-len('.json')]
-                       for f in os.listdir(archive_dir) if '-raw-' in f})
+        return sorted({stamp_of(f) for f in tier_files(archive_dir, 'days')})
 
     def test_one_file_per_day(self, config_dict, tmp_path):
         stop_ts = parameters.synthetic_dict['stop_ts']
@@ -870,22 +886,22 @@ class TestRawTier:
         assert days[-1] == time.strftime('%Y-%m-%d', time.localtime(stop_ts))
 
     def test_the_grid_is_the_archive_interval(self, config_dict, tmp_path):
-        """A raw_resolution of 0 uses the interval stored in the newest record."""
+        """A day_resolution of 0 uses the interval stored in the newest record."""
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'raw_days': '2', 'raw_resolution': '0'}
+        options = {'days': '2', 'day_resolution': '0'}
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
         archive_dir = os.path.join(data_dir, 'archive')
-        name = [f for f in os.listdir(archive_dir) if '-raw-' in f][0]
+        name = tier_files(archive_dir, 'days')[0]
         with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
             payload = json.load(fd)
 
         assert payload['interval'] == parameters.synthetic_dict['interval']
 
     def test_days_that_fall_out_of_the_window_are_removed(self, config_dict, tmp_path):
-        """Raw day files that fall out of the raw_days window are deleted.
+        """Day files that fall out of the 'days' window are deleted.
 
-        Otherwise the raw tier would grow by one file per group per day, forever.
+        Otherwise the day tier would grow by one file per group per day, forever.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         run_generator(config_dict, tmp_path, gen_ts=stop_ts - 3 * 86400,
@@ -902,9 +918,9 @@ class TestRawTier:
         for stamp in before:
             if stamp < after[0]:
                 assert not [f for f in os.listdir(archive_dir)
-                            if f.endswith('-raw-%s.json' % stamp)]
+                            if f.endswith('-%s.json' % stamp)]
 
-    def test_the_index_names_the_raw_days(self, config_dict, tmp_path):
+    def test_the_index_names_the_days(self, config_dict, tmp_path):
         stop_ts = parameters.synthetic_dict['stop_ts']
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=self.OPTIONS)
@@ -912,13 +928,13 @@ class TestRawTier:
             index = json.load(fd)
 
         groups = {g['name']: g for g in index['groups']}
-        assert len(groups['tempdew']['raw']) == 5
-        assert set(groups['tempdew']['raw_intervals'].values()) == {1800}
+        assert len(groups['tempdew']['days']) == 5
+        assert set(groups['tempdew']['day_intervals'].values()) == {1800}
 
     def test_it_is_off_unless_asked_for(self, config_dict, tmp_path):
         data_dir = run_generator(config_dict, tmp_path)
         archive_dir = os.path.join(data_dir, 'archive')
-        assert not [f for f in os.listdir(archive_dir) if '-raw-' in f]
+        assert not tier_files(archive_dir, 'days')
 
 
 class TestBudget:
@@ -968,7 +984,7 @@ class TestBudget:
         assert seen[-1] > seen[0], "later runs added nothing"
 
     def test_the_short_file_says_how_far_it_got(self, config_dict, tmp_path):
-        """A file cut short by the budget says in 'covered' how far it got.
+        """A file cut short by the budget says in 'newest' how far it got.
 
         Otherwise the next run would take the file as complete.
         """
@@ -979,8 +995,8 @@ class TestBudget:
         with open(path, encoding='utf-8') as fd:
             payload = json.load(fd)
 
-        assert payload['covered'] < stop_ts
-        assert payload['covered'] <= payload['start'] + payload['count'] * payload['interval']
+        assert payload['newest'] < stop_ts
+        assert payload['newest'] <= payload['start'] + payload['count'] * payload['interval']
         assert payload['resume_ts'] is not None
 
     def test_it_ends_up_the_same_as_doing_it_in_one_go(self, config_dict,
@@ -1023,20 +1039,19 @@ class TestBudget:
             after = json.load(fd)
 
         named = lambda idx: {(g['name'], y) for g in idx['groups']
-                             for y in g.get('covered', {})}
+                             for y in g.get('years', {})}
         assert named(after) == named(before)
         assert {g['name'] for g in after['groups']} == {g['name'] for g in before['groups']}
 
     def test_the_day_view_is_never_deferred(self, config_dict, tmp_path):
-        """The budget never defers the raw tier, which the page draws today from."""
+        """The budget never defers the day tier, which the page draws today from."""
         stop_ts = parameters.synthetic_dict['stop_ts']
         data_dir = run_generator(
             config_dict, tmp_path, gen_ts=stop_ts,
-            archive_options={'budget': '1', 'raw_days': '3', 'raw_resolution': '1800'})
+            archive_options={'budget': '1', 'days': '3', 'day_resolution': '1800'})
         archive_dir = os.path.join(data_dir, 'archive')
 
-        days = {f.split('-raw-')[1][:-len('.json')]
-                for f in os.listdir(archive_dir) if '-raw-' in f}
+        days = {stamp_of(f) for f in tier_files(archive_dir, 'days')}
         assert len(days) == 3, days
 
 
@@ -1073,11 +1088,11 @@ class TestArchiveSeriesShapes:
         label, drawn as a row of hairline bars.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'raw_days': '2', 'raw_resolution': '900'}
+        options = {'days': '2', 'day_resolution': '900'}
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
         archive_dir = os.path.join(data_dir, 'archive')
-        name = [f for f in os.listdir(archive_dir) if f.startswith('rain-raw-')][0]
+        name = tier_files(archive_dir, 'days', 'rain')[0]
         with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
             payload = json.load(fd)
 
@@ -1091,20 +1106,19 @@ class TestArchiveSeriesShapes:
             "readings are closer together than the hour they are totalled over: %s" % sorted(gaps)[:5]
 
     def test_finished_days_meet_without_a_seam(self, config_dict, tmp_path):
-        """Each raw day file ends exactly where the next one starts.
+        """Each day file ends exactly where the next one starts.
 
         A day with a slot past midnight shares an instant with the next file. No run
         fills that slot, because the day is finished and its file is skipped. The page
         then shows a gap between each pair of days.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'raw_days': '5', 'raw_resolution': '900'}
+        options = {'days': '5', 'day_resolution': '900'}
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
         archive_dir = os.path.join(data_dir, 'archive')
 
-        files = sorted(f for f in os.listdir(archive_dir)
-                       if f.startswith('tempdew-raw-'))
+        files = tier_files(archive_dir, 'days', 'tempdew')
         assert len(files) > 2, files
 
         spans = []
@@ -1128,12 +1142,12 @@ class TestArchiveSeriesShapes:
         early and overlap the bar before it.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'raw_days': '5', 'raw_resolution': '900'}
+        options = {'days': '5', 'day_resolution': '900'}
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
         archive_dir = os.path.join(data_dir, 'archive')
 
-        names = sorted(f for f in os.listdir(archive_dir) if f.startswith('rain-raw-'))
+        names = tier_files(archive_dir, 'days', 'rain')
         assert len(names) > 2, names
 
         # The day still filling up counts too. Its last interval is the one
