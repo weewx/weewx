@@ -3,18 +3,17 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
-## The scripts of every page, at the end of <body>. All of the markup is in place
-## when a script loads, so each script calls its start function at once, without
-## waiting for DOMContentLoaded. The order matters: horizon.js reads window.HORIZON;
-## forecast.js and climate.js use 'units' and 'tempColour', which horizon.js adds to
-## window.HORIZON; the scripts in 'custom_js' run after the skin has set up the page.
+## Every page loads its scripts at the end of <body>. The markup is then in place, so
+## each script calls its start function at once, without waiting for DOMContentLoaded.
+## The order matters. horizon.js reads window.HORIZON. forecast.js and climate.js use
+## 'units' and 'tempColour', which horizon.js adds to window.HORIZON. The scripts in
+## 'custom_js' come last, so they run after the skin has set up the page.
 #set $archived = $page == 'climate_year'
 #set $charted = $page in ('index', 'telemetry')
 #set $forecast = $page == 'index' and 'forecast' in $to_list($DisplayOptions.get('panels', ['forecast']))
-## A climate year page has no live update. On a climate year page '$current' is the
-## archive record at the end of that year, and for the running year that archive
-## record does not exist yet. 'generated' therefore takes the latest archive record,
-## '$latest'.
+## A climate year page has no live update. On a climate year page, '$current' is the
+## archive record at the end of the year. For the running year that record does not
+## exist yet, so 'generated' takes the latest archive record, '$latest'.
 #if $archived
   #set $refresh = 0
   #set $generated = $latest.dateTime.raw
@@ -44,10 +43,9 @@
         plotGroups: $jsonize($groups),
 #end if
 #if $forecast
-## The station's position, for the forecast that forecast.js fetches from
-## Open-Meteo. Three decimals are about 100 m, finer than any forecast model
-## resolves, and the rounding keeps the station's exact position out of
-## Open-Meteo's logs.
+## forecast.js fetches the forecast for the station's position from Open-Meteo.
+## Three decimals are about 100 m, finer than any forecast model resolves. The
+## rounding keeps the station's exact position out of Open-Meteo's logs.
         latitude: ${'%.3f' % $station.latitude_f},
         longitude: ${'%.3f' % $station.longitude_f},
         forecast: {
@@ -55,8 +53,8 @@
           fetch: #if $to_bool($fc.get('browser_fetch', True)) then 'true' else 'false'#,
           hours: $to_int($fc.get('hours', 8)),
           days: $to_int($fc.get('days', 7)),
-## The translated name of each WMO 4677 weather code. forecast.js holds only the
-## codes and their icons.
+## 'sky' maps each WMO 4677 weather code to its translated name. forecast.js holds
+## only the codes and their icons.
   #set $sky = {}
   #for $code, $said in [(0, 'Clear sky'), (1, 'Mainly clear'),
                         (2, 'Partly cloudy'), (3, 'Overcast'),

@@ -26,10 +26,10 @@
     }
   }
 
-  /* The key of the HEAT entry that the heat map shows. The choice is kept in this
-     variable and not read from the tabs, because horizon.js replaces the tabs on
-     each new archive record, and the new tabs mark the first entry as selected.
-     draw() marks the chosen tab again through markHeatTabs(). */
+  /* The key of the HEAT entry that the heat map shows. The choice lives in heatKind,
+     not in #heat-tabs. horizon.js replaces the tabs on each new archive record, and
+     the new tabs select the first entry. draw() therefore marks the chosen tab again
+     through markHeatTabs(). */
   var heatKind = null;
 
   /* Returns `value`, which is in `unit`, converted to the unit shown. Here and below,
@@ -62,12 +62,12 @@
   /* Returns [factor, offset] that convert a value in `metricUnit`, degree_C or mm,
      into the unit shown. Where the reader has chosen no unit system, the answer is
      `asRendered`, which climate.inc computed for the report unit system. Otherwise
-     the answer is measured with CFG.units at 0 and at 1, which is exact because every
-     conversion between these units is linear.
+     backOf() converts 0 and 1 with CFG.units. Two points give the exact answer,
+     because every temperature and rain conversion is linear.
 
      CFG.units.target() returns null where the unit system the reader chose uses
-     `metricUnit` itself. The answer is then [1, 0], not `asRendered`: a reader who
-     chooses METRICWX on a page in US units must see degree_C and mm. */
+     `metricUnit` itself. The answer is then [1, 0] rather than `asRendered`, because
+     a reader who chooses METRICWX on a page in US units must see degree_C and mm. */
   function backOf(metricUnit, obs, asRendered) {
     if (!CFG.units || !CFG.units.chosen()) return asRendered || [1, 0];
     var target = CFG.units.target(obs, metricUnit);
@@ -77,8 +77,8 @@
     return (at0 && at1) ? [at1.value - at0.value, at0.value] : [1, 0];
   }
 
-  /* Returns the number of decimals for the axis labels: one where a metric unit is
-     less than half of the unit shown, as a millimetre is of an inch, and none
+  /* Returns the number of decimals for the axis labels. The answer is 1 where the
+     unit shown is more than twice the metric unit, e.g., inch against mm, and 0
      otherwise. Without a decimal, axis labels 10 mm apart would read 0, 0, 1, 1 in
      inches. */
   function digitsFor(back) {
@@ -103,9 +103,8 @@
   /* -------------------------------------------------------- climate diagram */
 
   /* The climate diagram of Walter and Lieth (see climate.inc). Both axes are laid
-     out in degree_C and mm, the units in which climate.inc writes the lists. Only
-     the axis labels and the tooltip are converted to the unit shown, through
-     backOf(). */
+     out in degree_C and mm, the units of DATA.temp and DATA.rain. Only the axis
+     labels and the tooltip are converted to the unit shown, through backOf(). */
   var diagram = null;
 
   function drawDiagram() {
@@ -315,13 +314,13 @@
   /* --------------------------------------------------------------- heat map */
 
   /* The heat map: one square per day, a column per week and a row per weekday. Each
-     square is an element with its own title, which the browser shows as a tooltip;
-     a canvas would have no title per day.
+     square is an element with its own title, which the browser shows as a tooltip.
+     A canvas would have no title per day.
 
-     Each HEAT entry names the list in DATA, the key in DATA of that list's unit, the
-     observation type, and whether the list is coloured as rain or as temperature.
-     A temperature takes its colour from CFG.tempColour, which mixes the colours
-     --warm-0 to --warm-8 that also tint the outside temperature tile. */
+     Each HEAT entry names its list in DATA ('list'), the DATA key of the list's unit
+     ('unit'), the observation type ('obs') and the colour scale, rain or temp
+     ('kind'). A temperature takes its colour from CFG.tempColour, which mixes the
+     colours --warm-0 to --warm-8 that also tint the outside temperature tile. */
   var HEAT = {
     rain: { list: 'dayRain', unit: 'rainUnit', obs: 'rain', kind: 'rain' },
     temp: { list: 'dayTemp', unit: 'tempUnit', obs: 'outTemp', kind: 'temp' },
@@ -477,9 +476,9 @@
 
   /* ------------------------------------------------------------------- tabs */
 
-  /* One click listener on the document serves both sets of tabs. horizon.js
-     replaces the panels that hold the tabs on each new archive record, and a
-     listener on an element inside a replaced panel is lost with that element. */
+  /* One click listener on the document serves #record-tabs and #heat-tabs. A
+     listener on the tabs themselves would be lost, because horizon.js replaces
+     their panels on each new archive record. */
   document.addEventListener('click', function (e) {
     var record = e.target.closest('#record-tabs button[data-record]');
     if (record) {
@@ -517,8 +516,8 @@
     drawHeatmap();
   }
 
-  /* horizon.js has replaced the panels and #climate-data after a new archive
-     record, and the new chart elements are empty. */
+  /* horizon:panels fires when horizon.js has replaced the panels and #climate-data
+     after a new archive record. The new chart elements are empty. */
   document.addEventListener('horizon:panels', draw);
 
   /* The reader has chosen another unit system. */

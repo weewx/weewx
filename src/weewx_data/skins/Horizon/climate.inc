@@ -13,8 +13,8 @@
 ## The kinds of day that the panel climate-days counts. 'agg' and 'value' are an
 ## aggregation type and its ValueTuple argument, as described under "Aggregation
 ## types" in the Reference Guide. The thresholds are in metric units because the
-## definitions are metric, e.g., a summer day reaches 25 degree_C. A page in US units
-## therefore shows the summer day's threshold as 77 degree_F.
+## definitions are metric, e.g., a summer day reaches 25 degree_C. threshold_of()
+## converts each threshold to the report unit system, e.g., to 77 degree_F.
 #set $climate_days = [
   {'key': 'rain_day',     'obs': 'rain',     'agg': 'sum_ge',
    'value': (0.2, 'mm', 'group_rain')},
@@ -51,25 +51,24 @@
   'frost_day':    ($gettext("Frost days"),      $gettext("Daily minimum at or below %s")),
 }
 ##
-## The number of days of each kind in the year and in each month: one query on the
-## daily summaries for the year, and one for each month.
+## '$day_counts' holds the number of days of each kind in the year, '$day_months' the
+## number in each month. Each count is one query on the daily summaries.
 #set $months_of_year = [m for m in $year.months]
 #set $day_counts = {}
 #set $day_months = {}
 #for $spec in $climate_days
 #set $of_year = $getattr($getattr($year, $spec['obs']), $spec['agg'])($spec['value'])
 #silent $day_counts.__setitem__($spec['key'], $of_year)
-## Inside the comprehension, 'spec' is written without '$'. On Python before 3.12 a
+## Inside the comprehension, 'spec' is written without '$'. Before Python 3.12, a
 ## comprehension runs in a frame of its own. Cheetah looks up a '$' name in that
-## frame, which does not hold the template's '#set' and '#for' names, so the lookup
-## fails with NotFound. Without '$', Python finds 'spec' in the template's frame on
-## every version. The same holds for every '#set' or '#for' name inside a
-## comprehension in this skin. Only the iterable after the first 'in', e.g.,
-## '$months_of_year' below, may keep its '$', because Python evaluates that iterable
-## in the template's frame.
+## frame, where the template's '#set' and '#for' names are missing, and raises
+## NotFound. Without '$', Python finds 'spec' in the template's frame on every
+## version. This rule holds for every '#set' or '#for' name in a comprehension in
+## this skin. Only the iterable after the first 'in', e.g., '$months_of_year', may
+## keep its '$', because Python evaluates that iterable in the template's frame.
 ##
-## getattr() rather than $getVar(): $getVar() looks only in the searchList, and the
-## month 'm' is a loop variable, which is not in it.
+## The comprehension reads the month 'm' with getattr(). $getVar() would not find
+## 'm', because $getVar() looks only in the searchList.
 #set $per_month = [getattr(getattr(m, spec['obs']), spec['agg'])(spec['value'])
                    for m in $months_of_year]
 #silent $day_months.__setitem__($spec['key'], $per_month)
@@ -141,18 +140,18 @@
 ## whose bar stays below the line is dry.
 #set $has_temp = $getVar('year.outTemp.has_data', False)
 #set $has_rain = $getVar('year.rain.has_data', False)
-## The monthly figures go into the script element at the end of this file, and are
-## None where the type has no data; climate.js then leaves that part out. The figures
-## are in degree_C and mm whatever the report unit system, because the diagram's 2:1
-## ratio holds only in those units.
+## The monthly figures go into '$climate_data'. A list is None where its type has no
+## data, and climate.js then leaves that series out. The figures are in degree_C and
+## mm whatever the report unit system, because the diagram's 2:1 ratio holds only in
+## those units.
 #set $month_temp = [m.outTemp.avg.degree_C.raw for m in $months_of_year] if $has_temp else None
 #set $month_low = [m.outTemp.min.degree_C.raw for m in $months_of_year] if $has_temp else None
 #set $month_high = [m.outTemp.max.degree_C.raw for m in $months_of_year] if $has_temp else None
 #set $month_rain = [m.rain.sum.mm.raw for m in $months_of_year] if $has_rain else None
-## The daily figures for the heat map take one query for each series rather than one
-## for each day. The script element gets the start times of the days as one list and
-## the values of each series as another, because a series' own json() returns a
-## string, which $jsonize would quote a second time.
+## Each daily series for the heat map costs one query, not one query per day.
+## '$climate_data' takes the series' '.start.raw' and '.data.raw' lists. The series'
+## own json() would not do, because json() returns a string, which $jsonize would
+## quote a second time.
 #set $rain_series = $year.rain.series(aggregate_type='sum', aggregate_interval='day') if $has_rain else None
 #set $daily_start = $rain_series.start.raw if $has_rain else None
 #set $daily_rain = $rain_series.data.raw if $has_rain else None
@@ -197,7 +196,7 @@
 ## --------------------------------------------------------------- climate-heatmap
 ##
 ## A heat map with one square for each day of the year, a column for each week and a
-## row for each weekday. The tabs choose the type that the squares show.
+## row for each weekday. The tabs in #heat-tabs choose the type the squares show.
 #if $has_rain or $has_temp
   #set $heat_kinds = []
   #if $has_rain
@@ -227,9 +226,9 @@
 ## ---------------------------------------------------------------- climate-record
 ##
 ## Every year of the archive, month by month, in one table for each type. Each cell
-## is one query on the daily summaries, i.e., 13 for each year and type. WeeWX writes
-## climate.html and the climate year page of the year in progress on every report
-## cycle, and both pages run these queries each time.
+## is one query on the daily summaries, i.e., 13 queries for each year and type.
+## climate.html and the climate page of the year in progress run all of them on
+## every report cycle.
 #set $record_rows = [y for y in $alltime.years]
 #if len($record_rows) > 0
   #set $matrix = [
@@ -324,9 +323,9 @@
                               'dayRain': $daily_rain, 'dayTemp': $daily_temp,
                               'dayMin': $daily_tmin, 'dayMax': $daily_tmax,
                               'weekStart': $station.week_start})
-## The daily figures are in the report unit system, unlike the monthly ones.
-## 'rainUnit' and 'tempUnit' name those units, so that the unit picker can convert
-## the daily figures.
+## The daily figures are in the report unit system, the monthly ones in degree_C and
+## mm. 'rainUnit' and 'tempUnit' name the report units, so that the unit picker can
+## convert the daily figures.
 #silent $climate_data.update({'rainUnit': $getVar('unit.unit_type.rain', None),
                               'tempUnit': $getVar('unit.unit_type.outTemp', None)})
 ## The translated names that climate.js shows in its tooltips.
@@ -334,8 +333,8 @@
                               'rainText': $gettext("Rainfall"),
                               'etText': $gettext("Evapotranspiration"),
                               'keptText': $gettext("Water balance")})
-## The script element has 'data-live-panel', so that horizon.js replaces the element
-## on each new archive record like a panel, and climate.js redraws the charts from
-## the new data.
+## #climate-data has 'data-live-panel', so that horizon.js replaces the script
+## element on each new archive record like a panel. climate.js then redraws the
+## charts from the new data.
 <script id="climate-data" type="application/json"
         data-live-panel="climate-data">$jsonize($climate_data)</script>
