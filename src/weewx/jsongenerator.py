@@ -123,8 +123,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         The page reads skin.json before it draws a chart. Nothing in skin.json comes
         from the database.
         """
-        indent = to_int(self.gen_dict.get('json_indent'))
-
         # span_lengths maps each time span to its 'time_length' in seconds, e.g.,
         # 86400 for [[day_images]]. The page sets the x axis width from span_lengths.
         span_lengths = {}
@@ -160,8 +158,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                          # Each archive file holds readings in one unit. The unit
                          # table lets the page convert them to any other.
                          'units': _unit_choices(obs_types, units_seen,
-                                                self.formatter, self.converter)},
-                        indent)
+                                                self.formatter, self.converter)})
         except OSError as e:
             log.error("Unable to save to file '%s': %s", skin_file, e)
 
@@ -191,7 +188,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         dest_dir = arch_dict.get('dest_dir',
                                  os.path.join(self.gen_dict.get('json_dest_dir', 'data'),
                                               'archive'))
-        indent = to_int(self.gen_dict.get('json_indent'))
         rounding = to_int(arch_dict.get('round', self.gen_dict.get('round', 2)))
 
         try:
@@ -242,8 +238,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                              # When the files were last rebuilt in full. The next
                              # run passes 'rebuilt' to _rebuild_due().
                              'rebuilt': now_ts if rebuilding else known['rebuilt'],
-                             'groups': groups},
-                            indent)
+                             'groups': groups})
             except OSError as e:
                 log.error("Unable to write archive index: %s", e)
 
@@ -356,7 +351,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     # next file to the budget that is left.
                     counters['slots'] += max(0, payload['count'] - before)
                     try:
-                        _write_json(out_file, payload, indent)
+                        _write_json(out_file, payload)
                         counters['written'] += 1
                         counters['root'] = arch_root
                         entry[kind][stamp] = payload['newest']
@@ -413,7 +408,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                       'include_daynight', self.gen_dict.get('include_daynight', True))):
                   counters['daynight'] = True
                   self._archive_daynight(counters['root'], counters['first'],
-                                         counters['last'], indent)
+                                         counters['last'])
               write_index()
 
         if to_bool(search_up(self.gen_dict, 'log_success', True)):
@@ -556,7 +551,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                         known[kind][group].pop(key, None)
                         known[grids].get(group, {}).pop(key, None)
 
-    def _archive_daynight(self, root, first_ts, last_ts, indent):
+    def _archive_daynight(self, root, first_ts, last_ts):
         """Write sunrise and sunset times, one file per calendar year.
 
         Sunrise and sunset depend only on the station's location, so one file serves
@@ -567,7 +562,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             root (str): The archive directory.
             first_ts (int): The oldest reading in the database.
             last_ts (int): The newest reading in it.
-            indent (int | None): Indentation for the files.
         """
         if not first_ts or not last_ts:
             return
@@ -587,7 +581,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 if dn is None:
                     continue
                 dn['start'] = int(year_span.start)
-                _write_json(out_file, dn, indent)
+                _write_json(out_file, dn)
             except Exception as e:
                 log.warning("Could not write day/night file for %d: %s", year, e)
 
@@ -1017,8 +1011,8 @@ def _unit_choices(obs_types, units_seen, formatter, converter):
             'convert': convert, 'labels': labels, 'formats': formats}
 
 
-def _write_json(path, payload, indent):
-    """Write one JSON file atomically, so that a reader never sees half of it.
+def _write_json(path, payload):
+    """Write one JSON file atomically and compactly, so a reader never sees half of it.
 
     A browser may fetch a file while it is being written. Half an index.json does not
     parse, and the page then draws nothing until the next poll.
@@ -1026,7 +1020,6 @@ def _write_json(path, payload, indent):
     Args:
         path (str): Where to write the file.
         payload (dict[str, Any]): What to write.
-        indent (int | None): Indentation, or None for the compact form.
     """
     directory = os.path.dirname(path)
     os.makedirs(directory, exist_ok=True)
@@ -1034,8 +1027,7 @@ def _write_json(path, payload, indent):
     # beside the target.
     tmp = path + '.tmp'
     with open(tmp, 'w', encoding='utf-8') as fd:
-        json.dump(payload, fd, indent=indent, ensure_ascii=False,
-                  separators=(',', ':') if indent is None else None)
+        json.dump(payload, fd, ensure_ascii=False, separators=(',', ':'))
     os.replace(tmp, path)
 
 
