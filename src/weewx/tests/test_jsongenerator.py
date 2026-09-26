@@ -439,10 +439,10 @@ class TestArchive:
         with open(os.path.join(data_dir, 'archive', 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
 
-        assert index['interval'] == ARCHIVE_RESOLUTION
         groups = {g['name']: g for g in index['groups']}
         assert 'tempdew' in groups
         assert '2010' in groups['tempdew']['years']
+        assert groups['tempdew']['year_intervals']['2010'] == ARCHIVE_RESOLUTION
 
     def test_a_finer_grid_is_written_for_the_recent_past(self, config_dict, tmp_path):
         """An hourly grid flattens a single day, so recent months also get a fine one."""
@@ -464,10 +464,10 @@ class TestArchive:
 
         with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
-        assert index['fine_interval'] == 300
         groups = {g['name']: g for g in index['groups']}
         # The month the month file covers is named, so a client knows to ask for it.
         assert stamp_of(fine[0]) in groups[group]['months']
+        assert groups[group]['month_intervals'][stamp_of(fine[0])] == 300
 
     def test_a_grid_that_is_not_finer_is_refused(self, config_dict, tmp_path):
         """A month_resolution that is not finer than year_resolution writes no month files.

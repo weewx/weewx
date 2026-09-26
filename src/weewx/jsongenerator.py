@@ -47,6 +47,16 @@ from weewx.imagegenerator import _skip_if_empty
 
 log = logging.getLogger(__name__)
 
+# The index keys of the three tiers, as (kind, grids) pairs. Under 'kind' the index
+# records the newest reading of each file, and under 'grids' the grid of each file.
+# The finest tier comes last.
+TIERS = (('years', 'year_intervals'), ('months', 'month_intervals'),
+         ('days', 'day_intervals'))
+
+# The name of an archive file: the plot group, then the year, the month or the day the
+# file covers. See _parse_archive_name().
+_ARCHIVE_NAME = re.compile(r'^(.+)-(\d{4})(-\d{2})?(-\d{2})?\.json$')
+
 
 class JSONGenerator(weewx.reportengine.ReportGenerator):
     """Generate JSON time series from plot definitions."""
@@ -222,7 +232,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             log.error("Archive: no section [%s]. Skipped.", source_group)
             return
 
-        # write_tier() updates these counters. In a dict they need no 'nonlocal'.
+        # What this run has done so far, for the budget and for the log line at the
+        # end.
         counters = {'written': 0, 'skipped': 0, 'extended': 0, 'deferred': 0,
                     'spent': 0.0, 'slots': 0, 'root': None,
                     'first': None, 'last': None, 'daynight': False}
@@ -250,26 +261,15 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     # The group has no file in any tier. Naming it would send the
                     # page after a 404.
                     continue
-                group = {
-                    'name': name,
-                    'title': entry['title'] or name,
-                    'unit_label': entry['unit_label'] or '',
-                }
-                for kind, grids in TIERS:
-                    # JSON keys are strings, so a year is written as one, and
-                    # _read_archive_index() converts it back. The grid is recorded per
-                    # file, because files written under different settings differ.
-                    group[kind] = {str(s): c for s, c in entry[kind].items()}
-                    group[grids] = {str(s): g for s, g in entry[grids].items()}
-                groups.append(group)
+                # The grid is recorded per file, because files written under
+                # different settings differ.
+                groups.append({'name': name,
+                               'title': entry['title'] or name,
+                               'unit_label': entry['unit_label'] or '',
+                               **{key: entry[key] for tier in TIERS for key in tier}})
             try:
                 _write_json(os.path.join(counters['root'], 'index.json'),
-                            # 'interval' and 'fine_interval' are the grids for files
-                            # written now. A reader that ignores the per-file grids
-                            # falls back on them.
-                            {'interval': year_resolution,
-                             'fine_interval': month_resolution if months else None,
-                             'first': counters['first'],
+                            {'first': counters['first'],
                              'last': counters['last'],
                              # When the files were last rebuilt in full. The next
                              # run passes 'rebuilt' to _rebuild_due().
@@ -327,9 +327,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     spans (Iterable[weeutil.weeutil.TimeSpan]): The spans to write,
                         one file each.
                     kind (str): Which tier, as the index names it, e.g., 'days'.
-                    stamp_of (Callable[[weeutil.weeutil.TimeSpan], int | str]): Called
-                        as ``stamp_of(span)``. Returns the index stamp for a span.
-                    grid_of (Callable[[int | str, int | None], int]): Called as
+                    stamp_of (Callable[[weeutil.weeutil.TimeSpan], str]): Called as
+                        ``stamp_of(span)``. Returns the index stamp for a span, e.g.,
+                        '2026-07'.
+                    grid_of (Callable[[str, int | None], int]): Called as
                         ``grid_of(stamp, existing)``. Returns the grid, in seconds, for
                         a stamp. ``existing`` is the grid recorded for that stamp in the
                         previous index, or None if there is none.
@@ -424,8 +425,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             if pass_name == 'rest':
               write_tier(
                 weeutil.weeutil.genYearSpans(first_ts, last_ts), 'years',
-                lambda span: time.localtime(span.start).tm_year,
-                lambda year, existing: _year_grid(year, this_year, years,
+                lambda span: time.strftime('%Y', time.localtime(span.start)),
+                lambda year, existing: _year_grid(int(year), this_year, years,
                                                   year_resolution, old_year_resolution,
                                                   existing),
                 first_ts)
@@ -475,62 +476,34 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 month_intervals: the same for the months
                 day_intervals:   the same for the days
                 labels:          {group: (title, unit_label)}
-                first:          the oldest reading in the database when the last run
-                                read it, or None if there was no index
-                rebuilt:        when the files were last rebuilt in full, or None
+                first:           the oldest reading in the database when the last
+                                 run read it, or None if there was no index
+                rebuilt:         when the files were last rebuilt in full, or None
         """
-        empty = {'first': None, 'rebuilt': None}
-        for kind, grids in TIERS:
-            empty[kind] = {}
-            empty[grids] = {}
-        empty['labels'] = {}
-        found = {kind: {} for kind, _ in TIERS}
-        found.update({grids: {} for _, grids in TIERS})
-        found['labels'] = {}
-        first = None
-        rebuilt = None
+        path = os.path.join(self.config_dict['WEEWX_ROOT'],
+                            search_up(self.skin_dict, 'HTML_ROOT', 'public_html'),
+                            dest_dir, 'index.json')
+        known = _empty_index()
         try:
-            path = os.path.join(self.config_dict['WEEWX_ROOT'],
-                                search_up(self.skin_dict, 'HTML_ROOT', 'public_html'),
-                                dest_dir, 'index.json')
             with open(path, encoding='utf-8') as fd:
                 index = json.load(fd)
-            first = to_int(index.get('first'))
-            rebuilt = to_int(index.get('rebuilt'))
-            # An older index gives one grid at the top instead of one per file. Use
-            # that grid for every file the older index names.
-            defaults = {'year_intervals': to_int(index.get('interval')),
-                        'month_intervals': to_int(index.get('fine_interval')),
-                        'day_intervals': None}
-            # JSON keys are strings. Year stamps are converted back to int, while month
-            # and day stamps stay str.
-            as_key = {'years': int, 'months': str, 'days': str}
+            known['first'] = to_int(index.get('first'))
+            known['rebuilt'] = to_int(index.get('rebuilt'))
             for group in index.get('groups', []):
                 name = group['name']
                 # A run that writes no file of a group still needs the group's title
                 # and unit_label for the index, so keep them from the old index.
-                found['labels'][name] = (group.get('title'), group.get('unit_label'))
-                for kind, grids in TIERS:
-                    spans = {}
-                    for stamp, ts in (group.get(kind) or {}).items():
-                        spans[as_key[kind](stamp)] = int(ts)
-                    if spans:
-                        found[kind][name] = spans
-                    seen = {}
-                    for stamp, seconds in (group.get(grids) or {}).items():
-                        seen[as_key[kind](stamp)] = int(seconds)
-                    for stamp in spans:
-                        seen.setdefault(stamp, defaults[grids])
-                    seen = {s: g for s, g in seen.items() if g}
-                    if seen:
-                        found[grids][name] = seen
-        except (OSError, ValueError, KeyError, TypeError):
+                known['labels'][name] = (group.get('title'), group.get('unit_label'))
+                for key in (key for tier in TIERS for key in tier):
+                    stamps = {stamp: int(value)
+                              for stamp, value in (group.get(key) or {}).items() if value}
+                    if stamps:
+                        known[key][name] = stamps
+        except (OSError, ValueError, KeyError, TypeError, AttributeError):
             # No index, or one this version cannot read. Start from an empty record,
             # which _reconcile_index() then fills from the files on disk.
-            return empty
-        found['first'] = first
-        found['rebuilt'] = rebuilt
-        return found
+            return _empty_index()
+        return known
 
     def _span_extreme(self, var_type, tail, mgr, which, resolution, option_dict,
                       plot_options, unit):
@@ -1098,24 +1071,16 @@ def _write_json(path, payload, indent):
     os.replace(tmp, path)
 
 
-# The index keys of the three tiers, as (kind, grids) pairs. Under 'kind' the index
-# records what each file covers, and under 'grids' the grid of each file. The finest
-# tier comes last.
-TIERS = (('years', 'year_intervals'), ('months', 'month_intervals'),
-         ('days', 'day_intervals'))
-
-# The name of an archive file: the plot group, then the year, the month or the day the
-# file covers. See _parse_archive_name().
-_ARCHIVE_NAME = re.compile(r'^(.+)-(\d{4})(-\d{2})?(-\d{2})?\.json$')
-
-
 def _new_entry():
     """A blank index entry for one plot group."""
-    entry = {'title': None, 'unit_label': None}
-    for kind, grids in TIERS:
-        entry[kind] = {}
-        entry[grids] = {}
-    return entry
+    return {'title': None, 'unit_label': None,
+            **{key: {} for tier in TIERS for key in tier}}
+
+
+def _empty_index():
+    """An archive index that names no file."""
+    return {'first': None, 'rebuilt': None, 'labels': {},
+            **{key: {} for tier in TIERS for key in tier}}
 
 
 def _year_grid(year, this_year, years, year_resolution, old_year_resolution, existing):
@@ -1295,9 +1260,9 @@ def _parse_archive_name(filename):
         filename (str): The file name, without a directory.
 
     Returns:
-        tuple[str, str, int|str]|None: A three-way tuple (group, kind, stamp), with
-            kind as TIERS names it. The stamp of a year is an int. None if the name is
-            not that of an archive file.
+        tuple[str, str, str]|None: A three-way tuple (group, kind, stamp), with kind
+            as TIERS names it, e.g., ('tempdew', 'months', '2025-07'). None if the
+            name is not that of an archive file.
     """
     match = _ARCHIVE_NAME.match(filename)
     if match is None:
@@ -1307,7 +1272,7 @@ def _parse_archive_name(filename):
         return group, 'days', year + month + day
     if month:
         return group, 'months', year + month
-    return group, 'years', int(year)
+    return group, 'years', year
 
 
 def _read_archive_file(path):
