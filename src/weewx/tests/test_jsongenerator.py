@@ -89,9 +89,12 @@ def build_skin_dict(html_root, archive_options=None):
 
     mine = configobj.ConfigObj(PLOT_CONF.splitlines(), interpolation=False)
 
+    # The tests turn the day and month tiers, the budget and the extremes on where
+    # they are about them, and pin a rebuild once a day.
     json_conf = {'json_dest_dir': 'data', 'round': '3',
                  'Archive': {'year_resolution': str(ARCHIVE_RESOLUTION),
-                             'stale_age': '3600'}}
+                             'years': '0', 'months': '0', 'days': '0',
+                             'budget': '0', 'extremes': [], 'rebuild': '1d'}}
     json_conf['Archive'].update(archive_options or {})
 
     # Build a plain dict and hand it to ConfigObj in one piece. accumulateLeaves()
@@ -931,8 +934,8 @@ class TestDayTier:
         assert len(groups['tempdew']['days']) == 5
         assert set(groups['tempdew']['day_intervals'].values()) == {1800}
 
-    def test_it_is_off_unless_asked_for(self, config_dict, tmp_path):
-        data_dir = run_generator(config_dict, tmp_path)
+    def test_days_0_turns_it_off(self, config_dict, tmp_path):
+        data_dir = run_generator(config_dict, tmp_path, archive_options={'days': '0'})
         archive_dir = os.path.join(data_dir, 'archive')
         assert not tier_files(archive_dir, 'days')
 
@@ -1187,9 +1190,10 @@ class TestArchiveSeriesShapes:
         # dewpoint was not named, so it carries no extremes.
         assert 'min' not in payload['series'][1]
 
-    def test_extremes_are_off_by_default(self, config_dict, tmp_path):
+    def test_a_type_not_named_carries_no_extremes(self, config_dict, tmp_path):
         stop_ts = parameters.synthetic_dict['stop_ts']
-        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts)
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
+                                 archive_options={'extremes': 'windGust'})
         with open(os.path.join(data_dir, 'archive', 'tempdew-2010.json'),
                   encoding='utf-8') as fd:
             payload = json.load(fd)
@@ -1248,6 +1252,20 @@ class TestRebuildDue:
     def test_under_a_day_falls_back_to_elapsed_time(self):
         assert weewx.jsongenerator._rebuild_due(1000, 1000 + 3600, 3600)
         assert not weewx.jsongenerator._rebuild_due(1000, 1000 + 3599, 3600)
+
+
+class TestArchiveSettings:
+
+    def test_the_horizon_skin_sets_the_defaults(self):
+        """The options in the Horizon skin.conf are examples, not changes.
+
+        A default that differs from what the skin sets is a default nobody uses.
+        """
+        conf = configobj.ConfigObj(os.path.join(TestSkinLocalization.SKIN, 'skin.conf'),
+                                   encoding='utf-8', interpolation=False)
+        arch_dict = conf['JSONGenerator']['Archive']
+        assert weewx.jsongenerator._archive_settings(arch_dict) \
+            == weewx.jsongenerator._archive_settings({})
 
 
 class TestSkinLocalization:

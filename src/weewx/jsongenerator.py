@@ -53,6 +53,19 @@ log = logging.getLogger(__name__)
 TIERS = (('years', 'year_intervals'), ('months', 'month_intervals'),
          ('days', 'day_intervals'))
 
+# The defaults of the options in [[Archive]]. The Horizon skin.conf sets the same
+# values, and a test keeps the two in step. See _archive_settings().
+ARCHIVE_DEFAULTS = {
+    'aggregate_type': 'avg',
+    'years': 2, 'year_resolution': '1h', 'old_year_resolution': '4h',
+    'months': 2, 'month_resolution': 900,
+    'days': 30, 'day_resolution': 0,
+    'budget': 30,
+    'extremes': ['windGust', 'windSpeed', 'rainRate', 'radiation', 'UV'],
+    'rebuild': 0,
+    'source_group': 'day_images', 'strip_prefix': 'day', 'max_days': 0,
+}
+
 # The name of an archive file: the plot group, then the year, the month or the day the
 # file covers. See _parse_archive_name().
 _ARCHIVE_NAME = re.compile(r'^(.+)-(\d{4})(-\d{2})?(-\d{2})?\.json$')
@@ -167,64 +180,19 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
         t1 = time.time()
 
-        source_group = arch_dict.get('source_group', 'day_images')
-        strip_prefix = arch_dict.get('strip_prefix', 'day')
-        aggregate_type = arch_dict.get('aggregate_type', 'avg')
-        max_days = to_int(arch_dict.get('max_days', 0))
-
-        # The year tier, the coarsest: one file per calendar year. People read the
-        # last 'years' years closely, so those get 'year_resolution'. Older years get
-        # 'old_year_resolution', because an hourly grid gives each one 8760 points.
-        year_resolution = to_int(weeutil.weeutil.nominal_spans(
-            arch_dict.get('year_resolution', 3600)))
-        old_year_resolution = to_int(weeutil.weeutil.nominal_spans(
-            arch_dict.get('old_year_resolution', year_resolution)))
-        years = to_int(arch_dict.get('years', 0))
-
-        # The month tier: one file per calendar month, on a finer grid. The range bar
-        # steps back one day at a time, and an hourly grid flattens a day.
-        months = to_int(arch_dict.get('months', 0))
-        month_resolution = to_int(weeutil.weeutil.nominal_spans(
-            arch_dict.get('month_resolution', 900)))
-        if months and month_resolution >= year_resolution:
-            # Usually month_resolution = 5m. In a duration, 'm' means months, not
-            # minutes.
-            log.warning("Ignoring months: month_resolution (%d seconds) is not "
-                        "finer than year_resolution (%d seconds)",
-                        month_resolution, year_resolution)
-            months = 0
-        if old_year_resolution < year_resolution:
-            log.warning("old_year_resolution (%d seconds) is finer than "
-                        "year_resolution (%d seconds). Using year_resolution for both.",
-                        old_year_resolution, year_resolution)
-            old_year_resolution = year_resolution
-
-        # The day tier, the finest: one file per day, which the day view is drawn
-        # from. A 'day_resolution' of 0 means the archive interval the station
-        # actually uses. See _archive_interval().
-        days = to_int(arch_dict.get('days', 0))
-        day_resolution = to_int(weeutil.weeutil.nominal_spans(
-            arch_dict.get('day_resolution', 0)))
-
-        # 'budget' is how many seconds the year and month tiers may take per report.
-        # Building years of history at once would delay the next report by minutes.
-        # The next report carries on where this one stopped. 0 means no limit.
-        budget = to_int(weeutil.weeutil.nominal_spans(arch_dict.get('budget', 0)))
-
-        # The types named in 'extremes' also carry their lowest and highest reading
-        # per slot. An average over four hours turns a storm's gusts into a breeze.
-        # Each named type costs extra queries per slot, so the skin must ask for it.
-        extrema = set(weeutil.weeutil.option_as_list(
-            arch_dict.get('extremes', [])) or [])
+        opts = _archive_settings(arch_dict)
+        source_group, strip_prefix = opts['source_group'], opts['strip_prefix']
+        aggregate_type, max_days = opts['aggregate_type'], opts['max_days']
+        years, year_resolution = opts['years'], opts['year_resolution']
+        old_year_resolution = opts['old_year_resolution']
+        months, month_resolution = opts['months'], opts['month_resolution']
+        days, day_resolution = opts['days'], opts['day_resolution']
+        budget, extrema, rebuild_after = opts['budget'], opts['extremes'], opts['rebuild']
         dest_dir = arch_dict.get('dest_dir',
                                  os.path.join(self.gen_dict.get('json_dest_dir', 'data'),
                                               'archive'))
         indent = to_int(self.gen_dict.get('json_indent'))
         rounding = to_int(arch_dict.get('round', self.gen_dict.get('round', 2)))
-        # How often a file is rebuilt from the database instead of extended from the
-        # file on disk. See _rebuild_due().
-        rebuild_after = to_int(weeutil.weeutil.nominal_spans(
-            arch_dict.get('rebuild', '1d')))
 
         try:
             group_dict = self.plot_dict[source_group]
@@ -1081,6 +1049,72 @@ def _empty_index():
     """An archive index that names no file."""
     return {'first': None, 'rebuilt': None, 'labels': {},
             **{key: {} for tier in TIERS for key in tier}}
+
+
+def _archive_settings(arch_dict):
+    """Read the options of [[Archive]], taking ARCHIVE_DEFAULTS for those not set.
+
+    Args:
+        arch_dict (dict): The section [[Archive]], or {} if there is none.
+
+    Returns:
+        dict: The keys of ARCHIVE_DEFAULTS. Durations are in seconds, counts are int,
+            and 'extremes' is a set.
+    """
+    def get(name):
+        return arch_dict.get(name, ARCHIVE_DEFAULTS[name])
+
+    def seconds(name):
+        return to_int(weeutil.weeutil.nominal_spans(get(name)))
+
+    opts = {
+        'aggregate_type': get('aggregate_type'),
+        'source_group': get('source_group'),
+        'strip_prefix': get('strip_prefix'),
+        'max_days': to_int(get('max_days')),
+        # The year tier, the coarsest: one file per calendar year. People read the
+        # last 'years' years closely, so those get 'year_resolution'. Older years get
+        # 'old_year_resolution', because an hourly grid gives each one 8760 points.
+        'years': to_int(get('years')),
+        'year_resolution': seconds('year_resolution'),
+        'old_year_resolution': seconds('old_year_resolution'),
+        # The month tier: one file per calendar month, on a finer grid. The range bar
+        # steps back one day at a time, and an hourly grid flattens a day.
+        'months': to_int(get('months')),
+        'month_resolution': seconds('month_resolution'),
+        # The day tier, the finest: one file per day, which the day view is drawn
+        # from. A 'day_resolution' of 0 means the archive interval the station
+        # actually uses. See _archive_interval().
+        'days': to_int(get('days')),
+        'day_resolution': seconds('day_resolution'),
+        # 'budget' is how many seconds the year and month tiers may take per report.
+        # Building years of history at once would delay the next report by minutes.
+        # The next report carries on where this one stopped. 0 means no limit.
+        'budget': seconds('budget'),
+        # The types named in 'extremes' also carry their lowest and highest reading
+        # per slot. An average over four hours turns a storm's gusts into a breeze.
+        # Each named type costs extra queries per slot.
+        'extremes': set(weeutil.weeutil.option_as_list(get('extremes')) or []),
+        # How often a file is rebuilt from the database instead of extended from the
+        # file on disk. See _rebuild_due().
+        'rebuild': seconds('rebuild'),
+    }
+
+    if opts['months'] and opts['month_resolution'] >= opts['year_resolution']:
+        # Usually month_resolution = 5m. In a duration, 'm' means months, not minutes.
+        log.warning("Ignoring months: month_resolution (%d seconds) is not "
+                    "finer than year_resolution (%d seconds)",
+                    opts['month_resolution'], opts['year_resolution'])
+        opts['months'] = 0
+    if opts['old_year_resolution'] < opts['year_resolution']:
+        # A skin that sets only year_resolution, to more than the default of
+        # old_year_resolution, gets year_resolution for all years without a warning.
+        if 'old_year_resolution' in arch_dict:
+            log.warning("old_year_resolution (%d seconds) is finer than "
+                        "year_resolution (%d seconds). Using year_resolution for both.",
+                        opts['old_year_resolution'], opts['year_resolution'])
+        opts['old_year_resolution'] = opts['year_resolution']
+    return opts
 
 
 def _year_grid(year, this_year, years, year_resolution, old_year_resolution, existing):
