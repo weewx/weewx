@@ -40,8 +40,7 @@ Where the files go, relative to `HTML_ROOT`. Default is `data`.
 
 #### round
 
-How many decimal places a reading is written with, where `[[Archive]]` sets no
-`round` of its own. Default is `2`.
+How many decimal places a reading is written with. Default is `2`.
 
 #### include_daynight
 
@@ -146,8 +145,3 @@ How far back the archive reaches, in days. Default is `0`, the whole record.
 
 Where the archive files go, relative to `HTML_ROOT`. Default is
 `data/archive`.
-
-#### round
-
-How many decimal places an archive reading is written with. Default is
-[`round`](#round) of `[JSONGenerator]`.

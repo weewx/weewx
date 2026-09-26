@@ -188,7 +188,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         dest_dir = arch_dict.get('dest_dir',
                                  os.path.join(self.gen_dict.get('json_dest_dir', 'data'),
                                               'archive'))
-        rounding = to_int(arch_dict.get('round', self.gen_dict.get('round', 2)))
+        rounding = to_int(self.gen_dict.get('round', 2))
 
         try:
             group_dict = self.plot_dict[source_group]
@@ -404,8 +404,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
               # Write the day/night files with the first index, so the shading
               # appears with the first charts. Without the day tier, that is the
               # second pass.
-              if not counters['daynight'] and to_bool(arch_dict.get(
-                      'include_daynight', self.gen_dict.get('include_daynight', True))):
+              if not counters['daynight'] \
+                      and to_bool(self.gen_dict.get('include_daynight', True)):
                   counters['daynight'] = True
                   self._archive_daynight(counters['root'], counters['first'],
                                          counters['last'])
