@@ -116,7 +116,7 @@ Comma separated list of observation types that also carry their lowest and
 highest reading in each slot, not only the aggregate. An average is the wrong
 thing to remember for a gust: averaging it into a four hour slot turns a storm
 into a breeze. Each name costs two more queries per slot. Default is
-`windGust, windSpeed, rainRate, radiation, UV`.
+`windGust, windSpeed, rainRate, UV`.
 
 #### rebuild
 

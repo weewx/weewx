@@ -61,7 +61,7 @@ ARCHIVE_DEFAULTS = {
     'months': 2, 'month_resolution': 900,
     'days': 30, 'day_resolution': 0,
     'budget': 30,
-    'extremes': ['windGust', 'windSpeed', 'rainRate', 'radiation', 'UV'],
+    'extremes': ['windGust', 'windSpeed', 'rainRate', 'UV'],
     'rebuild': 0,
     'source_group': 'day_images', 'strip_prefix': 'day', 'max_days': 0,
 }
