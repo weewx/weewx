@@ -31,6 +31,8 @@ import os
 import re
 import time
 
+import configobj
+
 import weedb
 import weeplot.utilities
 import weeutil.logger
@@ -41,15 +43,12 @@ import weewx.units
 import weewx.xtypes
 from weeutil.config import search_up, accumulateLeaves
 from weeutil.weeutil import to_bool, to_int, TimeSpan
-# Import _skip_if_empty() rather than copy it, so that a fix to it reaches both
-# generators.
 from weewx.imagegenerator import _skip_if_empty
 
 log = logging.getLogger(__name__)
 
-# The index keys of the three tiers, as (kind, grids) pairs. Under 'kind' the index
-# records the newest reading of each file, and under 'grids' the grid of each file.
-# The finest tier comes last.
+# Three resolution tiers as (kind, grids) tuples. Under 'kind', the index records the newest
+# reading of each file, and under 'grids' the grid resolution of each file.
 TIERS = (('years', 'year_intervals'), ('months', 'month_intervals'),
          ('days', 'day_intervals'))
 
@@ -57,13 +56,19 @@ TIERS = (('years', 'year_intervals'), ('months', 'month_intervals'),
 # values, and a test keeps the two in step. See _archive_settings().
 ARCHIVE_DEFAULTS = {
     'aggregate_type': 'avg',
-    'years': 2, 'year_resolution': '1h', 'old_year_resolution': '4h',
-    'months': 2, 'month_resolution': 900,
-    'days': 30, 'day_resolution': 0,
+    'years': 2,                     # How many years to keep 'year_resolution'
+    'year_resolution': '1h',
+    'old_year_resolution': '4h',    # The resolution for files older than the 'years' limit.
+    'months': 2,
+    'month_resolution': 900,
+    'days': 30,
+    'day_resolution': 0,
     'budget': 30,
     'extremes': ['windGust', 'windSpeed', 'rainRate', 'UV'],
     'rebuild': 0,
-    'source_group': 'day_images', 'strip_prefix': 'day', 'max_days': 0,
+    'source_group': 'day_images',
+    'strip_prefix': 'day',
+    'max_days': 0,
 }
 
 # The name of an archive file: the plot group, then the year, the month or the day the
@@ -74,10 +79,26 @@ _ARCHIVE_NAME = re.compile(r'^(.+)-(\d{4})(-\d{2})?(-\d{2})?\.json$')
 class JSONGenerator(weewx.reportengine.ReportGenerator):
     """Generate JSON time series from plot definitions."""
 
+    def __init__(self, config_dict,
+                 skin_dict,
+                 gen_ts,
+                 first_run,
+                 stn_info,
+                 record=None,
+                 stop_event=None):
+        super().__init__(config_dict, skin_dict, gen_ts, first_run, stn_info, record, stop_event)
+        self.converter = None
+        self.data_root = None
+        self.formatter = None
+        self.gen_dict = None
+        self.generic_dict = None
+        self.plot_dict = None
+        self.text_dict = None
+
     def run(self):
         self.setup()
-        # setup() found no plot definitions and has logged that.
         if not self.plot_dict:
+            # No plot definitions found. Return.
             return
         self.gen_skin_json()
         self.gen_archive(self.gen_ts)
@@ -91,20 +112,15 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # Translated text strings:
         self.text_dict = self.skin_dict.get('Texts', {})
 
-        # gen_dict must be a Section, because options such as 'log_success' are
-        # looked up in the sections above it. A {} stored in skin_dict becomes one.
-        if 'JSONGenerator' not in self.skin_dict:
-            self.skin_dict['JSONGenerator'] = {}
+        # gen_dict must be a Section in order for function 'search_up()` to work.
+        self.skin_dict.setdefault('JSONGenerator', configobj.ConfigObj())
         self.gen_dict = self.skin_dict['JSONGenerator']
         self.data_root = os.path.join(self.config_dict['WEEWX_ROOT'],
                                       self.skin_dict.get('HTML_ROOT', 'public_html'),
                                       self.gen_dict.get('json_dest_dir', 'data'))
 
-        # Take the plot definitions from [JSONGenerator] if it holds any. A skin that
-        # draws only charts in the page keeps them there. Otherwise take them from
-        # [ImageGenerator]. Then a skin that draws both defines each plot once, and
-        # an older skin needs no new configuration.
-        self.plot_dict = {}
+        # Search for plot definitions. Try [JSONGenerator] first, then [ImageGenerator].
+        self.plot_dict = configobj.ConfigObj()
         for name in ('JSONGenerator', 'ImageGenerator'):
             section = self.skin_dict.get(name)
             if section is not None and _holds_plots(section):
@@ -939,23 +955,11 @@ def _unit_choices(obs_types, units_seen, formatter, converter):
             'labels' and 'formats' give each unit's label and number format, so the
             page writes "18.5 °C" the way the server would.
     """
-    # Take the unit systems from weewx.units, so that a new system needs no change
-    # here. The page shows the reader the name used in weewx.conf.
+    # Take the unit systems from weewx.units, so that if a new unit system was introduced,
+    # no changes would be needed here.
     systems = [(name, weewx.units.std_groups[constant])
                for name, constant in sorted(weewx.units.unit_constants.items(),
                                             key=lambda pair: pair[1])]
-
-    # Include every type WeeWX knows a group for, not only the plotted ones. The
-    # Horizon skin shows readings that no chart draws, e.g., rain rate and UV.
-    # Without their groups, a unit switch would convert only some readings on a page.
-    groups = {}
-    for obs_type, group in weewx.units.obs_group_dict.items():
-        if group:
-            groups[str(obs_type)] = str(group)
-    for obs_type in sorted(obs_types):
-        group = weewx.units.getUnitGroup(obs_type)
-        if group:
-            groups[obs_type] = group
 
     # 'wanted' holds more units than the archive files use. A viewer can switch the
     # page to any unit system, so 'wanted' needs every system's unit for each group.
@@ -963,7 +967,7 @@ def _unit_choices(obs_types, units_seen, formatter, converter):
     by_system = {}
     for name, table in systems:
         chosen = {}
-        for group in sorted(set(groups.values())):
+        for group in sorted(set(weewx.units.obs_group_dict.values())):
             unit = table.get(group)
             if unit:
                 chosen[group] = unit
@@ -1002,13 +1006,19 @@ def _unit_choices(obs_types, units_seen, formatter, converter):
     # readings it fetches itself, e.g., the forecast, which arrives in Celsius.
     # Without 'report', "Default" on the page would mean metric, not the skin's units.
     report = {}
-    for group in sorted(set(groups.values())):
+    for group in sorted(set(weewx.units.obs_group_dict.values())):
         unit = converter.group_unit_dict.get(group)
         if unit:
             report[group] = unit
 
-    return {'groups': groups, 'systems': by_system, 'report': report,
-            'convert': convert, 'labels': labels, 'formats': formats}
+    return {
+        'groups': weewx.units.obs_group_dict,
+        'systems': by_system,
+        'report': report,
+        'convert': convert,
+        'labels': labels,
+        'formats': formats
+    }
 
 
 def _write_json(path, payload):
@@ -1461,7 +1471,7 @@ def _holds_plots(section):
     has none.
 
     Args:
-        section (dict): The section to test.
+        section (configobj.Section): The section to test.
     """
     try:
         return any(section[name].sections for name in section.sections)
