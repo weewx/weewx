@@ -59,11 +59,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         self.gen_archive(self.gen_ts)
 
     def setup(self):
-        # ReportGenerator gained stop_event in v5.5.0. Earlier versions do not set
-        # stop_event, and the JSON generator runs under them as an extension.
-        if not hasattr(self, 'stop_event'):
-            self.stop_event = None
-
         # Generic labels, such as "Outside Temperature":
         try:
             self.generic_dict = self.skin_dict['Labels']['Generic']

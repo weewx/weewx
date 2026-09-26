@@ -135,13 +135,11 @@ def run_generator(config_dict, tmp_path, gen_ts=None, archive_options=None):
 class TestPlotDefinitions:
 
     @staticmethod
-    def run(config_dict, skin_dict, stop_event=True):
+    def run(config_dict, skin_dict):
         cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
         generator = weewx.jsongenerator.JSONGenerator(
             cd, skin_dict, parameters.synthetic_dict['stop_ts'], first_run=True,
             stn_info=weewx.station.StationInfo(**cd['Station']))
-        if not stop_event:
-            del generator.stop_event
         try:
             generator.start()
         finally:
@@ -216,16 +214,6 @@ class TestPlotDefinitions:
         del skin_dict['JSONGenerator']
         data_dir = self.run(config_dict, skin_dict)
         assert os.path.exists(os.path.join(data_dir, 'skin.json'))
-        assert self.archived(data_dir)
-
-    def test_it_runs_where_there_is_no_stop_event(self, config_dict, tmp_path):
-        """The generator runs without stop_event, as under WeeWX before v5.5.0.
-
-        ReportGenerator gained stop_event in v5.5.0. The JSON generator also runs as
-        an extension under earlier versions.
-        """
-        data_dir = self.run(config_dict, build_skin_dict(str(tmp_path)),
-                            stop_event=False)
         assert self.archived(data_dir)
 
 
