@@ -15,8 +15,7 @@ charts. In the skins that ship with WeeWX, the page is JavaScript in the browser
 
 The generator writes into `<HTML_ROOT>/<json_dest_dir>`:
 
-  index.json   The length of each time span, whether the ImageGenerator runs, and the
-               unit table. See gen_index().
+  skin.json    The length of each time span, and the unit table. See gen_skin_json().
   archive/     The readings of each plot group over the whole record, one file per day,
                month or year. See gen_archive().
 
@@ -56,7 +55,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # setup() found no plot definitions and has logged the error.
         if not self.plot_dict:
             return
-        self.gen_index(self.gen_ts)
+        self.gen_skin_json()
         self.gen_archive(self.gen_ts)
 
     def setup(self):
@@ -78,6 +77,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         if 'JSONGenerator' not in self.skin_dict:
             self.skin_dict['JSONGenerator'] = {}
         self.gen_dict = self.skin_dict['JSONGenerator']
+        self.data_root = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                      self.skin_dict.get('HTML_ROOT', 'public_html'),
+                                      self.gen_dict.get('json_dest_dir', 'data'))
 
         # Take the plot definitions from [JSONGenerator] if it holds any. A skin that
         # draws only charts in the page keeps them there. Otherwise take them from
@@ -96,44 +98,33 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
 
-    def gen_index(self, gen_ts):
-        """Write index.json from the plot definitions.
+    def gen_skin_json(self):
+        """Write skin.json, which holds the length of each time span and the unit table.
 
-        index.json holds the length of each time span, whether the ImageGenerator
-        runs, and the unit table. The page reads index.json before it draws a chart.
-        Nothing in index.json comes from the database.
-
-        Args:
-            gen_ts (int|None): The time the report is being run for.
+        The page reads skin.json before it draws a chart. Nothing in skin.json comes
+        from the database.
         """
-        dest_dir = self.gen_dict.get('json_dest_dir', 'data')
         indent = to_int(self.gen_dict.get('json_indent'))
 
-        json_root = None
         # span_lengths maps each time span to its 'time_length' in seconds, e.g.,
         # 86400 for [[day_images]]. The page sets the x axis width from span_lengths.
         span_lengths = {}
         # Every observation type in the plot definitions. _unit_choices() builds the
         # unit table from obs_types.
         obs_types = set()
-
         for timespan in self.plot_dict.sections:
-            for plotname in self.plot_dict[timespan].sections:
-                plot_options = accumulateLeaves(self.plot_dict[timespan][plotname])
-                json_root = os.path.join(self.config_dict['WEEWX_ROOT'],
-                                         plot_options['HTML_ROOT'],
-                                         dest_dir)
-                span_lengths[timespan] = to_int(weeutil.weeutil.nominal_spans(
-                    plot_options.get('time_length', 86400)))
-                for line_name in self.plot_dict[timespan][plotname].sections:
-                    line_options = accumulateLeaves(
-                        self.plot_dict[timespan][plotname][line_name])
-                    obs_types.add(line_options.get('data_type', line_name))
+            span_dict = self.plot_dict[timespan]
+            # A section without plots, e.g., [[Archive]], is not a time span.
+            if not span_dict.sections:
+                continue
+            span_lengths[timespan] = to_int(weeutil.weeutil.nominal_spans(
+                search_up(span_dict, 'time_length', 86400)))
+            for plotname in span_dict.sections:
+                for line_name in span_dict[plotname].sections:
+                    obs_types.add(search_up(span_dict[plotname][line_name],
+                                            'data_type', line_name))
 
-        if json_root is None:
-            return
-
-        # gen_index() reads no data, so the converter supplies the unit of each type.
+        # No reading is fetched here, so the converter supplies the unit of each type.
         units_seen = set()
         for obs in obs_types:
             try:
@@ -143,21 +134,17 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             if unit:
                 units_seen.add(unit)
 
-        index_file = os.path.join(json_root, 'index.json')
+        skin_file = os.path.join(self.data_root, 'skin.json')
         try:
-            _write_json(index_file,
-                        {'generated': int(gen_ts or time.time()),
-                         'spans': span_lengths,
-                         # The page links to a PNG only if the ImageGenerator
-                         # runs.
-                         'images': self._images_are_generated(),
+            _write_json(skin_file,
+                        {'spans': span_lengths,
                          # Each archive file holds readings in one unit. The unit
                          # table lets the page convert them to any other.
                          'units': _unit_choices(obs_types, units_seen,
                                                 self.formatter, self.converter)},
                         indent)
         except OSError as e:
-            log.error("Unable to save to file '%s': %s", index_file, e)
+            log.error("Unable to save to file '%s': %s", skin_file, e)
 
     def gen_archive(self, gen_ts):
         """Write the whole record, one file per plot group and span.
@@ -476,21 +463,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                      "for report %s in %.2f seconds",
                      counters['written'], counters['extended'], counters['skipped'],
                      self.skin_dict['REPORT_NAME'], time.time() - t1)
-
-    def _images_are_generated(self):
-        """Return True if the ImageGenerator is in this report's generator_list.
-
-        The skin says in [Generators] whether it draws PNGs, so no separate option
-        is needed.
-        """
-        try:
-            generators = self.skin_dict['Generators']['generator_list']
-        except (KeyError, TypeError):
-            return False
-        # The dots match the module 'imagegenerator' only, not a longer name that
-        # merely contains the word.
-        return any('.imagegenerator.' in str(g).lower()
-                   for g in weeutil.weeutil.option_as_list(generators))
 
     def _read_archive_index(self, dest_dir):
         """Read the archive index.json that the previous run wrote.
@@ -1039,7 +1011,7 @@ def _unit_choices(obs_types, units_seen, formatter, converter):
 
     The archive files hold readings in the skin's units. To offer Fahrenheit next to
     Celsius, the page needs each type's unit group, each system's unit for the group,
-    and the conversions between units. The unit table goes into index.json.
+    and the conversions between units. The unit table goes into skin.json.
 
     Args:
         obs_types (set[str]): The observation types the page shows.

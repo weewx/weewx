@@ -264,7 +264,7 @@
 
   /* ---------------------------------------------------------------- units */
 
-  /* WeeWX writes the JSON files in the report unit system. data/index.json also
+  /* WeeWX writes the JSON files in the report unit system. data/skin.json also
      carries a unit table. With the unit table, the browser converts any reading to
      the unit system the reader chose, without fetching anything. The unit table,
      in part:
@@ -279,10 +279,10 @@
      A conversion multiplies by the first number of a pair in 'convert' and adds the
      second. */
 
-  /* `unitChoices` holds the unit table from data/index.json. refreshCharts empties
-     `manifest` on each new archive record, so that data/index.json is read again.
+  /* `unitChoices` holds the unit table from data/skin.json. refreshCharts empties
+     `manifest` on each new archive record, so that data/skin.json is read again.
      `unitChoices` keeps the old unit table meanwhile, so the readings stay in the
-     chosen unit system while data/index.json loads. The unit table changes only
+     chosen unit system while data/skin.json loads. The unit table changes only
      when the station's configuration changes. */
   var unitChoices = null;
 
@@ -480,7 +480,7 @@
   };
 
   /* Returns the names of the unit systems in the unit table, e.g., ['US', 'METRIC',
-     'METRICWX'], or [] where data/index.json has no unit table. */
+     'METRICWX'], or [] where data/skin.json has no unit table. */
   function availableSystems() {
     var table = unitTable();
     if (!table || !table.systems) return [];
@@ -1182,9 +1182,9 @@
     });
   }
 
-  /* ------------------------------------------------------------ index.json */
+  /* ------------------------------------------------------------- skin.json */
 
-  /* `manifest` holds data/index.json: the length of each time span (`spans`) and
+  /* `manifest` holds data/skin.json: the length of each time span (`spans`) and
      the unit table (`units`). */
   var manifest = null;
 
@@ -1212,13 +1212,13 @@
 
      The values in PERIOD_SECONDS are defaults. adoptSpans replaces them with the
      `time_length` of [[day_images]], [[week_images]] and so on in skin.conf, which
-     data/index.json carries as `spans`. */
+     data/skin.json carries as `spans`. */
   var PERIOD_SECONDS = { day: 27 * 3600, week: 7 * 86400, month: 30 * 86400, year: 365 * 86400 };
 
   function adoptSpans(manifest) {
     if (!manifest || !manifest.spans) return;
     Object.keys(manifest.spans).forEach(function (group) {
-      /* data/index.json names a time span by its section in skin.conf, e.g.
+      /* data/skin.json names a time span by its section in skin.conf, e.g.
          'day_images', and the page names it 'day'. */
       var period = group.replace(/_images$/, '');
       var seconds = parseInt(manifest.spans[group], 10);
@@ -1564,7 +1564,7 @@
 
   function loadManifest() {
     if (manifest) return Promise.resolve(manifest);
-    return fetch(DATA_DIR + '/index.json', { cache: 'no-cache' })
+    return fetch(DATA_DIR + '/skin.json', { cache: 'no-cache' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (json) {
         manifest = json || {};
@@ -1696,15 +1696,14 @@
     Promise.all([loadManifest(), loadArchiveIndex()]).then(function (res) {
       var ai = res[1];
       var groups = CFG.plotGroups || [];
-      /* The time span on screen is measured only once data/index.json has
+      /* The time span on screen is measured only once data/skin.json has
          loaded. adoptSpans has then replaced the defaults in PERIOD_SECONDS with
          the `time_length` of skin.conf. Measured earlier, the first Year chart
          after a page load would span 365 days instead of the 365.25 days of '1y'. */
       var win = currentWindow(period);
       var from = win.from, to = win.to;
 
-      /* The chart cards follow the order of `plot_groups` in skin.conf, not the
-         order of data/index.json. */
+      /* The chart cards follow the order of `plot_groups` in skin.conf. */
       var wanted = groups.map(function (g) {
         var archived = (ai.groups || []).find(function (p) { return p.name === g; });
         /* data/archive/index.json lists every group with readings anywhere in the

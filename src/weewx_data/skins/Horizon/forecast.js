@@ -169,7 +169,7 @@
 
   /* The labels of degree_C and km_per_hour, the units the forecast arrives in.
      reading() uses DEFAULT_LABELS where CFG.units converts nothing, i.e., where the
-     page shows the same units or horizon.js has not loaded data/index.json yet. */
+     page shows the same units or horizon.js has not loaded data/skin.json yet. */
   var DEFAULT_LABELS = { degree_C: '°C', km_per_hour: 'km/h' };
 
   /* Appends to `into` a `tag` element that holds the value and, in a <small>, its

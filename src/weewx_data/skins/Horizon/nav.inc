@@ -60,7 +60,7 @@
         <div class="nav-settings">
   #if $show_units
 ## Every page whose '$page_units' is not False gets the unit picker. horizon.js fills
-## the list from 'data/index.json' and unhides the field when index.json offers at
+## the list from 'data/skin.json' and unhides the field when skin.json offers at
 ## least two unit systems.
           <p class="nav-field" hidden>
             <label for="unit-picker">$gettext("Units")</label>

@@ -178,7 +178,8 @@ class TestPlotDefinitions:
         skin_dict['JSONGenerator'].update({
             'chart_line_colors': '#118844',
             'day_images': {
-                'daymything': {'time_length': '6h', 'outTemp': {'label': 'Mine'}},
+                'time_length': '6h',
+                'daymything': {'outTemp': {'label': 'Mine'}},
             },
         })
         del skin_dict['ImageGenerator']
@@ -190,7 +191,7 @@ class TestPlotDefinitions:
             series = json.load(fd)['series'][0]
         assert series['label'] == 'Mine'
         assert series['color'] == '#118844'
-        with open(os.path.join(data_dir, 'index.json'), encoding='utf-8') as fd:
+        with open(os.path.join(data_dir, 'skin.json'), encoding='utf-8') as fd:
             assert json.load(fd)['spans'] == {'day_images': 6 * 3600}
 
     def test_the_image_generator_section_still_serves(self, config_dict, tmp_path):
@@ -214,7 +215,7 @@ class TestPlotDefinitions:
         skin_dict = build_skin_dict(str(tmp_path))
         del skin_dict['JSONGenerator']
         data_dir = self.run(config_dict, skin_dict)
-        assert os.path.exists(os.path.join(data_dir, 'index.json'))
+        assert os.path.exists(os.path.join(data_dir, 'skin.json'))
         assert self.archived(data_dir)
 
     def test_it_runs_where_there_is_no_stop_event(self, config_dict, tmp_path):
@@ -228,37 +229,26 @@ class TestPlotDefinitions:
         assert self.archived(data_dir)
 
 
-class TestIndex:
+class TestSkinJson:
 
     @staticmethod
-    def index(data_dir):
-        with open(os.path.join(data_dir, 'index.json'), encoding='utf-8') as fd:
+    def skin_json(data_dir):
+        with open(os.path.join(data_dir, 'skin.json'), encoding='utf-8') as fd:
             return json.load(fd)
 
-    def test_the_index_says_whether_images_are_drawn(self, config_dict, tmp_path):
-        """'images' follows the generator_list in [Generators]."""
+    def test_skin_json_holds_the_spans_and_the_units(self, config_dict, tmp_path):
+        skin_json = self.skin_json(run_generator(config_dict, tmp_path))
+        assert sorted(skin_json) == ['spans', 'units']
+        assert skin_json['spans'] == {'day_images': 27 * 3600, 'week_images': 7 * 86400}
+
+    def test_the_span_section_sets_the_length(self, config_dict, tmp_path):
+        """A plot's own time_length does not change the length of its span."""
         skin_dict = build_skin_dict(str(tmp_path))
-        skin_dict['Generators'] = {
-            'generator_list': 'weewx.jsongenerator.JSONGenerator',
-        }
-
-        def images():
-            return self.index(TestPlotDefinitions.run(config_dict, skin_dict))['images']
-
-        assert images() is False
-
-        # A generator with 'image' in its name is not the ImageGenerator.
-        skin_dict['Generators']['generator_list'] = \
-            'weewx.jsongenerator.JSONGenerator, user.gallery.ImageGalleryGenerator'
-        assert images() is False
-
-        skin_dict['Generators']['generator_list'] = \
-            'weewx.jsongenerator.JSONGenerator, weewx.imagegenerator.ImageGenerator'
-        assert images() is True
-
-    def test_the_index_gives_the_length_of_each_span(self, config_dict, tmp_path):
-        index = self.index(run_generator(config_dict, tmp_path))
-        assert index['spans'] == {'day_images': 27 * 3600, 'week_images': 7 * 86400}
+        day_images = skin_dict['ImageGenerator']['day_images']
+        for plotname in day_images.sections:
+            day_images[plotname]['time_length'] = '6h'
+        skin_json = self.skin_json(TestPlotDefinitions.run(config_dict, skin_dict))
+        assert skin_json['spans']['day_images'] == 27 * 3600
 
     def test_the_index_says_which_units_the_report_used(self, config_dict, tmp_path):
         """units['report'] gives the unit the report renders each group in.
@@ -268,7 +258,7 @@ class TestIndex:
         picks a unit system by hand.
         """
         data_dir = run_generator(config_dict, tmp_path)
-        units = self.index(data_dir)['units']
+        units = self.skin_json(data_dir)['units']
 
         # Compared with the unit of an archive file, not with a fixed unit. A fixed
         # unit would only restate the test skin's configuration.

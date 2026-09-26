@@ -35,7 +35,7 @@ including ones you added by hand years ago, is available as JSON straight away.
 
 The files go into a `data` subdirectory of `HTML_ROOT`. The readings are in
 `data/archive`, which covers your whole record, back to your first reading.
-There is also an `index.json`, which says how long each time span is and which
+There is also a `skin.json`, which says how long each time span is and which
 units the readings can be shown in. A page reads that first.
 
 ## What the charts take from the images
@@ -183,7 +183,7 @@ work, because `fetch()` does not insist, but it is worth fixing.
 ## What is inside the files
 
 You do not need to know this to use the generator, or to write a skin that
-draws its own charts from `index.json`. If you are writing something that reads
+draws its own charts from `skin.json`. If you are writing something that reads
 the files directly, the format is documented in the wiki, under [The JSON
 generator file
 format](https://github.com/weewx/weewx/wiki/The-JSON-generator-file-format).
