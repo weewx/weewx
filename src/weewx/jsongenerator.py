@@ -1012,7 +1012,7 @@ def _unit_choices(obs_types, units_seen, formatter, converter):
             report[group] = unit
 
     return {
-        'groups': weewx.units.obs_group_dict,
+        'groups': dict(weewx.units.obs_group_dict),
         'systems': by_system,
         'report': report,
         'convert': convert,
