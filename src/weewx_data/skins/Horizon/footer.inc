@@ -5,9 +5,9 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
-## The footer of every page: the station's particulars, the WeeWX line and the RSS
-## link. 'data-live-panel' makes horizon.js replace the footer on each new archive
-## record, which keeps the uptime current on a page that is left open.
+## The footer holds the station's particulars, the WeeWX line and the RSS link.
+## 'data-live-panel' makes horizon.js replace the footer on each new archive record.
+## The replacement keeps the uptime current on a page that stays open.
 ##
 ## On a climate year page the footer has only the WeeWX line and the RSS link (see
 ## climate-%Y.html.tmpl).

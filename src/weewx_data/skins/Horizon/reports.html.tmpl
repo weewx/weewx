@@ -90,8 +90,8 @@
         }
 
         /* show() sets 'aria-busy' on #report-body while a report loads, and put()
-           removes 'aria-busy' when the text is in. A placeholder such as "Loading"
-           would be read out by a screen reader as though it were the report. */
+           removes 'aria-busy' once the text is in. A screen reader would read a
+           placeholder such as "Loading" as the report. */
         function put(text) {
           body.textContent = text;
           body.removeAttribute('aria-busy');
@@ -152,11 +152,11 @@
         show(pick.value);
         sync();
 
-        /* WeeWX writes the NOAA reports of the running month and year again on
-           every report cycle. This panel has no 'data-live-panel', because horizon.js
-           would replace the panel and lose the report that the reader picked.
-           Instead, on 'horizon:update', which horizon.js sends for each new archive
-           record, show() fetches the picked report again. */
+        /* WeeWX rewrites the NOAA reports of the current month and year on every
+           report cycle. The reports panel has no 'data-live-panel', because
+           horizon.js would then replace the panel and lose the reader's pick.
+           Instead, show() fetches the picked report again on each
+           'horizon:update', i.e., on each new archive record. */
         document.addEventListener('horizon:update', function () { show(pick.value); });
       })();
     </script>

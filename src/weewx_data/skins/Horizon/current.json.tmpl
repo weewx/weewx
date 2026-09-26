@@ -3,19 +3,19 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
-## The readings for the live update. horizon.js fetches this file every
-## 'refresh_interval' seconds, so the file holds only what the live update shows: the
-## time of the archive record and the readings of the current conditions. For
-## example:
+## current.json holds the readings for the live update. horizon.js fetches
+## current.json every 'refresh_interval' seconds. The file therefore holds only what
+## the live update shows: the time of the archive record and the current conditions.
+## For example:
 ##
 ##   {"dateTime": "09/03/2010 11:00:00 AM", "dateTime_raw": 1283536800,
 ##    "interval": 30, "outTemp": "52.2", "outTemp_v": 52.208, "outTemp_u": "degree_F",
 ##    ..., "rainToday": "0.00", "rainToday_v": 0.0, "rainToday_u": "inch"}
 ##
-## '<name>' is the reading as the report formats it, without the unit label, because
-## the page shows the unit label in an element of its own. '<name>_v' and '<name>_u'
-## are the number and its unit, which horizon.js converts when the reader has chosen
-## a unit system.
+## '<name>' is the reading as the report formats it, without the unit label. The page
+## shows the unit label in an element of its own. '<name>_v' and '<name>_u' are the
+## number and its unit. horizon.js converts the number if the reader has chosen a
+## unit system.
 #set $observations = $to_list($DisplayOptions.get('observations_current', ['outTemp', 'barometer']))
 #set $fields = {}
 #silent $fields.update({'dateTime': $str($current.dateTime), 'dateTime_raw': $current.dateTime.raw})

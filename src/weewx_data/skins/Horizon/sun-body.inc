@@ -6,10 +6,10 @@
 ## The content of the sun panel, for sun.inc and sunmoon.inc: a drawing of the sun's
 ## altitude through the day, and figures on daylight and the sun.
 ##
-## The drawing has three curves. Each curve is computed from the sun's declination
-## 'dec' and transit time on the curve's day, which pyephem provides, rather than by
-## asking pyephem for the sun's position at each point. The sun's altitude h at the
-## hour angle H is
+## The drawing has three curves. Each curve is computed from two values that pyephem
+## gives for the curve's day: the sun's declination 'dec' and its transit time. This
+## costs one pyephem call per curve instead of one per point. The sun's altitude h at
+## the hour angle H is
 ##
 ##     sin(h) = sin(lat) sin(dec) + cos(lat) cos(dec) cos(H)
 #from math import asin, sin, cos, radians, degrees
@@ -23,15 +23,14 @@
   #set $SCALE = 0.62
 ##
 ## The curves are for the June solstice, the December solstice and today. The x axis
-## is local time from midnight to midnight, and a curve peaks at the transit time of
-## its day, where the time zone, the longitude and the equation of time put the
-## transit, not at 12:00. The curve of a day in summer time peaks about an hour later
-## by the clock than one in standard time.
+## is local time from midnight to midnight. Each curve peaks at the transit time of
+## its day. The time zone, the longitude and the equation of time move the transit
+## away from 12:00. On a day in summer time, the curve peaks about an hour later by
+## the clock.
 ##
-## mktime() with isdst = -1 finds the local midnight of each day, so the December
-## curve is placed in standard time and the June curve in summer time. The curves
-## are named for the month rather than the season, because south of the equator the
-## June curve is the low one.
+## mktime() with isdst = -1 finds the local midnight of each day. Each curve is thus
+## placed in the clock time of its day, summer or standard. The curves are named for
+## the month, because south of the equator the June curve is the low one.
   #set $curves = {}
   #for $name, $when in [('june', $almanac.next_summer_solstice.raw),
                         ('december', $almanac.next_winter_solstice.raw),
@@ -39,8 +38,8 @@
     #set $alm = $almanac(almanac_time=$when)
     #set $lt = localtime($when)
     #set $midnight = mktime(($lt.tm_year, $lt.tm_mon, $lt.tm_mday, 0, 0, 0, 0, 0, -1))
-## The next midnight comes from mktime() rather than from adding 86400, because the
-## days on which summer time starts and ends are 23 and 25 hours long.
+## mktime() also finds the next midnight. Adding 86400 would be wrong on the days
+## summer time starts and ends, which are 23 and 25 hours long.
     #set $next_mid = mktime(($lt.tm_year, $lt.tm_mon, $lt.tm_mday + 1, 0, 0, 0, 0, 0, -1))
     #set $span_h = ($next_mid - $midnight) / 3600.0
     #set $transit_h = ($alm.sun.transit.raw - $midnight) / 3600.0
@@ -87,8 +86,8 @@
       <line class="sunarc-now" x1="${'%.1f' % ($frac * $W)}" y1="2"
             x2="${'%.1f' % ($frac * $W)}" y2="$BASE"/>
   #end if
-## A mark at 12:00 by the clock, which is not in the middle of the axis on a day of
-## 23 or 25 hours.
+## A tick marks 12:00 by the clock. On a day of 23 or 25 hours, 12:00 is not in the
+## middle of the axis.
       <line class="sunarc-noon" x1="${'%.1f' % $noon_x}" y1="${$BASE - 6}" x2="${'%.1f' % $noon_x}" y2="${$BASE + 3}"/>
       <text class="sunarc-label" x="${'%.1f' % $noon_x}" y="88" text-anchor="middle">12</text>
 ## Beyond the polar circles some days have no sunrise or no sunset, and the almanac
