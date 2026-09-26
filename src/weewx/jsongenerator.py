@@ -52,7 +52,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
     def run(self):
         self.setup()
-        # setup() found no plot definitions and has logged the error.
+        # setup() found no plot definitions and has logged that.
         if not self.plot_dict:
             return
         self.gen_skin_json()
@@ -67,8 +67,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # Translated text strings:
         self.text_dict = self.skin_dict.get('Texts', {})
 
-        # ConfigObj turns the {} into a Section. search_up() needs a Section, because
-        # it climbs the tree through .parent.
+        # gen_dict must be a Section, because options such as 'log_success' are
+        # looked up in the sections above it. A {} stored in skin_dict becomes one.
         if 'JSONGenerator' not in self.skin_dict:
             self.skin_dict['JSONGenerator'] = {}
         self.gen_dict = self.skin_dict['JSONGenerator']
@@ -87,8 +87,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 self.plot_dict = section
                 break
         else:
-            log.error("No plot definitions found, in [JSONGenerator] or "
-                      "[ImageGenerator]. JSON generation skipped.")
+            log.info("No plot definitions in [JSONGenerator] or [ImageGenerator]. "
+                     "No JSON written.")
 
         self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)

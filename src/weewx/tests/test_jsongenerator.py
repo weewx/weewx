@@ -9,6 +9,7 @@ Use pytest to run the tests.
 """
 
 import json
+import logging
 import os
 import time
 
@@ -197,12 +198,20 @@ class TestPlotDefinitions:
         data_dir = self.run(config_dict, build_skin_dict(str(tmp_path)))
         assert self.archived(data_dir) == ['rain', 'tempdew', 'windvec']
 
-    def test_no_plot_definitions_anywhere_is_reported(self, config_dict, tmp_path):
-        """A skin without plots writes nothing."""
+    def test_no_plot_definitions_anywhere_is_reported(self, config_dict, tmp_path,
+                                                      caplog):
+        """A skin without plots writes nothing, and says so as information.
+
+        A skin may well draw no charts, so this is not an error.
+        """
         skin_dict = build_skin_dict(str(tmp_path))
         del skin_dict['ImageGenerator']
-        self.run(config_dict, skin_dict)
+        with caplog.at_level(logging.INFO, logger='weewx.jsongenerator'):
+            self.run(config_dict, skin_dict)
         assert not os.path.isdir(os.path.join(str(tmp_path), 'data'))
+        levels = [r.levelname for r in caplog.records
+                  if 'No plot definitions' in r.getMessage()]
+        assert levels == ['INFO']
 
     def test_a_skin_without_a_json_section_runs(self, config_dict, tmp_path):
         """[ImageGenerator] alone is enough.
