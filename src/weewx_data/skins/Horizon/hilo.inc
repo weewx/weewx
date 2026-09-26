@@ -13,8 +13,8 @@
 ## Use this span to determine whether there are any data to consider.
 #set $recent = $span($day_delta=30, boundary='midnight')
 ##
-## stat_cell() writes a figure with its 'data-value' and 'data-unit', and stat_unit()
-## writes the unit label of a row, so that the unit picker can convert the table.
+## stat_cell() writes a figure with its 'data-value' and 'data-unit'. stat_unit()
+## writes the unit label of a row. The unit picker needs both to convert the table.
 #def stat_cell($vh, $obs)
 #if $vh.raw is None
 #return $vh.format(add_label=False)

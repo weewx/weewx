@@ -10,9 +10,9 @@
 <section class="panel wide history">
   <div class="panel-head history-head">
     <h2>$gettext("History")</h2>
-## On the front page the time span links are in the navigation. The navigation's
-## links always open the front page's charts, so any other page with a history panel
-## (i.e., telemetry) has its own links here, in the panel head.
+## On the front page, the time span links are in the navigation. The navigation's
+## links always open the front page's charts. Any other page with a history panel,
+## i.e., telemetry, therefore has its own links in the panel head.
 #if $page != 'index'
     <div class="tabs" role="group" aria-label="$gettext('Time span')">
   #for $period in $periods
@@ -50,8 +50,8 @@
     <div id="charts" class="charts" tabindex="-1" aria-live="polite" aria-busy="true">
       <p class="chart-empty">$gettext("Loading charts")&hellip;</p>
     </div>
-## The notice mentions the statistics below the charts, i.e., the 'hilo' panel, which
-## only the front page has.
+## The <noscript> notice points to the statistics below the charts, i.e., the
+## 'hilo' panel, which only the front page has.
 #if $page == 'index'
     <noscript>
       <p class="chart-empty">$gettext("Charts need JavaScript. The statistics below work without it.")</p>

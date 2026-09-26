@@ -7,11 +7,11 @@
 #set $observations = $to_list($DisplayOptions.get('observations_stats', ['outTemp']))
 #set $obs_type_sum = $to_list($DisplayOptions.get('obs_type_sum', ['rain']))
 #set $obs_type_max = $to_list($DisplayOptions.get('obs_type_max', ['rainRate']))
-## Use this span to determine whether there are any data to consider.
+## An observation gets a row only if it has data in the last 30 days.
 #set $recent = $span($day_delta=30, boundary='midnight')
 ##
-## stat_cell() writes a figure with its 'data-value' and 'data-unit', and stat_unit()
-## writes the unit label of a row, so that the unit picker can convert the table.
+## stat_cell() writes a figure with its 'data-value' and 'data-unit'. stat_unit()
+## writes the unit label of a row. The unit picker needs both to convert the table.
 #def stat_cell($vh, $obs)
 #if $vh.raw is None
 #return $vh.format(add_label=False)

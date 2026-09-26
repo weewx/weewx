@@ -4,8 +4,8 @@
 #encoding UTF-8
 ##
 ## The content of the moon panel, for moon.inc and sunmoon.inc. The picture is one of
-## the 32 images in 'moon/', chosen by the moon's age since the last new moon;
-## moon/LICENSE.txt gives their source.
+## the 32 images in 'moon/', chosen by the moon's age since the last new moon.
+## moon/LICENSE.txt gives the source of the images.
 #if $almanac.hasExtras
   #set $AU_KM = 149597870.7
   #set $SYNODIC = 29.530588

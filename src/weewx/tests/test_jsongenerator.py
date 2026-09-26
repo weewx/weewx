@@ -9,6 +9,7 @@ Use pytest to run the tests.
 """
 
 import json
+import logging
 import os
 import time
 
@@ -26,14 +27,13 @@ import weewx.units
 import weewx.xtypes
 from weeutil.config import accumulateLeaves
 
-# The grid the archive tests are written on. Four hours rather than the hour a station
-# would use: get_series() runs one aggregate query per slot, so the resolution decides
-# what these tests cost, and nothing they check depends on which one it is.
+# The grid of the archive tests. Four hours keeps the tests fast, because get_series()
+# runs one aggregate query per slot. No test depends on the value.
 ARCHIVE_RESOLUTION = 14400
 
-# The generator works off plot definitions in the [ImageGenerator] syntax. This is a
-# small but representative one: a two-line plot, a bar plot with aggregation, and a
-# plot of a type the test database does not have (which must be skipped).
+# Plot definitions in the [ImageGenerator] syntax: a two-line plot, a bar plot with
+# aggregation, a wind vector, and a plot of a type the test database lacks. The
+# generator must skip that last plot.
 PLOT_CONF = """
 REPORT_NAME = TestReport
 SKIN_ROOT = skins
@@ -82,23 +82,24 @@ data_binding = wx_binding
 
 
 def build_skin_dict(html_root, archive_options=None):
-    """A skin dictionary complete enough for the generator to run against."""
-    # The delta-time formats contain things like %(minute_label)s, which ConfigObj would
-    # otherwise try to resolve as interpolation. The report engine turns interpolation
-    # off for the same reason.
+    """Build a skin dictionary complete enough to run the generator."""
+    # The delta-time formats contain e.g. %(minute_label)s, which ConfigObj would try to
+    # interpolate. The report engine turns interpolation off for the same reason.
     weewx.defaults.defaults.interpolation = False
 
     mine = configobj.ConfigObj(PLOT_CONF.splitlines(), interpolation=False)
 
+    # The tests turn the day and month tiers, the budget and the extremes on where
+    # they are about them, and pin a rebuild once a day.
     json_conf = {'json_dest_dir': 'data', 'round': '3',
-                 'Archive': {'resolution': str(ARCHIVE_RESOLUTION),
-                             'stale_age': '3600'}}
+                 'Archive': {'year_resolution': str(ARCHIVE_RESOLUTION),
+                             'years': '0', 'months': '0', 'days': '0',
+                             'budget': '0', 'extremes': [], 'rebuild': '1d'}}
     json_conf['Archive'].update(archive_options or {})
 
-    # Assemble as a plain dict, then hand the whole thing to ConfigObj at once.
-    # accumulateLeaves() walks the parent chain up to the root, and only a
-    # dictionary built in one piece has that chain wired correctly -- merging
-    # sections into an existing ConfigObj leaves them parented elsewhere.
+    # Build a plain dict and hand it to ConfigObj in one piece. accumulateLeaves()
+    # walks the parent chain up to the root. Sections merged into an existing
+    # ConfigObj keep their old parents, and the chain breaks.
     combined = weewx.defaults.defaults.dict()
     combined.update(mine.dict())
     combined['HTML_ROOT'] = html_root
@@ -118,7 +119,7 @@ def run_generator(config_dict, tmp_path, gen_ts=None, archive_options=None):
     skin_dict = build_skin_dict(html_root, archive_options=archive_options)
 
     # WEEWX_ROOT is left as the test configuration set it, so the database is still
-    # found. HTML_ROOT is absolute, and os.path.join() ignores the prefix for those.
+    # found. HTML_ROOT is absolute, so os.path.join() ignores WEEWX_ROOT for it.
     config_dict = configobj.ConfigObj(config_dict.dict(), interpolation=False)
 
     stn_info = weewx.station.StationInfo(**config_dict['Station'])
@@ -135,16 +136,30 @@ def run_generator(config_dict, tmp_path, gen_ts=None, archive_options=None):
     return os.path.join(html_root, 'data')
 
 
+def tier_files(archive_dir, kind, group=None):
+    """Return the sorted names of the archive files of one tier, e.g., 'days'."""
+    names = []
+    for name in os.listdir(archive_dir):
+        parsed = weewx.jsongenerator._parse_archive_name(name)
+        if parsed and parsed[0] != 'daynight' and parsed[1] == kind \
+                and group in (None, parsed[0]):
+            names.append(name)
+    return sorted(names)
+
+
+def stamp_of(name):
+    """Return the stamp in the name of an archive file, e.g., '2010-08'."""
+    return weewx.jsongenerator._parse_archive_name(name)[2]
+
+
 class TestPlotDefinitions:
 
     @staticmethod
-    def run(config_dict, skin_dict, stop_event=True):
+    def run(config_dict, skin_dict):
         cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
         generator = weewx.jsongenerator.JSONGenerator(
             cd, skin_dict, parameters.synthetic_dict['stop_ts'], first_run=True,
             stn_info=weewx.station.StationInfo(**cd['Station']))
-        if not stop_event:
-            del generator.stop_event
         try:
             generator.start()
         finally:
@@ -153,7 +168,7 @@ class TestPlotDefinitions:
 
     @staticmethod
     def archived(data_dir):
-        """The plot groups with an archive file for 2010."""
+        """Return the plot groups that have an archive file for 2010."""
         return sorted(f[:-len('-2010.json')]
                       for f in os.listdir(os.path.join(data_dir, 'archive'))
                       if f.endswith('-2010.json') and not f.startswith('daynight'))
@@ -181,7 +196,8 @@ class TestPlotDefinitions:
         skin_dict['JSONGenerator'].update({
             'chart_line_colors': '#118844',
             'day_images': {
-                'daymything': {'time_length': '6h', 'outTemp': {'label': 'Mine'}},
+                'time_length': '6h',
+                'daymything': {'outTemp': {'label': 'Mine'}},
             },
         })
         del skin_dict['ImageGenerator']
@@ -193,7 +209,7 @@ class TestPlotDefinitions:
             series = json.load(fd)['series'][0]
         assert series['label'] == 'Mine'
         assert series['color'] == '#118844'
-        with open(os.path.join(data_dir, 'index.json'), encoding='utf-8') as fd:
+        with open(os.path.join(data_dir, 'skin.json'), encoding='utf-8') as fd:
             assert json.load(fd)['spans'] == {'day_images': 6 * 3600}
 
     def test_the_image_generator_section_still_serves(self, config_dict, tmp_path):
@@ -201,12 +217,20 @@ class TestPlotDefinitions:
         data_dir = self.run(config_dict, build_skin_dict(str(tmp_path)))
         assert self.archived(data_dir) == ['rain', 'tempdew', 'windvec']
 
-    def test_no_plot_definitions_anywhere_is_reported(self, config_dict, tmp_path):
-        """A skin without plots writes nothing."""
+    def test_no_plot_definitions_anywhere_is_reported(self, config_dict, tmp_path,
+                                                      caplog):
+        """A skin without plots writes nothing, and says so as information.
+
+        A skin may well draw no charts, so this is not an error.
+        """
         skin_dict = build_skin_dict(str(tmp_path))
         del skin_dict['ImageGenerator']
-        self.run(config_dict, skin_dict)
+        with caplog.at_level(logging.INFO, logger='weewx.jsongenerator'):
+            self.run(config_dict, skin_dict)
         assert not os.path.isdir(os.path.join(str(tmp_path), 'data'))
+        levels = [r.levelname for r in caplog.records
+                  if 'No plot definitions' in r.getMessage()]
+        assert levels == ['INFO']
 
     def test_a_skin_without_a_json_section_runs(self, config_dict, tmp_path):
         """[ImageGenerator] alone is enough.
@@ -217,60 +241,40 @@ class TestPlotDefinitions:
         skin_dict = build_skin_dict(str(tmp_path))
         del skin_dict['JSONGenerator']
         data_dir = self.run(config_dict, skin_dict)
-        assert os.path.exists(os.path.join(data_dir, 'index.json'))
-        assert self.archived(data_dir)
-
-    def test_it_runs_where_there_is_no_stop_event(self, config_dict, tmp_path):
-        """ReportGenerator gained stop_event in v5.5.0.
-
-        Under an earlier WeeWX, stop_event is never set. The JSON generator runs
-        there as an extension.
-        """
-        data_dir = self.run(config_dict, build_skin_dict(str(tmp_path)),
-                            stop_event=False)
+        assert os.path.exists(os.path.join(data_dir, 'skin.json'))
         assert self.archived(data_dir)
 
 
-class TestIndex:
+class TestSkinJson:
 
     @staticmethod
-    def index(data_dir):
-        with open(os.path.join(data_dir, 'index.json'), encoding='utf-8') as fd:
+    def skin_json(data_dir):
+        with open(os.path.join(data_dir, 'skin.json'), encoding='utf-8') as fd:
             return json.load(fd)
 
-    def test_the_index_says_whether_images_are_drawn(self, config_dict, tmp_path):
-        """The skin says it once, in [Generators]."""
+    def test_skin_json_holds_the_spans_and_the_units(self, config_dict, tmp_path):
+        skin_json = self.skin_json(run_generator(config_dict, tmp_path))
+        assert sorted(skin_json) == ['spans', 'units']
+        assert skin_json['spans'] == {'day_images': 27 * 3600, 'week_images': 7 * 86400}
+
+    def test_the_span_section_sets_the_length(self, config_dict, tmp_path):
+        """A plot's own time_length does not change the length of its span."""
         skin_dict = build_skin_dict(str(tmp_path))
-        skin_dict['Generators'] = {
-            'generator_list': 'weewx.jsongenerator.JSONGenerator',
-        }
-
-        def images():
-            return self.index(TestPlotDefinitions.run(config_dict, skin_dict))['images']
-
-        assert images() is False
-
-        # A generator with 'image' in its name is not the ImageGenerator.
-        skin_dict['Generators']['generator_list'] = \
-            'weewx.jsongenerator.JSONGenerator, user.gallery.ImageGalleryGenerator'
-        assert images() is False
-
-        skin_dict['Generators']['generator_list'] = \
-            'weewx.jsongenerator.JSONGenerator, weewx.imagegenerator.ImageGenerator'
-        assert images() is True
-
-    def test_the_index_gives_the_length_of_each_span(self, config_dict, tmp_path):
-        index = self.index(run_generator(config_dict, tmp_path))
-        assert index['spans'] == {'day_images': 27 * 3600, 'week_images': 7 * 86400}
+        day_images = skin_dict['ImageGenerator']['day_images']
+        for plotname in day_images.sections:
+            day_images[plotname]['time_length'] = '6h'
+        skin_json = self.skin_json(TestPlotDefinitions.run(config_dict, skin_dict))
+        assert skin_json['spans']['day_images'] == 27 * 3600
 
     def test_the_index_says_which_units_the_report_used(self, config_dict, tmp_path):
-        """The forecast arrives in Celsius. The page converts it into the report's unit.
+        """units['report'] gives the unit the report renders each group in.
 
+        The page converts e.g. the forecast, which arrives in Celsius, into that unit.
         Without units['report'], the page converts the forecast only after the reader
         picks a unit system by hand.
         """
         data_dir = run_generator(config_dict, tmp_path)
-        units = self.index(data_dir)['units']
+        units = self.skin_json(data_dir)['units']
 
         # Compared with the unit of an archive file, not with a fixed unit. A fixed
         # unit would only restate the test skin's configuration.
@@ -324,11 +328,10 @@ class TestArchive:
 
     @pytest.fixture(scope='class')
     def archive_dir(self, config_dict, tmp_path_factory):
-        """One archive run, shared by the tests that only read what it wrote.
+        """Run the archive once for the tests that only read its output.
 
-        Writing it costs an aggregate query per grid slot, which is most of what this
-        file costs to run. The tests below look at the same output instead of each
-        building their own; the ones that need a second run still make it.
+        The run costs an aggregate query per grid slot, which dominates the run time
+        of this file. Tests that need a run of their own still make it.
         """
         data_dir = run_generator(config_dict, tmp_path_factory.mktemp('archive'))
         return os.path.join(data_dir, 'archive')
@@ -346,7 +349,7 @@ class TestArchive:
 
         assert payload['interval'] == ARCHIVE_RESOLUTION
         assert payload['start'] % ARCHIVE_RESOLUTION == 0
-        # No 'time' array at all: that is the point of the fixed grid.
+        # The fixed grid makes a 'time' array unnecessary.
         for series in payload['series']:
             assert 'time' not in series
             assert len(series['values']) == payload['count']
@@ -362,10 +365,10 @@ class TestArchive:
         assert len(filled) > 0.9 * (filled[-1] - filled[0] + 1)
 
     def test_fresh_files_are_not_rewritten(self, config_dict, tmp_path):
-        """A second run right after the first must not touch anything.
+        """A second run right after the first rewrites no file.
 
-        This is the case that matters in practice: reports run every archive interval,
-        and the archive must cost almost nothing on all the runs after the first.
+        Reports run every archive interval, so every run after the first must cost
+        almost nothing.
         """
         data_dir = run_generator(config_dict, tmp_path)
         path = os.path.join(data_dir, 'archive', 'tempdew-2010.json')
@@ -388,11 +391,10 @@ class TestArchive:
         assert os.path.getmtime(path) != before
 
     def test_catchup_data_reach_the_archive(self, config_dict, tmp_path):
-        """A file minutes old can still be hours behind.
+        """Readings caught up after a restart reach the archive.
 
-        Stop the station, restart it, and the logger hands over everything it recorded
-        meanwhile. The file on disk is younger than any age test would trip on, and
-        missing a day of data. Reported by tkeffer in #1111.
+        After a restart, the logger hands over what it recorded meanwhile. The file on
+        disk is then minutes old but days behind. Reported by tkeffer in #1111.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         data_dir = run_generator(config_dict, tmp_path,
@@ -406,14 +408,14 @@ class TestArchive:
         with open(path, encoding='utf-8') as fd:
             after = json.load(fd)
 
-        assert after['covered'] > before['covered']
+        assert after['newest'] > before['newest']
         filled = lambda p: sum(1 for v in p['series'][0]['values'] if v is not None)
         # Two days of catch-up, so nearly two days of grid slots have to fill in.
         slots = 2 * 86400 // ARCHIVE_RESOLUTION
         assert filled(after) - filled(before) > 0.8 * slots
 
     def test_an_import_rebuilds_finished_years(self, config_dict, tmp_path):
-        """Data reaching further back than last time mean an import.
+        """An import of older data rebuilds the finished years.
 
         A finished year is otherwise written once and skipped forever, so imported
         history would never show up.
@@ -440,65 +442,63 @@ class TestArchive:
         with open(os.path.join(data_dir, 'archive', 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
 
-        assert index['interval'] == ARCHIVE_RESOLUTION
         groups = {g['name']: g for g in index['groups']}
         assert 'tempdew' in groups
-        assert 2010 in groups['tempdew']['years']
+        assert '2010' in groups['tempdew']['years']
+        assert groups['tempdew']['year_intervals']['2010'] == ARCHIVE_RESOLUTION
 
     def test_a_finer_grid_is_written_for_the_recent_past(self, config_dict, tmp_path):
         """An hourly grid flattens a single day, so recent months also get a fine one."""
         data_dir = run_generator(config_dict, tmp_path,
-                                 archive_options={'fine_months': '2',
-                                                  'fine_resolution': '300'})
+                                 archive_options={'months': '2',
+                                                  'month_resolution': '300'})
         archive_dir = os.path.join(data_dir, 'archive')
-        fine = sorted(f for f in os.listdir(archive_dir) if '-fine-' in f)
-        assert fine, "no fine files written"
+        fine = tier_files(archive_dir, 'months')
+        assert fine, "no month files written"
 
         with open(os.path.join(archive_dir, fine[0]), encoding='utf-8') as fd:
             payload = json.load(fd)
         assert payload['interval'] == 300
 
         # The coarse file for the same group is still there, on the wide grid.
-        group = fine[0].split('-fine-')[0]
+        group = weewx.jsongenerator._parse_archive_name(fine[0])[0]
         with open(os.path.join(archive_dir, '%s-2010.json' % group), encoding='utf-8') as fd:
             assert json.load(fd)['interval'] == ARCHIVE_RESOLUTION
 
         with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
-        assert index['fine_interval'] == 300
         groups = {g['name']: g for g in index['groups']}
-        # The month the fine file covers is named, so a client knows to ask for it.
-        assert fine[0].split('-fine-')[1][:-5] in groups[group]['fine']
+        # The month the month file covers is named, so a client knows to ask for it.
+        assert stamp_of(fine[0]) in groups[group]['months']
+        assert groups[group]['month_intervals'][stamp_of(fine[0])] == 300
 
     def test_a_grid_that_is_not_finer_is_refused(self, config_dict, tmp_path):
-        """'5m' means five months. Silently writing that would be worse than saying so."""
+        """A month_resolution that is not finer than year_resolution writes no month files.
+
+        The usual cause is '5m', which means five months.
+        """
         data_dir = run_generator(config_dict, tmp_path,
-                                 archive_options={'fine_months': '2',
-                                                  'fine_resolution': '28800'})
+                                 archive_options={'months': '2',
+                                                  'month_resolution': '28800'})
         archive_dir = os.path.join(data_dir, 'archive')
-        assert not [f for f in os.listdir(archive_dir) if '-fine-' in f]
+        assert not tier_files(archive_dir, 'months')
 
 
 class TestArchiveExtension:
-    """Carrying a file forward instead of working the whole span out again.
+    """Extending a file on disk instead of calculating the whole span.
 
-    A file already holds every slot but its last, so a report only has to calculate
-    from there on. That is one aggregate query rather than one per slot in the year,
-    and it is the difference between the archive costing seconds every report and
-    costing nothing. What the tests here are for is the other half of that trade: the
-    result has to be what the long way round would have produced.
+    A file holds every slot but its last, so a report calculates only from there on.
+    The tests check that the result equals a full rebuild.
     """
 
-    # What a run leaves behind that says when it ran rather than what it found.
-    # 'covered' and the resume pair belong to the last run that wrote the file, and a
-    # run whose slot has not moved does not write one. So a chain of reports ending on
-    # a skipped one carries the stamps of the report before it, while a single run at
-    # the same instant carries its own. Neither is in the data the page draws.
-    BOOKKEEPING = ('covered', 'resume_ts', 'resume_slot')
+    # Keys that record when a file was written, not what it holds. A run whose slot
+    # has not moved skips the file. So after a chain of reports, these keys can come
+    # from an earlier run than in a single rebuild. The page draws none of them.
+    BOOKKEEPING = ('newest', 'resume_ts', 'resume_slot')
 
     @classmethod
     def payloads(cls, archive_dir, only=None):
-        """The drawable contents of every archive file, keyed by name."""
+        """Return the drawable contents of every archive file, keyed by file name."""
         out = {}
         for name in sorted(os.listdir(archive_dir)):
             if not name.endswith('.json') or name == 'index.json':
@@ -522,10 +522,9 @@ class TestArchiveExtension:
                                      archive_options=options)
             if gen_ts >= last_ts:
                 break
-            # The last report lands on 'last_ts' itself, whatever the step. A day the
-            # clocks change is 23 or 25 hours long, so a fixed step does not divide the
-            # span, and the walk would otherwise stop short of the rebuild it is
-            # compared against and be handed less of the database.
+            # The last report lands on 'last_ts', whatever the step. A DST day is 23 or
+            # 25 hours long, so a fixed step may not divide the span. Without the min(),
+            # the walk would stop short of the rebuild it is compared with.
             gen_ts = min(gen_ts + step, last_ts)
         return os.path.join(data_dir, 'archive')
 
@@ -545,19 +544,18 @@ class TestArchiveExtension:
 
     def test_extending_matches_a_full_rebuild_over_a_dst_boundary(
             self, config_dict, tmp_path_factory):
-        """intervalgen() keeps local time constant, so a slot can be three hours long.
+        """Extending matches a full rebuild across a DST change.
 
-        The grid a file is written on is worked out from its own start, and an extending
-        run starts from further along than the run that first wrote it. Where the clocks
-        change, the two could disagree about where a slot begins.
+        intervalgen() aligns slots on local time, so a slot can be three hours long. An
+        extending run starts later than the run that first wrote the file. Across a DST
+        change, the two runs could disagree about where a slot begins.
         """
         # 2010-03-14 02:00 PST is 03:00 PDT. Straddle it.
         first_ts = int(time.mktime((2010, 3, 13, 12, 0, 0, 0, 0, -1)))
         last_ts = int(time.mktime((2010, 3, 15, 0, 0, 0, 0, 0, -1)))
-        # Both sides have to end on the same slot boundary. A file is rewritten once
-        # its newest reading reaches the next slot, not once per report, so a walk
-        # that stops in the middle of a slot leaves the file as the report before it
-        # wrote it while the rebuild writes it fresh.
+        # Both sides must end on the same slot boundary. A file is rewritten only when
+        # its newest reading reaches the next slot. A walk ending mid-slot would leave
+        # an older file than the rebuild writes.
         last_ts -= last_ts % ARCHIVE_RESOLUTION
 
         grown = self.walk_forward(config_dict, tmp_path_factory.mktemp('dst_grown'),
@@ -570,16 +568,15 @@ class TestArchiveExtension:
 
     def test_extending_matches_a_full_rebuild_on_the_fine_grid(
             self, config_dict, tmp_path_factory):
-        """The fine files are the expensive ones, and they are per month, not per year.
+        """Extending matches a full rebuild on the fine grid, i.e., per month.
 
-        Only the month in progress is compared. Whole months either side of it are
-        written once and then kept, so the run that wrote one decides where it starts,
-        and a later run that skips it leaves that alone.
+        Only the month in progress is compared. A finished month is written once and
+        kept, so its start depends on the run that wrote it.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'fine_months': '2', 'fine_resolution': '3600'}
+        options = {'months': '2', 'month_resolution': '3600'}
         first_ts = stop_ts - 4 * 3600
-        current_month = '-fine-%s' % time.strftime('%Y-%m', time.localtime(stop_ts))
+        current_month = '-%s.json' % time.strftime('%Y-%m', time.localtime(stop_ts))
 
         grown = self.walk_forward(config_dict, tmp_path_factory.mktemp('fine_grown'),
                                   first_ts, stop_ts, 3600, options)
@@ -589,12 +586,12 @@ class TestArchiveExtension:
             'archive')
 
         grown_files = self.payloads(grown, only=current_month)
-        assert grown_files, "no fine file for the month in progress"
+        assert grown_files, "no month file for the month in progress"
         assert grown_files == self.payloads(built, only=current_month)
 
     def test_extending_costs_one_query_per_new_slot(self, config_dict, tmp_path,
                                                     monkeypatch):
-        """The whole point. A year's file must not cost a query per slot in the year."""
+        """Extending a year's file queries only the new slots, not the whole year."""
         stop_ts = parameters.synthetic_dict['stop_ts']
         run_generator(config_dict, tmp_path,
                       gen_ts=stop_ts - ARCHIVE_RESOLUTION,
@@ -610,12 +607,14 @@ class TestArchiveExtension:
                       archive_options={'rebuild': '0'})
 
         assert calls, "the second run asked for nothing at all"
-        # A call over more than a day is the archive working out the year again.
-        # Carrying the file forward makes that unnecessary.
+        # A query over more than a day means the year was calculated again.
         assert max(span.stop - span.start for span in calls) <= 86400
 
     def test_a_rebuild_happens_once_a_calendar_day(self, config_dict, tmp_path):
-        """Anything that changed further back than the last report needs this."""
+        """A full rebuild runs once per calendar day.
+
+        Only a rebuild picks up changes older than the last report.
+        """
         stop_ts = parameters.synthetic_dict['stop_ts']
         index_path = lambda d: os.path.join(d, 'archive', 'index.json')
         rebuilt_at = lambda d: json.load(open(index_path(d), encoding='utf-8'))['rebuilt']
@@ -643,11 +642,10 @@ class TestArchiveExtension:
             assert json.load(fd)['rebuilt'] is None
 
     def test_a_file_that_does_not_match_is_rebuilt(self, config_dict, tmp_path):
-        """A file whose series are not the ones being written cannot be carried on.
+        """A file whose series differ from the plot's is rebuilt, not extended.
 
-        This is what a changed skin looks like from here: same name, same grid, other
-        contents. Taking its values would put one observation's readings under another
-        one's label.
+        A changed skin leaves a file with the same name and grid but other series.
+        Extending it would put one type's readings under another type's label.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         run_generator(config_dict, tmp_path,
@@ -725,9 +723,10 @@ class TestTiers:
     """Which grid a calendar year's file is written on."""
 
     @staticmethod
-    def grid(year, this_year=2026, recent=2, fine=3600, coarse=14400, existing=None):
-        return weewx.jsongenerator._year_grid(year, this_year, recent, fine, coarse,
-                                              existing)
+    def grid(year, this_year=2026, years=2, year_resolution=3600,
+             old_year_resolution=14400, existing=None):
+        return weewx.jsongenerator._year_grid(year, this_year, years, year_resolution,
+                                              old_year_resolution, existing)
 
     def test_the_recent_years_get_the_finer_grid(self):
         assert self.grid(2026) == 3600
@@ -738,10 +737,10 @@ class TestTiers:
         assert self.grid(2016) == 14400
 
     def test_without_a_recent_window_every_year_is_the_same(self):
-        assert self.grid(2016, recent=0) == 3600
+        assert self.grid(2016, years=0) == 3600
 
     def test_a_file_already_finer_keeps_what_it_has(self):
-        """Rewriting a year to hold less than it does would be work spent backwards."""
+        """Coarsening a year would cost a year of queries to end up with less."""
         assert self.grid(2016, existing=3600) == 3600
 
     def test_a_file_coarser_than_wanted_is_refined(self):
@@ -776,14 +775,13 @@ class TestArchiveMemory:
     """What the archive knows about files it did not write this run."""
 
     def test_finished_months_stay_available(self, config_dict, tmp_path):
-        """A month that has ended never changes, so its file is good forever.
+        """The index still names finished months outside the 'months' window.
 
-        Only the months inside the writing window are written. Everything older that
-        is still on disk has to stay named in the index, or the page cannot see it and
-        the detail is there for nobody.
+        Only the months inside the window are written. Older month files on disk must
+        stay in the index, or the page cannot see them.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'fine_months': '2', 'fine_resolution': '3600'}
+        options = {'months': '2', 'month_resolution': '3600'}
         # Two runs a month apart, so the first month falls out of the window.
         run_generator(config_dict, tmp_path, gen_ts=stop_ts - 45 * 86400,
                       archive_options=options)
@@ -791,25 +789,24 @@ class TestArchiveMemory:
                                  archive_options=options)
 
         archive_dir = os.path.join(data_dir, 'archive')
-        on_disk = {f for f in os.listdir(archive_dir) if '-fine-' in f}
-        assert on_disk, "no fine files at all"
+        on_disk = set(tier_files(archive_dir, 'months'))
+        assert on_disk, "no month files at all"
 
         with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
         named = set()
         for group in index['groups']:
-            for stamp in group.get('fine', {}):
-                named.add('%s-fine-%s.json' % (group['name'], stamp))
+            for stamp in group.get('months', {}):
+                named.add('%s-%s.json' % (group['name'], stamp))
         assert on_disk <= named, "files on disk that the index does not name"
 
     def test_a_lost_index_is_rebuilt_from_the_directory(self, config_dict, tmp_path):
-        """The directory is the truth. Losing the index must not lose the work.
+        """A lost index.json is restored from the files in the directory.
 
-        Every answer is already in the files. Without this, deleting one small file
-        would mean working out the whole record again.
+        Otherwise, deleting index.json would mean calculating the whole record again.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'fine_months': '2', 'fine_resolution': '3600'}
+        options = {'months': '2', 'month_resolution': '3600'}
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
         archive_dir = os.path.join(data_dir, 'archive')
@@ -824,19 +821,18 @@ class TestArchiveMemory:
         with open(index_path, encoding='utf-8') as fd:
             after = json.load(fd)
         named = lambda idx: {(g['name'], y) for g in idx['groups']
-                             for y in list(g.get('covered', {}))
-                             + list(g.get('fine', {}))}
+                             for y in list(g.get('years', {}))
+                             + list(g.get('months', {}))}
         assert named(after) == named(before)
 
     def test_the_index_drops_files_that_have_gone(self, config_dict, tmp_path):
-        """An index naming a file that is not there sends the reader after a 404.
+        """The index drops a file that was deleted from the directory.
 
-        A file inside the writing window is simply written again, so the case that
-        needs catching is one outside it: a month the run no longer visits, deleted by
-        whoever was tidying up the directory.
+        A name without a file sends the page after a 404. A deleted file inside the
+        window is written again, so the test deletes a month outside the window.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'fine_months': '2', 'fine_resolution': '3600'}
+        options = {'months': '2', 'month_resolution': '3600'}
         run_generator(config_dict, tmp_path, gen_ts=stop_ts - 45 * 86400,
                       archive_options=options)
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
@@ -845,10 +841,10 @@ class TestArchiveMemory:
 
         with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
-        months = sorted({m for g in index['groups'] for m in g.get('fine', {})})
+        months = sorted({m for g in index['groups'] for m in g.get('months', {})})
         assert len(months) > 1, "only one month written, nothing is out of the window"
         oldest = months[0]
-        gone = [f for f in os.listdir(archive_dir) if f.endswith('-fine-%s.json' % oldest)]
+        gone = [f for f in os.listdir(archive_dir) if f.endswith('-%s.json' % oldest)]
         assert gone
         for name in gone:
             os.remove(os.path.join(archive_dir, name))
@@ -859,7 +855,7 @@ class TestArchiveMemory:
         with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
         for group in index['groups']:
-            assert oldest not in group.get('fine', {}), \
+            assert oldest not in group.get('months', {}), \
                 "index still names %s for %s" % (oldest, group['name'])
 
     def test_the_index_records_the_grid_of_each_file(self, config_dict, tmp_path):
@@ -870,18 +866,17 @@ class TestArchiveMemory:
             index = json.load(fd)
 
         groups = {g['name']: g for g in index['groups']}
-        assert groups['tempdew']['intervals']['2010'] == ARCHIVE_RESOLUTION
+        assert groups['tempdew']['year_intervals']['2010'] == ARCHIVE_RESOLUTION
 
 
-class TestRawTier:
+class TestDayTier:
     """The station's own readings, one file per day, kept for a while and then not."""
 
-    OPTIONS = {'raw_days': '5', 'raw_resolution': '1800'}
+    OPTIONS = {'days': '5', 'day_resolution': '1800'}
 
     @staticmethod
     def days(archive_dir):
-        return sorted({f.split('-raw-')[1][:-len('.json')]
-                       for f in os.listdir(archive_dir) if '-raw-' in f})
+        return sorted({stamp_of(f) for f in tier_files(archive_dir, 'days')})
 
     def test_one_file_per_day(self, config_dict, tmp_path):
         stop_ts = parameters.synthetic_dict['stop_ts']
@@ -894,20 +889,23 @@ class TestRawTier:
         assert days[-1] == time.strftime('%Y-%m-%d', time.localtime(stop_ts))
 
     def test_the_grid_is_the_archive_interval(self, config_dict, tmp_path):
-        """0 means 'as fine as the record', read off a record rather than a setting."""
+        """A day_resolution of 0 uses the interval stored in the newest record."""
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'raw_days': '2', 'raw_resolution': '0'}
+        options = {'days': '2', 'day_resolution': '0'}
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
         archive_dir = os.path.join(data_dir, 'archive')
-        name = [f for f in os.listdir(archive_dir) if '-raw-' in f][0]
+        name = tier_files(archive_dir, 'days')[0]
         with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
             payload = json.load(fd)
 
         assert payload['interval'] == parameters.synthetic_dict['interval']
 
     def test_days_that_fall_out_of_the_window_are_removed(self, config_dict, tmp_path):
-        """The one tier with a horizon. Left alone it would grow a file a day forever."""
+        """Day files that fall out of the 'days' window are deleted.
+
+        Otherwise the day tier would grow by one file per group per day, forever.
+        """
         stop_ts = parameters.synthetic_dict['stop_ts']
         run_generator(config_dict, tmp_path, gen_ts=stop_ts - 3 * 86400,
                       archive_options=self.OPTIONS)
@@ -923,9 +921,9 @@ class TestRawTier:
         for stamp in before:
             if stamp < after[0]:
                 assert not [f for f in os.listdir(archive_dir)
-                            if f.endswith('-raw-%s.json' % stamp)]
+                            if f.endswith('-%s.json' % stamp)]
 
-    def test_the_index_names_the_raw_days(self, config_dict, tmp_path):
+    def test_the_index_names_the_days(self, config_dict, tmp_path):
         stop_ts = parameters.synthetic_dict['stop_ts']
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=self.OPTIONS)
@@ -933,13 +931,13 @@ class TestRawTier:
             index = json.load(fd)
 
         groups = {g['name']: g for g in index['groups']}
-        assert len(groups['tempdew']['raw']) == 5
-        assert set(groups['tempdew']['raw_intervals'].values()) == {1800}
+        assert len(groups['tempdew']['days']) == 5
+        assert set(groups['tempdew']['day_intervals'].values()) == {1800}
 
-    def test_it_is_off_unless_asked_for(self, config_dict, tmp_path):
-        data_dir = run_generator(config_dict, tmp_path)
+    def test_days_0_turns_it_off(self, config_dict, tmp_path):
+        data_dir = run_generator(config_dict, tmp_path, archive_options={'days': '0'})
         archive_dir = os.path.join(data_dir, 'archive')
-        assert not [f for f in os.listdir(archive_dir) if '-raw-' in f]
+        assert not tier_files(archive_dir, 'days')
 
 
 class TestBudget:
@@ -962,12 +960,10 @@ class TestBudget:
 
     def test_a_file_too_big_for_the_budget_is_finished_later(self, config_dict,
                                                              tmp_path):
-        """The budget cuts inside a file, not between files.
+        """The budget can cut a file short, and later runs finish it.
 
-        A year on a slow machine can cost more than a whole budget on its own. Waiting
-        for it would be a report that runs long; skipping it would be a year that never
-        gets built. So the file is written holding what was worked out, and the next
-        run carries on from there, which is what extending already does.
+        On a slow machine, one year can cost more than the whole budget. So the file
+        is written with the slots done so far, and the next run extends it.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         name = os.path.join('data', 'archive', 'tempdew-2010.json')
@@ -991,7 +987,10 @@ class TestBudget:
         assert seen[-1] > seen[0], "later runs added nothing"
 
     def test_the_short_file_says_how_far_it_got(self, config_dict, tmp_path):
-        """'covered' has to be the truth, or the next run thinks it is done."""
+        """A file cut short by the budget says in 'newest' how far it got.
+
+        Otherwise the next run would take the file as complete.
+        """
         stop_ts = parameters.synthetic_dict['stop_ts']
         run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                       archive_options={'budget': '1'})
@@ -999,8 +998,8 @@ class TestBudget:
         with open(path, encoding='utf-8') as fd:
             payload = json.load(fd)
 
-        assert payload['covered'] < stop_ts
-        assert payload['covered'] <= payload['start'] + payload['count'] * payload['interval']
+        assert payload['newest'] < stop_ts
+        assert payload['newest'] <= payload['start'] + payload['count'] * payload['interval']
         assert payload['resume_ts'] is not None
 
     def test_it_ends_up_the_same_as_doing_it_in_one_go(self, config_dict,
@@ -1024,11 +1023,10 @@ class TestBudget:
         assert built_up['series'] == one_go['series']
 
     def test_deferred_files_stay_in_the_index(self, config_dict, tmp_path):
-        """A run that stops early must not un-name what earlier runs wrote.
+        """A run that the budget stops early keeps earlier files in the index.
 
-        The index is built from what this run touched. Everything else is on disk and
-        correct, and dropping it would take the page's history away until the run that
-        happens to reach it again.
+        The index is built from the files this run touched. Dropping the others would
+        hide the page's history until a later run reaches them again.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         full = run_generator(config_dict, tmp_path, gen_ts=stop_ts)
@@ -1044,20 +1042,19 @@ class TestBudget:
             after = json.load(fd)
 
         named = lambda idx: {(g['name'], y) for g in idx['groups']
-                             for y in g.get('covered', {})}
+                             for y in g.get('years', {})}
         assert named(after) == named(before)
         assert {g['name'] for g in after['groups']} == {g['name'] for g in before['groups']}
 
     def test_the_day_view_is_never_deferred(self, config_dict, tmp_path):
-        """The raw tier is what the page draws today from. It is not metered."""
+        """The budget never defers the day tier, which the page draws today from."""
         stop_ts = parameters.synthetic_dict['stop_ts']
         data_dir = run_generator(
             config_dict, tmp_path, gen_ts=stop_ts,
-            archive_options={'budget': '1', 'raw_days': '3', 'raw_resolution': '1800'})
+            archive_options={'budget': '1', 'days': '3', 'day_resolution': '1800'})
         archive_dir = os.path.join(data_dir, 'archive')
 
-        days = {f.split('-raw-')[1][:-len('.json')]
-                for f in os.listdir(archive_dir) if '-raw-' in f}
+        days = {stamp_of(f) for f in tier_files(archive_dir, 'days')}
         assert len(days) == 3, days
 
 
@@ -1065,10 +1062,9 @@ class TestArchiveSeriesShapes:
     """What a series in an archive file can carry beyond one number per slot."""
 
     def test_a_wind_vector_keeps_its_components(self, config_dict, tmp_path):
-        """A vector is a pair. The evenly spaced grid holds it as two arrays.
+        """A wind vector series keeps its components in 'vector_x' and 'vector_y'.
 
-        Without this the wind vector plot is the one chart the archive cannot draw,
-        and the page would need a second source just for it.
+        Without them, the page could not draw the wind vector plot from the archive.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts)
@@ -1089,18 +1085,17 @@ class TestArchiveSeriesShapes:
             assert abs((x ** 2 + y ** 2) ** 0.5 - v) < 0.01
 
     def test_a_line_keeps_its_own_aggregation_interval(self, config_dict, tmp_path):
-        """"Rain, hourly total" has to stay an hour, on any grid.
+        """A bar with 'aggregate_interval = 3600' stays hourly on a finer grid.
 
-        The plot says 'aggregate_interval = 3600'. Summing per slot on a finer grid
-        gives a number a fraction of the size, under a label that says otherwise, and
-        a row of hairline bars instead of one a reader can compare.
+        Summing per slot would give a fraction of the hourly total under an hourly
+        label, drawn as a row of hairline bars.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'raw_days': '2', 'raw_resolution': '900'}
+        options = {'days': '2', 'day_resolution': '900'}
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
         archive_dir = os.path.join(data_dir, 'archive')
-        name = [f for f in os.listdir(archive_dir) if f.startswith('rain-raw-')][0]
+        name = tier_files(archive_dir, 'days', 'rain')[0]
         with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
             payload = json.load(fd)
 
@@ -1114,21 +1109,19 @@ class TestArchiveSeriesShapes:
             "readings are closer together than the hour they are totalled over: %s" % sorted(gaps)[:5]
 
     def test_finished_days_meet_without_a_seam(self, config_dict, tmp_path):
-        """The end of one raw day file is the start of the next, exactly.
+        """Each day file ends exactly where the next one starts.
 
-        A day that runs a slot past midnight owns an instant the next file owns too,
-        and it can never fill it: the run that could is the one that finds the day
-        finished and skips the file. The page then draws every reading it has with a
-        hole between each pair of days.
+        A day with a slot past midnight shares an instant with the next file. No run
+        fills that slot, because the day is finished and its file is skipped. The page
+        then shows a gap between each pair of days.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'raw_days': '5', 'raw_resolution': '900'}
+        options = {'days': '5', 'day_resolution': '900'}
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
         archive_dir = os.path.join(data_dir, 'archive')
 
-        files = sorted(f for f in os.listdir(archive_dir)
-                       if f.startswith('tempdew-raw-'))
+        files = tier_files(archive_dir, 'days', 'tempdew')
         assert len(files) > 2, files
 
         spans = []
@@ -1140,23 +1133,24 @@ class TestArchiveSeriesShapes:
 
         # The last file is the day still filling up, so it stops where the readings do.
         for (name, start, count, interval), (_, later, _, _) in zip(spans, spans[1:]):
-            assert start + count * interval == later,                 "%s ends at %d, but the next file starts at %d"                 % (name, start + count * interval, later)
+            assert start + count * interval == later, (
+                "%s ends at %d, but the next file starts at %d"
+                % (name, start + count * interval, later))
 
     def test_a_finished_day_holds_nothing_from_the_next(self, config_dict, tmp_path):
-        """A bar totalled over an hour must not be filed a slot early.
+        """An hourly bar is not placed a slot early.
 
         get_series() clips its last interval to the end of the span, so the last bar
-        of a day covers less than the hour it is meant to. Counted back from its end
-        it lands before the slot it belongs in, which puts part of tomorrow's rain at
-        the end of today, overlapping the bar that is already there.
+        of a day is shorter than an hour. Placed by its end, the bar would land a slot
+        early and overlap the bar before it.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        options = {'raw_days': '5', 'raw_resolution': '900'}
+        options = {'days': '5', 'day_resolution': '900'}
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
                                  archive_options=options)
         archive_dir = os.path.join(data_dir, 'archive')
 
-        names = sorted(f for f in os.listdir(archive_dir) if f.startswith('rain-raw-'))
+        names = tier_files(archive_dir, 'days', 'rain')
         assert len(names) > 2, names
 
         # The day still filling up counts too. Its last interval is the one
@@ -1170,8 +1164,11 @@ class TestArchiveSeriesShapes:
             if len(filled) < 2:
                 continue
             gaps = {b - a for a, b in zip(filled, filled[1:])}
-            assert min(gaps) >= every,                 "%s files an hourly bar %d slots after the last, not %d: %s"                 % (name, min(gaps), every, filled[-6:])
-            assert max(filled) < payload['count'],                 "%s fills slot %d of %d" % (name, max(filled), payload['count'])
+            assert min(gaps) >= every, (
+                "%s files an hourly bar %d slots after the last, not %d: %s"
+                % (name, min(gaps), every, filled[-6:]))
+            assert max(filled) < payload['count'], (
+                "%s fills slot %d of %d" % (name, max(filled), payload['count']))
 
     def test_named_types_carry_their_extremes(self, config_dict, tmp_path):
         stop_ts = parameters.synthetic_dict['stop_ts']
@@ -1193,9 +1190,10 @@ class TestArchiveSeriesShapes:
         # dewpoint was not named, so it carries no extremes.
         assert 'min' not in payload['series'][1]
 
-    def test_extremes_are_off_by_default(self, config_dict, tmp_path):
+    def test_a_type_not_named_carries_no_extremes(self, config_dict, tmp_path):
         stop_ts = parameters.synthetic_dict['stop_ts']
-        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts)
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
+                                 archive_options={'extremes': 'windGust'})
         with open(os.path.join(data_dir, 'archive', 'tempdew-2010.json'),
                   encoding='utf-8') as fd:
             payload = json.load(fd)
@@ -1241,7 +1239,7 @@ class TestRebuildDue:
         assert not weewx.jsongenerator._rebuild_due(morning, evening, self.DAY)
 
     def test_over_midnight(self):
-        """Two minutes apart, and due, where 24 hours of elapsed time would not be."""
+        """Two reports two minutes apart, across midnight, trigger a rebuild."""
         before = int(time.mktime((2010, 3, 1, 23, 59, 0, 0, 0, -1)))
         after = int(time.mktime((2010, 3, 2, 0, 1, 0, 0, 0, -1)))
         assert weewx.jsongenerator._rebuild_due(before, after, self.DAY)
@@ -1256,12 +1254,26 @@ class TestRebuildDue:
         assert not weewx.jsongenerator._rebuild_due(1000, 1000 + 3599, 3600)
 
 
+class TestArchiveSettings:
+
+    def test_the_horizon_skin_sets_the_defaults(self):
+        """The options in the Horizon skin.conf are examples, not changes.
+
+        A default that differs from what the skin sets is a default nobody uses.
+        """
+        conf = configobj.ConfigObj(os.path.join(TestSkinLocalization.SKIN, 'skin.conf'),
+                                   encoding='utf-8', interpolation=False)
+        arch_dict = conf['JSONGenerator']['Archive']
+        assert weewx.jsongenerator._archive_settings(arch_dict) \
+            == weewx.jsongenerator._archive_settings({})
+
+
 class TestSkinLocalization:
     """Every string the Horizon skin asks for must exist in en.conf.
 
-    English is the fallback: if a string is missing there, the reader sees the raw key.
-    Other languages may lag behind -- an untranslated string falls back to English,
-    which is fine -- so they are reported but do not fail.
+    English is the fallback, so a string missing from en.conf shows as its raw key.
+    Other languages may lag, because an untranslated string falls back to English. For
+    them, the tests only check that the file parses.
     """
 
     SKIN = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),

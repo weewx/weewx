@@ -4,8 +4,9 @@
 #encoding UTF-8
 ##
 ## The planets panel: for each body in 'planets', its altitude now and its rise and
-## set times. Any body that pyephem knows can be named. A planet below the horizon
-## keeps its row. 'data-up' is 1 for a planet above the horizon and 0 for one below.
+## set times. 'planets' can name any body that pyephem knows. A planet below the
+## horizon keeps its row. 'data-up' is 1 for a planet above the horizon and 0 for one
+## below.
 #if $almanac.hasExtras
   #set $bodies = $to_list($DisplayOptions.get('planets',
                           ['mercury', 'venus', 'mars', 'jupiter', 'saturn']))

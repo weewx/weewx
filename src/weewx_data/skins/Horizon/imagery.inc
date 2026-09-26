@@ -7,10 +7,10 @@
 ## ('satellite_img', linked to 'satellite_url' if set) and a map
 ## ('google_map_apikey'). Each panel appears only if its option is set in [Extras].
 ##
-## The panels have no 'data-live-panel': replacing the map panel would discard the
-## Google Maps object in it, and a new <img> with the same URL would show the picture
-## from the browser's cache. Instead, on each new archive record, horizon.js requests
-## each 'data-live-src' picture again with a new query string.
+## The panels have no 'data-live-panel', so the live update does not replace them.
+## Replacing the map panel would discard its Google Maps object. A new <img> with the
+## same URL would show the cached picture. Instead, on each new archive record,
+## horizon.js reloads each 'data-live-src' picture with a new query string.
 
 #if 'radar_img' in $Extras
 <section class="panel">

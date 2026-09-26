@@ -95,9 +95,9 @@ def to_horizon(said):
 
     Dates and times are the station's local time, without a time zone.
     Temperatures are in degrees Celsius. 'wind' is the highest wind speed of the
-    day, in km/h. 'units' names these two units; the skin does not read the
-    field. The page shows 'run', so that a reader can tell a stale forecast from
-    a current one.
+    day, in km/h. 'units' names both units, but the skin does not read 'units'.
+    The page shows 'run', so that a reader can tell a stale forecast from a
+    current one.
 
     'code' is a WMO 4677 present-weather code. The skin has icons and texts for
     these codes only, so a source that uses other codes must convert them.
