@@ -31,10 +31,10 @@ import os
 import re
 import time
 
+import weedb
 import weeplot.utilities
 import weeutil.logger
 import weeutil.weeutil
-import weedb
 import weewx.accum
 import weewx.reportengine
 import weewx.units
@@ -246,170 +246,170 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # tiers. The index is written after each pass. So a station building its
         # history has the day view at once, before the years behind it are done.
         for pass_name in ('days', 'rest'):
-          for plotname in group_dict.sections:
-            if self.stop_event and self.stop_event.is_set():
-                return
+            for plotname in group_dict.sections:
+                if self.stop_event and self.stop_event.is_set():
+                    return
 
-            plot_options = accumulateLeaves(group_dict[plotname])
-            db_manager = self.db_binder.get_manager(plot_options['data_binding'])
+                plot_options = accumulateLeaves(group_dict[plotname])
+                db_manager = self.db_binder.get_manager(plot_options['data_binding'])
 
-            db_first = db_manager.firstGoodStamp()
-            last_ts = gen_ts or db_manager.lastGoodStamp()
-            if not db_first or not last_ts:
-                continue
-            first_ts = max(db_first, last_ts - max_days * 86400) if max_days else db_first
+                db_first = db_manager.firstGoodStamp()
+                last_ts = gen_ts or db_manager.lastGoodStamp()
+                if not db_first or not last_ts:
+                    continue
+                first_ts = max(db_first, last_ts - max_days * 86400) if max_days else db_first
 
-            # If the database reaches further back than last run, history was
-            # imported, and every file has to be built again. The test uses 'db_first',
-            # because under 'max_days' 'first_ts' moves forward every day.
-            reimported = previous_first is not None and int(db_first) < previous_first
+                # If the database reaches further back than last run, history was
+                # imported, and every file has to be built again. The test uses 'db_first',
+                # because under 'max_days' 'first_ts' moves forward every day.
+                reimported = previous_first is not None and int(db_first) < previous_first
 
-            # Take 'first' and 'last' from the database, not from the files written this
-            # run. A second run in the same minute writes no file.
-            if counters['first'] is None or first_ts < counters['first']:
-                counters['first'] = int(first_ts)
-            if counters['last'] is None or last_ts > counters['last']:
-                counters['last'] = int(last_ts)
+                # Take 'first' and 'last' from the database, not from the files written this
+                # run. A second run in the same minute writes no file.
+                if counters['first'] is None or first_ts < counters['first']:
+                    counters['first'] = int(first_ts)
+                if counters['last'] is None or last_ts > counters['last']:
+                    counters['last'] = int(last_ts)
 
-            group_name = plotname[len(strip_prefix):] \
-                if strip_prefix and plotname.startswith(strip_prefix) else plotname
+                group_name = plotname[len(strip_prefix):] \
+                    if strip_prefix and plotname.startswith(strip_prefix) else plotname
 
-            arch_root = os.path.join(self.config_dict['WEEWX_ROOT'],
-                                     plot_options['HTML_ROOT'], dest_dir)
+                arch_root = os.path.join(self.config_dict['WEEWX_ROOT'],
+                                         plot_options['HTML_ROOT'], dest_dir)
 
-            this_year = time.localtime(int(last_ts)).tm_year
+                this_year = time.localtime(int(last_ts)).tm_year
 
-            def write_tier(spans, kind, stamp_of, grid_of, tier_from, metered=True):
-                """Write the files of one tier for the current plot group.
+                def write_tier(spans, kind, stamp_of, grid_of, tier_from, metered=True):
+                    """Write the files of one tier for the current plot group.
 
-                The tiers differ in how they cut the record into files and in the
-                grid. The arguments supply those differences. Skipping, extending and
-                recording work the same for every tier.
+                    The tiers differ in how they cut the record into files and in the
+                    grid. The arguments supply those differences. Skipping, extending and
+                    recording work the same for every tier.
 
-                Args:
-                    spans (Iterable[weeutil.weeutil.TimeSpan]): The spans to write,
-                        one file each.
-                    kind (str): Which tier, as the index names it, e.g., 'days'.
-                    stamp_of (Callable[[weeutil.weeutil.TimeSpan], str]): Called as
-                        ``stamp_of(span)``. Returns the index stamp for a span, e.g.,
-                        '2026-07'.
-                    grid_of (Callable[[str, int | None], int]): Called as
-                        ``grid_of(stamp, existing)``. Returns the grid, in seconds, for
-                        a stamp. ``existing`` is the grid recorded for that stamp in the
-                        previous index, or None if there is none.
-                    tier_from (int): The oldest instant this tier reaches.
-                    metered (bool): Whether the budget applies. The day tier is not
-                        metered.
-                """
-                grids = dict(TIERS)[kind]
-                # Newest span first. A run that stops early then leaves the oldest
-                # spans unbuilt, not this year.
-                for span in reversed(list(spans)):
-                    afford = _affordable(budget, counters) if metered else None
-                    if afford == 0:
-                        counters['deferred'] += 1
-                        continue
-                    stamp = stamp_of(span)
-                    out_file = os.path.join(arch_root, '%s-%s.json' % (group_name, stamp))
-                    grid = grid_of(stamp, known[grids].get(group_name, {}).get(stamp))
-                    entry = index.setdefault(group_name, _new_entry())
+                    Args:
+                        spans (Iterable[weeutil.weeutil.TimeSpan]): The spans to write,
+                            one file each.
+                        kind (str): Which tier, as the index names it, e.g., 'days'.
+                        stamp_of (Callable[[weeutil.weeutil.TimeSpan], str]): Called as
+                            ``stamp_of(span)``. Returns the index stamp for a span, e.g.,
+                            '2026-07'.
+                        grid_of (Callable[[str, int | None], int]): Called as
+                            ``grid_of(stamp, existing)``. Returns the grid, in seconds, for
+                            a stamp. ``existing`` is the grid recorded for that stamp in the
+                            previous index, or None if there is none.
+                        tier_from (int): The oldest instant this tier reaches.
+                        metered (bool): Whether the budget applies. The day tier is not
+                            metered.
+                    """
+                    grids = dict(TIERS)[kind]
+                    # Newest span first. A run that stops early then leaves the oldest
+                    # spans unbuilt, not this year.
+                    for span in reversed(list(spans)):
+                        afford = _affordable(budget, counters) if metered else None
+                        if afford == 0:
+                            counters['deferred'] += 1
+                            continue
+                        stamp = stamp_of(span)
+                        out_file = os.path.join(arch_root, '%s-%s.json' % (group_name, stamp))
+                        grid = grid_of(stamp, known[grids].get(group_name, {}).get(stamp))
+                        entry = index.setdefault(group_name, _new_entry())
 
-                    # 'newest' is the newest reading the file holds. For a finished
-                    # span it is the end of the span, so the file is written once. For
-                    # the span in progress, 'newest' advances with the database. The
-                    # file is rewritten when 'newest' reaches the next slot. A test on
-                    # the file's age would miss a catch-up, where the file is minutes
-                    # old but hours behind.
-                    newest = min(int(span.stop), int(last_ts))
-                    was = known[kind].get(group_name, {}).get(stamp)
-                    if os.path.exists(out_file) and was is not None and not reimported \
-                            and was // grid == newest // grid:
-                        counters['skipped'] += 1
-                        entry[kind][stamp] = was
-                        entry[grids][stamp] = grid
-                        counters['root'] = arch_root
-                        continue
+                        # 'newest' is the newest reading the file holds. For a finished
+                        # span it is the end of the span, so the file is written once. For
+                        # the span in progress, 'newest' advances with the database. The
+                        # file is rewritten when 'newest' reaches the next slot. A test on
+                        # the file's age would miss a catch-up, where the file is minutes
+                        # old but hours behind.
+                        newest = min(int(span.stop), int(last_ts))
+                        was = known[kind].get(group_name, {}).get(stamp)
+                        if os.path.exists(out_file) and was is not None and not reimported \
+                                and was // grid == newest // grid:
+                            counters['skipped'] += 1
+                            entry[kind][stamp] = was
+                            entry[grids][stamp] = grid
+                            counters['root'] = arch_root
+                            continue
 
-                    # The file on disk holds every slot but its last. Passing it as
-                    # 'carry' means only the slots from there on are calculated. A
-                    # rebuild or an import calculates the whole span instead.
-                    carry = None if rebuilding or reimported or was is None \
-                        else _read_archive_file(out_file)
-                    if carry is not None:
-                        counters['extended'] += 1
+                        # The file on disk holds every slot but its last. Passing it as
+                        # 'carry' means only the slots from there on are calculated. A
+                        # rebuild or an import calculates the whole span instead.
+                        carry = None if rebuilding or reimported or was is None \
+                            else _read_archive_file(out_file)
+                        if carry is not None:
+                            counters['extended'] += 1
 
-                    started = time.time()
-                    before = carry['count'] if carry else 0
-                    payload = self._archive_span(
-                        group_dict[plotname], plot_options, span, grid, aggregate_type,
-                        rounding, group_name, tier_from, last_ts, carry, afford,
-                        extrema)
-                    counters['spent'] += time.time() - started
-                    if payload is None:
-                        continue
-                    # Count the slots calculated, so that _affordable() can size the
-                    # next file to the budget that is left.
-                    counters['slots'] += max(0, payload['count'] - before)
-                    try:
-                        _write_json(out_file, payload)
-                        counters['written'] += 1
-                        counters['root'] = arch_root
-                        entry[kind][stamp] = payload['newest']
-                        entry[grids][stamp] = grid
-                        entry['title'] = ', '.join(s['label'] for s in payload['series'])
-                        entry['unit_label'] = payload['unit_label']
-                    except OSError as e:
-                        log.error("Unable to save to file '%s': %s", out_file, e)
+                        started = time.time()
+                        before = carry['count'] if carry else 0
+                        payload = self._archive_span(
+                            group_dict[plotname], plot_options, span, grid, aggregate_type,
+                            rounding, group_name, tier_from, last_ts, carry, afford,
+                            extrema)
+                        counters['spent'] += time.time() - started
+                        if payload is None:
+                            continue
+                        # Count the slots calculated, so that _affordable() can size the
+                        # next file to the budget that is left.
+                        counters['slots'] += max(0, payload['count'] - before)
+                        try:
+                            _write_json(out_file, payload)
+                            counters['written'] += 1
+                            counters['root'] = arch_root
+                            entry[kind][stamp] = payload['newest']
+                            entry[grids][stamp] = grid
+                            entry['title'] = ', '.join(s['label'] for s in payload['series'])
+                            entry['unit_label'] = payload['unit_label']
+                        except OSError as e:
+                            log.error("Unable to save to file '%s': %s", out_file, e)
 
-            if days and pass_name == 'days':
-                # The day tier is exempt from the budget. It is cheap, and a report
-                # that deferred it would leave the page without today. It is also the
-                # only tier whose old files are deleted. See _drop_old_days().
-                grid = day_resolution or _archive_interval(db_manager, last_ts)
-                days_from = max(int(first_ts),
-                                weeutil.weeutil.startOfDay(int(last_ts))
-                                - (days - 1) * 86400)
-                write_tier(
-                    weeutil.weeutil.genDaySpans(days_from, last_ts), 'days',
-                    lambda span: time.strftime('%Y-%m-%d', time.localtime(span.start)),
-                    lambda stamp, existing: grid,
-                    days_from, metered=False)
-                _drop_old_days(arch_root, group_name,
-                               set(index.get(group_name, {}).get('days', {})))
+                if days and pass_name == 'days':
+                    # The day tier is exempt from the budget. It is cheap, and a report
+                    # that deferred it would leave the page without today. It is also the
+                    # only tier whose old files are deleted. See _drop_old_days().
+                    grid = day_resolution or _archive_interval(db_manager, last_ts)
+                    days_from = max(int(first_ts),
+                                    weeutil.weeutil.startOfDay(int(last_ts))
+                                    - (days - 1) * 86400)
+                    write_tier(
+                        weeutil.weeutil.genDaySpans(days_from, last_ts), 'days',
+                        lambda span: time.strftime('%Y-%m-%d', time.localtime(span.start)),
+                        lambda stamp, existing: grid,
+                        days_from, metered=False)
+                    _drop_old_days(arch_root, group_name,
+                                   set(index.get(group_name, {}).get('days', {})))
 
-            if months and pass_name == 'rest':
-                months_from = _months_back(int(last_ts), months, int(first_ts))
-                write_tier(
-                    weeutil.weeutil.genMonthSpans(months_from, last_ts), 'months',
-                    lambda span: time.strftime('%Y-%m', time.localtime(span.start)),
-                    lambda stamp, existing: month_resolution,
-                    months_from)
+                if months and pass_name == 'rest':
+                    months_from = _months_back(int(last_ts), months, int(first_ts))
+                    write_tier(
+                        weeutil.weeutil.genMonthSpans(months_from, last_ts), 'months',
+                        lambda span: time.strftime('%Y-%m', time.localtime(span.start)),
+                        lambda stamp, existing: month_resolution,
+                        months_from)
 
-            if pass_name == 'rest':
-              write_tier(
-                weeutil.weeutil.genYearSpans(first_ts, last_ts), 'years',
-                lambda span: time.strftime('%Y', time.localtime(span.start)),
-                lambda year, existing: _year_grid(int(year), this_year, years,
-                                                  year_resolution, old_year_resolution,
-                                                  existing),
-                first_ts)
+                if pass_name == 'rest':
+                    write_tier(
+                        weeutil.weeutil.genYearSpans(first_ts, last_ts), 'years',
+                        lambda span: time.strftime('%Y', time.localtime(span.start)),
+                        lambda year, existing: _year_grid(int(year), this_year, years,
+                                                          year_resolution, old_year_resolution,
+                                                          existing),
+                        first_ts)
 
-            _carry_over_index(index, known, group_name)
-            if index.get(group_name) \
-                    and any(index[group_name][kind] for kind, _ in TIERS):
-                counters['root'] = arch_root
+                _carry_over_index(index, known, group_name)
+                if index.get(group_name) \
+                        and any(index[group_name][kind] for kind, _ in TIERS):
+                    counters['root'] = arch_root
 
-          # Write the index after each pass that has anything to show.
-          if counters['root']:
-              # Write the day/night files with the first index, so the shading
-              # appears with the first charts. Without the day tier, that is the
-              # second pass.
-              if not counters['daynight'] \
-                      and to_bool(self.gen_dict.get('include_daynight', True)):
-                  counters['daynight'] = True
-                  self._archive_daynight(counters['root'], counters['first'],
-                                         counters['last'])
-              write_index()
+            # Write the index after each pass that has anything to show.
+            if counters['root']:
+                # Write the day/night files with the first index, so the shading
+                # appears with the first charts. Without the day tier, that is the
+                # second pass.
+                if not counters['daynight'] \
+                        and to_bool(self.gen_dict.get('include_daynight', True)):
+                    counters['daynight'] = True
+                    self._archive_daynight(counters['root'], counters['first'],
+                                           counters['last'])
+                write_index()
 
         if to_bool(search_up(self.gen_dict, 'log_success', True)):
             log.info("Generated %d archive files (%d extended, %d already current) "
@@ -1053,6 +1053,7 @@ def _archive_settings(arch_dict):
         dict: The keys of ARCHIVE_DEFAULTS. Durations are in seconds, counts are int,
             and 'extremes' is a set.
     """
+
     def get(name):
         return arch_dict.get(name, ARCHIVE_DEFAULTS[name])
 
