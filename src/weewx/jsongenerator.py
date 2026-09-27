@@ -137,8 +137,13 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         """Write skin.json, which holds the length of each time span and the unit table.
 
         The page reads skin.json before it draws a chart. Nothing in skin.json comes
-        from the database.
+        from the database, and the configuration changes only with a restart of
+        weewxd. So skin.json is written on the first run only, or when it is missing.
         """
+        skin_file = os.path.join(self.data_root, 'skin.json')
+        if not self.first_run and os.path.exists(skin_file):
+            return
+
         # span_lengths maps each time span to its 'time_length' in seconds, e.g.,
         # 86400 for [[day_images]]. The page sets the x axis width from span_lengths.
         span_lengths = {}
@@ -167,7 +172,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             if unit:
                 units_seen.add(unit)
 
-        skin_file = os.path.join(self.data_root, 'skin.json')
         try:
             _write_json(skin_file,
                         {'spans': span_lengths,

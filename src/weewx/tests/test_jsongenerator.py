@@ -113,7 +113,8 @@ def build_skin_dict(html_root, archive_options=None):
     return skin_dict
 
 
-def run_generator(config_dict, tmp_path, gen_ts=None, archive_options=None):
+def run_generator(config_dict, tmp_path, gen_ts=None, archive_options=None,
+                  first_run=True):
     """Run the generator against the test database and return its output directory."""
     html_root = str(tmp_path)
     skin_dict = build_skin_dict(html_root, archive_options=archive_options)
@@ -127,7 +128,7 @@ def run_generator(config_dict, tmp_path, gen_ts=None, archive_options=None):
         gen_ts = parameters.synthetic_dict['stop_ts']
 
     generator = weewx.jsongenerator.JSONGenerator(
-        config_dict, skin_dict, gen_ts, first_run=True, stn_info=stn_info)
+        config_dict, skin_dict, gen_ts, first_run=first_run, stn_info=stn_info)
     try:
         generator.start()
     finally:
@@ -251,6 +252,19 @@ class TestSkinJson:
     def skin_json(data_dir):
         with open(os.path.join(data_dir, 'skin.json'), encoding='utf-8') as fd:
             return json.load(fd)
+
+    def test_skin_json_is_written_on_the_first_run_only(self, config_dict, tmp_path):
+        path = os.path.join(run_generator(config_dict, tmp_path), 'skin.json')
+        with open(path, 'w', encoding='utf-8') as fd:
+            fd.write('{}')
+        run_generator(config_dict, tmp_path, first_run=False)
+        with open(path, encoding='utf-8') as fd:
+            assert fd.read() == '{}'
+
+        # A lost skin.json is written again.
+        os.remove(path)
+        run_generator(config_dict, tmp_path, first_run=False)
+        assert self.skin_json(os.path.dirname(path))['spans']
 
     def test_skin_json_holds_the_spans_and_the_units(self, config_dict, tmp_path):
         skin_json = self.skin_json(run_generator(config_dict, tmp_path))
