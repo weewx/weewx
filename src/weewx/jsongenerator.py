@@ -55,8 +55,7 @@ TIERS = (('years', 'year_intervals'), ('months', 'month_intervals'),
 # The defaults of the options in [[Archive]]. The Horizon skin.conf sets the same
 # values, and a test keeps the two in step. See _archive_settings().
 ARCHIVE_DEFAULTS = {
-    'aggregate_type': 'avg',
-    'years': 2,                     # How many years to keep 'year_resolution'
+    'years': 2,                    # How many years to keep 'year_resolution'
     'year_resolution': '1h',
     'old_year_resolution': '4h',    # The resolution for files older than the 'years' limit.
     'months': 2,
@@ -66,9 +65,6 @@ ARCHIVE_DEFAULTS = {
     'budget': 30,
     'extremes': ['windGust', 'windSpeed', 'rainRate', 'UV'],
     'rebuild': 0,
-    'source_group': 'day_images',
-    'strip_prefix': 'day',
-    'max_days': 0,
 }
 
 # The name of an archive file: the plot group, then the year, the month or the day the
@@ -178,22 +174,22 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         t1 = time.time()
 
         opts = _archive_settings(arch_dict)
-        source_group, strip_prefix = opts['source_group'], opts['strip_prefix']
-        aggregate_type, max_days = opts['aggregate_type'], opts['max_days']
         years, year_resolution = opts['years'], opts['year_resolution']
         old_year_resolution = opts['old_year_resolution']
         months, month_resolution = opts['months'], opts['month_resolution']
         days, day_resolution = opts['days'], opts['day_resolution']
         budget, extrema, rebuild_after = opts['budget'], opts['extremes'], opts['rebuild']
-        dest_dir = arch_dict.get('dest_dir',
-                                 os.path.join(self.gen_dict.get('json_dest_dir', 'data'),
-                                              'archive'))
         rounding = to_int(self.gen_dict.get('round', 2))
+        # The page reads the archive from 'archive' below the JSON directory.
+        arch_root = os.path.join(self.data_root, 'archive')
 
+        # The plot groups are the plots of [[day_images]], named without the prefix
+        # 'day', e.g., 'tempdew' for 'daytempdew'. 'plot_groups' in skin.conf uses the
+        # same names.
         try:
-            group_dict = self.plot_dict[source_group]
+            group_dict = self.plot_dict['day_images']
         except KeyError:
-            log.error("Archive: no section [%s]. Skipped.", source_group)
+            log.error("Archive: no section [[day_images]]. Skipped.")
             return
 
         # What this run has done so far, for the budget and for the log line at the
@@ -204,10 +200,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         index = {}
 
         # The archive index the last run wrote.
-        known = self._read_archive_index(dest_dir)
-        self._reconcile_index(known, os.path.join(
-            self.config_dict['WEEWX_ROOT'],
-            search_up(self.skin_dict, 'HTML_ROOT', 'public_html'), dest_dir))
+        known = self._read_archive_index(arch_root)
+        self._reconcile_index(known, arch_root)
         previous_first = known['first']
         now_ts = int(gen_ts or time.time())
         rebuilding = _rebuild_due(known['rebuilt'], now_ts, rebuild_after)
@@ -253,16 +247,14 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 plot_options = accumulateLeaves(group_dict[plotname])
                 db_manager = self.db_binder.get_manager(plot_options['data_binding'])
 
-                db_first = db_manager.firstGoodStamp()
+                first_ts = db_manager.firstGoodStamp()
                 last_ts = gen_ts or db_manager.lastGoodStamp()
-                if not db_first or not last_ts:
+                if not first_ts or not last_ts:
                     continue
-                first_ts = max(db_first, last_ts - max_days * 86400) if max_days else db_first
 
                 # If the database reaches further back than last run, history was
-                # imported, and every file has to be built again. The test uses 'db_first',
-                # because under 'max_days' 'first_ts' moves forward every day.
-                reimported = previous_first is not None and int(db_first) < previous_first
+                # imported, and every file has to be built again.
+                reimported = previous_first is not None and int(first_ts) < previous_first
 
                 # Take 'first' and 'last' from the database, not from the files written this
                 # run. A second run in the same minute writes no file.
@@ -271,11 +263,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 if counters['last'] is None or last_ts > counters['last']:
                     counters['last'] = int(last_ts)
 
-                group_name = plotname[len(strip_prefix):] \
-                    if strip_prefix and plotname.startswith(strip_prefix) else plotname
-
-                arch_root = os.path.join(self.config_dict['WEEWX_ROOT'],
-                                         plot_options['HTML_ROOT'], dest_dir)
+                group_name = plotname[len('day'):] if plotname.startswith('day') else plotname
 
                 this_year = time.localtime(int(last_ts)).tm_year
 
@@ -341,7 +329,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                         started = time.time()
                         before = carry['count'] if carry else 0
                         payload = self._archive_span(
-                            group_dict[plotname], plot_options, span, grid, aggregate_type,
+                            group_dict[plotname], plot_options, span, grid, 'avg',
                             rounding, group_name, tier_from, last_ts, carry, afford,
                             extrema)
                         counters['spent'] += time.time() - started
@@ -417,14 +405,15 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                      counters['written'], counters['extended'], counters['skipped'],
                      self.skin_dict['REPORT_NAME'], time.time() - t1)
 
-    def _read_archive_index(self, dest_dir):
+    @staticmethod
+    def _read_archive_index(arch_root):
         """Read the archive index.json that the previous run wrote.
 
         A file the index names need not be calculated again, whatever the current
         settings say.
 
         Args:
-            dest_dir (str): The archive directory.
+            arch_root (str): The archive directory.
 
         Returns:
             dict: With keys
@@ -443,9 +432,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                                  run read it, or None if there was no index
                 rebuilt:         when the files were last rebuilt in full, or None
         """
-        path = os.path.join(self.config_dict['WEEWX_ROOT'],
-                            search_up(self.skin_dict, 'HTML_ROOT', 'public_html'),
-                            dest_dir, 'index.json')
+        path = os.path.join(arch_root, 'index.json')
         known = _empty_index()
         try:
             with open(path, encoding='utf-8') as fd:
@@ -1041,10 +1028,6 @@ def _archive_settings(arch_dict):
         return to_int(weeutil.weeutil.nominal_spans(get(name)))
 
     opts = {
-        'aggregate_type': get('aggregate_type'),
-        'source_group': get('source_group'),
-        'strip_prefix': get('strip_prefix'),
-        'max_days': to_int(get('max_days')),
         # The year tier, the coarsest: one file per calendar year. People read the
         # last 'years' years closely, so those get 'year_resolution'. Older years get
         # 'old_year_resolution', because an hourly grid gives each one 8760 points.

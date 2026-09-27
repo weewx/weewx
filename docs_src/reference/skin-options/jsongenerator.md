@@ -54,9 +54,10 @@ It is written on three grids: the station's own readings for the last few days,
 a closer grid per month, and one per calendar year that coarsens with age. A
 page picks the finest grid that covers the span it is showing.
 
-#### aggregate_type
-
-How readings are combined into a slot. Default is `avg`.
+The archive holds the plots of `[[day_images]]`, named without the prefix
+`day`, e.g., `tempdew` for `daytempdew`. A line without an `aggregate_type` of
+its own is averaged over each slot. The files go into `archive`, below
+[`json_dest_dir`](#json_dest_dir).
 
 #### years
 
@@ -125,23 +126,3 @@ carried forward from the one already on disk. Default is `0`, which never does.
 A file that has been written is correct for the span it covers, and the index
 is checked against the directory on every run. Set it to a number of hours to
 have the files rewritten anyway, for a station whose history has been edited.
-
-#### source_group
-
-The subsection of the plot definitions the groups are taken from. The archive
-covers every span itself, so one set of definitions is enough. Default is
-`day_images`.
-
-#### strip_prefix
-
-Text to remove from the front of each plot name, so that `daytempdew` becomes
-`tempdew`. Default is `day`.
-
-#### max_days
-
-How far back the archive reaches, in days. Default is `0`, the whole record.
-
-#### dest_dir
-
-Where the archive files go, relative to `HTML_ROOT`. Default is
-`data/archive`.

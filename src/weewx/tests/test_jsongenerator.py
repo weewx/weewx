@@ -703,7 +703,7 @@ class TestResumeFrom:
         assert weewx.jsongenerator._resume_from(None, 1000, 100, 20) is None
 
     @pytest.mark.parametrize('overrides, reason', [
-        ({'start': 2000}, 'max_days moved the start'),
+        ({'start': 2000}, 'the start moved'),
         ({'interval': 50}, 'resolution changed'),
         ({'count': 1}, 'too short to carry anything'),
         ({'series': []}, 'no series in it'),
