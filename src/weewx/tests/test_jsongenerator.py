@@ -954,6 +954,13 @@ class TestDayTier:
                 assert not [f for f in os.listdir(archive_dir)
                             if f.endswith('-%s.json' % stamp)]
 
+        # The index names no deleted day, or the page would fetch it and get a 404.
+        with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
+            index = json.load(fd)
+        for group in index['groups']:
+            assert sorted(group['days']) == after, group['name']
+            assert sorted(group['day_intervals']) == after, group['name']
+
     def test_the_index_names_the_days(self, config_dict, tmp_path):
         stop_ts = parameters.synthetic_dict['stop_ts']
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,

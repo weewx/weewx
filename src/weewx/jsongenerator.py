@@ -197,13 +197,17 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # What this run has done so far, for the budget and for the log line at the
         # end.
         counters = {'written': 0, 'skipped': 0, 'extended': 0, 'deferred': 0,
-                    'spent': 0.0, 'root': None,
-                    'first': None, 'last': None, 'daynight': False}
-        index = {}
+                    'spent': 0.0, 'first': None, 'last': None, 'daynight': False}
 
-        # The archive index the last run wrote.
+        # The archive index the last run wrote, checked against the files on disk. The
+        # index this run writes starts from it, and every file written updates it.
+        try:
+            on_disk = os.listdir(arch_root)
+        except OSError:
+            on_disk = []
         known = self._read_archive_index(arch_root)
-        self._reconcile_index(known, arch_root)
+        self._reconcile_index(known, arch_root, on_disk)
+        index = _index_of(known)
         previous_first = known['first']
         now_ts = int(gen_ts or time.time())
         rebuilding = _rebuild_due(known['rebuilt'], now_ts, rebuild_after)
@@ -228,7 +232,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                                'unit_label': entry['unit_label'] or '',
                                **{key: entry[key] for tier in TIERS for key in tier}})
             try:
-                _write_json(os.path.join(counters['root'], 'index.json'),
+                _write_json(os.path.join(arch_root, 'index.json'),
                             {'first': counters['first'],
                              'last': counters['last'],
                              # When the files were last rebuilt in full. The next
@@ -315,9 +319,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                         if os.path.exists(out_file) and was is not None and not reimported \
                                 and was // grid == newest // grid:
                             counters['skipped'] += 1
-                            entry[kind][stamp] = was
-                            entry[grids][stamp] = grid
-                            counters['root'] = arch_root
                             continue
 
                         # Passing the file on disk as 'carry' means only the slots from
@@ -338,7 +339,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                         try:
                             _write_json(out_file, payload)
                             counters['written'] += 1
-                            counters['root'] = arch_root
                             entry[kind][stamp] = payload['newest']
                             entry[grids][stamp] = grid
                             entry['title'] = ', '.join(s['label'] for s in payload['series'])
@@ -354,13 +354,14 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     days_from = max(int(first_ts),
                                     weeutil.weeutil.startOfDay(int(last_ts))
                                     - (days - 1) * 86400)
-                    write_tier(
-                        weeutil.weeutil.genDaySpans(days_from, last_ts), 'days',
-                        lambda span: time.strftime('%Y-%m-%d', time.localtime(span.start)),
-                        lambda stamp, existing: grid,
-                        days_from, metered=False)
-                    _drop_old_days(arch_root, group_name,
-                                   set(index.get(group_name, {}).get('days', {})))
+                    day_spans = list(weeutil.weeutil.genDaySpans(days_from, last_ts))
+                    day_stamp = lambda span: time.strftime('%Y-%m-%d',
+                                                           time.localtime(span.start))
+                    write_tier(day_spans, 'days', day_stamp, lambda stamp, existing: grid,
+                               days_from, metered=False)
+                    _drop_old_days(arch_root, on_disk, group_name,
+                                   {day_stamp(span) for span in day_spans},
+                                   index.get(group_name))
 
                 if months and pass_name == 'rest':
                     months_from = _months_back(int(last_ts), months, int(first_ts))
@@ -379,21 +380,15 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                                                           existing),
                         first_ts)
 
-                _carry_over_index(index, known, group_name)
-                if index.get(group_name) \
-                        and any(index[group_name][kind] for kind, _ in TIERS):
-                    counters['root'] = arch_root
-
             # Write the index after each pass that has anything to show.
-            if counters['root']:
+            if any(entry[kind] for entry in index.values() for kind, _ in TIERS):
                 # Write the day/night files with the first index, so the shading
                 # appears with the first charts. Without the day tier, that is the
                 # second pass.
                 if not counters['daynight'] \
                         and to_bool(self.gen_dict.get('include_daynight', True)):
                     counters['daynight'] = True
-                    self._archive_daynight(counters['root'], counters['first'],
-                                           counters['last'])
+                    self._archive_daynight(arch_root, counters['first'], counters['last'])
                 write_index()
 
         if to_bool(search_up(self.gen_dict, 'log_success', True)):
@@ -453,27 +448,21 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         return known
 
     @staticmethod
-    def _reconcile_index(known, arch_root):
+    def _reconcile_index(known, arch_root, on_disk):
         """Correct the archive index, in place, to match the files on disk.
 
         The page cannot see a file the index does not name. A name without a file
         sends the page after a 404. If index.json is lost, the files restore it, and
-        nothing has to be calculated again.
-
-        Only files missing from the index are opened, so an intact index costs one
-        listdir.
+        nothing has to be calculated again. Only files missing from the index are
+        opened.
 
         Args:
             known (dict[str, dict[str, Any]]): The index as it was read.
             arch_root (str): The archive directory.
+            on_disk (list[str]): The names of the files in it.
         """
-        try:
-            names = os.listdir(arch_root)
-        except OSError:
-            return
-
         seen = {kind: set() for kind, _ in TIERS}
-        for filename in names:
+        for filename in on_disk:
             parsed = _parse_archive_name(filename)
             if parsed is None or parsed[0] == 'daynight':
                 continue
@@ -1152,31 +1141,26 @@ def _rebuild_due(rebuilt, now_ts, after):
     return (now - then).days >= int(after // 86400)
 
 
-def _carry_over_index(index, known, group_name):
-    """Add the files this run did not touch to the index entry of group_name.
+def _index_of(known):
+    """Return the index entries, by plot group, of the files already on disk.
 
-    A run skips the files that are current, and a budget defers more. Those files are
-    on disk, but the page cannot see a file the index does not name. _reconcile_index()
-    has checked 'known' against the directory, so every file in 'known' exists.
+    A run skips the files that are current, and a budget defers more. The index still
+    has to name them, or the page cannot see them. _reconcile_index() has checked
+    'known' against the directory, so every file in 'known' exists.
 
     Args:
-        index (dict[str, dict[str, Any]]): The index being written.
-        known (dict[str, dict[str, Any]]): The files that are really on disk.
-        group_name (str): The plot group to carry over.
+        known (dict[str, dict[str, Any]]): The archive index as read and reconciled.
+
+    Returns:
+        dict[str, dict[str, Any]]: One entry per plot group, as _new_entry() makes it.
     """
-    entry = index.setdefault(group_name, _new_entry())
-    for kind, grids in TIERS:
-        for stamp, ts in known[kind].get(group_name, {}).items():
-            if stamp in entry[kind]:
-                continue
-            entry[kind][stamp] = ts
-            grid = known[grids].get(group_name, {}).get(stamp)
-            if grid:
-                entry[grids][stamp] = grid
-    if not entry['title']:
-        title, unit_label = known['labels'].get(group_name, (None, None))
-        entry['title'] = title
-        entry['unit_label'] = unit_label
+    index = {}
+    for key in (key for tier in TIERS for key in tier):
+        for group, stamps in known[key].items():
+            index.setdefault(group, _new_entry())[key].update(stamps)
+    for group, entry in index.items():
+        entry['title'], entry['unit_label'] = known['labels'].get(group, (None, None))
+    return index
 
 
 def _archive_interval(db_manager, last_ts):
@@ -1198,7 +1182,7 @@ def _archive_interval(db_manager, last_ts):
     return 300
 
 
-def _drop_old_days(arch_root, group_name, keep):
+def _drop_old_days(arch_root, on_disk, group_name, keep, entry):
     """Delete the day files of group_name whose stamps are not in keep.
 
     The day tier is the only tier whose old files are deleted. Kept forever, it would
@@ -1206,14 +1190,13 @@ def _drop_old_days(arch_root, group_name, keep):
 
     Args:
         arch_root (str): The archive directory.
+        on_disk (list[str]): The names of the files in it.
         group_name (str): The plot group to sweep.
         keep (set[str]): The day stamps that are still wanted.
+        entry (dict[str, Any]|None): The group's entry in the index being written.
+            The days deleted leave it too.
     """
-    try:
-        names = os.listdir(arch_root)
-    except OSError:
-        return
-    for filename in names:
+    for filename in on_disk:
         parsed = _parse_archive_name(filename)
         if parsed is None or parsed[:2] != (group_name, 'days') or parsed[2] in keep:
             continue
@@ -1221,6 +1204,10 @@ def _drop_old_days(arch_root, group_name, keep):
             os.remove(os.path.join(arch_root, filename))
         except OSError as e:
             log.debug("Could not remove old day file '%s': %s", filename, e)
+            continue
+        if entry is not None:
+            entry['days'].pop(parsed[2], None)
+            entry['day_intervals'].pop(parsed[2], None)
 
 
 def _parse_archive_name(filename):
