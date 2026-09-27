@@ -146,39 +146,19 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
         # span_lengths maps each time span to its 'time_length' in seconds, e.g.,
         # 86400 for [[day_images]]. The page sets the x axis width from span_lengths.
+        # A section without plots, e.g., [[Archive]], is not a time span.
         span_lengths = {}
-        # Every observation type in the plot definitions. _unit_choices() builds the
-        # unit table from obs_types.
-        obs_types = set()
         for timespan in self.plot_dict.sections:
-            span_dict = self.plot_dict[timespan]
-            # A section without plots, e.g., [[Archive]], is not a time span.
-            if not span_dict.sections:
-                continue
-            span_lengths[timespan] = to_int(weeutil.weeutil.nominal_spans(
-                search_up(span_dict, 'time_length', 86400)))
-            for plotname in span_dict.sections:
-                for line_name in span_dict[plotname].sections:
-                    obs_types.add(search_up(span_dict[plotname][line_name],
-                                            'data_type', line_name))
-
-        # No reading is fetched here, so the converter supplies the unit of each type.
-        units_seen = set()
-        for obs in obs_types:
-            try:
-                unit = self.converter.getTargetUnit(obs)[0]
-            except (KeyError, TypeError, weewx.UnknownType):
-                continue
-            if unit:
-                units_seen.add(unit)
+            if self.plot_dict[timespan].sections:
+                span_lengths[timespan] = to_int(weeutil.weeutil.nominal_spans(
+                    search_up(self.plot_dict[timespan], 'time_length', 86400)))
 
         try:
             _write_json(skin_file,
                         {'spans': span_lengths,
                          # Each archive file holds readings in one unit. The unit
                          # table lets the page convert them to any other.
-                         'units': _unit_choices(obs_types, units_seen,
-                                                self.formatter, self.converter)})
+                         'units': _unit_choices(self.formatter, self.converter)})
         except OSError as e:
             log.error("Unable to save to file '%s': %s", skin_file, e)
 
@@ -938,7 +918,7 @@ def _linear(convert, from_unit, to_unit):
     return [round(factor, 12), round(at_zero, 12)]
 
 
-def _unit_choices(obs_types, units_seen, formatter, converter):
+def _unit_choices(formatter, converter):
     """Build the unit table that lets the page show readings in another unit.
 
     The archive files hold readings in the skin's units. To offer Fahrenheit next to
@@ -946,8 +926,6 @@ def _unit_choices(obs_types, units_seen, formatter, converter):
     and the conversions between units. The unit table goes into skin.json.
 
     Args:
-        obs_types (set[str]): The observation types the page shows.
-        units_seen (set[str]): The units those readings were written in.
         formatter (weewx.units.Formatter): The formatter the report was rendered with.
         converter (weewx.units.Converter): The converter it was rendered with.
 
@@ -959,24 +937,21 @@ def _unit_choices(obs_types, units_seen, formatter, converter):
             'labels' and 'formats' give each unit's label and number format, so the
             page writes "18.5 °C" the way the server would.
     """
-    # Take the unit systems from weewx.units, so that if a new unit system was introduced,
-    # no changes would be needed here.
-    systems = [(name, weewx.units.std_groups[constant])
-               for name, constant in sorted(weewx.units.unit_constants.items(),
-                                            key=lambda pair: pair[1])]
-
-    # 'wanted' holds more units than the archive files use. A viewer can switch the
-    # page to any unit system, so 'wanted' needs every system's unit for each group.
-    wanted = set(units_seen)
+    # Every unit system WeeWX knows, with the unit it uses for each group.
     by_system = {}
-    for name, table in systems:
-        chosen = {}
-        for group in sorted(set(weewx.units.obs_group_dict.values())):
-            unit = table.get(group)
-            if unit:
-                chosen[group] = unit
-                wanted.add(unit)
-        by_system[name] = chosen
+    for unit_system in weewx.units.std_groups:
+        name = weewx.units.unit_nicknames[unit_system]
+        by_system[name] = dict(weewx.units.std_groups[unit_system])
+
+    # 'report' holds the units the report renders in. The page needs them for the
+    # readings it fetches itself, e.g., the forecast, which arrives in Celsius.
+    # Without 'report', "Default" on the page would mean metric, not the skin's units.
+    report = dict(converter.group_unit_dict)
+
+    # The page can switch to any unit system, so 'wanted' holds every unit of every
+    # system, and the units of the report.
+    wanted = {unit for table in by_system.values() for unit in table.values()}
+    wanted.update(report.values())
 
     # Iterate over weewx.units.conversionDict, rather than over every pair of units
     # in 'wanted'. Asking weewx.units.convert() for a pair it cannot convert logs a
@@ -1005,15 +980,6 @@ def _unit_choices(obs_types, units_seen, formatter, converter):
         fmt = formatter.get_format_string(unit)
         if fmt:
             formats[unit] = fmt
-
-    # 'report' holds the units the report renders in. The page needs them for the
-    # readings it fetches itself, e.g., the forecast, which arrives in Celsius.
-    # Without 'report', "Default" on the page would mean metric, not the skin's units.
-    report = {}
-    for group in sorted(set(weewx.units.obs_group_dict.values())):
-        unit = converter.group_unit_dict.get(group)
-        if unit:
-            report[group] = unit
 
     return {
         'groups': dict(weewx.units.obs_group_dict),
