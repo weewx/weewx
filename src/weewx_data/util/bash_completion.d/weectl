@@ -1,0 +1,287 @@
+# bash completion for weectl (WeeWX's command-line configuration utility)
+
+_weectl() {
+    local cur prev words cword
+    _init_completion 2>/dev/null || {
+        # Fallback if bash-completion's _init_completion isn't available
+        COMPREPLY=()
+        cur="${COMP_WORDS[COMP_CWORD]}"
+        prev="${COMP_WORDS[COMP_CWORD-1]}"
+        words=("${COMP_WORDS[@]}")
+        cword=$COMP_CWORD
+    }
+
+    local top_subcommands="database debug device extension import report rest station"
+    local top_opts="-v --version -h --help"
+
+    # ---------------------------------------------------------------------
+    # Helpers
+    # ---------------------------------------------------------------------
+
+    # Complete a local file path (used for --config, --dist-config, etc.)
+    _weectl_complete_file() {
+        _filedir 2>/dev/null || COMPREPLY=( $(compgen -f -- "$cur") )
+    }
+
+    # Complete a local directory path (used for --skin-root, --sqlite-root, etc.)
+    _weectl_complete_dir() {
+        _filedir -d 2>/dev/null || COMPREPLY=( $(compgen -d -- "$cur") )
+    }
+
+    # Find the subcommand (word right after "weectl", ignoring -v/-h) and,
+    # if applicable, the action (the word after the subcommand).
+    local subcommand="" action="" i
+    for (( i=1; i < cword; i++ )); do
+        local w="${words[i]}"
+        if [[ -z "$subcommand" ]]; then
+            case "$w" in
+                -*) continue ;;
+                *) subcommand="$w" ;;
+            esac
+        elif [[ -z "$action" ]]; then
+            case "$w" in
+                -*) continue ;;
+                *) action="$w"; break ;;
+            esac
+        fi
+    done
+
+    # ---------------------------------------------------------------------
+    # Top level: "weectl <TAB>"
+    # ---------------------------------------------------------------------
+    if [[ -z "$subcommand" ]]; then
+        COMPREPLY=( $(compgen -W "${top_subcommands} ${top_opts}" -- "$cur") )
+        return 0
+    fi
+
+    # ---------------------------------------------------------------------
+    # weectl database ...
+    # ---------------------------------------------------------------------
+    if [[ "$subcommand" == "database" ]]; then
+        local actions="create drop-daily rebuild-daily add-column rename-column drop-columns reconfigure transfer calc-missing check update reweight"
+
+        if [[ -z "$action" ]]; then
+            COMPREPLY=( $(compgen -W "${actions} -h --help" -- "$cur") )
+            return 0
+        fi
+
+        case "$prev" in
+            --config) _weectl_complete_file; return 0 ;;
+            --binding) return 0 ;;
+        esac
+
+        case "$action" in
+            create|drop-daily|reconfigure|update)
+                COMPREPLY=( $(compgen -W "--config --binding --dry-run -y --yes -h --help" -- "$cur") )
+                ;;
+            rebuild-daily|reweight)
+                case "$prev" in
+                    --date|--from|--to) return 0 ;;
+                esac
+                COMPREPLY=( $(compgen -W "--date --from --to --config --binding --dry-run -y --yes -h --help" -- "$cur") )
+                ;;
+            add-column)
+                case "$prev" in
+                    --type) return 0 ;;
+                esac
+                COMPREPLY=( $(compgen -W "--type --config --binding --dry-run -y --yes -h --help" -- "$cur") )
+                ;;
+            rename-column)
+                COMPREPLY=( $(compgen -W "--config --binding --dry-run -y --yes -h --help" -- "$cur") )
+                ;;
+            drop-columns)
+                COMPREPLY=( $(compgen -W "--config --binding --dry-run -y --yes -h --help" -- "$cur") )
+                ;;
+            transfer)
+                case "$prev" in
+                    --dest-binding) return 0 ;;
+                esac
+                COMPREPLY=( $(compgen -W "--dest-binding --config --binding --dry-run -y --yes -h --help" -- "$cur") )
+                ;;
+            calc-missing)
+                case "$prev" in
+                    --date|--from|--to|--tranche) return 0 ;;
+                esac
+                COMPREPLY=( $(compgen -W "--date --from --to --tranche --config --binding --dry-run -y --yes -h --help" -- "$cur") )
+                ;;
+            check)
+                COMPREPLY=( $(compgen -W "--config --binding -h --help" -- "$cur") )
+                ;;
+            *)
+                COMPREPLY=( $(compgen -W "${actions} -h --help" -- "$cur") )
+                ;;
+        esac
+        return 0
+    fi
+
+    # ---------------------------------------------------------------------
+    # weectl debug ...
+    # ---------------------------------------------------------------------
+    if [[ "$subcommand" == "debug" ]]; then
+        case "$prev" in
+            --config) _weectl_complete_file; return 0 ;;
+            --output) _weectl_complete_file; return 0 ;;
+        esac
+        COMPREPLY=( $(compgen -W "--config --output -h --help" -- "$cur") )
+        return 0
+    fi
+
+    # ---------------------------------------------------------------------
+    # weectl device ...
+    # (uses optparse internally and dispatches to a device-specific
+    # configurator, so only the common bits can be offered here)
+    # ---------------------------------------------------------------------
+    if [[ "$subcommand" == "device" ]]; then
+        case "$prev" in
+            --config) _weectl_complete_file; return 0 ;;
+        esac
+        COMPREPLY=( $(compgen -W "--config -h --help" -- "$cur") )
+        return 0
+    fi
+
+    # ---------------------------------------------------------------------
+    # weectl extension ...
+    # ---------------------------------------------------------------------
+    if [[ "$subcommand" == "extension" ]]; then
+        local actions="list install uninstall"
+
+        if [[ -z "$action" ]]; then
+            COMPREPLY=( $(compgen -W "${actions} -h --help" -- "$cur") )
+            return 0
+        fi
+
+        case "$prev" in
+            --config) _weectl_complete_file; return 0 ;;
+            --verbosity) COMPREPLY=( $(compgen -W "0 1 2 3" -- "$cur") ); return 0 ;;
+        esac
+
+        case "$action" in
+            list)
+                COMPREPLY=( $(compgen -W "--config --verbosity -h --help" -- "$cur") )
+                ;;
+            install)
+                # positional SOURCE can be a file, directory, or URL
+                COMPREPLY=( $(compgen -W "--config --dry-run -y --yes --verbosity -h --help" -- "$cur") )
+                if [[ "$cur" != -* ]]; then
+                    _weectl_complete_file
+                fi
+                ;;
+            uninstall)
+                COMPREPLY=( $(compgen -W "--config --dry-run -y --yes --verbosity -h --help" -- "$cur") )
+                ;;
+            *)
+                COMPREPLY=( $(compgen -W "${actions} -h --help" -- "$cur") )
+                ;;
+        esac
+        return 0
+    fi
+
+    # ---------------------------------------------------------------------
+    # weectl import ... (no further subcommand)
+    # ---------------------------------------------------------------------
+    if [[ "$subcommand" == "import" ]]; then
+        case "$prev" in
+            --config|--import-config) _weectl_complete_file; return 0 ;;
+            --date|--from|--to) return 0 ;;
+        esac
+        COMPREPLY=( $(compgen -W "--config --import-config --dry-run --date --from --to --update --verbose --no-prompt --suppress-warnings -h --help" -- "$cur") )
+        return 0
+    fi
+
+    # ---------------------------------------------------------------------
+    # weectl report ...
+    # ---------------------------------------------------------------------
+    if [[ "$subcommand" == "report" ]]; then
+        local actions="list run"
+
+        if [[ -z "$action" ]]; then
+            COMPREPLY=( $(compgen -W "${actions} -h --help" -- "$cur") )
+            return 0
+        fi
+
+        case "$prev" in
+            --config) _weectl_complete_file; return 0 ;;
+            --epoch|--date|--time) return 0 ;;
+        esac
+
+        case "$action" in
+            list)
+                COMPREPLY=( $(compgen -W "--config -h --help" -- "$cur") )
+                ;;
+            run)
+                COMPREPLY=( $(compgen -W "--config --epoch --date --time -h --help" -- "$cur") )
+                ;;
+            *)
+                COMPREPLY=( $(compgen -W "${actions} -h --help" -- "$cur") )
+                ;;
+        esac
+        return 0
+    fi
+
+    # ---------------------------------------------------------------------
+    # weectl rest ...
+    # ---------------------------------------------------------------------
+    if [[ "$subcommand" == "rest" ]]; then
+        local actions="list run"
+
+        if [[ -z "$action" ]]; then
+            COMPREPLY=( $(compgen -W "${actions} -h --help" -- "$cur") )
+            return 0
+        fi
+
+        case "$prev" in
+            --config) _weectl_complete_file; return 0 ;;
+        esac
+
+        COMPREPLY=( $(compgen -W "--config -h --help" -- "$cur") )
+        return 0
+    fi
+
+    # ---------------------------------------------------------------------
+    # weectl station ...
+    # ---------------------------------------------------------------------
+    if [[ "$subcommand" == "station" ]]; then
+        local actions="create reconfigure upgrade list-drivers"
+
+        if [[ -z "$action" ]]; then
+            COMPREPLY=( $(compgen -W "${actions} -h --help" -- "$cur") )
+            return 0
+        fi
+
+        case "$prev" in
+            --config|--dist-config) _weectl_complete_file; return 0 ;;
+            --skin-root|--sqlite-root|--html-root|--user-root|--examples-root|--weewx-root)
+                _weectl_complete_dir; return 0 ;;
+            --register) COMPREPLY=( $(compgen -W "y n" -- "$cur") ); return 0 ;;
+            --units) COMPREPLY=( $(compgen -W "us metricwx metric" -- "$cur") ); return 0 ;;
+            --what) COMPREPLY=( $(compgen -W "examples util config skins" -- "$cur") ); return 0 ;;
+            --driver|--location|--altitude|--latitude|--longitude|--station-url) return 0 ;;
+        esac
+
+        case "$action" in
+            create)
+                COMPREPLY=( $(compgen -W "--driver --location --altitude --latitude --longitude --register --station-url --units --skin-root --sqlite-root --html-root --user-root --examples-root --no-prompt --config --dist-config --dry-run -h --help" -- "$cur") )
+                if [[ "$cur" != -* ]]; then
+                    _weectl_complete_dir
+                fi
+                ;;
+            reconfigure)
+                COMPREPLY=( $(compgen -W "--driver --location --altitude --latitude --longitude --register --station-url --units --skin-root --sqlite-root --html-root --user-root --weewx-root --no-backup --no-prompt --config --dry-run -h --help" -- "$cur") )
+                ;;
+            upgrade)
+                COMPREPLY=( $(compgen -W "--examples-root --skin-root --what --no-backup -y --yes --config --dist-config --dry-run -h --help" -- "$cur") )
+                ;;
+            list-drivers)
+                COMPREPLY=( $(compgen -W "--config -h --help" -- "$cur") )
+                ;;
+            *)
+                COMPREPLY=( $(compgen -W "${actions} -h --help" -- "$cur") )
+                ;;
+        esac
+        return 0
+    fi
+
+    return 0
+}
+
+complete -F _weectl weectl

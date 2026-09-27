@@ -1,4 +1,4 @@
-# Copyright 2012-2024 Matthew Wall
+# Copyright 2012-2026 Matthew Wall
 # See the file LICENSE.txt for your full rights.
 #
 # Thanks to Jim Easterbrook for pywws.  This implementation includes
@@ -226,7 +226,21 @@ import weewx.wxformulas
 log = logging.getLogger(__name__)
 
 DRIVER_NAME = 'FineOffsetUSB'
-DRIVER_VERSION = '1.3'
+DRIVER_VERSION = '1.4'
+
+# Every datetime that carries an observation time is aware UTC. None of them leave the
+# driver: loop packets are rebuilt by pywws2weewx() with a dateTime of its own, and
+# genArchiveRecords() converts back to epoch seconds before yielding. So the
+# representation is the driver's to choose, and the one that carries its time zone is
+# the one that cannot be mixed up: sync() compares and subtracts the two bounds below
+# against times read from the station, and doing that across a naive and an aware value
+# raises "can't subtract offset-naive and offset-aware datetimes".
+#
+# The station's own clock is local wall clock time, so set_clock() and the configurator
+# keep naive local datetimes on purpose.
+UTC = datetime.timezone.utc
+DT_MIN = datetime.datetime.min.replace(tzinfo=UTC)
+DT_MAX = datetime.datetime.max.replace(tzinfo=UTC)
 
 def loader(config_dict, engine):
     return FineOffsetUSB(**config_dict[DRIVER_NAME])
@@ -1093,11 +1107,8 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
         """
         records = self.get_records(since_ts)
         log.debug('found %d archive records' % len(records))
-        epoch = datetime.datetime.utcfromtimestamp(0)
         for r in records:
-            delta = r['datetime'] - epoch
-            # FIXME: deal with daylight saving corner case
-            ts = delta.days * 86400 + delta.seconds
+            ts = int(r['datetime'].timestamp())
             data = pywws2weewx(r['data'], ts,
                                self._last_rain_arc, self._last_rain_ts_arc,
                                self.max_rain_rate)
@@ -1292,10 +1303,10 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                 if fixed_block['data_count'] is None:
                     raise weewx.WeeWxIOError('invalid data_count in get_records')
                 if since_ts:
-                    dt = datetime.datetime.utcfromtimestamp(since_ts)
+                    dt = datetime.datetime.fromtimestamp(since_ts, UTC)
                     dt += datetime.timedelta(seconds=fixed_block['read_period']*30)
                 else:
-                    dt = datetime.datetime.min
+                    dt = DT_MIN
                 max_count = fixed_block['data_count'] - 1
                 if num_rec == 0 or num_rec > max_count:
                     num_rec = max_count
@@ -1346,15 +1357,15 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
             else:
                 quality = 0
         log.info('synchronising to the weather station (quality=%d)' % quality)
-        range_hi = datetime.datetime.max
-        range_lo = datetime.datetime.min
+        range_hi = DT_MAX
+        range_lo = DT_MIN
         ptr = self.current_pos()
         data = self.get_data(ptr, unbuffered=True)
         last_delay = data['delay']
         if last_delay is None or last_delay == 0:
-            prev_date = datetime.datetime.min
+            prev_date = DT_MIN
         else:
-            prev_date = datetime.datetime.utcnow()
+            prev_date = datetime.datetime.now(UTC)
         maxcount = 10
         count = 0
         for data, last_ptr, logged in self.live_data(logged_only=(quality>1)):
@@ -1369,7 +1380,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                     raise weewx.WeeWxIOError('repeated invalid delay while synchronising')
                 continue
             if quality < 2 and self._station_clock:
-                err = last_date - datetime.datetime.fromtimestamp(self._station_clock)
+                err = last_date - datetime.datetime.fromtimestamp(self._station_clock, UTC)
                 last_date -= datetime.timedelta(minutes=data['delay'],
                                                 seconds=err.seconds % 60)
                 log.debug('log timestamp is %s' % last_date.strftime('%H:%M:%S'))
@@ -1516,7 +1527,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                     while data_time > next_live + live_interval:
                         log.debug('missed interval')
                         next_live += live_interval
-                    result['idx'] = datetime.datetime.utcfromtimestamp(int(next_live))
+                    result['idx'] = datetime.datetime.fromtimestamp(int(next_live), UTC)
                     next_live += live_interval
                     yield result, old_ptr, False
                 old_data = new_data
@@ -1554,7 +1565,7 @@ class FineOffsetUSB(weewx.drivers.AbstractDevice):
                     next_log = None
                     self._station_clock = None
                 if next_log:
-                    result['idx'] = datetime.datetime.utcfromtimestamp(int(next_log))
+                    result['idx'] = datetime.datetime.fromtimestamp(int(next_log), UTC)
                     next_log += log_interval
                     yield result, old_ptr, True
                 if new_ptr != self.inc_ptr(old_ptr):

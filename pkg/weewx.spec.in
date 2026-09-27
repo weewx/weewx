@@ -17,6 +17,18 @@
 %define python python3
 %endif
 
+# suse 16: python3
+%if 0%{?suse_version} && "%{os_target}" == "16"
+%define app_group Productivity/Scientific/Other
+%define relos .suse16
+%define platform suse
+# leap 16 ships python 3.13. the modules are packaged as python313-*, but each
+# provides the python3-* name, so these resolve.
+# ephem is not available for leap 16
+%define deps python3, python3-importlib_resources, python3-configobj, python3-Cheetah3, python3-Pillow, python3-pyserial, python3-pyusb
+%define python python3
+%endif
+
 # rh: python3 on redhat, fedora, centos, rocky
 %if "%{_vendor}" == "redhat"
 %define app_group Applications/Science
@@ -133,6 +145,8 @@ cp pkg/etc/systemd/system/weewx.service %{buildroot}%{dst_cfg_dir}/systemd
 cp pkg/etc/systemd/system/weewx@.service %{buildroot}%{dst_cfg_dir}/systemd
 mkdir %{buildroot}%{dst_cfg_dir}/udev
 cp pkg/etc/udev/rules.d/weewx.rules %{buildroot}%{dst_cfg_dir}/udev
+mkdir %{buildroot}%{dst_cfg_dir}/bash_completion.d
+cp src/weewx_data/util/bash_completion.d/weectl %{buildroot}%{dst_cfg_dir}/bash_completion.d
 
 # create the weewx configuration
 sed \
@@ -205,6 +219,11 @@ fi
 
 %post
 
+get_old_pkg_version() {
+    v=$(rpm -q --qf "%%{VERSION}\n" %{name} | grep -v "%{version}" | head -n 1)
+    echo $v
+}
+
 # create a sane configuration file with simulator as the station type
 install_weewxconf() {
     %{cfgapp} station reconfigure --config=%{cfg_file} --driver=weewx.drivers.simulator --no-prompt --no-backup > /dev/null
@@ -218,14 +237,19 @@ install_weewxconf() {
 #   weewx.conf-old-new  - user's conf upgraded to this weewx version
 #   weewx.conf.rpmnew   - new conf from this rpm (created by rpm rules)
 merge_weewxconf() {
+    OLDVER=$1
+    NEWVER=$2
     if [ -f %{cfg_file}.prev ]; then
-        OLDVER=$(get_conf_version %{cfg_file}.prev)
-        if [ -f %{cfg_file}-%{weewx_version} ]; then
-            MNT=${OLDVER}-%{weewx_version}
+        if [ -f %{cfg_file}-$NEWVER ]; then
+            MNT=${OLDVER}-${NEWVER}
             echo Creating maintainer config file as %{cfg_file}-$MNT
             cp -p %{cfg_file}.prev %{cfg_file}-$MNT
-            %{cfgapp} station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg_file}-%{weewx_version} --what=config --no-backup --yes > /dev/null
+            %{cfgapp} station upgrade --config=%{cfg_file}-$MNT --dist-config=%{cfg_file}-$NEWVER --what=config --no-backup --yes > /dev/null
+        else
+            echo Maintainer file skipped, no new config %{cfg_file}-$NEWVER
         fi
+    else
+        echo Maintainer file skipped, no config file %{cfg_file}.prev
     fi
 }
 
@@ -235,16 +259,6 @@ precompile() {
         echo "Pre-compile failed!"
         echo "$rc"
     fi
-}
-
-# get the version number from the specified file, without the rpm revisions
-get_conf_version() {
-    v=$(grep '^version.*=' $1 | sed -e 's/\s*version\s*=\s*//' | sed -e 's/-.*//')
-    if [ "$v" = "" ]; then
-        # someone might have messed with the version string
-        v="xxx"
-    fi
-    echo $v
 }
 
 set_permissions() {
@@ -316,6 +330,19 @@ setup_udev() {
         sed \
   -e "s/GROUP=\"weewx\"/GROUP=\"${WEEWX_GROUP}\"/" \
   %{dst_cfg_dir}/udev/weewx.rules > %{udev_dir}/60-weewx.rules
+    fi
+}
+
+# install the bash completion
+setup_bash_completion() {
+    # prefer the directory that bash-completion loads on demand
+    dst=/usr/share/bash-completion/completions
+    if [ ! -d $dst ]; then
+        # bash-completion older than v2, or not installed
+        dst=/etc/bash_completion.d
+    fi
+    if [ -d $dst ]; then
+        cp %{dst_cfg_dir}/bash_completion.d/weectl $dst/weectl
     fi
 }
 
@@ -474,13 +501,16 @@ if [ $1 -gt 1 ]; then
 fi
 setup_defaults $pid1
 setup_udev
+setup_bash_completion
 
 if [ "$1" = "1" ]; then
     # this is a new install so create a config file
     install_weewxconf
 elif [ $1 -gt 1 ]; then
+    OLDVER=$(get_old_pkg_version)
+    NEWVER=%{weewx_version}
     # this is an upgrade so create a maintainers version by merging the config
-    merge_weewxconf
+    merge_weewxconf $OLDVER $NEWVER
     # migrate any extensions from V4 location to V5
     migrate_extensions
     # remove any previous init configuration that might interfere
@@ -527,6 +557,14 @@ if [ "$1" = "0" ]; then
   # remove udev rules
   if [ -f %{udev_dir}/60-weewx.rules ]; then
       rm -f %{udev_dir}/60-weewx.rules
+  fi
+  # remove weectl bash completion
+  bc_dir=/usr/share/bash-completion/completions
+  if [ ! -d $bc_dir ]; then
+      bc_dir=/etc/bash_completion.d
+  fi
+  if [ -f $bc_dir/weectl ]; then
+      rm -f $bc_dir/weectl
   fi
   # remove any bytecompiled code
   find /usr/share/weewx -name '*.pyc' -delete

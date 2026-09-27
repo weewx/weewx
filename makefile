@@ -381,10 +381,13 @@ rpm-package-rh10:
 suse-changelog:
 	make rpm-changelog RPMOS=suse
 
-suse-package: rpm-package-suse15
+suse-package: rpm-package-suse15 rpm-package-suse16
 
 rpm-package-suse15:
 	make rpm-package RPMOS=suse OSREL=15
+
+rpm-package-suse16:
+	make rpm-package RPMOS=suse OSREL=16
 
 # run rpmlint on the rpm package
 check-rpm:
@@ -401,8 +404,13 @@ check-rh9:
 check-rh10:
 	make check-rpm RPMOS=el OSREL=10
 
-check-suse:
+check-suse: check-suse15 check-suse16
+
+check-suse15:
 	make check-rpm RPMOS=suse OSREL=15
+
+check-suse16:
+	make check-rpm RPMOS=suse OSREL=16
 
 upload-rpm:
 	scp $(DSTDIR)/$(RPMPKG) $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
@@ -427,6 +435,7 @@ RHEL8_PKG=weewx-$(RPMVER).el8.$(RPMARCH).rpm
 RHEL9_PKG=weewx-$(RPMVER).el9.$(RPMARCH).rpm
 RHEL10_PKG=weewx-$(RPMVER).el10.$(RPMARCH).rpm
 SUSE15_PKG=weewx-$(RPMVER).suse15.$(RPMARCH).rpm
+SUSE16_PKG=weewx-$(RPMVER).suse16.$(RPMARCH).rpm
 upload-pkgs:
 	scp $(DSTDIR)/$(SRCPKG) \
  $(DSTDIR)/$(DEB3_PKG) \
@@ -434,13 +443,14 @@ upload-pkgs:
  $(DSTDIR)/$(RHEL9_PKG) \
  $(DSTDIR)/$(RHEL10_PKG) \
  $(DSTDIR)/$(SUSE15_PKG) \
+ $(DSTDIR)/$(SUSE16_PKG) \
  $(USER)@$(WEEWX_COM):$(WEEWX_STAGING)
 
 # move files from the upload directory to the release directory and set up the
 # symlinks to them from the download root directory
 DEVDIR=$(WEEWX_DOWNLOADS)/development_versions
 RELDIR=$(WEEWX_DOWNLOADS)/released_versions
-ARTIFACTS=$(DEB3_PKG) $(RHEL8_PKG) $(RHEL9_PKG) $(RHEL10_PKG) $(SUSE15_PKG) $(SRCPKG)
+ARTIFACTS=$(DEB3_PKG) $(RHEL8_PKG) $(RHEL9_PKG) $(RHEL10_PKG) $(SUSE15_PKG) $(SUSE16_PKG) $(SRCPKG)
 release-pkgs:
 	ssh $(USER)@$(WEEWX_COM) "for f in $(ARTIFACTS); do if [ -f $(DEVDIR)/\$$f ]; then mv $(DEVDIR)/\$$f $(RELDIR); fi; done"
 	ssh $(USER)@$(WEEWX_COM) "rm -f $(WEEWX_DOWNLOADS)/weewx*"
@@ -556,23 +566,28 @@ release-yum-repo:
 SUSE_DIR=/var/tmp/repo-suse
 SUSE_REPO=$(SUSE_DIR)/weewx
 suse-repo:
-	mkdir -p $(SUSE_REPO)/{suse12,suse15}/RPMS
+	mkdir -p $(SUSE_REPO)/{suse12,suse15,suse16}/RPMS
 	cp -p pkg/index-suse.html $(SUSE_DIR)/index.html
 	cp -p pkg/weewx-suse.repo $(SUSE_DIR)/weewx.repo
 	cp -p pkg/weewx-suse12.repo $(SUSE_DIR)
 	cp -p pkg/weewx-suse15.repo $(SUSE_DIR)
+	cp -p pkg/weewx-suse16.repo $(SUSE_DIR)
 
 pull-suse-repo:
 	make pull-repo REPO_NAME=suse REPO_DIR=$(SUSE_DIR)
 
 update-suse-repo:
-	mkdir -p $(SUSE_REPO)/suse15/RPMS
-	cp -p $(DSTDIR)/weewx-$(RPMVER).suse15.$(RPMARCH).rpm $(SUSE_REPO)/suse15/RPMS
-	createrepo $(SUSE_REPO)/suse15
+	for os in suse15 suse16; do \
+  mkdir -p $(SUSE_REPO)/suse15/RPMS; \
+  cp -p $(DSTDIR)/weewx-$(RPMVER).$$os.$(RPMARCH).rpm $(SUSE_REPO)/$$os/RPMS; \
+  createrepo $(SUSE_REPO)/$$os; \
+done
 ifneq ("$(GPG_KEYID)","")
-	gpg --export --armor > $(SUSE_REPO)/suse15/repodata/repomd.xml.key
-	gpg -abs -o $(SUSE_REPO)/suse15/repodata/repomd.xml.asc.new $(SUSE_REPO)/suse15/repodata/repomd.xml
-	mv $(SUSE_REPO)/suse15/repodata/repomd.xml.asc.new $(SUSE_REPO)/suse15/repodata/repomd.xml.asc
+	for os in suse15 suse16; do \
+  gpg --export --armor > $(SUSE_REPO)/$$os/repodata/repomd.xml.key; \
+  gpg -abs -o $(SUSE_REPO)/$$os/repodata/repomd.xml.asc.new $(SUSE_REPO)/$$os/repodata/repomd.xml; \
+  mv $(SUSE_REPO)/$$os/repodata/repomd.xml.asc.new $(SUSE_REPO)/$$os/repodata/repomd.xml.asc; \
+done
 endif
 
 push-suse-repo:
@@ -705,6 +720,7 @@ suse-package-via-vagrant:
 	make vagrant-sync-src VM_GUEST=$(SUSE_VM)
 	make vagrant-build VM_GUEST=$(SUSE_VM) VM_TGT=suse-package GPG_KEYID=$(GPG_KEYID)
 	make vagrant-pull-pkg VM_GUEST=$(SUSE_VM) VM_PKG=$(SUSE15_PKG)
+	make vagrant-pull-pkg VM_GUEST=$(SUSE_VM) VM_PKG=$(SUSE16_PKG)
 	make vagrant-teardown VM_GUEST=$(SUSE_VM)
 
 # The package repositories must be updated using tools on their respective
@@ -745,6 +761,7 @@ suse-repo-via-vagrant:
 	make vagrant-sync-gpg VM_GUEST=$(SUSE_VM)
 	make vagrant-sync-src VM_GUEST=$(SUSE_VM)
 	make vagrant-push-pkg VM_GUEST=$(SUSE_VM) VM_PKG=$(SUSE15_PKG)
+	make vagrant-push-pkg VM_GUEST=$(SUSE_VM) VM_PKG=$(SUSE16_PKG)
 	make vagrant-push-repo VM_GUEST=$(SUSE_VM) REPO_DIR=$(SUSE_DIR)
 	make vagrant-update-repo VM_GUEST=$(SUSE_VM) VM_REPO_TGT=update-suse-repo GPG_KEYID=$(GPG_KEYID)
 	make vagrant-pull-repo VM_GUEST=$(SUSE_VM) REPO_DIR=$(SUSE_DIR)

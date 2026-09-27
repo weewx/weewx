@@ -157,6 +157,45 @@ class TestConfig:
         d = 4
 """
 
+    def test_remove_and_prune_keeps_a_section_that_is_still_used(self):
+        """An extension that adds one option to a section the user already had must
+        not take the rest of that section with it. A driver adds 'station_type' to
+        [Station]; uninstalling it used to remove the location and the coordinates
+        as well."""
+
+        config_dict = configobj.ConfigObj(io.StringIO("""
+[Station]
+    location = somewhere
+    latitude = 45.0
+    station_type = FileParse
+"""), encoding='utf-8')
+
+        # This is what the fileparse example driver contributes.
+        weecfg.remove_and_prune(config_dict, {'Station': {'station_type': 'FileParse'}})
+
+        assert 'Station' in config_dict
+        assert 'station_type' not in config_dict['Station']
+        assert config_dict['Station']['location'] == 'somewhere'
+        assert config_dict['Station']['latitude'] == '45.0'
+
+    def test_remove_and_prune_removes_a_section_that_is_now_empty(self):
+        """The other half: a section the extension contributed in full does go."""
+
+        config_dict = configobj.ConfigObj(io.StringIO("""
+[Station]
+    location = somewhere
+[FileParse]
+    poll_interval = 10
+    path = /var/tmp/datafile
+"""), encoding='utf-8')
+
+        weecfg.remove_and_prune(config_dict,
+                                {'FileParse': {'poll_interval': '10',
+                                               'path': '/var/tmp/datafile'}})
+
+        assert 'FileParse' not in config_dict
+        assert 'Station' in config_dict
+
     def test_reorder_scalars(self):
         test_list = ['a', 'b', 'd', 'c']
         weecfg.reorder_scalars(test_list, 'c', 'd')

@@ -315,6 +315,22 @@ WeeWX must be restarted for the changes to take effect.
     ```
 
 
+## Command-line completion
+
+If you use bash, it can complete `weectl` subcommands and options for you.
+To install the completion for your own account, use this:
+
+```{ .shell .copy }
+sh ~/weewx-data/scripts/setup-bash-completion.sh
+```
+
+If you wish to install it for every user on the system add `sudo` in front: 
+
+```{ .shell .copy }
+sudo sh ~/weewx-data/scripts/setup-bash-completion.sh
+```
+
+
 ## Upgrade
 
 Get the latest release using `pip`:
@@ -378,6 +394,12 @@ If you installed a daemon configuration, remove it:
 
 ```{ .shell .copy }
 sudo sh ~/weewx-data/scripts/setup-daemon.sh uninstall
+```
+
+If you installed the bash completion, remove it as well:
+
+```{ .shell .copy }
+sh ~/weewx-data/scripts/setup-bash-completion.sh uninstall
 ```
 
 To delete the applications and code, remove the WeeWX virtual environment:
