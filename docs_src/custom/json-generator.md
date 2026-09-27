@@ -128,9 +128,9 @@ out. It caps how many seconds a report may spend building the archive:
         budget = 30
 ```
 
-A report that runs out of budget writes what it has worked out so far, and the
-next report carries on from where it stopped. Your history builds itself over
-the next few reports instead of blocking one of them. Set it to `0` if your
+A report that runs out of budget starts no further file, and the next report
+carries on from where it stopped. Your history builds itself over the next few
+reports instead of blocking one of them. Set it to `0` if your
 machine can afford to do the lot in one go.
 
 The day view is never deferred, whatever the budget says, so today's charts are

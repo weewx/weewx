@@ -103,9 +103,9 @@ archive interval.
 How many seconds a report may spend building the archive, as a number or a
 duration. Default is `30`. `0` removes the limit.
 
-Where a report runs out of budget, the file it was working on is written
-holding what was worked out, and the next report carries on from there. No
-single report runs long, however much history there is behind it.
+A report that runs out of budget starts no further file, and the next report
+carries on where it stopped. The newest files come first, so the older years
+fill in over the next reports.
 
 The day tier is never deferred. It is what the day view is drawn from, and a
 page without today is of little use.

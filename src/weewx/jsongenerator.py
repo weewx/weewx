@@ -23,10 +23,12 @@ The Reference Guide documents the options under [JSONGenerator]. The docstring o
 _archive_span() shows what an archive file holds.
 """
 
+import bisect
 import calendar
 import datetime
 import json
 import logging
+import math
 import os
 import re
 import time
@@ -195,7 +197,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # What this run has done so far, for the budget and for the log line at the
         # end.
         counters = {'written': 0, 'skipped': 0, 'extended': 0, 'deferred': 0,
-                    'spent': 0.0, 'slots': 0, 'root': None,
+                    'spent': 0.0, 'root': None,
                     'first': None, 'last': None, 'daynight': False}
         index = {}
 
@@ -293,8 +295,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     # Newest span first. A run that stops early then leaves the oldest
                     # spans unbuilt, not this year.
                     for span in reversed(list(spans)):
-                        afford = _affordable(budget, counters) if metered else None
-                        if afford == 0:
+                        # A file deferred by the budget is written by a later report.
+                        if metered and budget and counters['spent'] >= budget:
                             counters['deferred'] += 1
                             continue
                         stamp = stamp_of(span)
@@ -318,26 +320,21 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                             counters['root'] = arch_root
                             continue
 
-                        # The file on disk holds every slot but its last. Passing it as
-                        # 'carry' means only the slots from there on are calculated. A
-                        # rebuild or an import calculates the whole span instead.
+                        # Passing the file on disk as 'carry' means only the slots from
+                        # its newest reading on are calculated. A rebuild or an import
+                        # calculates the whole span instead.
                         carry = None if rebuilding or reimported or was is None \
                             else _read_archive_file(out_file)
                         if carry is not None:
                             counters['extended'] += 1
 
                         started = time.time()
-                        before = carry['count'] if carry else 0
                         payload = self._archive_span(
-                            group_dict[plotname], plot_options, span, grid, 'avg',
-                            rounding, group_name, tier_from, last_ts, carry, afford,
-                            extrema)
+                            group_dict[plotname], plot_options, span, grid, rounding,
+                            group_name, tier_from, last_ts, carry, extrema)
                         counters['spent'] += time.time() - started
                         if payload is None:
                             continue
-                        # Count the slots calculated, so that _affordable() can size the
-                        # next file to the budget that is left.
-                        counters['slots'] += max(0, payload['count'] - before)
                         try:
                             _write_json(out_file, payload)
                             counters['written'] += 1
@@ -455,40 +452,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             return _empty_index()
         return known
 
-    def _span_extreme(self, var_type, tail, mgr, which, resolution, option_dict,
-                      plot_options, unit):
-        """Get the lowest or highest reading of each slot in a span.
-
-        Args:
-            var_type (str): The observation type.
-            tail (weeutil.weeutil.TimeSpan): The span to look in.
-            mgr (weewx.manager.Manager): The open database.
-            which (str): Which end is wanted, `min` or `max`.
-            resolution (int): The grid, in seconds.
-            option_dict (dict[str, Any]): The options of the line being written.
-            plot_options (dict[str, Any]): The options of the plot it belongs to.
-            unit (str): The unit the readings are wanted in.
-
-        Returns:
-            list|None: The values, in the order get_series() returns them. None if the
-                database cannot answer for this type, or answers in another unit.
-        """
-        try:
-            _, _, data_vec_t = weewx.xtypes.get_series(
-                var_type, tail, mgr, aggregate_type=which,
-                aggregate_interval=resolution, **option_dict)
-        except (weewx.UnknownType, weewx.UnknownAggregation):
-            return None
-        if plot_options.get('unit'):
-            conv = weewx.units.convert(data_vec_t, plot_options['unit'])
-        else:
-            conv = self.converter.convert(data_vec_t)
-        # Extremes in another unit than the aggregate would put two scales on one
-        # chart. So drop the extremes.
-        if unit is not None and conv[1] is not None and conv[1] != unit:
-            return None
-        return conv[0]
-
     @staticmethod
     def _reconcile_index(known, arch_root):
         """Correct the archive index, in place, to match the files on disk.
@@ -572,9 +535,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             except Exception as e:
                 log.warning("Could not write day/night file for %d: %s", year, e)
 
-    def _archive_span(self, plot_section, plot_options, span, resolution,
-                      aggregate_type, rounding, group_name, first_ts, last_ts,
-                      previous=None, max_slots=None, extrema=()):
+    def _archive_span(self, plot_section, plot_options, span, resolution, rounding,
+                      group_name, first_ts, last_ts, previous=None, extrema=()):
         """Build the contents of one archive file: one plot group, one span.
 
         Every tier builds its files here. A day, a month and a year differ only in
@@ -584,24 +546,19 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         `count` slots. A null is a slot without a reading.
 
         Args:
-            plot_section (dict): The plot's section, holding one subsection per
-                line.
+            plot_section (configobj.Section): The plot's section, holding one
+                subsection per line.
             plot_options (dict[str, Any]): The options that apply to it.
             span (weeutil.weeutil.TimeSpan): The span the file covers.
             resolution (int): The grid it is written on, in seconds.
-            aggregate_type (str): How readings are combined into a slot.
-            rounding (int | None): Decimal places, or None to leave them alone.
+            rounding (int|None): Decimal places, or None to leave them alone.
             group_name (str): The plot group, which the file is named after.
             first_ts (int): The oldest reading in the database.
             last_ts (int): The newest reading in it.
-            previous (dict[str, Any] | None): The file this one replaces, as read back
-                from disk. If it can be extended, only the slots after its newest are
-                calculated. Otherwise, e.g., after a change of series or unit, the whole
-                span is.
-            max_slots (int | None): The most slots to calculate. If they do not reach
-                the end of the span, the file is written short, and the next run
-                continues it. None calculates the whole span.
-            extrema (set[str] | tuple[str, ...]): The observation types that also
+            previous (dict[str, Any]|None): The file this one replaces, as read back
+                from disk. A series the file already holds, on the same grid, is
+                calculated only from the slot of the file's newest reading on.
+            extrema (set[str]|tuple[str, ...]): The observation types that also
                 carry the lowest and highest reading in each slot.
 
         Returns:
@@ -631,222 +588,35 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         if slots < 2:
             return None
 
-        # 'resume' is (resume_ts, resume_slot) from the file on disk, or None to
-        # calculate every slot.
-        resume = _resume_from(previous, start, resolution, slots)
-
-        # Stop short if the budget allows only 'max_slots' more slots. The file then
-        # covers less than its span, like a file still filling up. 'newest' says how
-        # far it got, and the next run carries on from there.
-        if max_slots is not None:
-            done = resume[1] if resume else 0
-            if done + max_slots < slots:
-                slots = done + max_slots
-                stop = start + slots * resolution
-                last_ts = min(int(last_ts), stop - resolution)
-
-        domain = TimeSpan(start, stop)
-        tail = TimeSpan(resume[0], stop) if resume else domain
+        # A file on another grid, or cut from another span, cannot be extended.
+        if previous is not None and not _extends(previous, start, resolution, slots):
+            previous = None
+        old_series = {}
+        if previous is not None:
+            old_series = {(s.get('obs_type'), s.get('aggregate_type')): s
+                          for s in previous['series']}
 
         series_out = []
         unit = unit_label = None
-        # resume_ts is where the last slot of this file starts, and resume_slot is its
-        # index. Both go into the file, so that the next run carries on from there.
-        resume_ts = resume_slot = None
-        # 'stale' is set when the file on disk does not match the series being built.
-        # Only the loop can detect that. The loop then breaks, and the whole span is
-        # calculated.
-        stale = False
-
         for line_name in plot_section.sections:
-            line_options = accumulateLeaves(plot_section[line_name])
-            var_type = line_options.get('data_type', line_name)
-            mgr = self.db_binder.get_manager(line_options['data_binding'])
-
-            if _skip_if_empty(mgr, var_type, domain):
+            line = self._line_spec(plot_section[line_name], line_name, resolution)
+            old = old_series.get((line['var_type'], line['agg']))
+            entry = self._archive_series(line, plot_options, start, stop, slots,
+                                         resolution, rounding, extrema, old, previous)
+            if entry is None:
                 continue
-
-            is_vector = line_options.get('plot_type', 'line').lower() == 'vector'
-
-            # The line's own aggregate_type wins. 'none' asks for raw samples, which do
-            # not fit a fixed grid, so use the default.
-            agg = line_options.get('aggregate_type')
-            if agg in (None, '', 'None', 'none'):
-                agg = aggregate_type
-            # Sum the types whose accumulator extractor is 'sum', e.g., 'rain', 'ET'
-            # and 'windrun'. Reading accum_dict instead of a list here also sums the
-            # types a station adds under [Accumulator].
-            if weewx.accum.accum_dict.get(var_type, {}).get('extractor') == 'sum':
-                agg = 'sum'
-            elif var_type in ('windDir', 'windGustDir'):
-                # The arithmetic mean of 350 and 10 degrees is 180, due south.
-                # 'vecdir' averages the vectors and takes their bearing instead.
-                # 'vecdir' reads the 'wind' daily summary, so var_type becomes 'wind'.
-                var_type = 'wind'
-                agg = 'vecdir'
-
-            # Take the matching series from the file on disk, or rebuild if there is
-            # none. See _carried_series().
-            carried = None
-            if resume is not None:
-                carried = _carried_series(previous, len(series_out), var_type,
-                                          previous['count'])
-                if carried is None:
-                    stale = True
-                    break
-
-            # A bar's aggregate_interval is part of its meaning: an hourly rain total
-            # differs from sixty one-minute totals. So a bar asking for an interval
-            # coarser than the grid gets it, with a reading every nth slot.
-            #
-            # Lines keep the grid. On a line, aggregate_interval only smooths the
-            # drawing, and honouring it would leave most slots of a fine grid empty.
-            step = resolution
-            asked = to_int(weeutil.weeutil.nominal_spans(
-                line_options.get('aggregate_interval')))
-            if agg and asked and asked > resolution \
-                    and line_options.get('plot_type', 'line').lower() == 'bar':
-                step = asked
-
-            option_dict = dict(line_options)
-            option_dict.pop('aggregate_type', None)
-            option_dict.pop('aggregate_interval', None)
-
-            try:
-                start_vec_t, stop_vec_t, data_vec_t = weewx.xtypes.get_series(
-                    var_type, tail, mgr,
-                    aggregate_type=agg,
-                    aggregate_interval=step,
-                    **option_dict)
-            except (weewx.UnknownType, weewx.UnknownAggregation):
-                continue
-
-            if plot_options.get('unit'):
-                conv = weewx.units.convert(data_vec_t, plot_options['unit'])
-            else:
-                conv = self.converter.convert(data_vec_t)
-
-            # A span without readings reports no unit. Overwriting an earlier series'
-            # unit with None would write a null into the file. An extending run would
-            # then see a changed unit and rebuild the span on every report.
-            if conv[1] is not None:
-                unit = conv[1]
-                unit_label = line_options.get(
-                    'y_label', self.formatter.get_label_string(conv[1]))
-
-            if carried is not None:
-                if conv[1] is not None and conv[1] != previous.get('unit'):
-                    stale = True
-                    break
-                if unit is None:
-                    unit = previous.get('unit')
-                    unit_label = previous.get('unit_label')
-
-            # get_series() returns a wind vector as complex numbers.
-            values, components, bearings = conv[0], None, None
-            if is_vector:
-                components = _vector_components(conv[0])
-                if components:
-                    # The speed goes in 'values', so a reader that knows nothing
-                    # about vectors still draws a line. The legend shows the bearing,
-                    # and the page draws the arrows from the components.
-                    values, bearings = _split_vectors(conv[0])
-
-            # Place each value by its timestamp. get_series() skips intervals without
-            # readings, so the loop counter is not the slot.
-            def new_grid(carried_values):
-                if carried_values is None:
-                    return [None] * slots
-                # Keep the carried values before slot resume[1]. Clear the rest, so a
-                # slot without a new reading does not keep its old value.
-                return list(carried_values[:resume[1]]) + [None] * (slots - resume[1])
-
-            def fill(grid, seq):
-                for begin, val in zip(start_vec_t[0], seq):
-                    if begin is None or val is None:
-                        continue
-                    # Place by the interval's start. intervalgen() clips the last
-                    # interval to the end of the span, so counting back from its end
-                    # would put it a slot early.
-                    slot = int((begin - start) // resolution)
-                    if 0 <= slot < slots:
-                        grid[slot] = round(val, rounding) if rounding is not None else val
-                return grid
-
-            grid = fill(new_grid(carried['values'] if carried else None), values)
-
-            # The last interval of the series may still have been filling up, so the
-            # next run resumes at its start. Take the earliest across all series, so
-            # that no series skips a slot.
-            if stop_vec_t[0]:
-                last_slot = int((start_vec_t[0][-1] - start) // resolution)
-                if resume_ts is None or start_vec_t[0][-1] < resume_ts:
-                    resume_ts = int(start_vec_t[0][-1])
-                if resume_slot is None or last_slot < resume_slot:
-                    resume_slot = max(0, min(last_slot, slots - 1))
-
-            label = line_options.get('label')
-            label = self.text_dict.get(label, label) if label \
-                else self.generic_dict.get(var_type, var_type)
-
-            entry = {
-                'obs_type': var_type,
-                'label': label,
-                'aggregate_type': agg,
-                'values': grid,
-            }
-            if step != resolution:
-                # The readings sit every nth slot. The page needs aggregate_interval
-                # to draw each bar n slots wide.
-                entry['aggregate_interval'] = step
-            color = line_options.get('color')
-            if color:
-                entry['color'] = _normalize_color(color)
-            if line_options.get('plot_type', 'line').lower() == 'bar':
-                entry['plot_type'] = 'bar'
-
-            if components:
-                entry['vector_x'] = fill(new_grid(carried and carried.get('vector_x')),
-                                         components[0])
-                entry['vector_y'] = fill(new_grid(carried and carried.get('vector_y')),
-                                         components[1])
-                if bearings is not None:
-                    entry['directions'] = fill(
-                        new_grid(carried and carried.get('directions')), bearings)
-                entry['plot_type'] = 'vector'
-                rotate = line_options.get('vector_rotate')
-                if rotate is not None:
-                    entry['vector_rotate'] = -float(rotate)
-
-            # Add the lowest and highest reading per slot for the types named in
-            # 'extremes'. See gen_archive().
-            if var_type in extrema and agg not in ('min', 'max'):
-                for which in ('min', 'max'):
-                    seq = self._span_extreme(var_type, tail, mgr, which, resolution,
-                                             option_dict, plot_options, conv[1])
-                    if seq is None:
-                        continue
-                    entry[which] = fill(
-                        new_grid(carried and carried.get(which)), seq)
-
+            entry_unit = entry.pop('unit')
+            if entry_unit is not None:
+                unit = entry_unit
+                unit_label = line['options'].get(
+                    'y_label', self.formatter.get_label_string(entry_unit))
             series_out.append(entry)
-
-        # A series added since the file was written makes series_out longer than
-        # previous['series']. The loop can only detect that after it ends.
-        if resume is not None and len(series_out) != len(previous['series']):
-            stale = True
-
-        if stale:
-            # The file on disk holds other series, or another unit, than the skin asks
-            # for now. Calculate the whole span without the file.
-            log.debug("Archive file for '%s' does not match the plot it is for. "
-                      "Rebuilding it.", group_name)
-            return self._archive_span(plot_section, plot_options, span, resolution,
-                                      aggregate_type, rounding, group_name, first_ts,
-                                      last_ts, extrema=extrema)
 
         if not series_out:
             return None
+        # A span without new readings reports no unit. The file then keeps its own.
+        if unit is None and previous is not None:
+            unit, unit_label = previous.get('unit'), previous.get('unit_label')
 
         # chart_line_colors applies to every series that sets no color of its own.
         default_colors = weeutil.weeutil.option_as_list(
@@ -864,14 +634,250 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             # The newest reading in this file. The next run compares it with the
             # database to decide whether the file has to be written again.
             'newest': min(int(span.stop), int(last_ts)),
-            # resume_ts and resume_slot tell the next run where to carry on. See
-            # _resume_from().
-            'resume_ts': resume_ts,
-            'resume_slot': resume_slot,
             'unit': unit,
             'unit_label': (unit_label or '').strip(),
             'series': series_out,
         }
+
+    def _archive_series(self, line, plot_options, start, stop, slots, resolution,
+                        rounding, extrema, old, previous):
+        """Build one series of an archive file.
+
+        The readings of the span are read once, and sorted into the slots in Python.
+        A query per slot costs thousands of queries for a year.
+
+        Args:
+            line (dict[str, Any]): The line, as _line_spec() returns it.
+            plot_options (dict[str, Any]): The options of the plot the line belongs to.
+            start (int): The first instant of the file.
+            stop (int): The end of the file.
+            slots (int): How many slots the file holds.
+            resolution (int): The grid of the file, in seconds.
+            rounding (int|None): Decimal places, or None to leave them alone.
+            extrema (set[str]|tuple[str, ...]): The observation types that also carry
+                the lowest and highest reading in each slot.
+            old (dict[str, Any]|None): The same series in the file on disk, or None.
+            previous (dict[str, Any]|None): The file on disk, if it is being extended.
+
+        Returns:
+            dict|None: The series, with its unit under 'unit', which the caller takes
+                out again. None if the series holds no reading.
+        """
+        mgr = self.db_binder.get_manager(line['options']['data_binding'])
+        # Many skins plot sensors a station lacks. One query that stops at the first
+        # reading saves reading a whole year of nothing, on every report.
+        if previous is None and _skip_if_empty(mgr, line['data_type'],
+                                               TimeSpan(start, stop)):
+            return None
+        begins, ends = _intervals(start, stop, line['step'])
+
+        # The interval that holds the newest reading of the file on disk may have filled
+        # up since. So it is calculated again, together with every interval after it.
+        first = bisect.bisect_left(ends, previous['newest']) if previous is not None else 0
+        since = begins[first] if first < len(begins) else stop
+        keep = int((since - start) // resolution)
+
+        def new_grid(key):
+            carried = old.get(key) if old is not None else None
+            if carried is None:
+                return [None] * slots
+            # Clear the slots from 'keep' on, so a slot without a new reading does not
+            # keep its old value.
+            return list(carried[:keep]) + [None] * (slots - keep)
+
+        def fill(grid, pairs):
+            for begin, val in pairs:
+                slot = int((begin - start) // resolution)
+                if val is not None and 0 <= slot < slots:
+                    grid[slot] = round(val, rounding) if rounding is not None else val
+            return grid
+
+        read = self._read_slots(line, plot_options, mgr, TimeSpan(since, stop), begins,
+                                ends, first)
+        if read is None:
+            return None
+        unit, pairs, buckets = read
+        empty = all(val is None for _, val in pairs)
+        if old is None and empty:
+            return None
+        if previous is not None and (
+                old is None or unit is not None and unit != previous.get('unit', unit)):
+            # A series the file on disk lacks, e.g., a new sensor, or a unit that has
+            # changed since the file was written: calculate the whole span.
+            return self._archive_series(line, plot_options, start, stop, slots,
+                                        resolution, rounding, extrema, None, None)
+
+        entry = {
+            'obs_type': line['var_type'],
+            'label': line['label'],
+            'aggregate_type': line['agg'],
+            'unit': unit,
+        }
+        if line['step'] != resolution:
+            # The readings sit every nth slot. The page needs aggregate_interval to
+            # draw each bar n slots wide.
+            entry['aggregate_interval'] = line['step']
+        if line['color']:
+            entry['color'] = _normalize_color(line['color'])
+        if line['plot_type'] == 'bar':
+            entry['plot_type'] = 'bar'
+
+        values = [val for _, val in pairs]
+        components = _vector_components(values) if line['plot_type'] == 'vector' else None
+        if components:
+            # The speed goes in 'values', so a reader that knows nothing about vectors
+            # still draws a line. The legend shows the bearing, and the page draws the
+            # arrows from the components.
+            speeds, bearings = _split_vectors(values)
+            instants = [begin for begin, _ in pairs]
+            entry['values'] = fill(new_grid('values'), zip(instants, speeds))
+            entry['vector_x'] = fill(new_grid('vector_x'), zip(instants, components[0]))
+            entry['vector_y'] = fill(new_grid('vector_y'), zip(instants, components[1]))
+            if bearings is not None:
+                entry['directions'] = fill(new_grid('directions'),
+                                           zip(instants, bearings))
+            entry['plot_type'] = 'vector'
+            if line['rotate'] is not None:
+                entry['vector_rotate'] = -float(line['rotate'])
+        else:
+            entry['values'] = fill(new_grid('values'), pairs)
+
+        # The lowest and highest reading per slot, for the types named in 'extremes'.
+        # They come from the readings already read, so they cost no query.
+        if buckets is not None and line['var_type'] in extrema \
+                and line['agg'] not in ('min', 'max', 'vecdir') and not components:
+            if line['step'] != resolution:
+                slot_begins, slot_ends = _intervals(start, stop, resolution)
+                buckets = _bucket(slot_begins, slot_ends,
+                                  bisect.bisect_left(slot_ends, since), *buckets[1])
+            else:
+                slot_begins = begins
+            for which in ('min', 'max'):
+                entry[which] = fill(new_grid(which),
+                                    ((slot_begins[i], _reduce(which, vals, weights))
+                                     for i, (vals, weights) in buckets[0].items()))
+        return entry
+
+    def _line_spec(self, line_section, line_name, resolution):
+        """Read the options of one line of a plot.
+
+        Args:
+            line_section (configobj.Section): The line's section, e.g., [[[[outTemp]]]].
+            line_name (str): The name of the section.
+            resolution (int): The grid of the file, in seconds.
+
+        Returns:
+            dict: 'var_type', 'agg', 'step', 'plot_type', 'label', 'color', 'rotate',
+                all the line's 'options', and the 'data_type' as the skin names it,
+                e.g., 'windDir' where 'var_type' is 'wind'.
+        """
+        options = accumulateLeaves(line_section)
+        var_type = options.get('data_type', line_name)
+        plot_type = options.get('plot_type', 'line').lower()
+
+        # The line's own aggregate_type wins. 'none' asks for raw samples, which do not
+        # fit a fixed grid, so average.
+        agg = options.get('aggregate_type')
+        if agg in (None, '', 'None', 'none'):
+            agg = 'avg'
+        # Sum the types whose accumulator extractor is 'sum', e.g., 'rain', 'ET' and
+        # 'windrun'. Reading accum_dict instead of a list here also sums the types a
+        # station adds under [Accumulator].
+        if weewx.accum.accum_dict.get(var_type, {}).get('extractor') == 'sum':
+            agg = 'sum'
+        elif var_type in ('windDir', 'windGustDir'):
+            # The arithmetic mean of 350 and 10 degrees is 180, due south. 'vecdir'
+            # averages the vectors and takes their bearing instead.
+            var_type, agg = 'wind', 'vecdir'
+
+        # A bar's aggregate_interval is part of its meaning: an hourly rain total
+        # differs from sixty one-minute totals. So a bar asking for an interval coarser
+        # than the grid gets it, with a reading every nth slot. Lines keep the grid.
+        # On a line, aggregate_interval only smooths the drawing, and honouring it
+        # would leave most slots of a fine grid empty.
+        step = resolution
+        asked = to_int(weeutil.weeutil.nominal_spans(options.get('aggregate_interval')))
+        if asked and asked > resolution and plot_type == 'bar':
+            step = asked
+
+        label = options.get('label')
+        label = self.text_dict.get(label, label) if label \
+            else self.generic_dict.get(var_type, var_type)
+
+        return {'var_type': var_type, 'agg': agg, 'step': step, 'plot_type': plot_type,
+                'label': label, 'color': options.get('color'),
+                'rotate': options.get('vector_rotate'), 'options': options,
+                'data_type': options.get('data_type', line_name)}
+
+    def _read_slots(self, line, plot_options, mgr, span, begins, ends, first):
+        """Read one line over a span, and reduce it to one value per interval.
+
+        Args:
+            line (dict[str, Any]): The line, as _line_spec() returns it.
+            plot_options (dict[str, Any]): The options of the plot the line belongs to.
+            mgr (weewx.manager.Manager): The open database.
+            span (weeutil.weeutil.TimeSpan): The span to read.
+            begins (list[int]): Where each interval of the file begins.
+            ends (list[int]): Where each interval ends.
+            first (int): The index of the first interval inside the span.
+
+        Returns:
+            tuple|None: A three-way tuple (unit, pairs, buckets). 'pairs' holds
+                (begin, value) for each interval with a value. 'buckets' is a two-way
+                tuple of the readings per interval and the readings themselves, for
+                the extremes, or None where the readings were not read one by one.
+                None if the database knows neither the type nor the aggregation.
+        """
+        options = dict(line['options'])
+        options.pop('aggregate_type', None)
+        options.pop('aggregate_interval', None)
+
+        if line['agg'] in _RAW_AGGREGATES:
+            # 'vecdir' takes the bearing of the vector sum, so it reads the vectors.
+            read_type = 'windvec' if line['agg'] == 'vecdir' else line['var_type']
+            try:
+                start_vec, stop_vec, data_vec = weewx.xtypes.get_series(
+                    read_type, span, mgr, **options)
+            except (weewx.UnknownType, weewx.UnknownAggregation):
+                pass
+            else:
+                if line['agg'] == 'vecdir':
+                    # A bearing does not depend on the unit of the speed.
+                    unit = self.converter.getTargetUnit('wind', 'vecdir')[0]
+                    values = data_vec[0]
+                else:
+                    unit, values = self._convert(data_vec, plot_options)
+                # 'vecdir' weighs each reading by its archive interval, as the database
+                # does.
+                weights = [b - a for a, b in zip(start_vec[0], stop_vec[0])]
+                readings = (stop_vec[0], values, weights)
+                per_interval = _bucket(begins, ends, first, *readings)
+                pairs = [(begins[i], _reduce(line['agg'], vals, wts))
+                         for i, (vals, wts) in sorted(per_interval.items())]
+                return unit, pairs, (per_interval, readings)
+
+        # An aggregation that has no counterpart here, or a type that exists only as an
+        # aggregate: one query per interval, as the ImageGenerator does it.
+        try:
+            start_vec, _, data_vec = weewx.xtypes.get_series(
+                line['var_type'], span, mgr, aggregate_type=line['agg'],
+                aggregate_interval=line['step'], **options)
+        except (weewx.UnknownType, weewx.UnknownAggregation):
+            return None
+        unit, values = self._convert(data_vec, plot_options)
+        return unit, list(zip(start_vec[0], values)), None
+
+    def _convert(self, data_vec, plot_options):
+        """Convert a series into the unit of the plot, or else of the report.
+
+        Returns:
+            tuple[str|None, list]: A two-way tuple (unit, values).
+        """
+        if plot_options.get('unit'):
+            conv = weewx.units.convert(data_vec, plot_options['unit'])
+        else:
+            conv = self.converter.convert(data_vec)
+        return conv[1], conv[0]
 
 
 def _linear(convert, from_unit, to_unit):
@@ -1146,29 +1152,6 @@ def _rebuild_due(rebuilt, now_ts, after):
     return (now - then).days >= int(after // 86400)
 
 
-def _affordable(budget, counters):
-    """Return how many slots fit in the rest of this run's budget.
-
-    Args:
-        budget (int): How many seconds this report may spend. Zero removes the limit.
-        counters (dict[str, Any]): What the run has spent so far, and on how many
-            slots.
-
-    Returns:
-        int|None: The slots that fit in what is left, at least one while any time is
-            left. 0 once the budget is spent, and None if there is no budget.
-    """
-    if not budget:
-        return None
-    left = budget - counters['spent']
-    if left <= 0:
-        return 0
-    # A slot costs one database query, whose time depends on the machine. So measure
-    # it over the slots this run has done. Before the first, assume a pessimistic 5 ms.
-    per_slot = counters['spent'] / counters['slots'] if counters['slots'] else 0.005
-    return max(1, int(left / per_slot))
-
-
 def _carry_over_index(index, known, group_name):
     """Add the files this run did not touch to the index entry of group_name.
 
@@ -1284,68 +1267,107 @@ def _read_archive_file(path):
     return payload
 
 
-def _resume_from(previous, start, resolution, slots):
-    """Return where to extend the file on disk, or None to calculate the whole span.
-
-    The instant is read from the file, not computed from the slot number. get_series()
-    aligns its intervals on local time, so across a DST change the boundaries are not a
-    whole number of intervals apart. A computed instant would make an extended file
-    differ from a rebuild.
+def _extends(previous, start, resolution, slots):
+    """Return True if the file on disk is on the grid of the file being built.
 
     Args:
-        previous (dict[str, Any] | None): The file already on disk, or None.
-        start (int): Where the span being written begins.
-        resolution (int): The grid it is written on, in seconds.
-        slots (int): How many slots the span holds.
+        previous (dict[str, Any]): The file on disk.
+        start (int): Where the file being built begins.
+        resolution (int): Its grid, in seconds.
+        slots (int): How many slots it holds.
+    """
+    try:
+        return int(previous['start']) == start and int(previous['interval']) == resolution \
+            and int(previous['count']) <= slots and int(previous['newest']) >= start \
+            and isinstance(previous['series'], list)
+    except (KeyError, TypeError, ValueError):
+        return False
+
+
+def _intervals(start, stop, step):
+    """Return where the intervals of a series begin and end, as two lists.
+
+    The intervals are the ones get_series() aggregates over: intervalgen() keeps their
+    boundaries on constant local time, so an interval across a change of DST is an
+    hour longer or shorter.
+
+    Args:
+        start (int): The beginning of the first interval.
+        stop (int): The end of the last interval.
+        step (int): The length of an interval, in seconds.
+    """
+    begins, ends = [], []
+    for span in weeutil.weeutil.intervalgen(start, stop, step):
+        begins.append(int(span.start))
+        ends.append(int(span.stop))
+    return begins, ends
+
+
+def _bucket(begins, ends, first, stamps, values, weights):
+    """Sort readings into the intervals they belong to.
+
+    A reading stamped t belongs to the interval with begin < t <= end, as in the
+    queries of the database.
+
+    Args:
+        begins (list[int]): Where each interval begins.
+        ends (list[int]): Where each interval ends.
+        first (int): The index of the first interval to fill.
+        stamps (list[int]): When each reading was taken.
+        values (list): The readings. A None is left out.
+        weights (list[int]): The archive interval of each reading, in seconds.
 
     Returns:
-        tuple|None: A two-way tuple (resume_ts, resume_slot): the instant to query the
-            database from, and the first slot to overwrite. None if the file cannot be
-            extended, e.g., after a change of 'start' or 'interval', if the file
-            reaches past the span, or if it lacks 'resume_ts' or 'resume_slot'.
+        dict: {index: (values, weights)} for each interval that holds a reading.
     """
-    if not previous:
-        return None
-    try:
-        if int(previous['start']) != start or int(previous['interval']) != resolution:
-            return None
-        count = int(previous['count'])
-        resume_ts = int(previous['resume_ts'])
-        resume_slot = int(previous['resume_slot'])
-    except (KeyError, TypeError, ValueError):
-        return None
-    if not 2 <= count <= slots or not previous['series']:
-        return None
-    if not 0 <= resume_slot < count or not start <= resume_ts:
-        return None
-    return resume_ts, resume_slot
+    out = {}
+    for stamp, value, weight in zip(stamps, values, weights):
+        if value is None:
+            continue
+        i = bisect.bisect_left(ends, stamp, first)
+        if i < len(ends) and begins[i] < stamp:
+            vals, wts = out.setdefault(i, ([], []))
+            vals.append(value)
+            wts.append(weight)
+    return out
 
 
-def _carried_series(previous, position, var_type, count):
-    """Return the series at position in the file on disk, or None to rebuild.
+# The aggregations _reduce() does itself. Any other goes to the database, one query per
+# interval.
+_RAW_AGGREGATES = ('avg', 'sum', 'min', 'max', 'first', 'last', 'vecdir')
 
-    Series are matched by position, i.e., their order in the skin's plot section. The
-    observation type must match too, because two series can swap places. The series
-    must also hold exactly count values.
 
-    The whole entry is returned, because a series can carry more arrays than 'values',
-    e.g., vector components or extremes.
+def _reduce(agg, values, weights):
+    """Combine the readings of one interval, as the database would.
 
     Args:
-        previous (dict[str, Any]): The file already on disk.
-        position (int): Which of its series to take.
-        var_type (str): The observation type it should hold.
-        count (int): How many slots the new file has.
+        agg (str): One of _RAW_AGGREGATES.
+        values (list[float|complex]): The readings, in the order they were taken.
+        weights (list[int]): The archive interval of each reading, in seconds.
+
+    Returns:
+        float|complex|None: The aggregate. A wind vector with no length has no
+            bearing, so 'vecdir' then returns None.
     """
-    try:
-        entry = previous['series'][position]
-        values = entry['values']
-    except (IndexError, KeyError, TypeError):
+    if agg == 'avg':
+        return sum(values) / len(values)
+    if agg == 'sum':
+        return sum(values)
+    if agg in ('min', 'max'):
+        pick = min if agg == 'min' else max
+        # A wind vector compares by its length, as in the database. Python 3.7 does
+        # not take key=None, so the two cases stay apart.
+        return pick(values, key=abs) if isinstance(values[0], complex) else pick(values)
+    if agg == 'first':
+        return values[0]
+    if agg == 'last':
+        return values[-1]
+    # 'vecdir': the bearing of the sum of the vectors, each weighed by its interval.
+    total = sum(value * weight for value, weight in zip(values, weights))
+    if not total:
         return None
-    if entry.get('obs_type') != var_type or not isinstance(values, list) \
-            or len(values) != count:
-        return None
-    return entry
+    deg = 90.0 - math.degrees(math.atan2(total.imag, total.real))
+    return deg if deg >= 0 else deg + 360.0
 
 
 def _daynight(start_ts, stop_ts, lat, lon):

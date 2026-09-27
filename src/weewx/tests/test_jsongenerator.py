@@ -8,10 +8,12 @@
 Use pytest to run the tests.
 """
 
+import itertools
 import json
 import logging
 import os
 import time
+import types
 
 import configobj
 import pytest
@@ -25,6 +27,7 @@ import weewx.reportengine
 import weewx.station
 import weewx.units
 import weewx.xtypes
+import weeutil.weeutil
 from weeutil.config import accumulateLeaves
 
 # The grid of the archive tests. Four hours keeps the tests fast, because get_series()
@@ -505,10 +508,10 @@ class TestArchiveExtension:
     The tests check that the result equals a full rebuild.
     """
 
-    # Keys that record when a file was written, not what it holds. A run whose slot
-    # has not moved skips the file. So after a chain of reports, these keys can come
-    # from an earlier run than in a single rebuild. The page draws none of them.
-    BOOKKEEPING = ('newest', 'resume_ts', 'resume_slot')
+    # 'newest' records when a file was written, not what it holds. A run whose slot
+    # has not moved skips the file. So after a chain of reports, 'newest' can come from
+    # an earlier run than in a single rebuild. The page does not draw it.
+    BOOKKEEPING = ('newest',)
 
     @classmethod
     def payloads(cls, archive_dir, only=None):
@@ -683,54 +686,68 @@ class TestArchiveExtension:
         assert -99.0 not in after['series'][0]['values']
 
 
-class TestResumeFrom:
-    """Whether a file on disk can be carried forward, and from where."""
+class TestExtends:
+    """Whether a file on disk is on the grid of the file being built."""
 
     @staticmethod
     def file(**overrides):
-        payload = {'start': 1000, 'interval': 100, 'count': 10,
-                   'resume_ts': 1900, 'resume_slot': 9,
+        payload = {'start': 1000, 'interval': 100, 'count': 10, 'newest': 1900,
                    'series': [{'obs_type': 'outTemp', 'values': [1.0] * 10}]}
         payload.update(overrides)
         return payload
 
-    def test_resumes_where_the_file_says_it_stopped(self):
-        # The instant comes out of the file, not from slot arithmetic: see the
-        # docstring on _resume_from().
-        assert weewx.jsongenerator._resume_from(self.file(), 1000, 100, 20) == (1900, 9)
-
-    def test_no_file_means_no_resuming(self):
-        assert weewx.jsongenerator._resume_from(None, 1000, 100, 20) is None
+    def test_a_file_on_the_same_grid_extends(self):
+        assert weewx.jsongenerator._extends(self.file(), 1000, 100, 20)
 
     @pytest.mark.parametrize('overrides, reason', [
         ({'start': 2000}, 'the start moved'),
-        ({'interval': 50}, 'resolution changed'),
-        ({'count': 1}, 'too short to carry anything'),
-        ({'series': []}, 'no series in it'),
+        ({'interval': 50}, 'the resolution changed'),
+        ({'count': 30}, 'more slots than wanted, e.g., after a clock went backwards'),
         ({'count': 'nonsense'}, 'not a number'),
-        ({'resume_ts': None}, 'written before the field existed'),
-        ({'resume_slot': None}, 'written before the field existed'),
-        ({'resume_slot': 10}, 'points past the slots the file has'),
-        ({'resume_ts': 500}, 'before the file even starts'),
+        ({'newest': None}, 'no newest reading'),
+        ({'newest': 500}, 'a newest reading before the file starts'),
+        ({'series': None}, 'no series'),
     ])
-    def test_a_file_that_cannot_be_used(self, overrides, reason):
-        assert weewx.jsongenerator._resume_from(self.file(**overrides),
-                                                1000, 100, 20) is None, reason
+    def test_a_file_that_cannot_be_extended(self, overrides, reason):
+        assert not weewx.jsongenerator._extends(self.file(**overrides), 1000, 100, 20), \
+            reason
 
-    def test_a_file_reaching_past_the_span_is_refused(self):
-        """A clock that went backwards leaves more slots on disk than are wanted."""
-        assert weewx.jsongenerator._resume_from(self.file(count=30), 1000, 100, 20) is None
 
-    def test_carried_series_matches_by_position_and_type(self):
-        previous = self.file()
-        assert weewx.jsongenerator._carried_series(previous, 0, 'outTemp', 10) is not None
-        assert weewx.jsongenerator._carried_series(previous, 0, 'dewpoint', 10) is None
-        assert weewx.jsongenerator._carried_series(previous, 1, 'outTemp', 10) is None
+class TestSlots:
+    """How readings are sorted into slots and combined, as the database would."""
 
-    def test_carried_series_checks_its_length(self):
-        """A file whose values do not fill its own grid cannot be trusted."""
-        previous = self.file(series=[{'obs_type': 'outTemp', 'values': [1.0] * 3}])
-        assert weewx.jsongenerator._carried_series(previous, 0, 'outTemp', 10) is None
+    def test_a_reading_belongs_to_the_interval_it_ends(self):
+        """A reading stamped t belongs to the interval with begin < t <= end."""
+        buckets = weewx.jsongenerator._bucket([0, 10], [10, 20], 0,
+                                              [5, 10, 11, 20, 21], [1, 2, 3, 4, 5],
+                                              [1] * 5)
+        assert buckets == {0: ([1, 2], [1, 1]), 1: ([3, 4], [1, 1])}
+
+    def test_a_missing_reading_is_left_out(self):
+        buckets = weewx.jsongenerator._bucket([0], [10], 0, [5, 6], [None, 2.0], [1, 1])
+        assert buckets == {0: ([2.0], [1])}
+
+    @pytest.mark.parametrize('agg, expected', [
+        ('avg', 2.0), ('sum', 6.0), ('min', 1.0), ('max', 3.0),
+        ('first', 3.0), ('last', 1.0),
+    ])
+    def test_the_simple_aggregations(self, agg, expected):
+        assert weewx.jsongenerator._reduce(agg, [3.0, 2.0, 1.0], [1, 1, 1]) == expected
+
+    def test_a_vector_compares_by_its_length(self):
+        assert weewx.jsongenerator._reduce('max', [3j, 1 + 1j], [1, 1]) == 3j
+
+    def test_vecdir_is_the_bearing_of_the_weighted_sum(self):
+        north, east = weeutil.weeutil.to_complex(1.0, 0.0), \
+            weeutil.weeutil.to_complex(1.0, 90.0)
+        assert weewx.jsongenerator._reduce('vecdir', [north, east], [1, 1]) \
+            == pytest.approx(45.0)
+        # A reading over a longer interval counts for more, as in the database.
+        assert weewx.jsongenerator._reduce('vecdir', [north, east], [3, 1]) \
+            == pytest.approx(18.43, abs=0.01)
+
+    def test_vecdir_of_calm_air_has_no_bearing(self):
+        assert weewx.jsongenerator._reduce('vecdir', [0j, 0j], [1, 1]) is None
 
 
 class TestTiers:
@@ -954,121 +971,97 @@ class TestDayTier:
         assert not tier_files(archive_dir, 'days')
 
 
+def slow_clock(monkeypatch):
+    """Make every file cost the generator 50 s, so a budget of 30 s is spent at once.
+
+    The clock replaces the module 'time' inside weewx.jsongenerator only. Every other
+    function of the module stays the real one.
+    """
+    ticks = itertools.count(0, 50)
+    fake = types.SimpleNamespace(**{name: getattr(time, name) for name in dir(time)
+                                    if not name.startswith('_')})
+    fake.time = lambda: next(ticks)
+    monkeypatch.setattr(weewx.jsongenerator, 'time', fake)
+
+
 class TestBudget:
     """Building a long history across several reports instead of one long one."""
 
-    _whole = {}
+    OPTIONS = {'budget': '30', 'months': '2', 'month_resolution': '3600'}
 
-    @classmethod
-    def whole_count(cls, config_dict, tmp_path_factory=None):
-        """How many slots the file has when nothing gets in the way."""
-        if 'count' not in cls._whole:
-            import tempfile
-            target = tempfile.mkdtemp(prefix='whole-')
-            data_dir = run_generator(config_dict, target,
-                                     gen_ts=parameters.synthetic_dict['stop_ts'])
-            with open(os.path.join(data_dir, 'archive', 'tempdew-2010.json'),
-                      encoding='utf-8') as fd:
-                cls._whole['count'] = json.load(fd)['count']
-        return cls._whole['count']
+    @staticmethod
+    def archive(data_dir):
+        with open(os.path.join(data_dir, 'archive', 'index.json'), encoding='utf-8') as fd:
+            index = json.load(fd)
+        return {(g['name'], stamp) for g in index['groups'] for kind, _ in
+                weewx.jsongenerator.TIERS for stamp in g.get(kind, {})}
 
-    def test_a_file_too_big_for_the_budget_is_finished_later(self, config_dict,
-                                                             tmp_path):
-        """The budget can cut a file short, and later runs finish it.
+    def test_a_spent_budget_defers_whole_files(self, config_dict, tmp_path, monkeypatch):
+        """Once the budget is spent, a report starts no further file.
 
-        On a slow machine, one year can cost more than the whole budget. So the file
-        is written with the slots done so far, and the next run extends it.
+        The newest span comes first, so the month in progress is written before the
+        month before it.
         """
+        slow_clock(monkeypatch)
         stop_ts = parameters.synthetic_dict['stop_ts']
-        name = os.path.join('data', 'archive', 'tempdew-2010.json')
-        path = os.path.join(str(tmp_path), name)
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
+                                 archive_options=self.OPTIONS)
+        this_month = time.strftime('%Y-%m', time.localtime(stop_ts))
+        assert self.archive(data_dir) == {('tempdew', this_month)}
 
-        run_generator(config_dict, tmp_path, gen_ts=stop_ts,
-                      archive_options={'budget': '1'})
-        with open(path, encoding='utf-8') as fd:
-            first = json.load(fd)
-        assert first['count'] < self.whole_count(config_dict), \
-            "the budget did not cut the file short"
-
-        seen = [first['count']]
-        for _ in range(3):
-            run_generator(config_dict, tmp_path, gen_ts=stop_ts,
-                          archive_options={'budget': '1'})
-            with open(path, encoding='utf-8') as fd:
-                seen.append(json.load(fd)['count'])
-
-        assert seen == sorted(seen), "the file did not grow monotonically: %s" % seen
-        assert seen[-1] > seen[0], "later runs added nothing"
-
-    def test_the_short_file_says_how_far_it_got(self, config_dict, tmp_path):
-        """A file cut short by the budget says in 'newest' how far it got.
-
-        Otherwise the next run would take the file as complete.
-        """
-        stop_ts = parameters.synthetic_dict['stop_ts']
-        run_generator(config_dict, tmp_path, gen_ts=stop_ts,
-                      archive_options={'budget': '1'})
-        path = os.path.join(str(tmp_path), 'data', 'archive', 'tempdew-2010.json')
-        with open(path, encoding='utf-8') as fd:
-            payload = json.load(fd)
-
-        assert payload['newest'] < stop_ts
-        assert payload['newest'] <= payload['start'] + payload['count'] * payload['interval']
-        assert payload['resume_ts'] is not None
-
-    def test_it_ends_up_the_same_as_doing_it_in_one_go(self, config_dict,
-                                                       tmp_path_factory):
-        """Built in pieces or all at once, the file has to say the same thing."""
+    def test_later_reports_finish_the_archive(self, config_dict, tmp_path_factory,
+                                              monkeypatch):
+        """Built across reports or all at once, the files have to say the same thing."""
+        slow_clock(monkeypatch)
         stop_ts = parameters.synthetic_dict['stop_ts']
         pieces = tmp_path_factory.mktemp('pieces')
-        for _ in range(40):
-            run_generator(config_dict, pieces, gen_ts=stop_ts,
-                          archive_options={'budget': '1'})
+        seen = []
+        for _ in range(20):
+            data_dir = run_generator(config_dict, pieces, gen_ts=stop_ts,
+                                     archive_options=self.OPTIONS)
+            seen.append(len(self.archive(data_dir)))
+            if len(seen) > 1 and seen[-1] == seen[-2]:
+                break
+        assert seen == sorted(seen) and seen[-1] > seen[0], seen
+
         whole = tmp_path_factory.mktemp('whole')
-        run_generator(config_dict, whole, gen_ts=stop_ts)
+        options = dict(self.OPTIONS, budget='0')
+        one_go = run_generator(config_dict, whole, gen_ts=stop_ts, archive_options=options)
+        assert self.archive(data_dir) == self.archive(one_go)
+        for name in tier_files(os.path.join(one_go, 'archive'), 'months') \
+                + tier_files(os.path.join(one_go, 'archive'), 'years'):
+            with open(os.path.join(data_dir, 'archive', name), encoding='utf-8') as fd:
+                built_up = json.load(fd)
+            with open(os.path.join(one_go, 'archive', name), encoding='utf-8') as fd:
+                assert json.load(fd)['series'] == built_up['series'], name
 
-        name = os.path.join('data', 'archive', 'tempdew-2010.json')
-        with open(os.path.join(str(pieces), name), encoding='utf-8') as fd:
-            built_up = json.load(fd)
-        with open(os.path.join(str(whole), name), encoding='utf-8') as fd:
-            one_go = json.load(fd)
+    def test_deferred_files_stay_in_the_index(self, config_dict, tmp_path, monkeypatch):
+        """A report that the budget stops early keeps the earlier files in the index.
 
-        assert built_up['count'] == one_go['count'], "the pieces did not reach the end"
-        assert built_up['series'] == one_go['series']
-
-    def test_deferred_files_stay_in_the_index(self, config_dict, tmp_path):
-        """A run that the budget stops early keeps earlier files in the index.
-
-        The index is built from the files this run touched. Dropping the others would
-        hide the page's history until a later run reaches them again.
+        Dropping them would hide the page's history until a later report reaches them
+        again.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
-        full = run_generator(config_dict, tmp_path, gen_ts=stop_ts)
-        index_path = os.path.join(full, 'archive', 'index.json')
-        with open(index_path, encoding='utf-8') as fd:
-            before = json.load(fd)
+        before = self.archive(run_generator(config_dict, tmp_path, gen_ts=stop_ts,
+                                            archive_options=self.OPTIONS))
+        slow_clock(monkeypatch)
+        # An hour later, with a rebuild due, every file is due, and the budget is spent
+        # after the first.
+        after = self.archive(run_generator(
+            config_dict, tmp_path, gen_ts=stop_ts + 3600,
+            archive_options=dict(self.OPTIONS, rebuild='1')))
+        assert after == before
 
-        # Nothing is due now, and the budget is spent at once. The index must come out
-        # the same anyway, because every file is still there.
-        run_generator(config_dict, tmp_path, gen_ts=stop_ts,
-                      archive_options={'budget': '1'})
-        with open(index_path, encoding='utf-8') as fd:
-            after = json.load(fd)
-
-        named = lambda idx: {(g['name'], y) for g in idx['groups']
-                             for y in g.get('years', {})}
-        assert named(after) == named(before)
-        assert {g['name'] for g in after['groups']} == {g['name'] for g in before['groups']}
-
-    def test_the_day_view_is_never_deferred(self, config_dict, tmp_path):
+    def test_the_day_view_is_never_deferred(self, config_dict, tmp_path, monkeypatch):
         """The budget never defers the day tier, which the page draws today from."""
+        slow_clock(monkeypatch)
         stop_ts = parameters.synthetic_dict['stop_ts']
         data_dir = run_generator(
             config_dict, tmp_path, gen_ts=stop_ts,
-            archive_options={'budget': '1', 'days': '3', 'day_resolution': '1800'})
+            archive_options=dict(self.OPTIONS, days='3', day_resolution='1800'))
         archive_dir = os.path.join(data_dir, 'archive')
 
-        days = {stamp_of(f) for f in tier_files(archive_dir, 'days')}
+        days = {stamp_of(f) for f in tier_files(archive_dir, 'days', 'tempdew')}
         assert len(days) == 3, days
 
 
