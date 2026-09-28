@@ -136,12 +136,10 @@ class ImageGenerator(weewx.reportengine.ReportGenerator):
 
         Args:
             plotgen_ts (int): A timestamp for which the plot will be valid. This is generally the last
-            datum to be plotted.
-
+                datum to be plotted.
             plot_options (dict): A dictionary of plot options.
-
             plot_dict (ConfigObj.section): A section in a ConfigObj. Each subsection will contain data about plots
-            to be generated
+                to be generated
 
         Returns:
             weeplot.genplot.TimePlot|None An instance of weeplot.genplot.TimePlot or None. If the
@@ -405,8 +403,8 @@ def _get_check_domain(skip_if_empty, x_domain):
         x_domain (TimeSpan): The time domain over which we should check for data.
 
     Returns:
-        tuple[int, int] | None: The time domain over which we should check for data, or None if we
-        shouldn't check for data at all.
+        TimeSpan | tuple[int|float, int|float] | None: The time domain over which we should check
+        for data, or None if we shouldn't check for data at all.
 
     """
     # Convert to lower-case. It might not be a string, so be prepared for an AttributeError
@@ -432,14 +430,12 @@ def _skip_if_empty(db_manager, var_type, check_domain):
     Args:
         db_manager (weewx.manager.Manager): An open instance of weewx.manager.Manager, or a
             subclass.
-
         var_type (str): An observation type to check (e.g., 'outTemp')
+        check_domain (TimeSpan | tuple[int|float, int|float] | None): A TimeSpan or two-way tuple of
+            timestamps that contain the time domain to be checked for non-null data.
 
-        check_domain (tuple[int|float, int|flat]|None): A two-way tuple of timestamps that contain the
-            time domain to be checked for non-null data.
-
-    Returns:
-        bool: True if there is no non-null data in the domain. False otherwise.
+        Returns:
+            bool: True if there is no non-null data in the domain. False otherwise.
     """
     if check_domain is None:
         return False
