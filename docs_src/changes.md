@@ -1,6 +1,16 @@
 WeeWX change history
 --------------------
 
+### 5.5.3 dd-Mmm-yyyy
+
+Package upgrades now read `HTML_ROOT` from `weewx.conf` before setting ownership on
+the reporting directory. A station that had moved `HTML_ROOT` was left with the
+directory owned by whoever created it, and `weewxd` could not write its reports there.
+A relative `HTML_ROOT` is resolved against `WEEWX_ROOT`.
+Fixes [Issue #1046](https://github.com/weewx/weewx/issues/1046).
+[PR #1120](https://github.com/weewx/weewx/pull/1120).
+
+
 ### 5.5.2 23-Sep-2026
 
 Fixed the version check implementation for generating maintainer version of
