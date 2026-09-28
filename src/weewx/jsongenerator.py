@@ -176,11 +176,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         t1 = time.time()
 
         opts = _archive_settings(arch_dict)
-        years, year_resolution = opts['years'], opts['year_resolution']
-        old_year_resolution = opts['old_year_resolution']
-        months, month_resolution = opts['months'], opts['month_resolution']
-        days, day_resolution = opts['days'], opts['day_resolution']
-        budget, extrema, rebuild_after = opts['budget'], opts['extremes'], opts['rebuild']
         rounding = to_int(self.gen_dict.get('round', 2))
         # The page reads the archive from 'archive' below the JSON directory.
         arch_root = os.path.join(self.data_root, 'archive')
@@ -210,7 +205,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         index = _index_of(known)
         previous_first = known['first']
         now_ts = int(gen_ts or time.time())
-        rebuilding = _rebuild_due(known['rebuilt'], now_ts, rebuild_after)
+        rebuilding = _rebuild_due(known['rebuilt'], now_ts, opts['rebuild'])
 
         def write_index():
             """Write the archive index.json for the files that exist so far.
@@ -300,7 +295,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     # spans unbuilt, not this year.
                     for span in reversed(list(spans)):
                         # A file deferred by the budget is written by a later report.
-                        if metered and budget and counters['spent'] >= budget:
+                        if metered and opts['budget'] and counters['spent'] >= opts['budget']:
                             counters['deferred'] += 1
                             continue
                         stamp = stamp_of(span)
@@ -332,7 +327,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                         started = time.time()
                         payload = self._archive_span(
                             group_dict[plotname], plot_options, span, grid, rounding,
-                            group_name, tier_from, last_ts, carry, extrema)
+                            group_name, tier_from, last_ts, carry, opts['extremes'])
                         counters['spent'] += time.time() - started
                         if payload is None:
                             continue
@@ -346,14 +341,14 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                         except OSError as e:
                             log.error("Unable to save to file '%s': %s", out_file, e)
 
-                if days and pass_name == 'days':
+                if opts['days'] and pass_name == 'days':
                     # The day tier is exempt from the budget. It is cheap, and a report
                     # that deferred it would leave the page without today. It is also the
                     # only tier whose old files are deleted. See _drop_old_days().
-                    grid = day_resolution or _archive_interval(db_manager, last_ts)
+                    grid = opts['day_resolution'] or _archive_interval(db_manager, last_ts)
                     days_from = max(int(first_ts),
                                     weeutil.weeutil.startOfDay(int(last_ts))
-                                    - (days - 1) * 86400)
+                                    - (opts['days'] - 1) * 86400)
                     day_spans = list(weeutil.weeutil.genDaySpans(days_from, last_ts))
                     day_stamp = lambda span: time.strftime('%Y-%m-%d',
                                                            time.localtime(span.start))
@@ -363,20 +358,21 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                                    {day_stamp(span) for span in day_spans},
                                    index.get(group_name))
 
-                if months and pass_name == 'rest':
-                    months_from = _months_back(int(last_ts), months, int(first_ts))
+                if opts['months'] and pass_name == 'rest':
+                    months_from = _months_back(int(last_ts), opts['months'], int(first_ts))
                     write_tier(
                         weeutil.weeutil.genMonthSpans(months_from, last_ts), 'months',
                         lambda span: time.strftime('%Y-%m', time.localtime(span.start)),
-                        lambda stamp, existing: month_resolution,
+                        lambda stamp, existing: opts['month_resolution'],
                         months_from)
 
                 if pass_name == 'rest':
                     write_tier(
                         weeutil.weeutil.genYearSpans(first_ts, last_ts), 'years',
                         lambda span: time.strftime('%Y', time.localtime(span.start)),
-                        lambda year, existing: _year_grid(int(year), this_year, years,
-                                                          year_resolution, old_year_resolution,
+                        lambda year, existing: _year_grid(int(year), this_year, opts['years'],
+                                                          opts['year_resolution'],
+                                                          opts['old_year_resolution'],
                                                           existing),
                         first_ts)
 
