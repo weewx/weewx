@@ -560,14 +560,14 @@ class TestExtensionInstall:
 
     def test_http_install(self):
         self.engine.install_extension(
-            'https://github.com/chaunceygardiner/weewx-loopdata/releases/download/v3.3.2/weewx-loopdata-3.3.2.zip',
+            'https://github.com/tkeffer/filepile/archive/refs/tags/v0.4.zip',
             no_confirm=True)
         # Test that it got installed correctly
         assert os.path.isfile(os.path.join(self.engine.root_dict['USER_DIR'],
-                                           'loopdata.py'))
+                                           'filepile.py'))
         assert os.path.isfile(os.path.join(self.engine.root_dict['USER_DIR'],
                                            'installer',
-                                           'loopdata',
+                                           'filepile',
                                            'install.py'))
 
     def test_uninstall(self):
