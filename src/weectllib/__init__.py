@@ -39,10 +39,7 @@ def parse_dates(date=None, from_date=None, to_date=None, as_datetime=False):
 
         # there is a --date but is it valid
         try:
-            if as_datetime:
-                from_val = to_val = datetime.datetime.fromisoformat(date)
-            else:
-                from_val = to_val = datetime.date.fromisoformat(date)
+            from_val = to_val = parse_iso(date, as_datetime)
         except ValueError:
             raise ValueError("Invalid --date option specified.")
 
@@ -50,19 +47,13 @@ def parse_dates(date=None, from_date=None, to_date=None, as_datetime=False):
         # we don't have --date. Look for --from and/or --to
         if from_date:
             try:
-                if as_datetime:
-                    from_val = datetime.datetime.fromisoformat(from_date)
-                else:
-                    from_val = datetime.date.fromisoformat(from_date)
+                from_val = parse_iso(from_date, as_datetime)
             except ValueError:
                 raise ValueError("Invalid --from option specified.")
 
         if to_date:
             try:
-                if as_datetime:
-                    to_val = datetime.datetime.fromisoformat(to_date)
-                else:
-                    to_val = datetime.date.fromisoformat(to_date)
+                to_val = parse_iso(to_date, as_datetime)
             except ValueError:
                 raise ValueError("Invalid --to option specified.")
 
@@ -113,3 +104,18 @@ def _do_dispatch(namespace, extra_args=None):
     if dry_run:
         print("This was a dry run. Nothing was actually done.")
         log.info("This was a dry run. Nothing was actually done.")
+
+def parse_iso(date_str, as_datetime):
+    """Parse a date string in ISO format.
+
+    Works for all versions of Python.
+    """
+    for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
+        try:
+            dt = datetime.datetime.strptime(date_str, fmt)
+            if not as_datetime:
+                dt = dt.date()
+            return dt
+        except ValueError:
+            continue
+    raise ValueError(f"Invalid date string: {date_str}")
