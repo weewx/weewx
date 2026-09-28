@@ -230,18 +230,13 @@ def nominal_spans(label):
         7200
         >>> print(nominal_spans('120M'))
         7200
-        >>> print(nominal_spans(None))
-        None
 
     Args:
-        label(str|float|int|None): A time, possibly with a duration suffix.
+        label(str|float|int): A time, possibly with a duration suffix.
 
     Returns:
-        int|float|None:
+        int|float:
     """
-    if label is None:
-        return None
-
     if isinstance(label, str):
         label = duration_synonyms.get(label.lower(), label)
         if label.endswith('M'):
@@ -1062,6 +1057,22 @@ def genMonthSpans(start_ts, stop_ts):
 
 
 def genYearSpans(start_ts, stop_ts):
+    """
+    Generates year-long time spans between two given timestamps.
+
+    This function yields `TimeSpan` objects, each representing a full year
+    within the range specified by `start_ts` and `stop_ts`. If the `stop_ts`
+    timestamp corresponds to the exact start of a year (January 1, 00:00:00),
+    it adjusts to include only years prior to the `stop_ts`.
+
+    Args:
+        start_ts (int|float|None): Starting timestamp.
+        stop_ts (int|float|None): Stopping timestamp.
+
+    Yields:
+        TimeSpan: Representations of year-long intervals between `start_ts`
+        and `stop_ts`.
+    """
     if None in (start_ts, stop_ts):
         return
     _start_date = datetime.date.fromtimestamp(start_ts)
