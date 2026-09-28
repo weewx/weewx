@@ -76,6 +76,12 @@ _ARCHIVE_NAME = re.compile(r'^(.+)-(\d{4})(-\d{2})?(-\d{2})?\.json$')
 
 class JSONGenerator(weewx.reportengine.ReportGenerator):
     """Generate JSON time series from plot definitions."""
+    EMPTY_INDEX = {
+        'first': None,
+        'rebuilt': None,
+        'labels': {},
+        **{key: {} for tier in TIERS for key in tier}
+    }
 
     def __init__(self, config_dict,
                  skin_dict,
@@ -90,13 +96,15 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         self.formatter = None
         self.gen_dict = None
         self.generic_dict = None
-        self.plot_dict = None
+        self.plot_dict = configobj.ConfigObj()
         self.text_dict = None
 
     def run(self):
         self.setup()
         if not self.plot_dict:
             # No plot definitions found. Return.
+            log.info("No plot definitions in [JSONGenerator] or [ImageGenerator]. "
+                     "No JSON written.")
             return
         self.gen_skin_json()
         self.gen_archive(self.gen_ts)
@@ -118,15 +126,11 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                                       self.gen_dict.get('json_dest_dir', 'data'))
 
         # Search for plot definitions. Try [JSONGenerator] first, then [ImageGenerator].
-        self.plot_dict = configobj.ConfigObj()
         for name in ('JSONGenerator', 'ImageGenerator'):
             section = self.skin_dict.get(name)
             if section is not None and _holds_plots(section):
                 self.plot_dict = section
                 break
-        else:
-            log.info("No plot definitions in [JSONGenerator] or [ImageGenerator]. "
-                     "No JSON written.")
 
         self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
@@ -134,9 +138,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
     def gen_skin_json(self):
         """Write skin.json, which holds the length of each time span and the unit table.
 
-        The page reads skin.json before it draws a chart. Nothing in skin.json comes
-        from the database, and the configuration changes only with a restart of
-        weewxd. So skin.json is written on the first run only, or when it is missing.
+        The page reads skin.json before it draws a chart. The contents are static, so it is
+        written on the first run only, or when it is missing.
         """
         skin_file = os.path.join(self.data_root, 'skin.json')
         if not self.first_run and os.path.exists(skin_file):
@@ -161,9 +164,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             log.error("Unable to save to file '%s': %s", skin_file, e)
 
     def gen_archive(self, gen_ts):
-        """Write the whole record, one file per plot group and span.
+        """Write the whole archive, one file per plot group and time span.
 
-        The spans are calendar years, and optionally months (the month tier) and days
+        The time spans are calendar years, and optionally months (the month tier) and days
         (the day tier). A span that has ended never changes, so its file is written
         once and then skipped. The page fetches only the spans it shows. See "The JSON
         generator" in the Customization Guide for the format and the cost.
@@ -180,9 +183,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # The page reads the archive from 'archive' below the JSON directory.
         arch_root = os.path.join(self.data_root, 'archive')
 
-        # The plot groups are the plots of [[day_images]], named without the prefix
-        # 'day', e.g., 'tempdew' for 'daytempdew'. 'plot_groups' in skin.conf uses the
-        # same names.
+        # The variable `group_dict` is the set of plots in [[day_images]], without
+        # the prefix 'day', e.g., 'tempdew' for 'daytempdew'.
         try:
             group_dict = self.plot_dict['day_images']
         except KeyError:
@@ -421,7 +423,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 rebuilt:         when the files were last rebuilt in full, or None
         """
         path = os.path.join(arch_root, 'index.json')
-        known = _empty_index()
+        known = JSONGenerator.EMPTY_INDEX
         try:
             with open(path, encoding='utf-8') as fd:
                 index = json.load(fd)
@@ -440,7 +442,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         except (OSError, ValueError, KeyError, TypeError, AttributeError):
             # No index, or one this version cannot read. Start from an empty record,
             # which _reconcile_index() then fills from the files on disk.
-            return _empty_index()
+            return JSONGenerator.EMPTY_INDEX
         return known
 
     @staticmethod
@@ -534,10 +536,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             plot_section (configobj.Section): The plot's section, holding one
                 subsection per line.
             plot_options (dict[str, Any]): The options that apply to it.
-            span (weeutil.weeutil.TimeSpan): The span the file covers.
+            span (weeutil.weeutil.TimeSpan): The time span the file covers.
             resolution (int): The grid it is written on, in seconds.
             rounding (int|None): Decimal places, or None to leave them alone.
-            group_name (str): The plot group, which the file is named after.
+            group_name (str): The plot group, which the file is named after. Something like 'barometer'.
             first_ts (int): The oldest reading in the database.
             last_ts (int): The newest reading in it.
             previous (dict[str, Any]|None): The file this one replaces, as read back
@@ -970,10 +972,9 @@ def _unit_choices(formatter, converter):
 
 
 def _write_json(path, payload):
-    """Write one JSON file atomically and compactly, so a reader never sees half of it.
+    """Write one JSON file atomically and compactly.
 
-    A browser may fetch a file while it is being written. Half an index.json does not
-    parse, and the page then draws nothing until the next poll.
+    An atomic write is needed to avoid parsing errors caused by a partial write..
 
     Args:
         path (str): Where to write the file.
@@ -992,12 +993,6 @@ def _write_json(path, payload):
 def _new_entry():
     """A blank index entry for one plot group."""
     return {'title': None, 'unit_label': None,
-            **{key: {} for tier in TIERS for key in tier}}
-
-
-def _empty_index():
-    """An archive index that names no file."""
-    return {'first': None, 'rebuilt': None, 'labels': {},
             **{key: {} for tier in TIERS for key in tier}}
 
 
