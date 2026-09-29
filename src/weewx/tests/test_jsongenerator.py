@@ -1302,6 +1302,43 @@ class TestArchiveSeriesShapes:
             payload = json.load(fd)
         assert 'min' not in payload['series'][0]
 
+    def test_a_bar_carries_the_extremes_of_each_interval_of_the_file(self, config_dict,
+                                                                    tmp_path):
+        """The hourly rain bar in a day file at fifteen minutes carries the extremes.
+
+        The extremes are per aggregation interval of the file, not of the bar, so the
+        values of the bar are sorted into the intervals of the file a second time.
+        """
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        options = {'days': '2', 'day_resolution': '900', 'extremes': 'rain'}
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
+                                 archive_options=options)
+        archive_dir = os.path.join(data_dir, 'archive')
+        name = tier_files(archive_dir, 'days', 'rain')[0]
+        with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
+            payload = json.load(fd)
+        series = payload['series'][0]
+        assert series['aggregate_interval'] == 3600
+        assert len(series['max']) == payload['count']
+
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        binder = weewx.manager.DBBinder(cd)
+        try:
+            mgr = binder.get_manager('wx_binding')
+            start, interval = payload['start'], payload['interval']
+            for i, highest in enumerate(series['max']):
+                span = weeutil.weeutil.TimeSpan(start + i * interval,
+                                                start + (i + 1) * interval)
+                expected = weewx.units.convert(
+                    weewx.xtypes.get_aggregate('rain', span, 'max', mgr), payload['unit'])
+                if expected[0] is None:
+                    assert highest is None, i
+                else:
+                    assert highest == pytest.approx(expected[0], abs=0.001), i
+            assert any(highest is not None for highest in series['max'])
+        finally:
+            binder.close()
+
     def test_extending_carries_the_extra_arrays_too(self, config_dict,
                                                     tmp_path_factory):
         """Vectors and extremes have to survive the extending path, like values do."""

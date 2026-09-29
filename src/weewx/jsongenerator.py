@@ -752,16 +752,18 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # They come from the readings already read, so they cost no query.
         if buckets is not None and line['var_type'] in extrema \
                 and line['agg'] not in ('min', 'max', 'vecdir') and not components:
+            per_interval, readings = buckets
+            slot_begins = begins
             if line['step'] != resolution:
+                # A bar's intervals are coarser than the slots. Sort the readings
+                # again, into the slots.
                 slot_begins, slot_ends = _intervals(start, stop, resolution)
-                buckets = _bucket(slot_begins, slot_ends,
-                                  bisect.bisect_left(slot_ends, since), *buckets[1])
-            else:
-                slot_begins = begins
+                per_interval = _bucket(slot_begins, slot_ends,
+                                       bisect.bisect_left(slot_ends, since), *readings)
             for which in ('min', 'max'):
                 entry[which] = fill(new_grid(which),
                                     ((slot_begins[i], _reduce(which, vals))
-                                     for i, vals in buckets[0].items()))
+                                     for i, vals in per_interval.items()))
         return entry
 
     def _line_spec(self, line_section, line_name, resolution):
