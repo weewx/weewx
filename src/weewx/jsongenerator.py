@@ -329,8 +329,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
                         started = time.time()
                         payload = self._archive_span(
-                            group_dict[plotname], plot_options, span, grid, rounding,
-                            group_name, tier_from, last_ts, carry, opts['extremes'])
+                            plot_section=group_dict[plotname], plot_options=plot_options,
+                            span=span, resolution=grid, rounding=rounding,
+                            group_name=group_name, first_ts=tier_from, last_ts=last_ts,
+                            previous=carry, extrema=opts['extremes'])
                         counters['spent'] += time.time() - started
                         if payload is None:
                             continue
@@ -361,8 +363,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     day_grid = lambda stamp, existing: (
                         opts['day_resolution'] or existing
                         or _day_interval(db_manager, spans_by_stamp[stamp]))
-                    write_tier(day_spans, 'days', day_stamp, day_grid, days_from,
-                               metered=False)
+                    write_tier(spans=day_spans, kind='days', stamp_of=day_stamp,
+                               grid_of=day_grid, tier_from=days_from, metered=False)
                     _drop_old_days(arch_root, on_disk, group_name,
                                    {day_stamp(span) for span in day_spans},
                                    index.get(group_name))
@@ -370,20 +372,24 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 if opts['months'] and pass_name == 'rest':
                     months_from = _months_back(int(last_ts), opts['months'], int(first_ts))
                     write_tier(
-                        weeutil.weeutil.genMonthSpans(months_from, last_ts), 'months',
-                        lambda span: time.strftime('%Y-%m', time.localtime(span.start)),
-                        lambda stamp, existing: opts['month_resolution'],
-                        months_from)
+                        spans=weeutil.weeutil.genMonthSpans(months_from, last_ts),
+                        kind='months',
+                        stamp_of=lambda span: time.strftime('%Y-%m',
+                                                            time.localtime(span.start)),
+                        grid_of=lambda stamp, existing: opts['month_resolution'],
+                        tier_from=months_from)
 
                 if pass_name == 'rest':
                     write_tier(
-                        weeutil.weeutil.genYearSpans(first_ts, last_ts), 'years',
-                        lambda span: time.strftime('%Y', time.localtime(span.start)),
-                        lambda year, existing: _year_grid(int(year), this_year, opts['years'],
-                                                          opts['year_resolution'],
-                                                          opts['old_year_resolution'],
-                                                          existing),
-                        first_ts)
+                        spans=weeutil.weeutil.genYearSpans(first_ts, last_ts),
+                        kind='years',
+                        stamp_of=lambda span: time.strftime('%Y', time.localtime(span.start)),
+                        grid_of=lambda year, existing: _year_grid(
+                            year=int(year), this_year=this_year, years=opts['years'],
+                            year_resolution=opts['year_resolution'],
+                            old_year_resolution=opts['old_year_resolution'],
+                            existing=existing),
+                        tier_from=first_ts)
 
             # Write the index after each pass that has anything to show.
             if any(entry[kind] for entry in index.values() for kind, _ in TIERS):
@@ -596,8 +602,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         for line_name in plot_section.sections:
             line = self._line_spec(plot_section[line_name], line_name, resolution)
             old = old_series.get((line['var_type'], line['agg']))
-            entry = self._archive_series(line, plot_options, start, stop, slots,
-                                         resolution, rounding, extrema, old, previous)
+            entry = self._archive_series(
+                line=line, plot_options=plot_options, start=start, stop=stop,
+                slots=slots, resolution=resolution, rounding=rounding, extrema=extrema,
+                old=old, previous=previous)
             if entry is None:
                 continue
             entry_unit = entry.pop('unit')
@@ -687,8 +695,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     grid[slot] = round(val, rounding) if rounding is not None else val
             return grid
 
-        read = self._read_slots(line, plot_options, mgr, TimeSpan(since, stop), begins,
-                                ends, first)
+        read = self._read_slots(line=line, plot_options=plot_options, mgr=mgr,
+                                span=TimeSpan(since, stop), begins=begins, ends=ends,
+                                first=first)
         if read is None:
             return None
         unit, pairs, buckets = read
@@ -699,8 +708,10 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 old is None or unit is not None and unit != previous.get('unit', unit)):
             # A series the file on disk lacks, e.g., a new sensor, or a unit that has
             # changed since the file was written: calculate the whole span.
-            return self._archive_series(line, plot_options, start, stop, slots,
-                                        resolution, rounding, extrema, None, None)
+            return self._archive_series(
+                line=line, plot_options=plot_options, start=start, stop=stop,
+                slots=slots, resolution=resolution, rounding=rounding, extrema=extrema,
+                old=None, previous=None)
 
         entry = {
             'obs_type': line['var_type'],
