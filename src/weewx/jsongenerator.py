@@ -25,6 +25,7 @@ _archive_span() shows what an archive file holds.
 
 import bisect
 import calendar
+import copy
 import datetime
 import json
 import logging
@@ -423,7 +424,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 rebuilt:         when the files were last rebuilt in full, or None
         """
         path = os.path.join(arch_root, 'index.json')
-        known = JSONGenerator.EMPTY_INDEX
+        # A copy, because the rest of this run fills 'known' in place.
+        known = copy.deepcopy(JSONGenerator.EMPTY_INDEX)
         try:
             with open(path, encoding='utf-8') as fd:
                 index = json.load(fd)
@@ -442,7 +444,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         except (OSError, ValueError, KeyError, TypeError, AttributeError):
             # No index, or one this version cannot read. Start from an empty record,
             # which _reconcile_index() then fills from the files on disk.
-            return JSONGenerator.EMPTY_INDEX
+            return copy.deepcopy(JSONGenerator.EMPTY_INDEX)
         return known
 
     @staticmethod

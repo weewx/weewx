@@ -805,6 +805,20 @@ class TestMonthsBack:
 class TestArchiveMemory:
     """What the archive knows about files it did not write this run."""
 
+    def test_a_missing_index_reads_as_empty_after_another(self, config_dict, tmp_path):
+        """Each read of an index starts empty, whatever was read before.
+
+        Two reports in one weewxd, or two report cycles, must not see each other's
+        index.
+        """
+        data_dir = run_generator(config_dict, tmp_path / 'one')
+        read = weewx.jsongenerator.JSONGenerator._read_archive_index
+        assert read(os.path.join(data_dir, 'archive'))['years']
+
+        empty = read(str(tmp_path / 'nowhere'))
+        assert empty['years'] == {} and empty['labels'] == {}
+        assert empty['first'] is None and empty['rebuilt'] is None
+
     def test_finished_months_stay_available(self, config_dict, tmp_path):
         """The index still names finished months outside the 'months' window.
 
