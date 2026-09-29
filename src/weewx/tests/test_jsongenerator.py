@@ -982,7 +982,7 @@ class TestDayTier:
         assert days[-1] == time.strftime('%Y-%m-%d', time.localtime(stop_ts))
 
     def test_the_grid_is_the_archive_interval(self, config_dict, tmp_path):
-        """A day_resolution of 0 uses the interval stored in the newest record."""
+        """A day_resolution of 0 uses the archive interval of the day's records."""
         stop_ts = parameters.synthetic_dict['stop_ts']
         options = {'days': '2', 'day_resolution': '0'}
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
@@ -993,6 +993,33 @@ class TestDayTier:
             payload = json.load(fd)
 
         assert payload['interval'] == parameters.synthetic_dict['interval']
+
+    def test_a_day_takes_the_interval_most_of_its_records_have(self):
+        """A station that changes its archive interval late in a day keeps the old one.
+
+        The newest record alone would put the whole day on the new interval, and leave
+        most of its slots empty.
+        """
+        import sqlite3
+        connection = sqlite3.connect(':memory:')
+        connection.execute('CREATE TABLE archive (dateTime INTEGER, interval INTEGER)')
+        # Ten records five minutes apart, then three a minute apart.
+        stamps = [300 * n for n in range(1, 11)] + [3000 + 60 * n for n in range(1, 4)]
+        connection.executemany('INSERT INTO archive VALUES (?, ?)',
+                               [(ts, 5 if ts <= 3000 else 1) for ts in stamps])
+
+        class Manager:
+            table_name = 'archive'
+
+            @staticmethod
+            def getSql(sql, args):
+                return connection.execute(sql, tuple(args)).fetchone()
+
+        day = weeutil.weeutil.TimeSpan(0, 86400)
+        assert weewx.jsongenerator._day_interval(Manager, day) == 300
+        # A day without records falls back to five minutes.
+        empty = weeutil.weeutil.TimeSpan(86400, 2 * 86400)
+        assert weewx.jsongenerator._day_interval(Manager, empty) == 300
 
     def test_days_that_fall_out_of_the_window_are_removed(self, config_dict, tmp_path):
         """Day files that fall out of the 'days' window are deleted.

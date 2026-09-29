@@ -95,8 +95,8 @@ tier does not grow.
 
 #### day_resolution
 
-The grid the day files are written on. `0`, the default, uses the station's
-archive interval.
+The grid the day files are written on. `0`, the default, uses the archive
+interval that most archive records of the day have.
 
 #### budget
 

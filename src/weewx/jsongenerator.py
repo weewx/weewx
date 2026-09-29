@@ -348,15 +348,21 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     # The day tier is exempt from the budget. It is cheap, and a report
                     # that deferred it would leave the page without today. It is also the
                     # only tier whose old files are deleted. See _drop_old_days().
-                    grid = opts['day_resolution'] or _archive_interval(db_manager, last_ts)
                     days_from = max(int(first_ts),
                                     weeutil.weeutil.startOfDay(int(last_ts))
                                     - (opts['days'] - 1) * 86400)
                     day_spans = list(weeutil.weeutil.genDaySpans(days_from, last_ts))
                     day_stamp = lambda span: time.strftime('%Y-%m-%d',
                                                            time.localtime(span.start))
-                    write_tier(day_spans, 'days', day_stamp, lambda stamp, existing: grid,
-                               days_from, metered=False)
+                    spans_by_stamp = {day_stamp(span): span for span in day_spans}
+                    # A 'day_resolution' of 0 takes the archive interval of the day's
+                    # records. A day file already written keeps its own, so the database
+                    # is asked once per day.
+                    day_grid = lambda stamp, existing: (
+                        opts['day_resolution'] or existing
+                        or _day_interval(db_manager, spans_by_stamp[stamp]))
+                    write_tier(day_spans, 'days', day_stamp, day_grid, days_from,
+                               metered=False)
                     _drop_old_days(arch_root, on_disk, group_name,
                                    {day_stamp(span) for span in day_spans},
                                    index.get(group_name))
@@ -1029,8 +1035,8 @@ def _archive_settings(arch_dict):
         'months': to_int(get('months')),
         'month_resolution': seconds('month_resolution'),
         # The day tier, the finest: one file per day, which the day view is drawn
-        # from. A 'day_resolution' of 0 means the archive interval the station
-        # actually uses. See _archive_interval().
+        # from. A 'day_resolution' of 0 means the archive interval of the day's
+        # records. See _day_interval().
         'days': to_int(get('days')),
         'day_resolution': seconds('day_resolution'),
         # 'budget' is how many seconds the year and month tiers may take per report.
@@ -1158,23 +1164,28 @@ def _index_of(known):
     return index
 
 
-def _archive_interval(db_manager, last_ts):
-    """Return the archive interval in seconds, as stored in the newest record.
+def _day_interval(db_manager, span):
+    """Return the archive interval that most archive records of a day have, in seconds.
 
-    A driver that reads the interval from the hardware can override the configured
-    one. The record holds the interval actually used. Falls back to 300 seconds.
+    A station can change its archive interval, and a driver can take it from the
+    hardware rather than from weewx.conf. So each day file takes the interval of the
+    records of its own day.
 
     Args:
         db_manager (weewx.manager.Manager): The open database.
-        last_ts (int): The newest reading in it.
+        span (weeutil.weeutil.TimeSpan): The day.
+
+    Returns:
+        int: The archive interval, or 300 if the day holds no archive record.
     """
     try:
-        record = db_manager.getRecord(int(last_ts))
-        if record and record.get('interval'):
-            return int(record['interval']) * 60
-    except (weedb.DatabaseError, TypeError, ValueError, KeyError):
-        pass
-    return 300
+        row = db_manager.getSql("SELECT interval FROM %s "
+                                "WHERE dateTime > ? AND dateTime <= ? "
+                                "GROUP BY interval ORDER BY COUNT(*) DESC LIMIT 1"
+                                % db_manager.table_name, span)
+    except weedb.DatabaseError:
+        row = None
+    return int(row[0]) * 60 if row and row[0] else 300
 
 
 def _drop_old_days(arch_root, on_disk, group_name, keep, entry):
