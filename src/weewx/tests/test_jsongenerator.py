@@ -215,7 +215,7 @@ class TestPlotDefinitions:
         assert series['label'] == 'Mine'
         assert series['color'] == '#118844'
         with open(os.path.join(data_dir, 'skin.json'), encoding='utf-8') as fd:
-            assert json.load(fd)['spans'] == {'day_images': 6 * 3600}
+            assert json.load(fd)['time_lengths'] == {'day_images': 6 * 3600}
 
     def test_the_image_generator_section_still_serves(self, config_dict, tmp_path):
         """A skin written before the JSON generator needs no new configuration."""
@@ -268,21 +268,22 @@ class TestSkinJson:
         # A lost skin.json is written again.
         os.remove(path)
         run_generator(config_dict, tmp_path, first_run=False)
-        assert self.skin_json(os.path.dirname(path))['spans']
+        assert self.skin_json(os.path.dirname(path))['time_lengths']
 
-    def test_skin_json_holds_the_spans_and_the_units(self, config_dict, tmp_path):
+    def test_skin_json_holds_the_time_lengths_and_the_units(self, config_dict, tmp_path):
         skin_json = self.skin_json(run_generator(config_dict, tmp_path))
-        assert sorted(skin_json) == ['spans', 'units']
-        assert skin_json['spans'] == {'day_images': 27 * 3600, 'week_images': 7 * 86400}
+        assert sorted(skin_json) == ['time_lengths', 'units']
+        assert skin_json['time_lengths'] == {'day_images': 27 * 3600,
+                                             'week_images': 7 * 86400}
 
-    def test_the_span_section_sets_the_length(self, config_dict, tmp_path):
-        """A plot's own time_length does not change the length of its span."""
+    def test_the_time_period_sets_the_time_length(self, config_dict, tmp_path):
+        """A plot's own time_length does not change the one of its time period."""
         skin_dict = build_skin_dict(str(tmp_path))
         day_images = skin_dict['ImageGenerator']['day_images']
         for plotname in day_images.sections:
             day_images[plotname]['time_length'] = '6h'
         skin_json = self.skin_json(TestPlotDefinitions.run(config_dict, skin_dict))
-        assert skin_json['spans']['day_images'] == 27 * 3600
+        assert skin_json['time_lengths']['day_images'] == 27 * 3600
 
     def test_the_index_says_which_units_the_report_used(self, config_dict, tmp_path):
         """units['report'] gives the unit the report renders each group in.
@@ -719,13 +720,14 @@ class TestSlots:
 
     def test_a_reading_belongs_to_the_interval_it_ends(self):
         """A reading stamped t belongs to the interval with begin < t <= end."""
-        buckets = weewx.jsongenerator._bucket([0, 10], [10, 20], 0,
-                                              [5, 10, 11, 20, 21], [1, 2, 3, 4, 5])
-        assert buckets == {0: [1, 2], 1: [3, 4]}
+        per_interval = weewx.jsongenerator._sort_into_intervals(
+            [0, 10], [10, 20], 0, [5, 10, 11, 20, 21], [1, 2, 3, 4, 5])
+        assert per_interval == {0: [1, 2], 1: [3, 4]}
 
-    def test_a_missing_reading_is_left_out(self):
-        buckets = weewx.jsongenerator._bucket([0], [10], 0, [5, 6], [None, 2.0])
-        assert buckets == {0: [2.0]}
+    def test_a_missing_value_is_left_out(self):
+        per_interval = weewx.jsongenerator._sort_into_intervals(
+            [0], [10], 0, [5, 6], [None, 2.0])
+        assert per_interval == {0: [2.0]}
 
     @pytest.mark.parametrize('agg, expected', [
         ('avg', 2.0), ('sum', 6.0), ('min', 1.0), ('max', 3.0),
@@ -762,11 +764,12 @@ class TestSlots:
             weewx.units.ValueTuple([0, 900], 'unix_epoch', 'group_time'),
             weewx.units.ValueTuple([900, 1200], 'unix_epoch', 'group_time'),
             weewx.units.ValueTuple([north, east], 'meter_per_second', 'group_speed')))
-        line = {'agg': 'vecdir', 'var_type': 'wind', 'step': 3600, 'options': {}}
+        line = {'aggregate_type': 'vecdir', 'var_type': 'wind',
+                'aggregate_interval': 3600, 'options': {}}
 
-        _, pairs, _ = generator._read_slots(line, {}, None,
-                                            weeutil.weeutil.TimeSpan(0, 3600), [0], [3600],
-                                            0)
+        _, pairs, _ = generator._aggregate_line(line, {}, None,
+                                                weeutil.weeutil.TimeSpan(0, 3600), [0],
+                                                [3600], 0)
         assert pairs == [(0, pytest.approx(18.43, abs=0.01))]
 
     def test_vecdir_matches_the_database(self, config_dict, tmp_path):
@@ -804,8 +807,8 @@ class TestTiers:
     @staticmethod
     def grid(year, this_year=2026, years=2, year_resolution=3600,
              old_year_resolution=14400, existing=None):
-        return weewx.jsongenerator._year_grid(year, this_year, years, year_resolution,
-                                              old_year_resolution, existing)
+        return weewx.jsongenerator._year_interval(year, this_year, years, year_resolution,
+                                                  old_year_resolution, existing)
 
     def test_the_recent_years_get_the_finer_grid(self):
         assert self.grid(2026) == 3600
@@ -1016,10 +1019,10 @@ class TestDayTier:
                 return connection.execute(sql, tuple(args)).fetchone()
 
         day = weeutil.weeutil.TimeSpan(0, 86400)
-        assert weewx.jsongenerator._day_interval(Manager, day) == 300
+        assert weewx.jsongenerator._archive_interval_of_day(Manager, day) == 300
         # A day without records falls back to five minutes.
         empty = weeutil.weeutil.TimeSpan(86400, 2 * 86400)
-        assert weewx.jsongenerator._day_interval(Manager, empty) == 300
+        assert weewx.jsongenerator._archive_interval_of_day(Manager, empty) == 300
 
     def test_days_that_fall_out_of_the_window_are_removed(self, config_dict, tmp_path):
         """Day files that fall out of the 'days' window are deleted.

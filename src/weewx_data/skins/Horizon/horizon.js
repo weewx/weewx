@@ -1184,8 +1184,8 @@
 
   /* ------------------------------------------------------------- skin.json */
 
-  /* `manifest` holds data/skin.json: the length of each time span (`spans`) and
-     the unit table (`units`). */
+  /* `manifest` holds data/skin.json: the `time_length` of each time period in
+     skin.conf (`time_lengths`) and the unit table (`units`). */
   var manifest = null;
 
   /* --------------------------------------------------------- archive files */
@@ -1210,18 +1210,18 @@
      before. A time span reached with the arrows or the calendar is a calendar unit
      instead, e.g., Tuesday, week 33, July or 2025.
 
-     The values in PERIOD_SECONDS are defaults. adoptSpans replaces them with the
-     `time_length` of [[day_images]], [[week_images]] and so on in skin.conf, which
-     data/skin.json carries as `spans`. */
+     The values in PERIOD_SECONDS are defaults. adoptTimeLengths replaces them with
+     the `time_length` of [[day_images]], [[week_images]] and so on in skin.conf,
+     which data/skin.json carries as `time_lengths`. */
   var PERIOD_SECONDS = { day: 27 * 3600, week: 7 * 86400, month: 30 * 86400, year: 365 * 86400 };
 
-  function adoptSpans(manifest) {
-    if (!manifest || !manifest.spans) return;
-    Object.keys(manifest.spans).forEach(function (group) {
-      /* data/skin.json names a time span by its section in skin.conf, e.g.
+  function adoptTimeLengths(manifest) {
+    if (!manifest || !manifest.time_lengths) return;
+    Object.keys(manifest.time_lengths).forEach(function (section) {
+      /* data/skin.json names a time period by its section in skin.conf, e.g.
          'day_images', and the page names it 'day'. */
-      var period = group.replace(/_images$/, '');
-      var seconds = parseInt(manifest.spans[group], 10);
+      var period = section.replace(/_images$/, '');
+      var seconds = parseInt(manifest.time_lengths[section], 10);
       if (seconds > 0) PERIOD_SECONDS[period] = seconds;
     });
   }
@@ -1564,7 +1564,7 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (json) {
         manifest = json || {};
-        adoptSpans(manifest);
+        adoptTimeLengths(manifest);
         if (manifest.units) unitChoices = manifest.units;
         return manifest;
       })
@@ -1693,7 +1693,7 @@
       var ai = res[1];
       var groups = CFG.plotGroups || [];
       /* The time span on screen is measured only once data/skin.json has
-         loaded. adoptSpans has then replaced the defaults in PERIOD_SECONDS with
+         loaded. adoptTimeLengths has then replaced the defaults in PERIOD_SECONDS with
          the `time_length` of skin.conf. Measured earlier, the first Year chart
          after a page load would span 365 days instead of the 365.25 days of '1y'. */
       var win = currentWindow(period);
