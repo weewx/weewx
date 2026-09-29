@@ -23,6 +23,7 @@ import weewx
 import weewx.defaults
 import weewx.imagegenerator
 import weewx.jsongenerator
+import weewx.manager
 import weewx.reportengine
 import weewx.station
 import weewx.units
@@ -719,35 +720,82 @@ class TestSlots:
     def test_a_reading_belongs_to_the_interval_it_ends(self):
         """A reading stamped t belongs to the interval with begin < t <= end."""
         buckets = weewx.jsongenerator._bucket([0, 10], [10, 20], 0,
-                                              [5, 10, 11, 20, 21], [1, 2, 3, 4, 5],
-                                              [1] * 5)
-        assert buckets == {0: ([1, 2], [1, 1]), 1: ([3, 4], [1, 1])}
+                                              [5, 10, 11, 20, 21], [1, 2, 3, 4, 5])
+        assert buckets == {0: [1, 2], 1: [3, 4]}
 
     def test_a_missing_reading_is_left_out(self):
-        buckets = weewx.jsongenerator._bucket([0], [10], 0, [5, 6], [None, 2.0], [1, 1])
-        assert buckets == {0: ([2.0], [1])}
+        buckets = weewx.jsongenerator._bucket([0], [10], 0, [5, 6], [None, 2.0])
+        assert buckets == {0: [2.0]}
 
     @pytest.mark.parametrize('agg, expected', [
         ('avg', 2.0), ('sum', 6.0), ('min', 1.0), ('max', 3.0),
         ('first', 3.0), ('last', 1.0),
     ])
     def test_the_simple_aggregations(self, agg, expected):
-        assert weewx.jsongenerator._reduce(agg, [3.0, 2.0, 1.0], [1, 1, 1]) == expected
+        assert weewx.jsongenerator._reduce(agg, [3.0, 2.0, 1.0]) == expected
 
     def test_a_vector_compares_by_its_length(self):
-        assert weewx.jsongenerator._reduce('max', [3j, 1 + 1j], [1, 1]) == 3j
+        assert weewx.jsongenerator._reduce('max', [3j, 1 + 1j]) == 3j
 
-    def test_vecdir_is_the_bearing_of_the_weighted_sum(self):
+    def test_vecdir_is_the_bearing_of_the_sum(self):
         north, east = weeutil.weeutil.to_complex(1.0, 0.0), \
             weeutil.weeutil.to_complex(1.0, 90.0)
-        assert weewx.jsongenerator._reduce('vecdir', [north, east], [1, 1]) \
-            == pytest.approx(45.0)
-        # A reading over a longer interval counts for more, as in the database.
-        assert weewx.jsongenerator._reduce('vecdir', [north, east], [3, 1]) \
+        assert weewx.jsongenerator._reduce('vecdir', [north, east]) == pytest.approx(45.0)
+        assert weewx.jsongenerator._reduce('vecdir', [3 * north, east]) \
             == pytest.approx(18.43, abs=0.01)
 
     def test_vecdir_of_calm_air_has_no_bearing(self):
-        assert weewx.jsongenerator._reduce('vecdir', [0j, 0j], [1, 1]) is None
+        assert weewx.jsongenerator._reduce('vecdir', [0j, 0j]) is None
+
+    def test_vecdir_weighs_each_reading_by_its_archive_interval(self, config_dict,
+                                                                 tmp_path, monkeypatch):
+        """A reading over a longer interval counts for more, as in the database."""
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        generator = weewx.jsongenerator.JSONGenerator(
+            cd, build_skin_dict(str(tmp_path)), None, first_run=True,
+            stn_info=weewx.station.StationInfo(**cd['Station']))
+        generator.setup()
+        north = weeutil.weeutil.to_complex(1.0, 0.0)
+        east = weeutil.weeutil.to_complex(1.0, 90.0)
+        # North for 900 s, then east for 300 s.
+        monkeypatch.setattr(weewx.xtypes, 'get_series', lambda *args, **kwargs: (
+            weewx.units.ValueTuple([0, 900], 'unix_epoch', 'group_time'),
+            weewx.units.ValueTuple([900, 1200], 'unix_epoch', 'group_time'),
+            weewx.units.ValueTuple([north, east], 'meter_per_second', 'group_speed')))
+        line = {'agg': 'vecdir', 'var_type': 'wind', 'step': 3600, 'options': {}}
+
+        _, pairs, _ = generator._read_slots(line, {}, None,
+                                            weeutil.weeutil.TimeSpan(0, 3600), [0], [3600],
+                                            0)
+        assert pairs == [(0, pytest.approx(18.43, abs=0.01))]
+
+    def test_vecdir_matches_the_database(self, config_dict, tmp_path):
+        """The bearing in the file is the one the database gives for the interval."""
+        skin_dict = build_skin_dict(str(tmp_path))
+        skin_dict['ImageGenerator']['day_images']['daywinddir'] = {
+            'windDir': {}}
+        data_dir = TestPlotDefinitions.run(config_dict, skin_dict)
+        with open(os.path.join(data_dir, 'archive', 'winddir-2010.json'),
+                  encoding='utf-8') as fd:
+            payload = json.load(fd)
+        series = payload['series'][0]
+        assert series['aggregate_type'] == 'vecdir'
+
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        binder = weewx.manager.DBBinder(cd)
+        try:
+            mgr = binder.get_manager('wx_binding')
+            start, interval = payload['start'], payload['interval']
+            begins, ends = weewx.jsongenerator._intervals(
+                start, start + payload['count'] * interval, interval)
+            # Before and after the change to DST, which moves the intervals.
+            for i in (10, 500, 1000):
+                span = weeutil.weeutil.TimeSpan(begins[i], ends[i])
+                expected = weewx.xtypes.get_aggregate('wind', span, 'vecdir', mgr)[0]
+                slot = (begins[i] - start) // interval
+                assert series['values'][slot] == pytest.approx(expected, abs=0.002), i
+        finally:
+            binder.close()
 
 
 class TestTiers:

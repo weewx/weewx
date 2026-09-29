@@ -743,8 +743,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 slot_begins = begins
             for which in ('min', 'max'):
                 entry[which] = fill(new_grid(which),
-                                    ((slot_begins[i], _reduce(which, vals, weights))
-                                     for i, (vals, weights) in buckets[0].items()))
+                                    ((slot_begins[i], _reduce(which, vals))
+                                     for i, vals in buckets[0].items()))
         return entry
 
     def _line_spec(self, line_section, line_name, resolution):
@@ -831,18 +831,20 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 pass
             else:
                 if line['agg'] == 'vecdir':
-                    # A bearing does not depend on the unit of the speed.
+                    # The database takes the bearing of the sum of the wind vectors,
+                    # each multiplied by its archive interval. So multiply here, and
+                    # _reduce() adds them up. A bearing does not depend on the unit of
+                    # the speed, so the vectors need no conversion.
                     unit = self.converter.getTargetUnit('wind', 'vecdir')[0]
-                    values = data_vec[0]
+                    values = [None if value is None else value * (stop - start)
+                              for value, start, stop
+                              in zip(data_vec[0], start_vec[0], stop_vec[0])]
                 else:
                     unit, values = self._convert(data_vec, plot_options)
-                # 'vecdir' weighs each reading by its archive interval, as the database
-                # does.
-                weights = [b - a for a, b in zip(start_vec[0], stop_vec[0])]
-                readings = (stop_vec[0], values, weights)
+                readings = (stop_vec[0], values)
                 per_interval = _bucket(begins, ends, first, *readings)
-                pairs = [(begins[i], _reduce(line['agg'], vals, wts))
-                         for i, (vals, wts) in sorted(per_interval.items())]
+                pairs = [(begins[i], _reduce(line['agg'], vals))
+                         for i, vals in sorted(per_interval.items())]
                 return unit, pairs, (per_interval, readings)
 
         # An aggregation that has no counterpart here, or a type that exists only as an
@@ -1283,7 +1285,7 @@ def _intervals(start, stop, step):
     return begins, ends
 
 
-def _bucket(begins, ends, first, stamps, values, weights):
+def _bucket(begins, ends, first, stamps, values):
     """Sort readings into the intervals they belong to.
 
     A reading stamped t belongs to the interval with begin < t <= end, as in the
@@ -1295,20 +1297,17 @@ def _bucket(begins, ends, first, stamps, values, weights):
         first (int): The index of the first interval to fill.
         stamps (list[int]): When each reading was taken.
         values (list): The readings. A None is left out.
-        weights (list[int]): The archive interval of each reading, in seconds.
 
     Returns:
-        dict: {index: (values, weights)} for each interval that holds a reading.
+        dict: {index: values} for each interval that holds a reading.
     """
     out = {}
-    for stamp, value, weight in zip(stamps, values, weights):
+    for stamp, value in zip(stamps, values):
         if value is None:
             continue
         i = bisect.bisect_left(ends, stamp, first)
         if i < len(ends) and begins[i] < stamp:
-            vals, wts = out.setdefault(i, ([], []))
-            vals.append(value)
-            wts.append(weight)
+            out.setdefault(i, []).append(value)
     return out
 
 
@@ -1317,13 +1316,13 @@ def _bucket(begins, ends, first, stamps, values, weights):
 _RAW_AGGREGATES = ('avg', 'sum', 'min', 'max', 'first', 'last', 'vecdir')
 
 
-def _reduce(agg, values, weights):
+def _reduce(agg, values):
     """Combine the readings of one interval, as the database would.
 
     Args:
         agg (str): One of _RAW_AGGREGATES.
-        values (list[float|complex]): The readings, in the order they were taken.
-        weights (list[int]): The archive interval of each reading, in seconds.
+        values (list[float|complex]): The readings, in the order they were taken. For
+            'vecdir', the wind vectors, each multiplied by its archive interval.
 
     Returns:
         float|complex|None: The aggregate. A wind vector with no length has no
@@ -1342,8 +1341,8 @@ def _reduce(agg, values, weights):
         return values[0]
     if agg == 'last':
         return values[-1]
-    # 'vecdir': the bearing of the sum of the vectors, each weighed by its interval.
-    total = sum(value * weight for value, weight in zip(values, weights))
+    # 'vecdir': the bearing of the sum of the vectors.
+    total = sum(values)
     if not total:
         return None
     deg = 90.0 - math.degrees(math.atan2(total.imag, total.real))
