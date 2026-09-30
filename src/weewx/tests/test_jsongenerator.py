@@ -383,6 +383,29 @@ class TestArchive:
         # between the first and the last value holds one.
         assert len(filled) > 0.9 * (filled[-1] - filled[0] + 1)
 
+    def test_the_unit_label_is_only_in_skin_json(self, archive_dir):
+        """An archive file names its unit, and skin.json gives the label of each unit.
+
+        A label written anywhere else would be a second copy of the one in skin.json.
+        """
+        with open(os.path.join(os.path.dirname(archive_dir), 'skin.json'),
+                  encoding='utf-8') as fd:
+            labels = json.load(fd)['units']['labels']
+        with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
+            index = json.load(fd)
+        for group in index['groups']:
+            assert 'unit_label' not in group and 'unit' not in group, group['name']
+
+        names = [n for n in os.listdir(archive_dir)
+                 if n.endswith('.json') and n != 'index.json'
+                 and not n.startswith('daynight')]
+        assert names
+        for name in names:
+            with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
+                payload = json.load(fd)
+            assert 'unit_label' not in payload, name
+            assert payload['unit'] in labels, name
+
     def test_fresh_files_are_not_rewritten(self, config_dict, tmp_path):
         """A second run right after the first rewrites no file.
 
@@ -885,7 +908,7 @@ class TestArchiveMemory:
         assert read(os.path.join(data_dir, 'archive'))['years']
 
         empty = read(str(tmp_path / 'nowhere'))
-        assert empty['years'] == {} and empty['labels'] == {}
+        assert empty['years'] == {} and empty['titles'] == {}
         assert empty['first'] is None and empty['rebuilt'] is None
 
     def test_finished_months_stay_available(self, config_dict, tmp_path):

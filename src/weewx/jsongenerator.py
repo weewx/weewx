@@ -99,7 +99,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
     EMPTY_INDEX = {
         'first': None,
         'rebuilt': None,
-        'labels': {},
+        'titles': {},
         **{key: {} for pair in TIERS for key in pair}
     }
 
@@ -247,7 +247,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 # written under different settings differ.
                 groups.append({'name': name,
                                'title': entry['title'] or name,
-                               'unit_label': entry['unit_label'] or '',
                                **{key: entry[key] for pair in TIERS for key in pair}})
             try:
                 _write_json(os.path.join(arch_root, 'index.json'),
@@ -370,7 +369,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                             entry[tier][date] = payload['newest']
                             entry[intervals_key][date] = interval
                             entry['title'] = ', '.join(s['label'] for s in payload['series'])
-                            entry['unit_label'] = payload['unit_label']
                         except OSError as e:
                             log.error("Unable to save to file '%s': %s", out_file, e)
 
@@ -463,7 +461,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                                  coarsen it.
                 month_intervals: the same for the months
                 day_intervals:   the same for the days
-                labels:          {plot group: (title, unit_label)}
+                titles:          {plot group: title}
                 first:           the oldest archive record in the database when the
                                  previous run read it, or None if there was no archive
                                  index
@@ -480,9 +478,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             for group in index.get('groups', []):
                 name = group['name']
                 # A run that writes no archive file of a plot group still needs the
-                # plot group's title and unit_label for the archive index, so keep them
-                # from the old one.
-                old_index['labels'][name] = (group.get('title'), group.get('unit_label'))
+                # plot group's title for the archive index, so keep it from the old one.
+                old_index['titles'][name] = group.get('title')
                 for key in (key for pair in TIERS for key in pair):
                     by_date = {date: int(value)
                                for date, value in (group.get(key) or {}).items() if value}
@@ -606,7 +603,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
                     {'name': 'tempdew', 'start': 1735686000, 'interval': 3600,
                      'count': 8760, 'newest': 1767222000,
-                     'unit': 'degree_C', 'unit_label': '°C',
+                     'unit': 'degree_C',
                      'yscale': [-10.0, 35.0, 5.0],
                      'series': [{'obs_type': 'outTemp', 'label': 'Outside Temperature',
                                  'aggregate_type': 'avg', 'color': '#4282b4',
@@ -638,7 +635,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                           for s in old_file['series']}
 
         series_out = []
-        unit = unit_label = None
+        unit = None
         for line_name in plot_dict.sections:
             line = self._line_spec(plot_dict[line_name], line_name, interval)
             entry = self._archive_series(
@@ -651,8 +648,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             entry_unit = entry.pop('unit')
             if entry_unit is not None:
                 unit = entry_unit
-                unit_label = line['options'].get(
-                    'y_label', self.formatter.get_label_string(entry_unit))
             series_out.append(entry)
 
         if not series_out:
@@ -660,7 +655,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # A timespan without new archive records reports no unit. The archive file then
         # keeps its own.
         if unit is None and old_file is not None:
-            unit, unit_label = old_file.get('unit'), old_file.get('unit_label')
+            unit = old_file.get('unit')
 
         # chart_line_colors applies to every series that sets no color of its own.
         default_colors = weeutil.weeutil.option_as_list(
@@ -678,8 +673,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             # The time up to which this archive file is complete. The next run compares
             # it with the database to decide whether the file has to be written again.
             'newest': min(int(timespan.stop), int(last_ts)),
+            # The unit of every value in the file. Its label is in skin.json.
             'unit': unit,
-            'unit_label': (unit_label or '').strip(),
             'series': series_out,
         }
 
@@ -1075,7 +1070,7 @@ def _write_json(path, payload):
 
 def _new_entry():
     """A blank archive index entry for one plot group."""
-    return {'title': None, 'unit_label': None,
+    return {'title': None,
             **{key: {} for pair in TIERS for key in pair}}
 
 
@@ -1246,8 +1241,7 @@ def _index_of(old_index):
         for group_name, by_date in old_index[key].items():
             index.setdefault(group_name, _new_entry())[key].update(by_date)
     for group_name, entry in index.items():
-        entry['title'], entry['unit_label'] = old_index['labels'].get(group_name,
-                                                                      (None, None))
+        entry['title'] = old_index['titles'].get(group_name)
     return index
 
 

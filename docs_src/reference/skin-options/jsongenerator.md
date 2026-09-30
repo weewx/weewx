@@ -26,8 +26,8 @@ Either way the syntax is the Image generator's. See
 A plot definition can carry any option the Image generator knows. This
 generator reads the ones that say what the plot is: `time_length`,
 `aggregate_type`, `aggregate_interval`, `data_binding`, `data_type`, `unit`,
-`label`, `y_label`, `plot_type`, `color`, `chart_line_colors`, `yscale`,
-`y_nticks` and `vector_rotate`.
+`label`, `plot_type`, `color`, `chart_line_colors`, `yscale`, `y_nticks` and
+`vector_rotate`.
 
 Everything else describes how to draw an image, such as fonts, image sizes and
 marker shapes, and is ignored.
