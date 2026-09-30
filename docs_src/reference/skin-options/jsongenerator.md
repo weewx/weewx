@@ -99,7 +99,8 @@ tier does not grow.
 #### day_resolution
 
 The aggregation interval of the day files. `0`, the default, uses the archive
-interval that most archive records of the day have.
+interval that most archive records of the day have. The day files then hold the
+values of the archive records as they are.
 
 #### budget
 

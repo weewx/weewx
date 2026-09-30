@@ -291,7 +291,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 this_year = time.localtime(int(last_ts)).tm_year
 
                 def write_tier(timespans, tier, date_of, interval_of, tier_from,
-                               metered=True):
+                               metered=True, raw=False):
                     """Write the archive files of one tier for the current plot group.
 
                     The tiers differ in how they cut the database into archive files,
@@ -315,6 +315,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                         tier_from (int): The oldest time this tier reaches.
                         metered (bool): Whether the budget applies. The day tier is not
                             metered.
+                        raw (bool): Whether the aggregation interval is the archive
+                            interval. See _archive_series().
                     """
                     intervals_key = dict(TIERS)[tier]
                     # Start with the newest timespan. A run that stops early then leaves
@@ -358,7 +360,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                             plot_dict=day_plots[plotname], plot_options=plot_options,
                             timespan=timespan, interval=interval, rounding=rounding,
                             group_name=group_name, first_ts=tier_from, last_ts=last_ts,
-                            old_file=old_file, extremes=opts['extremes'])
+                            old_file=old_file, extremes=opts['extremes'], raw=raw)
                         counters['spent'] += time.time() - started
                         if payload is None:
                             continue
@@ -392,7 +394,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                         or _archive_interval_of_day(db_manager, timespan_of[date]))
                     write_tier(timespans=day_timespans, tier='days', date_of=date_of_day,
                                interval_of=day_interval, tier_from=days_from,
-                               metered=False)
+                               metered=False, raw=not opts['day_resolution'])
                     _drop_old_days(arch_root, on_disk, group_name,
                                    {date_of_day(timespan) for timespan in day_timespans},
                                    index.get(group_name))
@@ -569,7 +571,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 log.warning("Could not write day/night file for %d: %s", year, e)
 
     def _archive_file(self, plot_dict, plot_options, timespan, interval, rounding,
-                      group_name, first_ts, last_ts, old_file=None, extremes=()):
+                      group_name, first_ts, last_ts, old_file=None, extremes=(), raw=False):
         """Build the contents of one archive file: one plot group over one timespan.
 
         Every tier builds its archive files here. A day, a month and a year differ only
@@ -593,6 +595,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 extended. None otherwise.
             extremes (set[str]|tuple[str, ...]): The observation types that also carry
                 the lowest and highest value in each aggregation interval.
+            raw (bool): Whether 'interval' is the archive interval. See
+                _archive_series().
 
         Returns:
             dict|None: The contents of the archive file, or None if the timespan holds
@@ -641,7 +645,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 line=line, plot_options=plot_options, start=start, stop=stop,
                 count=count, interval=interval, rounding=rounding, extremes=extremes,
                 old_series=old_by_key.get((line['var_type'], line['aggregate_type'])),
-                old_file=old_file)
+                old_file=old_file, raw=raw)
             if entry is None:
                 continue
             entry_unit = entry.pop('unit')
@@ -678,7 +682,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         }
 
     def _archive_series(self, line, plot_options, start, stop, count, interval, rounding,
-                        extremes, old_series, old_file):
+                        extremes, old_series, old_file, raw=False):
         """Build one series of an archive file.
 
         Args:
@@ -693,6 +697,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 the lowest and highest value in each aggregation interval.
             old_series (dict|None): The same series in the archive file on disk, or None.
             old_file (dict|None): The archive file on disk, if it is being extended.
+            raw (bool): Whether 'interval' is the archive interval. Each aggregation
+                interval then holds one archive record, and a line at that interval
+                takes the values of the archive records as they are.
 
         Returns:
             dict|None: The series, with its unit under 'unit', which the caller takes
@@ -704,6 +711,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         if old_file is None and _skip_if_empty(mgr, line['data_type'],
                                                TimeSpan(start, stop)):
             return None
+
         def resume(aggregate_interval):
             """Return where to start calculating, and how many old values to keep.
 
@@ -743,8 +751,11 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # The aggregation intervals of the line. Only a bar has other ones than the
         # archive file. See _line_spec().
         since, keep = resume(line['aggregate_interval'])
+        # A value that is alone in its aggregation interval needs no aggregation. One
+        # query then reads all of them, instead of one query per aggregation interval.
+        unaggregated = raw and line['aggregate_interval'] == interval
         aggregated = self._aggregate_line(line=line, plot_options=plot_options, mgr=mgr,
-                                          timespan=TimeSpan(since, stop))
+                                          timespan=TimeSpan(since, stop), raw=unaggregated)
         if aggregated is None:
             return None
         unit, pairs = aggregated
@@ -758,7 +769,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             return self._archive_series(
                 line=line, plot_options=plot_options, start=start, stop=stop,
                 count=count, interval=interval, rounding=rounding, extremes=extremes,
-                old_series=None, old_file=None)
+                old_series=None, old_file=None, raw=raw)
 
         entry = {
             'obs_type': line['var_type'],
@@ -799,8 +810,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
         # The lowest and highest value per aggregation interval of the archive file, for
         # the observation types named in 'extremes'. For a bar, these are finer than
-        # its own aggregation intervals.
-        if line['var_type'] in extremes \
+        # its own aggregation intervals. A value alone in its aggregation interval is
+        # its own lowest and highest.
+        if line['var_type'] in extremes and not unaggregated \
                 and line['aggregate_type'] not in ('min', 'max', 'vecdir') and not components:
             since, keep = resume(interval)
             for which in ('min', 'max'):
@@ -867,7 +879,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 'data_type': options.get('data_type', line_name)}
 
     def _aggregate_line(self, line, plot_options, mgr, timespan, aggregate_type=None,
-                        aggregate_interval=None):
+                        aggregate_interval=None, raw=False):
         """Return the aggregates of one line over a timespan, as the ImageGenerator does.
 
         Args:
@@ -878,6 +890,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             aggregate_type (str|None): The aggregation type, or None for the line's own.
             aggregate_interval (int|None): The aggregation interval in seconds, or None
                 for the line's own.
+            raw (bool): True to return the values of the archive records instead, each
+                paired with the beginning of its archive interval.
 
         Returns:
             tuple|None: A two-way tuple (unit, pairs). 'pairs' holds (begin, aggregate)
@@ -888,11 +902,16 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         options.pop('aggregate_type', None)
         options.pop('aggregate_interval', None)
         try:
-            start_vec, _, data_vec = weewx.xtypes.get_series(
-                line['var_type'], timespan, mgr,
-                aggregate_type=aggregate_type or line['aggregate_type'],
-                aggregate_interval=aggregate_interval or line['aggregate_interval'],
-                **options)
+            if raw:
+                # The type as the skin names it: 'windDir', not 'wind' with 'vecdir'.
+                start_vec, _, data_vec = weewx.xtypes.get_series(
+                    line['data_type'], timespan, mgr, **options)
+            else:
+                start_vec, _, data_vec = weewx.xtypes.get_series(
+                    line['var_type'], timespan, mgr,
+                    aggregate_type=aggregate_type or line['aggregate_type'],
+                    aggregate_interval=aggregate_interval or line['aggregate_interval'],
+                    **options)
         except (weewx.UnknownType, weewx.UnknownAggregation):
             return None
         unit, values = self._convert(data_vec, plot_options)

@@ -983,6 +983,54 @@ class TestDayTier:
 
         assert payload['interval'] == parameters.synthetic_dict['interval']
 
+    def test_at_the_archive_interval_the_values_are_those_of_the_records(
+            self, config_dict, tmp_path, monkeypatch):
+        """A day file at the archive interval holds the values of the archive records.
+
+        Each aggregation interval holds one archive record, so nothing is aggregated but
+        the hourly rain bar.
+        """
+        aggregated = set()
+        original = weewx.xtypes.get_series
+
+        def get_series(obs_type, timespan, db_manager, aggregate_type=None,
+                       aggregate_interval=None, **options):
+            # A day file covers a day at most. The year files are aggregated anyway.
+            if aggregate_type and timespan.stop - timespan.start <= 90000:
+                aggregated.add(obs_type)
+            return original(obs_type, timespan, db_manager, aggregate_type=aggregate_type,
+                            aggregate_interval=aggregate_interval, **options)
+
+        monkeypatch.setattr(weewx.xtypes, 'get_series', get_series)
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
+                                 archive_options={'days': '2', 'day_resolution': '0'})
+        assert aggregated == {'rain'}
+
+        archive_dir = os.path.join(data_dir, 'archive')
+        name = tier_files(archive_dir, 'days', 'tempdew')[0]
+        with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
+            payload = json.load(fd)
+        start, interval = payload['start'], payload['interval']
+        values = payload['series'][0]['values']
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        binder = weewx.manager.DBBinder(cd)
+        try:
+            mgr = binder.get_manager('wx_binding')
+            records = list(mgr.genBatchRecords(start, start + payload['count'] * interval))
+        finally:
+            binder.close()
+        assert len(records) > 40
+        for record in records:
+            expected = weewx.units.convert(
+                (record['outTemp'], 'degree_F', 'group_temperature'), payload['unit'])[0]
+            position = (record['dateTime'] - record['interval'] * 60 - start) // interval
+            if expected is None:
+                assert values[position] is None, record['dateTime']
+            else:
+                assert values[position] == pytest.approx(expected, abs=0.001), \
+                    record['dateTime']
+
     def test_a_day_takes_the_archive_interval_most_of_its_records_have(self):
         """A station that changes its archive interval late in a day keeps the old one.
 
