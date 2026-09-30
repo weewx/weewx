@@ -23,6 +23,7 @@ import weewx
 import weewx.defaults
 import weewx.imagegenerator
 import weewx.jsongenerator
+import weewx.manager
 import weewx.reportengine
 import weewx.station
 import weewx.units
@@ -30,8 +31,8 @@ import weewx.xtypes
 import weeutil.weeutil
 from weeutil.config import accumulateLeaves
 
-# The grid of the archive tests. Four hours keeps the tests fast, because get_series()
-# runs one aggregate query per slot. No test depends on the value.
+# The aggregation interval of the year files in the archive tests. No test depends on
+# the value.
 ARCHIVE_RESOLUTION = 14400
 
 # Plot definitions in the [ImageGenerator] syntax: a two-line plot, a bar plot with
@@ -140,19 +141,19 @@ def run_generator(config_dict, tmp_path, gen_ts=None, archive_options=None,
     return os.path.join(html_root, 'data')
 
 
-def tier_files(archive_dir, kind, group=None):
+def tier_files(archive_dir, tier, group_name=None):
     """Return the sorted names of the archive files of one tier, e.g., 'days'."""
     names = []
     for name in os.listdir(archive_dir):
         parsed = weewx.jsongenerator._parse_archive_name(name)
-        if parsed and parsed[0] != 'daynight' and parsed[1] == kind \
-                and group in (None, parsed[0]):
+        if parsed and parsed[0] != 'daynight' and parsed[1] == tier \
+                and group_name in (None, parsed[0]):
             names.append(name)
     return sorted(names)
 
 
-def stamp_of(name):
-    """Return the stamp in the name of an archive file, e.g., '2010-08'."""
+def date_of(name):
+    """Return the date in the name of an archive file, e.g., '2010-08'."""
     return weewx.jsongenerator._parse_archive_name(name)[2]
 
 
@@ -188,7 +189,7 @@ class TestPlotDefinitions:
     def test_settings_are_not_mistaken_for_plots(self, config_dict, tmp_path):
         """[[Archive]] is a subsection of [JSONGenerator], but defines no plots.
 
-        Counted as a time span, [[Archive]] would leave the generator nothing to
+        Counted as a time period, [[Archive]] would leave the generator nothing to
         draw, and no error in the log.
         """
         data_dir = self.run(config_dict, build_skin_dict(str(tmp_path)))
@@ -214,7 +215,7 @@ class TestPlotDefinitions:
         assert series['label'] == 'Mine'
         assert series['color'] == '#118844'
         with open(os.path.join(data_dir, 'skin.json'), encoding='utf-8') as fd:
-            assert json.load(fd)['spans'] == {'day_images': 6 * 3600}
+            assert json.load(fd)['time_lengths'] == {'day_images': 6 * 3600}
 
     def test_the_image_generator_section_still_serves(self, config_dict, tmp_path):
         """A skin written before the JSON generator needs no new configuration."""
@@ -267,28 +268,29 @@ class TestSkinJson:
         # A lost skin.json is written again.
         os.remove(path)
         run_generator(config_dict, tmp_path, first_run=False)
-        assert self.skin_json(os.path.dirname(path))['spans']
+        assert self.skin_json(os.path.dirname(path))['time_lengths']
 
-    def test_skin_json_holds_the_spans_and_the_units(self, config_dict, tmp_path):
+    def test_skin_json_holds_the_time_lengths_and_the_units(self, config_dict, tmp_path):
         skin_json = self.skin_json(run_generator(config_dict, tmp_path))
-        assert sorted(skin_json) == ['spans', 'units']
-        assert skin_json['spans'] == {'day_images': 27 * 3600, 'week_images': 7 * 86400}
+        assert sorted(skin_json) == ['time_lengths', 'units']
+        assert skin_json['time_lengths'] == {'day_images': 27 * 3600,
+                                             'week_images': 7 * 86400}
 
-    def test_the_span_section_sets_the_length(self, config_dict, tmp_path):
-        """A plot's own time_length does not change the length of its span."""
+    def test_the_time_period_sets_the_time_length(self, config_dict, tmp_path):
+        """A plot's own time_length does not change the one of its time period."""
         skin_dict = build_skin_dict(str(tmp_path))
         day_images = skin_dict['ImageGenerator']['day_images']
         for plotname in day_images.sections:
             day_images[plotname]['time_length'] = '6h'
         skin_json = self.skin_json(TestPlotDefinitions.run(config_dict, skin_dict))
-        assert skin_json['spans']['day_images'] == 27 * 3600
+        assert skin_json['time_lengths']['day_images'] == 27 * 3600
 
     def test_the_index_says_which_units_the_report_used(self, config_dict, tmp_path):
-        """units['report'] gives the unit the report renders each group in.
+        """units['report'] gives the unit the report renders each unit group in.
 
-        The page converts e.g. the forecast, which arrives in Celsius, into that unit.
-        Without units['report'], the page converts the forecast only after the reader
-        picks a unit system by hand.
+        The JavaScript converts, e.g., the forecast, which arrives in Celsius, into that
+        unit. Without units['report'], the JavaScript converts the forecast only after
+        the viewer picks a unit system by hand.
         """
         data_dir = run_generator(config_dict, tmp_path)
         units = self.skin_json(data_dir)['units']
@@ -345,40 +347,40 @@ class TestArchive:
 
     @pytest.fixture(scope='class')
     def archive_dir(self, config_dict, tmp_path_factory):
-        """Run the archive once for the tests that only read its output.
+        """Run the generator once for the tests that only read the archive files.
 
-        The run costs an aggregate query per grid slot, which dominates the run time
-        of this file. Tests that need a run of their own still make it.
+        Tests that need a run of their own still make it.
         """
         data_dir = run_generator(config_dict, tmp_path_factory.mktemp('archive'))
         return os.path.join(data_dir, 'archive')
 
-    def test_writes_one_file_per_group_and_year(self, archive_dir):
+    def test_writes_one_file_per_plot_group_and_year(self, archive_dir):
         written = sorted(f for f in os.listdir(archive_dir) if f.endswith('.json'))
 
-        # The test data sit in 2010, and the group name has the 'day' prefix stripped.
+        # The test data sit in 2010, and the plot group is 'daytempdew' without 'day'.
         assert 'tempdew-2010.json' in written
         assert 'index.json' in written
 
-    def test_grid_is_regular_and_timestamps_implied(self, archive_dir):
+    def test_the_values_are_evenly_spaced_and_carry_no_timestamps(self, archive_dir):
         with open(os.path.join(archive_dir, 'tempdew-2010.json'), encoding='utf-8') as fd:
             payload = json.load(fd)
 
         assert payload['interval'] == ARCHIVE_RESOLUTION
         assert payload['start'] % ARCHIVE_RESOLUTION == 0
-        # The fixed grid makes a 'time' array unnecessary.
+        # The fixed aggregation interval makes a 'time' array unnecessary.
         for series in payload['series']:
             assert 'time' not in series
             assert len(series['values']) == payload['count']
 
-    def test_values_land_in_the_right_slots(self, archive_dir):
+    def test_a_database_without_gaps_gives_a_series_without_gaps(self, archive_dir):
         with open(os.path.join(archive_dir, 'tempdew-2010.json'), encoding='utf-8') as fd:
             payload = json.load(fd)
 
         series = payload['series'][0]
         filled = [i for i, v in enumerate(series['values']) if v is not None]
         assert filled, "archive holds no data at all"
-        # The synthetic database is gapless, so the run of filled slots must be dense.
+        # The synthetic database has no gaps, so nearly every aggregation interval
+        # between the first and the last value holds one.
         assert len(filled) > 0.9 * (filled[-1] - filled[0] + 1)
 
     def test_fresh_files_are_not_rewritten(self, config_dict, tmp_path):
@@ -395,8 +397,11 @@ class TestArchive:
 
         assert os.path.getmtime(path) == before
 
-    def test_a_new_grid_slot_rewrites_the_file(self, config_dict, tmp_path):
-        """The current year is rewritten once the data reach into the next slot."""
+    def test_a_new_aggregation_interval_rewrites_the_file(self, config_dict, tmp_path):
+        """The year in progress is rewritten when the database moves on.
+
+        That is once the database reaches the next aggregation interval.
+        """
         stop_ts = parameters.synthetic_dict['stop_ts']
         data_dir = run_generator(config_dict, tmp_path,
                                  gen_ts=stop_ts - ARCHIVE_RESOLUTION)
@@ -408,7 +413,7 @@ class TestArchive:
         assert os.path.getmtime(path) != before
 
     def test_catchup_data_reach_the_archive(self, config_dict, tmp_path):
-        """Readings caught up after a restart reach the archive.
+        """Archive records caught up after a restart reach the archive files.
 
         After a restart, the logger hands over what it recorded meanwhile. The file on
         disk is then minutes old but days behind. Reported by tkeffer in #1111.
@@ -427,9 +432,10 @@ class TestArchive:
 
         assert after['newest'] > before['newest']
         filled = lambda p: sum(1 for v in p['series'][0]['values'] if v is not None)
-        # Two days of catch-up, so nearly two days of grid slots have to fill in.
-        slots = 2 * 86400 // ARCHIVE_RESOLUTION
-        assert filled(after) - filled(before) > 0.8 * slots
+        # Two days of catch-up, so nearly two days of aggregation intervals have to fill
+        # in.
+        count = 2 * 86400 // ARCHIVE_RESOLUTION
+        assert filled(after) - filled(before) > 0.8 * count
 
     def test_an_import_rebuilds_finished_years(self, config_dict, tmp_path):
         """An import of older data rebuilds the finished years.
@@ -464,8 +470,12 @@ class TestArchive:
         assert '2010' in groups['tempdew']['years']
         assert groups['tempdew']['year_intervals']['2010'] == ARCHIVE_RESOLUTION
 
-    def test_a_finer_grid_is_written_for_the_recent_past(self, config_dict, tmp_path):
-        """An hourly grid flattens a single day, so recent months also get a fine one."""
+    def test_recent_months_get_a_shorter_aggregation_interval(self, config_dict,
+                                                              tmp_path):
+        """Recent months get a shorter aggregation interval than the year files.
+
+        An aggregation interval of one hour flattens a day.
+        """
         data_dir = run_generator(config_dict, tmp_path,
                                  archive_options={'months': '2',
                                                   'month_resolution': '300'})
@@ -477,19 +487,22 @@ class TestArchive:
             payload = json.load(fd)
         assert payload['interval'] == 300
 
-        # The coarse file for the same group is still there, on the wide grid.
-        group = weewx.jsongenerator._parse_archive_name(fine[0])[0]
-        with open(os.path.join(archive_dir, '%s-2010.json' % group), encoding='utf-8') as fd:
+        # The year file of the same plot group is still there, at the longer
+        # aggregation interval.
+        group_name = weewx.jsongenerator._parse_archive_name(fine[0])[0]
+        with open(os.path.join(archive_dir, '%s-2010.json' % group_name),
+                  encoding='utf-8') as fd:
             assert json.load(fd)['interval'] == ARCHIVE_RESOLUTION
 
         with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
         groups = {g['name']: g for g in index['groups']}
-        # The month the month file covers is named, so a client knows to ask for it.
-        assert stamp_of(fine[0]) in groups[group]['months']
-        assert groups[group]['month_intervals'][stamp_of(fine[0])] == 300
+        # The archive index names the month, so the JavaScript knows to ask for it.
+        assert date_of(fine[0]) in groups[group_name]['months']
+        assert groups[group_name]['month_intervals'][date_of(fine[0])] == 300
 
-    def test_a_grid_that_is_not_finer_is_refused(self, config_dict, tmp_path):
+    def test_a_month_resolution_that_is_not_finer_is_refused(self, config_dict,
+                                                             tmp_path):
         """A month_resolution that is not finer than year_resolution writes no month files.
 
         The usual cause is '5m', which means five months.
@@ -502,15 +515,16 @@ class TestArchive:
 
 
 class TestArchiveExtension:
-    """Extending a file on disk instead of calculating the whole span.
+    """Extending an archive file on disk instead of calculating the whole timespan.
 
-    A file holds every slot but its last, so a report calculates only from there on.
-    The tests check that the result equals a full rebuild.
+    Only the aggregation intervals from the newest of the file on disk on are
+    calculated. The tests check that the result equals a full rebuild.
     """
 
-    # 'newest' records when a file was written, not what it holds. A run whose slot
-    # has not moved skips the file. So after a chain of reports, 'newest' can come from
-    # an earlier run than in a single rebuild. The page does not draw it.
+    # 'newest' records when a file was written, not what it holds. A run whose
+    # aggregation interval has not moved skips the file. So after a chain of runs,
+    # 'newest' can come from an earlier run than in a single rebuild. The JavaScript
+    # does not draw it.
     BOOKKEEPING = ('newest',)
 
     @classmethod
@@ -529,7 +543,7 @@ class TestArchiveExtension:
 
     def walk_forward(self, config_dict, root, first_ts, last_ts, step,
                      archive_options=None):
-        """Report once per step from first_ts to last_ts, extending each time."""
+        """Run once per step from first_ts to last_ts, extending each time."""
         options = {'rebuild': '0'}
         options.update(archive_options or {})
         gen_ts = first_ts
@@ -539,14 +553,14 @@ class TestArchiveExtension:
                                      archive_options=options)
             if gen_ts >= last_ts:
                 break
-            # The last report lands on 'last_ts', whatever the step. A DST day is 23 or
-            # 25 hours long, so a fixed step may not divide the span. Without the min(),
+            # The last run lands on 'last_ts', whatever the step. A DST day is 23 or
+            # 25 hours long, so a fixed step may not divide the timespan. Without the min(),
             # the walk would stop short of the rebuild it is compared with.
             gen_ts = min(gen_ts + step, last_ts)
         return os.path.join(data_dir, 'archive')
 
     def test_extending_matches_a_full_rebuild(self, config_dict, tmp_path_factory):
-        """Six reports, each carrying the last forward, against one that does the lot."""
+        """Six runs, each extending the last, against one that does the lot."""
         stop_ts = parameters.synthetic_dict['stop_ts']
         first_ts = stop_ts - 6 * ARCHIVE_RESOLUTION
 
@@ -563,16 +577,17 @@ class TestArchiveExtension:
             self, config_dict, tmp_path_factory):
         """Extending matches a full rebuild across a DST change.
 
-        intervalgen() aligns slots on local time, so a slot can be three hours long. An
-        extending run starts later than the run that first wrote the file. Across a DST
-        change, the two runs could disagree about where a slot begins.
+        intervalgen() aligns aggregation intervals on local time, so one can be three
+        hours long. An extending run starts later than the run that first wrote the
+        file. Across a DST change, the two runs could disagree about where an
+        aggregation interval begins.
         """
         # 2010-03-14 02:00 PST is 03:00 PDT. Straddle it.
         first_ts = int(time.mktime((2010, 3, 13, 12, 0, 0, 0, 0, -1)))
         last_ts = int(time.mktime((2010, 3, 15, 0, 0, 0, 0, 0, -1)))
-        # Both sides must end on the same slot boundary. A file is rewritten only when
-        # its newest reading reaches the next slot. A walk ending mid-slot would leave
-        # an older file than the rebuild writes.
+        # Both sides must end on the same boundary. A file is rewritten only when its
+        # newest reaches the next aggregation interval. A walk ending inside one would
+        # leave an older file than the rebuild writes.
         last_ts -= last_ts % ARCHIVE_RESOLUTION
 
         grown = self.walk_forward(config_dict, tmp_path_factory.mktemp('dst_grown'),
@@ -583,9 +598,9 @@ class TestArchiveExtension:
 
         assert self.payloads(grown) == self.payloads(built)
 
-    def test_extending_matches_a_full_rebuild_on_the_fine_grid(
+    def test_extending_matches_a_full_rebuild_in_the_month_tier(
             self, config_dict, tmp_path_factory):
-        """Extending matches a full rebuild on the fine grid, i.e., per month.
+        """Extending matches a full rebuild in the month tier.
 
         Only the month in progress is compared. A finished month is written once and
         kept, so its start depends on the run that wrote it.
@@ -606,9 +621,9 @@ class TestArchiveExtension:
         assert grown_files, "no month file for the month in progress"
         assert grown_files == self.payloads(built, only=current_month)
 
-    def test_extending_costs_one_query_per_new_slot(self, config_dict, tmp_path,
-                                                    monkeypatch):
-        """Extending a year's file queries only the new slots, not the whole year."""
+    def test_extending_reads_only_the_new_aggregation_intervals(self, config_dict,
+                                                                tmp_path, monkeypatch):
+        """Extending a year file reads from its newest on, not the whole year."""
         stop_ts = parameters.synthetic_dict['stop_ts']
         run_generator(config_dict, tmp_path,
                       gen_ts=stop_ts - ARCHIVE_RESOLUTION,
@@ -625,12 +640,12 @@ class TestArchiveExtension:
 
         assert calls, "the second run asked for nothing at all"
         # A query over more than a day means the year was calculated again.
-        assert max(span.stop - span.start for span in calls) <= 86400
+        assert max(timespan.stop - timespan.start for timespan in calls) <= 86400
 
     def test_a_rebuild_happens_once_a_calendar_day(self, config_dict, tmp_path):
         """A full rebuild runs once per calendar day.
 
-        Only a rebuild picks up changes older than the last report.
+        Only a rebuild picks up changes older than the last run.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         index_path = lambda d: os.path.join(d, 'archive', 'index.json')
@@ -641,7 +656,7 @@ class TestArchiveExtension:
         first = rebuilt_at(data_dir)
         assert first is not None
 
-        # Later the same day: carried forward, so the stamp does not move.
+        # Later the same day: extended, so 'rebuilt' does not move.
         run_generator(config_dict, tmp_path,
                       gen_ts=stop_ts - 86400 + ARCHIVE_RESOLUTION)
         assert rebuilt_at(data_dir) == first
@@ -661,8 +676,9 @@ class TestArchiveExtension:
     def test_a_file_that_does_not_match_is_rebuilt(self, config_dict, tmp_path):
         """A file whose series differ from the plot's is rebuilt, not extended.
 
-        A changed skin leaves a file with the same name and grid but other series.
-        Extending it would put one type's readings under another type's label.
+        A changed skin leaves a file with the same name and aggregation interval but
+        other series. Extending it would put one observation type's values under
+        another one's label.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         run_generator(config_dict, tmp_path,
@@ -687,7 +703,7 @@ class TestArchiveExtension:
 
 
 class TestExtends:
-    """Whether a file on disk is on the grid of the file being built."""
+    """Whether an archive file on disk can be extended into the one being built."""
 
     @staticmethod
     def file(**overrides):
@@ -696,16 +712,17 @@ class TestExtends:
         payload.update(overrides)
         return payload
 
-    def test_a_file_on_the_same_grid_extends(self):
+    def test_a_file_at_the_same_aggregation_interval_extends(self):
         assert weewx.jsongenerator._extends(self.file(), 1000, 100, 20)
 
     @pytest.mark.parametrize('overrides, reason', [
         ({'start': 2000}, 'the start moved'),
-        ({'interval': 50}, 'the resolution changed'),
-        ({'count': 30}, 'more slots than wanted, e.g., after a clock went backwards'),
+        ({'interval': 50}, 'the aggregation interval changed'),
+        ({'count': 30}, 'more aggregation intervals than wanted, e.g., after a clock '
+                        'went backwards'),
         ({'count': 'nonsense'}, 'not a number'),
-        ({'newest': None}, 'no newest reading'),
-        ({'newest': 500}, 'a newest reading before the file starts'),
+        ({'newest': None}, 'no newest'),
+        ({'newest': 500}, 'a newest before the file starts'),
         ({'series': None}, 'no series'),
     ])
     def test_a_file_that_cannot_be_extended(self, overrides, reason):
@@ -713,69 +730,121 @@ class TestExtends:
             reason
 
 
-class TestSlots:
-    """How readings are sorted into slots and combined, as the database would."""
+class TestAggregation:
+    """How values are sorted into aggregation intervals, and aggregated there.
 
-    def test_a_reading_belongs_to_the_interval_it_ends(self):
-        """A reading stamped t belongs to the interval with begin < t <= end."""
-        buckets = weewx.jsongenerator._bucket([0, 10], [10, 20], 0,
-                                              [5, 10, 11, 20, 21], [1, 2, 3, 4, 5],
-                                              [1] * 5)
-        assert buckets == {0: ([1, 2], [1, 1]), 1: ([3, 4], [1, 1])}
+    The results must be the ones the database gives.
+    """
 
-    def test_a_missing_reading_is_left_out(self):
-        buckets = weewx.jsongenerator._bucket([0], [10], 0, [5, 6], [None, 2.0], [1, 1])
-        assert buckets == {0: ([2.0], [1])}
+    def test_a_record_belongs_to_the_aggregation_interval_it_ends(self):
+        """A record stamped t belongs to the one with begin < t <= end."""
+        per_interval = weewx.jsongenerator._sort_into_intervals(
+            [0, 10], [10, 20], 0, [5, 10, 11, 20, 21], [1, 2, 3, 4, 5])
+        assert per_interval == {0: [1, 2], 1: [3, 4]}
 
-    @pytest.mark.parametrize('agg, expected', [
+    def test_a_missing_value_is_left_out(self):
+        per_interval = weewx.jsongenerator._sort_into_intervals(
+            [0], [10], 0, [5, 6], [None, 2.0])
+        assert per_interval == {0: [2.0]}
+
+    @pytest.mark.parametrize('aggregate_type, expected', [
         ('avg', 2.0), ('sum', 6.0), ('min', 1.0), ('max', 3.0),
         ('first', 3.0), ('last', 1.0),
     ])
-    def test_the_simple_aggregations(self, agg, expected):
-        assert weewx.jsongenerator._reduce(agg, [3.0, 2.0, 1.0], [1, 1, 1]) == expected
+    def test_the_simple_aggregation_types(self, aggregate_type, expected):
+        assert weewx.jsongenerator._reduce(aggregate_type, [3.0, 2.0, 1.0]) == expected
 
     def test_a_vector_compares_by_its_length(self):
-        assert weewx.jsongenerator._reduce('max', [3j, 1 + 1j], [1, 1]) == 3j
+        assert weewx.jsongenerator._reduce('max', [3j, 1 + 1j]) == 3j
 
-    def test_vecdir_is_the_bearing_of_the_weighted_sum(self):
+    def test_vecdir_is_the_bearing_of_the_sum(self):
         north, east = weeutil.weeutil.to_complex(1.0, 0.0), \
             weeutil.weeutil.to_complex(1.0, 90.0)
-        assert weewx.jsongenerator._reduce('vecdir', [north, east], [1, 1]) \
-            == pytest.approx(45.0)
-        # A reading over a longer interval counts for more, as in the database.
-        assert weewx.jsongenerator._reduce('vecdir', [north, east], [3, 1]) \
+        assert weewx.jsongenerator._reduce('vecdir', [north, east]) == pytest.approx(45.0)
+        assert weewx.jsongenerator._reduce('vecdir', [3 * north, east]) \
             == pytest.approx(18.43, abs=0.01)
 
     def test_vecdir_of_calm_air_has_no_bearing(self):
-        assert weewx.jsongenerator._reduce('vecdir', [0j, 0j], [1, 1]) is None
+        assert weewx.jsongenerator._reduce('vecdir', [0j, 0j]) is None
+
+    def test_vecdir_weighs_each_record_by_its_archive_interval(self, config_dict,
+                                                                tmp_path, monkeypatch):
+        """A record with a longer archive interval counts for more, as in the database."""
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        generator = weewx.jsongenerator.JSONGenerator(
+            cd, build_skin_dict(str(tmp_path)), None, first_run=True,
+            stn_info=weewx.station.StationInfo(**cd['Station']))
+        generator.setup()
+        north = weeutil.weeutil.to_complex(1.0, 0.0)
+        east = weeutil.weeutil.to_complex(1.0, 90.0)
+        # North for 900 s, then east for 300 s.
+        monkeypatch.setattr(weewx.xtypes, 'get_series', lambda *args, **kwargs: (
+            weewx.units.ValueTuple([0, 900], 'unix_epoch', 'group_time'),
+            weewx.units.ValueTuple([900, 1200], 'unix_epoch', 'group_time'),
+            weewx.units.ValueTuple([north, east], 'meter_per_second', 'group_speed')))
+        line = {'aggregate_type': 'vecdir', 'var_type': 'wind',
+                'aggregate_interval': 3600, 'options': {}}
+
+        _, pairs, _ = generator._aggregate_line(line, {}, None,
+                                                weeutil.weeutil.TimeSpan(0, 3600), [0],
+                                                [3600], 0)
+        assert pairs == [(0, pytest.approx(18.43, abs=0.01))]
+
+    def test_vecdir_matches_the_database(self, config_dict, tmp_path):
+        """Each bearing in the file is the one the database gives."""
+        skin_dict = build_skin_dict(str(tmp_path))
+        skin_dict['ImageGenerator']['day_images']['daywinddir'] = {
+            'windDir': {}}
+        data_dir = TestPlotDefinitions.run(config_dict, skin_dict)
+        with open(os.path.join(data_dir, 'archive', 'winddir-2010.json'),
+                  encoding='utf-8') as fd:
+            payload = json.load(fd)
+        series = payload['series'][0]
+        assert series['aggregate_type'] == 'vecdir'
+
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        binder = weewx.manager.DBBinder(cd)
+        try:
+            mgr = binder.get_manager('wx_binding')
+            start, interval = payload['start'], payload['interval']
+            begins, ends = weewx.jsongenerator._intervals(
+                start, start + payload['count'] * interval, interval)
+            # Before and after the change to DST, which moves the aggregation intervals.
+            for i in (10, 500, 1000):
+                timespan = weeutil.weeutil.TimeSpan(begins[i], ends[i])
+                expected = weewx.xtypes.get_aggregate('wind', timespan, 'vecdir', mgr)[0]
+                position = (begins[i] - start) // interval
+                assert series['values'][position] == pytest.approx(expected, abs=0.002), i
+        finally:
+            binder.close()
 
 
 class TestTiers:
-    """Which grid a calendar year's file is written on."""
+    """Which aggregation interval a calendar year's archive file has."""
 
     @staticmethod
-    def grid(year, this_year=2026, years=2, year_resolution=3600,
-             old_year_resolution=14400, existing=None):
-        return weewx.jsongenerator._year_grid(year, this_year, years, year_resolution,
-                                              old_year_resolution, existing)
+    def interval(year, this_year=2026, years=2, year_resolution=3600,
+                 old_year_resolution=14400, old_interval=None):
+        return weewx.jsongenerator._year_interval(year, this_year, years, year_resolution,
+                                                  old_year_resolution, old_interval)
 
-    def test_the_recent_years_get_the_finer_grid(self):
-        assert self.grid(2026) == 3600
-        assert self.grid(2025) == 3600
+    def test_the_recent_years_get_the_shorter_aggregation_interval(self):
+        assert self.interval(2026) == 3600
+        assert self.interval(2025) == 3600
 
-    def test_older_years_get_the_coarse_one(self):
-        assert self.grid(2024) == 14400
-        assert self.grid(2016) == 14400
+    def test_older_years_get_the_longer_one(self):
+        assert self.interval(2024) == 14400
+        assert self.interval(2016) == 14400
 
     def test_without_a_recent_window_every_year_is_the_same(self):
-        assert self.grid(2016, years=0) == 3600
+        assert self.interval(2016, years=0) == 3600
 
-    def test_a_file_already_finer_keeps_what_it_has(self):
+    def test_a_file_already_shorter_keeps_what_it_has(self):
         """Coarsening a year would cost a year of queries to end up with less."""
-        assert self.grid(2016, existing=3600) == 3600
+        assert self.interval(2016, old_interval=3600) == 3600
 
-    def test_a_file_coarser_than_wanted_is_refined(self):
-        assert self.grid(2026, existing=14400) == 3600
+    def test_a_file_longer_than_wanted_is_refined(self):
+        assert self.interval(2026, old_interval=14400) == 3600
 
 
 class TestMonthsBack:
@@ -795,7 +864,7 @@ class TestMonthsBack:
     def test_it_crosses_the_new_year(self):
         assert self.at(2026, 2, 3, 4) == '2025-11-01'
 
-    def test_it_does_not_go_before_the_record(self):
+    def test_it_does_not_go_before_the_oldest_archive_record(self):
         floor = int(time.mktime((2026, 6, 15, 0, 0, 0, 0, 0, -1)))
         start = weewx.jsongenerator._months_back(
             int(time.mktime((2026, 8, 28, 12, 0, 0, 0, 0, -1))), 6, floor)
@@ -803,13 +872,27 @@ class TestMonthsBack:
 
 
 class TestArchiveMemory:
-    """What the archive knows about files it did not write this run."""
+    """What the archive index knows about archive files not written this run."""
+
+    def test_a_missing_index_reads_as_empty_after_another(self, config_dict, tmp_path):
+        """Each read of an archive index starts empty, whatever was read before.
+
+        Two reports in one weewxd, or two report cycles, must not see each other's
+        archive index.
+        """
+        data_dir = run_generator(config_dict, tmp_path / 'one')
+        read = weewx.jsongenerator.JSONGenerator._read_archive_index
+        assert read(os.path.join(data_dir, 'archive'))['years']
+
+        empty = read(str(tmp_path / 'nowhere'))
+        assert empty['years'] == {} and empty['labels'] == {}
+        assert empty['first'] is None and empty['rebuilt'] is None
 
     def test_finished_months_stay_available(self, config_dict, tmp_path):
-        """The index still names finished months outside the 'months' window.
+        """The archive index still names finished months outside the 'months' window.
 
         Only the months inside the window are written. Older month files on disk must
-        stay in the index, or the page cannot see them.
+        stay in the archive index, or the JavaScript cannot see them.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         options = {'months': '2', 'month_resolution': '3600'}
@@ -827,14 +910,14 @@ class TestArchiveMemory:
             index = json.load(fd)
         named = set()
         for group in index['groups']:
-            for stamp in group.get('months', {}):
-                named.add('%s-%s.json' % (group['name'], stamp))
-        assert on_disk <= named, "files on disk that the index does not name"
+            for date in group.get('months', {}):
+                named.add('%s-%s.json' % (group['name'], date))
+        assert on_disk <= named, "files on disk that the archive index does not name"
 
     def test_a_lost_index_is_rebuilt_from_the_directory(self, config_dict, tmp_path):
-        """A lost index.json is restored from the files in the directory.
+        """A lost index.json is restored from the archive files in the directory.
 
-        Otherwise, deleting index.json would mean calculating the whole record again.
+        Otherwise, deleting index.json would mean calculating every archive file again.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         options = {'months': '2', 'month_resolution': '3600'}
@@ -857,10 +940,10 @@ class TestArchiveMemory:
         assert named(after) == named(before)
 
     def test_the_index_drops_files_that_have_gone(self, config_dict, tmp_path):
-        """The index drops a file that was deleted from the directory.
+        """The archive index drops a file that was deleted from the directory.
 
-        A name without a file sends the page after a 404. A deleted file inside the
-        window is written again, so the test deletes a month outside the window.
+        A name without a file sends the JavaScript after a 404. A deleted file inside
+        the window is written again, so the test deletes a month outside the window.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         options = {'months': '2', 'month_resolution': '3600'}
@@ -887,10 +970,11 @@ class TestArchiveMemory:
             index = json.load(fd)
         for group in index['groups']:
             assert oldest not in group.get('months', {}), \
-                "index still names %s for %s" % (oldest, group['name'])
+                "archive index still names %s for %s" % (oldest, group['name'])
 
-    def test_the_index_records_the_grid_of_each_file(self, config_dict, tmp_path):
-        """Files are not all on the same grid, so the reader is told per file."""
+    def test_the_index_records_the_aggregation_interval_of_each_file(self, config_dict,
+                                                                     tmp_path):
+        """Archive files can differ in aggregation interval, so it is named per file."""
         stop_ts = parameters.synthetic_dict['stop_ts']
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts)
         with open(os.path.join(data_dir, 'archive', 'index.json'), encoding='utf-8') as fd:
@@ -901,13 +985,13 @@ class TestArchiveMemory:
 
 
 class TestDayTier:
-    """The station's own readings, one file per day, kept for a while and then not."""
+    """One archive file per day, kept for a while and then not."""
 
     OPTIONS = {'days': '5', 'day_resolution': '1800'}
 
     @staticmethod
     def days(archive_dir):
-        return sorted({stamp_of(f) for f in tier_files(archive_dir, 'days')})
+        return sorted({date_of(f) for f in tier_files(archive_dir, 'days')})
 
     def test_one_file_per_day(self, config_dict, tmp_path):
         stop_ts = parameters.synthetic_dict['stop_ts']
@@ -919,8 +1003,9 @@ class TestDayTier:
         assert len(days) == 5, days
         assert days[-1] == time.strftime('%Y-%m-%d', time.localtime(stop_ts))
 
-    def test_the_grid_is_the_archive_interval(self, config_dict, tmp_path):
-        """A day_resolution of 0 uses the interval stored in the newest record."""
+    def test_the_aggregation_interval_is_the_archive_interval(self, config_dict,
+                                                              tmp_path):
+        """A day_resolution of 0 uses the archive interval of the day's records."""
         stop_ts = parameters.synthetic_dict['stop_ts']
         options = {'days': '2', 'day_resolution': '0'}
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
@@ -932,10 +1017,37 @@ class TestDayTier:
 
         assert payload['interval'] == parameters.synthetic_dict['interval']
 
+    def test_a_day_takes_the_archive_interval_most_of_its_records_have(self):
+        """A station that changes its archive interval late in a day keeps the old one.
+
+        Taken from the newest record alone, the whole day would get the new archive
+        interval, and most of its aggregation intervals would stay empty.
+        """
+        import sqlite3
+        connection = sqlite3.connect(':memory:')
+        connection.execute('CREATE TABLE archive (dateTime INTEGER, interval INTEGER)')
+        # Ten records five minutes apart, then three a minute apart.
+        stamps = [300 * n for n in range(1, 11)] + [3000 + 60 * n for n in range(1, 4)]
+        connection.executemany('INSERT INTO archive VALUES (?, ?)',
+                               [(ts, 5 if ts <= 3000 else 1) for ts in stamps])
+
+        class Manager:
+            table_name = 'archive'
+
+            @staticmethod
+            def getSql(sql, args):
+                return connection.execute(sql, tuple(args)).fetchone()
+
+        day = weeutil.weeutil.TimeSpan(0, 86400)
+        assert weewx.jsongenerator._archive_interval_of_day(Manager, day) == 300
+        # A day without records falls back to five minutes.
+        empty = weeutil.weeutil.TimeSpan(86400, 2 * 86400)
+        assert weewx.jsongenerator._archive_interval_of_day(Manager, empty) == 300
+
     def test_days_that_fall_out_of_the_window_are_removed(self, config_dict, tmp_path):
         """Day files that fall out of the 'days' window are deleted.
 
-        Otherwise the day tier would grow by one file per group per day, forever.
+        Otherwise the day tier would grow by one file per plot group per day, forever.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         run_generator(config_dict, tmp_path, gen_ts=stop_ts - 3 * 86400,
@@ -949,12 +1061,13 @@ class TestDayTier:
 
         assert len(after) == 5, after
         assert after[0] > before[0], "the window did not move on"
-        for stamp in before:
-            if stamp < after[0]:
+        for date in before:
+            if date < after[0]:
                 assert not [f for f in os.listdir(archive_dir)
-                            if f.endswith('-%s.json' % stamp)]
+                            if f.endswith('-%s.json' % date)]
 
-        # The index names no deleted day, or the page would fetch it and get a 404.
+        # The archive index names no deleted day, or the JavaScript would fetch it and
+        # get a 404.
         with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
         for group in index['groups']:
@@ -992,7 +1105,7 @@ def slow_clock(monkeypatch):
 
 
 class TestBudget:
-    """Building a long history across several reports instead of one long one."""
+    """Building a long history across several runs instead of one long one."""
 
     OPTIONS = {'budget': '30', 'months': '2', 'month_resolution': '3600'}
 
@@ -1000,14 +1113,14 @@ class TestBudget:
     def archive(data_dir):
         with open(os.path.join(data_dir, 'archive', 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
-        return {(g['name'], stamp) for g in index['groups'] for kind, _ in
-                weewx.jsongenerator.TIERS for stamp in g.get(kind, {})}
+        return {(g['name'], date) for g in index['groups'] for tier, _ in
+                weewx.jsongenerator.TIERS for date in g.get(tier, {})}
 
     def test_a_spent_budget_defers_whole_files(self, config_dict, tmp_path, monkeypatch):
-        """Once the budget is spent, a report starts no further file.
+        """Once the budget is spent, a run starts no further file.
 
-        The newest span comes first, so the month in progress is written before the
-        month before it.
+        The newest timespan comes first, so the month in progress is written before
+        the month before it.
         """
         slow_clock(monkeypatch)
         stop_ts = parameters.synthetic_dict['stop_ts']
@@ -1016,9 +1129,9 @@ class TestBudget:
         this_month = time.strftime('%Y-%m', time.localtime(stop_ts))
         assert self.archive(data_dir) == {('tempdew', this_month)}
 
-    def test_later_reports_finish_the_archive(self, config_dict, tmp_path_factory,
-                                              monkeypatch):
-        """Built across reports or all at once, the files have to say the same thing."""
+    def test_later_runs_finish_the_archive_files(self, config_dict, tmp_path_factory,
+                                                 monkeypatch):
+        """Built across runs or all at once, the files have to say the same thing."""
         slow_clock(monkeypatch)
         stop_ts = parameters.synthetic_dict['stop_ts']
         pieces = tmp_path_factory.mktemp('pieces')
@@ -1043,10 +1156,10 @@ class TestBudget:
                 assert json.load(fd)['series'] == built_up['series'], name
 
     def test_deferred_files_stay_in_the_index(self, config_dict, tmp_path, monkeypatch):
-        """A report that the budget stops early keeps the earlier files in the index.
+        """A run that the budget stops early keeps the older files in the archive index.
 
-        Dropping them would hide the page's history until a later report reaches them
-        again.
+        Dropping them would hide the history from the JavaScript until a later run
+        reaches them again.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         before = self.archive(run_generator(config_dict, tmp_path, gen_ts=stop_ts,
@@ -1060,7 +1173,7 @@ class TestBudget:
         assert after == before
 
     def test_the_day_view_is_never_deferred(self, config_dict, tmp_path, monkeypatch):
-        """The budget never defers the day tier, which the page draws today from."""
+        """The budget never defers the day tier, which the JavaScript draws today from."""
         slow_clock(monkeypatch)
         stop_ts = parameters.synthetic_dict['stop_ts']
         data_dir = run_generator(
@@ -1068,17 +1181,18 @@ class TestBudget:
             archive_options=dict(self.OPTIONS, days='3', day_resolution='1800'))
         archive_dir = os.path.join(data_dir, 'archive')
 
-        days = {stamp_of(f) for f in tier_files(archive_dir, 'days', 'tempdew')}
+        days = {date_of(f) for f in tier_files(archive_dir, 'days', 'tempdew')}
         assert len(days) == 3, days
 
 
 class TestArchiveSeriesShapes:
-    """What a series in an archive file can carry beyond one number per slot."""
+    """What a series in an archive file carries beyond its values."""
 
     def test_a_wind_vector_keeps_its_components(self, config_dict, tmp_path):
         """A wind vector series keeps its components in 'vector_x' and 'vector_y'.
 
-        Without them, the page could not draw the wind vector plot from the archive.
+        Without them, the JavaScript could not draw the wind vector plot from the
+        archive files.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts)
@@ -1099,9 +1213,9 @@ class TestArchiveSeriesShapes:
             assert abs((x ** 2 + y ** 2) ** 0.5 - v) < 0.01
 
     def test_a_line_keeps_its_own_aggregation_interval(self, config_dict, tmp_path):
-        """A bar with 'aggregate_interval = 3600' stays hourly on a finer grid.
+        """A bar with 'aggregate_interval = 3600' stays hourly in a day file at 900 s.
 
-        Summing per slot would give a fraction of the hourly total under an hourly
+        Summing per 900 s would give a fraction of the hourly total under an hourly
         label, drawn as a row of hairline bars.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
@@ -1117,17 +1231,18 @@ class TestArchiveSeriesShapes:
         values = payload['series'][0]['values']
         filled = [i for i, v in enumerate(values) if v is not None]
         assert filled, "no rain at all"
-        # An hourly total on a quarter-hour grid lands on every fourth slot.
+        # An hourly total in a file at a quarter of an hour lands at every fourth
+        # position.
         gaps = {b - a for a, b in zip(filled, filled[1:])}
         assert gaps and min(gaps) >= 4, \
-            "readings are closer together than the hour they are totalled over: %s" % sorted(gaps)[:5]
+            "totals are closer together than the hour they are totalled over: %s" % sorted(gaps)[:5]
 
     def test_finished_days_meet_without_a_seam(self, config_dict, tmp_path):
         """Each day file ends exactly where the next one starts.
 
-        A day with a slot past midnight shares an instant with the next file. No run
-        fills that slot, because the day is finished and its file is skipped. The page
-        then shows a gap between each pair of days.
+        A day file with an aggregation interval past midnight shares it with the next
+        file. No run fills it, because the day is finished and its file is skipped. The
+        JavaScript then shows a gap between each pair of days.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         options = {'days': '5', 'day_resolution': '900'}
@@ -1138,25 +1253,26 @@ class TestArchiveSeriesShapes:
         files = tier_files(archive_dir, 'days', 'tempdew')
         assert len(files) > 2, files
 
-        spans = []
+        extents = []
         for name in files:
             with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
                 payload = json.load(fd)
-            spans.append((name, payload['start'], payload['count'],
-                          payload['interval']))
+            extents.append((name, payload['start'], payload['count'],
+                            payload['interval']))
 
-        # The last file is the day still filling up, so it stops where the readings do.
-        for (name, start, count, interval), (_, later, _, _) in zip(spans, spans[1:]):
+        # The last file is the day still filling up, so it stops where the database
+        # does.
+        for (name, start, count, interval), (_, later, _, _) in zip(extents, extents[1:]):
             assert start + count * interval == later, (
                 "%s ends at %d, but the next file starts at %d"
                 % (name, start + count * interval, later))
 
     def test_a_finished_day_holds_nothing_from_the_next(self, config_dict, tmp_path):
-        """An hourly bar is not placed a slot early.
+        """An hourly bar is not placed an aggregation interval early.
 
-        get_series() clips its last interval to the end of the span, so the last bar
-        of a day is shorter than an hour. Placed by its end, the bar would land a slot
-        early and overlap the bar before it.
+        get_series() clips its last aggregation interval to the end of the timespan, so
+        the last bar of a day is shorter than an hour. Placed by its end, the bar would
+        land one position early and overlap the bar before it.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         options = {'days': '5', 'day_resolution': '900'}
@@ -1179,10 +1295,10 @@ class TestArchiveSeriesShapes:
                 continue
             gaps = {b - a for a, b in zip(filled, filled[1:])}
             assert min(gaps) >= every, (
-                "%s files an hourly bar %d slots after the last, not %d: %s"
+                "%s files an hourly bar %d positions after the last, not %d: %s"
                 % (name, min(gaps), every, filled[-6:]))
             assert max(filled) < payload['count'], (
-                "%s fills slot %d of %d" % (name, max(filled), payload['count']))
+                "%s fills position %d of %d" % (name, max(filled), payload['count']))
 
     def test_named_types_carry_their_extremes(self, config_dict, tmp_path):
         stop_ts = parameters.synthetic_dict['stop_ts']
@@ -1213,6 +1329,45 @@ class TestArchiveSeriesShapes:
             payload = json.load(fd)
         assert 'min' not in payload['series'][0]
 
+    def test_a_bar_carries_the_extremes_of_each_interval_of_the_file(self, config_dict,
+                                                                    tmp_path):
+        """The hourly rain bar in a day file at fifteen minutes carries the extremes.
+
+        The extremes are per aggregation interval of the file, not of the bar, so the
+        values of the bar are sorted into the aggregation intervals of the file a
+        second time.
+        """
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        options = {'days': '2', 'day_resolution': '900', 'extremes': 'rain'}
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
+                                 archive_options=options)
+        archive_dir = os.path.join(data_dir, 'archive')
+        name = tier_files(archive_dir, 'days', 'rain')[0]
+        with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
+            payload = json.load(fd)
+        series = payload['series'][0]
+        assert series['aggregate_interval'] == 3600
+        assert len(series['max']) == payload['count']
+
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        binder = weewx.manager.DBBinder(cd)
+        try:
+            mgr = binder.get_manager('wx_binding')
+            start, interval = payload['start'], payload['interval']
+            for i, highest in enumerate(series['max']):
+                timespan = weeutil.weeutil.TimeSpan(start + i * interval,
+                                                    start + (i + 1) * interval)
+                expected = weewx.units.convert(
+                    weewx.xtypes.get_aggregate('rain', timespan, 'max', mgr),
+                    payload['unit'])
+                if expected[0] is None:
+                    assert highest is None, i
+                else:
+                    assert highest == pytest.approx(expected[0], abs=0.001), i
+            assert any(highest is not None for highest in series['max'])
+        finally:
+            binder.close()
+
     def test_extending_carries_the_extra_arrays_too(self, config_dict,
                                                     tmp_path_factory):
         """Vectors and extremes have to survive the extending path, like values do."""
@@ -1241,7 +1396,7 @@ class TestRebuildDue:
 
     DAY = 86400
 
-    def test_no_stamp_means_rebuild(self):
+    def test_never_rebuilt_means_rebuild(self):
         assert weewx.jsongenerator._rebuild_due(None, 1000, self.DAY)
 
     def test_turned_off(self):
@@ -1253,7 +1408,7 @@ class TestRebuildDue:
         assert not weewx.jsongenerator._rebuild_due(morning, evening, self.DAY)
 
     def test_over_midnight(self):
-        """Two reports two minutes apart, across midnight, trigger a rebuild."""
+        """Two runs two minutes apart, across midnight, trigger a rebuild."""
         before = int(time.mktime((2010, 3, 1, 23, 59, 0, 0, 0, -1)))
         after = int(time.mktime((2010, 3, 2, 0, 1, 0, 0, 0, -1)))
         assert weewx.jsongenerator._rebuild_due(before, after, self.DAY)

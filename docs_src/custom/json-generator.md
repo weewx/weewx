@@ -35,15 +35,15 @@ including ones you added by hand years ago, is available as JSON straight away.
 
 The files go into a `data` subdirectory of `HTML_ROOT`. The readings are in
 `data/archive`, which covers your whole record, back to your first reading.
-There is also a `skin.json`, which says how long each time span is and which
-units the readings can be shown in. A page reads that first.
+There is also a `skin.json`, which holds the `time_length` of each time period
+and the units the readings can be shown in. A page reads that first.
 
 ## What the charts take from the images
 
 Sharing the `[ImageGenerator]` section means you define a plot once. That cuts
 both ways, and it is worth knowing which way round.
 
-**What the plot is** comes from there. The time span, the aggregation, the data
+**What the plot is** comes from there. The time length, the aggregation, the data
 binding, the observation types, their labels, the line colors, the y scaling:
 change any of these and the chart follows, exactly as the PNG does.
 
@@ -89,11 +89,11 @@ detail, and a page fetches only the pieces it is showing:
 | | covers | written |
 |---|---|---|
 | the last few days | your station's own readings | one file per day |
-| the last few months | a closer grid | one file per month |
-| everything before that | a coarser grid, coarser still with age | one file per year |
+| the last few months | a shorter aggregation interval | one file per month |
+| everything before that | a longer aggregation interval, longer still with age | one file per year |
 
 You do not have to choose between them. The page picks the finest level that
-covers the span it is showing.
+covers the time it is showing.
 
 How far each level reaches is yours to set:
 [`days`](../reference/skin-options/jsongenerator.md#days),

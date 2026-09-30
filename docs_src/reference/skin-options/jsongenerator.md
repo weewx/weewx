@@ -49,15 +49,17 @@ night. Requires `pyephem`. Default is `True`.
 
 ## [[Archive]]
 
-The archive is the whole record, cut into files a page can fetch one at a time.
-It is written on three grids: the station's own readings for the last few days,
-a closer grid per month, and one per calendar year that coarsens with age. A
-page picks the finest grid that covers the span it is showing.
+The archive is the whole database, cut into files the browser can fetch one at a
+time. There are three tiers: one file per day for the last few days, at the
+archive interval; one file per month, at a shorter aggregation interval than the
+years; and one file per calendar year, at an aggregation interval that grows
+with age. The browser picks the tier with the shortest aggregation interval that
+covers the time it is showing.
 
 The archive holds the plots of `[[day_images]]`, named without the prefix
 `day`, e.g., `tempdew` for `daytempdew`. A line without an `aggregate_type` of
-its own is averaged over each slot. The files go into `archive`, below
-[`json_dest_dir`](#json_dest_dir).
+its own is averaged over each aggregation interval. The files go into
+`archive`, below [`json_dest_dir`](#json_dest_dir).
 
 #### years
 
@@ -67,22 +69,23 @@ How many calendar years, counting back from this one, are written at
 
 #### year_resolution
 
-The grid a year file is written on, for the years named by [`years`](#years).
-May be a number of seconds or a duration such as `1h`. Default is `1h`.
+The aggregation interval of the year files, for the years named by
+[`years`](#years). May be a number of seconds or a duration such as `1h`.
+Default is `1h`.
 
 #### old_year_resolution
 
-The grid the older year files are written on. A year at four hours is about
-2,200 slots. Default is `4h`.
+The aggregation interval of the older year files. A year at four hours holds
+about 2,200 values per series. Default is `4h`.
 
 #### months
 
-How many calendar months, counting back from this one, are written on a closer
-grid than the year files, one file per month. Default is `2`.
+How many calendar months, counting back from this one, are written at a shorter
+aggregation interval than the year files, one file per month. Default is `2`.
 
 #### month_resolution
 
-The grid the month files are written on. Default is `900`, that is, fifteen
+The aggregation interval of the month files. Default is `900`, that is, fifteen
 minutes.
 
 #### days
@@ -95,8 +98,8 @@ tier does not grow.
 
 #### day_resolution
 
-The grid the day files are written on. `0`, the default, uses the station's
-archive interval.
+The aggregation interval of the day files. `0`, the default, uses the archive
+interval that most archive records of the day have.
 
 #### budget
 
@@ -113,16 +116,15 @@ page without today is of little use.
 #### extremes
 
 Comma separated list of observation types that also carry their lowest and
-highest reading in each slot, not only the aggregate. An average is the wrong
-thing to remember for a gust: averaging it into a four hour slot turns a storm
-into a breeze. Each name costs two more queries per slot. Default is
-`windGust, windSpeed, rainRate, UV`.
+highest value in each aggregation interval, not only the aggregate. An average
+is the wrong thing to remember for a gust: averaged over four hours, a storm
+turns into a breeze. Default is `windGust, windSpeed, rainRate, UV`.
 
 #### rebuild
 
 How often every file is built from the whole database again, rather than
 carried forward from the one already on disk. Default is `0`, which never does.
 
-A file that has been written is correct for the span it covers, and the index
-is checked against the directory on every run. Set it to a number of hours to
+A file that has been written is correct for the time it covers, and the archive
+index is checked against the directory on every run. Set it to a number of hours to
 have the files rewritten anyway, for a station whose history has been edited.
