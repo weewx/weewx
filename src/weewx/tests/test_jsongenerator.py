@@ -383,6 +383,29 @@ class TestArchive:
         # between the first and the last value holds one.
         assert len(filled) > 0.9 * (filled[-1] - filled[0] + 1)
 
+    def test_a_sensor_without_values_is_looked_for_over_whole_days(
+            self, config_dict, tmp_path, monkeypatch):
+        """Over whole days, the daily summaries answer whether a sensor has a value.
+
+        Over any other timespan, the database searches the archive records, and it does
+        that on every run for each sensor a station lacks.
+        """
+        domains = []
+        original = weewx.jsongenerator._skip_if_empty
+
+        def skip_if_empty(db_manager, var_type, check_domain):
+            domains.append(check_domain)
+            return original(db_manager, var_type, check_domain)
+
+        monkeypatch.setattr(weewx.jsongenerator, '_skip_if_empty', skip_if_empty)
+        run_generator(config_dict, tmp_path,
+                      archive_options={'days': '2', 'months': '2',
+                                       'month_resolution': '3600'})
+        assert domains
+        for domain in domains:
+            assert weeutil.weeutil.isStartOfDay(domain.start), domain
+            assert weeutil.weeutil.isStartOfDay(domain.stop), domain
+
     def test_the_unit_label_is_only_in_skin_json(self, archive_dir):
         """An archive file names its unit, and skin.json gives the label of each unit.
 
@@ -1526,6 +1549,16 @@ class TestHelpers:
 
     def test_normalize_color_survives_nonsense(self):
         assert weewx.jsongenerator._normalize_color('0xnothex') == '0xnothex'
+
+    def test_whole_days_stop_at_the_midnight_they_end_on(self):
+        """A timespan that ends at midnight touches no part of the next day."""
+        midnight = int(time.mktime((2010, 3, 2, 0, 0, 0, 0, 0, -1)))
+        before = int(time.mktime((2010, 3, 1, 0, 0, 0, 0, 0, -1)))
+        assert weewx.jsongenerator._whole_days(before + 3600, midnight) \
+            == weeutil.weeutil.TimeSpan(before, midnight)
+        after = int(time.mktime((2010, 3, 3, 0, 0, 0, 0, 0, -1)))
+        assert weewx.jsongenerator._whole_days(before + 3600, midnight + 60) \
+            == weeutil.weeutil.TimeSpan(before, after)
         assert weewx.jsongenerator._normalize_color(None) is None
 
     def test_split_vectors_leaves_scalars_alone(self):

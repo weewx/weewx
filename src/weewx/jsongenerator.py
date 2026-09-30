@@ -706,10 +706,12 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 out again. None if the series holds no value.
         """
         mgr = self.db_binder.get_manager(line['options']['data_binding'])
-        # Many skins plot sensors a station lacks. One query that stops at the first
-        # archive record saves reading a whole year of nothing, on every run.
+        # Many skins plot sensors a station lacks. One query saves reading a whole year
+        # of nothing, on every run. Asked over whole days, the daily summaries answer
+        # it. Over the timespan itself, the database would search the archive records
+        # of the year so far.
         if old_file is None and _skip_if_empty(mgr, line['data_type'],
-                                               TimeSpan(start, stop)):
+                                               _whole_days(start, stop)):
             return None
 
         def resume(aggregate_interval):
@@ -1368,6 +1370,20 @@ def _intervals(start, stop, aggregate_interval):
         begins.append(int(timespan.start))
         ends.append(int(timespan.stop))
     return begins, ends
+
+
+def _whole_days(start, stop):
+    """Return the timespan from the midnight before 'start' to the one after 'stop'.
+
+    Args:
+        start (int): The beginning of a timespan.
+        stop (int): Its end.
+
+    Returns:
+        weeutil.weeutil.TimeSpan: The calendar days the timespan touches.
+    """
+    return TimeSpan(int(weeutil.weeutil.startOfDay(start)),
+                    int(weeutil.weeutil.archiveDaySpan(stop).stop))
 
 
 def _daynight(start_ts, stop_ts, lat, lon):
