@@ -754,64 +754,7 @@ class TestExtends:
 
 
 class TestAggregation:
-    """How values are sorted into aggregation intervals, and aggregated there.
-
-    The results must be the ones the database gives.
-    """
-
-    def test_a_record_belongs_to_the_aggregation_interval_it_ends(self):
-        """A record stamped t belongs to the one with begin < t <= end."""
-        per_interval = weewx.jsongenerator._sort_into_intervals(
-            [0, 10], [10, 20], 0, [5, 10, 11, 20, 21], [1, 2, 3, 4, 5])
-        assert per_interval == {0: [1, 2], 1: [3, 4]}
-
-    def test_a_missing_value_is_left_out(self):
-        per_interval = weewx.jsongenerator._sort_into_intervals(
-            [0], [10], 0, [5, 6], [None, 2.0])
-        assert per_interval == {0: [2.0]}
-
-    @pytest.mark.parametrize('aggregate_type, expected', [
-        ('avg', 2.0), ('sum', 6.0), ('min', 1.0), ('max', 3.0),
-        ('first', 3.0), ('last', 1.0),
-    ])
-    def test_the_simple_aggregation_types(self, aggregate_type, expected):
-        assert weewx.jsongenerator._reduce(aggregate_type, [3.0, 2.0, 1.0]) == expected
-
-    def test_a_vector_compares_by_its_length(self):
-        assert weewx.jsongenerator._reduce('max', [3j, 1 + 1j]) == 3j
-
-    def test_vecdir_is_the_bearing_of_the_sum(self):
-        north, east = weeutil.weeutil.to_complex(1.0, 0.0), \
-            weeutil.weeutil.to_complex(1.0, 90.0)
-        assert weewx.jsongenerator._reduce('vecdir', [north, east]) == pytest.approx(45.0)
-        assert weewx.jsongenerator._reduce('vecdir', [3 * north, east]) \
-            == pytest.approx(18.43, abs=0.01)
-
-    def test_vecdir_of_calm_air_has_no_bearing(self):
-        assert weewx.jsongenerator._reduce('vecdir', [0j, 0j]) is None
-
-    def test_vecdir_weighs_each_record_by_its_archive_interval(self, config_dict,
-                                                                tmp_path, monkeypatch):
-        """A record with a longer archive interval counts for more, as in the database."""
-        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
-        generator = weewx.jsongenerator.JSONGenerator(
-            cd, build_skin_dict(str(tmp_path)), None, first_run=True,
-            stn_info=weewx.station.StationInfo(**cd['Station']))
-        generator.setup()
-        north = weeutil.weeutil.to_complex(1.0, 0.0)
-        east = weeutil.weeutil.to_complex(1.0, 90.0)
-        # North for 900 s, then east for 300 s.
-        monkeypatch.setattr(weewx.xtypes, 'get_series', lambda *args, **kwargs: (
-            weewx.units.ValueTuple([0, 900], 'unix_epoch', 'group_time'),
-            weewx.units.ValueTuple([900, 1200], 'unix_epoch', 'group_time'),
-            weewx.units.ValueTuple([north, east], 'meter_per_second', 'group_speed')))
-        line = {'aggregate_type': 'vecdir', 'var_type': 'wind',
-                'aggregate_interval': 3600, 'options': {}}
-
-        _, pairs, _ = generator._aggregate_line(line, {}, None,
-                                                weeutil.weeutil.TimeSpan(0, 3600), [0],
-                                                [3600], 0)
-        assert pairs == [(0, pytest.approx(18.43, abs=0.01))]
+    """The aggregates in an archive file are the ones the database gives."""
 
     def test_vecdir_matches_the_database(self, config_dict, tmp_path):
         """Each bearing in the file is the one the database gives."""

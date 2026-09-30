@@ -118,7 +118,8 @@ page without today is of little use.
 Comma separated list of observation types that also carry their lowest and
 highest value in each aggregation interval, not only the aggregate. An average
 is the wrong thing to remember for a gust: averaged over four hours, a storm
-turns into a breeze. Default is `windGust, windSpeed, rainRate, UV`.
+turns into a breeze. Each name costs two more queries per aggregation interval.
+Default is `windGust, windSpeed, rainRate, UV`.
 
 #### rebuild
 

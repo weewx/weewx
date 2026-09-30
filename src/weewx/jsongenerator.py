@@ -48,7 +48,6 @@ import copy
 import datetime
 import json
 import logging
-import math
 import os
 import re
 import time
@@ -705,19 +704,26 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         if old_file is None and _skip_if_empty(mgr, line['data_type'],
                                                TimeSpan(start, stop)):
             return None
-        # The aggregation intervals of the line. Only a bar has other ones than the
-        # archive file. See _line_spec().
-        begins, ends = _intervals(start, stop, line['aggregate_interval'])
+        def resume(aggregate_interval):
+            """Return where to start calculating, and how many old values to keep.
 
-        # When extending, the aggregation interval that holds the newest of the archive
-        # file on disk may have filled up since. So it is calculated again, together
-        # with every aggregation interval after it. 'first' is its position, 'since' its
-        # beginning, and 'keep' the number of aggregates to take from the file on disk.
-        first = bisect.bisect_left(ends, old_file['newest']) if old_file is not None else 0
-        since = begins[first] if first < len(begins) else stop
-        keep = int((since - start) // interval)
+            When extending, the aggregation interval that holds the newest of the
+            archive file on disk may have filled up since. So it is calculated again,
+            together with every aggregation interval after it.
 
-        def new_values(key):
+            Returns:
+                tuple[int, int]: A two-way tuple (since, keep). 'since' is where that
+                    aggregation interval begins, and 'keep' the number of values to
+                    take from the file on disk.
+            """
+            if old_file is None:
+                return start, 0
+            begins, ends = _intervals(start, stop, aggregate_interval)
+            i = bisect.bisect_left(ends, old_file['newest'])
+            since = begins[i] if i < len(begins) else stop
+            return since, int((since - start) // interval)
+
+        def new_values(key, keep):
             """Return a list of 'count' values, with the first 'keep' from old_series."""
             carried = old_series.get(key) if old_series is not None else None
             if carried is None:
@@ -734,12 +740,14 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     out[i] = round(val, rounding) if rounding is not None else val
             return out
 
-        aggregated = self._aggregate_line(
-            line=line, plot_options=plot_options, mgr=mgr, timespan=TimeSpan(since, stop),
-            begins=begins, ends=ends, first=first)
+        # The aggregation intervals of the line. Only a bar has other ones than the
+        # archive file. See _line_spec().
+        since, keep = resume(line['aggregate_interval'])
+        aggregated = self._aggregate_line(line=line, plot_options=plot_options, mgr=mgr,
+                                          timespan=TimeSpan(since, stop))
         if aggregated is None:
             return None
-        unit, pairs, sorted_values = aggregated
+        unit, pairs = aggregated
         empty = all(val is None for _, val in pairs)
         if old_series is None and empty:
             return None
@@ -775,35 +783,33 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             # the arrows from the components.
             speeds, bearings = _split_vectors(values)
             instants = [begin for begin, _ in pairs]
-            entry['values'] = fill(new_values('values'), zip(instants, speeds))
-            entry['vector_x'] = fill(new_values('vector_x'), zip(instants, components[0]))
-            entry['vector_y'] = fill(new_values('vector_y'), zip(instants, components[1]))
+            entry['values'] = fill(new_values('values', keep), zip(instants, speeds))
+            entry['vector_x'] = fill(new_values('vector_x', keep),
+                                     zip(instants, components[0]))
+            entry['vector_y'] = fill(new_values('vector_y', keep),
+                                     zip(instants, components[1]))
             if bearings is not None:
-                entry['directions'] = fill(new_values('directions'),
+                entry['directions'] = fill(new_values('directions', keep),
                                            zip(instants, bearings))
             entry['plot_type'] = 'vector'
             if line['rotate'] is not None:
                 entry['vector_rotate'] = -float(line['rotate'])
         else:
-            entry['values'] = fill(new_values('values'), pairs)
+            entry['values'] = fill(new_values('values', keep), pairs)
 
-        # The lowest and highest value per aggregation interval, for the observation
-        # types named in 'extremes'. They come from the values already read, so they
-        # cost no query.
-        if sorted_values is not None and line['var_type'] in extremes \
+        # The lowest and highest value per aggregation interval of the archive file, for
+        # the observation types named in 'extremes'. For a bar, these are finer than
+        # its own aggregation intervals.
+        if line['var_type'] in extremes \
                 and line['aggregate_type'] not in ('min', 'max', 'vecdir') and not components:
-            per_interval, records = sorted_values
-            file_begins = begins
-            if line['aggregate_interval'] != interval:
-                # A bar's aggregation intervals are coarser than those of the archive
-                # file. Sort the values again, into those of the file.
-                file_begins, file_ends = _intervals(start, stop, interval)
-                per_interval = _sort_into_intervals(
-                    file_begins, file_ends, bisect.bisect_left(file_ends, since), *records)
+            since, keep = resume(interval)
             for which in ('min', 'max'):
-                entry[which] = fill(new_values(which),
-                                    ((file_begins[i], _reduce(which, vals))
-                                     for i, vals in per_interval.items()))
+                extreme = self._aggregate_line(
+                    line=line, plot_options=plot_options, mgr=mgr,
+                    timespan=TimeSpan(since, stop), aggregate_type=which,
+                    aggregate_interval=interval)
+                if extreme is not None:
+                    entry[which] = fill(new_values(which, keep), extreme[1])
         return entry
 
     def _line_spec(self, line_dict, line_name, interval):
@@ -860,76 +866,37 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 'rotate': options.get('vector_rotate'), 'options': options,
                 'data_type': options.get('data_type', line_name)}
 
-    def _aggregate_line(self, line, plot_options, mgr, timespan, begins, ends, first):
-        """Aggregate the values of one line, one aggregate per aggregation interval.
+    def _aggregate_line(self, line, plot_options, mgr, timespan, aggregate_type=None,
+                        aggregate_interval=None):
+        """Return the aggregates of one line over a timespan, as the ImageGenerator does.
 
         Args:
             line (dict): The line, as _line_spec() returns it.
             plot_options (dict): The options of the plot the line belongs to.
             mgr (weewx.manager.Manager): The database manager.
             timespan (weeutil.weeutil.TimeSpan): The timespan to aggregate.
-            begins (list[int]): Where each aggregation interval of the line begins.
-            ends (list[int]): Where each one ends.
-            first (int): The position of the first aggregation interval inside
-                'timespan'.
+            aggregate_type (str|None): The aggregation type, or None for the line's own.
+            aggregate_interval (int|None): The aggregation interval in seconds, or None
+                for the line's own.
 
         Returns:
-            tuple|None: A three-way tuple (unit, pairs, sorted_values). 'pairs' holds
-                (begin, aggregate) for each aggregation interval with an aggregate.
-                'sorted_values', for the extremes, is a two-way tuple (per_interval,
-                records): 'records' holds the timestamps and the values of the archive
-                records, and 'per_interval' maps the position of each aggregation
-                interval to its values. 'sorted_values' is None where the database did
-                the aggregation. The result is None if the database knows neither the
+            tuple|None: A two-way tuple (unit, pairs). 'pairs' holds (begin, aggregate)
+                for each aggregation interval. None if the database knows neither the
                 observation type nor the aggregation type.
         """
         options = dict(line['options'])
         options.pop('aggregate_type', None)
         options.pop('aggregate_interval', None)
-
-        if line['aggregate_type'] in _RAW_AGGREGATES:
-            # get_series() can aggregate, but it runs one query per aggregation
-            # interval, e.g., 8760 queries for a year at one hour. So read the values of
-            # the archive records with one query, sort them into the aggregation
-            # intervals, and aggregate each one here.
-            # 'vecdir' takes the bearing of the vector sum, so it reads the vectors.
-            read_type = 'windvec' if line['aggregate_type'] == 'vecdir' else line['var_type']
-            try:
-                start_vec, stop_vec, data_vec = weewx.xtypes.get_series(
-                    read_type, timespan, mgr, **options)
-            except (weewx.UnknownType, weewx.UnknownAggregation):
-                pass
-            else:
-                if line['aggregate_type'] == 'vecdir':
-                    # The database takes the bearing of the sum of the wind vectors,
-                    # each multiplied by its archive interval. So multiply here, and
-                    # _reduce() adds them up. A bearing does not depend on the unit of
-                    # the speed, so the vectors need no conversion.
-                    unit = self.converter.getTargetUnit('wind', 'vecdir')[0]
-                    values = [None if value is None else value * (stop - start)
-                              for value, start, stop
-                              in zip(data_vec[0], start_vec[0], stop_vec[0])]
-                else:
-                    unit, values = self._convert(data_vec, plot_options)
-                # An archive record belongs to the aggregation interval its timestamp,
-                # i.e., the end of the record, falls in.
-                records = (stop_vec[0], values)
-                per_interval = _sort_into_intervals(begins, ends, first, *records)
-                pairs = [(begins[i], _reduce(line['aggregate_type'], vals))
-                         for i, vals in sorted(per_interval.items())]
-                return unit, pairs, (per_interval, records)
-
-        # An aggregation type that _reduce() does not know, or an observation type that
-        # exists only as an aggregate: one query per aggregation interval, as the
-        # ImageGenerator does it.
         try:
             start_vec, _, data_vec = weewx.xtypes.get_series(
-                line['var_type'], timespan, mgr, aggregate_type=line['aggregate_type'],
-                aggregate_interval=line['aggregate_interval'], **options)
+                line['var_type'], timespan, mgr,
+                aggregate_type=aggregate_type or line['aggregate_type'],
+                aggregate_interval=aggregate_interval or line['aggregate_interval'],
+                **options)
         except (weewx.UnknownType, weewx.UnknownAggregation):
             return None
         unit, values = self._convert(data_vec, plot_options)
-        return unit, list(zip(start_vec[0], values)), None
+        return unit, list(zip(start_vec[0], values))
 
     def _convert(self, data_vec, plot_options):
         """Convert a series into the unit of the plot, or else of the report.
@@ -1382,70 +1349,6 @@ def _intervals(start, stop, aggregate_interval):
         begins.append(int(timespan.start))
         ends.append(int(timespan.stop))
     return begins, ends
-
-
-def _sort_into_intervals(begins, ends, first, stamps, values):
-    """Sort the values of archive records into the aggregation intervals they belong to.
-
-    An archive record stamped t belongs to the aggregation interval with
-    begin < t <= end, as in the queries of the database.
-
-    Args:
-        begins (list[int]): Where each aggregation interval begins.
-        ends (list[int]): Where each one ends.
-        first (int): The position of the first aggregation interval to fill.
-        stamps (list[int]): The timestamp of each archive record.
-        values (list): The value of each. A None is left out.
-
-    Returns:
-        dict: {position: values} for each aggregation interval that holds a value.
-    """
-    out = {}
-    for stamp, value in zip(stamps, values):
-        if value is None:
-            continue
-        i = bisect.bisect_left(ends, stamp, first)
-        if i < len(ends) and begins[i] < stamp:
-            out.setdefault(i, []).append(value)
-    return out
-
-
-# The aggregation types _reduce() calculates itself. For any other, get_series() asks
-# the database, one query per aggregation interval.
-_RAW_AGGREGATES = ('avg', 'sum', 'min', 'max', 'first', 'last', 'vecdir')
-
-
-def _reduce(aggregate_type, values):
-    """Aggregate the values of one aggregation interval, as the database would.
-
-    Args:
-        aggregate_type (str): One of _RAW_AGGREGATES.
-        values (list[float|complex]): The values of the archive records, oldest first.
-            For 'vecdir', the wind vectors, each multiplied by its archive interval.
-
-    Returns:
-        float|complex|None: The aggregate. A wind vector with no length has no
-            bearing, so 'vecdir' then returns None.
-    """
-    if aggregate_type == 'avg':
-        return sum(values) / len(values)
-    if aggregate_type == 'sum':
-        return sum(values)
-    if aggregate_type in ('min', 'max'):
-        pick = min if aggregate_type == 'min' else max
-        # A wind vector compares by its length, as in the database. Python 3.7 does
-        # not take key=None, so the two cases stay apart.
-        return pick(values, key=abs) if isinstance(values[0], complex) else pick(values)
-    if aggregate_type == 'first':
-        return values[0]
-    if aggregate_type == 'last':
-        return values[-1]
-    # 'vecdir': the bearing of the sum of the vectors.
-    total = sum(values)
-    if not total:
-        return None
-    deg = 90.0 - math.degrees(math.atan2(total.imag, total.real))
-    return deg if deg >= 0 else deg + 360.0
 
 
 def _daynight(start_ts, stop_ts, lat, lon):
