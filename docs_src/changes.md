@@ -1,6 +1,15 @@
 WeeWX change history
 --------------------
 
+### 5.6.0
+
+Improved the performance of `weewx.xtypes.ArchiveTable.get_series()` for
+aggregated series (such as hourly aggregation over a long timespan). It now
+issues a single bulk SQL query for the whole timespan, then calculates the
+aggregates in memory, instead of issuing one SQL query per aggregation
+bucket.
+
+
 ### 5.5.2 23-Sep-2026
 
 Fixed the version check implementation for generating maintainer version of
