@@ -403,3 +403,103 @@ def test_get_series_archive_agg_query_count(config_dict):
 
     assert len(data_vec[0]) > 100
     assert call_count[0] < 10
+
+
+# Page spans used to exercise the paging logic of ArchiveTable.get_series(). A span of 1 second
+# results in one bucket per page. A span of 5000 seconds is not a multiple of either the archive
+# interval or the aggregation interval.
+page_spans = [1, 3600, 5000, 24 * 3600, weewx.xtypes.ArchiveTable.series_page_span]
+
+
+def _get_hourly_series(db_manager, obs_type, aggregate_type):
+    return weewx.xtypes.ArchiveTable.get_series(obs_type,
+                                                TimeSpan(month_start_ts, month_stop_ts),
+                                                db_manager,
+                                                aggregate_type,
+                                                3600)
+
+
+def _assert_series_equal(actual, expected):
+    for actual_vt, expected_vt in zip(actual, expected):
+        assert actual_vt[1:] == expected_vt[1:]
+        assert len(actual_vt[0]) == len(expected_vt[0])
+        for a, e in zip(actual_vt[0], expected_vt[0]):
+            if a is None or e is None:
+                assert a == e
+            else:
+                assert a == pytest.approx(e, abs=1e-6)
+
+
+@pytest.mark.parametrize('obs_type', ['outTemp', 'rain', 'wind'])
+@pytest.mark.parametrize('aggregate_type',
+                         sorted(weewx.xtypes.ArchiveTable._fast_aggregate_types)
+                         + ['cumulative'])
+def test_get_series_archive_agg_paged(config_dict, monkeypatch, obs_type, aggregate_type):
+    """The paged fast path of ArchiveTable.get_series() must give the same results as the
+    per-bucket fallback, no matter what the page span is."""
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        # First, get the reference results by forcing the per-bucket fallback.
+        with monkeypatch.context() as m:
+            m.setattr(weewx.xtypes.ArchiveTable, '_fast_aggregate_types', set())
+            expected = _get_hourly_series(db_manager, obs_type, aggregate_type)
+        # March has 31 days, less one hour for the DST change.
+        assert len(expected[0][0]) == 31 * 24 - 1
+
+        for page_span in page_spans:
+            with monkeypatch.context() as m:
+                m.setattr(weewx.xtypes.ArchiveTable, 'series_page_span', page_span)
+                actual = _get_hourly_series(db_manager, obs_type, aggregate_type)
+            _assert_series_equal(actual, expected)
+
+
+@pytest.mark.parametrize('page_span', page_spans)
+def test_get_series_archive_agg_page_bounds(config_dict, monkeypatch, page_span):
+    """The number of queries issued by the paged fast path should be about the timespan divided
+    by the page span, and no single query should return more than about a page of rows."""
+    monkeypatch.setattr(weewx.xtypes.ArchiveTable, 'series_page_span', page_span)
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        row_counts = []
+        orig_genSql = db_manager.genSql
+
+        def counting_genSql(*args, **kwargs):
+            row_counts.append(0)
+            for row in orig_genSql(*args, **kwargs):
+                row_counts[-1] += 1
+                yield row
+
+        db_manager.genSql = counting_genSql
+        try:
+            start_vec, stop_vec, data_vec = _get_hourly_series(db_manager, 'outTemp', 'avg')
+        finally:
+            db_manager.genSql = orig_genSql
+
+    n_buckets = len(data_vec[0])
+    assert n_buckets == 31 * 24 - 1
+    # Each page holds a whole number of hourly buckets: just enough to span page_span seconds.
+    buckets_per_page = max(1, -(-page_span // 3600))
+    expected_pages = n_buckets / buckets_per_page
+    assert expected_pages - 1 <= len(row_counts) <= expected_pages + 1
+    # No single query returns more than a page of rows.
+    assert max(row_counts) <= buckets_per_page * 3600 / interval + 1
+    if page_span == 24 * 3600:
+        assert 30 <= len(row_counts) <= 32
+
+
+def test_gen_pages():
+    """Test grouping buckets into pages."""
+    buckets = [TimeSpan(t, t + 10) for t in range(0, 100, 10)]
+    pages = list(weewx.xtypes.ArchiveTable._gen_pages(buckets, 25))
+    assert pages == [buckets[0:3], buckets[3:6], buckets[6:9], buckets[9:10]]
+    pages = list(weewx.xtypes.ArchiveTable._gen_pages(buckets, 1))
+    assert pages == [[b] for b in buckets]
+    pages = list(weewx.xtypes.ArchiveTable._gen_pages(buckets, 1000))
+    assert pages == [buckets]
+    assert list(weewx.xtypes.ArchiveTable._gen_pages([], 1000)) == []
+
+
+def test_get_series_archive_agg_unknown_type(config_dict):
+    """A type that is not in the database should fall back to the per-bucket loop, which
+    raises UnknownAggregation because no XType can calculate it."""
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        with pytest.raises(weewx.UnknownAggregation):
+            _get_hourly_series(db_manager, 'fooBar', 'avg')

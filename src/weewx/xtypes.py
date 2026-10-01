@@ -6,6 +6,7 @@
 """User-defined extensions to the WeeWX type system"""
 
 import datetime
+import itertools
 import time
 import math
 
@@ -239,6 +240,12 @@ class ArchiveTable(XType):
         The general strategy is that if aggregation is asked for, chop the series up into separate
         chunks, calculating the aggregate for each chunk. Then assemble the results.
 
+        For simple scalar aggregates of types stored in the archive table, the archive rows are
+        fetched in pages of consecutive chunks, each page spanning about
+        `ArchiveTable.series_page_span` seconds, and the aggregates are calculated in memory.
+        This keeps both the number of queries and the memory used small. Otherwise, each chunk is
+        calculated separately using get_aggregate().
+
         If no aggregation is called for, just return the data directly out of the database.
 
         Args:
@@ -270,8 +277,9 @@ class ArchiveTable(XType):
             else:
                 do_aggregate = aggregate_type
 
-            # Precompute the bucket spans, applying the same first_timestamp/last_timestamp
-            # skip logic used by the (possible) fallback, per-bucket loop below.
+            # Precompute the time span of each aggregation bucket, applying the same
+            # first_timestamp/last_timestamp skip logic used by the (possible) fallback, per-bucket
+            # loop below.
             buckets = []
             for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
                 if db_manager.first_timestamp is None or stamp[1] <= db_manager.first_timestamp:
@@ -282,51 +290,53 @@ class ArchiveTable(XType):
 
             use_fast_path = False
             if do_aggregate in ArchiveTable._fast_aggregate_types:
-                # Fast path: fetch all the rows needed for the whole series in a single bulk query,
-                # then aggregate them in memory, one bucket at a time. If obs_type is not a literal
-                # column in the archive table (for example, it's a vector type such as 'windvec',
-                # or a type calculated on-the-fly by another XType), a weewx.UnknownType exception
-                # will be raised. In that case, fall back to the per-bucket loop below, which uses
-                # the generic get_aggregate() dispatcher to find an XType that can calculate it.
+                # Fast path: fetch the rows needed for the series in pages (each page being a run
+                # of consecutive aggregation buckets spanning about ArchiveTable.series_page_span
+                # seconds), then aggregate them in memory, one bucket at a time. This uses only a
+                # handful of queries, while keeping memory use bounded. If obs_type is not a
+                # literal column in the archive table (for example, it's a vector type such as
+                # 'windvec', or a type calculated on-the-fly by another XType), a weewx.UnknownType
+                # exception will be raised when the first page is fetched. In that case, fall back
+                # to the per-bucket loop below, which uses the generic get_aggregate() dispatcher
+                # to find an XType that can calculate it.
+                agg_gen = ArchiveTable._gen_scalar_aggregates(obs_type, do_aggregate, buckets,
+                                                              db_manager,
+                                                              ArchiveTable.series_page_span)
+                first_item = None
                 try:
-                    rows = ArchiveTable._get_bulk_rows(obs_type, do_aggregate, timespan,
-                                                       db_manager)
+                    # Prime the generator. This fetches the first page, which will give us useful
+                    # information about whether a type exists in the database.
+                    first_item = next(agg_gen)
+                    # It exists. We can use the page algorithm.
+                    use_fast_path = True
+                except StopIteration:
+                    # No buckets at all.
                     use_fast_path = True
                 except weewx.UnknownType:
+                    # The type does not exist in the database. We can't use the page algorithm.
                     pass
 
             if use_fast_path:
-                # Track the unit system, exactly like the non-aggregated branch above.
                 std_unit_system = None
-                for row in rows:
-                    unit_system = row[2]
-                    if std_unit_system is not None:
-                        if std_unit_system != unit_system:
-                            raise weewx.UnsupportedFeature("Unit type cannot change "
-                                                           "within an aggregation interval.")
-                    else:
-                        std_unit_system = unit_system
-
-                stats_list = ArchiveTable._calc_scalar_aggregates(rows, buckets)
-                agg_values = [ArchiveTable._extract_scalar_aggregate(do_aggregate, stats)
-                             for stats in stats_list]
+                if first_item is not None:
+                    # Because we already retrieved the first item, we have to tack it back on to
+                    # the beginning of the iterator. Use itertools.chain to do this.
+                    for stamp, value, std_unit_system in itertools.chain([first_item], agg_gen):
+                        start_vec.append(stamp[0])
+                        stop_vec.append(stamp[1])
+                        if aggregate_type == 'cumulative':
+                            if value is not None:
+                                total += value
+                            data_vec.append(total)
+                        else:
+                            data_vec.append(value)
 
                 unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type,
                                                                    do_aggregate)
 
-                for stamp, value in zip(buckets, agg_values):
-                    start_vec.append(stamp[0])
-                    stop_vec.append(stamp[1])
-                    if aggregate_type == 'cumulative':
-                        if value is not None:
-                            total += value
-                        data_vec.append(total)
-                    else:
-                        data_vec.append(value)
-
             else:
-                # Fall back to the existing per-bucket loop, e.g., for wind-vector aggregates
-                # ('vecdir', 'vecavg', 'gustdir').
+                # Fall back to the an algorithm that does a query for each aggregation bucket.
+                # Slow, but reliable.
                 for stamp in buckets:
                     try:
                         # Get the aggregate as a ValueTuple
@@ -446,27 +456,111 @@ class ArchiveTable(XType):
                      "WHERE dateTime > %(start)s AND dateTime <= %(stop)s " \
                      "AND %(sql_type)s IS NOT NULL"
 
-    # The following aggregate types can be calculate with a single bulk query followed by in-memory
+    # The following aggregate types can be calculated with a few paged queries followed by in-memory
     # aggregation (instead of one query per aggregation bucket). Types 'diff' and 'tderiv' are
     # deliberately excluded because they are inclusive on the left, while all other aggregation
-    # types are exclusive, thus breaking the model. This simplifies the code.
+    # types are exclusive, thus breaking the model. This simplifies the code, at the cost of
+    # slower queries for these seldom-used aggregation types.
 
     _fast_aggregate_types = {
         'sum', 'count', 'avg', 'min', 'max', 'first', 'last',
         'firsttime', 'lasttime', 'maxtime', 'mintime', 'not_null',
     }
 
+    # When calculating an aggregated series using the fast path, archive rows are fetched in
+    # pages, each covering about this many seconds. This bounds the memory used.
+    series_page_span = 7 * 24 * 3600
+
     @staticmethod
-    def _get_bulk_rows(obs_type, aggregate_type, timespan, db_manager):
-        """Fetch, in a single query, all the archive rows needed to calculate a series of
-        aggregates over a timespan.
+    def _gen_pages(buckets, page_span):
+        """Group consecutive aggregation buckets into pages.
+
+        Buckets are accumulated into a page until the page spans at least `page_span` seconds.
+        Each page holds at least one bucket, so a bucket is never split across pages.
+
+        Args:
+            buckets (list[weeutil.weeutil.TimeSpan]): The bucket time spans, sorted ascending and
+                non-overlapping.
+            page_span (int|float): The target length of a page, in seconds.
+
+        Yields:
+            list[weeutil.weeutil.TimeSpan]: A list of consecutive buckets.
+        """
+        page = []
+        for bucket in buckets:
+            page.append(bucket)
+            if page[-1][1] - page[0][0] >= page_span:
+                yield page
+                page = []
+        if page:
+            yield page
+
+    @staticmethod
+    def _gen_scalar_aggregates(obs_type, aggregate_type, buckets, db_manager, page_span):
+        """Calculate a series of scalar aggregates, fetching the archive rows one page at a
+        time.
+
+        For each bucket, a weewx.accum.ScalarStats instance is accumulated, reduced to its final
+        value, then discarded.
+
+        While internally the data is fetched in pages, this is transparent to the caller. All it
+        sees is a sequence of aggregation buckets.
+
+        Args:
+            obs_type (str): The observation type to be aggregated.
+            aggregate_type (str): The type of aggregation. Must be in `_fast_aggregate_types`.
+            buckets (list[weeutil.weeutil.TimeSpan]): The time spans of the aggregation buckets.
+                These should be ascending and non-overlapping.
+            db_manager (weewx.manager.Manager): An open database manager.
+            page_span (int|float): The target length of a page, in seconds.
+
+        Yields:
+            tuple(weeutil.weeutil.TimeSpan, int|float|bool|None, int|None): A 3-way tuple
+                containing the time span of the aggregation bucket, the aggregate value for the
+                bucket, and the unit system seen so far (None if no rows have been seen yet).
+
+        Raises:
+            weewx.UnknownType: If `obs_type` does not exist in the archive table. This is raised
+                when the first page is fetched, before anything is yielded.
+            weewx.UnsupportedFeature: If the unit system changes within the series.
+        """
+        std_unit_system = None
+        for page in ArchiveTable._gen_pages(buckets, page_span):
+            rows = ArchiveTable._get_page_rows(obs_type, aggregate_type, page[0][0], page[-1][1],
+                                               db_manager)
+            n = len(rows)
+            idx = 0
+            for bucket in page:
+                stop = bucket[1]
+                stats = weewx.accum.ScalarStats()
+                while idx < n and rows[idx][0] <= stop:
+                    # Unpack the row tuple.
+                    timestamp, value, unit_system, interval = rows[idx]
+                    if std_unit_system is not None:
+                        if std_unit_system != unit_system:
+                            raise weewx.UnsupportedFeature("Unit type cannot change "
+                                                           "within an aggregation interval.")
+                    else:
+                        std_unit_system = unit_system
+                    if value is not None:
+                        stats.addHiLo(value, timestamp)
+                        stats.addSum(value)
+                    idx += 1
+                yield (bucket,
+                       ArchiveTable._extract_scalar_aggregate(aggregate_type, stats),
+                       std_unit_system)
+
+    @staticmethod
+    def _get_page_rows(obs_type, aggregate_type, page_start, page_stop, db_manager):
+        """Fetch, in a single query, the archive rows in a page.
+        That is, page_start < dateTime <= page_stop.
 
         Args:
             obs_type (str): The observation type to be retrieved.
             aggregate_type (str): The type of aggregation. Used only to pick between 'windGust'
                 and 'windSpeed' when `obs_type` is 'wind'. Otherwise, ignored.
-            timespan (weeutil.weeutil.TimeSpan|tuple[int|float, int|float]): The time period over
-                which the rows are to be fetched.
+            page_start (int|float): The start of the page (exclusive).
+            page_stop (int|float): The end of the page (inclusive).
             db_manager (weewx.manager.Manager): An open database manager.
 
         Returns:
@@ -486,40 +580,9 @@ class ArchiveTable(XType):
                  % (sql_type, db_manager.table_name)
 
         try:
-            return list(db_manager.genSql(sql_str, (timespan[0], timespan[1])))
+            return list(db_manager.genSql(sql_str, (page_start, page_stop)))
         except weedb.NoColumnError:
             raise weewx.UnknownType(obs_type)
-
-    @staticmethod
-    def _calc_scalar_aggregates(rows, buckets):
-        """Calculate a series of 'sum', 'count', 'avg', 'min', 'max', 'first', 'last',
-        'firsttime', 'lasttime', 'maxtime', 'mintime', and 'not_null' aggregates, in a single
-        forward pass over the bulk-fetched rows, using one weewx.accum.ScalarStats instance per
-        bucket.
-
-        Args:
-            rows (list[tuple]): The bulk-fetched (dateTime, value, usUnits, interval) rows,
-                sorted ascending by dateTime, as returned by `_get_bulk_rows()`.
-            buckets (list[weeutil.weeutil.TimeSpan]): The bucket spans, sorted ascending and
-                non-overlapping, as yielded by `weeutil.weeutil.intervalgen()`.
-
-        Returns:
-            list[weewx.accum.ScalarStats]: One finalized ScalarStats instance per bucket.
-        """
-        n = len(rows)
-        idx = 0
-        stats_list = []
-        for start, stop in buckets:
-            stats = weewx.accum.ScalarStats()
-            while idx < n and rows[idx][0] <= stop:
-                # Unpack the row tuple.
-                timestamp, value, unit_system, interval = rows[idx]
-                if value is not None:
-                    stats.addHiLo(value, timestamp)
-                    stats.addSum(value)
-                idx += 1
-            stats_list.append(stats)
-        return stats_list
 
     @staticmethod
     def _extract_scalar_aggregate(aggregate_type, stats):
