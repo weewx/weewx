@@ -7,7 +7,8 @@ Improved the performance of `weewx.xtypes.ArchiveTable.get_series()` for
 aggregated series (such as hourly aggregation over a long timespan). Instead of
 one SQL query per aggregation bucket, it now issues one query per month of
 buckets: a `GROUP BY` where the database can do the aggregation, otherwise a
-single pass over the records. Memory use stays about what it was. PR #NNNN.
+single pass over the records. Memory use stays about what it was.
+[PR #1153](https://github.com/weewx/weewx/pull/1153).
 
 
 ### 5.5.2 23-Sep-2026
