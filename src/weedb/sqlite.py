@@ -258,6 +258,9 @@ class Connection(weedb.Connection):
                "AS int)",
         'month': "GROUP BY strftime('%%Y-%%m',dateTime,'unixepoch','localtime') ",
         'year': "GROUP BY strftime('%%Y',dateTime,'unixepoch','localtime') ",
+        # Intervals of 'step' seconds, each from 'start' + n * 'step', exclusive, to the next
+        # one, inclusive. The division is an integer one, because all three are integers.
+        'interval': "GROUP BY (dateTime - %(start)s - 1) / %(step)s ",
     }
 
     @staticmethod

@@ -12,7 +12,6 @@ import math
 import weedb
 import weeutil.weeutil
 import weewx
-import weewx.accum
 import weewx.units
 import weewx.wxformulas
 from weeutil.weeutil import isStartOfDay, to_float
@@ -270,64 +269,12 @@ class ArchiveTable(XType):
             else:
                 do_aggregate = aggregate_type
 
-            # Precompute the bucket spans, applying the same first_timestamp/last_timestamp
-            # skip logic used by the (possible) fallback, per-bucket loop below.
-            buckets = []
-            for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
-                if db_manager.first_timestamp is None or stamp[1] <= db_manager.first_timestamp:
-                    continue
-                if db_manager.last_timestamp is None or stamp[0] >= db_manager.last_timestamp:
-                    break
-                buckets.append(stamp)
-
-            use_fast_path = False
-            if do_aggregate in ArchiveTable._fast_aggregate_types:
-                # Fast path: fetch all the rows needed for the whole series in a single bulk query,
-                # then aggregate them in memory, one bucket at a time. If obs_type is not a literal
-                # column in the archive table (for example, it's a vector type such as 'windvec',
-                # or a type calculated on-the-fly by another XType), a weewx.UnknownType exception
-                # will be raised. In that case, fall back to the per-bucket loop below, which uses
-                # the generic get_aggregate() dispatcher to find an XType that can calculate it.
-                try:
-                    rows = ArchiveTable._get_bulk_rows(obs_type, do_aggregate, timespan,
-                                                       db_manager)
-                    use_fast_path = True
-                except weewx.UnknownType:
-                    pass
-
-            if use_fast_path:
-                # Track the unit system, exactly like the non-aggregated branch above.
-                std_unit_system = None
-                for row in rows:
-                    unit_system = row[2]
-                    if std_unit_system is not None:
-                        if std_unit_system != unit_system:
-                            raise weewx.UnsupportedFeature("Unit type cannot change "
-                                                           "within an aggregation interval.")
-                    else:
-                        std_unit_system = unit_system
-
-                stats_list = ArchiveTable._calc_scalar_aggregates(rows, buckets)
-                agg_values = [ArchiveTable._extract_scalar_aggregate(do_aggregate, stats)
-                             for stats in stats_list]
-
-                unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type,
-                                                                   do_aggregate)
-
-                for stamp, value in zip(buckets, agg_values):
-                    start_vec.append(stamp[0])
-                    stop_vec.append(stamp[1])
-                    if aggregate_type == 'cumulative':
-                        if value is not None:
-                            total += value
-                        data_vec.append(total)
-                    else:
-                        data_vec.append(value)
-
-            else:
-                # Fall back to the existing per-bucket loop, e.g., for wind-vector aggregates
-                # ('vecdir', 'vecavg', 'gustdir').
-                for stamp in buckets:
+            buckets = ArchiveTable._buckets(startstamp, stopstamp, aggregate_interval,
+                                            db_manager)
+            # Most aggregates can be calculated for many buckets at once, with a few queries. See
+            # _at_once(). A bucket that comes with None goes to get_aggregate(), as before.
+            for stamp, agg_vt in _at_once(obs_type, buckets, do_aggregate, db_manager):
+                if agg_vt is None:
                     try:
                         # Get the aggregate as a ValueTuple
                         agg_vt = get_aggregate(obs_type, stamp, do_aggregate, db_manager,
@@ -336,20 +283,20 @@ class ArchiveTable(XType):
                         # Function get_aggregate() should not raise CannotCalculate. But, just
                         # in case, catch it and convert to None.
                         agg_vt = ValueTuple(None, unit, unit_group)
-                    if unit:
-                        # Make sure units are consistent so far.
-                        if agg_vt[1] is not None and (unit != agg_vt[1] or unit_group != agg_vt[2]):
-                            raise weewx.UnsupportedFeature("Cannot change units within a series.")
-                    else:
-                        unit, unit_group = agg_vt[1], agg_vt[2]
-                    start_vec.append(stamp[0])
-                    stop_vec.append(stamp[1])
-                    if aggregate_type == 'cumulative':
-                        if agg_vt[0] is not None:
-                            total += agg_vt[0]
-                        data_vec.append(total)
-                    else:
-                        data_vec.append(agg_vt[0])
+                if unit:
+                    # Make sure units are consistent so far.
+                    if agg_vt[1] is not None and (unit != agg_vt[1] or unit_group != agg_vt[2]):
+                        raise weewx.UnsupportedFeature("Cannot change units within a series.")
+                else:
+                    unit, unit_group = agg_vt[1], agg_vt[2]
+                start_vec.append(stamp[0])
+                stop_vec.append(stamp[1])
+                if aggregate_type == 'cumulative':
+                    if agg_vt[0] is not None:
+                        total += agg_vt[0]
+                    data_vec.append(total)
+                else:
+                    data_vec.append(agg_vt[0])
 
         else:
 
@@ -386,6 +333,27 @@ class ArchiveTable(XType):
         return (ValueTuple(start_vec, 'unix_epoch', 'group_time'),
                 ValueTuple(stop_vec, 'unix_epoch', 'group_time'),
                 ValueTuple(data_vec, unit, unit_group))
+
+    @staticmethod
+    def _buckets(startstamp, stopstamp, aggregate_interval, db_manager):
+        """Yield the buckets of an aggregated series that lie between the oldest and the newest
+        archive record, even in part.
+
+        Args:
+            startstamp (int|float): The beginning of the series.
+            stopstamp (int|float): Its end.
+            aggregate_interval (float|int|str): The length of a bucket.
+            db_manager (weewx.manager.Manager): An open database manager.
+
+        Yields:
+            weeutil.weeutil.TimeSpan: The buckets, in order.
+        """
+        for stamp in weeutil.weeutil.intervalgen(startstamp, stopstamp, aggregate_interval):
+            if db_manager.first_timestamp is None or stamp[1] <= db_manager.first_timestamp:
+                continue
+            if db_manager.last_timestamp is None or stamp[0] >= db_manager.last_timestamp:
+                break
+            yield stamp
 
     # Set of SQL statements to be used for calculating aggregates from the main archive table.
     agg_sql_dict = {
@@ -446,106 +414,6 @@ class ArchiveTable(XType):
                      "WHERE dateTime > %(start)s AND dateTime <= %(stop)s " \
                      "AND %(sql_type)s IS NOT NULL"
 
-    # The following aggregate types can be calculate with a single bulk query followed by in-memory
-    # aggregation (instead of one query per aggregation bucket). Types 'diff' and 'tderiv' are
-    # deliberately excluded because they are inclusive on the left, while all other aggregation
-    # types are exclusive, thus breaking the model. This simplifies the code.
-
-    _fast_aggregate_types = {
-        'sum', 'count', 'avg', 'min', 'max', 'first', 'last',
-        'firsttime', 'lasttime', 'maxtime', 'mintime', 'not_null',
-    }
-
-    @staticmethod
-    def _get_bulk_rows(obs_type, aggregate_type, timespan, db_manager):
-        """Fetch, in a single query, all the archive rows needed to calculate a series of
-        aggregates over a timespan.
-
-        Args:
-            obs_type (str): The observation type to be retrieved.
-            aggregate_type (str): The type of aggregation. Used only to pick between 'windGust'
-                and 'windSpeed' when `obs_type` is 'wind'. Otherwise, ignored.
-            timespan (weeutil.weeutil.TimeSpan|tuple[int|float, int|float]): The time period over
-                which the rows are to be fetched.
-            db_manager (weewx.manager.Manager): An open database manager.
-
-        Returns:
-            list[tuple]: A list of (dateTime, value, usUnits, interval) tuples, sorted by
-                dateTime in ascending order.
-
-        Raises:
-            weewx.UnknownType: If `obs_type` does not exist in the archive table.
-        """
-        if obs_type == 'wind':
-            sql_type = 'windGust' if aggregate_type in ('max', 'maxtime') else 'windSpeed'
-        else:
-            sql_type = obs_type
-
-        sql_str = "SELECT dateTime, %s, usUnits, interval FROM %s " \
-                 "WHERE dateTime > ? AND dateTime <= ? ORDER BY dateTime ASC" \
-                 % (sql_type, db_manager.table_name)
-
-        try:
-            return list(db_manager.genSql(sql_str, (timespan[0], timespan[1])))
-        except weedb.NoColumnError:
-            raise weewx.UnknownType(obs_type)
-
-    @staticmethod
-    def _calc_scalar_aggregates(rows, buckets):
-        """Calculate a series of 'sum', 'count', 'avg', 'min', 'max', 'first', 'last',
-        'firsttime', 'lasttime', 'maxtime', 'mintime', and 'not_null' aggregates, in a single
-        forward pass over the bulk-fetched rows, using one weewx.accum.ScalarStats instance per
-        bucket.
-
-        Args:
-            rows (list[tuple]): The bulk-fetched (dateTime, value, usUnits, interval) rows,
-                sorted ascending by dateTime, as returned by `_get_bulk_rows()`.
-            buckets (list[weeutil.weeutil.TimeSpan]): The bucket spans, sorted ascending and
-                non-overlapping, as yielded by `weeutil.weeutil.intervalgen()`.
-
-        Returns:
-            list[weewx.accum.ScalarStats]: One finalized ScalarStats instance per bucket.
-        """
-        n = len(rows)
-        idx = 0
-        stats_list = []
-        for start, stop in buckets:
-            stats = weewx.accum.ScalarStats()
-            while idx < n and rows[idx][0] <= stop:
-                # Unpack the row tuple.
-                timestamp, value, unit_system, interval = rows[idx]
-                if value is not None:
-                    stats.addHiLo(value, timestamp)
-                    stats.addSum(value)
-                idx += 1
-            stats_list.append(stats)
-        return stats_list
-
-    @staticmethod
-    def _extract_scalar_aggregate(aggregate_type, stats):
-        """Extract the final value of an aggregate type from a (finalized) ScalarStats
-        instance, replicating the semantics of ArchiveTable.agg_sql_dict / simple_agg_sql
-        exactly.
-
-        Args:
-            aggregate_type (str): The type of aggregation to extract. Must be one of 'sum',
-                'count', 'avg', 'min', 'max', 'first', 'last', 'firsttime', 'lasttime',
-                'maxtime', 'mintime', or 'not_null'.
-            stats (weewx.accum.ScalarStats): The accumulated statistics for the bucket.
-
-        Returns:
-            int|float|bool|None: The extracted value.
-        """
-        if aggregate_type in {'count', 'avg', 'min', 'max', 'first', 'last',
-                               'firsttime', 'lasttime', 'maxtime', 'mintime'}:
-            return getattr(stats, aggregate_type)
-        elif aggregate_type == 'sum':
-            return stats.sum if stats.count else None
-        elif aggregate_type == 'not_null':
-            return stats.count > 0
-        else:
-            raise weewx.UnknownAggregation(aggregate_type)
-
     @staticmethod
     def get_aggregate(obs_type, timespan, aggregate_type, db_manager, **option_dict):
         """Returns an aggregation of an observation type over a given time period, using the
@@ -597,18 +465,7 @@ class ArchiveTable(XType):
         except weedb.NoColumnError:
             raise weewx.UnknownType(aggregate_type)
 
-        if aggregate_type == 'not_null':
-            value = row is not None
-        elif aggregate_type == 'vecdir':
-            if None in row or row == (0.0, 0.0):
-                value = None
-            else:
-                deg = 90.0 - math.degrees(math.atan2(row[1], row[0]))
-                value = deg if deg >= 0 else deg + 360.0
-        elif aggregate_type == 'vecavg':
-            value = math.sqrt((row[0] ** 2 + row[1] ** 2) / row[2] ** 2) if row[2] else None
-        else:
-            value = row[0] if row else None
+        value = ArchiveTable._value_of(aggregate_type, row)
 
         # Look up the unit type and group of this combination of observation type and aggregation:
         u, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type,
@@ -630,6 +487,28 @@ class ArchiveTable(XType):
 
         # Form the ValueTuple and return it:
         return weewx.units.ValueTuple(value, u, g)
+
+    @staticmethod
+    def _value_of(aggregate_type, row):
+        """Return the aggregate in a row that the SQL of an aggregation type returned.
+
+        Args:
+            aggregate_type (str): The type of aggregation.
+            row (tuple|list|None): The row, without anything that is not part of the aggregate.
+
+        Returns:
+            int|float|bool|None: The aggregate.
+        """
+        if aggregate_type == 'not_null':
+            return row is not None
+        if aggregate_type == 'vecdir':
+            if None in row or row == (0.0, 0.0):
+                return None
+            deg = 90.0 - math.degrees(math.atan2(row[1], row[0]))
+            return deg if deg >= 0 else deg + 360.0
+        if aggregate_type == 'vecavg':
+            return math.sqrt((row[0] ** 2 + row[1] ** 2) / row[2] ** 2) if row[2] else None
+        return row[0] if row else None
 
     @staticmethod
     def get_wind_aggregate_long(obs_type, timespan, aggregate_type, db_manager):
@@ -674,14 +553,7 @@ class ArchiveTable(XType):
                     xsum += row[0] * row[1] * math.cos(math.radians(90.0 - row[2]))
                     ysum += row[0] * row[1] * math.sin(math.radians(90.0 - row[2]))
 
-        if not sumtime or (xsum == 0.0 and ysum == 0.0):
-            value = None
-        elif aggregate_type == 'vecdir':
-            deg = 90.0 - math.degrees((math.atan2(ysum, xsum)))
-            value = deg if deg >= 0 else deg + 360.0
-        else:
-            assert aggregate_type == 'vecavg'
-            value = math.sqrt((xsum ** 2 + ysum ** 2) / sumtime ** 2)
+        value = _wind_long_value(aggregate_type, xsum, ysum, sumtime)
 
         # Look up the unit type and group of this combination of observation type and aggregation:
         u, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type,
@@ -1315,9 +1187,8 @@ class WindVec(XType):
         if aggregate_type:
             # Yes. Just use the regular series function. When it comes time to do the aggregation,
             # the specialized function WindVec.get_aggregate() (defined below), will be used.
-            xx = ArchiveTable.get_series(obs_type, timespan, db_manager, aggregate_type,
+            return ArchiveTable.get_series(obs_type, timespan, db_manager, aggregate_type,
                                            aggregate_interval, **option_dict)
-            return xx
 
         else:
             # No aggregation desired. However, we have will have to assemble the wind vector from
@@ -1520,6 +1391,388 @@ class WindVecDaily(XType):
                                                aggregate_type)
         # Return as a value tuple
         return weewx.units.ValueTuple(value, t, g)
+
+
+# ######################## Aggregates of many buckets at once ##############################
+#
+# ArchiveTable.get_series() needs an aggregate for each bucket. Through get_aggregate(), each
+# bucket costs a query, i.e., 8,760 queries for a year of hourly buckets. The functions below
+# calculate a run of buckets at once: with a GROUP BY where the database can do the
+# aggregation, otherwise in one pass over the archive records. A run spans at most
+# _AT_ONCE_SPAN, or _AT_ONCE_RECORDS_SPAN where the query reads whole archive records, and only
+# one run is held at a time. That bounds the memory, however long the series. A MySQL client
+# holds the whole result set of a query, and SQLite sorts the archive records a GROUP BY reads.
+#
+# Every bucket must get the value get_aggregate() would give it. So these functions only take
+# a bucket that get_aggregate() would hand to ArchiveTable, WindVec or XTypeTable, and they
+# calculate it as those do. Every other bucket is left to get_aggregate().
+
+_AT_ONCE_SPAN = 31 * 86400
+_AT_ONCE_RECORDS_SPAN = 86400
+
+# For each aggregation type a GROUP BY can calculate: what to select, and which archive records
+# to select it from. The same as ArchiveTable.simple_agg_sql and ArchiveTable.agg_sql_dict.
+_GROUPED = {
+    'avg': ('AVG(%(sql_type)s)', 'AND %(sql_type)s IS NOT NULL'),
+    'sum': ('SUM(%(sql_type)s)', 'AND %(sql_type)s IS NOT NULL'),
+    'count': ('COUNT(%(sql_type)s)', 'AND %(sql_type)s IS NOT NULL'),
+    'min': ('MIN(%(sql_type)s)', 'AND %(sql_type)s IS NOT NULL'),
+    'max': ('MAX(%(sql_type)s)', 'AND %(sql_type)s IS NOT NULL'),
+    'not_null': ('1', 'AND %(sql_type)s IS NOT NULL'),
+    'firsttime': ('MIN(dateTime)', 'AND %(sql_type)s IS NOT NULL'),
+    'lasttime': ('MAX(dateTime)', 'AND %(sql_type)s IS NOT NULL'),
+    'vecdir': ('SUM(interval * windSpeed * COS(RADIANS(90 - windDir))), '
+               'SUM(interval * windSpeed * SIN(RADIANS(90 - windDir)))', ''),
+    'vecavg': ('SUM(interval * windSpeed * COS(RADIANS(90 - windDir))), '
+               'SUM(interval * windSpeed * SIN(RADIANS(90 - windDir))), SUM(interval)',
+               'AND windSpeed is not null'),
+}
+
+# The row the SQL of an aggregation type returns for a bucket without archive records. A GROUP
+# BY returns no row at all for such a bucket.
+_EMPTY_ROWS = {'count': (0,), 'not_null': None, 'vecdir': (None, None),
+               'vecavg': (None, None, None)}
+
+# The aggregation types XTypeTable calculates from the archive records.
+_XTYPE_TABLE_TYPES = {'sum', 'count', 'avg', 'max', 'min', 'mintime', 'maxtime', 'not_null'}
+
+
+def _at_once(obs_type, buckets, aggregate_type, db_manager):
+    """Yield each bucket of a series with its aggregate, where that can be calculated at once.
+
+    Args:
+        obs_type (str): The type to aggregate.
+        buckets (Iterable[weeutil.weeutil.TimeSpan]): The buckets, in order, as intervalgen()
+            yields them.
+        aggregate_type (str): The type of aggregation.
+        db_manager (weewx.manager.Manager): An open database manager.
+
+    Yields:
+        tuple[weeutil.weeutil.TimeSpan, ValueTuple|None]: A two-way tuple (bucket, aggregate),
+            for each bucket, in order. An aggregate of None leaves the bucket to
+            get_aggregate().
+    """
+    calculator = _calculator(obs_type, aggregate_type, db_manager)
+    if calculator is None:
+        for bucket in buckets:
+            yield bucket, None
+        return
+    calculate, span = calculator
+    taken = _taken_by_daily_summaries(obs_type, aggregate_type, db_manager)
+    run = []
+    for bucket in buckets:
+        # A GROUP BY needs integer bounds.
+        joins = not taken(bucket) and bucket[0] == int(bucket[0]) \
+            and bucket[1] == int(bucket[1])
+        if run and not (joins and _continues(run, bucket, span)):
+            for item in zip(run, calculate(obs_type, aggregate_type, run, db_manager)):
+                yield item
+            run = []
+        if joins:
+            run.append(bucket)
+        else:
+            yield bucket, None
+    if run:
+        for item in zip(run, calculate(obs_type, aggregate_type, run, db_manager)):
+            yield item
+
+
+def _continues(run, bucket, span):
+    """Return True if a bucket can join a run, i.e., be calculated by the same query.
+
+    The buckets of a run have the same length, follow each other without a gap, and together
+    span at most 'span' seconds.
+    """
+    first_start, first_stop = run[0]
+    return bucket[0] == run[-1][1] and bucket[1] - bucket[0] == first_stop - first_start \
+        and bucket[1] - first_start <= span
+
+
+def _calculator(obs_type, aggregate_type, db_manager):
+    """Return the function that calculates many buckets at once, and how far a call reaches.
+
+    Args:
+        obs_type (str): The type to aggregate.
+        aggregate_type (str): The type of aggregation.
+        db_manager (weewx.manager.Manager): An open database manager.
+
+    Returns:
+        tuple|None: A two-way tuple (calculate, span), or None if there is no such function.
+            'calculate' is called as ``calculate(obs_type, aggregate_type, run, db_manager)``,
+            where 'run' is a list of buckets that span at most 'span' seconds. See
+            _continues(). It returns a list with a ValueTuple for each bucket, or None for a
+            bucket to leave to get_aggregate().
+    """
+    if obs_type in WindVec.windvec_types:
+        if aggregate_type in ('avg', 'sum') and _clear_ahead_of(WindVec):
+            return _windvec_at_once, _AT_ONCE_SPAN
+        return None
+    if obs_type in ('heatdeg', 'cooldeg', 'growdeg') or not _clear_ahead_of(ArchiveTable):
+        return None
+    try:
+        db_manager.connection.get_group_by('interval')
+        can_group = True
+    except (AttributeError, KeyError):
+        # A database driver that has no GROUP BY for intervals.
+        can_group = False
+    if aggregate_type in ('vecdir', 'vecavg'):
+        # ArchiveTable takes them from windSpeed and windDir, whatever the type, but without
+        # math functions in SQLite, only for type 'wind'.
+        if obs_type != 'wind':
+            return None
+        if not db_manager.connection.has_math:
+            return _wind_long_at_once, _AT_ONCE_SPAN
+        return (_grouped, _AT_ONCE_SPAN) if can_group else None
+    sql_type = _sql_type(obs_type, aggregate_type)
+    if sql_type in db_manager.sqlkeys:
+        if aggregate_type in _GROUPED or aggregate_type in ('first', 'last'):
+            return (_grouped, _AT_ONCE_SPAN) if can_group else None
+        if aggregate_type in ('mintime', 'maxtime'):
+            return _extreme_time, _AT_ONCE_SPAN
+        return None
+    if obs_type != 'wind' and aggregate_type in _XTYPE_TABLE_TYPES \
+            and _clear_ahead_of(XTypeTable):
+        # Not a column of the archive table. ArchiveTable raises UnknownType for it, and
+        # XTypeTable calculates it from each archive record.
+        return _xtype_table_at_once, _AT_ONCE_RECORDS_SPAN
+    return None
+
+
+def _sql_type(obs_type, aggregate_type):
+    """Return the column ArchiveTable aggregates for a type, as in get_aggregate()."""
+    if obs_type == 'wind':
+        return 'windGust' if aggregate_type in ('max', 'maxtime') else 'windSpeed'
+    return obs_type
+
+
+def _clear_ahead_of(cls):
+    """Return True if no xtype ahead of 'cls' could take an aggregate that 'cls' would take.
+
+    The xtypes of this module are accounted for. See _calculator() and
+    _taken_by_daily_summaries(). Any other xtype ahead of 'cls' must not have a get_aggregate()
+    of its own.
+    """
+    known = (WindVecDaily, WindVec, AggregateHeatCool, DailySummaries, ArchiveTable)
+    for xtype in xtypes:
+        if type(xtype) is cls:
+            return True
+        if type(xtype) not in known \
+                and getattr(type(xtype), 'get_aggregate', XType.get_aggregate) \
+                is not XType.get_aggregate:
+            return False
+    return False
+
+
+def _taken_by_daily_summaries(obs_type, aggregate_type, db_manager):
+    """Return a function that tells whether the daily summaries take a bucket.
+
+    get_aggregate() asks DailySummaries before ArchiveTable, and WindVecDaily before WindVec.
+    Both take a bucket that begins and ends at midnight, or at the first or last archive
+    record. See DailySummaries.check_eligibility().
+
+    Returns:
+        Callable[[weeutil.weeutil.TimeSpan], bool]: Called as ``taken(bucket)``.
+    """
+    if obs_type == 'windvec':
+        day_type = 'wind' if aggregate_type in ('avg', 'not_null') else None
+    elif obs_type in WindVec.windvec_types:
+        day_type = None
+    else:
+        day_type = obs_type if aggregate_type in DailySummaries.agg_sql_dict else None
+    first, last = db_manager.first_timestamp, db_manager.last_timestamp
+    if day_type not in getattr(db_manager, 'daykeys', ()) or first is None or last is None:
+        return lambda bucket: False
+    return lambda bucket: (isStartOfDay(bucket[0]) or bucket[0] == first) \
+        and (isStartOfDay(bucket[1]) or bucket[1] == last)
+
+
+def _extent(run):
+    """Return where a run begins, the length of its buckets, and where it ends, in seconds.
+
+    An archive record stamped t belongs to the bucket at position (t - start - 1) // step.
+
+    Returns:
+        tuple[int, int, int]: A three-way tuple (start, step, stop).
+    """
+    start = int(run[0][0])
+    return start, int(run[0][1]) - start, int(run[-1][1])
+
+
+def _grouped(obs_type, aggregate_type, run, db_manager):
+    """Calculate a run of buckets with one GROUP BY. See _calculator()."""
+    start, step, stop = _extent(run)
+    group_by = db_manager.connection.get_group_by('interval')
+    if aggregate_type in ('first', 'last'):
+        # The record with the first or last value of each bucket, by dateTime.
+        sql = "SELECT a.dateTime, a.%(sql_type)s FROM %(table_name)s AS a " \
+              "JOIN (SELECT %(pick)s(dateTime) AS picked FROM %(table_name)s " \
+              "WHERE dateTime > %(start)s AND dateTime <= %(stop)s " \
+              "AND %(sql_type)s IS NOT NULL " + group_by + ") AS b " \
+              "ON a.dateTime = b.picked"
+    else:
+        # MIN(dateTime) tells which bucket a row is for.
+        select, where = _GROUPED[aggregate_type]
+        sql = "SELECT MIN(dateTime), " + select + " FROM %(table_name)s " \
+              "WHERE dateTime > %(start)s AND dateTime <= %(stop)s " + where + " " + group_by
+    sql = sql % {'sql_type': _sql_type(obs_type, aggregate_type),
+                 'table_name': db_manager.table_name,
+                 'pick': 'MIN' if aggregate_type == 'first' else 'MAX',
+                 'start': start, 'stop': stop, 'step': step}
+
+    rows = {}
+    for row in db_manager.genSql(sql):
+        rows[(row[0] - start - 1) // step] = row[1:]
+
+    u, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type, aggregate_type)
+    empty = _EMPTY_ROWS.get(aggregate_type, (None,))
+    return [ValueTuple(ArchiveTable._value_of(aggregate_type, rows.get(i, empty)), u, g)
+            for i in range(len(run))]
+
+
+def _extreme_time(obs_type, aggregate_type, run, db_manager):
+    """Calculate a run of 'mintime' or 'maxtime' in one pass. See _calculator().
+
+    Of equal extremes, the earliest wins.
+    """
+    start, step, stop = _extent(run)
+    sql_type = _sql_type(obs_type, aggregate_type)
+    sql = "SELECT dateTime, %s FROM %s WHERE dateTime > ? AND dateTime <= ? " \
+          "AND %s IS NOT NULL ORDER BY dateTime ASC" % (sql_type, db_manager.table_name, sql_type)
+    lowest = aggregate_type == 'mintime'
+    best = {}
+    for timestamp, value in db_manager.genSql(sql, (start, stop)):
+        i = (timestamp - start - 1) // step
+        if i not in best or (value < best[i][0] if lowest else value > best[i][0]):
+            best[i] = (value, timestamp)
+    u, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type, aggregate_type)
+    return [ValueTuple(best[i][1] if i in best else None, u, g) for i in range(len(run))]
+
+
+def _wind_long_at_once(obs_type, aggregate_type, run, db_manager):
+    """Calculate a run of 'vecdir' or 'vecavg' in one pass, as get_wind_aggregate_long() does.
+    See _calculator()."""
+    start, step, stop = _extent(run)
+    sql = "SELECT dateTime, interval, windSpeed, windDir FROM %s " \
+          "WHERE dateTime > ? AND dateTime <= ? ORDER BY dateTime ASC" % db_manager.table_name
+    sums = {}
+    for timestamp, interval, speed, direction in db_manager.genSql(sql, (start, stop)):
+        if speed is None:
+            continue
+        s = sums.setdefault((timestamp - start - 1) // step, [0.0, 0.0, 0.0])
+        s[2] += interval
+        if direction is not None:
+            s[0] += interval * speed * math.cos(math.radians(90.0 - direction))
+            s[1] += interval * speed * math.sin(math.radians(90.0 - direction))
+    u, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type, aggregate_type)
+    return [ValueTuple(_wind_long_value(aggregate_type, *sums.get(i, (0.0, 0.0, 0.0))), u, g)
+            for i in range(len(run))]
+
+
+def _wind_long_value(aggregate_type, xsum, ysum, sumtime):
+    """Return 'vecdir' or 'vecavg' from the sums get_wind_aggregate_long() adds up."""
+    if not sumtime or (xsum == 0.0 and ysum == 0.0):
+        return None
+    if aggregate_type == 'vecdir':
+        deg = 90.0 - math.degrees((math.atan2(ysum, xsum)))
+        return deg if deg >= 0 else deg + 360.0
+    return math.sqrt((xsum ** 2 + ysum ** 2) / sumtime ** 2)
+
+
+def _windvec_at_once(obs_type, aggregate_type, run, db_manager):
+    """Calculate a run of 'avg' or 'sum' of a wind vector in one pass, as WindVec does. See
+    _calculator()."""
+    start, step, stop = _extent(run)
+    sql = "SELECT dateTime, %s, %s, usUnits FROM %s WHERE dateTime > ? AND dateTime <= ? " \
+          "ORDER BY dateTime ASC" % (WindVec.windvec_types[obs_type][0],
+                                     WindVec.windvec_types[obs_type][1], db_manager.table_name)
+    # For each bucket: the unit system, the sums of x and y, and the count.
+    state = {}
+    for timestamp, mag, direction, unit_system in db_manager.genSql(sql, (start, stop)):
+        # As in WindVec.get_aggregate(): a magnitude of None is ignored, and a direction of None
+        # is fine only with a magnitude of zero.
+        if mag is None or (mag != 0.0 and direction is None):
+            continue
+        s = state.setdefault((timestamp - start - 1) // step, [None, 0.0, 0.0, 0])
+        if s[0]:
+            if s[0] != unit_system:
+                raise weewx.UnsupportedFeature("Unit type cannot change within a time interval.")
+        else:
+            s[0] = unit_system
+        if direction is not None:
+            s[1] += mag * math.cos(math.radians(90.0 - direction))
+            s[2] += mag * math.sin(math.radians(90.0 - direction))
+        s[3] += 1
+
+    found = []
+    for i in range(len(run)):
+        std_unit_system, xsum, ysum, count = state.get(i, (None, 0.0, 0.0, 0))
+        if not count:
+            value = None
+        elif aggregate_type == 'sum':
+            value = complex(xsum, ysum)
+        else:
+            value = complex(xsum, ysum) / count
+        t, g = weewx.units.getStandardUnitType(std_unit_system, obs_type, aggregate_type)
+        found.append(ValueTuple(value, t, g))
+    return found
+
+
+def _xtype_table_at_once(obs_type, aggregate_type, run, db_manager):
+    """Calculate a run in one pass over the archive records, as XTypeTable does. See
+    _calculator()."""
+    start, step, stop = _extent(run)
+    # For each bucket: the unit system, the total, the count, the minimum, the maximum, when
+    # they were, whether a value was found for 'not_null', and whether XTypeTable gave up.
+    state = {}
+    for record in db_manager.genBatchRecords(start, stop):
+        s = state.setdefault((record['dateTime'] - start - 1) // step,
+                             [None, 0.0, 0, None, None, None, None, False, False])
+        if s[7] or s[8]:
+            # XTypeTable is done with this bucket.
+            continue
+        if s[0]:
+            if s[0] != record['usUnits']:
+                raise weewx.UnsupportedFeature("Unit system cannot change within the database")
+        else:
+            s[0] = record['usUnits']
+        try:
+            value = get_scalar(obs_type, record, db_manager)[0]
+        except weewx.CannotCalculate:
+            value = None
+        except weewx.UnknownType:
+            # XTypeTable raises it, and get_aggregate() asks the xtypes after XTypeTable.
+            s[8] = True
+            continue
+        if value is not None:
+            if aggregate_type == 'not_null':
+                s[7] = True
+                continue
+            s[1] += value
+            s[2] += 1
+            if s[3] is None or value < s[3]:
+                s[3], s[5] = value, record['dateTime']
+            if s[4] is None or value > s[4]:
+                s[4], s[6] = value, record['dateTime']
+
+    found = []
+    for i in range(len(run)):
+        std_unit_system, total, count, minimum, maximum, mintime, maxtime, not_null, gave_up \
+            = state.get(i, (None, 0.0, 0, None, None, None, None, False, False))
+        if gave_up:
+            found.append(None)
+        elif aggregate_type == 'not_null':
+            found.append(ValueTuple(not_null, 'boolean', 'group_boolean'))
+        else:
+            value = {'sum': total,
+                     'count': count,
+                     'avg': total / count if count else None,
+                     'min': minimum,
+                     'max': maximum,
+                     'mintime': mintime,
+                     'maxtime': maxtime}[aggregate_type]
+            u, g = weewx.units.getStandardUnitType(std_unit_system, obs_type, aggregate_type)
+            found.append(ValueTuple(value, u, g))
+    return found
 
 
 # Add instantiated versions to the extension list. Order matters. We want the highly-specialized

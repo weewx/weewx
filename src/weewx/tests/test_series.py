@@ -370,7 +370,8 @@ def test_get_series_archive_agg_outTemp(config_dict, aggregate_type, expected_va
     assert len(stop_vec[0]) == 31
     assert len(data_vec[0]) == 31
     for actual, expected in zip(data_vec[0], expected_values):
-        if actual is None or expected is None:
+        if actual is None or expected is None or isinstance(expected, bool):
+            # A daily bucket goes to the daily summaries, which give 'not_null' as 1, not True.
             assert actual == expected
         else:
             assert actual == pytest.approx(expected, abs=1e-6)
