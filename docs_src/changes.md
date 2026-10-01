@@ -12,6 +12,12 @@ summary, all of which can be arranged in a custom order.
 [PR #1133](https://github.com/weewx/weewx/pull/1133). Huge thanks to user 
 Manuel!
 
+Improved the performance of `weewx.xtypes.ArchiveTable.get_series()` for
+aggregated series (such as hourly aggregation over a long timespan). It now
+issues a single bulk SQL query for the whole timespan, then calculates the
+aggregates in memory, instead of issuing one SQL query per aggregation
+bucket.
+
 
 ### 5.5.2 23-Sep-2026
 
