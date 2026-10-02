@@ -333,3 +333,23 @@ def test_last_wind(config_dict):
         assert value[0] == pytest.approx(expected)
         assert value[1] == 'mile_per_hour'
         assert value[2] == 'group_speed'
+
+
+def test_extreme_time_ties(config_dict):
+    """Of equal extremes, 'maxtime' and 'mintime' should give the earliest, as the daily
+    summaries do."""
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        # The hour before 1-Mar-2010 16:00:00 was chosen because it holds two records, both
+        # without rain.
+        stop_ts = time.mktime((2010, 3, 1, 16, 0, 0, 0, 0, -1))
+        start_ts = stop_ts - 3600
+        # Check the premise of the test
+        results = [tuple(x) for x in db_manager.genSql("SELECT dateTime, rain FROM archive "
+                                                       "WHERE dateTime > ? AND dateTime <= ? "
+                                                       "ORDER BY dateTime ASC",
+                                                       (start_ts, stop_ts))]
+        assert results == [(stop_ts - 1800, 0.0), (stop_ts, 0.0)]
+        for aggregate_type in ('maxtime', 'mintime'):
+            value = weewx.xtypes.ArchiveTable.get_aggregate('rain', TimeSpan(start_ts, stop_ts),
+                                                            aggregate_type, db_manager)
+            assert value[0] == stop_ts - 1800
