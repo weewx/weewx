@@ -355,9 +355,8 @@ expected_outTemp_tderiv = [6.808472e-06, 6.878762e-06, 6.947014e-06, 7.013206e-0
 def test_get_series_archive_agg_outTemp(config_dict, aggregate_type, expected_values,
                                         expected_unit):
     """Test a series of 'outTemp', with daily aggregation, run against the main archive table.
-    This exercises the fast, bulk-query path of ArchiveTable.get_series() for the 'core
-    scalar' aggregate types. 'diff' and 'tderiv' are not part of the fast path, and instead
-    exercise the older, per-bucket fallback loop."""
+    Buckets of a day go through the per-bucket loop, and so through the daily summaries where
+    those know the aggregate type."""
     with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
         start_vec, stop_vec, data_vec \
             = weewx.xtypes.ArchiveTable.get_series('outTemp',
@@ -370,7 +369,8 @@ def test_get_series_archive_agg_outTemp(config_dict, aggregate_type, expected_va
     assert len(stop_vec[0]) == 31
     assert len(data_vec[0]) == 31
     for actual, expected in zip(data_vec[0], expected_values):
-        if actual is None or expected is None:
+        # The daily summaries return 'not_null' as 1, the archive table as True.
+        if actual is None or expected is None or isinstance(expected, bool):
             assert actual == expected
         else:
             assert actual == pytest.approx(expected, abs=1e-6)
@@ -430,17 +430,29 @@ def _assert_series_equal(actual, expected):
                 assert a == pytest.approx(e, abs=1e-6)
 
 
+def _force_per_bucket(m):
+    """Make ArchiveTable.get_series() calculate every bucket using get_aggregate()."""
+    m.setattr(weewx.xtypes.ArchiveTable, '_fast_aggregate_types', set())
+    m.setattr(weewx.xtypes.ArchiveTable, '_grouped_aggregate_types', set())
+
+
+# The aggregate types of the fast path, to compare with the per-bucket fallback. 'vecavg' is left
+# out, because get_aggregate() raises a TypeError for it in a calm bucket, i.e., one with a wind
+# speed of zero and no direction. The hour before 2010-03-13 00:00 is one.
+compared_types = sorted((weewx.xtypes.ArchiveTable._fast_aggregate_types
+                         | weewx.xtypes.ArchiveTable._grouped_aggregate_types)
+                        - {'vecavg'})
+
+
 @pytest.mark.parametrize('obs_type', ['outTemp', 'rain', 'wind'])
-@pytest.mark.parametrize('aggregate_type',
-                         sorted(weewx.xtypes.ArchiveTable._fast_aggregate_types)
-                         + ['cumulative'])
+@pytest.mark.parametrize('aggregate_type', compared_types + ['cumulative'])
 def test_get_series_archive_agg_paged(config_dict, monkeypatch, obs_type, aggregate_type):
     """The paged fast path of ArchiveTable.get_series() must give the same results as the
     per-bucket fallback, no matter what the page span is."""
     with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
         # First, get the reference results by forcing the per-bucket fallback.
         with monkeypatch.context() as m:
-            m.setattr(weewx.xtypes.ArchiveTable, '_fast_aggregate_types', set())
+            _force_per_bucket(m)
             expected = _get_hourly_series(db_manager, obs_type, aggregate_type)
         # March has 31 days, less one hour for the DST change.
         assert len(expected[0][0]) == 31 * 24 - 1
@@ -495,6 +507,103 @@ def test_gen_pages():
     pages = list(weewx.xtypes.ArchiveTable._gen_pages(buckets, 1000))
     assert pages == [buckets]
     assert list(weewx.xtypes.ArchiveTable._gen_pages([], 1000)) == []
+    # A bucket of a different length starts a new page.
+    buckets = [TimeSpan(0, 10), TimeSpan(10, 20), TimeSpan(20, 40), TimeSpan(40, 50),
+               TimeSpan(50, 55)]
+    pages = list(weewx.xtypes.ArchiveTable._gen_pages(buckets, 1000))
+    assert pages == [buckets[0:2], buckets[2:3], buckets[3:4], buckets[4:5]]
+
+
+@pytest.mark.parametrize('obs_type', ['outTemp', 'wind'])
+@pytest.mark.parametrize('aggregate_type',
+                         sorted(weewx.xtypes.ArchiveTable._grouped_aggregate_types))
+def test_get_series_archive_agg_dst(config_dict, monkeypatch, obs_type, aggregate_type):
+    """Where DST begins, one of the 3-hour buckets is only 2 hours long. The buckets after it
+    must still get the values of the per-bucket fallback."""
+    def get_series():
+        return weewx.xtypes.ArchiveTable.get_series(obs_type,
+                                                    TimeSpan(month_start_ts, month_stop_ts),
+                                                    db_manager,
+                                                    aggregate_type,
+                                                    3 * 3600)
+
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        with monkeypatch.context() as m:
+            _force_per_bucket(m)
+            expected = get_series()
+        start_vec, stop_vec = expected[0][0], expected[1][0]
+        assert sorted(set(b - a for a, b in zip(start_vec, stop_vec))) == [7200, 10800]
+        _assert_series_equal(get_series(), expected)
+
+
+@pytest.mark.parametrize('aggregate_type', compared_types)
+def test_get_series_archive_agg_empty(config_dict, monkeypatch, aggregate_type):
+    """With buckets of 15 minutes, and an archive row every 30 minutes, every other bucket is
+    empty. It must get the value of the per-bucket fallback."""
+    def get_series():
+        return weewx.xtypes.ArchiveTable.get_series('wind',
+                                                    TimeSpan(month_start_ts,
+                                                             month_start_ts + 7 * 24 * 3600),
+                                                    db_manager,
+                                                    aggregate_type,
+                                                    900)
+
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        with monkeypatch.context() as m:
+            _force_per_bucket(m)
+            expected = get_series()
+        _assert_series_equal(get_series(), expected)
+
+
+def test_get_series_archive_agg_grouped(config_dict):
+    """Where its SQL can aggregate, the database returns a row per bucket, rather than every
+    archive row."""
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        row_count = [0]
+        orig_genSql = db_manager.genSql
+
+        def counting_genSql(*args, **kwargs):
+            for row in orig_genSql(*args, **kwargs):
+                row_count[0] += 1
+                yield row
+
+        db_manager.genSql = counting_genSql
+        try:
+            start_vec, stop_vec, data_vec = _get_hourly_series(db_manager, 'outTemp', 'avg')
+        finally:
+            db_manager.genSql = orig_genSql
+
+    # An hour holds two archive rows.
+    assert 0 < row_count[0] <= len(data_vec[0])
+
+
+def test_get_series_archive_agg_whole_days(config_dict):
+    """Buckets of a day come from the daily summaries, as with get_aggregate(). The summaries
+    hold the extremes of the LOOP packets, which can fall between two archive records. One is
+    simulated here, and the series must show it."""
+    day_start = int(time.mktime((2010, 3, 10, 0, 0, 0, 0, 0, -1)))
+    # Between the archive records of 03:00 and 03:30
+    loop_time = day_start + 3 * 3600 + 1234
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        # Through a cursor: connection.execute() of weedb.sqlite commits at once, and the other
+        # tests would see the change.
+        with db_manager.connection.cursor() as cursor:
+            db_manager.connection.begin()
+            try:
+                cursor.execute("UPDATE archive_day_outTemp SET max = 200.0, maxtime = ? "
+                               "WHERE dateTime = ?", (loop_time, day_start))
+                start_vec, stop_vec, data_vec \
+                    = weewx.xtypes.ArchiveTable.get_series('outTemp',
+                                                           TimeSpan(month_start_ts,
+                                                                    month_stop_ts),
+                                                           db_manager,
+                                                           'maxtime',
+                                                           24 * 3600)
+            finally:
+                db_manager.connection.rollback()
+
+    assert start_vec[0][9] == day_start
+    assert data_vec[0][9] == loop_time
 
 
 def test_get_series_archive_agg_unknown_type(config_dict):
