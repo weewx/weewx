@@ -6,7 +6,6 @@
 """User-defined extensions to the WeeWX type system"""
 
 import datetime
-import itertools
 import time
 import math
 
@@ -235,24 +234,25 @@ class ArchiveTable(XType):
     @staticmethod
     def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_interval=None,
                    **option_dict):
-        """Get a series, possibly with aggregation, from the main archive database.
+        """Get a series from the main archive database.
 
-        Fpr series without aggregation, the series is returned straight from the database.
+        For series without aggregation, return it straight from the database.
 
         For series with aggregation, the requested time span is split into aggregation buckets,
         each aggregate_interval long. The buckets are then calculated in one of three ways. The
-        first two are paged "fast paths" and the third is the fallback.
+        first two are paged "fast paths", and the third is the fallback.
 
         1. Paged, database-side aggregation (_gen_grouped_aggregates)
-            - Used when the aggregation bucket is shorter than a day and the aggregate type is
+            - Used when the aggregation interval is shorter than a day and the aggregate type is
             simple, such as 'sum' or 'max'. It can also be used by 'vecdir' and 'vecavg', provided
             that the database supports math functions.
-            - Consecutive aggregation buckets are grouped into pages of about series_page_span
+            - Consecutive aggregation buckets are grouped into pages of about `series_page_span`
             (7 days) each.
-            - The aggregation for each page is done by the database in one query.
+            - The aggregation for each page is then done by the database in one query.
         2. Paged, in-memory aggregation (_gen_scalar_aggregates)
             - Used when the bucket is shorter than a day and the type is in _fast_aggregate_types
-            but not handled by method 1. That is first, last, maxtime, mintime and not_null.
+            but not handled by method 1. That is aggregation types 'first', 'last', 'maxtime',
+            'mintime' and 'not_null'.
             - Pages are formed the same way, at about 7 days each.
             - Each page fetches the raw archive rows in one query, ordered by dateTime.
             - The aggregation value is then computed in memory.
@@ -308,43 +308,26 @@ class ArchiveTable(XType):
 
             use_fast_path = False
             # Find an appropriate fast path algorithm for this aggregation, or None if it cannot
-            # be done. Variable `gen_aggregates` will be a callable.
+            # be done. Variable `gen_aggregates` will be a generator function
             gen_aggregates = ArchiveTable._get_fast_path(obs_type, do_aggregate,
                                                          aggregate_interval, db_manager)
             if gen_aggregates:
                 # Fast path possible: calculate the series in pages (each page being a run of
                 # consecutive aggregation buckets spanning about ArchiveTable.series_page_span
                 # seconds), one query per page. The database either aggregates the page itself, or
-                # returns its rows to be aggregated in memory. This uses only a handful of queries,
-                # while keeping memory use bounded. If obs_type is not a literal column in the
-                # archive table (for example, it's a vector type such as 'windvec', or a type
-                # calculated on-the-fly by another XType), a weewx.UnknownType exception will be
-                # raised when the first page is fetched. In that case, fall back to the per-bucket
-                # loop below, which uses the generic get_aggregate() dispatcher to find an XType
-                # that can calculate it.
+                # returns its rows to be aggregated in memory. Either strategy uses only a handful
+                # of queries, while keeping memory use bounded. The call returns an appropriate
+                # generator object.
                 agg_gen = gen_aggregates(obs_type, do_aggregate, buckets, db_manager,
                                          ArchiveTable.series_page_span)
-                first_item = None
-                try:
-                    # Prime the generator. This fetches the first page, which will give us useful
-                    # information about whether a type exists in the database.
-                    first_item = next(agg_gen)
-                    # It exists. We can use the page algorithm.
-                    use_fast_path = True
-                except StopIteration:
-                    # No buckets at all.
-                    use_fast_path = True
-                except weewx.UnknownType:
-                    # The type does not exist in the database. We can't use the page algorithm.
-                    pass
-
-            if use_fast_path:
                 std_unit_system = None
-                if first_item is not None:
-                    # Retrieve the series from the iterator. Because we already retrieved the first
-                    # item, we need to tack it back on to the beginning of the iterator. Use
-                    # itertools.chain to do this.
-                    for stamp, value, std_unit_system in itertools.chain([first_item], agg_gen):
+                # Consume the generator object. If obs_type is not a literal column in the archive
+                # table (for example, it's a vector type such as 'windvec', or a type calculated
+                # on-the-fly by another XType), a weewx.UnknownType exception will be raised. Be
+                # ready to catch it, then fall back to the per-bucket loop below, which uses the
+                # generic get_aggregate() dispatcher to find an XType that can calculate it.
+                try:
+                    for stamp, value, std_unit_system in agg_gen:
                         start_vec.append(stamp[0])
                         stop_vec.append(stamp[1])
                         if aggregate_type == 'cumulative':
@@ -353,12 +336,16 @@ class ArchiveTable(XType):
                             data_vec.append(total)
                         else:
                             data_vec.append(value)
+                    # We succeeded.
+                    use_fast_path = True
+                    unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type,
+                                                                       do_aggregate)
+                except weewx.UnknownType:
+                    # The type does not exist in the database. We can't use the page algorithm.
+                    pass
 
-                unit, unit_group = weewx.units.getStandardUnitType(std_unit_system, obs_type,
-                                                                   do_aggregate)
-
-            else:
-                # Fall back to the an algorithm that does a query for each aggregation bucket.
+            if not use_fast_path:
+                # Fall back to an algorithm that does a query for each aggregation bucket.
                 # Slow, but reliable.
                 for stamp in buckets:
                     try:
@@ -503,7 +490,7 @@ class ArchiveTable(XType):
 
     @staticmethod
     def _get_fast_path(obs_type, aggregate_type, aggregate_interval, db_manager):
-        """Choose how to calculate an aggregated series a page at a time.
+        """Choose which strategy to use to calculate an aggregated series a page at a time.
 
         Args:
             obs_type (str): The type to be aggregated.
