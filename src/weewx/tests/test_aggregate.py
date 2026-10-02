@@ -333,3 +333,21 @@ def test_last_wind(config_dict):
         assert value[0] == pytest.approx(expected)
         assert value[1] == 'mile_per_hour'
         assert value[2] == 'group_speed'
+
+
+def test_vecavg_calm(config_dict):
+    """Test 'vecavg' over an interval where no wind speed has a direction."""
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        # The hour before 13-Mar-2010 00:00:00 was chosen because its first wind speed is null,
+        # and its second is calm: zero, without a direction.
+        stop_ts = time.mktime((2010, 3, 13, 0, 0, 0, 0, 0, -1))
+        start_ts = stop_ts - 3600
+        # Check the premise of the test
+        results = [tuple(x) for x in db_manager.genSql("SELECT windSpeed, windDir FROM archive "
+                                                       "WHERE dateTime > ? AND dateTime <= ? "
+                                                       "ORDER BY dateTime ASC",
+                                                       (start_ts, stop_ts))]
+        assert results == [(None, None), (0.0, None)]
+        value = weewx.xtypes.ArchiveTable.get_aggregate('wind', TimeSpan(start_ts, stop_ts),
+                                                        'vecavg', db_manager)
+        assert value[0] is None
