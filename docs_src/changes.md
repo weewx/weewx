@@ -9,6 +9,11 @@ of issuing one SQL query per aggregation bucket, it now fetches the archive
 data in pages of about a week each, then calculates the aggregates in memory.
 This keeps both the number of queries and the memory used small.
 
+Where its SQL can, the database now aggregates each page itself, so it returns
+a row per bucket rather than every archive record. Buckets of a day or more
+come from the daily summaries again, as before.
+[PR #1154](https://github.com/weewx/weewx/pull/1154).
+
 
 ### 5.5.2 23-Sep-2026
 
