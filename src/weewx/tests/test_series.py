@@ -585,19 +585,22 @@ def test_get_series_archive_agg_whole_days(config_dict):
     # Between the archive records of 03:00 and 03:30
     loop_time = day_start + 3 * 3600 + 1234
     with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
-        db_manager.connection.begin()
-        try:
-            db_manager.connection.execute("UPDATE archive_day_outTemp SET max = 200.0, "
-                                          "maxtime = ? WHERE dateTime = ?",
-                                          (loop_time, day_start))
-            start_vec, stop_vec, data_vec \
-                = weewx.xtypes.ArchiveTable.get_series('outTemp',
-                                                       TimeSpan(month_start_ts, month_stop_ts),
-                                                       db_manager,
-                                                       'maxtime',
-                                                       24 * 3600)
-        finally:
-            db_manager.connection.rollback()
+        # Through a cursor: connection.execute() of weedb.sqlite commits at once, and the other
+        # tests would see the change.
+        with db_manager.connection.cursor() as cursor:
+            db_manager.connection.begin()
+            try:
+                cursor.execute("UPDATE archive_day_outTemp SET max = 200.0, maxtime = ? "
+                               "WHERE dateTime = ?", (loop_time, day_start))
+                start_vec, stop_vec, data_vec \
+                    = weewx.xtypes.ArchiveTable.get_series('outTemp',
+                                                           TimeSpan(month_start_ts,
+                                                                    month_stop_ts),
+                                                           db_manager,
+                                                           'maxtime',
+                                                           24 * 3600)
+            finally:
+                db_manager.connection.rollback()
 
     assert start_vec[0][9] == day_start
     assert data_vec[0][9] == loop_time
