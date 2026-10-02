@@ -6,6 +6,10 @@ WeeWX change history
 Fixed a `TypeError` in aggregate type `vecavg` when there is no wind direction
 over an interval. [PR #1155](https://github.com/weewx/weewx/pull/1155).
 
+Of several equal extremes, aggregate types `maxtime` and `mintime` now give the
+earliest when calculated from the archive table, as they already did from the
+daily summaries. [PR #1156](https://github.com/weewx/weewx/pull/1156).
+
 
 ### 5.5.2 23-Sep-2026
 
