@@ -1,6 +1,13 @@
 WeeWX change history
 --------------------
 
+### 5.5.3
+
+Fixed a `TypeError` in aggregate type `vecavg` over an interval where no wind
+speed has a direction, such as a calm one.
+[PR #1155](https://github.com/weewx/weewx/pull/1155).
+
+
 ### 5.5.2 23-Sep-2026
 
 Fixed the version check implementation for generating maintainer version of
