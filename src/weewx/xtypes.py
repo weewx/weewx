@@ -452,9 +452,9 @@ class ArchiveTable(XType):
                 deg = 90.0 - math.degrees(math.atan2(row[1], row[0]))
                 value = deg if deg >= 0 else deg + 360.0
         elif aggregate_type == 'vecavg':
-            # The sums of x and y are null when no wind speed in the interval has a direction,
-            # as when it is calm.
             if None in row or not row[2]:
+                # The x- or y-component of the vector averaged wind is null. This can happen if
+                # the wind speed or direction is null.
                 value = None
             else:
                 value = math.sqrt((row[0] ** 2 + row[1] ** 2) / row[2] ** 2)
