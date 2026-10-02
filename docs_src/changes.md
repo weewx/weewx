@@ -1,6 +1,13 @@
 WeeWX change history
 --------------------
 
+### 5.5.3
+
+Of several equal extremes, aggregate types `maxtime` and `mintime` now give the
+earliest when calculated from the archive table, as they already did from the
+daily summaries. [PR #1156](https://github.com/weewx/weewx/pull/1156).
+
+
 ### 5.5.2 23-Sep-2026
 
 Fixed the version check implementation for generating maintainer version of
