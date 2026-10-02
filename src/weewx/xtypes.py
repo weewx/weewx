@@ -237,23 +237,39 @@ class ArchiveTable(XType):
                    **option_dict):
         """Get a series, possibly with aggregation, from the main archive database.
 
-        The general strategy is that if aggregation is asked for, chop the series up into separate
-        chunks, calculating the aggregate for each chunk. Then assemble the results.
+        Fpr series without aggregation, the series is returned straight from the database.
 
-        For simple scalar aggregates of types stored in the archive table, chunks shorter than a
-        day are calculated in pages of consecutive chunks, each page spanning about
-        `ArchiveTable.series_page_span` seconds, with one query per page. Where its SQL can, the
-        database aggregates each chunk of the page itself. Otherwise, the archive rows of the
-        page are fetched, and the aggregates are calculated in memory. This keeps both the number
-        of queries and the memory used small. Any other chunk is calculated separately using
-        get_aggregate().
+        For series with aggregation, the requested time span is split into aggregation buckets,
+        each aggregate_interval long. The buckets are then calculated in one of three ways. The
+        first two are paged "fast paths" and the third is the fallback.
 
-        If no aggregation is called for, just return the data directly out of the database.
+        1. Paged, database-side aggregation (_gen_grouped_aggregates)
+            - Used when the aggregation bucket is shorter than a day and the aggregate type is
+            simple, such as 'sum' or 'max'. It can also be used by 'vecdir' and 'vecavg', provided
+            that the database supports math functions.
+            - Consecutive aggregation buckets are grouped into pages of about series_page_span
+            (7 days) each.
+            - The aggregation for each page is done by the database in one query.
+        2. Paged, in-memory aggregation (_gen_scalar_aggregates)
+            - Used when the bucket is shorter than a day and the type is in _fast_aggregate_types
+            but not handled by method 1. That is first, last, maxtime, mintime and not_null.
+            - Pages are formed the same way, at about 7 days each.
+            - Each page fetches the raw archive rows in one query, ordered by dateTime.
+            - The aggregation value is then computed in memory.
+        3. Fallback: one get_aggregate() call per bucket
+            - Used when:
+                o the bucket is a day or longer. This allows get_aggregate() to use the daily
+                summaries if possible;
+                o the aggregate type isn't supported by the fast paths (e.g. diff, tderiv, gustdir);
+                o the type isn't a real database column (e.g. windvec, or a type calculated by
+                XType).
+            - In these cases, the aggregation goes through the generic xtypes.get_aggregate()
+            algorithm. It is the slowest approach, but the most general.
 
         Args:
             obs_type (str): The type to be calculated.
-            timespan (weeutil.weeutil.TimeSpan|tuple[int|float, int|float]): The time period over which the series
-                is to be calculated.
+            timespan (weeutil.weeutil.TimeSpan|tuple[int|float, int|float]): The time period over
+                which the series is to be calculated.
             db_manager (weewx.manager.Manager): An open database manager.
             aggregate_type (str|None): The type of aggregation to be used, if any.
             aggregate_interval (float|int): The aggregation interval, if aggregation is used.
@@ -291,19 +307,21 @@ class ArchiveTable(XType):
                 buckets.append(stamp)
 
             use_fast_path = False
+            # Find an appropriate fast path algorithm for this aggregation, or None if it cannot
+            # be done. Variable `gen_aggregates` will be a callable.
             gen_aggregates = ArchiveTable._get_fast_path(obs_type, do_aggregate,
                                                          aggregate_interval, db_manager)
             if gen_aggregates:
-                # Fast path: calculate the series in pages (each page being a run of consecutive
-                # aggregation buckets spanning about ArchiveTable.series_page_span seconds), one
-                # query per page. The database either aggregates the page itself, or returns its
-                # rows to be aggregated in memory. This uses only a handful of queries, while
-                # keeping memory use bounded. If obs_type is not a literal column in the archive
-                # table (for example, it's a vector type such as 'windvec', or a type calculated
-                # on-the-fly by another XType), a weewx.UnknownType exception will be raised when
-                # the first page is fetched. In that case, fall back to the per-bucket loop below,
-                # which uses the generic get_aggregate() dispatcher to find an XType that can
-                # calculate it.
+                # Fast path possible: calculate the series in pages (each page being a run of
+                # consecutive aggregation buckets spanning about ArchiveTable.series_page_span
+                # seconds), one query per page. The database either aggregates the page itself, or
+                # returns its rows to be aggregated in memory. This uses only a handful of queries,
+                # while keeping memory use bounded. If obs_type is not a literal column in the
+                # archive table (for example, it's a vector type such as 'windvec', or a type
+                # calculated on-the-fly by another XType), a weewx.UnknownType exception will be
+                # raised when the first page is fetched. In that case, fall back to the per-bucket
+                # loop below, which uses the generic get_aggregate() dispatcher to find an XType
+                # that can calculate it.
                 agg_gen = gen_aggregates(obs_type, do_aggregate, buckets, db_manager,
                                          ArchiveTable.series_page_span)
                 first_item = None
@@ -323,8 +341,9 @@ class ArchiveTable(XType):
             if use_fast_path:
                 std_unit_system = None
                 if first_item is not None:
-                    # Because we already retrieved the first item, we have to tack it back on to
-                    # the beginning of the iterator. Use itertools.chain to do this.
+                    # Retrieve the series from the iterator. Because we already retrieved the first
+                    # item, we need to tack it back on to the beginning of the iterator. Use
+                    # itertools.chain to do this.
                     for stamp, value, std_unit_system in itertools.chain([first_item], agg_gen):
                         start_vec.append(stamp[0])
                         stop_vec.append(stamp[1])
@@ -496,15 +515,14 @@ class ArchiveTable(XType):
             Callable|None: Either `_gen_grouped_aggregates` or `_gen_scalar_aggregates`, or None
                 if each bucket must be calculated separately using get_aggregate().
         """
-        # Buckets of a day or more are left to get_aggregate(). There are few of them, and
-        # get_aggregate() answers a bucket that begins and ends at midnight from the daily
-        # summaries. Those hold the extremes of the LOOP packets, and a time-weighted average,
-        # so the archive rows would give different values.
+        # Buckets of a day or more are left to get_aggregate(), which can (possibly) take advantage
+        # of the daily summaries.
         if weeutil.weeutil.nominal_spans(aggregate_interval) >= 24 * 3600:
             return None
         if aggregate_type in ArchiveTable._grouped_aggregate_types:
-            # The SQL of 'vecdir' and 'vecavg' needs the math functions of the database. Without
-            # them, get_aggregate() calculates these in Python.
+            # For simple aggregation types such as 'avg', or 'max', we can use "GROUP BY"
+            # semantics. Vector aggregations 'vecdir' and 'vecavg' can as well, but only if the
+            # database supports math functions.
             if aggregate_type not in ('vecdir', 'vecavg') or db_manager.connection.has_math:
                 return ArchiveTable._gen_grouped_aggregates
         if aggregate_type in ArchiveTable._fast_aggregate_types:
