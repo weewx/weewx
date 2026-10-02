@@ -240,11 +240,11 @@ class ArchiveTable(XType):
         The general strategy is that if aggregation is asked for, chop the series up into separate
         chunks, calculating the aggregate for each chunk. Then assemble the results.
 
-        For simple scalar aggregates of types stored in the archive table, the archive rows are
-        fetched in pages of consecutive chunks, each page spanning about
-        `ArchiveTable.series_page_span` seconds, and the aggregates are calculated in memory.
-        This keeps both the number of queries and the memory used small. Otherwise, each chunk is
-        calculated separately using get_aggregate().
+        For simple scalar aggregates of types stored in the archive table, chunks shorter than a
+        day are calculated in pages of consecutive chunks, each page spanning about
+        `ArchiveTable.series_page_span` seconds: the archive rows of a page are fetched, and the
+        aggregates are calculated in memory. This keeps both the number of queries and the memory
+        used small. Any other chunk is calculated separately using get_aggregate().
 
         If no aggregation is called for, just return the data directly out of the database.
 
@@ -289,7 +289,12 @@ class ArchiveTable(XType):
                 buckets.append(stamp)
 
             use_fast_path = False
-            if do_aggregate in ArchiveTable._fast_aggregate_types:
+            # Buckets of a day or more are left to the per-bucket loop. There are few of them,
+            # and get_aggregate() answers a bucket that begins and ends at midnight from the daily
+            # summaries. Those hold the extremes of the LOOP packets, and a time-weighted average,
+            # so the archive rows would give different values.
+            if do_aggregate in ArchiveTable._fast_aggregate_types \
+                    and weeutil.weeutil.nominal_spans(aggregate_interval) < 24 * 3600:
                 # Fast path: fetch the rows needed for the series in pages (each page being a run
                 # of consecutive aggregation buckets spanning about ArchiveTable.series_page_span
                 # seconds), then aggregate them in memory, one bucket at a time. This uses only a

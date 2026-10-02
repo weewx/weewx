@@ -355,9 +355,8 @@ expected_outTemp_tderiv = [6.808472e-06, 6.878762e-06, 6.947014e-06, 7.013206e-0
 def test_get_series_archive_agg_outTemp(config_dict, aggregate_type, expected_values,
                                         expected_unit):
     """Test a series of 'outTemp', with daily aggregation, run against the main archive table.
-    This exercises the fast, bulk-query path of ArchiveTable.get_series() for the 'core
-    scalar' aggregate types. 'diff' and 'tderiv' are not part of the fast path, and instead
-    exercise the older, per-bucket fallback loop."""
+    Buckets of a day go through the per-bucket loop, and so through the daily summaries where
+    those know the aggregate type."""
     with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
         start_vec, stop_vec, data_vec \
             = weewx.xtypes.ArchiveTable.get_series('outTemp',
@@ -370,7 +369,8 @@ def test_get_series_archive_agg_outTemp(config_dict, aggregate_type, expected_va
     assert len(stop_vec[0]) == 31
     assert len(data_vec[0]) == 31
     for actual, expected in zip(data_vec[0], expected_values):
-        if actual is None or expected is None:
+        # The daily summaries return 'not_null' as 1, the archive table as True.
+        if actual is None or expected is None or isinstance(expected, bool):
             assert actual == expected
         else:
             assert actual == pytest.approx(expected, abs=1e-6)
@@ -495,6 +495,32 @@ def test_gen_pages():
     pages = list(weewx.xtypes.ArchiveTable._gen_pages(buckets, 1000))
     assert pages == [buckets]
     assert list(weewx.xtypes.ArchiveTable._gen_pages([], 1000)) == []
+
+
+def test_get_series_archive_agg_whole_days(config_dict):
+    """Buckets of a day come from the daily summaries, as with get_aggregate(). The summaries
+    hold the extremes of the LOOP packets, which can fall between two archive records. One is
+    simulated here, and the series must show it."""
+    day_start = int(time.mktime((2010, 3, 10, 0, 0, 0, 0, 0, -1)))
+    # Between the archive records of 03:00 and 03:30
+    loop_time = day_start + 3 * 3600 + 1234
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        db_manager.connection.begin()
+        try:
+            db_manager.connection.execute("UPDATE archive_day_outTemp SET max = 200.0, "
+                                          "maxtime = ? WHERE dateTime = ?",
+                                          (loop_time, day_start))
+            start_vec, stop_vec, data_vec \
+                = weewx.xtypes.ArchiveTable.get_series('outTemp',
+                                                       TimeSpan(month_start_ts, month_stop_ts),
+                                                       db_manager,
+                                                       'maxtime',
+                                                       24 * 3600)
+        finally:
+            db_manager.connection.rollback()
+
+    assert start_vec[0][9] == day_start
+    assert data_vec[0][9] == loop_time
 
 
 def test_get_series_archive_agg_unknown_type(config_dict):
