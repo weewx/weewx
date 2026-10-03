@@ -991,7 +991,7 @@
     return { plot: plot, meta: meta, host: host, period: period };
   }
 
-  /* unitLabel writes the date between the arrows (#range-label) in a short form
+  /* periodLabel writes the date between the arrows (#range-label) in a short form
      below 34rem and in a long form above. Crossing 34rem, e.g., by turning a phone,
      calls showPeriod to write the date again. */
   window.matchMedia('(min-width: 34rem)').addEventListener('change', function () {
@@ -1866,7 +1866,7 @@
   /* Returns the name of the calendar unit on screen, e.g., "Tuesday, 18 August 2026"
      for a day, the first and last date for a week, "July 2026" for a month and
      "2025" for a year. */
-  function unitLabel(period, from, to) {
+  function periodLabel(period, from, to) {
     var start = new Date(from * 1000);
     var end = new Date((to - 1) * 1000);
 
@@ -1909,7 +1909,7 @@
     var d = calendarWindow(period, dataTs());
     return d.from === calendarWindow(period, nowTs()).from
       ? (CFG.text.now || 'Now')
-      : unitLabel(period, d.from, d.to);
+      : periodLabel(period, d.from, d.to);
   }
 
   /* Labels the time span on screen, and disables an arrow that would leave the
@@ -1923,7 +1923,7 @@
 
     label.textContent = anchor === null
       ? liveLabel(period)
-      : unitLabel(period, from, to);
+      : periodLabel(period, from, to);
 
     if (fwd) fwd.disabled = anchor === null;
     if (now) now.hidden = anchor === null;
