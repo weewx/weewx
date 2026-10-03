@@ -1529,18 +1529,19 @@
         series.forEach(function (s) { s.time = times; });
 
         /* The joined y axis covers the widest range of the files' axes, and takes
-           the step of the first file that has one. */
+           the step of the first file that has one. `== null` also catches a value
+           that is missing, e.g., the step of a yscale with two values. */
         var yscale = null;
         present.forEach(function (file) {
           if (!file.yscale) return;
           if (!yscale) { yscale = file.yscale.slice(); return; }
-          if (file.yscale[0] !== null && (yscale[0] === null || file.yscale[0] < yscale[0])) {
+          if (file.yscale[0] != null && (yscale[0] == null || file.yscale[0] < yscale[0])) {
             yscale[0] = file.yscale[0];
           }
-          if (file.yscale[1] !== null && (yscale[1] === null || file.yscale[1] > yscale[1])) {
+          if (file.yscale[1] != null && (yscale[1] == null || file.yscale[1] > yscale[1])) {
             yscale[1] = file.yscale[1];
           }
-          if (yscale[2] === null) yscale[2] = file.yscale[2];
+          if (yscale[2] == null) yscale[2] = file.yscale[2];
         });
 
         var out = {
