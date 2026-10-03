@@ -318,19 +318,16 @@
     return wanted;
   }
 
-  /* Returns a copy of the plot data `meta` with its readings, y axis and unit label
-     in the unit system the reader chose. `meta` itself stays in the unit it was
-     written in. If `meta` were converted in place, the next unit change would
-     convert its readings a second time. */
+  /* Returns the plot data `meta` with its readings, y axis and unit label in the unit
+     system the reader chose. A conversion goes into a copy, and `meta` itself stays in
+     the unit it was written in. If `meta` were converted in place, the next unit
+     change would convert its readings a second time. */
   function inChosenUnit(meta) {
     var table = unitTable();
-    if (!table || !meta || !meta.series || !meta.series.length) return shallow(meta);
+    if (!table || !meta || !meta.series || !meta.series.length) return meta;
 
     var to = targetUnit(meta.series[0].obs_type, meta.unit);
-    /* Without a conversion, inChosenUnit still returns a copy. Returning `meta`
-       itself would make entry.meta and entry.raw one object, and updateChart would
-       then write converted data into entry.raw. */
-    if (!to) return shallow(meta);
+    if (!to) return meta;
     var steps = table.convert[meta.unit][to];
     var factor = steps[0], offset = steps[1];
     var apply = function (v) {
@@ -676,7 +673,7 @@
      Each reading is a line from the zero line, as long as the wind speed on the y
      axis, in the direction of `vector_x` and `vector_y` turned by `vector_rotate`
      degrees. */
-  function vectorRenderItem(s, meta) {
+  function vectorRenderItem(s) {
     var rotate = (s.vector_rotate || 0) * Math.PI / 180;
     return function (params, api) {
       var i = params.dataIndex;
@@ -847,7 +844,7 @@
       if (s.plot_type === 'vector') {
         return {
           name: s.label, type: 'custom', data: points,
-          renderItem: vectorRenderItem(s, meta),
+          renderItem: vectorRenderItem(s),
           encode: { x: 0, y: 1 },
           animation: false, silent: false
         };
@@ -983,7 +980,6 @@
   }
 
   function buildChart(host, meta, period) {
-    meta._period = period;
     var hostWidth = host.clientWidth || 600;
     host.style.height = chartHeight(hostWidth) + 'px';
     var plot = echarts.init(host, null, { renderer: 'canvas' });
@@ -991,7 +987,7 @@
     return { plot: plot, meta: meta, host: host, period: period };
   }
 
-  /* unitLabel writes the date between the arrows (#range-label) in a short form
+  /* periodLabel writes the date between the arrows (#range-label) in a short form
      below 34rem and in a long form above. Crossing 34rem, e.g., by turning a phone,
      calls showPeriod to write the date again. */
   window.matchMedia('(min-width: 34rem)').addEventListener('change', function () {
@@ -1022,7 +1018,7 @@
 
   /* ------------------------------------------------------------- rendering */
 
-  function renderTable(meta, digits) {
+  function renderTable(meta, period, digits) {
     var head = '<tr><th>' + escapeHtml(CFG.text.time || 'Time') + '</th>'
       + meta.series.map(function (s) { return '<th>' + escapeHtml(s.label) + '</th>'; }).join('')
       + '</tr>';
@@ -1040,7 +1036,7 @@
       for (var j = 1; j < data.length; j++) {
         cells += '<td>' + fmtNumber(data[j][i], digits) + '</td>';
       }
-      rows.push('<tr><td class="metric">' + escapeHtml(fmtTime(data[0][i], meta._period))
+      rows.push('<tr><td class="metric">' + escapeHtml(fmtTime(data[0][i], period))
         + '</td>' + cells + '</tr>');
     }
 
@@ -1092,7 +1088,7 @@
 
     if (details) {
       var digits = digitsFor(meta.series);
-      details.querySelector('.scroller-host').innerHTML = renderTable(meta, digits);
+      details.querySelector('.scroller-host').innerHTML = renderTable(meta, period, digits);
     }
   }
 
@@ -1108,9 +1104,7 @@
     var fresh = inChosenUnit(raw);
     if (!fresh.series || fresh.series.length !== entry.meta.series.length) return false;
 
-    /* The new data is copied into entry.meta rather than replacing the object,
-       because renderTable reads `_period`, which buildChart set on entry.meta. */
-    Object.keys(fresh).forEach(function (key) { entry.meta[key] = fresh[key]; });
+    entry.meta = fresh;
     entry.raw = raw;
     plot.setOption(chartOptions(entry.meta, entry.period,
                                 entry.host.clientWidth || 600));
@@ -1122,7 +1116,7 @@
     if (details) {
       if (details.open) {
         details.querySelector('.scroller-host').innerHTML =
-          renderTable(entry.meta, digitsFor(entry.meta.series));
+          renderTable(entry.meta, entry.period, digitsFor(entry.meta.series));
         delete details.dataset.stale;
       } else {
         details.dataset.stale = '1';
@@ -1535,18 +1529,19 @@
         series.forEach(function (s) { s.time = times; });
 
         /* The joined y axis covers the widest range of the files' axes, and takes
-           the step of the first file that has one. */
+           the step of the first file that has one. `== null` also catches a value
+           that is missing, e.g., the step of a yscale with two values. */
         var yscale = null;
         present.forEach(function (file) {
           if (!file.yscale) return;
           if (!yscale) { yscale = file.yscale.slice(); return; }
-          if (file.yscale[0] !== null && (yscale[0] === null || file.yscale[0] < yscale[0])) {
+          if (file.yscale[0] != null && (yscale[0] == null || file.yscale[0] < yscale[0])) {
             yscale[0] = file.yscale[0];
           }
-          if (file.yscale[1] !== null && (yscale[1] === null || file.yscale[1] > yscale[1])) {
+          if (file.yscale[1] != null && (yscale[1] == null || file.yscale[1] > yscale[1])) {
             yscale[1] = file.yscale[1];
           }
-          if (yscale[2] === null) yscale[2] = file.yscale[2];
+          if (yscale[2] == null) yscale[2] = file.yscale[2];
         });
 
         var out = {
@@ -1866,7 +1861,7 @@
   /* Returns the name of the calendar unit on screen, e.g., "Tuesday, 18 August 2026"
      for a day, the first and last date for a week, "July 2026" for a month and
      "2025" for a year. */
-  function unitLabel(period, from, to) {
+  function periodLabel(period, from, to) {
     var start = new Date(from * 1000);
     var end = new Date((to - 1) * 1000);
 
@@ -1909,7 +1904,7 @@
     var d = calendarWindow(period, dataTs());
     return d.from === calendarWindow(period, nowTs()).from
       ? (CFG.text.now || 'Now')
-      : unitLabel(period, d.from, d.to);
+      : periodLabel(period, d.from, d.to);
   }
 
   /* Labels the time span on screen, and disables an arrow that would leave the
@@ -1923,7 +1918,7 @@
 
     label.textContent = anchor === null
       ? liveLabel(period)
-      : unitLabel(period, from, to);
+      : periodLabel(period, from, to);
 
     if (fwd) fwd.disabled = anchor === null;
     if (now) now.hidden = anchor === null;
@@ -2153,7 +2148,7 @@
         });
         if (entry) {
           e.target.querySelector('.scroller-host').innerHTML =
-            renderTable(entry.meta, digitsFor(entry.meta.series));
+            renderTable(entry.meta, entry.period, digitsFor(entry.meta.series));
         }
         delete e.target.dataset.stale;
       }
