@@ -264,6 +264,10 @@ class Connection(weedb.Connection):
                "- TO_DAYS(FROM_UNIXTIME(%(sod)s)))/ %(agg_days)s, 0) ",
         'month': "GROUP BY DATE_FORMAT(FROM_UNIXTIME(dateTime), '%%%%Y-%%%%m') ",
         'year': "GROUP BY DATE_FORMAT(FROM_UNIXTIME(dateTime), '%%%%Y') ",
+        # Buckets of 'step' seconds. Bucket n holds the records with
+        # start + n * step < dateTime <= start + (n + 1) * step. DIV is an integer division. A
+        # plain '/' would give a decimal.
+        'interval': "GROUP BY (dateTime - %(start)s - 1) DIV %(step)s ",
     }
 
     @staticmethod

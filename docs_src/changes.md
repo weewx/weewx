@@ -13,10 +13,25 @@ summary, all of which can be arranged in a custom order.
 Manuel!
 
 Improved the performance of `weewx.xtypes.ArchiveTable.get_series()` for
-aggregated series (such as hourly aggregation over a long timespan). It now
-issues a single bulk SQL query for the whole timespan, then calculates the
-aggregates in memory, instead of issuing one SQL query per aggregation
-bucket.
+aggregated series (such as hourly aggregation over a long timespan). Instead
+of issuing one SQL query per aggregation bucket, it now fetches the archive
+data in pages of about a week each, then calculates the aggregates in memory.
+This keeps both the number of queries and the memory used small.
+
+Where its SQL can, the database now aggregates each page itself, so it returns
+a row per bucket rather than every archive record. Buckets of a day or more
+come from the daily summaries again, as before.
+[PR #1154](https://github.com/weewx/weewx/pull/1154).
+
+
+### 5.x.y dd-Mmm-YYYY
+
+Fixed a `TypeError` in aggregate type `vecavg` when there is no wind direction
+over an interval. [PR #1155](https://github.com/weewx/weewx/pull/1155).
+
+Of several equal extremes, aggregate types `maxtime` and `mintime` now give the
+earliest when calculated from the archive table, as they already did from the
+daily summaries. [PR #1156](https://github.com/weewx/weewx/pull/1156).
 
 
 ### 5.5.2 23-Sep-2026
