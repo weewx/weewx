@@ -428,10 +428,12 @@ class ArchiveTable(XType):
                     "AND %(sql_type)s IS NOT NULL",
         'maxtime': "SELECT dateTime FROM %(table_name)s "
                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                   "AND %(sql_type)s IS NOT NULL ORDER BY %(sql_type)s DESC LIMIT 1",
+                   "AND %(sql_type)s IS NOT NULL "
+                   "ORDER BY %(sql_type)s DESC, dateTime ASC LIMIT 1",
         'mintime': "SELECT dateTime FROM %(table_name)s "
                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
-                   "AND %(sql_type)s IS NOT NULL ORDER BY %(sql_type)s ASC LIMIT 1",
+                   "AND %(sql_type)s IS NOT NULL "
+                   "ORDER BY %(sql_type)s ASC, dateTime ASC LIMIT 1",
         'not_null': "SELECT 1 FROM %(table_name)s "
                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
                     "AND %(sql_type)s IS NOT NULL LIMIT 1",
