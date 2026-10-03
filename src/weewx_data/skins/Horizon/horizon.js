@@ -673,7 +673,7 @@
      Each reading is a line from the zero line, as long as the wind speed on the y
      axis, in the direction of `vector_x` and `vector_y` turned by `vector_rotate`
      degrees. */
-  function vectorRenderItem(s, meta) {
+  function vectorRenderItem(s) {
     var rotate = (s.vector_rotate || 0) * Math.PI / 180;
     return function (params, api) {
       var i = params.dataIndex;
@@ -844,7 +844,7 @@
       if (s.plot_type === 'vector') {
         return {
           name: s.label, type: 'custom', data: points,
-          renderItem: vectorRenderItem(s, meta),
+          renderItem: vectorRenderItem(s),
           encode: { x: 0, y: 1 },
           animation: false, silent: false
         };
