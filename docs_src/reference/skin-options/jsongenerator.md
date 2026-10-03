@@ -26,8 +26,8 @@ Either way the syntax is the Image generator's. See
 A plot definition can carry any option the Image generator knows. This
 generator reads the ones that say what the plot is: `time_length`,
 `aggregate_type`, `aggregate_interval`, `data_binding`, `data_type`, `unit`,
-`label`, `y_label`, `plot_type`, `color`, `chart_line_colors`, `yscale`,
-`y_nticks` and `vector_rotate`.
+`label`, `plot_type`, `color`, `chart_line_colors`, `yscale`, `y_nticks` and
+`vector_rotate`.
 
 Everything else describes how to draw an image, such as fonts, image sizes and
 marker shapes, and is ignored.
@@ -99,7 +99,8 @@ tier does not grow.
 #### day_resolution
 
 The aggregation interval of the day files. `0`, the default, uses the archive
-interval that most archive records of the day have.
+interval that most archive records of the day have. The day files then hold the
+values of the archive records as they are.
 
 #### budget
 
@@ -118,7 +119,8 @@ page without today is of little use.
 Comma separated list of observation types that also carry their lowest and
 highest value in each aggregation interval, not only the aggregate. An average
 is the wrong thing to remember for a gust: averaged over four hours, a storm
-turns into a breeze. Default is `windGust, windSpeed, rainRate, UV`.
+turns into a breeze. Each name costs two more queries per aggregation interval.
+Default is `windGust, windSpeed, rainRate, UV`.
 
 #### rebuild
 

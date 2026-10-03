@@ -290,6 +290,13 @@
     return unitChoices;
   }
 
+  /* Returns the label of `unit`, e.g., '°C'. data/skin.json is the only place that
+     holds it: the archive files name only the unit. */
+  function unitLabel(unit) {
+    var table = unitTable();
+    return (table && table.labels && table.labels[unit]) || '';
+  }
+
   /* Returns the unit in which a reading of `obsType` in `fromUnit` is shown, or null
      where the reading stays in `fromUnit`.
 
@@ -332,7 +339,7 @@
 
     var out = shallow(meta);
     out.unit = to;
-    out.unit_label = (table.labels && table.labels[to]) || '';
+    out.unit_label = unitLabel(to);
 
     /* The step of the y axis is a difference, so the step takes the factor but not
        the offset: a step of 5 degree_C is 9 degree_F, not 41. */
@@ -1547,7 +1554,7 @@
           start: start,
           stop: start + slots * interval,
           unit: template.unit,
-          unit_label: template.unit_label,
+          unit_label: unitLabel(template.unit),
           aggregate_interval: interval,
           series: series
         };

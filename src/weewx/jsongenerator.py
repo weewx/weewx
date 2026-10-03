@@ -48,7 +48,6 @@ import copy
 import datetime
 import json
 import logging
-import math
 import os
 import re
 import time
@@ -99,7 +98,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
     EMPTY_INDEX = {
         'first': None,
         'rebuilt': None,
-        'labels': {},
+        'titles': {},
         **{key: {} for pair in TIERS for key in pair}
     }
 
@@ -247,7 +246,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 # written under different settings differ.
                 groups.append({'name': name,
                                'title': entry['title'] or name,
-                               'unit_label': entry['unit_label'] or '',
                                **{key: entry[key] for pair in TIERS for key in pair}})
             try:
                 _write_json(os.path.join(arch_root, 'index.json'),
@@ -293,7 +291,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 this_year = time.localtime(int(last_ts)).tm_year
 
                 def write_tier(timespans, tier, date_of, interval_of, tier_from,
-                               metered=True):
+                               metered=True, raw=False):
                     """Write the archive files of one tier for the current plot group.
 
                     The tiers differ in how they cut the database into archive files,
@@ -317,6 +315,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                         tier_from (int): The oldest time this tier reaches.
                         metered (bool): Whether the budget applies. The day tier is not
                             metered.
+                        raw (bool): Whether the aggregation interval is the archive
+                            interval. See _archive_series().
                     """
                     intervals_key = dict(TIERS)[tier]
                     # Start with the newest timespan. A run that stops early then leaves
@@ -360,7 +360,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                             plot_dict=day_plots[plotname], plot_options=plot_options,
                             timespan=timespan, interval=interval, rounding=rounding,
                             group_name=group_name, first_ts=tier_from, last_ts=last_ts,
-                            old_file=old_file, extremes=opts['extremes'])
+                            old_file=old_file, extremes=opts['extremes'], raw=raw)
                         counters['spent'] += time.time() - started
                         if payload is None:
                             continue
@@ -370,7 +370,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                             entry[tier][date] = payload['newest']
                             entry[intervals_key][date] = interval
                             entry['title'] = ', '.join(s['label'] for s in payload['series'])
-                            entry['unit_label'] = payload['unit_label']
                         except OSError as e:
                             log.error("Unable to save to file '%s': %s", out_file, e)
 
@@ -395,7 +394,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                         or _archive_interval_of_day(db_manager, timespan_of[date]))
                     write_tier(timespans=day_timespans, tier='days', date_of=date_of_day,
                                interval_of=day_interval, tier_from=days_from,
-                               metered=False)
+                               metered=False, raw=not opts['day_resolution'])
                     _drop_old_days(arch_root, on_disk, group_name,
                                    {date_of_day(timespan) for timespan in day_timespans},
                                    index.get(group_name))
@@ -463,7 +462,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                                  coarsen it.
                 month_intervals: the same for the months
                 day_intervals:   the same for the days
-                labels:          {plot group: (title, unit_label)}
+                titles:          {plot group: title}
                 first:           the oldest archive record in the database when the
                                  previous run read it, or None if there was no archive
                                  index
@@ -480,9 +479,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             for group in index.get('groups', []):
                 name = group['name']
                 # A run that writes no archive file of a plot group still needs the
-                # plot group's title and unit_label for the archive index, so keep them
-                # from the old one.
-                old_index['labels'][name] = (group.get('title'), group.get('unit_label'))
+                # plot group's title for the archive index, so keep it from the old one.
+                old_index['titles'][name] = group.get('title')
                 for key in (key for pair in TIERS for key in pair):
                     by_date = {date: int(value)
                                for date, value in (group.get(key) or {}).items() if value}
@@ -573,7 +571,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 log.warning("Could not write day/night file for %d: %s", year, e)
 
     def _archive_file(self, plot_dict, plot_options, timespan, interval, rounding,
-                      group_name, first_ts, last_ts, old_file=None, extremes=()):
+                      group_name, first_ts, last_ts, old_file=None, extremes=(), raw=False):
         """Build the contents of one archive file: one plot group over one timespan.
 
         Every tier builds its archive files here. A day, a month and a year differ only
@@ -597,6 +595,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 extended. None otherwise.
             extremes (set[str]|tuple[str, ...]): The observation types that also carry
                 the lowest and highest value in each aggregation interval.
+            raw (bool): Whether 'interval' is the archive interval. See
+                _archive_series().
 
         Returns:
             dict|None: The contents of the archive file, or None if the timespan holds
@@ -606,7 +606,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
                     {'name': 'tempdew', 'start': 1735686000, 'interval': 3600,
                      'count': 8760, 'newest': 1767222000,
-                     'unit': 'degree_C', 'unit_label': '°C',
+                     'unit': 'degree_C',
                      'yscale': [-10.0, 35.0, 5.0],
                      'series': [{'obs_type': 'outTemp', 'label': 'Outside Temperature',
                                  'aggregate_type': 'avg', 'color': '#4282b4',
@@ -638,21 +638,19 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                           for s in old_file['series']}
 
         series_out = []
-        unit = unit_label = None
+        unit = None
         for line_name in plot_dict.sections:
             line = self._line_spec(plot_dict[line_name], line_name, interval)
             entry = self._archive_series(
                 line=line, plot_options=plot_options, start=start, stop=stop,
                 count=count, interval=interval, rounding=rounding, extremes=extremes,
                 old_series=old_by_key.get((line['var_type'], line['aggregate_type'])),
-                old_file=old_file)
+                old_file=old_file, raw=raw)
             if entry is None:
                 continue
             entry_unit = entry.pop('unit')
             if entry_unit is not None:
                 unit = entry_unit
-                unit_label = line['options'].get(
-                    'y_label', self.formatter.get_label_string(entry_unit))
             series_out.append(entry)
 
         if not series_out:
@@ -660,7 +658,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # A timespan without new archive records reports no unit. The archive file then
         # keeps its own.
         if unit is None and old_file is not None:
-            unit, unit_label = old_file.get('unit'), old_file.get('unit_label')
+            unit = old_file.get('unit')
 
         # chart_line_colors applies to every series that sets no color of its own.
         default_colors = weeutil.weeutil.option_as_list(
@@ -678,13 +676,13 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             # The time up to which this archive file is complete. The next run compares
             # it with the database to decide whether the file has to be written again.
             'newest': min(int(timespan.stop), int(last_ts)),
+            # The unit of every value in the file. Its label is in skin.json.
             'unit': unit,
-            'unit_label': (unit_label or '').strip(),
             'series': series_out,
         }
 
     def _archive_series(self, line, plot_options, start, stop, count, interval, rounding,
-                        extremes, old_series, old_file):
+                        extremes, old_series, old_file, raw=False):
         """Build one series of an archive file.
 
         Args:
@@ -699,30 +697,43 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 the lowest and highest value in each aggregation interval.
             old_series (dict|None): The same series in the archive file on disk, or None.
             old_file (dict|None): The archive file on disk, if it is being extended.
+            raw (bool): Whether 'interval' is the archive interval. Each aggregation
+                interval then holds one archive record, and a line at that interval
+                takes the values of the archive records as they are.
 
         Returns:
             dict|None: The series, with its unit under 'unit', which the caller takes
                 out again. None if the series holds no value.
         """
         mgr = self.db_binder.get_manager(line['options']['data_binding'])
-        # Many skins plot sensors a station lacks. One query that stops at the first
-        # archive record saves reading a whole year of nothing, on every run.
+        # Many skins plot sensors a station lacks. One query saves reading a whole year
+        # of nothing, on every run. Asked over whole days, the daily summaries answer
+        # it. Over the timespan itself, the database would search the archive records
+        # of the year so far.
         if old_file is None and _skip_if_empty(mgr, line['data_type'],
-                                               TimeSpan(start, stop)):
+                                               _whole_days(start, stop)):
             return None
-        # The aggregation intervals of the line. Only a bar has other ones than the
-        # archive file. See _line_spec().
-        begins, ends = _intervals(start, stop, line['aggregate_interval'])
 
-        # When extending, the aggregation interval that holds the newest of the archive
-        # file on disk may have filled up since. So it is calculated again, together
-        # with every aggregation interval after it. 'first' is its position, 'since' its
-        # beginning, and 'keep' the number of aggregates to take from the file on disk.
-        first = bisect.bisect_left(ends, old_file['newest']) if old_file is not None else 0
-        since = begins[first] if first < len(begins) else stop
-        keep = int((since - start) // interval)
+        def resume(aggregate_interval):
+            """Return where to start calculating, and how many old values to keep.
 
-        def new_values(key):
+            When extending, the aggregation interval that holds the newest of the
+            archive file on disk may have filled up since. So it is calculated again,
+            together with every aggregation interval after it.
+
+            Returns:
+                tuple[int, int]: A two-way tuple (since, keep). 'since' is where that
+                    aggregation interval begins, and 'keep' the number of values to
+                    take from the file on disk.
+            """
+            if old_file is None:
+                return start, 0
+            begins, ends = _intervals(start, stop, aggregate_interval)
+            i = bisect.bisect_left(ends, old_file['newest'])
+            since = begins[i] if i < len(begins) else stop
+            return since, int((since - start) // interval)
+
+        def new_values(key, keep):
             """Return a list of 'count' values, with the first 'keep' from old_series."""
             carried = old_series.get(key) if old_series is not None else None
             if carried is None:
@@ -739,12 +750,17 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     out[i] = round(val, rounding) if rounding is not None else val
             return out
 
-        aggregated = self._aggregate_line(
-            line=line, plot_options=plot_options, mgr=mgr, timespan=TimeSpan(since, stop),
-            begins=begins, ends=ends, first=first)
+        # The aggregation intervals of the line. Only a bar has other ones than the
+        # archive file. See _line_spec().
+        since, keep = resume(line['aggregate_interval'])
+        # A value that is alone in its aggregation interval needs no aggregation. One
+        # query then reads all of them, instead of one query per aggregation interval.
+        unaggregated = raw and line['aggregate_interval'] == interval
+        aggregated = self._aggregate_line(line=line, plot_options=plot_options, mgr=mgr,
+                                          timespan=TimeSpan(since, stop), raw=unaggregated)
         if aggregated is None:
             return None
-        unit, pairs, sorted_values = aggregated
+        unit, pairs = aggregated
         empty = all(val is None for _, val in pairs)
         if old_series is None and empty:
             return None
@@ -755,7 +771,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             return self._archive_series(
                 line=line, plot_options=plot_options, start=start, stop=stop,
                 count=count, interval=interval, rounding=rounding, extremes=extremes,
-                old_series=None, old_file=None)
+                old_series=None, old_file=None, raw=raw)
 
         entry = {
             'obs_type': line['var_type'],
@@ -780,35 +796,34 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             # the arrows from the components.
             speeds, bearings = _split_vectors(values)
             instants = [begin for begin, _ in pairs]
-            entry['values'] = fill(new_values('values'), zip(instants, speeds))
-            entry['vector_x'] = fill(new_values('vector_x'), zip(instants, components[0]))
-            entry['vector_y'] = fill(new_values('vector_y'), zip(instants, components[1]))
+            entry['values'] = fill(new_values('values', keep), zip(instants, speeds))
+            entry['vector_x'] = fill(new_values('vector_x', keep),
+                                     zip(instants, components[0]))
+            entry['vector_y'] = fill(new_values('vector_y', keep),
+                                     zip(instants, components[1]))
             if bearings is not None:
-                entry['directions'] = fill(new_values('directions'),
+                entry['directions'] = fill(new_values('directions', keep),
                                            zip(instants, bearings))
             entry['plot_type'] = 'vector'
             if line['rotate'] is not None:
                 entry['vector_rotate'] = -float(line['rotate'])
         else:
-            entry['values'] = fill(new_values('values'), pairs)
+            entry['values'] = fill(new_values('values', keep), pairs)
 
-        # The lowest and highest value per aggregation interval, for the observation
-        # types named in 'extremes'. They come from the values already read, so they
-        # cost no query.
-        if sorted_values is not None and line['var_type'] in extremes \
+        # The lowest and highest value per aggregation interval of the archive file, for
+        # the observation types named in 'extremes'. For a bar, these are finer than
+        # its own aggregation intervals. A value alone in its aggregation interval is
+        # its own lowest and highest.
+        if line['var_type'] in extremes and not unaggregated \
                 and line['aggregate_type'] not in ('min', 'max', 'vecdir') and not components:
-            per_interval, records = sorted_values
-            file_begins = begins
-            if line['aggregate_interval'] != interval:
-                # A bar's aggregation intervals are coarser than those of the archive
-                # file. Sort the values again, into those of the file.
-                file_begins, file_ends = _intervals(start, stop, interval)
-                per_interval = _sort_into_intervals(
-                    file_begins, file_ends, bisect.bisect_left(file_ends, since), *records)
+            since, keep = resume(interval)
             for which in ('min', 'max'):
-                entry[which] = fill(new_values(which),
-                                    ((file_begins[i], _reduce(which, vals))
-                                     for i, vals in per_interval.items()))
+                extreme = self._aggregate_line(
+                    line=line, plot_options=plot_options, mgr=mgr,
+                    timespan=TimeSpan(since, stop), aggregate_type=which,
+                    aggregate_interval=interval)
+                if extreme is not None:
+                    entry[which] = fill(new_values(which, keep), extreme[1])
         return entry
 
     def _line_spec(self, line_dict, line_name, interval):
@@ -865,76 +880,44 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 'rotate': options.get('vector_rotate'), 'options': options,
                 'data_type': options.get('data_type', line_name)}
 
-    def _aggregate_line(self, line, plot_options, mgr, timespan, begins, ends, first):
-        """Aggregate the values of one line, one aggregate per aggregation interval.
+    def _aggregate_line(self, line, plot_options, mgr, timespan, aggregate_type=None,
+                        aggregate_interval=None, raw=False):
+        """Return the aggregates of one line over a timespan, as the ImageGenerator does.
 
         Args:
             line (dict): The line, as _line_spec() returns it.
             plot_options (dict): The options of the plot the line belongs to.
             mgr (weewx.manager.Manager): The database manager.
             timespan (weeutil.weeutil.TimeSpan): The timespan to aggregate.
-            begins (list[int]): Where each aggregation interval of the line begins.
-            ends (list[int]): Where each one ends.
-            first (int): The position of the first aggregation interval inside
-                'timespan'.
+            aggregate_type (str|None): The aggregation type, or None for the line's own.
+            aggregate_interval (int|None): The aggregation interval in seconds, or None
+                for the line's own.
+            raw (bool): True to return the values of the archive records instead, each
+                paired with the beginning of its archive interval.
 
         Returns:
-            tuple|None: A three-way tuple (unit, pairs, sorted_values). 'pairs' holds
-                (begin, aggregate) for each aggregation interval with an aggregate.
-                'sorted_values', for the extremes, is a two-way tuple (per_interval,
-                records): 'records' holds the timestamps and the values of the archive
-                records, and 'per_interval' maps the position of each aggregation
-                interval to its values. 'sorted_values' is None where the database did
-                the aggregation. The result is None if the database knows neither the
+            tuple|None: A two-way tuple (unit, pairs). 'pairs' holds (begin, aggregate)
+                for each aggregation interval. None if the database knows neither the
                 observation type nor the aggregation type.
         """
         options = dict(line['options'])
         options.pop('aggregate_type', None)
         options.pop('aggregate_interval', None)
-
-        if line['aggregate_type'] in _RAW_AGGREGATES:
-            # get_series() can aggregate, but it runs one query per aggregation
-            # interval, e.g., 8760 queries for a year at one hour. So read the values of
-            # the archive records with one query, sort them into the aggregation
-            # intervals, and aggregate each one here.
-            # 'vecdir' takes the bearing of the vector sum, so it reads the vectors.
-            read_type = 'windvec' if line['aggregate_type'] == 'vecdir' else line['var_type']
-            try:
-                start_vec, stop_vec, data_vec = weewx.xtypes.get_series(
-                    read_type, timespan, mgr, **options)
-            except (weewx.UnknownType, weewx.UnknownAggregation):
-                pass
-            else:
-                if line['aggregate_type'] == 'vecdir':
-                    # The database takes the bearing of the sum of the wind vectors,
-                    # each multiplied by its archive interval. So multiply here, and
-                    # _reduce() adds them up. A bearing does not depend on the unit of
-                    # the speed, so the vectors need no conversion.
-                    unit = self.converter.getTargetUnit('wind', 'vecdir')[0]
-                    values = [None if value is None else value * (stop - start)
-                              for value, start, stop
-                              in zip(data_vec[0], start_vec[0], stop_vec[0])]
-                else:
-                    unit, values = self._convert(data_vec, plot_options)
-                # An archive record belongs to the aggregation interval its timestamp,
-                # i.e., the end of the record, falls in.
-                records = (stop_vec[0], values)
-                per_interval = _sort_into_intervals(begins, ends, first, *records)
-                pairs = [(begins[i], _reduce(line['aggregate_type'], vals))
-                         for i, vals in sorted(per_interval.items())]
-                return unit, pairs, (per_interval, records)
-
-        # An aggregation type that _reduce() does not know, or an observation type that
-        # exists only as an aggregate: one query per aggregation interval, as the
-        # ImageGenerator does it.
         try:
-            start_vec, _, data_vec = weewx.xtypes.get_series(
-                line['var_type'], timespan, mgr, aggregate_type=line['aggregate_type'],
-                aggregate_interval=line['aggregate_interval'], **options)
+            if raw:
+                # The type as the skin names it: 'windDir', not 'wind' with 'vecdir'.
+                start_vec, _, data_vec = weewx.xtypes.get_series(
+                    line['data_type'], timespan, mgr, **options)
+            else:
+                start_vec, _, data_vec = weewx.xtypes.get_series(
+                    line['var_type'], timespan, mgr,
+                    aggregate_type=aggregate_type or line['aggregate_type'],
+                    aggregate_interval=aggregate_interval or line['aggregate_interval'],
+                    **options)
         except (weewx.UnknownType, weewx.UnknownAggregation):
             return None
         unit, values = self._convert(data_vec, plot_options)
-        return unit, list(zip(start_vec[0], values)), None
+        return unit, list(zip(start_vec[0], values))
 
     def _convert(self, data_vec, plot_options):
         """Convert a series into the unit of the plot, or else of the report.
@@ -1075,7 +1058,7 @@ def _write_json(path, payload):
 
 def _new_entry():
     """A blank archive index entry for one plot group."""
-    return {'title': None, 'unit_label': None,
+    return {'title': None,
             **{key: {} for pair in TIERS for key in pair}}
 
 
@@ -1246,8 +1229,7 @@ def _index_of(old_index):
         for group_name, by_date in old_index[key].items():
             index.setdefault(group_name, _new_entry())[key].update(by_date)
     for group_name, entry in index.items():
-        entry['title'], entry['unit_label'] = old_index['labels'].get(group_name,
-                                                                      (None, None))
+        entry['title'] = old_index['titles'].get(group_name)
     return index
 
 
@@ -1390,68 +1372,18 @@ def _intervals(start, stop, aggregate_interval):
     return begins, ends
 
 
-def _sort_into_intervals(begins, ends, first, stamps, values):
-    """Sort the values of archive records into the aggregation intervals they belong to.
-
-    An archive record stamped t belongs to the aggregation interval with
-    begin < t <= end, as in the queries of the database.
+def _whole_days(start, stop):
+    """Return the timespan from the midnight before 'start' to the one after 'stop'.
 
     Args:
-        begins (list[int]): Where each aggregation interval begins.
-        ends (list[int]): Where each one ends.
-        first (int): The position of the first aggregation interval to fill.
-        stamps (list[int]): The timestamp of each archive record.
-        values (list): The value of each. A None is left out.
+        start (int): The beginning of a timespan.
+        stop (int): Its end.
 
     Returns:
-        dict: {position: values} for each aggregation interval that holds a value.
+        weeutil.weeutil.TimeSpan: The calendar days the timespan touches.
     """
-    out = {}
-    for stamp, value in zip(stamps, values):
-        if value is None:
-            continue
-        i = bisect.bisect_left(ends, stamp, first)
-        if i < len(ends) and begins[i] < stamp:
-            out.setdefault(i, []).append(value)
-    return out
-
-
-# The aggregation types _reduce() calculates itself. For any other, get_series() asks
-# the database, one query per aggregation interval.
-_RAW_AGGREGATES = ('avg', 'sum', 'min', 'max', 'first', 'last', 'vecdir')
-
-
-def _reduce(aggregate_type, values):
-    """Aggregate the values of one aggregation interval, as the database would.
-
-    Args:
-        aggregate_type (str): One of _RAW_AGGREGATES.
-        values (list[float|complex]): The values of the archive records, oldest first.
-            For 'vecdir', the wind vectors, each multiplied by its archive interval.
-
-    Returns:
-        float|complex|None: The aggregate. A wind vector with no length has no
-            bearing, so 'vecdir' then returns None.
-    """
-    if aggregate_type == 'avg':
-        return sum(values) / len(values)
-    if aggregate_type == 'sum':
-        return sum(values)
-    if aggregate_type in ('min', 'max'):
-        pick = min if aggregate_type == 'min' else max
-        # A wind vector compares by its length, as in the database. Python 3.7 does
-        # not take key=None, so the two cases stay apart.
-        return pick(values, key=abs) if isinstance(values[0], complex) else pick(values)
-    if aggregate_type == 'first':
-        return values[0]
-    if aggregate_type == 'last':
-        return values[-1]
-    # 'vecdir': the bearing of the sum of the vectors.
-    total = sum(values)
-    if not total:
-        return None
-    deg = 90.0 - math.degrees(math.atan2(total.imag, total.real))
-    return deg if deg >= 0 else deg + 360.0
+    return TimeSpan(int(weeutil.weeutil.startOfDay(start)),
+                    int(weeutil.weeutil.archiveDaySpan(stop).stop))
 
 
 def _daynight(start_ts, stop_ts, lat, lon):
