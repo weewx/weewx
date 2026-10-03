@@ -383,6 +383,52 @@ class TestArchive:
         # between the first and the last value holds one.
         assert len(filled) > 0.9 * (filled[-1] - filled[0] + 1)
 
+    def test_a_sensor_without_values_is_looked_for_over_whole_days(
+            self, config_dict, tmp_path, monkeypatch):
+        """Over whole days, the daily summaries answer whether a sensor has a value.
+
+        Over any other timespan, the database searches the archive records, and it does
+        that on every run for each sensor a station lacks.
+        """
+        domains = []
+        original = weewx.jsongenerator._skip_if_empty
+
+        def skip_if_empty(db_manager, var_type, check_domain):
+            domains.append(check_domain)
+            return original(db_manager, var_type, check_domain)
+
+        monkeypatch.setattr(weewx.jsongenerator, '_skip_if_empty', skip_if_empty)
+        run_generator(config_dict, tmp_path,
+                      archive_options={'days': '2', 'months': '2',
+                                       'month_resolution': '3600'})
+        assert domains
+        for domain in domains:
+            assert weeutil.weeutil.isStartOfDay(domain.start), domain
+            assert weeutil.weeutil.isStartOfDay(domain.stop), domain
+
+    def test_the_unit_label_is_only_in_skin_json(self, archive_dir):
+        """An archive file names its unit, and skin.json gives the label of each unit.
+
+        A label written anywhere else would be a second copy of the one in skin.json.
+        """
+        with open(os.path.join(os.path.dirname(archive_dir), 'skin.json'),
+                  encoding='utf-8') as fd:
+            labels = json.load(fd)['units']['labels']
+        with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
+            index = json.load(fd)
+        for group in index['groups']:
+            assert 'unit_label' not in group and 'unit' not in group, group['name']
+
+        names = [n for n in os.listdir(archive_dir)
+                 if n.endswith('.json') and n != 'index.json'
+                 and not n.startswith('daynight')]
+        assert names
+        for name in names:
+            with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
+                payload = json.load(fd)
+            assert 'unit_label' not in payload, name
+            assert payload['unit'] in labels, name
+
     def test_fresh_files_are_not_rewritten(self, config_dict, tmp_path):
         """A second run right after the first rewrites no file.
 
@@ -731,64 +777,7 @@ class TestExtends:
 
 
 class TestAggregation:
-    """How values are sorted into aggregation intervals, and aggregated there.
-
-    The results must be the ones the database gives.
-    """
-
-    def test_a_record_belongs_to_the_aggregation_interval_it_ends(self):
-        """A record stamped t belongs to the one with begin < t <= end."""
-        per_interval = weewx.jsongenerator._sort_into_intervals(
-            [0, 10], [10, 20], 0, [5, 10, 11, 20, 21], [1, 2, 3, 4, 5])
-        assert per_interval == {0: [1, 2], 1: [3, 4]}
-
-    def test_a_missing_value_is_left_out(self):
-        per_interval = weewx.jsongenerator._sort_into_intervals(
-            [0], [10], 0, [5, 6], [None, 2.0])
-        assert per_interval == {0: [2.0]}
-
-    @pytest.mark.parametrize('aggregate_type, expected', [
-        ('avg', 2.0), ('sum', 6.0), ('min', 1.0), ('max', 3.0),
-        ('first', 3.0), ('last', 1.0),
-    ])
-    def test_the_simple_aggregation_types(self, aggregate_type, expected):
-        assert weewx.jsongenerator._reduce(aggregate_type, [3.0, 2.0, 1.0]) == expected
-
-    def test_a_vector_compares_by_its_length(self):
-        assert weewx.jsongenerator._reduce('max', [3j, 1 + 1j]) == 3j
-
-    def test_vecdir_is_the_bearing_of_the_sum(self):
-        north, east = weeutil.weeutil.to_complex(1.0, 0.0), \
-            weeutil.weeutil.to_complex(1.0, 90.0)
-        assert weewx.jsongenerator._reduce('vecdir', [north, east]) == pytest.approx(45.0)
-        assert weewx.jsongenerator._reduce('vecdir', [3 * north, east]) \
-            == pytest.approx(18.43, abs=0.01)
-
-    def test_vecdir_of_calm_air_has_no_bearing(self):
-        assert weewx.jsongenerator._reduce('vecdir', [0j, 0j]) is None
-
-    def test_vecdir_weighs_each_record_by_its_archive_interval(self, config_dict,
-                                                                tmp_path, monkeypatch):
-        """A record with a longer archive interval counts for more, as in the database."""
-        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
-        generator = weewx.jsongenerator.JSONGenerator(
-            cd, build_skin_dict(str(tmp_path)), None, first_run=True,
-            stn_info=weewx.station.StationInfo(**cd['Station']))
-        generator.setup()
-        north = weeutil.weeutil.to_complex(1.0, 0.0)
-        east = weeutil.weeutil.to_complex(1.0, 90.0)
-        # North for 900 s, then east for 300 s.
-        monkeypatch.setattr(weewx.xtypes, 'get_series', lambda *args, **kwargs: (
-            weewx.units.ValueTuple([0, 900], 'unix_epoch', 'group_time'),
-            weewx.units.ValueTuple([900, 1200], 'unix_epoch', 'group_time'),
-            weewx.units.ValueTuple([north, east], 'meter_per_second', 'group_speed')))
-        line = {'aggregate_type': 'vecdir', 'var_type': 'wind',
-                'aggregate_interval': 3600, 'options': {}}
-
-        _, pairs, _ = generator._aggregate_line(line, {}, None,
-                                                weeutil.weeutil.TimeSpan(0, 3600), [0],
-                                                [3600], 0)
-        assert pairs == [(0, pytest.approx(18.43, abs=0.01))]
+    """The aggregates in an archive file are the ones the database gives."""
 
     def test_vecdir_matches_the_database(self, config_dict, tmp_path):
         """Each bearing in the file is the one the database gives."""
@@ -885,7 +874,7 @@ class TestArchiveMemory:
         assert read(os.path.join(data_dir, 'archive'))['years']
 
         empty = read(str(tmp_path / 'nowhere'))
-        assert empty['years'] == {} and empty['labels'] == {}
+        assert empty['years'] == {} and empty['titles'] == {}
         assert empty['first'] is None and empty['rebuilt'] is None
 
     def test_finished_months_stay_available(self, config_dict, tmp_path):
@@ -1016,6 +1005,54 @@ class TestDayTier:
             payload = json.load(fd)
 
         assert payload['interval'] == parameters.synthetic_dict['interval']
+
+    def test_at_the_archive_interval_the_values_are_those_of_the_records(
+            self, config_dict, tmp_path, monkeypatch):
+        """A day file at the archive interval holds the values of the archive records.
+
+        Each aggregation interval holds one archive record, so nothing is aggregated but
+        the hourly rain bar.
+        """
+        aggregated = set()
+        original = weewx.xtypes.get_series
+
+        def get_series(obs_type, timespan, db_manager, aggregate_type=None,
+                       aggregate_interval=None, **options):
+            # A day file covers a day at most. The year files are aggregated anyway.
+            if aggregate_type and timespan.stop - timespan.start <= 90000:
+                aggregated.add(obs_type)
+            return original(obs_type, timespan, db_manager, aggregate_type=aggregate_type,
+                            aggregate_interval=aggregate_interval, **options)
+
+        monkeypatch.setattr(weewx.xtypes, 'get_series', get_series)
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        data_dir = run_generator(config_dict, tmp_path, gen_ts=stop_ts,
+                                 archive_options={'days': '2', 'day_resolution': '0'})
+        assert aggregated == {'rain'}
+
+        archive_dir = os.path.join(data_dir, 'archive')
+        name = tier_files(archive_dir, 'days', 'tempdew')[0]
+        with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
+            payload = json.load(fd)
+        start, interval = payload['start'], payload['interval']
+        values = payload['series'][0]['values']
+        cd = configobj.ConfigObj(config_dict.dict(), interpolation=False)
+        binder = weewx.manager.DBBinder(cd)
+        try:
+            mgr = binder.get_manager('wx_binding')
+            records = list(mgr.genBatchRecords(start, start + payload['count'] * interval))
+        finally:
+            binder.close()
+        assert len(records) > 40
+        for record in records:
+            expected = weewx.units.convert(
+                (record['outTemp'], 'degree_F', 'group_temperature'), payload['unit'])[0]
+            position = (record['dateTime'] - record['interval'] * 60 - start) // interval
+            if expected is None:
+                assert values[position] is None, record['dateTime']
+            else:
+                assert values[position] == pytest.approx(expected, abs=0.001), \
+                    record['dateTime']
 
     def test_a_day_takes_the_archive_interval_most_of_its_records_have(self):
         """A station that changes its archive interval late in a day keeps the old one.
@@ -1512,6 +1549,16 @@ class TestHelpers:
 
     def test_normalize_color_survives_nonsense(self):
         assert weewx.jsongenerator._normalize_color('0xnothex') == '0xnothex'
+
+    def test_whole_days_stop_at_the_midnight_they_end_on(self):
+        """A timespan that ends at midnight touches no part of the next day."""
+        midnight = int(time.mktime((2010, 3, 2, 0, 0, 0, 0, 0, -1)))
+        before = int(time.mktime((2010, 3, 1, 0, 0, 0, 0, 0, -1)))
+        assert weewx.jsongenerator._whole_days(before + 3600, midnight) \
+            == weeutil.weeutil.TimeSpan(before, midnight)
+        after = int(time.mktime((2010, 3, 3, 0, 0, 0, 0, 0, -1)))
+        assert weewx.jsongenerator._whole_days(before + 3600, midnight + 60) \
+            == weeutil.weeutil.TimeSpan(before, after)
         assert weewx.jsongenerator._normalize_color(None) is None
 
     def test_split_vectors_leaves_scalars_alone(self):
