@@ -318,19 +318,16 @@
     return wanted;
   }
 
-  /* Returns a copy of the plot data `meta` with its readings, y axis and unit label
-     in the unit system the reader chose. `meta` itself stays in the unit it was
-     written in. If `meta` were converted in place, the next unit change would
-     convert its readings a second time. */
+  /* Returns the plot data `meta` with its readings, y axis and unit label in the unit
+     system the reader chose. A conversion goes into a copy, and `meta` itself stays in
+     the unit it was written in. If `meta` were converted in place, the next unit
+     change would convert its readings a second time. */
   function inChosenUnit(meta) {
     var table = unitTable();
-    if (!table || !meta || !meta.series || !meta.series.length) return shallow(meta);
+    if (!table || !meta || !meta.series || !meta.series.length) return meta;
 
     var to = targetUnit(meta.series[0].obs_type, meta.unit);
-    /* Without a conversion, inChosenUnit still returns a copy. Returning `meta`
-       itself would make entry.meta and entry.raw one object, and updateChart would
-       then write converted data into entry.raw. */
-    if (!to) return shallow(meta);
+    if (!to) return meta;
     var steps = table.convert[meta.unit][to];
     var factor = steps[0], offset = steps[1];
     var apply = function (v) {
@@ -983,7 +980,6 @@
   }
 
   function buildChart(host, meta, period) {
-    meta._period = period;
     var hostWidth = host.clientWidth || 600;
     host.style.height = chartHeight(hostWidth) + 'px';
     var plot = echarts.init(host, null, { renderer: 'canvas' });
@@ -1022,7 +1018,7 @@
 
   /* ------------------------------------------------------------- rendering */
 
-  function renderTable(meta, digits) {
+  function renderTable(meta, period, digits) {
     var head = '<tr><th>' + escapeHtml(CFG.text.time || 'Time') + '</th>'
       + meta.series.map(function (s) { return '<th>' + escapeHtml(s.label) + '</th>'; }).join('')
       + '</tr>';
@@ -1040,7 +1036,7 @@
       for (var j = 1; j < data.length; j++) {
         cells += '<td>' + fmtNumber(data[j][i], digits) + '</td>';
       }
-      rows.push('<tr><td class="metric">' + escapeHtml(fmtTime(data[0][i], meta._period))
+      rows.push('<tr><td class="metric">' + escapeHtml(fmtTime(data[0][i], period))
         + '</td>' + cells + '</tr>');
     }
 
@@ -1092,7 +1088,7 @@
 
     if (details) {
       var digits = digitsFor(meta.series);
-      details.querySelector('.scroller-host').innerHTML = renderTable(meta, digits);
+      details.querySelector('.scroller-host').innerHTML = renderTable(meta, period, digits);
     }
   }
 
@@ -1108,9 +1104,7 @@
     var fresh = inChosenUnit(raw);
     if (!fresh.series || fresh.series.length !== entry.meta.series.length) return false;
 
-    /* The new data is copied into entry.meta rather than replacing the object,
-       because renderTable reads `_period`, which buildChart set on entry.meta. */
-    Object.keys(fresh).forEach(function (key) { entry.meta[key] = fresh[key]; });
+    entry.meta = fresh;
     entry.raw = raw;
     plot.setOption(chartOptions(entry.meta, entry.period,
                                 entry.host.clientWidth || 600));
@@ -1122,7 +1116,7 @@
     if (details) {
       if (details.open) {
         details.querySelector('.scroller-host').innerHTML =
-          renderTable(entry.meta, digitsFor(entry.meta.series));
+          renderTable(entry.meta, entry.period, digitsFor(entry.meta.series));
         delete details.dataset.stale;
       } else {
         details.dataset.stale = '1';
@@ -2153,7 +2147,7 @@
         });
         if (entry) {
           e.target.querySelector('.scroller-host').innerHTML =
-            renderTable(entry.meta, digitsFor(entry.meta.series));
+            renderTable(entry.meta, entry.period, digitsFor(entry.meta.series));
         }
         delete e.target.dataset.stale;
       }
