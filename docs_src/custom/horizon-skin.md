@@ -113,7 +113,7 @@ other.
 `history` holds the charts. Which charts `history` shows, and in what order, is
 set by [`plot_groups`](../reference/skin-options/displayoptions.md#plot_groups).
 What each chart shows is set by its plot definition in `[[day_images]]` under
-`[JSONGenerator]`, in the syntax of the Image generator. `[[week_images]]`,
+`[JSONGenerator]`. `[[week_images]]`,
 `[[month_images]]` and `[[year_images]]` set only how long each time span is.
 See [The JSON generator](json-generator.md).
 
@@ -428,6 +428,7 @@ above.
 | `warn`, `accent-bright` | a partly cloudy sky, and snow, in the forecast |
 | `warm-0` … `warm-8` | the temperature bands, cold to hot: the tint of the outside temperature tile, and the heat map on the climate page |
 | `chart-grid`, `chart-axis`, `chart-night` | inside the charts: the grid, the axes, and the shading of the night |
+| `app-config-chart-line-colors`, `app-config-chart-fill-colors` | the colors of the lines of the charts, and of its bars. See [Changing the colors of the charts](#changing-the-colors-of-the-charts) |
 | `radius`, `shadow` | the corners and the shadow of panels and tiles |
 | `gap`, `edge`, `pad` | the space between panels, the margin at either side of the page, and the space inside a panel |
 | `font`, `font-mono` | the typeface of the page, and of the NOAA reports |
@@ -436,8 +437,29 @@ above.
 Give the `warm` colors as `#rrggbb` or `rgb()`. The heat map on the climate page
 mixes the `warm` colors in the browser, and skips a color written any other way.
 
-The colors of the lines in the charts come from the plot definitions in
-`[JSONGenerator]`, such as `chart_line_colors`, and not from the stylesheet.
+## Changing the colors of the charts
+
+The JSON files hold the data of the charts and not how they look, so the colors
+of the lines come from the stylesheet and not from `[JSONGenerator]`. Two custom
+properties hold them, each as one quoted string of colors, separated by commas:
+
+``` css
+:root {
+  --app-config-chart-line-colors: "#4282b4, #b44242, #42b442, #42b4b4, #b442b4";
+  --app-config-chart-fill-colors: "#72b2c4, #c47272, #72c472, #72c4c4, #c472c4";
+}
+```
+
+The first line of a chart takes the first color, the second line the second
+color, and so on. A chart with more lines than there are colors starts again at
+the first. `--app-config-chart-line-colors` colors the lines, and the series
+names above the chart. `--app-config-chart-fill-colors` colors the bars, such as
+those of rain. The quotes keep the commas inside the string. A color is any CSS
+color.
+
+Set them in your own stylesheet, as in [Changing the colors and
+fonts](#changing-the-colors-and-fonts). The dark theme can have colors of its
+own, in the same two rules as the other colors of that theme.
 
 ## Adding a script of your own
 
@@ -451,7 +473,7 @@ Name a script of your own in `custom_js`:
 As with a stylesheet, put the file in the skin directory, and add it to
 `copy_once`. Every page loads its scripts at the end of the page, in this order:
 the chart library `echarts.min.js`, on the pages that have charts; the skin's
-`horizon.js`; the page's own script, `forecast.js` or `climate.js`; then the
+`weewx-json.js`, which reads the JSON files, and `horizon.js`; the page's own script, `forecast.js` or `climate.js`; then the
 scripts in `custom_js`, in the order of the list. When a script of your own
 runs, the page is complete, and the skin has set up its controls.
 

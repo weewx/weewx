@@ -609,7 +609,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                      'unit': 'degree_C',
                      'yscale': [-10.0, 35.0, 5.0],
                      'series': [{'obs_type': 'outTemp', 'label': 'Outside Temperature',
-                                 'aggregate_type': 'avg', 'color': '#4282b4',
+                                 'aggregate_type': 'avg',
                                  'values': [3.1, 2.8, None, 2.4, ...]}]}
         """
         # Clip to the archive records that exist, then move both ends onto a multiple of
@@ -659,13 +659,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # keeps its own.
         if unit is None and old_file is not None:
             unit = old_file.get('unit')
-
-        # chart_line_colors applies to every series that sets no color of its own.
-        default_colors = weeutil.weeutil.option_as_list(
-            plot_options.get('chart_line_colors', [])) or []
-        for i, s in enumerate(series_out):
-            if 'color' not in s and default_colors:
-                s['color'] = _normalize_color(default_colors[i % len(default_colors)])
 
         return {
             'name': group_name,
@@ -783,8 +776,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             # The aggregates of a bar sit at every nth position. The JavaScript needs
             # aggregate_interval to draw each bar n aggregation intervals wide.
             entry['aggregate_interval'] = line['aggregate_interval']
-        if line['color']:
-            entry['color'] = _normalize_color(line['color'])
         if line['plot_type'] == 'bar':
             entry['plot_type'] = 'bar'
 
@@ -836,7 +827,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
         Returns:
             dict: 'var_type', 'aggregate_type', 'aggregate_interval', 'plot_type',
-                'label', 'color', 'rotate', all the line's 'options', and the
+                'label', 'rotate', all the line's 'options', and the
                 'data_type' as the skin names it, e.g., 'windDir' where 'var_type' is
                 'wind'.
         """
@@ -876,7 +867,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
         return {'var_type': var_type, 'aggregate_type': aggregate_type,
                 'aggregate_interval': aggregate_interval, 'plot_type': plot_type,
-                'label': label, 'color': options.get('color'),
+                'label': label,
                 'rotate': options.get('vector_rotate'), 'options': options,
                 'data_type': options.get('data_type', line_name)}
 
@@ -1566,26 +1557,3 @@ def _split_vectors(seq):
             magnitudes.append(v)
             directions.append(None)
     return magnitudes, directions
-
-
-def _normalize_color(color):
-    """Rewrite a WeeWX colour as one CSS understands.
-
-    WeeWX accepts three forms: '#RRGGBB', '0xBBGGRR' and English names such as 'blue'.
-    CSS takes the first and the third as they are. The second has its red and blue bytes
-    the other way round and has to be swapped.
-
-    Args:
-        color (str|int|None): A colour, in any of the forms the skin may write it.
-    """
-    if not isinstance(color, str):
-        return color
-    c = color.strip()
-    if c.lower().startswith('0x'):
-        try:
-            bgr = int(c, 16)
-            b, g, r = (bgr >> 16) & 0xff, (bgr >> 8) & 0xff, bgr & 0xff
-            return '#%02x%02x%02x' % (r, g, b)
-        except ValueError:
-            return c
-    return c
