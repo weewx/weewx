@@ -1,22 +1,19 @@
 # The JSON generator
 
-The [Image generator](image-generator.md) draws your plots on the server and
-saves them as PNG files. The JSON generator does the same work, but instead of
-drawing the plot, it writes the numbers behind it.
+The JSON generator writes the numbers behind your plots as JSON files. A web
+page that has the numbers can do things that a picture cannot. It can resize the
+chart with the window, show the value under the pointer, let the reader switch
+from Celsius to Fahrenheit, and step back through the history, all without
+asking the server for anything new. The [Horizon](horizon-skin.md) skin works
+this way.
 
-Why would you want that? Because a web page that has the numbers can do things
-a picture cannot. It can resize the chart with the window, show the value under
-the pointer, let the reader switch from Celsius to Fahrenheit, and step back
-through the history, all without asking the server for anything new. The
-[Horizon](horizon-skin.md) skin works this way.
+The generator does for a page that draws its own charts what the [Image
+generator](image-generator.md) does for a page that shows pictures. The two are
+peers. They share no files, and either can run without the other.
 
 The JSON generator is controlled by the configuration options in the reference
 [_[JSONGenerator]_](../reference/skin-options/jsongenerator.md). These options
 are specified in the `[JSONGenerator]` section of a skin configuration file.
-
-It changes nothing about the Image generator, and the two happily run side by
-side. If you link your PNGs from a forum signature or an email, keep the Image
-generator enabled and add this one alongside it.
 
 Let's take a look at how this works.
 
@@ -29,59 +26,41 @@ Add the generator to the skin's generator list:
     generator_list = weewx.cheetahgenerator.CheetahGenerator, weewx.jsongenerator.JSONGenerator
 ```
 
-That is all it takes. Without any further configuration, the generator reads
-your existing `[ImageGenerator]` section, so every plot you have ever defined,
-including ones you added by hand years ago, is available as JSON straight away.
+Then define the plots, in a `[JSONGenerator]` section. The structure is the one
+of the Image generator: a time period, `[[day_images]]`, holds the plots, and a
+plot holds the lines.
+
+``` ini
+[JSONGenerator]
+    [[day_images]]
+        time_length = 27h
+        [[[daytempdew]]]
+            [[[[outTemp]]]]
+            [[[[dewpoint]]]]
+```
+
+The options of a plot are documented in the reference, under
+[_[JSONGenerator]_](../reference/skin-options/jsongenerator.md#plot-options).
+The files hold what a plot shows: the observation types, their labels, the
+aggregation and the y scaling. How it looks, such as the colors, is up to the
+page. Horizon takes the colors of its chart lines from its stylesheet. See
+[_Changing the colors of the charts_](horizon-skin.md#changing-the-colors-of-the-charts).
+
+(A skin that has no plots in `[JSONGenerator]` but has some in
+`[ImageGenerator]` gets those, which lets a skin that was written for the Image
+generator work. This is for skins that exist already. Over time it will become a
+historical curiosity, so define the plots in `[JSONGenerator]`.)
 
 The files go into a `data` subdirectory of `HTML_ROOT`. The readings are in
 `data/archive`, which covers your whole record, back to your first reading.
 There is also a `skin.json`, which holds the `time_length` of each time period
 and the units the readings can be shown in. A page reads that first.
 
-## What the charts take from the images
-
-Sharing the `[ImageGenerator]` section means you define a plot once. That cuts
-both ways, and it is worth knowing which way round.
-
-**What the plot is** comes from there. The time length, the aggregation, the data
-binding, the observation types, their labels, the line colors, the y scaling:
-change any of these and the chart follows, exactly as the PNG does.
-
-**What the picture looks like** does not. Fonts, image dimensions, background
-colors, anti-aliasing, marker shapes, label formats: these all describe how to
-draw an image on a canvas of a given size, and a browser is not doing that.
-
-So if you set `chart_background_color` and the charts stay as they were, this
-is why. Their colors come from the page's stylesheet.
-
-The full list is in the reference, under
-[_[JSONGenerator]_](../reference/skin-options/jsongenerator.md).
-
-## Using a different set of plots
-
-Suppose you want the charts and the PNGs to show different things. Or suppose
-you run no Image generator at all, and would rather not keep a section named
-after one. Put the definitions in `[JSONGenerator]` and they are used instead:
-
-``` ini hl_lines="2"
-[JSONGenerator]
-    chart_line_colors = "#118844"
-    [[day_images]]
-        [[[mything]]]
-            time_length = 6h
-            [[[[outTemp]]]]
-```
-
-`[ImageGenerator]` is read only where this section holds no plots at all, so
-there is no mixing the two.
-
-Same syntax, same option names, nothing shared with the images.
-
 ## Going back through the record
 
-The Image generator draws four windows: the last day, week, month and year,
-each ending now. None of them can answer *"show me last March"*. The archive
-can, because it covers your whole record.
+A picture shows a fixed window, such as the last day or the last week, ending
+now. It cannot answer *"show me last March"*. The archive can, because it covers
+your whole record.
 
 The archive is not one big file. It is cut into pieces, on three levels of
 detail, and a page fetches only the pieces it is showing:
@@ -142,48 +121,68 @@ second, however long your record is.
 
 ## Changing the unit used in a chart
 
-The charts follow whatever unit you have set for the report, the same as the
-PNGs do. See [*Mixed units*](custom-reports.md#mixed-units).
+The charts follow whatever unit you have set for the report. See [*Mixed
+units*](custom-reports.md#mixed-units).
 
-The difference is that the reader can change it afterwards. Alongside the
-readings, the generator writes the arithmetic needed to convert between units,
-so a page can offer a unit picker that works without fetching anything. The
-Horizon skin has one, in its navigation.
+The difference from a picture is that the reader can change it afterwards.
+Alongside the readings, the generator writes the arithmetic needed to convert
+between units, so a page can offer a unit picker that works without fetching
+anything. The Horizon skin has one, in its navigation.
 
 Nothing needs configuring for this. If you would rather not have it, drop the
 unit picker from the template.
 
-## Publishing over FTP or rsync
+## Publishing the files
 
-Nothing special is needed. `FtpGenerator` and `RsyncGenerator` walk
-`HTML_ROOT`, so the `data` directory goes along with everything else.
+Nothing special is needed. `FtpGenerator` and `RsyncGenerator` walk `HTML_ROOT`,
+so the `data` directory goes along with everything else.
 
 What matters is how much goes up *each cycle*, because that happens every
 archive interval. A file is rewritten only when it has a new reading, and an
 unchanged file is not uploaded. A finished year is written once, so it is
 uploaded once.
 
-On a slow line, the PNGs are usually the thing to look at first, not the JSON.
-The Horizon skin renders them at 1000×360 rather than the classic 500×180,
-which is three times the bytes. Either put the old size back:
-
-``` ini
-[ImageGenerator]
-    image_width = 500
-    image_height = 180
-```
-
-or drop `weewx.imagegenerator.ImageGenerator` from `[Generators]` altogether,
-if you do not link the images anywhere. The page does not need them.
-
 One thing to check on your web server: that it serves `.json` as
 `application/json`. Almost all do. If yours does not, the charts will still
 work, because `fetch()` does not insist, but it is worth fixing.
 
-## What is inside the files
+## Reading the files in a skin of your own
 
-You do not need to know this to use the generator, or to write a skin that
-draws its own charts from `skin.json`. If you are writing something that reads
-the files directly, the format is documented in the wiki, under [The JSON
-generator file
-format](https://github.com/weewx/weewx/wiki/The-JSON-generator-file-format).
+The structure of the files is documented in [_JSON data
+files_](../reference/json-files.md). To use them in a skin other than Horizon,
+you do not have to write the code that fetches them. The Horizon skin ships it
+as a separate file, `weewx-json.js`, which knows nothing about Horizon or about
+the chart library that Horizon uses. It reads `skin.json` and the archive index,
+works out which archive files cover a time span, fetches them, joins them into
+one series, and converts the readings to another unit system.
+
+Copy `weewx-json.js` from the Horizon skin directory into your skin, list it in
+`copy_once` in `[CopyGenerator]`, and load it before your own script:
+
+``` html
+<script src="weewx-json.js"></script>
+<script src="my-charts.js"></script>
+```
+
+Then, in your script:
+
+``` javascript
+var data = WeeWXJSON.create({ dataDir: 'data' });
+
+data.loadManifest()
+  .then(function () { return data.loadIndex(); })
+  .then(function () {
+    // The last 27 hours of the plot group 'tempdew'
+    var to = Math.floor(Date.now() / 1000);
+    return data.plot('tempdew', to - 27 * 3600, to);
+  })
+  .then(function (plot) {
+    if (!plot) return;
+    plot.series.forEach(function (series) {
+      // series.label, series.time[i], series.values[i], ...
+    });
+  });
+```
+
+The methods are listed in the comment at the top of `weewx-json.js`. The skin
+`Horizon` (`horizon.js`) is a full example.
