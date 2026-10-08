@@ -9,7 +9,7 @@ this way.
 
 The generator does for a page that draws its own charts what the [Image
 generator](image-generator.md) does for a page that shows pictures. The two are
-peers. They share no files, and either can run without the other.
+independent: they share no files, and either can run without the other.
 
 The JSON generator is controlled by the configuration options in the reference
 [_[JSONGenerator]_](../reference/skin-options/jsongenerator.md). These options
@@ -46,10 +46,10 @@ aggregation and the y scaling. How it looks, such as the colors, is up to the
 page. Horizon takes the colors of its chart lines from its stylesheet. See
 [_Changing the colors of the charts_](horizon-skin.md#changing-the-colors-of-the-charts).
 
-(A skin that has no plots in `[JSONGenerator]` but has some in
-`[ImageGenerator]` gets those, which lets a skin that was written for the Image
-generator work. This is for skins that exist already. Over time it will become a
-historical curiosity, so define the plots in `[JSONGenerator]`.)
+A skin with no plots in `[JSONGenerator]` falls back on its `[ImageGenerator]`
+plots, so that a skin written for the Image generator keeps working. The
+fallback is for skins that exist already. Define the plots of a new skin in
+`[JSONGenerator]`.
 
 The files go into a `data` subdirectory of `HTML_ROOT`. The readings are in
 `data/archive`, which covers your whole record, back to your first reading.

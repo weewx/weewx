@@ -1,9 +1,9 @@
 # [JSONGenerator]
 
 This section is used by generator `weewx.jsongenerator.JSONGenerator`. The JSON
-generator is a peer of the Image generator. It reads the same kind of plot
-definitions, but instead of drawing a plot it writes the numbers behind it, as
-JSON files that a web page can read. This section holds both the options of the
+generator works independently of the Image generator. It reads the same kind of
+plot definitions, but instead of drawing a plot it writes the numbers behind it,
+as JSON files that a web page can read. This section holds both the options of the
 generator and the plot definitions it draws from.
 
 A skin that draws its charts with JavaScript needs this generator. The
