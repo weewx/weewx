@@ -71,14 +71,14 @@
     };
   }
 
-  /* Returns the colors in the custom property `name`, which holds one string of
-     comma separated colors, e.g., "#4282b4, #b44242". The quotes keep the commas
-     out of the way of CSS. horizon.css sets --app-config-chart-line-colors and
-     --app-config-chart-fill-colors, and a stylesheet in 'custom_css' may set them
-     again, for either theme. */
-  function colorList(name) {
-    var raw = getComputedStyle(document.documentElement).getPropertyValue(name);
-    return raw.replace(/["']/g, '').split(',')
+  /* Returns the colors in the custom property `name` of `el`, which holds one string
+     of comma separated colors, e.g., "#4282b4, rgb(180, 66, 66)". The quotes keep
+     the commas out of the way of CSS, and a comma inside parentheses belongs to its
+     color. A chart reads them from its own element, so a rule on its card can set
+     colors for that chart alone. */
+  function colorList(name, el) {
+    var raw = getComputedStyle(el).getPropertyValue(name);
+    return raw.replace(/["']/g, '').split(/,(?![^(]*\))/)
       .map(function (c) { return c.trim(); })
       .filter(function (c) { return c; });
   }
@@ -86,10 +86,11 @@
   /* Gives each series of `meta` its `color` and `fill_color`. The JSON files say
      what a chart shows and not how it looks, so the colors come from the
      stylesheet. The nth series takes the nth color, and the list starts again where
-     the chart has more series than the list has colors. */
-  function paint(meta) {
-    var line = colorList('--app-config-chart-line-colors');
-    var fill = colorList('--app-config-chart-fill-colors');
+     the chart has more series than the list has colors. `host` is the element of
+     the chart. */
+  function paint(meta, host) {
+    var line = colorList('--chart-lines', host);
+    var fill = colorList('--chart-fills', host);
     if (!fill.length) fill = line;
     meta.series.forEach(function (s, i) {
       s.color = line.length ? line[i % line.length] : themeColors().ink;
@@ -733,8 +734,8 @@
   /* Returns the ECharts options for one chart. The options are built again on each
      change of readings, unit or theme, and passed to setOption() of the existing
      instance. */
-  function chartOptions(meta, period, hostWidth) {
-    paint(meta);
+  function chartOptions(meta, period, host, hostWidth) {
+    paint(meta, host);
     var colors = themeColors();
     var family = getComputedStyle(document.body).fontFamily;
     var digits = digitsFor(meta.series);
@@ -889,7 +890,7 @@
     var hostWidth = host.clientWidth || 600;
     host.style.height = chartHeight(hostWidth) + 'px';
     var plot = echarts.init(host, null, { renderer: 'canvas' });
-    plot.setOption(chartOptions(meta, period, hostWidth));
+    plot.setOption(chartOptions(meta, period, host, hostWidth));
     return { plot: plot, meta: meta, host: host, period: period };
   }
 
@@ -904,7 +905,7 @@
     /* chartOptions reads the colours from the stylesheet, so a theme change
        builds the options again. The legend takes the same colours. */
     charts.forEach(function (c) {
-      c.plot.setOption(chartOptions(c.meta, c.period, c.host.clientWidth || 600));
+      c.plot.setOption(chartOptions(c.meta, c.period, c.host, c.host.clientWidth || 600));
       var title = c.host.closest('.chart-card');
       title = title && title.querySelector('.chart-title');
       if (title) title.innerHTML = legendHtml(c.meta);
@@ -921,7 +922,7 @@
       if (w <= 0) return;
       c.host.style.height = chartHeight(w) + 'px';
       c.plot.resize({ width: w, height: chartHeight(w) });
-      c.plot.setOption({ series: chartOptions(c.meta, c.period, w).series });
+      c.plot.setOption({ series: chartOptions(c.meta, c.period, c.host, w).series });
     });
   });
 
@@ -982,7 +983,7 @@
       return;
     }
 
-    legend.innerHTML = legendHtml(paint(meta));
+    legend.innerHTML = legendHtml(paint(meta, host));
 
     var entry = buildChart(host, meta, period);
     entry.raw = raw;
@@ -1019,7 +1020,7 @@
 
     entry.meta = fresh;
     entry.raw = raw;
-    plot.setOption(chartOptions(entry.meta, entry.period,
+    plot.setOption(chartOptions(entry.meta, entry.period, entry.host,
                                 entry.host.clientWidth || 600));
 
     /* An open data table is built again now. A closed data table gets

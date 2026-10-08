@@ -428,7 +428,7 @@ above.
 | `warn`, `accent-bright` | a partly cloudy sky, and snow, in the forecast |
 | `warm-0` … `warm-8` | the temperature bands, cold to hot: the tint of the outside temperature tile, and the heat map on the climate page |
 | `chart-grid`, `chart-axis`, `chart-night` | inside the charts: the grid, the axes, and the shading of the night |
-| `app-config-chart-line-colors`, `app-config-chart-fill-colors` | the colors of the lines of the charts, and of its bars. See [Changing the colors of the charts](#changing-the-colors-of-the-charts) |
+| `chart-lines`, `chart-fills` | the colors of the lines of the charts, and of the bars. See [Changing the colors of the charts](#changing-the-colors-of-the-charts) |
 | `radius`, `shadow` | the corners and the shadow of panels and tiles |
 | `gap`, `edge`, `pad` | the space between panels, the margin at either side of the page, and the space inside a panel |
 | `font`, `font-mono` | the typeface of the page, and of the NOAA reports |
@@ -440,26 +440,39 @@ mixes the `warm` colors in the browser, and skips a color written any other way.
 ## Changing the colors of the charts
 
 The JSON files hold the data of the charts and not how they look, so the colors
-of the lines come from the stylesheet and not from `[JSONGenerator]`. Two custom
-properties hold them, each as one quoted string of colors, separated by commas:
+come from the stylesheet and not from `[JSONGenerator]`. Two custom properties
+hold them. Each is one quoted string of colors with commas between them:
 
 ``` css
 :root {
-  --app-config-chart-line-colors: "#4282b4, #b44242, #42b442, #42b4b4, #b442b4";
-  --app-config-chart-fill-colors: "#72b2c4, #c47272, #72c472, #72c4c4, #c472c4";
+  --chart-lines: "#4282b4, #b44242, #42b442, #42b4b4, #b442b4";
+  --chart-fills: "#72b2c4, #c47272, #72c472, #72c4c4, #c472c4";
 }
 ```
 
-The first line of a chart takes the first color, the second line the second
-color, and so on. A chart with more lines than there are colors starts again at
-the first. `--app-config-chart-line-colors` colors the lines, and the series
-names above the chart. `--app-config-chart-fill-colors` colors the bars, such as
-those of rain. The quotes keep the commas inside the string. A color is any CSS
-color.
+The first line of a chart takes the first color, the second line the second,
+and so on. A chart with more lines than there are colors starts again at the
+first. `--chart-lines` also colors the series names above the chart.
+`--chart-fills` colors the bars, such as those of rain. The quotes keep the
+commas inside the string, and a color can be anything CSS accepts.
 
-Set them in your own stylesheet, as in [Changing the colors and
-fonts](#changing-the-colors-and-fonts). The dark theme can have colors of its
-own, in the same two rules as the other colors of that theme.
+Every chart sits in a card that carries its plot group in `data-group`. The group
+is the name of the plot section in `skin.conf` without the leading `day`, so
+`daytempdew` is the group `tempdew`. A rule on the card gives one chart colors of
+its own and leaves the others alone:
+
+``` css
+.chart-card[data-group="wind"] {
+  --chart-lines: "#1d6fa5, #e08a1e";
+}
+```
+
+Set the properties in your own stylesheet, as in [Changing the colors and
+fonts](#changing-the-colors-and-fonts). The dark theme can have its own colors,
+in the same two rules as the other colors of that theme. A rule on a card
+applies in both themes. To give that chart other colors in the dark theme as
+well, repeat the card selector after `:root:not([data-theme="light"])` in the
+first dark rule, and after `:root[data-theme="dark"]` in the second.
 
 ## Adding a script of your own
 
