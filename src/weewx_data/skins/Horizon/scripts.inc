@@ -5,9 +5,10 @@
 ##
 ## Every page loads its scripts at the end of <body>. The markup is then in place, so
 ## each script calls its start function at once, without waiting for DOMContentLoaded.
-## The order matters. horizon.js reads window.HORIZON. forecast.js and climate.js use
-## 'units' and 'tempColour', which horizon.js adds to window.HORIZON. The scripts in
-## 'custom_js' come last, so they run after the skin has set up the page.
+## The order matters. weewx-json.js comes before horizon.js, which calls it. horizon.js
+## reads window.HORIZON. forecast.js and climate.js use 'units' and 'tempColour', which
+## horizon.js adds to window.HORIZON. The scripts in 'custom_js' come last, so they run
+## after the skin has set up the page.
 #set $archived = $page == 'climate_year'
 #set $charted = $page in ('index', 'telemetry')
 #set $forecast = $page == 'index' and 'forecast' in $to_list($DisplayOptions.get('panels', ['forecast']))
@@ -93,6 +94,7 @@
         }
       };
     </script>
+    <script src="weewx-json.js"></script>
     <script src="horizon.js"></script>
 #if $forecast
     <script src="forecast.js"></script>

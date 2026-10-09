@@ -199,7 +199,6 @@ class TestPlotDefinitions:
         """A skin without an ImageGenerator keeps its plots in [JSONGenerator]."""
         skin_dict = build_skin_dict(str(tmp_path))
         skin_dict['JSONGenerator'].update({
-            'chart_line_colors': '#118844',
             'day_images': {
                 'time_length': '6h',
                 'daymything': {'outTemp': {'label': 'Mine'}},
@@ -213,7 +212,7 @@ class TestPlotDefinitions:
                   encoding='utf-8') as fd:
             series = json.load(fd)['series'][0]
         assert series['label'] == 'Mine'
-        assert series['color'] == '#118844'
+        assert 'color' not in series
         with open(os.path.join(data_dir, 'skin.json'), encoding='utf-8') as fd:
             assert json.load(fd)['time_lengths'] == {'day_images': 6 * 3600}
 
@@ -1538,18 +1537,6 @@ class TestSkinLocalization:
 
 class TestHelpers:
 
-    @pytest.mark.parametrize("given,expected", [
-        ('#4282b4', '#4282b4'),        # already CSS
-        ('blue', 'blue'),              # English name, valid CSS
-        ('0xb44242', '#4242b4'),       # WeeWX's BGR notation, byte-swapped
-        ('0x0000ff', '#ff0000'),       # pure red in BGR
-    ])
-    def test_normalize_color(self, given, expected):
-        assert weewx.jsongenerator._normalize_color(given) == expected
-
-    def test_normalize_color_survives_nonsense(self):
-        assert weewx.jsongenerator._normalize_color('0xnothex') == '0xnothex'
-
     def test_whole_days_stop_at_the_midnight_they_end_on(self):
         """A timespan that ends at midnight touches no part of the next day."""
         midnight = int(time.mktime((2010, 3, 2, 0, 0, 0, 0, 0, -1)))
@@ -1559,7 +1546,6 @@ class TestHelpers:
         after = int(time.mktime((2010, 3, 3, 0, 0, 0, 0, 0, -1)))
         assert weewx.jsongenerator._whole_days(before + 3600, midnight + 60) \
             == weeutil.weeutil.TimeSpan(before, after)
-        assert weewx.jsongenerator._normalize_color(None) is None
 
     def test_split_vectors_leaves_scalars_alone(self):
         values, directions = weewx.jsongenerator._split_vectors([1.0, None, 3.0])

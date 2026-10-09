@@ -3,8 +3,8 @@ WeeWX change history
 
 ### 5.6.0 dd-Mmm-yyyy
 
-Added `weewx.jsongenerator.JSONGenerator`, which writes the plots defined for
-the `ImageGenerator` as JSON. Added the skin `Horizon`, which leverages the JSON
+Added `weewx.jsongenerator.JSONGenerator`, which writes the data of plots as
+JSON. Added the skin `Horizon`, which leverages the JSON
 data, allowing it to step backwards through the entire station history. The skin
 also includes various panels, including a forecast panel, and a climate page
 summary, all of which can be arranged in a custom order. 

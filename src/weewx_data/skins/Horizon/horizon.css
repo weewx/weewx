@@ -49,6 +49,13 @@
   --chart-axis: #8c959f;
   --chart-night: #eaeef2;
 
+  /* The colors of the lines of a chart, and of its bars, each as one quoted string of
+     colors with commas between them. The nth line takes the nth color, and the list
+     starts again at the first where a chart has more lines. A rule on
+     '.chart-card[data-group="wind"]' gives one chart colors of its own. */
+  --chart-lines: "#4282b4, #b44242, #42b442, #42b4b4, #b442b4";
+  --chart-fills: "#72b2c4, #c47272, #72c472, #72c4c4, #c472c4";
+
   --radius: 8px;
   /* The space between panels, and between masthead, navigation, content and footer. */
   --gap: clamp(0.75rem, 2.2vw, 1.25rem);

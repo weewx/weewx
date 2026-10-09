@@ -308,7 +308,6 @@ Each object in the `series` array contains:
 | `obs_type`           | *string*  | Required | Observation type name (e.g., `"outTemp"`, `"dewpoint"`, `"windSpeed"`, `"rain"`).                                                                                                                         |
 | `label`              | *string*  | Required | Display label (e.g., `"Outside Temperature"`).                                                                                                                                                            |
 | `aggregate_type`     | *string*  | Required | Aggregation function applied (e.g., `"avg"`, `"sum"`, `"min"`, `"max"`, `"vecdir"`).                                                                                                                      |
-| `color`              | *string*  | Optional | Hex color code (e.g., `"#4282b4"`).                                                                                                                                                                       |
 | `values`             | *array*   | Required | Array of length `count` containing numeric values or `null`. For vector plots, contains speed magnitudes.                                                                                                 |
 | `plot_type`          | *string*  | Optional | Set to `"bar"` for bar charts or `"vector"` for wind vector plots. Defaults to standard line when omitted.                                                                                                |
 | `aggregate_interval` | *integer* | Optional | Present on bar series when the bar aggregation interval is coarser than the file interval (e.g., hourly bars on a 1-minute file). Aggregated values appear at every `n`-th index with `null`s in between. |
@@ -343,7 +342,6 @@ Each object in the `series` array contains:
       "obs_type": "outTemp",
       "label": "Outside Temperature",
       "aggregate_type": "avg",
-      "color": "#4282b4",
       "values": [
         55.5,
         55.4,
@@ -357,7 +355,6 @@ Each object in the `series` array contains:
       "obs_type": "dewpoint",
       "label": "Dew Point",
       "aggregate_type": "avg",
-      "color": "#b44242",
       "values": [
         51.38,
         51.28,
@@ -398,7 +395,6 @@ resolution) with `null`s filling the remaining slots:
       "aggregate_type": "sum",
       "plot_type": "bar",
       "aggregate_interval": 3600,
-      "color": "#4282b4",
       "values": [
         0.05,
         null,
@@ -437,7 +433,6 @@ aggregate `values`:
       "obs_type": "windSpeed",
       "label": "Wind Speed",
       "aggregate_type": "avg",
-      "color": "#4282b4",
       "values": [
         1.37,
         2.02,
@@ -461,7 +456,6 @@ aggregate `values`:
       "obs_type": "windGust",
       "label": "Gust Speed",
       "aggregate_type": "avg",
-      "color": "#b44242",
       "values": [
         3.2,
         5.1,
@@ -510,7 +504,6 @@ components for rendering wind arrows:
       "aggregate_type": "avg",
       "plot_type": "vector",
       "vector_rotate": -90.0,
-      "color": "#4282b4",
       "values": [
         4.2,
         5.0,
