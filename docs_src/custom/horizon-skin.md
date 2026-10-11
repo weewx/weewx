@@ -111,11 +111,10 @@ as the skin has it, copy the `panels` line, comment out one copy, and edit the
 other.
 
 `history` holds the charts. Which charts `history` shows, and in what order, is
-set by [`plot_groups`](../reference/skin-options/displayoptions.md#plot_groups).
-What each chart shows is set by its plot definition in `[[day_images]]` under
-`[JSONGenerator]`. `[[week_images]]`,
-`[[month_images]]` and `[[year_images]]` set only how long each time span is.
-See [The JSON generator](json-generator.md).
+set by `plot_groups`. What each chart shows is set under `[[JSONFiles]]` in
+`[JSONGenerator]`, and how it looks under `[[Charts]]` in `[DisplayOptions]`. See
+[Changing what a chart shows](#changing-what-a-chart-shows) and [The JSON
+generator](json-generator.md).
 
 These panels come with the skin:
 
@@ -222,9 +221,11 @@ loaded the page.
 
 Most options of the section are shared with *Seasons*, and described in the
 reference, under [_[DisplayOptions]_](../reference/skin-options/displayoptions.md):
-`plot_groups`, `periods`, `observations_current`, `observations_stats`,
-`observations_rss`, `obs_type_sum`, `obs_type_max`, `telemetry_plot_groups`,
-`sensor_connections`, `sensor_batteries` and `sensor_voltages`.
+`periods`, `observations_current`, `observations_stats`, `observations_rss`,
+`obs_type_sum`, `obs_type_max`, `sensor_connections`, `sensor_batteries` and
+`sensor_voltages`. The options `plot_groups` and `telemetry_plot_groups` have
+another meaning here: the names are those of the plot groups under `[[JSONFiles]]`
+in `[JSONGenerator]`, not those of plots of the Image generator.
 
 These options are Horizon's own:
 
@@ -237,8 +238,9 @@ These options are Horizon's own:
 | `custom_js` | A list of scripts of your own. See [Adding a script of your own](#adding-a-script-of-your-own). |
 | `lang_root` | For a report whose `HTML_ROOT` is a subdirectory of another report's `HTML_ROOT`, the path back to that `HTML_ROOT`, e.g., `..`. Default is `.`. See [Choosing the language](#choosing-the-language). |
 
-The subsections `[[Forecast]]`, `[[Icons]]` and `[[Languages]]` are described
-below.
+The subsections `[[TimeLengths]]` and `[[Charts]]` are described in [Changing
+what a chart shows](#changing-what-a-chart-shows). `[[Forecast]]`, `[[Icons]]`
+and `[[Languages]]` are described below.
 
 ## Setting up the forecast
 
@@ -437,10 +439,60 @@ above.
 Give the `warm` colors as `#rrggbb` or `rgb()`. The heat map on the climate page
 mixes the `warm` colors in the browser, and skips a color written any other way.
 
+## Changing what a chart shows
+
+The JSON files hold the data of the charts and not how they look. Which series
+a chart holds is set under `[[JSONFiles]]` in `[JSONGenerator]`. How the chart
+shows them is set under `[DisplayOptions]`, and the skin writes it to
+`display.json` on each report. A change there takes effect at the next report,
+and no JSON file is written again for it.
+
+To add a chart of the type `extraTemp5`, name it in both places. Give the plot
+group a name, here `tempext5`:
+
+``` ini
+[JSONGenerator]
+    [[JSONFiles]]
+        [[[tempext5]]]
+            [[[[extraTemp5]]]]
+
+[DisplayOptions]
+    plot_groups = tempdew, wind, rain, tempext5
+```
+
+The chart is a line chart of the generic label of the type, "Temperature5" in
+English. The generator writes the files of the plot group on the next report. To
+show the rain in bars, or to label a series, give the plot group a subsection
+under `[[Charts]]`:
+
+``` ini
+[DisplayOptions]
+    [[Charts]]
+        [[[rain]]]
+            plot_type = bar
+            [[[[rain]]]]
+                label = Rain (hourly total)
+```
+
+A label that names an entry under `[Texts]` of the language file is translated.
+The options of a plot group are these. An option of a series, which is a
+subsection of the plot group, wins over the one of the plot group, and an option
+directly under `[[Charts]]` is the default of every chart.
+
+| Option | What it does |
+|---|---|
+| `plot_type` | How the series are drawn: `line`, `bar` or `vector`. A `vector` chart needs a series of the type `windvec` or `windgustvec`. Default is `line`. |
+| `yscale` | The y axis, as `minimum, maximum, step`. A value of `None` is worked out from the readings that the chart shows, in the unit that the reader chose. A step is the smallest the axis may have. Where the reader chose another unit than the one the report uses, a minimum and a maximum only widen the readings, because 0 and 40 degrees Celsius are not round numbers in Fahrenheit. Default is `None, None, None`. |
+| `vector_rotate` | For a `vector` chart, the angle in degrees by which the arrows are turned, as in the Image generator. Default is `0`, and the `skin.conf` of Horizon sets `90`. |
+| `label` | On a series, the label shown in the legend and in the tooltip. Default is the generic label of the type. |
+
+`[[TimeLengths]]` sets how far back the live view of a time span reaches. Its
+options are named after the time spans in `periods`, and the value is a number
+of seconds or a [duration](../reference/durations.md), e.g., `day = 27h`.
+
 ## Changing the colors of the charts
 
-The JSON files hold the data of the charts and not how they look, so the colors
-come from the stylesheet and not from `[JSONGenerator]`. Two custom properties
+The colors come from the stylesheet and not from `[DisplayOptions]`. Two custom properties
 hold them. Each is one quoted string of colors with commas between them:
 
 ``` css
@@ -457,8 +509,7 @@ first. `--chart-lines` also colors the series names above the chart.
 commas inside the string, and a color can be anything CSS accepts.
 
 Every chart sits in a card that carries its plot group in `data-group`. The group
-is the name of the plot section in `skin.conf` without the leading `day`, so
-`daytempdew` is the group `tempdew`. A rule on the card gives one chart colors of
+is the name of the plot group under `[[JSONFiles]]`, e.g., `tempdew`. A rule on the card gives one chart colors of
 its own and leaves the others alone:
 
 ``` css

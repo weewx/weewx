@@ -9,7 +9,9 @@ this way.
 
 The generator does for a page that draws its own charts what the [Image
 generator](image-generator.md) does for a page that shows pictures. The two are
-independent: they share no files, and either can run without the other.
+independent: they share no files, and either can run without the other. The
+difference is that the files hold the readings and nothing about how they look.
+A skin sets the labels, the type of each chart and the y axis itself.
 
 The JSON generator is controlled by the configuration options in the reference
 [_[JSONGenerator]_](../reference/skin-options/jsongenerator.md). These options
@@ -26,35 +28,33 @@ Add the generator to the skin's generator list:
     generator_list = weewx.cheetahgenerator.CheetahGenerator, weewx.jsongenerator.JSONGenerator
 ```
 
-Then define the plots, in a `[JSONGenerator]` section. The structure is the one
-of the Image generator: a time period, `[[day_images]]`, holds the plots, and a
-plot holds the lines.
+Then list the files to write, in a `[JSONGenerator]` section. A plot group,
+`[[[tempdew]]]`, is a family of files. It holds the series, named after their
+observation types.
 
 ``` ini
 [JSONGenerator]
-    [[day_images]]
-        time_length = 27h
-        [[[daytempdew]]]
+    [[JSONFiles]]
+        [[[tempdew]]]
             [[[[outTemp]]]]
             [[[[dewpoint]]]]
 ```
 
-The options of a plot are documented in the reference, under
-[_[JSONGenerator]_](../reference/skin-options/jsongenerator.md#plot-options).
-The files hold what a plot shows: the observation types, their labels, the
-aggregation and the y scaling. How it looks, such as the colors, is up to the
-page. Horizon takes the colors of its chart lines from its stylesheet. See
+The options are documented in the reference, under
+[_[JSONGenerator]_](../reference/skin-options/jsongenerator.md#jsonfiles). They
+are about which numbers a file holds: the observation types, the aggregation
+and the unit. How the numbers are shown, such as the labels, the type of the
+chart, the y axis and the colors, is up to the page. Horizon sets the first
+three in its [`[DisplayOptions]`](horizon-skin.md#changing-what-a-chart-shows),
+and takes the colors of its chart lines from its stylesheet. See
 [_Changing the colors of the charts_](horizon-skin.md#changing-the-colors-of-the-charts).
 
-A skin with no plots in `[JSONGenerator]` falls back on its `[ImageGenerator]`
-plots, so that a skin written for the Image generator keeps working. The
-fallback is for skins that exist already. Define the plots of a new skin in
-`[JSONGenerator]`.
+Plots of `[ImageGenerator]` are not read.
 
 The files go into a `data` subdirectory of `HTML_ROOT`. The readings are in
 `data/archive`, which covers your whole record, back to your first reading.
-There is also a `skin.json`, which holds the `time_length` of each time period
-and the units the readings can be shown in. A page reads that first.
+There is also a `meta.json`, which holds the units the readings can be shown
+in. A page reads that first.
 
 ## Going back through the record
 
@@ -152,9 +152,12 @@ The structure of the files is documented in [_JSON data
 files_](../reference/json-files.md). To use them in a skin other than Horizon,
 you do not have to write the code that fetches them. The Horizon skin ships it
 as a separate file, `weewx-json.js`, which knows nothing about Horizon or about
-the chart library that Horizon uses. It reads `skin.json` and the archive index,
-works out which archive files cover a time span, fetches them, joins them into
-one series, and converts the readings to another unit system.
+the chart library that Horizon uses. It reads `meta.json`, the archive index and
+the file `display.json` of the skin, works out which archive files cover a time
+span, fetches them, joins them into one series, and converts the readings to
+another unit system. What a skin has to say about its charts, e.g., a label, is
+in `display.json`. Without that file, `weewx-json.js` draws every plot group as
+a line, labelled with the name of its observation type.
 
 Copy `weewx-json.js` from the Horizon skin directory into your skin, list it in
 `copy_once` in `[CopyGenerator]`, and load it before your own script:
@@ -169,18 +172,19 @@ Then, in your script:
 ``` javascript
 var data = WeeWXJSON.create({ dataDir: 'data' });
 
-data.loadManifest()
-  .then(function () { return data.loadIndex(); })
+data.load()
   .then(function () {
     // The last 27 hours of the plot group 'tempdew'
     var to = Math.floor(Date.now() / 1000);
-    return data.plot('tempdew', to - 27 * 3600, to);
+    return data.chart('tempdew', to - 27 * 3600, to);
   })
-  .then(function (plot) {
-    if (!plot) return;
-    plot.series.forEach(function (series) {
+  .then(function (chart) {
+    if (!chart) return;
+    chart.series.forEach(function (series) {
       // series.label, series.time[i], series.values[i], ...
     });
+    // [minimum, maximum, step] of a y axis that holds 8 gridlines
+    var axis = data.yAxis(chart, 8);
   });
 ```
 
