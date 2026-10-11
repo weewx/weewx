@@ -9,6 +9,11 @@
 ## reads window.HORIZON. forecast.js and climate.js use 'units' and 'tempColour', which
 ## horizon.js adds to window.HORIZON. The scripts in 'custom_js' come last, so they run
 ## after the skin has set up the page.
+##
+## window.HORIZON holds what concerns the page: where it is, the station, the forecast
+## and the texts of the buttons. What concerns the charts and the units is in
+## display.json, which weewx-json.js fetches: the time spans, the plot groups, the
+## labels and type of each chart and how a unit is written. See display.json.tmpl.
 #set $archived = $page == 'climate_year'
 #set $charted = $page in ('index', 'telemetry')
 #set $forecast = $page == 'index' and 'forecast' in $to_list($DisplayOptions.get('panels', ['forecast']))
@@ -34,15 +39,6 @@
         generated: #if $generated is None then 'null' else $generated#,
         station: "$station.location",
         weekStart: $station.week_start,
-#if $charted
-  #if $page == 'telemetry'
-    #set $groups = $to_list($DisplayOptions.get('telemetry_plot_groups', ['rx', 'volt']))
-  #else
-    #set $groups = $to_list($DisplayOptions.get('plot_groups', ['tempdew', 'wind', 'rain']))
-  #end if
-        periods: $jsonize($to_list($DisplayOptions.get('periods', ['day', 'week', 'month', 'year']))),
-        plotGroups: $jsonize($groups),
-#end if
 #if $forecast
 ## forecast.js fetches the forecast for the station's position from Open-Meteo.
 ## Three decimals are about 100 m, finer than any forecast model resolves. The
