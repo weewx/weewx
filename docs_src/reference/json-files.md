@@ -1,9 +1,8 @@
 # JSON data files
 
 The JSON generator (`weewx.jsongenerator.JSONGenerator`) creates JSON time
-series and metadata designed for browser-based charting and interactive
-dashboards, such as the *Horizon* skin. This section documents the format used
-by the files.
+series and metadata for browser-based charting and interactive dashboards, such
+as the *Horizon* skin. This section documents the generated file formats.
 
 All files are written to `<HTML_ROOT>/<json_dest_dir>`, where `<json_dest_dir>`
 defaults to `./data`.
@@ -27,24 +26,24 @@ data/
 
 Summary of generated files:
 
-| File                                                        | Purpose                                                                                                       | Update frequency                                                                     |
-|:------------------------------------------------------------|:--------------------------------------------------------------------------------------------------------------|:-------------------------------------------------------------------------------------|
-| [`meta.json`](#metajson)                                    | Unit systems, unit groups and conversion arithmetic.                                                          | Generated once on first report run (or when missing).                                |
-| [`archive/index.json`](#archiveindexjson)                   | Master catalog of available plot groups, archive tiers, date coverage, and aggregation intervals.             | Updated every report cycle.                                                          |
-| [`archive/<group>-<date>.json`](#archive-data-files)        | Time series data for one plot group over a single calendar day, month, or year.                               | Finished timespans are written once; the current timespan is updated incrementally.  |
-| [`archive/daynight-<YYYY>.json`](#archivedaynight-yyyyjson) | Sunrise, sunset, and civil twilight timestamps for chart background shading.                                  | Generated once per calendar year (requires `pyephem` and `include_daynight = True`). |
+| File                                                        | Purpose                                                                                           | Update frequency                                                                      |
+|:------------------------------------------------------------|:--------------------------------------------------------------------------------------------------|:--------------------------------------------------------------------------------------|
+| [`meta.json`](#metajson)                                    | Unit systems, unit groups and conversion arithmetic.                                              | Generated once on first report run (or when missing).                                 |
+| [`archive/index.json`](#archiveindexjson)                   | Master catalog of available plot groups, archive tiers, date coverage, and aggregation intervals. | Updated every report cycle.                                                           |
+| [`archive/<group>-<date>.json`](#archive-data-files)        | Time series data for one plot group over a single calendar day, month, or year.                   | Finished time spans are written once; the current time span is updated incrementally. |
+| [`archive/daynight-<YYYY>.json`](#archivedaynight-yyyyjson) | Sunrise, sunset, and civil twilight timestamps for chart background shading.                      | Generated once per calendar year (requires `pyephem` and `include_daynight = True`).  |
 
 ---
 
 ## `meta.json`
 
-The file `meta.json` contains static metadata required by client-side JavaScript
-to handle unit conversions dynamically without requesting additional data from
-the server. It says nothing about how to show the readings. A skin that draws
-charts keeps that in a file of its own. The file `display.json` of the *Horizon*
-skin is an example. See [`display.json`](#displayjson). Because this
-configuration is static for a given skin, `meta.json` is written only on the
-first report run (or if the file does not exist on disk).
+The file `meta.json` contains static metadata that client-side JavaScript uses
+to convert units without requesting additional data from the server. It does not
+control how readings are displayed. Skins that draw charts keep display settings
+in their own files. For example, the *Horizon* skin uses `display.json`; see
+[`display.json`](#displayjson). Because this configuration is static for a
+given skin, `meta.json` is written only on the first report run, or when the
+file does not already exist.
 
 ### Structure
 
@@ -56,11 +55,11 @@ unit definitions and conversion tables:
   `group_temperature`, `group_pressure`, `group_speed`).
 * **`systems`** (*object*): Maps each standard unit system name (`US`,
   `METRIC`, `METRICWX`) to a dictionary, which maps unit groups (e.g.,
-  `group_temperature`) to its
-  corresponding unit in that system (e.g., `degree_C`).
-* **`convert`** (*object*): Map that given a `from_unit` and a `to_unit`
-  supplies a `[factor, offset]`. The client then converts a value
-  using the formula: `to_value` = `from_value` * `factor` + `offset`.
+  `group_temperature`) to its corresponding unit in that system 
+  (e.g., `degree_C`).
+* **`convert`** (*object*): Maps a `from_unit` and `to_unit` pair to a
+  `[factor, offset]`. The client can then convert values with the formula
+  `to_value = from_value * factor + offset`.
 
 ### Example `meta.json`
 
@@ -142,8 +141,8 @@ unit definitions and conversion tables:
 
 ## `archive/index.json`
 
-The file `archive/index.json` acts as the master directory of all available
-historical data files in the `archive/` folder. The client-side JavaScript reads
+The file `archive/index.json` is the master directory of all available
+historical data files in the `archive/` folder. Client-side JavaScript reads
 this index to determine available date ranges, plot groups, and aggregation
 resolutions across all tiers.
 
@@ -239,9 +238,9 @@ The JSON database is divided into three levels of detail (tiers):
 
 To keep file sizes small and downloads fast:
 
-* Timestamps are not stored per data point.
+* Timestamps are not stored with individual data points.
 * Instead, timestamps are implicit: the `i`-th entry in `values` represents the
-  aggregation interval beginning at:  `timestamp_i = start + i * interval`.
+  aggregation interval beginning at `timestamp_i = start + i * interval`.
 * If no observation exists for an aggregation interval, `null` is written.
 
 ### Top-level properties
@@ -260,18 +259,17 @@ To keep file sizes small and downloads fast:
 
 Each object in the `series` array contains:
 
-| Property             | Type      | Presence | Description                                                                                                                                                                                               |
-|:---------------------|:----------|:---------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `obs_type`           | *string*  | Required | Observation type name (e.g., `"outTemp"`, `"dewpoint"`, `"windSpeed"`, `"rain"`).                                                                                                                         |
-| `aggregate_type`     | *string*  | Required | Aggregation function applied (e.g., `"avg"`, `"sum"`, `"min"`, `"max"`, `"vecdir"`).                                                                                                                      |
-| `values`             | *array*   | Required | Array of length `count` containing numeric values or `null`. For vector plots, contains speed magnitudes.                                                                                                 |
-| `aggregate_interval` | *integer* | Optional | Present on a series whose aggregation interval is coarser than the file interval (e.g., hourly totals on a 1-minute file). Aggregated values appear at every `n`-th index with `null`s in between.       |
-| `min`                | *array*   | Optional | Array of length `count` containing the interval minimums. Present when `obs_type` is listed in `extremes` (e.g., `windSpeed`, `windGust`, `rainRate`, `UV`) and the series is aggregated.                 |
-| `max`                | *array*   | Optional | Array of length `count` containing the interval maximums. Present when `obs_type` is listed in `extremes`.                                                                                                |
-| `vector_x`           | *array*   | Optional | Real component of wind vector (for the types `windvec` and `windgustvec`).                                                                                                                                |
-| `vector_y`           | *array*   | Optional | Imaginary component of wind vector (for the types `windvec` and `windgustvec`).                                                                                                                           |
-| `directions`         | *array*   | Optional | Wind direction / compass bearing in degrees from `0⁰` to `360⁰` (for the types `windvec` and `windgustvec`).                                                                                              |
-
+| Property             | Type      | Presence | Description                                                                                                                                                                                         |
+|:---------------------|:----------|:---------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `obs_type`           | *string*  | Required | Observation type name (e.g., `"outTemp"`, `"dewpoint"`, `"windSpeed"`, `"rain"`).                                                                                                                   |
+| `aggregate_type`     | *string*  | Required | Aggregation function applied (e.g., `"avg"`, `"sum"`, `"min"`, `"max"`, `"vecdir"`).                                                                                                                |
+| `values`             | *array*   | Required | Array of length `count` containing numeric values or `null`. For vector plots, this contains speed magnitudes.                                                                                      |
+| `aggregate_interval` | *integer* | Optional | Present when the series aggregation interval is coarser than the file interval (e.g., hourly totals in a 1-minute file). Aggregated values appear at every `n`-th index, with `null`s between them. |
+| `min`                | *array*   | Optional | Array of length `count` containing interval minimums. Present when `obs_type` is listed in `extremes` (e.g., `windSpeed`, `windGust`, `rainRate`, `UV`) and the series is aggregated.               |
+| `max`                | *array*   | Optional | Array of length `count` containing interval maximums. Present when `obs_type` is listed in `extremes`.                                                                                              |
+| `vector_x`           | *array*   | Optional | Real component of the wind vector for `windvec` and `windgustvec`.                                                                                                                                  |
+| `vector_y`           | *array*   | Optional | Imaginary component of the wind vector for `windvec` and `windgustvec`.                                                                                                                             |
+| `directions`         | *array*   | Optional | Wind direction in degrees from `0⁰` to `360⁰` for `windvec` and `windgustvec`.                                                                                                                      |
 ---
 
 ### Archive file examples
@@ -317,10 +315,10 @@ Each object in the `series` array contains:
 
 #### 2. Totals over a longer interval (`rain-2026-10-03.json`)
 
-For series with `aggregate_interval` greater than the file's `interval` (for
-example, hourly rain totals on a 1-minute day file), values are placed at
-every `n`-th index (e.g., every 60 intervals for 1-hour totals on 60-second
-resolution) with `null`s filling the remaining slots:
+For series with an `aggregate_interval` greater than the file's `interval` (for
+example, hourly rain totals in a 1-minute day file), values are placed at every
+`n`-th index. For 1-hour totals at 60-second resolution, this means every 60th
+interval. The remaining slots are filled with `null`:
 
 ```json
 {
@@ -415,7 +413,7 @@ aggregate `values`:
 #### 4. Vector plot (`windvec-2026-10-03.json`)
 
 Wind vector series (of the types `windvec` and `windgustvec`) contain directional
-and cartesian components for rendering wind arrows:
+and Cartesian components for rendering wind arrows:
 
 ```json
 {
@@ -509,18 +507,20 @@ background shading.
 
 ## `display.json`
 
-The *Horizon* skin writes the file `display.json` into its `HTML_ROOT`, not into
-the directory of the JSON generator. It is not part of the generator's output:
-it holds how Horizon shows the readings, and `weewx-json.js` reads it with them.
-The template `display.json.tmpl` writes it from the options in
-[`[DisplayOptions]`](../custom/horizon-skin.md#changing-what-a-chart-shows), on
-every report. A report in another language has a `display.json` of its own, with
-the labels in that language.
+The *Horizon* skin reads the template `display.json.tmpl` and uses it to
+generate `display.json`, which contains settings from the `[DisplayOptions]`
+section that control how the skin displays data. This file does not contain
+data, and it is not part of the JSON generator's output. The JavaScript program
+`weewx-json.js`, which runs in the web browser, reads it and uses the
+information to arrange the web page.
 
-* **`periods`** (*array of strings*): The time spans on offer, e.g.,
+Because `display.json` contains only static display information, it is generated
+only once, during the first reporting cycle.
+
+* **`periods`** (*array of strings*): The available time spans, e.g.,
   `["day", "week", "month", "year"]`.
-* **`time_lengths`** (*object*): The length in seconds of the live view of each
-  time span.
+* **`time_lengths`** (*object*): The length, in seconds, of the live view for
+  each time span.
 * **`plot_groups`**, **`telemetry_plot_groups`** (*array of strings*): The plot
   groups for charts on the front page and telemetry page.
 * **`charts`** (*object*): Maps each plot group to its options: `plot_type`
