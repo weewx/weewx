@@ -15,7 +15,7 @@
 ##    "plot_groups": ["tempdew", "rain"], "telemetry_plot_groups": ["rx"],
 ##    "charts": {"rain": {"plot_type": "bar", "yscale": [null, null, null],
 ##                        "vector_rotate": 90,
-##                        "series": {"rain": {"label": "Rain (hourly total)"}}}},
+##                        "overrides": {"rain": {"label": "Rain (hourly total)"}}}},
 ##    "labels": {"outTemp": "Outside Temperature", ...},
 ##    "units": {"report": {"group_temperature": "degree_C", ...},
 ##              "labels": {"degree_C": "°C", ...}, "formats": {"degree_C": "%.1f", ...}}}
@@ -67,7 +67,7 @@
   #set $entry = {'plot_type': $chart.get('plot_type', 'line').lower(),
                  'yscale': $weeutil.weeutil.convertToFloat($weeutil.weeutil.option_as_list($chart.get('yscale', ['None', 'None', 'None']))),
                  'vector_rotate': $weeutil.weeutil.to_float($chart.get('vector_rotate', 0))}
-  #set $series = {}
+  #set $overrides = {}
   #if $name in $charts_dict.sections
     #for $obs_type in $chart_section.sections
       #set $one = $weeutil.config.accumulateLeaves($chart_section[$obs_type], max_level=2)
@@ -81,10 +81,10 @@
       #if 'vector_rotate' in $chart_section[$obs_type]
         #silent $mine['vector_rotate'] = $weeutil.weeutil.to_float($one['vector_rotate'])
       #end if
-      #silent $series[$obs_type] = $mine
+      #silent $overrides[$obs_type] = $mine
     #end for
   #end if
-  #silent $entry['series'] = $series
+  #silent $entry['overrides'] = $overrides
   #silent $charts[$name] = $entry
 #end for
 #silent $display['charts'] = $charts

@@ -522,18 +522,18 @@ the labels in that language.
 * **`time_lengths`** (*object*): The length in seconds of the live view of each
   time span.
 * **`plot_groups`**, **`telemetry_plot_groups`** (*array of strings*): The plot
-  groups of the charts on the front page and on the telemetry page.
-* **`charts`** (*object*): Maps a plot group to its options: `plot_type`
-  (`"line"`, `"bar"` or `"vector"`), `yscale` (`[minimum, maximum, step]`, each
-  of which can be `null`), `vector_rotate` (degrees), and `series`. `series`
-  maps an observation type to what `[[Charts]]` sets for that series, which is
-  `label`, `plot_type` and `vector_rotate`. A series that it does not list has
-  the options of its plot group.
-* **`labels`** (*object*): Maps an observation type to its generic label.
-* **`units`** (*object*): What `meta.json` leaves out of the unit table:
-  `report` (the unit that the report uses for each unit group), `labels` (the
-  label of each unit, e.g., `"degree_C": "°C"`) and `formats` (its `printf`
-  format, e.g., `"degree_F": "%.1f"`).
+  groups for charts on the front page and telemetry page.
+* **`charts`** (*object*): Maps each plot group to its options: `plot_type`
+  (`"line"`, `"bar"`, or `"vector"`), `yscale`
+  (`[minimum, maximum, step]`, where each value can be `null`), `vector_rotate`
+  (degrees), and `overrides`. The key `overrides` captures any overrides in the
+  `[[Charts]]` subsection, typically `label`, `plot_type`, and
+  `vector_rotate`. If absent, then unit group defaults are used.
+* **`labels`** (*object*): Maps each observation type to its generic label.
+* **`units`** (*object*): Contains the unit information that `meta.json` omits:
+  `report` (the unit used by the report for each unit group), `labels` (the
+  label for each unit, e.g., `"degree_C": "°C"`), and `formats` (the `printf`
+  format for each unit, e.g., `"degree_F": "%.1f"`).
 
 ```json
 {
