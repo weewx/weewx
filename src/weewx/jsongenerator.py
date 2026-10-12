@@ -5,17 +5,19 @@
 #
 """Generate JSON time series, for JavaScript that draws its own charts.
 
-The JSON generator is the data-only counterpart to `weewx.imagegenerator`. It reads plot
-definitions in the ImageGenerator's syntax and fetches the series through
-`weewx.xtypes.get_series()`. It converts units and looks up labels like the
-ImageGenerator, but writes JSON instead of a PNG.
+The JSON generator is the data-only counterpart to `weewx.imagegenerator`. It writes the
+readings and nothing about how they look: no labels, no plot types and no axis scales.
+Those belong to the skin that draws the charts. Horizon sets them under [DisplayOptions]
+and writes them to display.json.
 
-The generator writes into `<HTML_ROOT>/<json_dest_dir>`:
+The generator reads which series to write from [[JSONFiles]], fetches them through
+`weewx.xtypes.get_series()` and converts their units like the ImageGenerator. It writes
+into `<HTML_ROOT>/<json_dest_dir>`:
 
-  skin.json    The time_length of each time period, and the unit table. See
-               gen_skin_json().
-  archive/     The series of each plot over the whole database, one archive file per
-               calendar year, month or day. See gen_archive().
+  meta.json    The unit table: what a JavaScript needs to convert a reading to another
+               unit. See gen_meta_json().
+  archive/     The series of each plot group over the whole database, one archive file
+               per calendar year, month or day. See gen_archive().
 
 The terms below are the generator's own. Everything else is named as elsewhere in
 WeeWX, e.g., archive record, archive interval, aggregation type, aggregation interval,
@@ -24,8 +26,9 @@ time period, plot, line and timespan.
   JavaScript     The code of a skin that reads the JSON files and draws the charts. In
                  the Horizon skin, horizon.js.
   run            One call of run(). The report engine makes one per report cycle.
-  plot group     The name of a plot without its time period, e.g., 'tempdew' for
-                 [[[daytempdew]]], as in option plot_groups of [DisplayOptions].
+  plot group     One section of [[JSONFiles]], e.g., [[[tempdew]]]. Its name begins the
+                 names of its archive files, and is the name that option plot_groups of
+                 [DisplayOptions] refers to. Its subsections are the series.
   archive file   A JSON file that holds the series of one plot group over one calendar
                  year, month or day. See _archive_file() for an example.
   date           The year, month or day an archive file covers, as its name gives it,
@@ -55,7 +58,6 @@ import time
 import configobj
 
 import weedb
-import weeplot.utilities
 import weeutil.logger
 import weeutil.weeutil
 import weewx.accum
@@ -94,11 +96,10 @@ _ARCHIVE_NAME = re.compile(r'^(.+)-(\d{4})(-\d{2})?(-\d{2})?\.json$')
 
 
 class JSONGenerator(weewx.reportengine.ReportGenerator):
-    """Generate JSON time series from plot definitions."""
+    """Generate JSON time series from the definitions under [[JSONFiles]]."""
     EMPTY_INDEX = {
         'first': None,
         'rebuilt': None,
-        'titles': {},
         **{key: {} for pair in TIERS for key in pair}
     }
 
@@ -112,31 +113,19 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         super().__init__(config_dict, skin_dict, gen_ts, first_run, stn_info, record, stop_event)
         self.converter = None
         self.data_root = None
-        self.formatter = None
         self.gen_dict = None
-        self.generic_dict = None
         self.plot_dict = configobj.ConfigObj()
-        self.text_dict = None
 
     def run(self):
         self.setup()
-        if not self.plot_dict:
-            # No plot definitions found. Return.
-            log.info("No plot definitions in [JSONGenerator] or [ImageGenerator]. "
-                     "No JSON written.")
+        if not self.plot_dict.sections:
+            # No plot groups found. Return.
+            log.info("No plot groups in [[JSONFiles]] of [JSONGenerator]. No JSON written.")
             return
-        self.gen_skin_json()
+        self.gen_meta_json()
         self.gen_archive(self.gen_ts)
 
     def setup(self):
-        # Generic labels, such as "Outside Temperature":
-        try:
-            self.generic_dict = self.skin_dict['Labels']['Generic']
-        except KeyError:
-            self.generic_dict = {}
-        # Translated text strings:
-        self.text_dict = self.skin_dict.get('Texts', {})
-
         # gen_dict must be a Section in order for function 'search_up()` to work.
         self.skin_dict.setdefault('JSONGenerator', configobj.ConfigObj())
         self.gen_dict = self.skin_dict['JSONGenerator']
@@ -144,43 +133,30 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                                       self.skin_dict.get('HTML_ROOT', 'public_html'),
                                       self.gen_dict.get('json_dest_dir', 'data'))
 
-        # Search for plot definitions. Try [JSONGenerator] first, then [ImageGenerator].
-        for name in ('JSONGenerator', 'ImageGenerator'):
-            section = self.skin_dict.get(name)
-            if section is not None and _holds_plots(section):
-                self.plot_dict = section
-                break
+        # The plot groups. A skin written for the ImageGenerator has none, and gets no
+        # JSON: a plot definition says how a chart looks, which this generator never
+        # reads.
+        self.plot_dict = self.gen_dict.get('JSONFiles', configobj.ConfigObj())
 
-        self.formatter = weewx.units.Formatter.fromSkinDict(self.skin_dict)
         self.converter = weewx.units.Converter.fromSkinDict(self.skin_dict)
 
-    def gen_skin_json(self):
-        """Write skin.json: the time_length of each time period, and the unit table.
+    def gen_meta_json(self):
+        """Write meta.json: the unit table.
 
-        The JavaScript reads skin.json before it draws a chart. The contents are static,
-        so it is written on the first run only, or when it is missing.
+        Each archive file holds its values in one unit. The unit table lets a JavaScript
+        convert them to any other. The JavaScript reads meta.json before it draws a
+        chart. The contents are static, so it is written on the first run only, or when
+        it is missing.
         """
-        skin_file = os.path.join(self.data_root, 'skin.json')
-        if not self.first_run and os.path.exists(skin_file):
+        meta_file = os.path.join(self.data_root, 'meta.json')
+        if not self.first_run and os.path.exists(meta_file):
             return
 
-        # time_lengths maps each time period to its 'time_length' in seconds, e.g.,
-        # 86400 for [[day_images]]. The JavaScript sets the width of the x axis from it.
-        # A section without plots, e.g., [[Archive]], is not a time period.
-        time_lengths = {}
-        for period in self.plot_dict.sections:
-            if self.plot_dict[period].sections:
-                time_lengths[period] = to_int(weeutil.weeutil.nominal_spans(
-                    search_up(self.plot_dict[period], 'time_length', 86400)))
-
         try:
-            _write_json(skin_file,
-                        {'time_lengths': time_lengths,
-                         # Each archive file holds values in one unit. The unit
-                         # table lets the JavaScript convert them to any other.
-                         'units': _unit_choices(self.formatter, self.converter)})
+            _write_json(meta_file,
+                        {'units': _unit_choices(self.converter)})
         except OSError as e:
-            log.error("Unable to save to file '%s': %s", skin_file, e)
+            log.error("Unable to save to file '%s': %s", meta_file, e)
 
     def gen_archive(self, gen_ts):
         """Write the archive files of every plot group, and the archive index.
@@ -202,13 +178,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         rounding = to_int(self.gen_dict.get('round', 2))
         # The JavaScript reads the archive files from 'archive' below the JSON directory.
         arch_root = os.path.join(self.data_root, 'archive')
-
-        # The archive files hold the plots of [[day_images]].
-        try:
-            day_plots = self.plot_dict['day_images']
-        except KeyError:
-            log.error("Archive: no section [[day_images]]. Skipped.")
-            return
 
         # What this run has done so far, for the budget and for the log line at the
         # end.
@@ -245,7 +214,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 # The aggregation interval is recorded per archive file, because files
                 # written under different settings differ.
                 groups.append({'name': name,
-                               'title': entry['title'] or name,
                                **{key: entry[key] for pair in TIERS for key in pair}})
             try:
                 _write_json(os.path.join(arch_root, 'index.json'),
@@ -263,11 +231,11 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         # building its history has the day view at once, before the years behind it are
         # done.
         for pass_name in ('days', 'rest'):
-            for plotname in day_plots.sections:
+            for group_name in self.plot_dict.sections:
                 if self.stop_event and self.stop_event.is_set():
                     return
 
-                plot_options = accumulateLeaves(day_plots[plotname])
+                plot_options = accumulateLeaves(self.plot_dict[group_name])
                 db_manager = self.db_binder.get_manager(plot_options['data_binding'])
 
                 first_ts = db_manager.firstGoodStamp()
@@ -285,8 +253,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     counters['first'] = int(first_ts)
                 if counters['last'] is None or last_ts > counters['last']:
                     counters['last'] = int(last_ts)
-
-                group_name = plotname[len('day'):] if plotname.startswith('day') else plotname
 
                 this_year = time.localtime(int(last_ts)).tm_year
 
@@ -357,7 +323,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
                         started = time.time()
                         payload = self._archive_file(
-                            plot_dict=day_plots[plotname], plot_options=plot_options,
+                            plot_dict=self.plot_dict[group_name], plot_options=plot_options,
                             timespan=timespan, interval=interval, rounding=rounding,
                             group_name=group_name, first_ts=tier_from, last_ts=last_ts,
                             old_file=old_file, extremes=opts['extremes'], raw=raw)
@@ -369,7 +335,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                             counters['written'] += 1
                             entry[tier][date] = payload['newest']
                             entry[intervals_key][date] = interval
-                            entry['title'] = ', '.join(s['label'] for s in payload['series'])
                         except OSError as e:
                             log.error("Unable to save to file '%s': %s", out_file, e)
 
@@ -462,7 +427,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                                  coarsen it.
                 month_intervals: the same for the months
                 day_intervals:   the same for the days
-                titles:          {plot group: title}
                 first:           the oldest archive record in the database when the
                                  previous run read it, or None if there was no archive
                                  index
@@ -478,9 +442,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             old_index['rebuilt'] = to_int(index.get('rebuilt'))
             for group in index.get('groups', []):
                 name = group['name']
-                # A run that writes no archive file of a plot group still needs the
-                # plot group's title for the archive index, so keep it from the old one.
-                old_index['titles'][name] = group.get('title')
                 for key in (key for pair in TIERS for key in pair):
                     by_date = {date: int(value)
                                for date, value in (group.get(key) or {}).items() if value}
@@ -582,8 +543,9 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         aggregation intervals. A None is an aggregation interval without a value.
 
         Args:
-            plot_dict (configobj.Section): The plot, holding one subsection per line.
-            plot_options (dict): The options that apply to the plot.
+            plot_dict (configobj.Section): The plot group, holding one subsection per
+                series.
+            plot_options (dict): The options that apply to the plot group.
             timespan (weeutil.weeutil.TimeSpan): The timespan the archive file covers.
             interval (int): The aggregation interval of the archive file, in seconds.
             rounding (int|None): Decimal places, or None to leave them alone.
@@ -607,9 +569,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     {'name': 'tempdew', 'start': 1735686000, 'interval': 3600,
                      'count': 8760, 'newest': 1767222000,
                      'unit': 'degree_C',
-                     'yscale': [-10.0, 35.0, 5.0],
-                     'series': [{'obs_type': 'outTemp', 'label': 'Outside Temperature',
-                                 'aggregate_type': 'avg',
+                     'series': [{'obs_type': 'outTemp', 'aggregate_type': 'avg',
                                  'values': [3.1, 2.8, None, 2.4, ...]}]}
         """
         # Clip to the archive records that exist, then move both ends onto a multiple of
@@ -640,7 +600,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         series_out = []
         unit = None
         for line_name in plot_dict.sections:
-            line = self._line_spec(plot_dict[line_name], line_name, interval)
+            line = _line_spec(plot_dict[line_name], line_name, interval)
             entry = self._archive_series(
                 line=line, plot_options=plot_options, start=start, stop=stop,
                 count=count, interval=interval, rounding=rounding, extremes=extremes,
@@ -664,12 +624,12 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             'name': group_name,
             'start': start,
             'interval': interval,
-            'yscale': _yscale(plot_options, series_out),
             'count': count,
             # The time up to which this archive file is complete. The next run compares
             # it with the database to decide whether the file has to be written again.
             'newest': min(int(timespan.stop), int(last_ts)),
-            # The unit of every value in the file. Its label is in skin.json.
+            # The unit of every value in the file. How the unit is written, e.g., its
+            # label, is not in the file.
             'unit': unit,
             'series': series_out,
         }
@@ -743,8 +703,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                     out[i] = round(val, rounding) if rounding is not None else val
             return out
 
-        # The aggregation intervals of the line. Only a bar has other ones than the
-        # archive file. See _line_spec().
+        # The aggregation intervals of the line. A series with a coarser aggregate_interval
+        # than the archive file has other ones. See _line_spec().
         since, keep = resume(line['aggregate_interval'])
         # A value that is alone in its aggregation interval needs no aggregation. One
         # query then reads all of them, instead of one query per aggregation interval.
@@ -768,23 +728,25 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
         entry = {
             'obs_type': line['var_type'],
-            'label': line['label'],
             'aggregate_type': line['aggregate_type'],
             'unit': unit,
         }
         if line['aggregate_interval'] != interval:
-            # The aggregates of a bar sit at every nth position. The JavaScript needs
-            # aggregate_interval to draw each bar n aggregation intervals wide.
+            # The aggregates of this series sit at every nth position. The JavaScript
+            # needs aggregate_interval to draw each aggregate n aggregation intervals
+            # wide.
             entry['aggregate_interval'] = line['aggregate_interval']
-        if line['plot_type'] == 'bar':
-            entry['plot_type'] = 'bar'
 
         values = [val for _, val in pairs]
-        components = _vector_components(values) if line['plot_type'] == 'vector' else None
-        if components:
+        if line['vector']:
             # The speed goes in 'values', so a reader that knows nothing about vectors
             # still draws a line. The legend shows the bearing, and the JavaScript draws
-            # the arrows from the components.
+            # the arrows from the components. An extended file whose new aggregation
+            # intervals are all empty has no vector to split. The arrays then stay, with
+            # nothing in the new part, so that they keep the values the file already
+            # holds.
+            nothing = [None] * len(values)
+            components = _vector_components(values) or (nothing, nothing)
             speeds, bearings = _split_vectors(values)
             instants = [begin for begin, _ in pairs]
             entry['values'] = fill(new_values('values', keep), zip(instants, speeds))
@@ -792,21 +754,18 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                                      zip(instants, components[0]))
             entry['vector_y'] = fill(new_values('vector_y', keep),
                                      zip(instants, components[1]))
-            if bearings is not None:
-                entry['directions'] = fill(new_values('directions', keep),
-                                           zip(instants, bearings))
-            entry['plot_type'] = 'vector'
-            if line['rotate'] is not None:
-                entry['vector_rotate'] = -float(line['rotate'])
+            entry['directions'] = fill(new_values('directions', keep),
+                                       zip(instants, bearings or nothing))
         else:
             entry['values'] = fill(new_values('values', keep), pairs)
 
         # The lowest and highest value per aggregation interval of the archive file, for
-        # the observation types named in 'extremes'. For a bar, these are finer than
-        # its own aggregation intervals. A value alone in its aggregation interval is
-        # its own lowest and highest.
+        # the observation types named in 'extremes'. For a series with a coarser
+        # aggregate_interval, these are finer than its own aggregation intervals. A value
+        # alone in its aggregation interval is its own lowest and highest.
         if line['var_type'] in extremes and not unaggregated \
-                and line['aggregate_type'] not in ('min', 'max', 'vecdir') and not components:
+                and line['aggregate_type'] not in ('min', 'max', 'vecdir') \
+                and not line['vector']:
             since, keep = resume(interval)
             for which in ('min', 'max'):
                 extreme = self._aggregate_line(
@@ -816,60 +775,6 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                 if extreme is not None:
                     entry[which] = fill(new_values(which, keep), extreme[1])
         return entry
-
-    def _line_spec(self, line_dict, line_name, interval):
-        """Read the options of one line of a plot.
-
-        Args:
-            line_dict (configobj.Section): The line, e.g., [[[[outTemp]]]].
-            line_name (str): The name of the section.
-            interval (int): The aggregation interval of the archive file, in seconds.
-
-        Returns:
-            dict: 'var_type', 'aggregate_type', 'aggregate_interval', 'plot_type',
-                'label', 'rotate', all the line's 'options', and the
-                'data_type' as the skin names it, e.g., 'windDir' where 'var_type' is
-                'wind'.
-        """
-        options = accumulateLeaves(line_dict)
-        var_type = options.get('data_type', line_name)
-        plot_type = options.get('plot_type', 'line').lower()
-
-        # The line's own aggregate_type wins. 'none' asks for the values of the archive
-        # records, which do not fit the aggregation interval of the file, so average.
-        aggregate_type = options.get('aggregate_type')
-        if aggregate_type in (None, '', 'None', 'none'):
-            aggregate_type = 'avg'
-        # Sum the observation types whose accumulator extractor is 'sum', e.g., 'rain',
-        # 'ET' and 'windrun'. Reading accum_dict instead of a list here also sums the
-        # types a station adds under [Accumulator].
-        if weewx.accum.accum_dict.get(var_type, {}).get('extractor') == 'sum':
-            aggregate_type = 'sum'
-        elif var_type in ('windDir', 'windGustDir'):
-            # The arithmetic mean of 350 and 10 degrees is 180, due south. 'vecdir'
-            # averages the vectors and takes their bearing instead.
-            var_type, aggregate_type = 'wind', 'vecdir'
-
-        # A line with 'plot_type = bar' keeps its aggregate_interval where that is
-        # coarser than the aggregation interval of the archive file: an hourly rain
-        # total differs from sixty one-minute totals. Its aggregates then sit at every
-        # nth position of the series. Other lines take the aggregation interval of the
-        # file. For them, aggregate_interval only smooths the drawing, and honouring it
-        # would leave most positions of a fine archive file empty.
-        aggregate_interval = interval
-        asked = to_int(weeutil.weeutil.nominal_spans(options.get('aggregate_interval')))
-        if asked and asked > interval and plot_type == 'bar':
-            aggregate_interval = asked
-
-        label = options.get('label')
-        label = self.text_dict.get(label, label) if label \
-            else self.generic_dict.get(var_type, var_type)
-
-        return {'var_type': var_type, 'aggregate_type': aggregate_type,
-                'aggregate_interval': aggregate_interval, 'plot_type': plot_type,
-                'label': label,
-                'rotate': options.get('vector_rotate'), 'options': options,
-                'data_type': options.get('data_type', line_name)}
 
     def _aggregate_line(self, line, plot_options, mgr, timespan, aggregate_type=None,
                         aggregate_interval=None, raw=False):
@@ -923,6 +828,56 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         return conv[1], conv[0]
 
 
+def _line_spec(line_dict, line_name, interval):
+    """Read the options of one series of a plot group.
+
+    Args:
+        line_dict (configobj.Section): The series, e.g., [[[[outTemp]]]].
+        line_name (str): The name of the section.
+        interval (int): The aggregation interval of the archive file, in seconds.
+
+    Returns:
+        dict: 'var_type', 'aggregate_type', 'aggregate_interval', 'vector', all the
+            series' 'options', and the 'data_type' as the skin names it, e.g., 'windDir'
+            where 'var_type' is 'wind'.
+    """
+    options = accumulateLeaves(line_dict)
+    var_type = options.get('data_type', line_name)
+
+    # The series' own aggregate_type wins. 'none' asks for the values of the archive
+    # records, which do not fit the aggregation interval of the file, so average.
+    aggregate_type = options.get('aggregate_type')
+    if aggregate_type in (None, '', 'None', 'none'):
+        aggregate_type = 'avg'
+    # Sum the observation types whose accumulator extractor is 'sum', e.g., 'rain',
+    # 'ET' and 'windrun'. Reading accum_dict instead of a list here also sums the
+    # types a station adds under [Accumulator].
+    if weewx.accum.accum_dict.get(var_type, {}).get('extractor') == 'sum':
+        aggregate_type = 'sum'
+    elif var_type in ('windDir', 'windGustDir'):
+        # The arithmetic mean of 350 and 10 degrees is 180, due south. 'vecdir'
+        # averages the vectors and takes their bearing instead.
+        var_type, aggregate_type = 'wind', 'vecdir'
+
+    # A series keeps its aggregate_interval where that is coarser than the aggregation
+    # interval of the archive file: an hourly rain total differs from sixty one-minute
+    # totals. Its aggregates then sit at every nth position of the series. A series
+    # with a finer aggregate_interval takes the one of the file, because honouring it
+    # would only repeat what the file already holds.
+    aggregate_interval = interval
+    asked = to_int(weeutil.weeutil.nominal_spans(options.get('aggregate_interval')))
+    if asked and asked > interval:
+        aggregate_interval = asked
+
+    return {'var_type': var_type, 'aggregate_type': aggregate_type,
+            'aggregate_interval': aggregate_interval,
+            # The type itself says whether the series is a vector. 'windvec' and
+            # 'windgustvec' are the only types whose xtype returns complex numbers,
+            # and a skin cannot give a plain type a direction by naming it so.
+            'vector': var_type in weewx.xtypes.WindVec.windvec_types,
+            'options': options, 'data_type': options.get('data_type', line_name)}
+
+
 def _linear(convert, from_unit, to_unit):
     """Return the factor and offset that convert from_unit into to_unit.
 
@@ -954,25 +909,23 @@ def _linear(convert, from_unit, to_unit):
     return [round(factor, 12), round(at_zero, 12)]
 
 
-def _unit_choices(formatter, converter):
+def _unit_choices(converter):
     """Build the unit table that lets the JavaScript show values in another unit.
 
     The archive files hold values in the skin's units. To offer Fahrenheit next to
     Celsius, the JavaScript needs each observation type's unit group, each unit system's
     unit for the unit group, and the conversions between units. The unit table goes into
-    skin.json.
+    meta.json. How a unit is written, e.g., its label and its number format, is not
+    about the data. A skin gives it to its JavaScript by itself, as Horizon does in
+    display.json.
 
     Args:
-        formatter (weewx.units.Formatter): The formatter the report was rendered with.
-        converter (weewx.units.Converter): The converter it was rendered with.
+        converter (weewx.units.Converter): The converter the report was rendered with.
 
     Returns:
-        dict: Six keys. 'groups' maps an observation type to its unit group.
+        dict: Three keys. 'groups' maps an observation type to its unit group.
             'systems' maps a unit system name to the unit it uses for each unit group.
-            'report' maps each unit group to the unit the report renders it in.
             'convert' maps a unit to each unit it converts to, as [factor, offset].
-            'labels' and 'formats' give each unit's label and number format, so the
-            JavaScript writes "18.5 °C" the way the server would.
     """
     # Every unit system WeeWX knows, with the unit it uses for each unit group.
     by_system = {}
@@ -980,15 +933,10 @@ def _unit_choices(formatter, converter):
         name = weewx.units.unit_nicknames[unit_system]
         by_system[name] = dict(weewx.units.std_groups[unit_system])
 
-    # 'report' holds the units the report renders in. The JavaScript needs them for the
-    # values it fetches itself, e.g., the forecast, which arrives in Celsius. Without
-    # 'report', "Default" in the unit picker would mean metric, not the skin's units.
-    report = dict(converter.group_unit_dict)
-
     # The JavaScript can switch to any unit system, so 'wanted' holds every unit of
-    # every unit system, and the units of the report.
+    # every unit system, and the units the report renders in.
     wanted = {unit for table in by_system.values() for unit in table.values()}
-    wanted.update(report.values())
+    wanted.update(converter.group_unit_dict.values())
 
     # Iterate over weewx.units.conversionDict, rather than over every pair of units
     # in 'wanted'. Asking weewx.units.convert() for a pair it cannot convert logs a
@@ -1010,21 +958,10 @@ def _unit_choices(formatter, converter):
         if pairs:
             convert[from_unit] = pairs
 
-    labels = {}
-    formats = {}
-    for unit in sorted(wanted):
-        labels[unit] = (formatter.get_label_string(unit) or '').strip()
-        fmt = formatter.get_format_string(unit)
-        if fmt:
-            formats[unit] = fmt
-
     return {
         'groups': dict(weewx.units.obs_group_dict),
         'systems': by_system,
-        'report': report,
-        'convert': convert,
-        'labels': labels,
-        'formats': formats
+        'convert': convert
     }
 
 
@@ -1049,8 +986,7 @@ def _write_json(path, payload):
 
 def _new_entry():
     """A blank archive index entry for one plot group."""
-    return {'title': None,
-            **{key: {} for pair in TIERS for key in pair}}
+    return {key: {} for pair in TIERS for key in pair}
 
 
 def _archive_settings(arch_dict):
@@ -1219,8 +1155,6 @@ def _index_of(old_index):
     for key in (key for pair in TIERS for key in pair):
         for group_name, by_date in old_index[key].items():
             index.setdefault(group_name, _new_entry())[key].update(by_date)
-    for group_name, entry in index.items():
-        entry['title'] = old_index['titles'].get(group_name)
     return index
 
 
@@ -1442,62 +1376,6 @@ def _daynight(start_ts, stop_ts, lat, lon):
     transitions.sort()
     twilight.sort(key=lambda b: b['from'])
     return {'first': first or 'day', 'transitions': transitions, 'twilight': twilight}
-
-
-def _holds_plots(section):
-    """Return True if the section defines plots rather than settings.
-
-    A plot definition is three levels deep: [ImageGenerator], then a time period such as
-    [[day_images]], then a plot such as [[[daytempdew]]]. So a section holds plots if
-    one of its subsections has subsections. A settings subsection such as [[Archive]]
-    has none.
-
-    Args:
-        section (configobj.Section): The section to test.
-    """
-    try:
-        return any(section[name].sections for name in section.sections)
-    except (AttributeError, KeyError, TypeError):
-        return False
-
-
-def _yscale(plot_options, series_out):
-    """Return the y axis of the plot as [min, max, increment].
-
-    The axis comes from weeplot.utilities.scale(), as in the ImageGenerator. The plot's
-    'yscale' fixes the values it names, and scale() fills in the rest from the data. A
-    chart library picks worse axes, e.g., wind direction up to 400 degrees.
-
-    Args:
-        plot_options (dict): The options of the plot being written.
-        series_out (list[dict]): The series already worked out for it.
-
-    Returns:
-        list|None: The three values, or None if there is nothing to scale.
-    """
-    prescale = weeutil.weeutil.convertToFloat(
-        weeutil.weeutil.option_as_list(plot_options.get('yscale', ['None', 'None', 'None'])))
-    prescale = tuple(prescale) + (None,) * (3 - len(prescale))
-
-    ymin = ymax = None
-    for entry in series_out:
-        values = [v for v in entry['values'] if v is not None]
-        if not values:
-            continue
-        if entry.get('plot_type') == 'vector':
-            # A vector's extent is the magnitude, mirrored about zero, exactly as
-            # genplot._calcYScaling() has it.
-            line_max = max(abs(v) for v in values)
-            line_min = -line_max
-        else:
-            line_min, line_max = min(values), max(values)
-        ymin = line_min if ymin is None else min(ymin, line_min)
-        ymax = line_max if ymax is None else max(ymax, line_max)
-
-    if ymin is None:
-        return None
-    nsteps = to_int(plot_options.get('y_nticks', 10))
-    return list(weeplot.utilities.scale(ymin, ymax, prescale, nsteps=nsteps))
 
 
 def _vector_components(seq):

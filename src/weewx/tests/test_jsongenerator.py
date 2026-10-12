@@ -8,6 +8,7 @@
 Use pytest to run the tests.
 """
 
+import copy
 import itertools
 import json
 import logging
@@ -35,54 +36,24 @@ from weeutil.config import accumulateLeaves
 # the value.
 ARCHIVE_RESOLUTION = 14400
 
-# Plot definitions in the [ImageGenerator] syntax: a two-line plot, a bar plot with
-# aggregation, a wind vector, and a plot of a type the test database lacks. The
-# generator must skip that last plot.
+# The skin options around [JSONGenerator]. The plot groups are in JSON_FILES below.
 PLOT_CONF = """
 REPORT_NAME = TestReport
 SKIN_ROOT = skins
 skin = Test
 unit_system = metricwx
 data_binding = wx_binding
-
-[ImageGenerator]
-    chart_line_colors = "#4282b4", "#b44242"
-    chart_fill_colors = "#72b2c4", "#c47272"
-    plot_type = line
-    aggregate_type = none
-    skip_if_empty = year
-    show_daynight = true
-
-    [[day_images]]
-        time_length = 27h
-
-        [[[daytempdew]]]
-            [[[[outTemp]]]]
-            [[[[dewpoint]]]]
-
-        [[[dayrain]]]
-            plot_type = bar
-            aggregate_type = sum
-            aggregate_interval = 3600
-            [[[[rain]]]]
-
-        [[[daywindvec]]]
-            vector_rotate = 90
-            [[[[windvec]]]]
-                plot_type = vector
-
-        [[[daynothing]]]
-            [[[[soilMoist4]]]]
-
-    [[week_images]]
-        time_length = 7d
-        aggregate_type = avg
-        aggregate_interval = 1h
-
-        [[[weektempdew]]]
-            [[[[outTemp]]]]
-            [[[[dewpoint]]]]
 """
+
+# The plot groups: a two-series group, a group of hourly totals, a wind vector, and a
+# group of a type the test database lacks. The generator must skip that last one.
+JSON_FILES = {
+    'aggregate_type': 'none',
+    'tempdew': {'outTemp': {}, 'dewpoint': {}},
+    'rain': {'aggregate_type': 'sum', 'aggregate_interval': '3600', 'rain': {}},
+    'windvec': {'windvec': {}},
+    'nothing': {'soilMoist4': {}},
+}
 
 
 def build_skin_dict(html_root, archive_options=None):
@@ -96,6 +67,7 @@ def build_skin_dict(html_root, archive_options=None):
     # The tests turn the day and month tiers, the budget and the extremes on where
     # they are about them, and pin a rebuild once a day.
     json_conf = {'json_dest_dir': 'data', 'round': '3',
+                 'JSONFiles': copy.deepcopy(JSON_FILES),
                  'Archive': {'year_resolution': str(ARCHIVE_RESOLUTION),
                              'years': '0', 'months': '0', 'days': '0',
                              'budget': '0', 'extremes': [], 'rebuild': '1d'}}
@@ -178,131 +150,83 @@ class TestPlotDefinitions:
                       for f in os.listdir(os.path.join(data_dir, 'archive'))
                       if f.endswith('-2010.json') and not f.startswith('daynight'))
 
-    def test_its_own_section_comes_first(self, config_dict, tmp_path):
-        """Plots under [JSONGenerator] win over [ImageGenerator]."""
-        skin_dict = build_skin_dict(str(tmp_path))
-        skin_dict['JSONGenerator']['day_images'] = {
-            'dayown': {'time_length': '6h', 'outTemp': {'label': 'Own'}},
-        }
-        assert self.archived(self.run(config_dict, skin_dict)) == ['own']
-
-    def test_settings_are_not_mistaken_for_plots(self, config_dict, tmp_path):
-        """[[Archive]] is a subsection of [JSONGenerator], but defines no plots.
-
-        Counted as a time period, [[Archive]] would leave the generator nothing to
-        draw, and no error in the log.
-        """
-        data_dir = self.run(config_dict, build_skin_dict(str(tmp_path)))
-        assert 'tempdew' in self.archived(data_dir)
-
-    def test_plots_can_live_in_this_generators_own_section(self, config_dict, tmp_path):
-        """A skin without an ImageGenerator keeps its plots in [JSONGenerator]."""
-        skin_dict = build_skin_dict(str(tmp_path))
-        skin_dict['JSONGenerator'].update({
-            'day_images': {
-                'time_length': '6h',
-                'daymything': {'outTemp': {'label': 'Mine'}},
-            },
-        })
-        del skin_dict['ImageGenerator']
-        data_dir = self.run(config_dict, skin_dict)
-
-        assert self.archived(data_dir) == ['mything']
-        with open(os.path.join(data_dir, 'archive', 'mything-2010.json'),
-                  encoding='utf-8') as fd:
-            series = json.load(fd)['series'][0]
-        assert series['label'] == 'Mine'
-        assert 'color' not in series
-        with open(os.path.join(data_dir, 'skin.json'), encoding='utf-8') as fd:
-            assert json.load(fd)['time_lengths'] == {'day_images': 6 * 3600}
-
-    def test_the_image_generator_section_still_serves(self, config_dict, tmp_path):
-        """A skin written before the JSON generator needs no new configuration."""
+    def test_the_sections_of_json_files_are_the_plot_groups(self, config_dict, tmp_path):
+        """[[Archive]] sits next to [[JSONFiles]], and is not a plot group."""
         data_dir = self.run(config_dict, build_skin_dict(str(tmp_path)))
         assert self.archived(data_dir) == ['rain', 'tempdew', 'windvec']
 
-    def test_no_plot_definitions_anywhere_is_reported(self, config_dict, tmp_path,
-                                                      caplog):
-        """A skin without plots writes nothing, and says so as information.
-
-        A skin may well draw no charts, so this is not an error.
-        """
+    def test_a_plot_group_of_its_own(self, config_dict, tmp_path):
         skin_dict = build_skin_dict(str(tmp_path))
-        del skin_dict['ImageGenerator']
+        skin_dict['JSONGenerator']['JSONFiles']['mything'] = {'outTemp': {}}
+        data_dir = self.run(config_dict, skin_dict)
+
+        assert 'mything' in self.archived(data_dir)
+        with open(os.path.join(data_dir, 'archive', 'mything-2010.json'),
+                  encoding='utf-8') as fd:
+            assert [s['obs_type'] for s in json.load(fd)['series']] == ['outTemp']
+
+    def test_plots_of_the_image_generator_are_not_read(self, config_dict, tmp_path,
+                                                       caplog):
+        """A plot definition says how a chart looks, so it is no list of series."""
+        skin_dict = build_skin_dict(str(tmp_path))
+        del skin_dict['JSONGenerator']['JSONFiles']
+        skin_dict['ImageGenerator'] = {
+            'day_images': {'time_length': '6h', 'daytempdew': {'outTemp': {}}}}
         with caplog.at_level(logging.INFO, logger='weewx.jsongenerator'):
             self.run(config_dict, skin_dict)
         assert not os.path.isdir(os.path.join(str(tmp_path), 'data'))
         levels = [r.levelname for r in caplog.records
-                  if 'No plot definitions' in r.getMessage()]
+                  if 'No plot groups' in r.getMessage()]
         assert levels == ['INFO']
 
     def test_a_skin_without_a_json_section_runs(self, config_dict, tmp_path):
-        """[ImageGenerator] alone is enough.
-
-        search_up() climbs the section tree through .parent. A plain dict in place
-        of [JSONGenerator] has no .parent, and every search_up() on it raises.
-        """
+        """search_up() climbs the section tree through .parent. A plain dict in place
+        of [JSONGenerator] has no .parent, and every search_up() on it raises."""
         skin_dict = build_skin_dict(str(tmp_path))
         del skin_dict['JSONGenerator']
-        data_dir = self.run(config_dict, skin_dict)
-        assert os.path.exists(os.path.join(data_dir, 'skin.json'))
-        assert self.archived(data_dir)
+        self.run(config_dict, skin_dict)
+        assert not os.path.isdir(os.path.join(str(tmp_path), 'data'))
 
 
-class TestSkinJson:
+class TestMetaJson:
 
     @staticmethod
-    def skin_json(data_dir):
-        with open(os.path.join(data_dir, 'skin.json'), encoding='utf-8') as fd:
+    def meta_json(data_dir):
+        with open(os.path.join(data_dir, 'meta.json'), encoding='utf-8') as fd:
             return json.load(fd)
 
-    def test_skin_json_is_written_on_the_first_run_only(self, config_dict, tmp_path):
-        path = os.path.join(run_generator(config_dict, tmp_path), 'skin.json')
+    def test_meta_json_is_written_on_the_first_run_only(self, config_dict, tmp_path):
+        path = os.path.join(run_generator(config_dict, tmp_path), 'meta.json')
         with open(path, 'w', encoding='utf-8') as fd:
             fd.write('{}')
         run_generator(config_dict, tmp_path, first_run=False)
         with open(path, encoding='utf-8') as fd:
             assert fd.read() == '{}'
 
-        # A lost skin.json is written again.
+        # A lost meta.json is written again.
         os.remove(path)
         run_generator(config_dict, tmp_path, first_run=False)
-        assert self.skin_json(os.path.dirname(path))['time_lengths']
+        assert self.meta_json(os.path.dirname(path))['units']
 
-    def test_skin_json_holds_the_time_lengths_and_the_units(self, config_dict, tmp_path):
-        skin_json = self.skin_json(run_generator(config_dict, tmp_path))
-        assert sorted(skin_json) == ['time_lengths', 'units']
-        assert skin_json['time_lengths'] == {'day_images': 27 * 3600,
-                                             'week_images': 7 * 86400}
+    def test_meta_json_holds_the_conversions_and_no_display_data(self, config_dict,
+                                                                 tmp_path):
+        """The unit table says how to convert, not how to write a unit."""
+        units = self.meta_json(run_generator(config_dict, tmp_path))['units']
+        assert sorted(units) == ['convert', 'groups', 'systems']
 
-    def test_the_time_period_sets_the_time_length(self, config_dict, tmp_path):
-        """A plot's own time_length does not change the one of its time period."""
-        skin_dict = build_skin_dict(str(tmp_path))
-        day_images = skin_dict['ImageGenerator']['day_images']
-        for plotname in day_images.sections:
-            day_images[plotname]['time_length'] = '6h'
-        skin_json = self.skin_json(TestPlotDefinitions.run(config_dict, skin_dict))
-        assert skin_json['time_lengths']['day_images'] == 27 * 3600
+    def test_the_conversions_start_at_the_unit_of_the_files(self, config_dict, tmp_path):
+        """'convert' has a row for the unit the files are written in.
 
-    def test_the_index_says_which_units_the_report_used(self, config_dict, tmp_path):
-        """units['report'] gives the unit the report renders each unit group in.
-
-        The JavaScript converts, e.g., the forecast, which arrives in Celsius, into that
-        unit. Without units['report'], the JavaScript converts the forecast only after
-        the viewer picks a unit system by hand.
+        Compared with the unit of an archive file, not with a fixed unit. A fixed unit
+        would only restate the test skin's configuration.
         """
         data_dir = run_generator(config_dict, tmp_path)
-        units = self.skin_json(data_dir)['units']
-
-        # Compared with the unit of an archive file, not with a fixed unit. A fixed
-        # unit would only restate the test skin's configuration.
+        units = self.meta_json(data_dir)['units']
         with open(os.path.join(data_dir, 'archive', 'tempdew-2010.json'),
                   encoding='utf-8') as fd:
             written = json.load(fd)['unit']
-        assert units['report'][units['groups']['outTemp']] == written
-
-        # Every unit group that appears has a unit in units['report'].
-        assert set(units['report']) >= set(units['groups'].values()) - {None}
+        assert units['groups']['outTemp'] == 'group_temperature'
+        assert 'degree_F' in units['convert'][written]
 
 
 class TestDayNight:
@@ -356,7 +280,7 @@ class TestArchive:
     def test_writes_one_file_per_plot_group_and_year(self, archive_dir):
         written = sorted(f for f in os.listdir(archive_dir) if f.endswith('.json'))
 
-        # The test data sit in 2010, and the plot group is 'daytempdew' without 'day'.
+        # The test data sit in 2010.
         assert 'tempdew-2010.json' in written
         assert 'index.json' in written
 
@@ -405,18 +329,19 @@ class TestArchive:
             assert weeutil.weeutil.isStartOfDay(domain.start), domain
             assert weeutil.weeutil.isStartOfDay(domain.stop), domain
 
-    def test_the_unit_label_is_only_in_skin_json(self, archive_dir):
-        """An archive file names its unit, and skin.json gives the label of each unit.
+    def test_the_files_hold_data_and_no_display_fields(self, archive_dir):
+        """Labels, plot types, axis scales and unit labels are the skin's, not the data's.
 
-        A label written anywhere else would be a second copy of the one in skin.json.
+        Listed by what a file may hold, so a display field added later fails here.
         """
-        with open(os.path.join(os.path.dirname(archive_dir), 'skin.json'),
-                  encoding='utf-8') as fd:
-            labels = json.load(fd)['units']['labels']
+        series_keys = {'obs_type', 'aggregate_type', 'aggregate_interval', 'unit',
+                       'values', 'min', 'max', 'vector_x', 'vector_y', 'directions'}
+        file_keys = {'name', 'start', 'interval', 'count', 'newest', 'unit', 'series'}
         with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
             index = json.load(fd)
         for group in index['groups']:
-            assert 'unit_label' not in group and 'unit' not in group, group['name']
+            assert set(group) == {'name', 'years', 'months', 'days', 'year_intervals',
+                                  'month_intervals', 'day_intervals'}, group['name']
 
         names = [n for n in os.listdir(archive_dir)
                  if n.endswith('.json') and n != 'index.json'
@@ -425,8 +350,9 @@ class TestArchive:
         for name in names:
             with open(os.path.join(archive_dir, name), encoding='utf-8') as fd:
                 payload = json.load(fd)
-            assert 'unit_label' not in payload, name
-            assert payload['unit'] in labels, name
+            assert set(payload) == file_keys, name
+            for series in payload['series']:
+                assert set(series) <= series_keys, (name, set(series) - series_keys)
 
     def test_fresh_files_are_not_rewritten(self, config_dict, tmp_path):
         """A second run right after the first rewrites no file.
@@ -723,7 +649,7 @@ class TestArchiveExtension:
 
         A changed skin leaves a file with the same name and aggregation interval but
         other series. Extending it would put one observation type's values under
-        another one's label.
+        another one's name.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         run_generator(config_dict, tmp_path,
@@ -781,8 +707,7 @@ class TestAggregation:
     def test_vecdir_matches_the_database(self, config_dict, tmp_path):
         """Each bearing in the file is the one the database gives."""
         skin_dict = build_skin_dict(str(tmp_path))
-        skin_dict['ImageGenerator']['day_images']['daywinddir'] = {
-            'windDir': {}}
+        skin_dict['JSONGenerator']['JSONFiles']['winddir'] = {'windDir': {}}
         data_dir = TestPlotDefinitions.run(config_dict, skin_dict)
         with open(os.path.join(data_dir, 'archive', 'winddir-2010.json'),
                   encoding='utf-8') as fd:
@@ -873,7 +798,7 @@ class TestArchiveMemory:
         assert read(os.path.join(data_dir, 'archive'))['years']
 
         empty = read(str(tmp_path / 'nowhere'))
-        assert empty['years'] == {} and empty['titles'] == {}
+        assert empty['years'] == {}
         assert empty['first'] is None and empty['rebuilt'] is None
 
     def test_finished_months_stay_available(self, config_dict, tmp_path):
@@ -1237,7 +1162,6 @@ class TestArchiveSeriesShapes:
             payload = json.load(fd)
 
         series = payload['series'][0]
-        assert series['plot_type'] == 'vector'
         assert len(series['vector_x']) == payload['count']
         assert len(series['vector_y']) == payload['count']
         # The magnitude stays in 'values', so a reader that knows nothing about
@@ -1248,11 +1172,43 @@ class TestArchiveSeriesShapes:
         for x, y, v in pairs[:20]:
             assert abs((x ** 2 + y ** 2) ** 0.5 - v) < 0.01
 
-    def test_a_line_keeps_its_own_aggregation_interval(self, config_dict, tmp_path):
-        """A bar with 'aggregate_interval = 3600' stays hourly in a day file at 900 s.
+    def test_extending_with_nothing_new_keeps_the_vector(self, config_dict, tmp_path,
+                                                          monkeypatch):
+        """A vector file extended over a gap in the readings is still a vector file.
 
-        Summing per 900 s would give a fraction of the hourly total under an hourly
-        label, drawn as a row of hairline bars.
+        The type says that it is a vector, so the components stay even where the new
+        aggregation intervals hold nothing to split into components.
+        """
+        stop_ts = parameters.synthetic_dict['stop_ts']
+        options = {'rebuild': '0'}
+        run_generator(config_dict, tmp_path, archive_options=options,
+                      gen_ts=stop_ts - 4 * ARCHIVE_RESOLUTION)
+        path = os.path.join(str(tmp_path), 'data', 'archive', 'windvec-2010.json')
+        with open(path, encoding='utf-8') as fd:
+            before = json.load(fd)['series'][0]
+
+        aggregate = weewx.jsongenerator.JSONGenerator._aggregate_line
+
+        def gap(self, line, *args, **kwargs):
+            got = aggregate(self, line, *args, **kwargs)
+            if got is None or line['var_type'] != 'windvec':
+                return got
+            return got[0], [(begin, None) for begin, _ in got[1]]
+
+        monkeypatch.setattr(weewx.jsongenerator.JSONGenerator, '_aggregate_line', gap)
+        run_generator(config_dict, tmp_path, archive_options=options, gen_ts=stop_ts)
+        with open(path, encoding='utf-8') as fd:
+            after = json.load(fd)['series'][0]
+
+        assert sorted(after) == sorted(before)
+        # What the file held before the gap is still there.
+        assert any(v is not None for v in after['vector_x'])
+
+    def test_a_line_keeps_its_own_aggregation_interval(self, config_dict, tmp_path):
+        """A series with 'aggregate_interval = 3600' stays hourly in a day file at 900 s.
+
+        Summing per 900 s would give a fraction of the hourly total, drawn as a row of
+        hairline bars.
         """
         stop_ts = parameters.synthetic_dict['stop_ts']
         options = {'days': '2', 'day_resolution': '900'}

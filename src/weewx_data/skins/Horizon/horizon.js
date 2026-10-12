@@ -301,10 +301,10 @@
 
   /* ---------------------------------------------------------------- units */
 
-  /* WeeWX writes the JSON files in the report unit system, and data/skin.json carries
-     a unit table for converting a reading to any other unit system. weewx-json.js
-     does the conversion (see `data` above). The functions below show the converted
-     readings on the page. */
+  /* WeeWX writes the JSON files in the report unit system, and data/meta.json and
+     display.json carry a unit table for converting a reading to any other unit system.
+     weewx-json.js does the conversion (see `data` above). The functions below show the
+     converted readings on the page. */
 
   /* Returns the unit label `now`, with a space in front if the label `was` had one.
      The skin writes some unit labels with a space in front and some without. The
@@ -390,7 +390,7 @@
   };
 
   /* Returns the names of the unit systems in the unit table, e.g., ['US', 'METRIC',
-     'METRICWX'], or [] where data/skin.json has no unit table. */
+     'METRICWX'], or [] where data/meta.json has no unit table. */
   function availableSystems() {
     var table = data.unitTable();
     if (!table || !table.systems) return [];
@@ -409,7 +409,7 @@
     var chosen = recall('units', '');
     if (chosen) applyUnitsAll();
 
-    loadManifest().then(function () {
+    data.load().then(function () {
       var systems = availableSystems();
       if (systems.length < 2) return;
       picker.innerHTML = ['<option value="">'
@@ -575,12 +575,13 @@
     return Math.max(1, Math.floor((covered / span) * hostWidth * 0.85));
   }
 
-  /* Returns the renderItem of an ECharts custom series, for the plot type 'vector'.
-     Each reading is a line from the zero line, as long as the wind speed on the y
-     axis, in the direction of `vector_x` and `vector_y` turned by `vector_rotate`
-     degrees. */
+  /* Returns the renderItem of an ECharts custom series, for the type 'vector'. Each
+     reading is a line from the zero line, as long as the wind speed on the y axis, in
+     the direction of `vector_x` and `vector_y` turned by `vector_rotate` degrees. The
+     angle is the one that `vector_rotate` in skin.conf sets, which weeplot turns the
+     other way round from the screen's y axis. */
   function vectorRenderItem(s) {
-    var rotate = (s.vector_rotate || 0) * Math.PI / 180;
+    var rotate = -(s.vector_rotate || 0) * Math.PI / 180;
     return function (params, api) {
       var i = params.dataIndex;
       var x = s.vector_x && s.vector_x[i];
@@ -608,73 +609,15 @@
 
   /* --------------------------------------------------------------- charting */
 
-  /* ROUND_STEPS lists the leading digits of a gridline step that reads as round, at
-     any power of ten. 4.5 is in the list for 45 degrees, an eighth of the compass.
-     A step that a conversion produces, e.g., 1.27 mm from 0.05 inch, is not
-     round. */
-  var ROUND_STEPS = [1, 1.5, 2, 2.5, 3, 4, 4.5, 5, 6, 7.5, 9];
-
-  function isRound(v) {
-    if (!v) return false;
-    var mag = Math.pow(10, Math.floor(Math.log(Math.abs(v)) / Math.LN10));
-    var lead = Math.abs(v) / mag;
-    return ROUND_STEPS.some(function (m) { return Math.abs(lead - m) < 1e-9; });
-  }
-
-  /* Returns whether both ends of the y axis, `lo` and `hi`, are whole multiples of
-     `step`. The `yscale` of the JSON generator passes, but a conversion
-     with an offset can make `yscale` fail. A step of 5 degree_C becomes 9 degree_F,
-     which ROUND_STEPS accepts. The ends 0 and 40 degree_C become 32 and 104
-     degree_F, which are not multiples of 9. */
-  function divides(lo, hi, step) {
-    if (!step) return false;
-    var whole = function (v) {
-      var n = v / step;
-      return Math.abs(n - Math.round(n)) < 1e-6;
-    };
-    return whole(lo) && whole(hi);
-  }
-
-  /* Returns the step between the y axis gridlines of a chart `height` pixels high,
-     or null to let ECharts choose. The step of `meta.yscale` is kept where the step
-     is round, divides the axis, and leaves room between the labels. */
-  function gridStep(meta, height) {
-    if (!meta.yscale || !meta.yscale[2]) return null;
-    var step = meta.yscale[2];
-    var span = meta.yscale[1] - meta.yscale[0];
-    if (!(span > 0)) return step;
-
-    /* The labels are 12 px high, and a gridline every 24 px leaves as much space
-       again between them. */
+  /* Returns the number of steps that the y axis of a chart `height` pixels high has
+     room for. The labels are 12 px high, and a gridline every 24 px leaves as much
+     space again between them. The step of the axis is 2, 5 or 10 times a power of ten
+     (see WeeWXJSON.scale), so the axis ends up with between half and one and a quarter
+     times the number of steps asked for. Asking for four fifths of the room keeps the
+     most steps within it. */
+  function axisSteps(height) {
     var room = Math.max(2, Math.floor((height - 40) / 24));
-
-    if (span / step <= room && isRound(step)
-        && divides(meta.yscale[0], meta.yscale[1], step)) {
-      return step;
-    }
-
-    /* Otherwise take the smallest of 1, 2, 2.5 and 5 times a power of ten that
-       needs no more than `room` gridlines. */
-    var least = span / room;
-    var mag = Math.pow(10, Math.floor(Math.log(least) / Math.LN10));
-    var nice = [1, 2, 2.5, 5, 10, 20].map(function (m) { return m * mag; })
-      .filter(function (v) { return v >= least; })[0];
-    return nice || step;
-  }
-
-  /* Returns the lower or upper end of the y axis (`which` is 'min' or 'max'), moved
-     outward to a whole multiple of `step`, so that no reading falls outside the
-     axis. After a conversion the ends of `meta.yscale` are seldom multiples, e.g.,
-     29.0 inHg is 982.05 mbar. ECharts would then put the gridlines at 982.05,
-     992.05, and so on. */
-  function axisEnd(meta, step, which) {
-    if (!meta.yscale) return null;
-    var v = meta.yscale[which === 'min' ? 0 : 1];
-    if (v === null || v === undefined || !step) return v === undefined ? null : v;
-    var snapped = which === 'min' ? Math.floor(v / step) * step
-                                  : Math.ceil(v / step) * step;
-    /* Remove floating-point error, e.g., 0.30000000000000004, from the label. */
-    return Math.round(snapped * 1e6) / 1e6;
+    return Math.max(2, Math.floor(room * 0.8));
   }
 
   function chartHeight(width) {
@@ -739,8 +682,8 @@
     var colors = themeColors();
     var family = getComputedStyle(document.body).fontFamily;
     var digits = digitsFor(meta.series);
-    var isBar = meta.series.some(function (s) { return s.plot_type === 'bar'; });
-    var step = gridStep(meta, chartHeight(hostWidth));
+    var isBar = meta.series.some(function (s) { return s.type === 'bar'; });
+    var axis = data.yAxis(meta, axisSteps(chartHeight(hostWidth)));
     var areas = isBar ? [] : nightAreas(meta);
 
     var series = meta.series.map(function (s, i) {
@@ -748,7 +691,7 @@
         return [t * 1000, s.values[j]];
       });
 
-      if (s.plot_type === 'vector') {
+      if (s.type === 'vector') {
         return {
           name: s.label, type: 'custom', data: points,
           renderItem: vectorRenderItem(s),
@@ -759,7 +702,7 @@
 
       var out = {
         name: s.label,
-        type: s.plot_type === 'bar' ? 'bar' : 'line',
+        type: s.type === 'bar' ? 'bar' : 'line',
         data: points,
         animation: false,
         symbol: 'none',
@@ -770,7 +713,7 @@
         sampling: 'lttb',
         large: true
       };
-      if (s.plot_type === 'bar') {
+      if (s.type === 'bar') {
         out.itemStyle = { color: s.fill_color || s.color || colors.ink };
         var w = barWidthPx(meta, s, hostWidth);
         if (w) out.barWidth = w;
@@ -867,13 +810,12 @@
         nameTextStyle: {
           color: colors.muted, fontFamily: family, fontSize: 12, align: 'left'
         },
-        /* `meta.yscale` comes from the JSON generator, which scales the y axis as
-           the ImageGenerator does. Left to itself, ECharts runs a wind direction
-           axis to 400 degrees, or a wind speed axis to 5 m/s for wind that never
-           passed 2.3. */
-        min: axisEnd(meta, step, 'min'),
-        max: axisEnd(meta, step, 'max'),
-        interval: step,
+        /* `axis` is worked out from the readings, as the ImageGenerator scales the y
+           axis. Left to itself, ECharts runs a wind direction axis to 400 degrees, or
+           a wind speed axis to 5 m/s for wind that never passed 2.3. */
+        min: axis[0],
+        max: axis[1],
+        interval: axis[2],
         axisLine: { show: false },
         axisTick: { show: false },
         splitLine: { lineStyle: { color: colors.grid } },
@@ -1023,9 +965,13 @@
     plot.setOption(chartOptions(entry.meta, entry.period, entry.host,
                                 entry.host.clientWidth || 600));
 
+    /* The legend is built again too, because display.json may have a new label. */
+    var card = entry.host.closest('.chart-card');
+    var title = card && card.querySelector('.chart-title');
+    if (title) title.innerHTML = legendHtml(entry.meta);
+
     /* An open data table is built again now. A closed data table gets
        `data-stale`, and is built when the reader opens it (see setupPeriods). */
-    var card = entry.host.closest('.chart-card');
     var details = card && card.querySelector('.chart-data');
     if (details) {
       if (details.open) {
@@ -1041,7 +987,7 @@
 
   /* Returns a promise of the plot data for one chart card, or of null. */
   function chartSource(card) {
-    return data.plot(card.dataset.group, +card.dataset.from, +card.dataset.to);
+    return data.chart(card.dataset.group, +card.dataset.from, +card.dataset.to);
   }
 
   /* Updates the charts to the newest archive record. Only the live view changes;
@@ -1054,7 +1000,7 @@
        new start and end. */
     var win = currentWindow(currentPeriod);
 
-    data.loadIndex().then(function () {
+    data.load().then(function () {
       charts.forEach(function (entry) {
         var card = entry.host.closest('.chart-card');
         if (!card || !card.dataset.group) return;
@@ -1110,19 +1056,33 @@
      instead, e.g., Tuesday, week 33, July or 2025.
 
      The values in PERIOD_SECONDS are defaults. adoptTimeLengths replaces them with
-     the `time_length` of [[day_images]], [[week_images]] and so on in skin.conf,
-     which data/skin.json carries as `time_lengths`. */
+     the lengths in [[TimeLengths]] under [DisplayOptions] in skin.conf, which
+     display.json carries as `time_lengths`. */
   var PERIOD_SECONDS = { day: 27 * 3600, week: 7 * 86400, month: 30 * 86400, year: 365 * 86400 };
 
-  function adoptTimeLengths(manifest) {
-    if (!manifest || !manifest.time_lengths) return;
-    Object.keys(manifest.time_lengths).forEach(function (section) {
-      /* data/skin.json names a time period by its section in skin.conf, e.g.
-         'day_images', and the page names it 'day'. */
-      var period = section.replace(/_images$/, '');
-      var seconds = parseInt(manifest.time_lengths[section], 10);
+  function adoptTimeLengths(display) {
+    var lengths = (display && display.time_lengths) || {};
+    Object.keys(lengths).forEach(function (period) {
+      var seconds = parseInt(lengths[period], 10);
       if (seconds > 0) PERIOD_SECONDS[period] = seconds;
     });
+  }
+
+  /* Returns the time spans that the charts offer, in the order of `periods` under
+     [DisplayOptions]. Before display.json has loaded, and without it, these are the
+     four of the defaults. */
+  function periodNames() {
+    var named = data.display().periods;
+    return named && named.length ? named : ['day', 'week', 'month', 'year'];
+  }
+
+  /* Returns the plot groups of the charts on this page, in the order of
+     `plot_groups` under [DisplayOptions], or of `telemetry_plot_groups` on the
+     telemetry page. */
+  function plotGroupNames() {
+    var display = data.display();
+    return (CFG.page === 'telemetry' ? display.telemetry_plot_groups : display.plot_groups)
+      || [];
   }
 
   /* horizon.js has two current times, dataTs() and nowTs(). Using one where the
@@ -1182,11 +1142,10 @@
     return w;
   }
 
-  /* Reads data/skin.json, and adopts the `time_length` of each time period. */
-  function loadManifest() {
-    return data.loadManifest().then(function (manifest) {
-      adoptTimeLengths(manifest);
-      return manifest;
+  /* Reads the JSON files, and adopts the length of each time span. */
+  function loadFiles() {
+    return data.load().then(function () {
+      adoptTimeLengths(data.display());
     });
   }
 
@@ -1214,6 +1173,9 @@
         card.querySelector('.chart-host').innerHTML = empty;
         return;
       }
+      /* A card is made without a title, because the series that a plot group holds
+         are known only from its files. */
+      card.querySelector('.chart-title').textContent = meta.title;
       var any = meta.series.some(function (s) {
         return s.values.some(function (v) { return v !== null; });
       });
@@ -1257,7 +1219,7 @@
     if (!hash) return null;
     var parts = hash.split('/');
     var period = parts[0];
-    if ((CFG.periods || []).indexOf(period) < 0) return null;
+    if (periodNames().indexOf(period) < 0) return null;
 
     if (!parts[1]) return { period: period, anchor: null };
 
@@ -1308,13 +1270,13 @@
     clearCharts();
     container.setAttribute('aria-busy', 'true');
 
-    Promise.all([loadManifest(), data.loadIndex()]).then(function (res) {
-      var ai = res[1];
-      var groups = CFG.plotGroups || [];
-      /* The time span on screen is measured only once data/skin.json has
-         loaded. adoptTimeLengths has then replaced the defaults in PERIOD_SECONDS with
-         the `time_length` of skin.conf. Measured earlier, the first Year chart
-         after a page load would span 365 days instead of the 365.25 days of '1y'. */
+    loadFiles().then(function () {
+      var ai = data.index();
+      var groups = plotGroupNames();
+      /* The time span on screen is measured only once display.json has loaded.
+         adoptTimeLengths has then replaced the defaults in PERIOD_SECONDS with the
+         lengths in skin.conf. Measured earlier, the first Year chart after a page
+         load would span 365 days instead of the 365.25 days of '1y'. */
       var win = currentWindow(period);
       var from = win.from, to = win.to;
 
@@ -1326,7 +1288,7 @@
            chart would be empty on every time span since. So a chart card is made
            only where data.hasFiles finds files for this time span. */
         if (!archived || !data.hasFiles(g, from, to)) return null;
-        return { group: g, title: archived.title };
+        return { group: g };
       }).filter(Boolean);
 
       container.innerHTML = '';
@@ -1348,7 +1310,7 @@
         card.dataset.to = to;
         card.innerHTML =
           '<div class="chart-head">'
-          + '<h3 class="chart-title chart-legend">' + escapeHtml(entry.title) + '</h3>'
+          + '<h3 class="chart-title chart-legend"></h3>'
           + '<div class="chart-actions"></div>'
           + '</div>'
           + '<div class="chart-host"><div class="chart-skeleton"></div></div>'
@@ -1772,27 +1734,30 @@
     }, true);
     setupRangeNav();
 
-    /* A time span in the URL hash takes precedence over the one in localStorage. */
-    var linked = readLocation();
-    if (linked) {
-      currentPeriod = linked.period;
-      showPeriod(linked.period, linked.anchor);
-    } else {
-      var start = recall('period', (CFG.periods || ['day'])[0]);
-      if ((CFG.periods || []).indexOf(start) < 0) start = (CFG.periods || ['day'])[0];
-      showPeriod(start, null);
-    }
-
-    /* nav.inc on the front page and history.inc on the other pages with charts
-       write the time span links as bare hashes such as '#week'. Following a time
-       span link fires hashchange. The browser's back and forward buttons fire
-       hashchange too, as does a link pasted into the tab. */
-    window.addEventListener('hashchange', function () {
-      var loc = readLocation();
-      if (loc && (loc.period !== currentPeriod || loc.anchor !== anchor)) {
-        currentPeriod = loc.period;
-        showPeriod(loc.period, loc.anchor);
+    /* The time spans on offer are in display.json, so the first chart waits for it. */
+    loadFiles().then(function () {
+      /* A time span in the URL hash takes precedence over the one in localStorage. */
+      var linked = readLocation();
+      if (linked) {
+        currentPeriod = linked.period;
+        showPeriod(linked.period, linked.anchor);
+      } else {
+        var start = recall('period', periodNames()[0]);
+        if (periodNames().indexOf(start) < 0) start = periodNames()[0];
+        showPeriod(start, null);
       }
+
+      /* nav.inc on the front page and history.inc on the other pages with charts
+         write the time span links as bare hashes such as '#week'. Following a time
+         span link fires hashchange. The browser's back and forward buttons fire
+         hashchange too, as does a link pasted into the tab. */
+      window.addEventListener('hashchange', function () {
+        var loc = readLocation();
+        if (loc && (loc.period !== currentPeriod || loc.anchor !== anchor)) {
+          currentPeriod = loc.period;
+          showPeriod(loc.period, loc.anchor);
+        }
+      });
     });
   }
 

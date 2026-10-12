@@ -1,96 +1,59 @@
 # [JSONGenerator]
 
 This section is used by generator `weewx.jsongenerator.JSONGenerator`. The JSON
-generator works independently of the Image generator. It reads the same kind of
-plot definitions, but instead of drawing a plot it writes the numbers behind it,
-as JSON files that a web page can read. This section holds both the options of the
-generator and the plot definitions it draws from.
+generator writes the numbers that a web page draws its charts from, as JSON files.
+It writes the readings and nothing about how they look. Labels, the type of a
+chart and the y axis are up to the skin. The *Horizon* skin sets them under
+[`[DisplayOptions]`](../../custom/horizon-skin.md#changing-what-a-chart-shows).
+This section holds both the options of the generator and the list of files it
+writes.
 
 A skin that draws its charts with JavaScript needs this generator. The
 *Horizon* skin is the one that ships with WeeWX. See [_The JSON
 generator_](../../custom/json-generator.md) for how it works, and [_JSON data
 files_](../json-files.md) for what the files look like.
 
-## Plot definitions
+## [[JSONFiles]]
 
-The plots are defined in this section, with the same structure as the plots of
-the Image generator. A subsection for each time period, such as `[[day_images]]`,
-holds a subsection for each plot, and that holds a subsection for each line:
+The files to write. A subsection is a plot group, which is a family of files. Its
+name begins the names of the files: the plot group `tempdew` writes
+`tempdew-2026-10-03.json` and so on. It is also the name that a skin refers to,
+e.g., in the option `plot_groups` of Horizon. A subsection of a plot group is a
+series, named after its observation type:
 
 ``` ini
 [JSONGenerator]
-    [[day_images]]
-        time_length = 27h
-        [[[daytempdew]]]
+    [[JSONFiles]]
+        aggregate_type = none
+        [[[tempdew]]]
             [[[[outTemp]]]]
             [[[[dewpoint]]]]
-        [[[dayrain]]]
-            plot_type = bar
+        [[[rain]]]
+            aggregate_type = sum
+            aggregate_interval = 1h
             [[[[rain]]]]
-                aggregate_type = sum
-                aggregate_interval = 1h
-                label = Rain (hourly total)
 ```
 
-The archive is made from the plots of `[[day_images]]`. A plot named `daytempdew`
-becomes the plot group `tempdew`. The other time periods, e.g., `[[week_images]]`,
-set only how long a time span is. See [`time_length`](#time_length).
+An option that is set above a plot group or a series, directly in `[[JSONFiles]]`,
+applies to everything below it. An option set lower down wins.
 
-An option that is set above a plot, on the time period or directly in this
-section, applies to every plot and line below it. An option set lower down wins.
+The generator does not read the plots of `[ImageGenerator]`. A plot says how a
+chart looks, and this generator writes no such thing.
 
-If this section holds no plots, the generator falls back on the plots of
-`[ImageGenerator]`, so that a skin written for the Image generator still works.
-This is a stopgap for existing skins. Define the plots here.
+## Plot group and series options
 
-## Plot options
-
-These options describe what a plot shows. They are not about how it looks. The JSON
-files hold the data, and the page that reads them decides on colors, fonts and
-sizes. An option not listed here has no effect.
-
-#### data_binding
-
-The database the plot reads from, by the name of its binding. Optional. Default
-is `wx_binding`.
-
-#### time_length
-
-The nominal length of the time period, in seconds. Alternatively, a [duration
-notation](../durations.md) can be used. A page reads it from `skin.json` to
-decide how much time its chart shows. Set it on a time period, such as
-`[[week_images]]`. Optional. Default is `86400` (one day).
-
-#### unit
-
-Normally, the unit used in a plot is set by whatever [unit group the types are
-in](../../custom/custom-reports.md#mixed-units). This option overrides the
-unit of a plot, e.g., `degree_C`. Optional.
-
-#### y_nticks
-
-The nominal number of ticks along the y axis, which decides the step of the
-axis the generator suggests. Optional. Default is `10`.
-
-#### yscale
-
-A 3-way tuple (`ylow`, `yhigh`, `min_interval`), where `ylow` and `yhigh` are
-the minimum and maximum y-axis values, and `min_interval` is the minimum tick
-interval. A value of `None` is chosen from the data. The archive files carry the
-result, as `yscale`. Optional. Default is `None, None, None`.
-
-## Line options
-
-These options are set on a line, or above it for all the lines below.
+These options describe which numbers a file holds. An option that is not listed
+here has no effect.
 
 #### aggregate_interval
 
-The time over which a line is aggregated, in seconds. Alternatively, a [duration
-notation](../durations.md) can be used. The archive files already hold an
-aggregate for each of their own aggregation intervals, so this option applies
-only to a bar (`plot_type = bar`) that is to total over a longer time, such as
-the rain of each hour in a file of minutes. Optional. Without it, a line takes the
-aggregation interval of the file.
+The time over which a series is aggregated, in seconds. Alternatively, a
+[duration notation](../durations.md) can be used. The archive files already hold
+an aggregate for each of their own aggregation intervals, so this option applies
+only where it is longer than the aggregation interval of a file, such as the
+rain of each hour in a file of minutes. The aggregates then sit at every _n_-th
+position of the series. Optional. Without it, a series takes the aggregation
+interval of the file.
 
 #### aggregate_type
 
@@ -102,32 +65,25 @@ option says. The value `none`, which the Image generator reads as "every
 reading", is treated like the default, since a file holds one value for each
 aggregation interval.
 
+#### data_binding
+
+The database the series reads from, by the name of its binding. Optional. Default
+is `wx_binding`.
+
 #### data_type
 
-The observation type of the line, for when it is not the name of the line's
-section. This allows a type to appear in a plot more than once, e.g., with
+The observation type of the series, for when it is not the name of the series'
+section. This allows a type to appear in a plot group more than once, e.g., with
 different aggregate types. Optional. Default is the name of the section.
 
-#### label
+The types `windvec` and `windgustvec` are wind vectors. A file holds their
+components as well as their speed. See [_JSON data files_](../json-files.md).
 
-The label of the line, which a page shows in a legend and in a tooltip. If it
-names an entry under `[Texts]`, the translation is used. Optional. Default is
-the generic label of the type under `[Labels]` / `[[Generic]]`, or else the
-name of the type.
+#### unit
 
-#### plot_type
-
-The type of plot for a line. Choices are `line`, `bar` and `vector`. A page draws
-a `bar` as bars, and a `vector` as arrows. A `vector` line needs a type that
-holds a wind vector, such as `windvec`. Optional. Default is `line`.
-
-#### vector_rotate
-
-Rotates the vectors by this many degrees, positive being clockwise. If westerly
-winds dominate at your location, you may want to specify `+90`, so that the
-average vector points straight up, rather than lies flat along the x axis. The
-archive file carries the angle in the opposite sense, as the series property
-`vector_rotate`, ready for a page to apply. Optional. Default is `0`.
+Normally, the unit used in a file is set by whatever [unit group the types are
+in](../../custom/custom-reports.md#mixed-units). This option overrides the
+unit of a plot group, e.g., `degree_C`. Optional.
 
 ## General options
 
@@ -153,10 +109,9 @@ years; and one file per calendar year, at an aggregation interval that grows
 with age. The browser picks the tier with the shortest aggregation interval that
 covers the time it is showing.
 
-The archive holds the plots of `[[day_images]]`, named without the prefix
-`day`, e.g., `tempdew` for `daytempdew`. A line without an `aggregate_type` of
-its own is averaged over each aggregation interval. The files go into
-`archive`, below [`json_dest_dir`](#json_dest_dir).
+The archive holds the plot groups of [`[[JSONFiles]]`](#jsonfiles). A series
+without an `aggregate_type` of its own is averaged over each aggregation
+interval. The files go into `archive`, below [`json_dest_dir`](#json_dest_dir).
 
 #### years
 

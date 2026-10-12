@@ -3,58 +3,87 @@
  */
 
 /* weewx-json.js reads the files of the JSON generator (see "The JSON generator" in
-   the Customization Guide, and "JSON files" in the Reference Guide). Any skin can
-   load it, whatever draws its charts. The Horizon skin draws its charts with
-   ECharts, but weewx-json.js knows nothing about ECharts or about Horizon.
+   the Customization Guide, and "JSON files" in the Reference Guide) and the file
+   display.json of a skin, and hands the caller descriptions of charts that are ready
+   to draw. Any skin can load it, whatever draws its charts. The Horizon skin draws its
+   charts with ECharts, but weewx-json.js knows nothing about ECharts or about Horizon.
+
+   The files it reads are
+
+     data/meta.json          What a JavaScript needs to convert a reading to another
+                             unit. The JSON generator writes it.
+     data/archive/           The readings. The JSON generator writes them, in the
+                             unit system of the report. They say what was measured and
+                             nothing about how to show it.
+     display.json            How to show the readings: the labels, the type of each
+                             chart, the length of each time span and how to write a
+                             unit. The skin writes it, e.g., Horizon from
+                             [DisplayOptions] with the template display.json.tmpl.
+                             Without display.json, every plot group in the archive is
+                             a line chart, and a series is labelled with the name of
+                             its observation type.
 
    weewx-json.js adds one name to the page, WeeWXJSON. WeeWXJSON.create() returns a
    reader of the files in one data directory:
 
      var data = WeeWXJSON.create({ dataDir: 'data' });
-     data.loadManifest().then(function () {
-       return data.loadIndex();
-     }).then(function () {
+     data.load().then(function () {
        // The last 27 hours of plot group 'tempdew'.
        var to = Math.floor(Date.now() / 1000);
-       return data.plot('tempdew', to - 27 * 3600, to);
-     }).then(function (plot) {
-       // plot.series[0].time and plot.series[0].values, ...
+       return data.chart('tempdew', to - 27 * 3600, to);
+     }).then(function (chart) {
+       // chart.series[0].label, chart.series[0].time, chart.series[0].values, ...
+       // data.yAxis(chart, 8) is [min, max, step] for the y axis.
      });
 
    The options of create() are
 
-     dataDir     The directory of the JSON files, relative to the page. Default is
-                 'data'.
-     unitSystem  A function that returns the name of the unit system the reader
-                 chose, e.g., 'METRIC', or '' for the unit system of the report.
-                 Default is a function that returns ''.
+     dataDir      The directory of the JSON files, relative to the page. Default is
+                  'data'.
+     displayFile  The address of display.json, relative to the page. Default is
+                  'display.json'.
+     unitSystem   A function that returns the name of the unit system the reader
+                  chose, e.g., 'METRIC', or '' for the unit system of the report.
+                  Default is a function that returns ''.
 
    The methods of the reader are
 
-     loadManifest()         Returns a promise of data/skin.json: `time_lengths` and
-                            the unit table `units`.
-     loadIndex()            Returns a promise of data/archive/index.json.
-     index()                Returns data/archive/index.json where loadIndex() has
-                            loaded it, or null.
+     load()                 Returns a promise that is kept when meta.json,
+                            display.json and data/archive/index.json have loaded. A
+                            file that is missing is read as empty.
+     display()              Returns display.json where load() has loaded it, or {}.
+                            It holds `periods`, `time_lengths` (seconds), `plot_groups`
+                            and `telemetry_plot_groups`, `charts`, `labels` and
+                            `units`.
+     index()                Returns data/archive/index.json where load() has loaded
+                            it, or null.
      hasFiles(group, from, to)
                             Returns whether the archive files cover the time span
                             from `from` to `to`, both in seconds since the epoch.
-                            Call it after loadIndex().
-     plot(group, from, to)  Returns a promise of the plot data of plot group `group`
-                            for the time span, or of null. The plot data joins the
-                            archive files that the time span touches onto one grid
-                            of times. It holds `unit`, `unit_label`, `yscale`,
-                            `aggregate_interval` and `series`, and where the time
-                            span is short enough `daynight`. Each series holds
-                            `time` and `values`, and the other arrays and fields
-                            of the file. Call it after loadManifest() and
-                            loadIndex().
-     reset()                Forgets what loadManifest(), loadIndex() and plot()
-                            have read, so that the next call reads the files again.
-                            Call it when the generator has written new files.
-     unitTable()            Returns the unit table of data/skin.json, or null.
-     inChosenUnit(plot)     Returns `plot` with its readings, y axis and unit label
-                            in the unit system that unitSystem() names. The plot is
+                            Call it after load().
+     chart(group, from, to) Returns a promise of the chart description of plot group
+                            `group` for the time span, or of null. The description
+                            joins the archive files that the time span touches onto
+                            one grid of times. It holds `title`, `unit`, `unit_label`,
+                            `yscale`, `aggregate_interval` and `series`, and where the
+                            time span is short enough `daynight`. `yscale` holds the
+                            minimum, the maximum and the step that display.json sets,
+                            where each can be null. Each series holds `label`, `type`
+                            ('line', 'bar' or 'vector'), `time` and `values`, and the
+                            other arrays and fields of the file. A 'vector' series has
+                            `vector_x`, `vector_y` and `vector_rotate`, the angle in
+                            degrees that display.json sets. Call it after load().
+     yAxis(chart, steps)    Returns [minimum, maximum, step] for the y axis of
+                            `chart`, a number that is round at 1, 2 and 5 times a power
+                            of ten. See scale(). `steps` is the number of gridlines the
+                            axis has room for.
+     reset()                Forgets what load() and chart() have read, except
+                            meta.json, so that the next call reads the other files
+                            again. Call it when the generator has written new files.
+     unitTable()            Returns the unit table, or null. It joins the unit table of
+                            meta.json with `units` of display.json.
+     inChosenUnit(chart)    Returns `chart` with its readings, y axis and unit label
+                            in the unit system that unitSystem() names. The chart is
                             not changed.
      targetUnit(obsType, fromUnit)
                             Returns the unit in which a reading of `obsType` in
@@ -65,19 +94,112 @@
      unitLabel(unit)        Returns the label of `unit`, e.g., '°C'.
      decimalsFor(unit, fallback)
                             Returns the number of decimals the report writes for
-                            `unit`. */
+                            `unit`.
+
+   WeeWXJSON.scale(min, max, prescale, steps) is the function that yAxis() calls. */
 
 (function (root) {
   'use strict';
 
+  /* Returns a number without the digits that floating point adds, e.g., 0.30000000000000004
+     as 0.3. */
+  function clean(v) {
+    return parseFloat(v.toPrecision(12));
+  }
+
+  /* Returns [minimum, maximum, step] for an axis that has to hold the readings from
+     `dataMin` to `dataMax`, with the zero on a step. It does what scale() of
+     weeplot/utilities.py does for the image of the ImageGenerator, so that a chart
+     here has the axis that the image of the same plot would have.
+
+     `prescale` is [minimum, maximum, step], where each can be null. A minimum or a
+     maximum that is not null is kept. A step that is not null is the smallest the axis
+     may have. `steps` is the number of steps wanted, 10 if not given. */
+  function scale(dataMin, dataMax, prescale, steps) {
+    var pre = prescale || [null, null, null];
+    var minScale = pre[0], maxScale = pre[1], minInterval = pre[2];
+    var wanted = steps || 10;
+
+    /* Everything is fixed, so there is nothing to work out. */
+    if (minScale !== null && maxScale !== null && minInterval !== null) {
+      return [minScale, maxScale, minInterval];
+    }
+
+    var lo = dataMin, hi = dataMax;
+    /* Readings outside a fixed end do not move the axis. */
+    if (maxScale !== null) {
+      hi = Math.min(hi, maxScale);
+      if (hi < lo) lo = hi;
+    }
+    if (minScale !== null) {
+      lo = Math.max(lo, minScale);
+      if (hi < lo) hi = lo;
+    }
+
+    /* All readings equal: the axis needs a range, and gets one by moving an end that
+       is not fixed. */
+    if (Math.abs(lo - hi) <= 1e-7 * Math.max(Math.abs(lo), Math.abs(hi))) {
+      var out = minInterval !== null ? minInterval * wanted
+        : (hi ? 0.01 * (Math.round(Math.abs(hi) * 100) / 100) : 0.1);
+      if (maxScale !== null) {
+        lo = hi - out;
+      } else if (minScale !== null) {
+        hi = lo + out;
+      } else if (lo === 0) {
+        hi = 1;
+      } else {
+        hi = lo + out;
+      }
+    }
+
+    var range;
+    if (minScale !== null && maxScale !== null) range = maxScale - minScale;
+    else if (minScale !== null) range = hi - minScale;
+    else if (maxScale !== null) range = maxScale - lo;
+    else range = hi - lo;
+
+    var nominal = range / wanted;
+    var power = Math.pow(10, Math.floor(Math.log(nominal) / Math.LN10));
+    var lead = Math.floor(nominal / power + 0.5);
+    /* The step is 2, 5 or 10 times a power of ten, whichever is nearest to the
+       nominal step. weeplot has no step of 1 times a power of ten. */
+    var interval = (lead > 5 ? 10 : lead > 2 ? 5 : 2) * power;
+
+    if (minInterval === null || interval >= minInterval) {
+      if (minScale === null) minScale = interval * Math.floor(lo / interval);
+      if (maxScale === null) maxScale = interval * Math.ceil(hi / interval);
+    } else {
+      /* The step that was asked for is wider than the one that fits. The axis then
+         has few steps, so its ends are moved to make a chart that is not empty. */
+      interval = minInterval;
+      if (minScale === null) {
+        if (maxScale === null) {
+          minScale = interval * Math.floor(lo / interval);
+          maxScale = minScale + interval * wanted;
+        } else {
+          minScale = maxScale - interval * wanted;
+        }
+      } else if (maxScale === null) {
+        maxScale = minScale + interval * wanted;
+      }
+    }
+    return [clean(minScale), clean(maxScale), clean(interval)];
+  }
+
   function create(options) {
     options = options || {};
     var dataDir = options.dataDir || 'data';
+    var displayFile = options.displayFile || 'display.json';
     var chosenSystem = options.unitSystem || function () { return ''; };
 
-    /* `manifest` holds data/skin.json: the `time_length` of each time period in
-       skin.conf (`time_lengths`) and the unit table (`units`). */
-    var manifest = null;
+    /* `metaFile` holds data/meta.json, which the JSON generator writes: the unit table
+       that converts a reading to another unit. `shown` holds display.json, which the
+       skin writes. The unit table changes only when the station's configuration does,
+       so reset() leaves `metaFile` alone and a page reads it once. reset() empties
+       `shown`, so that load() reads display.json again, and a page that stays open
+       for days shows a label that its owner has changed. */
+    var metaFile = null;
+    var shown = null;
 
     /* The archive files, in data/archive/, hold the readings of each plot group over
        the whole archive, in three tiers (see MAX_POINTS). data/archive/index.json
@@ -86,25 +208,27 @@
     var archiveIndex = null;
     var archiveCache = new Map();           // file name -> file contents
 
-    /* WeeWX writes the JSON files in the report unit system. data/skin.json also
-       carries a unit table. With the unit table, the browser converts any reading to
-       the unit system the reader chose, without fetching anything. The unit table,
-       in part:
+    /* WeeWX writes the JSON files in the report unit system. With the unit table, the
+       browser converts any reading to the unit system the reader chose, without
+       fetching anything. The unit table comes in two files. data/meta.json says how to
+       convert, because that depends on the units and on nothing else:
 
          groups:  {"outTemp": "group_temperature", ...}
          systems: {"METRIC": {"group_temperature": "degree_C", ...}, ...}
-         report:  {"group_temperature": "degree_F", ...}
          convert: {"degree_F": {"degree_C": [0.5556, -17.7778]}, ...}
-         labels:  {"degree_C": "°C", ...}
-         formats: {"degree_C": "%.1f", ...}
 
        A conversion multiplies by the first number of a pair in 'convert' and adds the
-       second. */
+       second. display.json says how to write a unit, because that depends on the
+       language of the report:
 
-    /* `unitChoices` holds the unit table from data/skin.json. reset() empties
-       `manifest`, so that data/skin.json is read again. `unitChoices` keeps the old
-       unit table meanwhile, so the readings stay in the chosen unit system while
-       data/skin.json loads. The unit table changes only when the station's
+         report:  {"group_temperature": "degree_F", ...}
+         labels:  {"degree_C": "°C", ...}
+         formats: {"degree_C": "%.1f", ...} */
+
+    /* `unitChoices` holds the unit table, from the two files. reset() empties
+       `metaFile` and `shown`, so that both files are read again. `unitChoices` keeps
+       the old unit table meanwhile, so the readings stay in the chosen unit system
+       while the files load. The unit table changes only when the station's
        configuration changes. */
     var unitChoices = null;
 
@@ -112,7 +236,7 @@
       return unitChoices;
     }
 
-    /* Returns the label of `unit`, e.g., '°C'. data/skin.json is the only place that
+    /* Returns the label of `unit`, e.g., '°C'. display.json is the only place that
        holds it: the archive files name only the unit. */
     function unitLabel(unit) {
       var table = unitTable();
@@ -140,34 +264,37 @@
       return wanted;
     }
 
-    /* Returns the plot data `meta` with its readings, y axis and unit label in the unit
-       system the reader chose. A conversion goes into a copy, and `meta` itself stays in
-       the unit it was written in. If `meta` were converted in place, the next unit
+    /* Returns the chart `chart` with its readings, y axis and unit label in the unit
+       system the reader chose. A conversion goes into a copy, and `chart` itself stays
+       in the unit it was written in. If `chart` were converted in place, the next unit
        change would convert its readings a second time. */
-    function inChosenUnit(meta) {
+    function inChosenUnit(chart) {
       var table = unitTable();
-      if (!table || !meta || !meta.series || !meta.series.length) return meta;
+      if (!table || !chart || !chart.series || !chart.series.length) return chart;
 
-      var to = targetUnit(meta.series[0].obs_type, meta.unit);
-      if (!to) return meta;
-      var steps = table.convert[meta.unit][to];
+      var to = targetUnit(chart.series[0].obs_type, chart.unit);
+      if (!to) return chart;
+      var steps = table.convert[chart.unit][to];
       var factor = steps[0], offset = steps[1];
       var apply = function (v) {
         return v === null || v === undefined ? null : v * factor + offset;
       };
 
-      var out = shallow(meta);
+      var out = shallow(chart);
       out.unit = to;
       out.unit_label = unitLabel(to);
 
       /* The step of the y axis is a difference, so the step takes the factor but not
-         the offset: a step of 5 degree_C is 9 degree_F, not 41. */
-      if (meta.yscale) {
-        out.yscale = [apply(meta.yscale[0]), apply(meta.yscale[1]),
-                      meta.yscale[2] * Math.abs(factor)];
+         the offset: a step of 5 degree_C is 9 degree_F, not 41. `converted` tells
+         yAxis() that the ends are no longer the ones that were set: 0 and 40 degree_C
+         are 32 and 104 degree_F, which are not round. */
+      if (chart.yscale) {
+        out.yscale = [apply(chart.yscale[0]), apply(chart.yscale[1]),
+                      chart.yscale[2] === null ? null : chart.yscale[2] * Math.abs(factor)];
+        out.converted = true;
       }
 
-      out.series = meta.series.map(function (s) {
+      out.series = chart.series.map(function (s) {
         var copy = {};
         Object.keys(s).forEach(function (k) { copy[k] = s[k]; });
         copy.unit = to;
@@ -223,7 +350,55 @@
     }
 
 
-    function loadArchiveIndex() {
+    /* Returns [minimum, maximum, step] for the y axis of `chart`, worked out from the
+       readings that `chart` holds, at the unit system the chart is in. The ends and
+       the step that display.json sets are kept, as scale() keeps them, and `steps` is
+       the number of steps the axis has room for. */
+    function yAxis(chart, steps) {
+      var fixed = (chart.yscale || [null, null, null]).slice();
+      var lo = null, hi = null, bars = false;
+
+      chart.series.forEach(function (s) {
+        var top = null, bottom = null;
+        for (var i = 0; i < s.values.length; i++) {
+          var v = s.values[i];
+          if (v === null || v === undefined) continue;
+          /* A vector is as long as the speed on the axis, in both directions from
+             zero, as weeplot draws it. */
+          var a = s.type === 'vector' ? -Math.abs(v) : v;
+          var b = s.type === 'vector' ? Math.abs(v) : v;
+          if (bottom === null || a < bottom) bottom = a;
+          if (top === null || b > top) top = b;
+        }
+        if (top === null) return;
+        if (s.type === 'vector') {
+          bottom = -Math.max(top, -bottom);
+          top = -bottom;
+        }
+        if (s.type === 'bar') bars = true;
+        lo = lo === null ? bottom : Math.min(lo, bottom);
+        hi = hi === null ? top : Math.max(hi, top);
+      });
+      if (lo === null) return [0, 1, 0.2];
+
+      /* A bar starts at zero. An axis that starts higher makes a small total look
+         like a big one. */
+      if (bars) {
+        lo = Math.min(lo, 0);
+        hi = Math.max(hi, 0);
+      }
+
+      /* After a conversion, the ends that display.json sets are no longer round, e.g.,
+         32 and 104 degree_F. They then only widen the readings, and scale() rounds. */
+      if (chart.converted) {
+        if (fixed[0] !== null) lo = Math.min(lo, fixed[0]);
+        if (fixed[1] !== null) hi = Math.max(hi, fixed[1]);
+        fixed[0] = fixed[1] = null;
+      }
+      return scale(lo, hi, fixed, steps);
+    }
+
+    function loadIndex() {
       if (archiveIndex) return Promise.resolve(archiveIndex);
       return fetch(dataDir + '/archive/index.json', { cache: 'no-cache' })
         .then(function (r) { return r.ok ? r.json() : null; })
@@ -425,17 +600,28 @@
           var EXTRA = ['vector_x', 'vector_y', 'directions', 'min', 'max'];
 
           var template = present[0];
+          var look = chartLook(group);
           var series = template.series.map(function (s) {
+            var own = look.series[s.obs_type] || {};
+            var type = own.plot_type || look.plot_type;
+            /* A vector needs the components that the file holds for a wind vector. A
+               file without them gets a line of the speeds instead, e.g., for a type
+               of a station that has no wind direction. */
+            if (type === 'vector' && !s.vector_x) type = 'line';
             var out = {
               obs_type: s.obs_type,
-              label: s.label,
-              plot_type: s.plot_type || 'line',
+              label: own.label || labelOf(s.obs_type),
+              type: type,
               time: [],
               values: new Array(slots).fill(null)
             };
-            if (s.vector_rotate !== undefined) out.vector_rotate = s.vector_rotate;
-            /* barWidthPx needs `aggregate_interval` for a bar that totals more than
-               one interval. */
+            if (type === 'vector') {
+              out.vector_rotate = own.vector_rotate !== undefined
+                ? own.vector_rotate : look.vector_rotate;
+            }
+            /* A series that totals more than one interval, e.g., hourly rain in a
+               file of five minutes, needs `aggregate_interval` to say how many
+               intervals each of its readings covers. */
             if (s.aggregate_interval) out.aggregate_interval = s.aggregate_interval;
             EXTRA.forEach(function (key) {
               if (s[key]) out[key] = new Array(slots).fill(null);
@@ -466,32 +652,19 @@
           for (var k = 0; k < slots; k++) times[k] = start + k * interval;
           series.forEach(function (s) { s.time = times; });
 
-          /* The joined y axis covers the widest range of the files' axes, and takes
-             the step of the first file that has one. `== null` also catches a value
-             that is missing, e.g., the step of a yscale with two values. */
-          var yscale = null;
-          present.forEach(function (file) {
-            if (!file.yscale) return;
-            if (!yscale) { yscale = file.yscale.slice(); return; }
-            if (file.yscale[0] != null && (yscale[0] == null || file.yscale[0] < yscale[0])) {
-              yscale[0] = file.yscale[0];
-            }
-            if (file.yscale[1] != null && (yscale[1] == null || file.yscale[1] > yscale[1])) {
-              yscale[1] = file.yscale[1];
-            }
-            if (yscale[2] == null) yscale[2] = file.yscale[2];
-          });
-
           var out = {
             name: group,
+            title: series.map(function (s) { return s.label; }).join(', '),
             start: start,
             stop: start + slots * interval,
             unit: template.unit,
             unit_label: unitLabel(template.unit),
             aggregate_interval: interval,
+            /* The ends and the step of the y axis that display.json sets, where
+               each can be null. yAxis() works out the others from the readings. */
+            yscale: look.yscale.slice(),
             series: series
           };
-          if (yscale) out.yscale = yscale;
           if (daynight) out.daynight = daynight;
           return out;
         })();
@@ -499,30 +672,86 @@
     }
 
 
-    function loadManifest() {
-      if (manifest) return Promise.resolve(manifest);
-      return fetch(dataDir + '/skin.json', { cache: 'no-cache' })
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .then(function (json) {
-          manifest = json || {};
-          if (manifest.units) unitChoices = manifest.units;
-          return manifest;
-        })
-        .catch(function () { manifest = {}; return manifest; });
+    /* Reads a JSON file, and returns a promise of its contents, or of `empty` where
+       the file is missing or is not JSON. A skin without display.json still draws its
+       charts, from the defaults. */
+    function fetchJSON(url, empty) {
+      return fetch(url, { cache: 'no-cache' })
+        .then(function (r) { return r.ok ? r.json() : empty; })
+        .catch(function () { return empty; });
+    }
+
+    function loadMeta() {
+      if (metaFile) return Promise.resolve(metaFile);
+      return fetchJSON(dataDir + '/meta.json', {}).then(function (json) {
+        metaFile = json;
+        return json;
+      });
+    }
+
+    function loadDisplay() {
+      if (shown) return Promise.resolve(shown);
+      return fetchJSON(displayFile, {}).then(function (json) {
+        shown = json;
+        return json;
+      });
+    }
+
+    /* `loading` is the promise of a load() that is under way. The page calls load()
+       from more than one place at start-up, and the files should be fetched once. */
+    var loading = null;
+
+    /* Reads meta.json, display.json and data/archive/index.json, and puts the unit
+       table together from the first two. */
+    function load() {
+      if (loading) return loading;
+      loading = Promise.all([loadMeta(), loadDisplay(), loadIndex()]).then(function (all) {
+        if (all[0].units || all[1].units) {
+          unitChoices = Object.assign({}, all[0].units, all[1].units);
+        }
+        /* Without display.json, every plot group in the archive is a chart. */
+        if (!all[1].plot_groups) {
+          all[1].plot_groups = (all[2].groups || []).map(function (g) { return g.name; });
+        }
+      });
+      return loading;
+    }
+
+    /* Returns what display.json says about plot group `group`: the type of its
+       chart, the ends and step of its y axis, the angle of its vector arrows, and in
+       `series` what it says about a series, by observation type. A plot group that
+       display.json does not list is a line chart. */
+    function chartLook(group) {
+      var listed = ((shown && shown.charts) || {})[group] || {};
+      return {
+        plot_type: listed.plot_type || 'line',
+        yscale: listed.yscale || [null, null, null],
+        vector_rotate: listed.vector_rotate || 0,
+        series: listed.series || {}
+      };
+    }
+
+    /* Returns the label of the observation type `obsType` in the language of the
+       report, or the type itself where display.json has none. */
+    function labelOf(obsType) {
+      var labels = (shown && shown.labels) || {};
+      return labels[obsType] || obsType;
     }
 
     function reset() {
       archiveCache.clear();
       archiveIndex = null;
-      manifest = null;
+      shown = null;
+      loading = null;
     }
 
     return {
-      loadManifest: loadManifest,
-      loadIndex: loadArchiveIndex,
+      load: load,
+      display: function () { return shown || {}; },
       index: function () { return archiveIndex; },
       hasFiles: function (group, from, to) { return !!filesFor(group, from, to); },
-      plot: windowFromArchive,
+      chart: windowFromArchive,
+      yAxis: yAxis,
       reset: reset,
       unitTable: unitTable,
       inChosenUnit: inChosenUnit,
@@ -533,5 +762,5 @@
     };
   }
 
-  root.WeeWXJSON = { create: create };
+  root.WeeWXJSON = { create: create, scale: scale };
 })(window);
