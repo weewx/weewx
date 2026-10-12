@@ -77,12 +77,33 @@
     return (at0 && at1) ? [at1.value - at0.value, at0.value] : [1, 0];
   }
 
-  /* Returns the number of decimals for the axis labels. The answer is 1 where the
-     unit shown is more than twice the metric unit, e.g., inch against mm, and 0
-     otherwise. Without a decimal, axis labels 10 mm apart would read 0, 0, 1, 1 in
-     inches. */
-  function digitsFor(back) {
-    return back[0] < 0.5 ? 1 : 0;
+  /* Returns the smallest step of 1, 2 or 5 times a power of ten that is at least
+     `atLeast`. */
+  function niceStep(atLeast) {
+    var power = Math.pow(10, Math.floor(Math.log10(atLeast)));
+    var multiples = [1, 2, 5, 10];
+    for (var i = 0; i < multiples.length; i++) {
+      if (multiples[i] * power >= atLeast * (1 - 1e-9)) return multiples[i] * power;
+    }
+    return 10 * power;
+  }
+
+  /* Lays out a value axis for the metric values from `low` to `high` (`low` <= 0 <=
+     `high`). `factor` converts a metric value into the unit shown. The gridlines lie
+     a round step of the unit shown apart, at most `maxSteps` of them, and the first
+     one is on the zero of the metric unit. Returns the step in the metric unit and
+     the ends of the axis, which lie on gridlines. */
+  function layoutAxis(low, high, factor, maxSteps) {
+    var step = niceStep((high - low) * factor / maxSteps) / factor;
+    var min = Math.floor(low / step + 1e-9) * step;
+    var max = Math.ceil(high / step - 1e-9) * step;
+    return { min: min, max: max, step: step };
+  }
+
+  /* Returns the number of decimals that make the labels `step` apart differ, where
+     `step` is in the unit shown. */
+  function digitsOf(step) {
+    return Math.max(0, Math.ceil(-Math.log10(step) - 1e-9));
   }
 
   /* Returns a function that writes a metric value in the unit shown, with `digits`
@@ -129,13 +150,20 @@
     var tMax = Math.max.apply(null, real(temps).concat([0]));
     var tMin = Math.min.apply(null, real(temps).concat([0]));
     var rMax = Math.max.apply(null, real(rains).concat([0]));
-    var top = Math.max(tMax, rMax / 2) * 1.1 || 1;
-    var bottom = Math.min(tMin, 0) * 1.1;
 
     var backT = backOf('degree_C', 'outTemp', DATA.tempBack);
     var backR = backOf('mm', 'rain', DATA.rainBack);
     var tempUnit = unitLabel(DATA.tempUnit, 'outTemp', DATA.tempLabel);
     var rainUnit = unitLabel(DATA.rainUnit, 'rain', DATA.rainLabel);
+
+    /* The two axes have the same number of gridlines, and the gridlines of one lie on
+       those of the other. The rainfall axis runs over twice the metric range of the
+       temperature axis. The round steps are those of the temperature axis; the
+       rainfall labels are round only where the unit shown keeps the two to one, as
+       degree_C and mm do. The ends of the axes lie on gridlines. */
+    var top = Math.max(tMax, rMax / 2) * 1.05 || 1;
+    var axis = layoutAxis(Math.min(tMin, 0), top, backT[0], 8);
+    var rainStep = axis.step * 2;
 
     var family = getComputedStyle(document.body).fontFamily;
     var axisColor = themeColor('--chart-axis', '#8397a7');
@@ -192,23 +220,25 @@
       },
       yAxis: [
         {
-          type: 'value', min: bottom, max: top,
+          type: 'value', min: axis.min, max: axis.max + axis.step * 1e-6,
+          interval: axis.step,
           name: tempUnit,
           nameTextStyle: { color: tempColor, fontFamily: family, fontSize: 12 },
           axisLine: { show: false }, axisTick: { show: false },
           splitLine: { lineStyle: { color: gridColor } },
           axisLabel: { color: tempColor, fontFamily: family, fontSize: 12,
-                       formatter: scaled(backT, digitsFor(backT)) }
+                       formatter: scaled(backT, digitsOf(axis.step * backT[0])) }
         },
         {
           /* The rainfall axis, at twice the scale of the temperature axis. */
-          type: 'value', min: bottom * 2, max: top * 2,
+          type: 'value', min: axis.min * 2, max: axis.max * 2 + rainStep * 1e-6,
+          interval: rainStep,
           name: rainUnit,
           nameTextStyle: { color: rainColor, fontFamily: family, fontSize: 12 },
           axisLine: { show: false }, axisTick: { show: false },
           splitLine: { show: false },
           axisLabel: { color: rainColor, fontFamily: family, fontSize: 12,
-                       formatter: scaled(backR, digitsFor(backR)) }
+                       formatter: scaled(backR, digitsOf(rainStep * backR[0])) }
         }
       ],
       series: series
@@ -247,7 +277,14 @@
 
     var backR = backOf('mm', 'rain', DATA.rainBack);
     var rainUnit = unitLabel(DATA.rainUnit, 'rain', DATA.rainLabel);
-    var label = scaled(backR, digitsFor(backR));
+
+    /* Rainfall and evapotranspiration are both zero-based, so the axis can start
+       from the extremes, with a little room above and below. */
+    var extent = rain.concat(lost, kept).filter(function (v) { return v !== null; });
+    var axis = layoutAxis(Math.min.apply(null, extent.concat([0])) * 1.03,
+                          Math.max.apply(null, extent.concat([0])) * 1.03 || 1,
+                          backR[0], 8);
+    var label = scaled(backR, digitsOf(axis.step * backR[0]));
 
     var family = getComputedStyle(document.body).fontFamily;
     var axisColor = themeColor('--chart-axis', '#8397a7');
@@ -269,7 +306,7 @@
         formatter: function (params) {
           var rows = params.map(function (p) {
             return '<span style="color:' + p.color + '">●</span> ' + p.seriesName
-              + ': ' + label(Math.abs(p.value)) + (rainUnit ? ' ' + rainUnit : '');
+              + ': ' + scaled(backR, 1)(Math.abs(p.value)) + (rainUnit ? ' ' + rainUnit : '');
           });
           return params[0].axisValueLabel + '<br>' + rows.join('<br>');
         }
@@ -281,7 +318,8 @@
         axisLabel: { color: themeColor('--ink-muted', '#5c7183'), fontFamily: family, fontSize: 12 }
       },
       yAxis: {
-        type: 'value',
+        type: 'value', min: axis.min, max: axis.max + axis.step * 1e-6,
+        interval: axis.step,
         name: rainUnit,
         nameTextStyle: { color: axisColor, fontFamily: family, fontSize: 12 },
         axisLine: { show: false }, axisTick: { show: false },
