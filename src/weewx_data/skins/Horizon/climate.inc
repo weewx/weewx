@@ -172,7 +172,7 @@
 #if $has_temp or $has_rain
 <section class="panel wide" data-live-panel="climate-diagram">
   <div class="panel-head">
-    <h2>$gettext("The year's shape")</h2>
+    <h2>$climate_year $gettext("Walter-Lieth diagram")</h2>
   </div>
   <div class="panel-body">
     <div id="climate-diagram" class="climate-chart"></div>

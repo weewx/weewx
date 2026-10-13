@@ -556,10 +556,10 @@ The climatological days use their metric definitions, e.g., a summer day reaches
 25 °C. On a page in US units the thresholds are converted, so the summer day's
 threshold reads 77 °F.
 
-The climate diagram is always laid out in °C and mm, because Walter and Lieth's
-ratio of 20 mm to 10 °C is defined in those units. In other units only the axis
-labels change, so the labels are the equivalents of round values in °C and mm,
-e.g., 50 and 68 °F for 10 and 20 °C.
+The climate diagram is laid out in °C and mm, because Walter and Lieth's ratio of 20 mm
+to 10 °C is defined in those units. Where *Default* is selected in the unit picker,
+the axis labels and the tooltip are in °C and mm as well, whatever the unit system
+of the report. Where a unit system is selected, they are in the units of that system.
 
 The water balance appears only where the station has rain and
 evapotranspiration (`ET`) data. WeeWX calculates `ET` from solar radiation,

@@ -103,11 +103,22 @@
   /* -------------------------------------------------------- climate diagram */
 
   /* The climate diagram of Walter and Lieth (see climate.inc). Both axes are laid
-     out in degree_C and mm, the units of DATA.temp and DATA.rain. Only the axis
-     labels and the tooltip are converted to the unit shown, through backOf(). */
+     out in degree_C and mm, the units of DATA.temp and DATA.rain. Where the reader
+     has chosen no unit system, the axis labels and the tooltip are in degree_C and
+     mm as well, whatever unit system the report uses. Where the reader has chosen a
+     unit system, they are converted to it, through backOf(). */
   var diagram = null;
 
-  function drawDiagram() {
+  /* Returns the label of the unit the reader chose for a value in `metricUnit`, or
+     `metricLabel` where the reader chose no unit system or one that uses `metricUnit`. */
+  function diagramLabel(metricUnit, obs, metricLabel) {
+    if (!CFG.units || !CFG.units.chosen()) return metricLabel;
+    if (!CFG.units.target(obs, metricUnit)) return metricLabel;
+    var out = CFG.units.convert(1, metricUnit, obs);
+    return out ? out.label : metricLabel;
+  }
+
+  function drawWalterLieth() {
     var host = document.getElementById('climate-diagram');
     if (!host || !window.echarts) return;
     if (!DATA.temp && !DATA.rain) return;
@@ -132,10 +143,14 @@
     var top = Math.max(tMax, rMax / 2) * 1.1 || 1;
     var bottom = Math.min(tMin, 0) * 1.1;
 
-    var backT = backOf('degree_C', 'outTemp', DATA.tempBack);
-    var backR = backOf('mm', 'rain', DATA.rainBack);
-    var tempUnit = unitLabel(DATA.tempUnit, 'outTemp', DATA.tempLabel);
-    var rainUnit = unitLabel(DATA.rainUnit, 'rain', DATA.rainLabel);
+    /* Where the reader has chosen no unit system ('Default'), the diagram uses
+       METRICWX: degree_C and mm. Where the reader has chosen one, the diagram shows
+       that unit system. backOf() answers [1, 0] where no unit system is chosen, as
+       its last argument says, and where the one chosen uses degree_C or mm itself. */
+    var backT = backOf('degree_C', 'outTemp', [1, 0]);
+    var backR = backOf('mm', 'rain', [1, 0]);
+    var tempUnit = diagramLabel('degree_C', 'outTemp', '°C');
+    var rainUnit = diagramLabel('mm', 'rain', 'mm');
 
     var family = getComputedStyle(document.body).fontFamily;
     var axisColor = themeColor('--chart-axis', '#8397a7');
@@ -176,10 +191,10 @@
         formatter: function (params) {
           var rows = params.map(function (p) {
             var bar = p.seriesType === 'bar';
-            var back = bar ? backR : backT;
             var unit = bar ? rainUnit : tempUnit;
             return '<span style="color:' + p.color + '">●</span> ' + p.seriesName
-              + ': ' + scaled(back, 1)(p.value) + (unit ? ' ' + unit : '');
+              + ': ' + scaled(bar ? backR : backT, 1)(p.value)
+              + (unit ? ' ' + unit : '');
           });
           return params[0].axisValueLabel + '<br>' + rows.join('<br>');
         }
@@ -511,7 +526,7 @@
     DATA = readData();
     if (!DATA) return;
     markHeatTabs();
-    drawDiagram();
+    drawWalterLieth();
     drawWater();
     drawHeatmap();
   }
