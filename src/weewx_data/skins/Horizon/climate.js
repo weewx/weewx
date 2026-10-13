@@ -100,6 +100,22 @@
     return { min: min, max: max, step: step };
   }
 
+  /* Returns a metric axis whose five intervals and endpoints are round values in
+     the unit shown. Both diagram axes use five intervals so their ticks share
+     gridlines, but each axis covers only its own data. */
+  function diagramAxis(low, high, back) {
+    low = low * back[0] + back[1];
+    high = high * back[0] + back[1];
+    var step = niceStep((high - low) / 5);
+    var min = Math.floor(low / step + 1e-9) * step;
+    while (min + 5 * step < high - step * 1e-9) {
+      step = niceStep(step * 1.01);
+      min = Math.floor(low / step + 1e-9) * step;
+    }
+    return { min: (min - back[1]) / back[0],
+             max: (min + 5 * step - back[1]) / back[0], step: step / back[0] };
+  }
+
   /* Returns the number of decimals that make the labels `step` apart differ, where
      `step` is in the unit shown. */
   function digitsOf(step) {
@@ -123,9 +139,8 @@
 
   /* -------------------------------------------------------- climate diagram */
 
-  /* The climate diagram of Walter and Lieth (see climate.inc). Both axes are laid
-     out in degree_C and mm, the units of DATA.temp and DATA.rain. Only the axis
-     labels and the tooltip are converted to the unit shown, through backOf(). */
+  /* The monthly temperature and rainfall keep their metric values. Each axis is
+     scaled independently in the unit shown, through backOf(). */
   var diagram = null;
 
   function drawDiagram() {
@@ -143,9 +158,6 @@
     var temps = (DATA.temp || []).slice();
     var rains = (DATA.rain || []).slice();
 
-    /* The temperature axis reaches up to the warmest month's mean or to half the
-       wettest month's rainfall, whichever is higher, because the rainfall axis at
-       twice the scale must hold the wettest month's bar. */
     var real = function (list) { return list.filter(function (v) { return v !== null; }); };
     var tMax = Math.max.apply(null, real(temps).concat([0]));
     var tMin = Math.min.apply(null, real(temps).concat([0]));
@@ -156,14 +168,20 @@
     var tempUnit = unitLabel(DATA.tempUnit, 'outTemp', DATA.tempLabel);
     var rainUnit = unitLabel(DATA.rainUnit, 'rain', DATA.rainLabel);
 
-    /* The two axes have the same number of gridlines, and the gridlines of one lie on
-       those of the other. The rainfall axis runs over twice the metric range of the
-       temperature axis. The round steps are those of the temperature axis; the
-       rainfall labels are round only where the unit shown keeps the two to one, as
-       degree_C and mm do. The ends of the axes lie on gridlines. */
-    var top = Math.max(tMax, rMax / 2) * 1.05 || 1;
-    var axis = layoutAxis(Math.min(tMin, 0), top, backT[0], 8);
-    var rainStep = axis.step * 2;
+    var tempAxis = diagramAxis(tMin * 1.05, tMax * 1.05 || 1, backT);
+    var rainAxis = diagramAxis(0, rMax * 1.05 || 1, backR);
+
+    /* With independent axes, a bar below the temperature line no longer identifies
+       a dry month. Shade the months that satisfy Walter and Lieth's criterion in
+       the original degree_C and mm, including months with no rainfall. Missing
+       observations cannot classify a month as dry. */
+    var dryMonths = [];
+    temps.forEach(function (temp, i) {
+      if (temp !== null && temp !== undefined && rains[i] !== null
+          && rains[i] !== undefined && rains[i] < 2 * temp) {
+        dryMonths.push([{ xAxis: i }, { xAxis: i }]);
+      }
+    });
 
     var family = getComputedStyle(document.body).fontFamily;
     var axisColor = themeColor('--chart-axis', '#8397a7');
@@ -176,7 +194,13 @@
       series.push({
         name: DATA.rainText || 'Rainfall',
         type: 'bar', yAxisIndex: 1, data: rains,
-        itemStyle: { color: rainColor }, barMaxWidth: 40, animation: false
+        itemStyle: { color: rainColor }, barMaxWidth: 40, animation: false,
+        /* A bar's markArea covers the whole category, including zero-height bars. */
+        markArea: {
+          silent: true, label: { show: false },
+          itemStyle: { color: themeColor('--sun', '#a8761c'), opacity: 0.15 },
+          data: dryMonths
+        }
       });
     }
     if (DATA.temp) {
@@ -220,25 +244,24 @@
       },
       yAxis: [
         {
-          type: 'value', min: axis.min, max: axis.max + axis.step * 1e-6,
-          interval: axis.step,
+          type: 'value', min: tempAxis.min, max: tempAxis.max + tempAxis.step * 1e-6,
+          interval: tempAxis.step,
           name: tempUnit,
           nameTextStyle: { color: tempColor, fontFamily: family, fontSize: 12 },
           axisLine: { show: false }, axisTick: { show: false },
           splitLine: { lineStyle: { color: gridColor } },
           axisLabel: { color: tempColor, fontFamily: family, fontSize: 12,
-                       formatter: scaled(backT, digitsOf(axis.step * backT[0])) }
+                       formatter: scaled(backT, digitsOf(tempAxis.step * backT[0])) }
         },
         {
-          /* The rainfall axis, at twice the scale of the temperature axis. */
-          type: 'value', min: axis.min * 2, max: axis.max * 2 + rainStep * 1e-6,
-          interval: rainStep,
+          type: 'value', min: rainAxis.min, max: rainAxis.max + rainAxis.step * 1e-6,
+          interval: rainAxis.step,
           name: rainUnit,
           nameTextStyle: { color: rainColor, fontFamily: family, fontSize: 12 },
           axisLine: { show: false }, axisTick: { show: false },
           splitLine: { show: false },
           axisLabel: { color: rainColor, fontFamily: family, fontSize: 12,
-                       formatter: scaled(backR, digitsOf(rainStep * backR[0])) }
+                       formatter: scaled(backR, digitsOf(rainAxis.step * backR[0])) }
         }
       ],
       series: series

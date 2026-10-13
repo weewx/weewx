@@ -942,10 +942,10 @@ def _unit_choices(converter):
     # in 'wanted'. Asking weewx.units.convert() for a pair it cannot convert logs a
     # DEBUG line, and most pairs cannot be converted.
     #
-    # The Walter and Lieth diagram on the climate page is always drawn in degree_C and
-    # mm, because its 2:1 ratio is defined in those units. On a US station the
-    # values arrive in degree_F and inch. So 'convert' must carry the rows from
-    # those units to metric, whatever units the other charts show.
+    # The climate page writes monthly temperature and rainfall in degree_C and mm
+    # to identify dry months independently of the displayed units. A US report needs
+    # rows in 'convert' from those metric units to degree_F and inch for the chart
+    # labels and tooltips.
     convert = {}
     for from_unit in sorted(wanted):
         pairs = {}

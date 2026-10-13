@@ -26,6 +26,10 @@ come from the daily summaries again, as before.
 
 ### 5.x.y dd-Mmm-YYYY
 
+Fixed the axes of Horizon's climate charts to use round steps in the displayed
+units. Monthly rainfall and temperature use separate scales, with dry months
+shaded. [PR #1163](https://github.com/weewx/weewx/pull/1163).
+
 Fixed a `TypeError` in aggregate type `vecavg` when there is no wind direction
 over an interval. [PR #1155](https://github.com/weewx/weewx/pull/1155).
 

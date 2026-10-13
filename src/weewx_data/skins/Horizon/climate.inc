@@ -135,15 +135,15 @@
 
 ## --------------------------------------------------------------- climate-diagram
 ##
-## A climate diagram after Walter and Lieth: each month's mean temperature as a line
-## and its rainfall as bars. The rainfall axis has 2 mm for each degree_C, so a month
-## whose bar stays below the line is dry.
+## Each month's mean temperature is a line and its rainfall is a bar. The axes use
+## separate scales, and climate.js shades dry months using Walter and Lieth's
+## criterion: rainfall in mm is less than twice the mean temperature in degree_C.
 #set $has_temp = $getVar('year.outTemp.has_data', False)
 #set $has_rain = $getVar('year.rain.has_data', False)
 ## The monthly figures go into '$climate_data'. A list is None where its type has no
 ## data, and climate.js then leaves that series out. The figures are in degree_C and
-## mm whatever the report unit system, because the diagram's 2:1 ratio holds only in
-## those units.
+## mm whatever the report unit system, because the dry-month criterion is defined
+## in those units.
 #set $month_temp = [m.outTemp.avg.degree_C.raw for m in $months_of_year] if $has_temp else None
 #set $month_low = [m.outTemp.min.degree_C.raw for m in $months_of_year] if $has_temp else None
 #set $month_high = [m.outTemp.max.degree_C.raw for m in $months_of_year] if $has_temp else None
@@ -176,6 +176,11 @@
   </div>
   <div class="panel-body">
     <div id="climate-diagram" class="climate-chart"></div>
+    <p class="climate-note">$gettext("Rainfall and temperature use separate scales.")#slurp
+  #if $has_temp and $has_rain
+ $gettext("Shaded months are dry.")#slurp
+  #end if
+</p>
   </div>
 </section>
 #end if

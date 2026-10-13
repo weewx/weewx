@@ -556,10 +556,11 @@ The climatological days use their metric definitions, e.g., a summer day reaches
 25 °C. On a page in US units the thresholds are converted, so the summer day's
 threshold reads 77 °F.
 
-The climate diagram is always laid out in °C and mm, because Walter and Lieth's
-ratio of 20 mm to 10 °C is defined in those units. In other units only the axis
-labels change, so the labels are the equivalents of round values in °C and mm,
-e.g., 50 and 68 °F for 10 and 20 °C.
+The climate diagram shows monthly mean temperature and rainfall on separate
+scales, with round steps in the units you choose. Shaded months are dry by
+Walter and Lieth's criterion: rainfall in mm is less than twice the mean
+temperature in °C. A rainfall bar below the temperature line does not identify
+a dry month, because the axes have separate scales.
 
 The water balance appears only where the station has rain and
 evapotranspiration (`ET`) data. WeeWX calculates `ET` from solar radiation,
