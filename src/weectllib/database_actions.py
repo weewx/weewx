@@ -350,11 +350,12 @@ def reconfigure_database(config_dict,
     ans = y_or_n("Are you sure you wish to proceed (y/n)? ", noprompt=no_confirm)
     if ans == 'y':
         t1 = time.time()
-        weewx.manager.reconfig(manager_dict['database_dict'],
-                               new_database_dict,
-                               new_unit_system=target_unit_system,
-                               new_schema=manager_dict['schema'],
-                               dry_run=dry_run)
+        # reconfig() initializes the destination even during a dry run.
+        if not dry_run:
+            weewx.manager.reconfig(manager_dict['database_dict'],
+                                   new_database_dict,
+                                   new_unit_system=target_unit_system,
+                                   new_schema=manager_dict['schema'])
         tdiff = time.time() - t1
         print("Database '%s' copied to '%s' in %.2f seconds."
               % (manager_dict['database_dict']['database_name'],
@@ -368,7 +369,8 @@ def transfer_database(config_dict,
                       dest_binding=None,
                       db_binding='wx_binding',
                       dry_run=False,
-                      no_confirm=False):
+                      no_confirm=False,
+                      db_filename=None):
     """Transfer 'archive' data from one database to another
 
     Args:
@@ -378,6 +380,7 @@ def transfer_database(config_dict,
             'wx_binding'.
         dry_run (bool): True to not actually do anything. Default is False.
         no_confirm (bool): True to not ask for confirmation. Default is False.
+        db_filename (str|None): Override the source SQLite filename. Default is None.
     """
 
     # do we have enough to go on, must have a dest binding
@@ -387,6 +390,10 @@ def transfer_database(config_dict,
 
     # get manager dict for our source binding
     src_manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, db_binding)
+    if db_filename is not None:
+        # The destination may use the same binding, so keep its settings separate.
+        src_manager_dict['database_dict'] = dict(src_manager_dict['database_dict'])
+        src_manager_dict['database_dict']['database_name'] = db_filename
     # get manager dict for our dest binding
     try:
         dest_manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, dest_binding)
