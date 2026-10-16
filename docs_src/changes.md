@@ -19,7 +19,7 @@ come from the daily summaries again, as before.
 
 Added `--db-filename` to `weectl database` to select an alternate SQLite file
 without editing the configuration. `reconfigure --dry-run` no longer creates
-the destination database. [Issue #1164](https://github.com/weewx/weewx/issues/1164).
+the destination database. [PR #1165](https://github.com/weewx/weewx/pull/1165).
 
 Fixed a `TypeError` in aggregate type `vecavg` when there is no wind direction
 over an interval. [PR #1155](https://github.com/weewx/weewx/pull/1155).
