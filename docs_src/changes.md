@@ -3,6 +3,12 @@ WeeWX change history
 
 ### 5.6.0
 
+Added `--db-filename` to `weectl database` to select an alternate SQLite file
+without editing the configuration. Dry runs of `reconfigure` and `transfer`
+no longer create destination databases. `reconfigure` now checks the source
+before creating or deleting the destination.
+[PR #1165](https://github.com/weewx/weewx/pull/1165).
+
 Improved the performance of `weewx.xtypes.ArchiveTable.get_series()` for
 aggregated series (such as hourly aggregation over a long timespan). Instead
 of issuing one SQL query per aggregation bucket, it now fetches the archive
@@ -16,10 +22,6 @@ come from the daily summaries again, as before.
 
 
 ### 5.x.y dd-Mmm-YYYY
-
-Added `--db-filename` to `weectl database` to select an alternate SQLite file
-without editing the configuration. `reconfigure --dry-run` no longer creates
-the destination database. [PR #1165](https://github.com/weewx/weewx/pull/1165).
 
 Fixed a `TypeError` in aggregate type `vecavg` when there is no wind direction
 over an interval. [PR #1155](https://github.com/weewx/weewx/pull/1155).

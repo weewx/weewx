@@ -306,6 +306,14 @@ def reconfigure_database(config_dict,
     # Now modify the database name
     new_database_dict['database_name'] = manager_dict['database_dict']['database_name'] + '_new'
 
+    # Get the unit system of the old archive:
+    with weewx.manager.Manager.open(manager_dict['database_dict']) as old_dbmanager:
+        old_unit_system = old_dbmanager.std_unit_system
+
+    if old_unit_system is None:
+        print("Old database has not been initialized. Nothing to be done.")
+        return
+
     # First check and see if the new database already exists. If it does, check
     # with the user whether it's ok to delete it.
     try:
@@ -320,14 +328,6 @@ def reconfigure_database(config_dict,
         else:
             print("Nothing done.")
             return
-
-    # Get the unit system of the old archive:
-    with weewx.manager.Manager.open(manager_dict['database_dict']) as old_dbmanager:
-        old_unit_system = old_dbmanager.std_unit_system
-
-    if old_unit_system is None:
-        print("Old database has not been initialized. Nothing to be done.")
-        return
 
     # Get the unit system of the new archive:
     try:
@@ -434,7 +434,6 @@ def transfer_database(config_dict,
             print("Nothing done. Aborting.")
             return
 
-        # not a dry run, actually do the transfer
         ans = y_or_n("Transfer %s records from source database '%s' "
                      "to destination database '%s' (y/n)? "
                      % (num_recs, src_manager.database_name,
@@ -442,6 +441,10 @@ def transfer_database(config_dict,
                      noprompt=no_confirm)
         if ans == 'n':
             print("Nothing done.")
+            return
+
+        if dry_run:
+            print("Dry run: no records transferred.")
             return
 
         t1 = time.time()
@@ -455,18 +458,17 @@ def transfer_database(config_dict,
                 print("Transferring, this may take a while.... ")
                 sys.stdout.flush()
 
-                if not dry_run:
-                    # This could generate a *lot* of log entries. Temporarily disable logging
-                    # for events at or below INFO
-                    logging.disable(logging.INFO)
+                # This could generate a *lot* of log entries. Temporarily disable logging
+                # for events at or below INFO
+                logging.disable(logging.INFO)
 
-                    # do the transfer, should be quick as it's done as a
-                    # single transaction
-                    nrecs = dest_manager.addRecord(src_manager.genBatchRecords(),
-                                                   progress_fn=weewx.manager.show_progress)
+                # do the transfer, should be quick as it's done as a
+                # single transaction
+                nrecs = dest_manager.addRecord(src_manager.genBatchRecords(),
+                                               progress_fn=weewx.manager.show_progress)
 
-                    # Remove the temporary restriction
-                    logging.disable(logging.NOTSET)
+                # Remove the temporary restriction
+                logging.disable(logging.NOTSET)
 
                 tdiff = time.time() - t1
                 print("\nCompleted.")

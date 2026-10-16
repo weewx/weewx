@@ -184,9 +184,9 @@ Guide_ for step-by-step instructions that use this option.
 This action is useful for moving your database from one type of database to
 another, such as from SQLite to MySQL. To transfer between database types, you
 must have two bindings specified in your `weewx.conf` configuration file. One
-will serve as the source, the other as the destination. Specify the source binding with option
-`--binding` (default `wx_binding`), the destination binding with option
-`--dest-binding` (required).
+will serve as the source, the other as the destination. Specify the source
+binding with option `--binding` (default `wx_binding`), the destination binding
+with option `--dest-binding` (required).
 
 To copy an alternate SQLite file into the database configured for `wx_binding`:
 

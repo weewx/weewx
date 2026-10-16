@@ -15,6 +15,7 @@ import pytest
 
 import weectl
 import weectllib.database_cmd
+import weedb
 import weewx.manager
 
 
@@ -158,7 +159,10 @@ def test_reconfigure_file(config_dict, run_command, tmp_path, absolute, legacy, 
 
 
 @pytest.mark.parametrize('binding', ['wx_binding', 'other_binding'])
-def test_transfer_preserves_destination(config_dict, run_command, tmp_path, binding):
+@pytest.mark.parametrize('dry_run', [False, True])
+@pytest.mark.parametrize('destination_exists', [False, True])
+def test_transfer_preserves_destination(config_dict, run_command, tmp_path, binding,
+                                         dry_run, destination_exists):
     directory = tmp_path / 'archive'
     directory.mkdir()
     source_path = directory / 'old.sdb'
@@ -167,11 +171,52 @@ def test_transfer_preserves_destination(config_dict, run_command, tmp_path, bind
                            'usUnits INTEGER, interval INTEGER, outTemp REAL)')
         connection.execute('INSERT INTO archive VALUES (1470000000, 1, 5, 68.0)')
     source_bytes = source_path.read_bytes()
-    run_command(['transfer', '--binding=' + binding, '--dest-binding=wx_binding',
-                 '--db-filename=old.sdb', '-y'])
+    destination_path = directory / 'weewx.sdb'
+    if destination_exists:
+        with sqlite3.connect(str(destination_path)) as connection:
+            connection.execute('CREATE TABLE archive (dateTime INTEGER PRIMARY KEY, '
+                               'usUnits INTEGER, interval INTEGER, outTemp REAL)')
+            connection.execute('INSERT INTO archive VALUES (1470000300, 1, 5, 70.0)')
+        destination_bytes = destination_path.read_bytes()
+    args = ['transfer', '--binding=' + binding, '--dest-binding=wx_binding',
+            '--db-filename=old.sdb', '-y']
+    if dry_run:
+        args.append('--dry-run')
+    run_command(args)
     assert source_path.read_bytes() == source_bytes
-    with sqlite3.connect(str(directory / 'weewx.sdb')) as connection:
-        assert connection.execute('SELECT outTemp FROM archive').fetchall() == [(68.0,)]
+    if dry_run:
+        if destination_exists:
+            assert destination_path.read_bytes() == destination_bytes
+        else:
+            assert not destination_path.exists()
+    else:
+        with sqlite3.connect(str(destination_path)) as connection:
+            expected = [(68.0,), (70.0,)] if destination_exists else [(68.0,)]
+            assert connection.execute('SELECT outTemp FROM archive ORDER BY dateTime').fetchall() \
+                   == expected
+
+
+@pytest.mark.parametrize('source_exists', [False, True])
+@pytest.mark.parametrize('destination_exists', [False, True])
+def test_reconfigure_invalid_source(run_command, tmp_path, source_exists, destination_exists):
+    directory = tmp_path / 'archive'
+    directory.mkdir()
+    if source_exists:
+        with sqlite3.connect(str(directory / 'old.sdb')) as connection:
+            connection.execute('CREATE TABLE archive (dateTime INTEGER PRIMARY KEY, '
+                               'usUnits INTEGER, interval INTEGER, outTemp REAL)')
+    destination_path = directory / 'old.sdb_new'
+    if destination_exists:
+        destination_path.write_bytes(b'existing destination must not be deleted')
+    if source_exists:
+        run_command(['reconfigure', '--db-filename=old.sdb', '-y'])
+    else:
+        with pytest.raises(weedb.NoDatabaseError):
+            run_command(['reconfigure', '--db-filename=old.sdb', '-y'])
+    if destination_exists:
+        assert destination_path.read_bytes() == b'existing destination must not be deleted'
+    else:
+        assert not destination_path.exists()
 
 
 def test_cli_reconfigure(config_dict, tmp_path):
