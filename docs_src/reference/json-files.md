@@ -7,6 +7,25 @@ as the *Horizon* skin. This section documents the generated file formats.
 All files are written to `<HTML_ROOT>/<json_dest_dir>`, where `<json_dest_dir>`
 defaults to `./data`.
 
+## File format versions
+
+The files `meta.json`, `archive/index.json`, and `display.json` each have a
+top-level key, `version`, which holds the version of the format of that file as
+a string `"<major>.<minor>"`. Each file is versioned independently of the
+others. A program that reads one of these files can use the version to check
+that it understands the format.
+
+| File                 | Current version |
+|:---------------------|:----------------|
+| `meta.json`          | `1.0`           |
+| `archive/index.json` | `1.0`           |
+| `display.json`       | `1.0`           |
+
+The minor number is incremented when a change is backwards compatible, such as
+adding a new key. The major number is incremented when a change is not
+backwards compatible, such as removing or renaming a key, or changing its
+meaning.
+
 ## Directory layout
 
 ```
@@ -47,24 +66,28 @@ file does not already exist.
 
 ### Structure
 
-The top-level JSON object contains one key, **`units`** (*object*), with the
-unit definitions and conversion tables:
+The top-level JSON object contains the keys **`version`** and **`units`**:
 
-* **`groups`** (*object*): Maps each observation type (e.g. `outTemp`,
-  `barometer`, `windSpeed`) to its WeeWX unit group (e.g.
-  `group_temperature`, `group_pressure`, `group_speed`).
-* **`systems`** (*object*): Maps each standard unit system name (`US`,
-  `METRIC`, `METRICWX`) to a dictionary, which maps unit groups (e.g.,
-  `group_temperature`) to its corresponding unit in that system 
-  (e.g., `degree_C`).
-* **`convert`** (*object*): Maps a `from_unit` and `to_unit` pair to a
-  `[factor, offset]`. The client can then convert values with the formula
-  `to_value = from_value * factor + offset`.
+* **`version`** (*string*): The version of the format of this file, currently
+  `"1.0"`. See [File format versions](#file-format-versions).
+* **`units`** (*object*): The unit definitions and conversion tables:
+
+  * **`groups`** (*object*): Maps each observation type (e.g. `outTemp`,
+    `barometer`, `windSpeed`) to its WeeWX unit group (e.g.
+    `group_temperature`, `group_pressure`, `group_speed`).
+  * **`systems`** (*object*): Maps each standard unit system name (`US`,
+    `METRIC`, `METRICWX`) to a dictionary, which maps unit groups (e.g.,
+    `group_temperature`) to its corresponding unit in that system 
+    (e.g., `degree_C`).
+  * **`convert`** (*object*): Maps a `from_unit` and `to_unit` pair to a
+    `[factor, offset]`. The client can then convert values with the formula
+    `to_value = from_value * factor + offset`.
 
 ### Example `meta.json`
 
 ```json
 {
+  "version": "1.0",
   "units": {
     "groups": {
       "outTemp": "group_temperature",
@@ -148,6 +171,8 @@ resolutions across all tiers.
 
 ### Structure
 
+* **`version`** (*string*): The version of the format of this file, currently
+  `"1.0"`. See [File format versions](#file-format-versions).
 * **`first`** (*integer*): Unix epoch timestamp of the earliest record in the
   database.
 * **`last`** (*integer*): Unix epoch timestamp of the latest record in the
@@ -175,6 +200,7 @@ resolutions across all tiers.
 
 ```json
 {
+  "version": "1.0",
   "first": 1788890520,
   "last": 1791053520,
   "rebuilt": null,
@@ -517,6 +543,8 @@ information to arrange the web page.
 Because `display.json` contains only static display information, it is generated
 only once, during the first reporting cycle.
 
+* **`version`** (*string*): The version of the format of this file, currently
+  `"1.0"`. See [File format versions](#file-format-versions).
 * **`periods`** (*array of strings*): The available time spans, e.g.,
   `["day", "week", "month", "year"]`.
 * **`time_lengths`** (*object*): The length, in seconds, of the live view for
@@ -537,6 +565,7 @@ only once, during the first reporting cycle.
 
 ```json
 {
+  "version": "1.0",
   "periods": ["day", "week"],
   "time_lengths": {"day": 97200, "week": 604800},
   "plot_groups": ["tempdew", "rain"],

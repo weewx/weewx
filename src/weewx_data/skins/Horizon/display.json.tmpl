@@ -11,7 +11,7 @@
 ## weewx-json.js fetches display.json beside them. The file has one copy per report,
 ## so a report in another language has the labels in that language. For example:
 ##
-##   {"periods": ["day", "week"], "time_lengths": {"day": 97200, "week": 604800},
+##   {"version": "1.0", "periods": ["day", "week"], "time_lengths": {"day": 97200, "week": 604800},
 ##    "plot_groups": ["tempdew", "rain"], "telemetry_plot_groups": ["rx"],
 ##    "charts": {"rain": {"plot_type": "bar", "yscale": [null, null, null],
 ##                        "vector_rotate": 90,
@@ -30,6 +30,8 @@
 ## into the page by scripts.inc.
 #set $options = $DisplayOptions
 #set $display = {}
+## The version of the format of this file. It is documented in json-files.md.
+#silent $display['version'] = '1.0'
 #silent $display['periods'] = $to_list($options.get('periods', ['day', 'week', 'month', 'year']))
 #silent $display['plot_groups'] = $to_list($options.get('plot_groups', ['tempdew', 'wind', 'rain']))
 #silent $display['telemetry_plot_groups'] = $to_list($options.get('telemetry_plot_groups', ['rx', 'volt']))

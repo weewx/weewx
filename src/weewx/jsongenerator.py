@@ -91,6 +91,12 @@ ARCHIVE_DEFAULTS = {
     'rebuild': 0,
 }
 
+# The format versions of the files this generator writes, as "<major>.<minor>". They are
+# documented in docs_src/reference/json-files.md. Bump one when the format of its file
+# changes.
+META_VERSION = '1.0'
+INDEX_VERSION = '1.0'
+
 # The name of an archive file: the plot group, then the date. See _parse_archive_name().
 _ARCHIVE_NAME = re.compile(r'^(.+)-(\d{4})(-\d{2})?(-\d{2})?\.json$')
 
@@ -154,7 +160,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
 
         try:
             _write_json(meta_file,
-                        {'units': _unit_choices(self.converter)})
+                        {'version': META_VERSION,
+                         'units': _unit_choices(self.converter)})
         except OSError as e:
             log.error("Unable to save to file '%s': %s", meta_file, e)
 
@@ -217,7 +224,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
                                **{key: entry[key] for pair in TIERS for key in pair}})
             try:
                 _write_json(os.path.join(arch_root, 'index.json'),
-                            {'first': counters['first'],
+                            {'version': INDEX_VERSION,
+                             'first': counters['first'],
                              'last': counters['last'],
                              # When the archive files were last rebuilt. The next run
                              # passes 'rebuilt' to _rebuild_due().

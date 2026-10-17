@@ -214,6 +214,10 @@ class TestMetaJson:
         units = self.meta_json(run_generator(config_dict, tmp_path))['units']
         assert sorted(units) == ['convert', 'groups', 'systems']
 
+    def test_meta_json_has_a_version(self, config_dict, tmp_path):
+        """meta.json says which version of its format it is."""
+        assert self.meta_json(run_generator(config_dict, tmp_path))['version'] == '1.0'
+
     def test_the_conversions_start_at_the_unit_of_the_files(self, config_dict, tmp_path):
         """'convert' has a row for the unit the files are written in.
 
@@ -353,6 +357,11 @@ class TestArchive:
             assert set(payload) == file_keys, name
             for series in payload['series']:
                 assert set(series) <= series_keys, (name, set(series) - series_keys)
+
+    def test_the_archive_index_has_a_version(self, archive_dir):
+        """index.json says which version of its format it is."""
+        with open(os.path.join(archive_dir, 'index.json'), encoding='utf-8') as fd:
+            assert json.load(fd)['version'] == '1.0'
 
     def test_fresh_files_are_not_rewritten(self, config_dict, tmp_path):
         """A second run right after the first rewrites no file.
