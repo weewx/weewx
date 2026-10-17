@@ -3,18 +3,20 @@
 #errorCatcher Echo
 #encoding UTF-8
 ##
+#from weewx.units import ValueTuple, convert
+##
 ## The panels of a climate page. climate.html.tmpl includes this file for the year in
-## progress, and climate-%Y.html.tmpl for each year of the archive. On both pages
-## '$year' is the year shown. Every panel reads from '$year' except climate-record,
-## which lists every year of '$alltime'.
+## progress, and climate-%Y.html.tmpl for each year of the archive. On both pages,
+## '$year' is an instance of TimeSpanBinder for the year shown. Every panel reads
+## from '$year' except climate-record, which lists every year of '$alltime'.
 ##
 ## ------------------------------------------------------------------ climate-days
 ##
 ## The kinds of day that the panel climate-days counts. 'agg' and 'value' are an
 ## aggregation type and its ValueTuple argument, as described under "Aggregation
 ## types" in the Reference Guide. The thresholds are in metric units because the
-## definitions are metric, e.g., a summer day reaches 25 degree_C. threshold_of()
-## converts each threshold to the report unit system, e.g., to 77 degree_F.
+## definitions are metric, e.g., a summer day reaches 25 degree_C. The function threshold_of()
+## converts each threshold to the unit system of the report, e.g., to 77 degree_F.
 #set $climate_days = [
   {'key': 'rain_day',     'obs': 'rain',     'agg': 'sum_ge',
    'value': (0.2, 'mm', 'group_rain')},
@@ -38,8 +40,8 @@
 #set $climate_days = [d for d in $climate_days
                       if $getVar('year.%s.has_data' % d['obs'], False)]
 ##
-## The name and the definition of each kind of day, both translated. threshold_of()
-## below fills in the '%s'.
+## The name and the definition of each kind of day, both translated. The function threshold_of()
+## (defined below) fills in the '%s'.
 #set $day_text = {
   'rain_day':     ($gettext("Rain days"),       $gettext("Daily rainfall at or above %s")),
   'summer_day':   ($gettext("Summer days"),     $gettext("Daily maximum at or above %s")),
@@ -57,37 +59,36 @@
 #set $day_counts = {}
 #set $day_months = {}
 #for $spec in $climate_days
-#set $of_year = $getattr($getattr($year, $spec['obs']), $spec['agg'])($spec['value'])
-#silent $day_counts.__setitem__($spec['key'], $of_year)
-## Inside the comprehension, 'spec' is written without '$'. Before Python 3.12, a
-## comprehension runs in a frame of its own. Cheetah looks up a '$' name in that
-## frame, where the template's '#set' and '#for' names are missing, and raises
-## NotFound. Without '$', Python finds 'spec' in the template's frame on every
-## version. This rule holds for every '#set' or '#for' name in a comprehension in
-## this skin. Only the iterable after the first 'in', e.g., '$months_of_year', may
-## keep its '$', because Python evaluates that iterable in the template's frame.
-##
-## The comprehension reads the month 'm' with getattr(). $getVar() would not find
-## 'm', because $getVar() looks only in the searchList.
-#set $per_month = [getattr(getattr(m, spec['obs']), spec['agg'])(spec['value'])
-                   for m in $months_of_year]
-#silent $day_months.__setitem__($spec['key'], $per_month)
+    #set $of_year = $getattr($getattr($year, $spec['obs']), $spec['agg'])($spec['value'])
+    #silent $day_counts.__setitem__($spec['key'], $of_year)
+    ## Inside the comprehension, 'spec' is written without '$'. Before Python 3.12, a
+    ## comprehension runs in a frame of its own. Cheetah looks up a '$' name in that
+    ## frame, where the template's '#set' and '#for' names are missing, and raises
+    ## NotFound. Without '$', Python finds 'spec' in the template's frame on every
+    ## version. This rule holds for every '#set' or '#for' name in a comprehension in
+    ## this skin. Only the iterable after the first 'in', e.g., '$months_of_year', may
+    ## keep its '$', because Python evaluates that iterable in the template's frame.
+    ##
+    ## The comprehension reads the month 'm' with getattr(). $getVar() would not find
+    ## 'm', because $getVar() looks only in the searchList.
+    #set $per_month = [getattr(getattr(m, spec['obs']), spec['agg'])(spec['value'])
+                       for m in $months_of_year]
+    #silent $day_months.__setitem__($spec['key'], $per_month)
 #end for
 ##
 #set $month_names = [m.dateTime.format("%b") for m in $months_of_year]
-#from weewx.units import ValueTuple, convert
 ##
 ## threshold_of() returns the threshold of a kind of day as an element with
 ## 'data-value' and 'data-unit', like every other reading on the page. The threshold
 ## is converted to the report unit system and formatted with '$unit.format' for its
 ## type, and the unit picker can convert it further.
 #def threshold_of($spec)
-#set $obs = $spec['obs']
-#set $vt = $ValueTuple(*$spec['value'])
-#set $target = $getVar('unit.unit_type.%s' % $obs)
-#set $shown = $convert($vt, $target)
-#set $text = ($getVar('unit.format.%s' % $obs) % $shown[0])
-#return '<span data-obs="%s" data-value="%s" data-unit="%s"><span data-unit-value>%s</span><small data-unit-label>%s</small></span>' % ($obs, $shown[0], $target, $text, $getVar('unit.label.%s' % $obs))
+    #set $obs = $spec['obs']
+    #set $vt = $ValueTuple(*$spec['value'])
+    #set $target = $getVar('unit.unit_type.%s' % $obs)
+    #set $shown = $convert($vt, $target)
+    #set $text = ($getVar('unit.format.%s' % $obs) % $shown[0])
+    #return '<span data-obs="%s" data-value="%s" data-unit="%s"><span data-unit-value>%s</span><small data-unit-label>%s</small></span>' % ($obs, $shown[0], $target, $text, $getVar('unit.label.%s' % $obs))
 #end def
 ##
 <section class="panel wide" data-live-panel="climate-days">

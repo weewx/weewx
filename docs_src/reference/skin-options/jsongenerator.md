@@ -1,9 +1,10 @@
 # [JSONGenerator]
 
 This section is used by generator `weewx.jsongenerator.JSONGenerator`. The JSON
-generator writes the numbers that a web page draws its charts from, as JSON files.
-It writes the readings and nothing about how they look. Labels, the type of a
-chart and the y axis are up to the skin. The *Horizon* skin sets them under
+generator writes JSON files containing the numbers that a web page can use to
+draw charts. It writes the readings and nothing about how they look. Labels, the
+type of a chart and the y axis are up to the skin. The *Horizon* skin sets them
+under
 [`[DisplayOptions]`](../../custom/horizon-skin.md#changing-what-a-chart-shows).
 This section holds both the options of the generator and the list of files it
 writes.

@@ -97,7 +97,7 @@ none.
 For a report whose `HTML_ROOT` is a subdirectory of another report's
 `HTML_ROOT`, the path back to that top directory, e.g., "`..`". The language
 picker uses it to build its links. Default is "`.`". See [*Choosing the
-language*](../../custom/horizon-skin.md#choosing-the-language).
+language*](../../custom/horizon-skin.md#choosing-a-language).
 
 ## Which observation types to show
 
@@ -254,8 +254,7 @@ series takes the generic label of its type.
 ## [[Forecast]]
 
 Controls the `forecast` panel. If the file `data/forecast.json` exists under
-`HTML_ROOT`, it takes precedence. See [*Section
-[[Forecast]]*](../../custom/horizon-skin.md#section-forecast).
+`HTML_ROOT`, it takes precedence. See [*Setting a forecast*](../../custom/horizon-skin.md#setting-a-forecast).
 
 #### browser_fetch
 
@@ -299,7 +298,7 @@ the station's pages. `.` means the top directory itself. Default is the name of
 the subsection.
 
 See [*Choosing the
-language*](../../custom/horizon-skin.md#choosing-the-language)
+language*](../../custom/horizon-skin.md#choosing-a-language)
 for how to set up one report per language.
 
 ## [[Icons]]

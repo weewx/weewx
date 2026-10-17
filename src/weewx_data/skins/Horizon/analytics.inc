@@ -1,7 +1,6 @@
 ## analytics module weewx skins
 ## Copyright Tom Keffer, Matthew Wall
-## Copyright (c) 2026 Manuel Hilgert
-## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+## See LICENSE.txt for your rights
 #errorCatcher Echo
 #encoding UTF-8
 
