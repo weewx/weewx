@@ -546,7 +546,7 @@ only once, during the first reporting cycle.
       "plot_type": "bar",
       "yscale": [null, null, null],
       "vector_rotate": 90.0,
-      "series": {"rain": {"label": "Rain (hourly total)"}}
+      "overrides": {"rain": {"label": "Rain (hourly total)"}}
     }
   },
   "labels": {"outTemp": "Outside Temperature", "rain": "Rain"},
