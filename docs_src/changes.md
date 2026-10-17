@@ -26,6 +26,10 @@ come from the daily summaries again, as before.
 
 ### 5.x.y dd-Mmm-YYYY
 
+Fixed Horizon charts ignoring per-series labels, plot types, and vector rotation
+set under `[DisplayOptions][[Charts]]`.
+[PR #1139](https://github.com/weewx/weewx/pull/1139).
+
 Fixed a `TypeError` in aggregate type `vecavg` when there is no wind direction
 over an interval. [PR #1155](https://github.com/weewx/weewx/pull/1155).
 

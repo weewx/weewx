@@ -727,7 +727,7 @@
         plot_type: listed.plot_type || 'line',
         yscale: listed.yscale || [null, null, null],
         vector_rotate: listed.vector_rotate || 0,
-        series: listed.series || {}
+        series: listed.overrides || {}
       };
     }
 
