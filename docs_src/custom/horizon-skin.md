@@ -288,24 +288,24 @@ front page looks as follows:
 Each name in this table is written `--name` in a stylesheet, as in the example
 above.
 
-| Name                                          | What it sets                                                                                                                        |
-|-----------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
-| `bg`                                          | The page behind the panels                                                                                                          |
-| `surface`, `surface-sunk`                     | Panels, tiles and the masthead; a row of tabs, and a chart that is not yet drawn                                                    |
-| `ink`, `ink-muted`, `ink-faint`               | Text; labels; the headings of the navigation, and the small print                                                                   |
-| `border`, `border-strong`                     | The edges of panels and tiles, and the rules between rows; an edge under the pointer                                                |
-| `accent`                                      | Links, and what is selected: the page or time span shown, a tab                                                                     |
-| `hi`, `lo`                                    | Highs and lows, and a rising and a falling trend; temperature and rain on the climate page                                          |
-| `ok`                                          | The *Live* badge, and a battery that is OK                                                                                          |
-| `sun`                                         | The sun's curve, a planet above the horizon, and a clear sky in the forecast                                                        |
-| `warn`, `accent-bright`                       | A partly cloudy sky, and snow, in the forecast                                                                                      |
-| `warm-0` … `warm-8`                           | The temperature bands, cold to hot: the tint of the outside temperature tile, and the heat map on the climate page                  |
-| `chart-grid`, `chart-axis`, `chart-night`     | Inside the charts: the grid, the axes, and the shading of the night                                                                 |
-| `chart-lines`, `chart-fills`                  | The colors of the lines of the charts, and of the bars. See [Changing the colors of the charts](#changing-the-colors-of-the-charts) |
-| `radius`, `shadow`                            | The corners and the shadow of panels and tiles                                                                                      |
-| `gap`, `edge`, `pad`                          | The space between panels, the margin at either side of the page, and the space inside a panel                                       |
-| `font`, `font-mono`                           | The typeface of the page, and of the NOAA reports                                                                                   |
-| `fs-xs`, `fs-sm`, `fs-base`, `fs-md`, `fs-lg` | Type sizes, from the small print to the page title                                                                                  |
+| Name                                          | What it sets                                                                                                            |
+|-----------------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
+| `bg`                                          | The page behind the panels                                                                                              |
+| `surface`, `surface-sunk`                     | Panels, tiles and the masthead; a row of tabs, and a chart that is not yet drawn                                        |
+| `ink`, `ink-muted`, `ink-faint`               | Text; labels; the headings of the navigation, and the small print                                                       |
+| `border`, `border-strong`                     | The edges of panels and tiles, and the rules between rows; an edge under the pointer                                    |
+| `accent`                                      | Links, and what is selected: the page or time span shown, a tab                                                         |
+| `hi`, `lo`                                    | Highs and lows, and a rising and a falling trend; temperature and rain on the climate page                              |
+| `ok`                                          | The *Live* badge, and a battery that is OK                                                                              |
+| `sun`                                         | The sun's curve, a planet above the horizon, and a clear sky in the forecast                                            |
+| `warn`, `accent-bright`                       | A partly cloudy sky, and snow, in the forecast                                                                          |
+| `warm-0` … `warm-8`                           | The temperature bands, cold to hot: the tint of the outside temperature tile, and the heat map on the climate page      |
+| `chart-grid`, `chart-axis`, `chart-night`     | Inside the charts: the grid, the axes, and the shading of the night                                                     |
+| `chart-lines`, `chart-fills`                  | The colors of the lines of the charts, and of the bars. See [Changing the colors of the charts](#changing-chart-colors) |
+| `radius`, `shadow`                            | The corners and the shadow of panels and tiles                                                                          |
+| `gap`, `edge`, `pad`                          | The space between panels, the margin at either side of the page, and the space inside a panel                           |
+| `font`, `font-mono`                           | The typeface of the page, and of the NOAA reports                                                                       |
+| `fs-xs`, `fs-sm`, `fs-base`, `fs-md`, `fs-lg` | Type sizes, from the small print to the page title                                                                      |
 
 Give the `warm` colors as `#rrggbb` or `rgb()`. The heat map on the climate page
 mixes the `warm` colors in the browser, and skips a color written any other way.

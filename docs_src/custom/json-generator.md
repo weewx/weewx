@@ -45,9 +45,9 @@ The options are documented in the reference, under
 are about which numbers a file holds: the observation types, the aggregation,
 and the unit. How the numbers are shown, such as the labels, the type of the
 chart, the y-axis and the colors, is up to the page. *Horizon* sets the first
-three in its [`[DisplayOptions]`](horizon-skin.md#changing-what-a-chart-shows),
+three in its [`[DisplayOptions]`](horizon-skin.md#include-it-in-the-history-panel),
 and takes the colors of its chart lines from its stylesheet. See
-[_Changing the colors of the charts_](horizon-skin.md#changing-the-colors-of-the-charts).
+[_Changing the colors of the charts_](horizon-skin.md#changing-chart-colors).
 
 The generated files go into a `data` subdirectory of `HTML_ROOT`. The archived
 JSON data are in `data/archive`, which goes back to the beginning of your

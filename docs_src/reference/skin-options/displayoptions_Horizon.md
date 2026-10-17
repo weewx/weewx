@@ -216,7 +216,7 @@ A subsection is named after a plot group, and its subsections after the series
 defaults of those below. Hence, a chart that is not listed takes the default
 options listed directly under `[[Charts]]`. The colors of the charts are not set
 here, but in `horizon.css`. See [*Changing the colors of the
-charts*](../../custom/horizon-skin.md#changing-the-colors-of-the-charts).
+charts*](../../custom/horizon-skin.md#changing-chart-colors).
 
 ``` ini
 [[Charts]]
