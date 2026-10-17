@@ -1,0 +1,113 @@
+## Copyright (c) 2026 Manuel Hilgert
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+#encoding UTF-8
+#import weeutil.config
+#import weeutil.weeutil
+#import weewx.units
+##
+## display.json holds how the charts look, as set under [DisplayOptions]. The JSON
+## generator writes the readings and meta.json, and none of it says how to show them.
+## weewx-json.js fetches display.json beside them. The file has one copy per report,
+## so a report in another language has the labels in that language. For example:
+##
+##   {"periods": ["day", "week"], "time_lengths": {"day": 97200, "week": 604800},
+##    "plot_groups": ["tempdew", "rain"], "telemetry_plot_groups": ["rx"],
+##    "charts": {"rain": {"plot_type": "bar", "yscale": [null, null, null],
+##                        "vector_rotate": 90,
+##                        "overrides": {"rain": {"label": "Rain (hourly total)"}}}},
+##    "labels": {"outTemp": "Outside Temperature", ...},
+##    "units": {"report": {"group_temperature": "degree_C", ...},
+##              "labels": {"degree_C": "°C", ...}, "formats": {"degree_C": "%.1f", ...}}}
+##
+## 'charts' holds the options of each plot group, with the defaults under [[Charts]]
+## filled in. A series is listed only where [[Charts]] gives it an option of its own.
+## 'labels' holds the generic label of each observation type. A series without a label
+## of its own takes the one of its type.
+##
+## This file holds what concerns the charts and the units. What concerns the page
+## itself, e.g., the texts of its buttons, the station and the forecast, goes inline
+## into the page by scripts.inc.
+#set $options = $DisplayOptions
+#set $display = {}
+#silent $display['periods'] = $to_list($options.get('periods', ['day', 'week', 'month', 'year']))
+#silent $display['plot_groups'] = $to_list($options.get('plot_groups', ['tempdew', 'wind', 'rain']))
+#silent $display['telemetry_plot_groups'] = $to_list($options.get('telemetry_plot_groups', ['rx', 'volt']))
+##
+## The length of each time span, in seconds. A span without a length in [[TimeLengths]]
+## is left out, and the page uses its own default for it.
+#set $lengths = $options.get('TimeLengths', {})
+#set $time_lengths = {}
+#for $period in $display['periods']
+  #if $period in $lengths
+    #silent $time_lengths[$period] = $to_int($weeutil.weeutil.nominal_spans($lengths[$period]))
+  #end if
+#end for
+#silent $display['time_lengths'] = $time_lengths
+##
+## The options of each chart: the plot groups that a page can show, then any other
+## that [[Charts]] lists.
+#set $charts_dict = $options.get('Charts', {})
+#set $names = $display['plot_groups'] + $display['telemetry_plot_groups']
+#for $name in $charts_dict.sections
+  #if $name not in $names
+    #silent $names.append($name)
+  #end if
+#end for
+#set $charts = {}
+#for $name in $names
+  ## [[Charts]] holds the defaults, so a chart that is not listed takes just those.
+  #if $name in $charts_dict.sections
+    #set $chart_section = $charts_dict[$name]
+    #set $chart = $weeutil.config.accumulateLeaves($chart_section, max_level=1)
+  #else
+    #set $chart_section = {}
+    #set $chart = $weeutil.config.accumulateLeaves($charts_dict, max_level=0)
+  #end if
+  #set $entry = {'plot_type': $chart.get('plot_type', 'line').lower(),
+                 'yscale': $weeutil.weeutil.convertToFloat($weeutil.weeutil.option_as_list($chart.get('yscale', ['None', 'None', 'None']))),
+                 'vector_rotate': $weeutil.weeutil.to_float($chart.get('vector_rotate', 0))}
+  #set $overrides = {}
+  #if $name in $charts_dict.sections
+    #for $obs_type in $chart_section.sections
+      #set $one = $weeutil.config.accumulateLeaves($chart_section[$obs_type], max_level=2)
+      #set $mine = {}
+      #if 'label' in $chart_section[$obs_type]
+        #silent $mine['label'] = $gettext($chart_section[$obs_type]['label'])
+      #end if
+      #if 'plot_type' in $chart_section[$obs_type]
+        #silent $mine['plot_type'] = $one['plot_type'].lower()
+      #end if
+      #if 'vector_rotate' in $chart_section[$obs_type]
+        #silent $mine['vector_rotate'] = $weeutil.weeutil.to_float($one['vector_rotate'])
+      #end if
+      #silent $overrides[$obs_type] = $mine
+    #end for
+  #end if
+  #silent $entry['overrides'] = $overrides
+  #silent $charts[$name] = $entry
+#end for
+#silent $display['charts'] = $charts
+##
+## The generic label of each observation type, in the language of this report.
+#silent $display['labels'] = dict($obs.label)
+##
+## What the unit table in meta.json lacks: how to write a unit. 'wanted' holds every
+## unit that meta.json can convert to, as the JSON generator works it out: the units of
+## every unit system and those of this report.
+#set $report = dict($unit.group_unit_dict)
+#set $wanted = set($report.values())
+#for $table in $weewx.units.std_groups.values()
+  #silent $wanted.update($table.values())
+#end for
+#set $labels = {}
+#set $formats = {}
+#for $one_unit in sorted($wanted)
+  #silent $labels[$one_unit] = ($unit.label.formatter.get_label_string($one_unit) or '').strip()
+  #set $format = $unit.format.formatter.get_format_string($one_unit)
+  #if $format
+    #silent $formats[$one_unit] = $format
+  #end if
+#end for
+#silent $display['units'] = {'report': $report, 'labels': $labels, 'formats': $formats}
+$jsonize($display)
