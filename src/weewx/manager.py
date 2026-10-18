@@ -1609,16 +1609,29 @@ class DaySummaryManager(Manager):
         _cursor = cursor or self.connection.cursor()
 
         try:
-            # For each observation type, execute the SQL query and hand the results on to the
-            # accumulator.
-            for _day_key in self.daykeys:
-                _cursor.execute(
-                    "SELECT * FROM %s_day_%s WHERE dateTime = ?" % (self.table_name, _day_key),
-                    (_day_accum.timespan.start,))
-                _row = _cursor.fetchone()
-                # If the date does not exist in the database yet then _row will be None.
-                _stats_tuple = _row[1:] if _row is not None else None
-                _day_accum.set_stats(_day_key, _stats_tuple)
+            # Combine reads to avoid a network round trip for each observation type.
+            # UNION ALL requires matching column counts, so group scalar and vector
+            # statistics separately. Initialize missing rows to empty statistics.
+            summary_groups = {}
+            for day_key in self.daykeys:
+                _day_accum.set_stats(day_key, None)
+                summary_size = len(_day_accum[day_key].getStatsTuple())
+                summary_groups.setdefault(summary_size, []).append(day_key)
+
+            for summary_keys in summary_groups.values():
+                # Keep below SQLite's limit on terms in a compound SELECT, even
+                # for installations with hundreds of custom observation types.
+                for chunk in _gen_chunks(summary_keys, 200):
+                    selects = []
+                    sql_args = []
+                    for day_key in chunk:
+                        table_name = "%s_day_%s" % (self.table_name, day_key)
+                        selects.append("SELECT ?, %s.* FROM %s WHERE dateTime = ?"
+                                       % (table_name, table_name))
+                        sql_args.extend((day_key, _day_accum.timespan.start))
+                    _cursor.execute(" UNION ALL ".join(selects), sql_args)
+                    for row in _cursor:
+                        _day_accum.set_stats(row[0], row[2:])
 
             return _day_accum
         finally:

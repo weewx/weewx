@@ -3,6 +3,10 @@ WeeWX change history
 
 ### 5.x.y dd-Mmm-YYYY
 
+Reading daily summaries now combines queries for multiple observation types,
+reducing network round trips when archiving to a remote database. See the
+[weewx-user discussion](https://groups.google.com/g/weewx-user/c/s4bDlCbB3P8).
+
 Fixed a `TypeError` in aggregate type `vecavg` when there is no wind direction
 over an interval. [PR #1155](https://github.com/weewx/weewx/pull/1155).
 

@@ -25,6 +25,7 @@ import pytest
 import gen_fake_data
 import weewx
 import weewx.schemas.wview_small
+import weewx.schemas.wview_extended
 import weedb
 import weeutil.logger
 import weewx.manager
@@ -207,6 +208,80 @@ class TestRetry:
         # Verify the record was added
         result = db_manager_retry.getSql("SELECT COUNT(*) FROM archive WHERE dateTime = ?", (record['dateTime'],))
         assert result[0] == 1
+
+
+class TestDaySummaryReads:
+    @pytest.fixture(params=[db_dict_sqlite, db_dict_mysql])
+    def manager(self, request):
+        with weewx.manager.DaySummaryManager.open_with_create(
+                request.param, table_name='summary_read_test',
+                schema=weewx.schemas.wview_extended.schema) as manager:
+            yield manager
+            with weedb.Transaction(manager.connection) as cursor:
+                for table in manager.connection.tables():
+                    if table.startswith('summary_read_test'):
+                        cursor.drop_table(table)
+
+    def test_read_summaries(self, manager, monkeypatch):
+        record = {'dateTime': start_ts, 'usUnits': weewx.US, 'interval': 60,
+                  'outTemp': 0.0, 'rain': 0.0, 'windSpeed': 4.0,
+                  'windDir': 270.0, 'windGust': 8.0, 'windGustDir': 280.0}
+        manager.addRecord(record)
+        sod_ts = weeutil.weeutil.startOfArchiveDay(start_ts)
+        manager.connection.execute(
+            "DELETE FROM summary_read_test_day_rain WHERE dateTime = ?", (sod_ts,))
+        expected = {}
+        for key in manager.daykeys:
+            row = manager.getSql("SELECT * FROM summary_read_test_day_%s WHERE dateTime = ?"
+                                 % key, (sod_ts,))
+            stats = weewx.accum.new_accumulator(key)
+            stats.setStats(row[1:] if row is not None else None)
+            expected[key] = stats.getStatsTuple()
+
+        with manager.connection.cursor() as cursor:
+            execute = cursor.execute
+            queries = []
+
+            def counted_execute(sql, sqlargs=()):
+                queries.append(sql)
+                return execute(sql, sqlargs)
+
+            monkeypatch.setattr(cursor, 'execute', counted_execute)
+            summary = manager._get_day_summary(sod_ts, cursor)
+            assert {key: summary[key].getStatsTuple() for key in summary} == expected
+            assert len(queries) <= 3
+            # A caller-supplied cursor must remain usable after the read.
+            cursor.execute("SELECT 1")
+            assert cursor.fetchone()[0] == 1
+
+        # No row for this day exists in any of the daily tables.
+        empty_summary = manager._get_day_summary(sod_ts - 86400)
+        assert set(empty_summary) == manager.daykeys
+        for key in empty_summary:
+            assert empty_summary[key].getStatsTuple() \
+                   == weewx.accum.new_accumulator(key).getStatsTuple()
+
+    def test_no_summaries(self, manager):
+        manager.daykeys = set()
+        assert not manager._get_day_summary(start_ts)
+
+    def test_many_summaries(self):
+        # SQLite normally allows at most 500 terms in a compound SELECT.
+        custom_keys = ['custom_%d' % index for index in range(501)]
+        large_schema = {
+            'table': schema['table'][:3] + [(key, 'REAL') for key in custom_keys],
+            'day_summaries': [(key, 'scalar') for key in custom_keys],
+        }
+        with weewx.manager.DaySummaryManager.open_with_create(
+                db_dict_sqlite, schema=large_schema) as manager:
+            record = dict(zip(custom_keys, range(len(custom_keys))))
+            record.update(dateTime=start_ts, usUnits=weewx.US, interval=60)
+            manager.addRecord(record)
+            summary = manager._get_day_summary(weeutil.weeutil.startOfArchiveDay(start_ts))
+            assert set(summary) == set(custom_keys)
+            for index, key in enumerate(custom_keys):
+                assert summary[key].count == 1
+                assert summary[key].sum == index
 
 
 def setup_database(db_dict):
