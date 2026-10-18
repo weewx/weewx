@@ -29,16 +29,15 @@ Here is an example of two plot groups: `tempdew` and `rain`. Plot group
             [[[[rain]]]]
 ```
 
-An option that is set above a plot group or a series, directly in
-`[[JSONFiles]]`, applies to everything below it. An option set lower down wins.
-So, in this case, the default aggregation is `none`, that is, no aggregation.
-Plot group `rain` overrides this and uses `sum` aggregation with a one hour
-aggregate interval.
+Options set directly under `[[JSONFiles]]` apply to everything below it. An
+option set lower down wins. So, in this case, no aggregation has been specified
+under `[[JSONFiles]]` so it defaults to `none`, that is, no aggregation. Plot
+group `rain` overrides this and uses `sum` aggregation with a one-hour aggregate
+interval.
 
 ## Plot group and series options
 
-These options describe which numbers a JSON file holds. An option not listed
-here has no effect.
+These options describe which numbers a JSON file holds. 
 
 #### aggregate_interval
 
@@ -67,9 +66,9 @@ is `wx_binding`.
 
 #### data_type
 
-The observation type of the series, for when it is not the name of the series'
-section. This allows a type to appear in a plot group more than once, e.g., with
-different aggregate types. Optional. Default is the name of the section.
+The observation type used for the series. This allows a type to appear in a plot
+group more than once, e.g., with different aggregate types. Optional. Default is
+the name of the section.
 
 The types `windvec` and `windgustvec` are wind vectors. A file holds their
 components as well as their speed. See [_JSON data files_](../json-files.md).
@@ -88,7 +87,7 @@ Where the files go, relative to `HTML_ROOT`. Default is `data`.
 
 #### round
 
-How many decimal places a reading is written with. Default is `2`.
+How many decimal places to use when writing a value. Default is `2`.
 
 #### include_daynight
 
@@ -98,7 +97,7 @@ night. Requires `pyephem`. Default is `True`.
 ## [[Archive]]
 
 The archive is the whole database, cut into files the browser can fetch one at a
-time. There are three tiers: one file per day for the last few days, at the
+time. There are three tiers: one file per day for the last few days, all at the
 archive interval; one file per month, at a shorter aggregation interval than the
 years; and one file per calendar year, at an aggregation interval that grows
 with age. The browser picks the tier with the shortest aggregation interval that
@@ -106,7 +105,8 @@ covers the time it is showing.
 
 The archive holds the plot groups of [`[[JSONFiles]]`](#jsonfiles). A series
 without an `aggregate_type` of its own is averaged over each aggregation
-interval. The files go into `archive`, below [`json_dest_dir`](#json_dest_dir).
+interval. The files go into subdirectory `archive`, located 
+below [`json_dest_dir`](#json_dest_dir).
 
 #### years
 
@@ -140,23 +140,22 @@ minutes.
 How many days are written at the station's own archive interval, one file per
 day. This is what the day view is drawn from. Default is `30`.
 
-Files older than this are removed on the next run, so the disk cost of this
+Files older than this are removed on the next run, so the storage cost of this
 tier does not grow.
 
 #### day_resolution
 
-The aggregation interval of the day files. `0`, the default, uses the archive
-interval that most archive records of the day have. The day files then hold the
-values of the archive records as they are.
+The aggregation interval of the day files. The default `0` uses the archive
+interval.
 
 #### budget
 
 How many seconds a report may spend building the archive, as a number or a
-duration. Default is `30`. `0` removes the limit.
+duration. Default is `30`. A value of `0` removes the limit.
 
 A report that runs out of budget starts no further file, and the next report
-carries on where it stopped. The newest files come first, so the older years
-fill in over the next reports.
+carries on from where it stopped. The newest files come first, so the older
+years fill in over the next reports.
 
 The day tier is never deferred. It is what the day view is drawn from, and a
 page without today is of little use.
@@ -175,5 +174,5 @@ How often every file is built from the whole database again, rather than
 carried forward from the one already on disk. Default is `0`, which never does.
 
 A file that has been written is correct for the time it covers, and the archive
-index is checked against the directory on every run. Set it to a number of hours to
-have the files rewritten anyway, for a station whose history has been edited.
+index is checked against the directory on every run. Set it to a number of hours
+to have the files rewritten anyway, for a station whose history has been edited.
