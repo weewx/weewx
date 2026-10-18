@@ -3,6 +3,11 @@ WeeWX change history
 
 ### 5.x.y dd-Mmm-YYYY
 
+Reduce database queries when iterating over archive records or calculating degree
+days. Nearest-record lookups now use the timestamp index instead of sorting all
+records in the search window.
+[PR #1168](https://github.com/weewx/weewx/pull/1168).
+
 Fixed a `TypeError` in aggregate type `vecavg` when there is no wind direction
 over an interval. [PR #1155](https://github.com/weewx/weewx/pull/1155).
 
