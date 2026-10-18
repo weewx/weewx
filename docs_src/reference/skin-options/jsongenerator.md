@@ -43,13 +43,14 @@ here has no effect.
 #### aggregate_interval
 
 The time over which a series is aggregated, in seconds. Alternatively, a
-[duration notation](../durations.md) can be used.  This option applies only at the
-finest resolutions, that is, JSON files for individual days. By default, these
-files do no aggregation, that is, the raw data at the native archive interval is
-what is stored. 
-
-For longer time periods, such as Week, Month, and Year, the aggregation intervals
-are set by the resolution options under [`[[Archive]]`](#archive).
+[duration notation](../durations.md) can be used.  This option takes effect only
+when it is longer than the resolution interval of the file (see section
+[`[[Archive]]`](#archive)). For example, the resolution interval of Day files is
+the native archive interval (usually 5 minutes or so), so `aggregate_interval`
+has an effect only when it is longer than that. The same rule applies for
+courser files. For example, the nominal resolution for Month files is 15
+minutes, so `aggregate_interval` must be longer than 15 minutes to have an
+effect.
 
 #### aggregate_type
 
