@@ -4,7 +4,8 @@ WeeWX change history
 ### 5.x.y dd-Mmm-YYYY
 
 Reading daily summaries now combines queries for multiple observation types,
-reducing network round trips when archiving to a remote database.
+reducing the number of required queries. This can lead to performance
+improvements particularly with remote databases.
 [PR #1170](https://github.com/weewx/weewx/pull/1170).
 
 Fixed a `TypeError` in aggregate type `vecavg` when there is no wind direction
