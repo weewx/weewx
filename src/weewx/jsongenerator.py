@@ -121,6 +121,7 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         self.data_root = None
         self.gen_dict = None
         self.plot_dict = configobj.ConfigObj()
+        self._archive_resume = {}
 
     def run(self):
         self.setup()
@@ -177,6 +178,8 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         Args:
             gen_ts (int|None): The time the report is being run for.
         """
+        # Resume points depend on the timezone, so share them only within this run.
+        self._archive_resume.clear()
         arch_dict = self.gen_dict.get('Archive', {})
 
         t1 = time.time()
@@ -689,9 +692,16 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
             """
             if old_file is None:
                 return start, 0
-            begins, ends = _intervals(start, stop, aggregate_interval)
-            i = bisect.bisect_left(ends, old_file['newest'])
-            since = begins[i] if i < len(begins) else stop
+            key = (start, stop, aggregate_interval, old_file['newest'])
+            if key not in self._archive_resume:
+                begins, ends = _intervals(start, stop, aggregate_interval)
+                i = bisect.bisect_left(ends, old_file['newest'])
+                # Cache only the resume point. Keeping every calendar list would
+                # retain memory for all archive files visited during this run.
+                if len(self._archive_resume) >= 32:
+                    self._archive_resume.clear()
+                self._archive_resume[key] = begins[i] if i < len(begins) else stop
+            since = self._archive_resume[key]
             return since, int((since - start) // interval)
 
         def new_values(key, keep):
@@ -988,7 +998,10 @@ def _write_json(path, payload):
     # beside the target.
     tmp = path + '.tmp'
     with open(tmp, 'w', encoding='utf-8') as fd:
-        json.dump(payload, fd, ensure_ascii=False, separators=(',', ':'))
+        # Consume JSON fragments through the buffered file without building a
+        # second copy of the complete document in memory.
+        fd.writelines(json.JSONEncoder(ensure_ascii=False,
+                                      separators=(',', ':')).iterencode(payload))
     os.replace(tmp, path)
 
 
