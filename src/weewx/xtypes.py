@@ -837,7 +837,7 @@ class DailySummaries(XType):
 
         Args:
             obs_type (str): The observation type to be evaluated for eligibility.
-            timespan (weeutil.weeutil.TimeSpan|tuple[int|float, int|float]) A tuple containing the start and end
+            timespan (weeutil.weeutil.TimeSpan|tuple[int|float, int|float]): A tuple containing the start and end
                 timestamps of the aggregation interval.
             db_manager (manager.Manager): The database manager object responsible for interacting
                 with the weather database.
@@ -887,9 +887,10 @@ class AggregateHeatCool(XType):
                 'cooldeg', or 'growdeg'.
             timespan (weeutil.weeutil.TimeSpan|tuple[int|float, int|float]) A tuple containing the start and end
                 timestamps of the aggregation interval.
-            aggregate_type (str): The type of aggregation to be done. Must be 'avg' or 'sum'.
+            aggregate_type (str): The type of aggregation to be done. Must be 'avg', 'sum',
+                or 'not_null'.
             db_manager (weewx.manager.Manager): An instance of weewx.manager.Manager or subclass.
-            option_dict (dict): Not used in this version.
+            option_dict (dict): Report options, including the degree-day bases in skin_dict.
 
         Returns:
              ValueTuple: A ValueTuple containing the result.
@@ -919,19 +920,32 @@ class AggregateHeatCool(XType):
 
         total = 0.0
         count = 0
-        for daySpan in weeutil.weeutil.genDaySpans(timespan[0], timespan[1]):
-            # Get the average temperature for the day as a value tuple:
-            Tavg_t = DailySummaries.get_aggregate('outTemp', daySpan, 'avg', db_manager)
-            # Make sure it's valid before including it in the aggregation:
-            if Tavg_t is not None and Tavg_t[0] is not None:
+        start = weeutil.weeutil.startOfDay(timespan[0])
+        # genDaySpans excludes the stop day throughout midnight's first second.
+        stop = weeutil.weeutil.archiveDaySpan(math.floor(timespan[1])).stop
+        if start < stop:
+            # Degree days include the whole first and last calendar days, even
+            # when the requested span ends partway through a day. Read those
+            # summaries together, preserving their interval-weighted means.
+            summary_span = weeutil.weeutil.TimeSpan(start, stop)
+            DailySummaries.check_eligibility('outTemp', summary_span, db_manager, 'avg')
+            rows = db_manager.genSql(
+                'SELECT wsum, sumtime FROM %s_day_outTemp '
+                'WHERE dateTime >= ? AND dateTime < ? ORDER BY dateTime' % db_manager.table_name,
+                summary_span)
+        else:
+            rows = ()
+        for weighted_sum, sumtime in rows:
+            if weighted_sum is not None and sumtime:
+                average = weighted_sum / sumtime
                 if aggregate_type == 'not_null':
                     return ValueTuple(True, 'boolean', 'group_boolean')
                 if obs_type == 'heatdeg':
-                    total += weewx.wxformulas.heating_degrees(Tavg_t[0], heatbase_t[0])
+                    total += weewx.wxformulas.heating_degrees(average, heatbase_t[0])
                 elif obs_type == 'cooldeg':
-                    total += weewx.wxformulas.cooling_degrees(Tavg_t[0], coolbase_t[0])
+                    total += weewx.wxformulas.cooling_degrees(average, coolbase_t[0])
                 else:
-                    total += weewx.wxformulas.cooling_degrees(Tavg_t[0], growbase_t[0])
+                    total += weewx.wxformulas.cooling_degrees(average, growbase_t[0])
 
                 count += 1
 
