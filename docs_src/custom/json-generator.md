@@ -11,13 +11,13 @@ The generator does for a page that draws its own charts what the [Image
 generator](image-generator.md) does for a page that shows images. The two are
 independent: they share no files, and either can run without the other. The
 difference is that the files hold the readings and nothing about how they look.
-A skin sets the labels, the type of each chart and the y-axis itself.
+A skin sets the labels, the type of each chart, and the y-axis itself.
 
-The JSON generator is controlled by the configuration options in the reference
-[_[JSONGenerator]_](../reference/skin-options/jsongenerator.md). These options
-are specified in the `[JSONGenerator]` section of a skin configuration file.
+The JSON generator is controlled by the configuration options in the section
+[_[JSONGenerator]_](../reference/skin-options/jsongenerator.md) in the skin
+configuration file `skin.conf`.
 
-Let's take a look at how this works.
+Let's take a look at how this all works.
 
 ## Turning it on
 
@@ -44,7 +44,7 @@ The options are documented in the reference, under
 [_[JSONGenerator]_](../reference/skin-options/jsongenerator.md#jsonfiles). They
 are about which numbers a file holds: the observation types, the aggregation,
 and the unit. How the numbers are shown, such as the labels, the type of the
-chart, the y-axis and the colors, is up to the page. *Horizon* sets the first
+chart, the y-axis, and the colors, is up to the page. *Horizon* sets the first
 three in its [`[DisplayOptions]`](horizon-skin.md#include-it-in-the-history-panel),
 and takes the colors of its chart lines from its stylesheet. See
 [_Changing the colors of the charts_](horizon-skin.md#changing-chart-colors).
@@ -74,7 +74,7 @@ covers the time it is showing.
 
 How far each level reaches is yours to set:
 [`days`](../reference/skin-options/jsongenerator.md#days),
-[`months`](../reference/skin-options/jsongenerator.md#months) and
+[`months`](../reference/skin-options/jsongenerator.md#months), and
 [`years`](../reference/skin-options/jsongenerator.md#years).
 The defaults suit a station that reports every five minutes.
 
@@ -119,16 +119,13 @@ second, however big your database is.
 
 ## Changing the unit used in a chart
 
-The charts follow whatever unit you have set for the report. See [*Mixed
-units*](custom-reports.md#mixed-units).
+The written JSON files follow whatever unit you have set for the report. See
+[*Mixed units*](custom-reports.md#mixed-units).
 
 The difference from an image is that the reader can change it afterward.
 Alongside the readings, the generator writes the arithmetic needed to convert
 between units, so a page can offer a unit picker that works without fetching
 anything. The *Horizon* skin has one in its navigation.
-
-Nothing needs configuring for this. If you would rather not have it, drop the
-unit picker from the template.
 
 ## Publishing the files
 
@@ -148,14 +145,13 @@ work, because `fetch()` does not insist, but it is worth fixing.
 
 The structure of the files is documented in [_JSON data
 files_](../reference/json-files.md). To use them in a skin other than *Horizon*,
-you do not have to write the code that fetches them. The *Horizon* skin ships it
-as a separate file, `weewx-json.js`, which knows nothing about Horizon or about
-the chart library that *Horizon* uses. It reads `meta.json`, the archive index and
-the file `display.json` of the skin, works out which archive files cover a time
-span, fetches them, joins them into one series, and converts the readings to
-another unit system. What a skin has to say about its charts, e.g., a label, is
-in `display.json`. Without that file, `weewx-json.js` draws every plot group as
-a line, labelled with the name of its observation type.
+use the file `weewx-json.js`, which is located in the *Horizon* skin directory.
+It can simplify the fetching of the data you need. It reads `meta.json`, the
+archive index, and the file `display.json` of the skin, works out which archive
+files cover a time span, fetches them, joins them into one series, and converts
+the readings to another unit system. What a skin has to say about its charts,
+e.g., a label, is in `display.json`. Without that file, `weewx-json.js` draws
+every plot group as a line, labeled with the name of its observation type.
 
 Copy `weewx-json.js` from the *Horizon* skin directory into your skin, list it in
 `copy_once` in `[CopyGenerator]`, and load it before your own script:

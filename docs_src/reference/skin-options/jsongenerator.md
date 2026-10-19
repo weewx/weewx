@@ -15,7 +15,8 @@ writes `tempdew-2026-10-03.json` and so on. It is also the name that a skin
 refers to, e.g., in the option `plot_groups` of *Horizon*.
 
 Here is an example of two plot groups: `tempdew` and `rain`. Plot group
-`tempdew` names two series as members: `outTemp` and `dewpoint`.
+`tempdew` names two series as members: `outTemp` and `dewpoint`. Plot group
+`rain` just one: `rain`.
 
 ``` ini
 [JSONGenerator]
@@ -30,10 +31,11 @@ Here is an example of two plot groups: `tempdew` and `rain`. Plot group
 ```
 
 Options set directly under `[[JSONFiles]]` apply to everything below it. An
-option set lower down wins. So, in this case, no aggregation has been specified
-under `[[JSONFiles]]` so it defaults to `none`, that is, no aggregation. Plot
-group `rain` overrides this and uses `sum` aggregation with a one-hour aggregate
-interval.
+option set lower down wins. By default, day files store the archive values
+without further aggregation. Month and year files average these temperature
+series at their configured resolutions. In this example, the `rain` group sums
+over one hour, or over the file's resolution interval, whichever is longer.
+
 
 ## Plot group and series options
 
@@ -45,7 +47,7 @@ The time over which a series is aggregated, in seconds. Alternatively, a
 [duration notation](../durations.md) can be used.  This option takes effect only
 when it is longer than the resolution interval of the file (see section
 [`[[Archive]]`](#archive)). For example, the resolution interval of Day files is
-the native archive interval (usually 5 minutes or so), so `aggregate_interval`
+the native archive interval (typically 5 minutes), so `aggregate_interval`
 has an effect only when it is longer than that. The same rule applies for
 courser files. For example, the nominal resolution for Month files is 15
 minutes, so `aggregate_interval` must be longer than 15 minutes to have an
@@ -100,13 +102,11 @@ The archive is the whole database, cut into files the browser can fetch one at a
 time. There are three tiers: one file per day for the last few days, all at the
 archive interval; one file per month, at a shorter aggregation interval than the
 years; and one file per calendar year, at an aggregation interval that grows
-with age. The browser picks the tier with the shortest aggregation interval that
-covers the time it is showing.
+with age. The browser should pick the tier with the shortest aggregation
+interval that covers the time it is showing.
 
-The archive holds the plot groups of [`[[JSONFiles]]`](#jsonfiles). A series
-without an `aggregate_type` of its own is averaged over each aggregation
-interval. The files go into subdirectory `archive`, located 
-below [`json_dest_dir`](#json_dest_dir).
+The archive holds the plot groups of [`[[JSONFiles]]`](#jsonfiles). The files go
+into subdirectory `archive`, located below [`json_dest_dir`](#json_dest_dir).
 
 #### years
 

@@ -162,7 +162,7 @@ Clicking *Now* returns to the latest readings. Clicking *Share* copies a link to
 what the charts show, such as `index.html#month/2026-07` for July 2026. Over
 plain HTTP the browser lets no page write to the clipboard, so *Share* shows the
 link in a box for the reader to copy. A link to `index.html#week` opens the
-front page on the time span Week*. The range bar moves only the charts: the
+front page on the time span *Week*. The range bar moves only the charts: the
 other panels stay on the day, week, month, or year that holds the latest archive
 record.
 
@@ -175,13 +175,15 @@ The charts shade the nights on time spans of up to nine days, i.e., *Day* and
 Adding a new chart involves two steps: arranging for its JSON data to be
 generated, then instructing the *Horizon* skin to include it in the history
 panel. Let's go through an example where we add a chart that includes two
-temperatures: `inTemp` and `inDewpoint`, the inside temperture and dewpoint. We
-wish to show these two temperatures on the same chart.
+temperatures: `inTemp` and `inDewpoint`. These will represent the temperature
+and dewpoint inside a barn. We wish to show these two temperatures on
+the same chart.
 
 #### Generate its JSON data
 
-This is covered in the section XXXX. You should end up with a section that looks
-like:
+This is covered in the reference section on 
+[`[[JSONFiles]]`](../reference/skin-options/jsongenerator.md#jsonfiles). You 
+should end up with a section that looks like this:
 
 ``` ini
 [JSONGenerator]
@@ -197,8 +199,7 @@ This will generate the necessary files to support plot group `intempdew`.
 
 #### Include it in the history panel
 
-Next step is to describe how the chart will appear and to make sure it is included. This is done 
-under `[DisplayOptions]`. 
+Next step is to make sure it is included. This is done under `[DisplayOptions]`.
 
 ``` ini
 [DisplayOptions]
@@ -207,11 +208,14 @@ under `[DisplayOptions]`.
     ...    
 ```
 
+Note the addition of `intempdew` at the end of the `plot_groups` options.
 Without anything else, this will produce a chart with inside temperature and
 dewpoint using default values for scaling, plot type, and labeling. 
 
-However, suppose you wish to include a custom label and use a custom scaling. In
-this case, you will need to add the customization under `[[Charts]]`.
+However, this doesn't tell us that these readings come from inside a barn, so we
+should add a custom label. For illustrative purposes, let's also add a custom
+temperature range: 40⁰ to 80⁰ F. To do this, we add the following customization under
+`[[Charts]]`.
 
 ``` ini
 [DisplayOptions]
@@ -219,11 +223,21 @@ this case, you will need to add the customization under `[[Charts]]`.
     plot_groups = tempdew, tempfeel, hum, barometer, wind, winddir, windvec, rain, intempdew
     ...
     [[Charts]]
-        label = Living room temperature and dewpoint
-        yscale = 60, 100, None
+        ...
         [[[intempdew]]]
+            yscale = 40, 80, None
+            [[[[inTemp]]]]
+                label = Barn temperature
+            [[[[inDewpoint]]]]
+                label = Barn dewpoint
 ```
 
+The result is a chart that looks like this:
+
+![Chart of fridge temp and ewpoint](../images/temp-dew-chart.png)
+
+
+#### Available `[[Charts]]` options
 
 These are the various options available for customization:
 
