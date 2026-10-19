@@ -579,9 +579,15 @@ class Manager:
             if max_delta:
                 time_start_ts = timestamp - max_delta
                 time_stop_ts = timestamp + max_delta
-                _cursor.execute("SELECT * FROM %s WHERE dateTime>=? AND dateTime<=? "
-                                "ORDER BY ABS(dateTime-?) ASC LIMIT 1" % self.table_name,
-                                (time_start_ts, time_stop_ts, timestamp))
+                # Only the nearest timestamp on either side can win. Find both
+                # through the primary key instead of sorting the entire window.
+                _cursor.execute(
+                    "SELECT * FROM %(table)s WHERE dateTime IN ("
+                    "SELECT MAX(dateTime) FROM %(table)s WHERE dateTime>=? AND dateTime<=? "
+                    "UNION ALL "
+                    "SELECT MIN(dateTime) FROM %(table)s WHERE dateTime>? AND dateTime<=?) "
+                    "ORDER BY ABS(dateTime-?), dateTime LIMIT 1" % {'table': self.table_name},
+                    (time_start_ts, timestamp, timestamp, time_stop_ts, timestamp))
             else:
                 _cursor.execute("SELECT * FROM %s WHERE dateTime=?"
                                 % self.table_name, (timestamp,))
