@@ -787,9 +787,14 @@ class StdArchive(StdService):
             for record in generator(lastgood_ts):
                 ts = record.get('dateTime')
                 if ts and ts < time.time() + self.archive_delay:
+                    # Catch-up records can precede the interval covered by LOOP data.
+                    accumulator = self.old_accumulator \
+                        if self.old_accumulator and ts == self.old_accumulator.timespan.stop \
+                        else None
                     self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
                                                           record=record,
-                                                          origin='hardware'))
+                                                          origin='hardware',
+                                                          accumulator=accumulator))
                 else:
                     log.warning("Ignore historical record: %s" % record)
         except weewx.HardwareError as e:
@@ -804,7 +809,8 @@ class StdArchive(StdService):
         # Send out an event with the new record:
         self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
                                               record=record,
-                                              origin='software'))
+                                              origin='software',
+                                              accumulator=self.old_accumulator))
 
     def _new_accumulator(self, timestamp):
         start_ts = weeutil.weeutil.startOfInterval(timestamp,

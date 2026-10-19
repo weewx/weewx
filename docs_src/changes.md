@@ -17,6 +17,11 @@ come from the daily summaries again, as before.
 
 ### 5.x.y dd-Mmm-YYYY
 
+Archive events emitted by `StdArchive` now include the matching LOOP
+accumulator. Extensions can read interval statistics or preserve LOOP highs
+and lows when writing to another database.
+[Issue #1171](https://github.com/weewx/weewx/issues/1171).
+
 Fixed a `TypeError` in aggregate type `vecavg` when there is no wind direction
 over an interval. [PR #1155](https://github.com/weewx/weewx/pull/1155).
 

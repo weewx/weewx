@@ -134,7 +134,13 @@ class END_ARCHIVE_PERIOD:
 
 class NEW_ARCHIVE_RECORD:
     """Event issued when a new archive record is available. The event contains
-    attribute 'record', which is the new archive record."""
+    attribute 'record', which is the new archive record.
+
+    Events emitted by StdArchive also contain 'accumulator', the completed LOOP
+    accumulator whose ending timestamp matches the record, or None if unavailable.
+    Services must not modify this shared accumulator. Its values use its own
+    'unit_system', and its high/low statistics depend on the 'loop_hilo' setting.
+    """
 
 
 class POST_LOOP:
