@@ -3,9 +3,6 @@ WeeWX change history
 
 ### 5.6.0 dd-Mmm-yyyy
 
-Improved JSON archive update performance while keeping memory use bounded.
-[PR #1169](https://github.com/weewx/weewx/pull/1169).
-
 Added `weewx.jsongenerator.JSONGenerator`, which writes the data as JSON. Added
 the skin `Horizon`, which leverages the JSON data, allowing it to step backwards
 through the entire station history. The skin also includes various panels,
