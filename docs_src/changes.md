@@ -3,6 +3,9 @@ WeeWX change history
 
 ### 5.x.y dd-Mmm-YYYY
 
+FTP uploads now exclude entire .git, .svn, CVS, .idea and __pycache__
+directory trees.
+
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
 improvements particularly with remote databases.
