@@ -225,12 +225,9 @@ class StdReportEngine(threading.Thread):
                             skin_dict['SKIN_ROOT'],
                             skin_dict['skin'])
 
-            # We are using two "with" statements below:
-            # 1. Set the current working directory to the skin's location. This allows #include
-            # statements to work.
-            # 2. Set the locale to 'lang'. If 'lang' was not specified, set it to the user's
-            # default locale.
-            with set_cwd(skin_dir) as cwd, set_locale(skin_dict.get('lang', '')) as loc:
+            # Both locale and working directory are process-wide. Acquire the locale lock
+            # before changing directory, and restore the directory before releasing it.
+            with set_locale(skin_dict.get('lang', '')) as loc, set_cwd(skin_dir) as cwd:
                 log.debug("Running generators for report '%s' in directory '%s' with locale '%s'",
                           report, cwd, loc)
 
