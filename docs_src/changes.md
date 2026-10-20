@@ -27,6 +27,10 @@ FTP uploads now exclude entire .git, .svn, CVS, .idea and __pycache__
 directory trees.
 [PR #1192](https://github.com/weewx/weewx/pull/1192).
 
+Fixed `AltimeterToStationPressure` raising `AttributeError` and added inverse
+conversions for all supported altimeter algorithms.
+[PR #1194](https://github.com/weewx/weewx/pull/1194).
+
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
 improvements particularly with remote databases.
