@@ -3,6 +3,10 @@ WeeWX change history
 
 ### 5.x.y dd-Mmm-YYYY
 
+Fixed incorrect values in derived series and aggregates when an XType extension
+returns a value in a different unit system.
+[PR #1188](https://github.com/weewx/weewx/pull/1188).
+
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
 improvements particularly with remote databases.

@@ -1016,7 +1016,7 @@ class XTypeTable(XType):
                 # Given a record, use the xtypes system to calculate a value:
                 try:
                     value = get_scalar(obs_type, record, db_manager)
-                    data_vec.append(value[0])
+                    data_vec.append(weewx.units.convertStd(value, std_unit_system)[0])
                 except weewx.CannotCalculate:
                     data_vec.append(None)
                 start_vec.append(record['dateTime'] - record['interval'] * 60)
@@ -1069,8 +1069,8 @@ class XTypeTable(XType):
             # Given a record, use the xtypes system to calculate a value. If the value cannot be
             # calculated a CannotCalculate exception will be raised. Be prepared to catch it.
             try:
-                # A ValueTuple will be returned, so use only the first element.
-                value = get_scalar(obs_type, record, db_manager)[0]
+                value_tuple = get_scalar(obs_type, record, db_manager)
+                value = weewx.units.convertStd(value_tuple, std_unit_system)[0]
             except weewx.CannotCalculate:
                 value = None
 
