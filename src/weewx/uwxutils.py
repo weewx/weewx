@@ -202,13 +202,30 @@ class TWxUtils:
         Result = InToHPa(HPaToIn(pressureHPa) * Power10(0.00813 * MToFt(sensorElevationM - stationElevationM) / FToR(CToF(currentTempC))))
         return Result
 
-    # FIXME: still to do
-    #class function TWxUtils.AltimeterToStationPressure(pressureHPa: TWxReal;
-    #     elevationM: TWxReal;
-    #     algorithm: TAltimeterAlgorithm = DefaultAltimeterAlgorithm): TWxReal;
-    #begin
-    #end;
-    #}
+    @staticmethod
+    def AltimeterToStationPressure(pressureHPa, elevationM, algorithm='aaMADIS'):
+        """Invert StationToAltimeter, returning station pressure in hPa."""
+        if algorithm == 'aaASOS':
+            return InToHPa(Power(Power(HPaToIn(pressureHPa), 1 / 5.255)
+                                - 1.313E-5 * MToFt(elevationM), 1 / 0.1903))
+        if algorithm == 'aaASOS2':
+            k1 = TWxUtils.standardLapseRate * TWxUtils.gasConstantAir / TWxUtils.gravity
+            return Power(Power(pressureHPa, k1)
+                         - 8.41728638E-5 * TWxUtils.GeopotentialAltitude(elevationM), 1 / k1)
+        if algorithm in ('aaMADIS', 'aaNOAA'):
+            k1 = 0.190284
+            k2 = 8.4184960528E-5 if algorithm == 'aaMADIS' else 8.42288069E-5
+            return Power(Power(pressureHPa, k1) - k2 * elevationM, 1 / k1) + 0.3
+        if algorithm == 'aaWOB':
+            k1 = TWxUtils.standardLapseRate * TWxUtils.gasConstantAir / TWxUtils.gravity
+            return InToHPa(Power(Power(HPaToIn(pressureHPa), k1)
+                                - 1.312603E-5 * MToFt(elevationM), 1 / k1))
+        if algorithm == 'aaSMT':
+            k1 = 0.190284
+            return InToHPa(Power(Power(HPaToIn(pressureHPa), k1)
+                                - 4.30899E-5 * TWxUtils.GeopotentialAltitude(elevationM),
+                                1 / k1) + 0.01)
+        raise ValueError("Unknown AltimeterToStationPressure algorithm '%s'" % algorithm)
 
     @staticmethod
     def SeaLevelToStationPressure(pressureHPa, elevationM,
@@ -388,7 +405,7 @@ class TWxUtilsUS:
         Result = TWxUtils.AltimeterToStationPressure(InToHPa(pressureIn),
                                                      FtToM(elevationFt),
                                                      algorithm)
-        return Result
+        return HPaToIn(Result)
 
     @staticmethod
     def SeaLevelToStationPressure(pressureIn, elevationFt,
