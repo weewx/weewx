@@ -3,6 +3,9 @@ WeeWX change history
 
 ### 5.x.y dd-Mmm-YYYY
 
+Fixed calculated rainRate including LOOP rain after the archive record
+timestamp, and retained the complete rain window for delayed calculations.
+
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
 improvements particularly with remote databases.
