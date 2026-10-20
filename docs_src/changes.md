@@ -11,6 +11,10 @@ Fixed `diff` and `tderiv` reading an unrelated archive table or returning values
 across empty intervals.
 [PR #1189](https://github.com/weewx/weewx/pull/1189).
 
+Fixed `unix_epoch_ns` conversions, which used microsecond scale. Nanosecond
+output values are now 1000 times larger.
+[PR #1190](https://github.com/weewx/weewx/pull/1190).
+
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
 improvements particularly with remote databases.
