@@ -25,9 +25,20 @@ trust weewx.com, and know where to find the WeeWX releases.
 2. Tell `apt` where to find the WeeWX repository.
 
     ```{.shell .copy}
-    echo "deb [arch=all] https://weewx.com/apt/python3 buster main" | \
-        sudo tee /etc/apt/sources.list.d/weewx.list
+    wget -qO - https://weewx.com/apt/weewx-python3.sources | \
+        sudo tee /etc/apt/sources.list.d/weewx.sources
     ```
+
+    If you previously configured WeeWX using `weewx.list`, remove that file:
+
+    ```{.shell .copy}
+    sudo rm -f /etc/apt/sources.list.d/weewx.list
+    ```
+
+The repository's `stable` suite is for all supported Debian-based systems,
+regardless of their release name. The source file specifies `Architectures: all`
+because the WeeWX package contains no architecture-specific binaries. Keep this
+setting even on ARM64 systems.
 
 
 ## Install
@@ -185,5 +196,5 @@ sudo gpasswd -d $USER weewx
 sudo userdel weewx
 sudo groupdel weewx
 sudo rm /etc/apt/trusted.gpg.d/weewx.gpg
-sudo rm /etc/apt/sources.list.d/weewx.list
+sudo rm -f /etc/apt/sources.list.d/weewx.sources /etc/apt/sources.list.d/weewx.list
 ```

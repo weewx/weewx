@@ -1,0 +1,6 @@
+Types: deb
+URIs: https://weewx.com/apt/python3
+Suites: stable
+Components: main
+Architectures: all
+Signed-By: /etc/apt/trusted.gpg.d/weewx.gpg

@@ -482,12 +482,12 @@ release-repo:
 # when debian deprecated the use of apt-key.
 upload-repo-index:
 	scp pkg/index-apt.html $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/public/index.html
+	scp pkg/weewx-python3.sources $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/aptly/public
 	scp pkg/index-yum.html $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/yum/index.html
 	scp pkg/index-suse.html $(USER)@$(WEEWX_COM):$(WEEWX_HTMLDIR)/suse/index.html
 
 # 'apt-repo' is only used when creating a new apt repository from scratch
-# the .html and .list files are not part of an official apt repository.  they
-# are included to make the repository self-documenting.
+# The .html, .list, and .sources files make the repository self-documenting.
 APTLY_DIR=/var/tmp/repo-apt
 apt-repo:
 	aptly -config=pkg/aptly.conf repo create -distribution=squeeze -component=main -architectures=all python2-weewx
@@ -496,6 +496,7 @@ apt-repo:
 	cp -p pkg/index-apt.html $(APTLY_DIR)/public/index.html
 	cp -p pkg/weewx-python2.list $(APTLY_DIR)/public
 	cp -p pkg/weewx-python3.list $(APTLY_DIR)/public
+	cp -p pkg/weewx-python3.sources $(APTLY_DIR)/public
 # this is for backward-compatibility when there was not python2/3 distinction
 	cp -p pkg/weewx-python2.list $(APTLY_DIR)/public/weewx.list
 # these are for backward-compatibility for users that do not have python2 or
@@ -511,9 +512,16 @@ pull-apt-repo:
 update-apt-repo:
 	aptly -config=pkg/aptly.conf repo add python3-weewx $(DSTDIR)/python3-$(DEBPKG)
 	aptly -config=pkg/aptly.conf snapshot create python3-weewx-$(DEBVER) from repo python3-weewx
-	aptly -config=pkg/aptly.conf publish drop buster python3
-	aptly -config=pkg/aptly.conf publish -architectures=all snapshot python3-weewx-$(DEBVER) python3
-#	aptly -config=pkg/aptly.conf publish switch buster python3 python3-weewx-$(DEBVER)
+# Keep buster for existing clients; stable is independent of Debian release names.
+	set -e; for suite in buster stable; do \
+  if aptly -config=pkg/aptly.conf publish show $$suite python3 > /dev/null 2>&1; then \
+    aptly -config=pkg/aptly.conf publish switch $$suite python3 python3-weewx-$(DEBVER); \
+  else \
+    aptly -config=pkg/aptly.conf publish -distribution=$$suite -architectures=all snapshot python3-weewx-$(DEBVER) python3; \
+  fi; \
+done
+	cp -p pkg/index-apt.html $(APTLY_DIR)/public/index.html
+	cp -p pkg/weewx-python3.sources $(APTLY_DIR)/public
 
 # publish apt repo changes to the public weewx apt repo
 push-apt-repo:

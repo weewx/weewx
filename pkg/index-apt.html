@@ -54,7 +54,13 @@ wget -qO - https://weewx.com/keys.html | sudo gpg --dearmor --output /etc/apt/tr
 <h2>Tell apt where to find the WeeWX repository</h2>
 
 For Debian10 and later (WeeWX5 and Python3):
-<pre class='tty'>echo "deb [arch=all] https://weewx.com/apt/python3 buster main" | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
+<pre class='tty'>wget -qO - https://weewx.com/apt/weewx-python3.sources | sudo tee /etc/apt/sources.list.d/weewx.sources</pre>
+
+<p>If you previously configured WeeWX using <code>weewx.list</code>, remove that file:</p>
+<pre class='tty'>sudo rm -f /etc/apt/sources.list.d/weewx.list</pre>
+
+<p>The <code>stable</code> suite is for all supported Debian-based systems, regardless of their release name.
+The source file specifies <code>Architectures: all</code>, including on ARM64 systems.</p>
 
 For Debian9 and earlier (WeeWX4 and Python2):
 <pre class='tty'>echo "deb [arch=all] https://weewx.com/apt/python2 squeeze main" | sudo tee /etc/apt/sources.list.d/weewx.list</pre>
