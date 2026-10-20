@@ -283,6 +283,12 @@ using a simple 'publish update'.
 
 There are two apt repositories: python2 and python3
 
+The python3 repository publishes the same snapshot under both buster and stable.
+The stable suite is independent of Debian release names. Keep buster for
+existing clients. The update-apt-repo target creates either publication if
+missing, or switches it to the new snapshot if it already exists. It also
+refreshes the installation page and weewx-python3.sources in the public directory.
+
 to do apt repo updates you must first install aptly:
   https://www.aptly.info/download/
 for example, on debian:
@@ -305,6 +311,7 @@ create a snapshot:
 publish using snapshot:
   aptly publish -architectures=all snapshot python-weewx-x.y.z-n python2
   aptly publish -architectures=all snapshot python3-weewx-x.y.z-n python3
+  aptly publish -distribution=stable -architectures=all snapshot python3-weewx-x.y.z-n python3
 
 update using 'publish switch':
   aptly repo add python2-weewx dist/python-weewx_x.y.z-n_all.deb
@@ -314,15 +321,14 @@ update using 'publish switch':
   aptly repo add python3-weewx dist/python3-weewx_x.y.z-n_all.deb
   aptly snapshot create python3-weewx-x.y.z-n from repo python3-weewx
   aptly publish switch buster python3 python3-weewx-x.y.z-n
+  aptly publish switch stable python3 python3-weewx-x.y.z-n
 
-update using 'publish update':
+update the python2 repo using 'publish update':
   aptly publish repo -architectures=all python2-weewx squeeze
   aptly repo add python2-weewx dist/squeeze/python-weewx_x.y.z-n_all.deb
   aptly publish update squeeze python2
 
-  aptly publish repo -architectures=all python3-weewx buster
-  aptly repo add python3-weewx dist/buster/python3-weewx_x.y.z-n_all.deb
-  aptly publish update buster python3
+For python3, use the snapshot workflow above to keep both suites up to date.
 
 clone the published apt repo to local space:
   mkdir -p ~/.aptly
@@ -334,10 +340,8 @@ synchronize local aptly changes with the published apt repo:
 switch from testing to production (this is done at weewx.com):
   rsync -Oarvz --delete /var/www/html/aptly-test/ /var/www/html/aptly
 
-for clients to use an apt repo at weewx.com:
-  curl -s http://weewx.com/keys.html | sudo apt-key add -
-  echo "deb [arch=all] http://weewx.com/apt/ squeeze main" | sudo tee /etc/apt/sources.list.d/weewx.list
-  echo "deb [arch=all] http://weewx.com/apt/ buster main" | sudo tee /etc/apt/sources.list.d/python3-weewx.list
+For client setup, see docs_src/quickstarts/debian.md. Publish both suites and
+weewx-python3.sources before publishing the updated client instructions.
 
 
 yum/zypper repository details -------------------------------------------------
