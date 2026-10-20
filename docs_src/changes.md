@@ -5,6 +5,7 @@ WeeWX change history
 
 Fixed overlapping report runs using the wrong skin directory or leaving the
 working directory changed.
+[PR #1191](https://github.com/weewx/weewx/pull/1191).
 
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
