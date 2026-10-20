@@ -294,7 +294,8 @@ class TimespanBinder:
         manager = self.db_lookup(self.data_binding)
         for record in manager.genBatchRecords(self.timespan.start, self.timespan.stop):
             yield CurrentObj(self.db_lookup, self.data_binding, record['dateTime'], self.formatter,
-                             self.converter, record=record, record_binding=self.data_binding)
+                             self.converter, record=record, record_binding=self.data_binding,
+                             record_is_complete=True)
 
     # Iterate over custom span
     def spans(self, context='day', interval=10800):
@@ -689,7 +690,8 @@ class CurrentObj:
     """
 
     def __init__(self, db_lookup, data_binding, current_time,
-                 formatter, converter, max_delta=None, record=None, record_binding=None):
+                 formatter, converter, max_delta=None, record=None, record_binding=None,
+                 record_is_complete=False):
         self.db_lookup = db_lookup
         self.data_binding = data_binding
         self.current_time = current_time
@@ -698,6 +700,7 @@ class CurrentObj:
         self.max_delta = max_delta
         self.record = record
         self.record_binding = record_binding
+        self.record_is_complete = record_is_complete
 
     def __getattr__(self, obs_type):
         """Return the given observation type."""
@@ -711,13 +714,13 @@ class CurrentObj:
         # iterator also identifies the binding it read, so its rows can be reused
         # without accidentally taking a current record from another database.
         if (not self.data_binding or self.data_binding == self.record_binding) \
-                and self.record and obs_type in self.record \
+                and self.record \
+                and (obs_type in self.record or self.record_is_complete) \
                 and self.record['dateTime'] == self.current_time:
-            # Use the record given to us to form a ValueTuple
-            vt = weewx.units.as_value_tuple(self.record, obs_type)
+            record = self.record
         else:
             # The supplied record belongs to another binding, is unavailable,
-            # lacks this observation, or has the wrong timestamp.
+            # or has the wrong timestamp.
             try:
                 # Get the appropriate database manager
                 db_manager = self.db_lookup(self.data_binding)
@@ -727,22 +730,21 @@ class CurrentObj:
 
             # Get the record for this timestamp from the database
             record = db_manager.getRecord(self.current_time, max_delta=self.max_delta)
-            # If there was no record at that timestamp, it will be None. If there was a record,
-            # check to see if the type is in it.
-            if not record or obs_type in record:
-                # If there was no record, then the value of the ValueTuple will be None.
-                # Otherwise, it will be value stored in the database.
-                vt = weewx.units.as_value_tuple(record, obs_type)
-            else:
-                # Couldn't get the value out of the record. Try the XTypes system.
-                try:
-                    vt = weewx.xtypes.get_scalar(obs_type, record, db_manager)
-                except weewx.CannotCalculate:
-                    u, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type)
-                    vt = ValueTuple(None, u, g)
-                except weewx.UnknownType:
-                    # Nothing seems to be working. It's an unknown type.
-                    vt = weewx.units.UnknownObsType(obs_type)
+
+        if not record or obs_type in record:
+            vt = weewx.units.as_value_tuple(record, obs_type)
+        else:
+            try:
+                db_manager = self.db_lookup(self.data_binding)
+            except weewx.UnknownBinding:
+                raise AttributeError(self.data_binding)
+            try:
+                vt = weewx.xtypes.get_scalar(obs_type, dict(record), db_manager)
+            except weewx.CannotCalculate:
+                u, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type)
+                vt = ValueTuple(None, u, g)
+            except weewx.UnknownType:
+                vt = weewx.units.UnknownObsType(obs_type)
 
         # Finally, return a ValueHelper
         return weewx.units.ValueHelper(vt, 'current', self.formatter, self.converter)
