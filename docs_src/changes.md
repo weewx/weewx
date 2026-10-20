@@ -5,6 +5,7 @@ WeeWX change history
 
 Fixed incorrect values in derived series and aggregates when an extension
 returns a different unit system.
+[PR #1188](https://github.com/weewx/weewx/pull/1188).
 
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
