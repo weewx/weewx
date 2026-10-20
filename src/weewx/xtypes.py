@@ -335,11 +335,11 @@ class ArchiveTable(XType):
 
     # Set of SQL statements to be used for calculating aggregates from the main archive table.
     agg_sql_dict = {
-        'diff': "SELECT (b.%(sql_type)s - a.%(sql_type)s) FROM archive a, archive b "
-                "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive "
-                "WHERE dateTime <= %(stop)s) "
-                "AND a.dateTime = (SELECT MIN(dateTime) FROM archive "
-                "WHERE dateTime >= %(start)s);",
+        'diff': "SELECT (b.%(sql_type)s - a.%(sql_type)s) FROM %(table_name)s a, %(table_name)s b "
+                "WHERE b.dateTime = (SELECT MAX(dateTime) FROM %(table_name)s "
+                "WHERE dateTime >= %(start)s AND dateTime <= %(stop)s) "
+                "AND a.dateTime = (SELECT MIN(dateTime) FROM %(table_name)s "
+                "WHERE dateTime >= %(start)s AND dateTime <= %(stop)s);",
         'first': "SELECT %(sql_type)s FROM %(table_name)s "
                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
                  "AND %(sql_type)s IS NOT NULL ORDER BY dateTime ASC LIMIT 1",
@@ -364,11 +364,11 @@ class ArchiveTable(XType):
                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
                     "AND %(sql_type)s IS NOT NULL LIMIT 1",
         'tderiv': "SELECT (b.%(sql_type)s - a.%(sql_type)s) / (b.dateTime-a.dateTime) "
-                  "FROM archive a, archive b "
-                  "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive "
-                  "WHERE dateTime <= %(stop)s) "
-                  "AND a.dateTime = (SELECT MIN(dateTime) FROM archive "
-                  "WHERE dateTime >= %(start)s);",
+                  "FROM %(table_name)s a, %(table_name)s b "
+                  "WHERE b.dateTime = (SELECT MAX(dateTime) FROM %(table_name)s "
+                  "WHERE dateTime >= %(start)s AND dateTime <= %(stop)s) "
+                  "AND a.dateTime = (SELECT MIN(dateTime) FROM %(table_name)s "
+                  "WHERE dateTime >= %(start)s AND dateTime <= %(stop)s);",
         'gustdir': "SELECT windGustDir FROM %(table_name)s "
                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
                    "ORDER BY windGust DESC limit 1",
