@@ -5,6 +5,7 @@ WeeWX change history
 
 FTP uploads now exclude entire .git, .svn, CVS, .idea and __pycache__
 directory trees.
+[PR #1192](https://github.com/weewx/weewx/pull/1192).
 
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
