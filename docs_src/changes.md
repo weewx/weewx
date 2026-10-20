@@ -3,6 +3,9 @@ WeeWX change history
 
 ### 5.x.y dd-Mmm-YYYY
 
+Fixed diff and tderiv reading an unrelated archive table or returning values
+across empty intervals.
+
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
 improvements particularly with remote databases.
