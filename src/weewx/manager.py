@@ -1675,14 +1675,14 @@ class DaySummaryManager(Manager):
             _qmarks = ','.join(len(_write_tuple) * '?')
             _sql_insert_str = ("INSERT INTO %s_day_%s VALUES(%s)"
                                % (self.table_name, _summary_type, _qmarks))
-            # ... and write to the database. In case the type doesn't appear in the database,
-            # be prepared to catch an exception:
+            # A failed summary write must abort the archive transaction as well.
             try:
                 cursor.execute("DELETE FROM %s_day_%s WHERE dateTime = ?"
                                % (self.table_name, _summary_type), (_sod,))
                 cursor.execute(_sql_insert_str, _write_tuple)
             except weedb.OperationalError as e:
                 log.error("Replace failed for database %s: %s", self.database_name, e)
+                raise
 
         # If requested, update the time of the last daily summary update:
         if lastUpdate is not None:
