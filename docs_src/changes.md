@@ -7,6 +7,10 @@ Fixed incorrect values in derived series and aggregates when an XType extension
 returns a value in a different unit system.
 [PR #1188](https://github.com/weewx/weewx/pull/1188).
 
+Fixed `diff` and `tderiv` reading an unrelated archive table or returning values
+across empty intervals.
+[PR #1189](https://github.com/weewx/weewx/pull/1189).
+
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
 improvements particularly with remote databases.
