@@ -3,6 +3,9 @@ WeeWX change history
 
 ### 5.x.y dd-Mmm-YYYY
 
+Fixed unix_epoch_ns conversions, which used microsecond scale. Nanosecond
+output values are now 1000 times larger.
+
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
 improvements particularly with remote databases.
