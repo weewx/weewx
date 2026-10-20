@@ -5,6 +5,7 @@ WeeWX change history
 
 Fixed wind vector counts failing under MySQL ONLY_FULL_GROUP_BY and returning
 missing units for empty intervals on SQLite.
+[PR #1195](https://github.com/weewx/weewx/pull/1195).
 
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
