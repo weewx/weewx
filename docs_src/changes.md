@@ -6,6 +6,7 @@ WeeWX change history
 Fixed archive records being lost or daily summaries left stale after MySQL
 lock errors. Other summary write errors now roll back the archive transaction
 and propagate to the caller.
+[PR #1196](https://github.com/weewx/weewx/pull/1196).
 
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
