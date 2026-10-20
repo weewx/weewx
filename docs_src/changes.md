@@ -3,6 +3,11 @@ WeeWX change history
 
 ### 5.x.y dd-Mmm-YYYY
 
+Fixed energy derivatives raising TypeError for missing or single samples.
+Unsupported temperature derivatives now raise UnknownAggregation instead of
+returning incorrect units.
+[PR #1199](https://github.com/weewx/weewx/pull/1199).
+
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
 improvements particularly with remote databases.

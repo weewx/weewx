@@ -471,15 +471,23 @@ class ArchiveTable(XType):
         # watts, scaled by the number of seconds in an hour. The unit group also changes to
         # group_power.
         if aggregate_type == 'tderiv':
+            if g == 'group_temperature':
+                # Absolute temperature conversions include an offset, which
+                # would corrupt a rate when the report changes unit systems.
+                raise weewx.UnknownAggregation(aggregate_type)
             if u == 'watt_second':
                 u = 'watt'
+                g = 'group_power'
             elif u == 'watt_hour':
                 u = 'watt'
-                value *= 3600
+                if value is not None:
+                    value *= 3600
+                g = 'group_power'
             elif u == 'kilowatt_hour':
                 u = 'kilowatt'
-                value *= 3600
-            g = 'group_power'
+                if value is not None:
+                    value *= 3600
+                g = 'group_power'
 
         # Form the ValueTuple and return it:
         return weewx.units.ValueTuple(value, u, g)
