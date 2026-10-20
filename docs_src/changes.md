@@ -5,6 +5,7 @@ WeeWX change history
 
 Reduced database queries when reports iterate over derived observation values
 in archive records.
+[PR #1201](https://github.com/weewx/weewx/pull/1201).
 
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
