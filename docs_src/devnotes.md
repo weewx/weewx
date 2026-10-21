@@ -99,6 +99,11 @@ more likely), then only the generation of reports will be affected &mdash;
 the main thread will continue downloading data off the instrument and
 putting them in the database.
 
+To see these pieces at work, open the [animated model of the core data
+flow](devnotes/core-dataflow.html). It follows LOOP packets and archive
+records from the driver through the services into the database, the
+RESTful uploaders and the report thread.
+
 ## Units
 
 In general, there are three different areas where the unit system makes
