@@ -30,6 +30,10 @@ Fixed `AltimeterToStationPressure` raising `AttributeError` and added inverse
 conversions for all supported altimeter algorithms.
 [PR #1194](https://github.com/weewx/weewx/pull/1194).
 
+Fixed wind vector counts failing under MySQL when `ONLY_FULL_GROUP_BY` is
+enabled, and under SQLite with empty intervals.
+[PR #1195](https://github.com/weewx/weewx/pull/1195).
+
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
 improvements particularly with remote databases.

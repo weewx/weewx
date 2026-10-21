@@ -1125,7 +1125,7 @@ class WindVec(XType):
     }
 
     agg_sql_dict = {
-        'count': "SELECT COUNT(dateTime), usUnits FROM %(table_name)s "
+        'count': "SELECT COUNT(dateTime), MAX(usUnits) FROM %(table_name)s "
                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL",
         'first': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL "
@@ -1271,6 +1271,8 @@ class WindVec(XType):
                 if row:
                     if aggregate_type == 'count':
                         value, std_unit_system = row
+                        if std_unit_system is None:
+                            std_unit_system = db_manager.std_unit_system
                     else:
                         magnitude, direction, std_unit_system = row
                         value = weeutil.weeutil.to_complex(magnitude, direction)
