@@ -493,3 +493,30 @@ In our case, the obvious place for our new service is in
         restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW, weewx.restx.StdAWEKAS
         report_services = weewx.engine.StdPrint, weewx.engine.StdReport
 ```
+
+## Event data
+
+When WeeWX calls the function, that your service bound to an event, WeeWX
+passes an instance of the class `Event` to it. It contains the following
+data:
+
+* for `NEW_LOOP_PACKET` and `CHECK_LOOP`:
+
+  * `event.event_type`: `NEW_LOOP_PACKET`
+  * `event.packet`: the LOOP packet containing the measurements
+
+* for `NEW_ARCHIVE_RECORD`:
+
+  * `event.event_type`: `NEW_ARCHIVE_RECORD`
+  * `event.record`: the archive record
+  * `event.accumulator`: an accumulator or `None` (from WeeWX 5.6 on)
+  * `event.origin`: where the data come from; can be `hardware` or `software`
+
+  If you want the extract data from the accumulator, make sure to check
+  the timespan first:
+
+  ```Python
+          if event.accumulator and and event.record['dateTime'] == event.accumulator.timespan.stop:
+              # your code here
+              ...
+  ```
