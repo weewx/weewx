@@ -379,6 +379,17 @@ class Manager:
         Returns:
             int: The number of successful insertions.
         """
+        
+        # An accumulator is used during an archive interval. At the end of
+        # it, one single record is written only. There cannot be more than
+        # one archive record in one archive interval. So, an accumulator
+        # can be accompanied by a single record only, not a list of records.
+        # In this case, `weewx.engine.StdArchive._catchup` and
+        # `weewx.engine.StdArchive._software_catchup` make sure, record and 
+        # accumulator correspond, and we do not need to check it here again.
+        # But make sure, there is no accumulator if `record_obj` is a list.
+        # With this check here we avoid the comparison within the `for` loop.
+        if not isinstance(record_obj, dict): accumulator = None
 
         # Determine if record_obj is just a single dictionary instance. If so, wrap it in
         # something iterable (a list):
@@ -393,7 +404,9 @@ class Manager:
                 try:
                     # If the accumulator time matches the record we are working with,
                     # use it to update the highs and lows.
-                    if accumulator and record['dateTime'] == accumulator.timespan.stop:
+                    # Note: The check `record['dateTime'] == accumulator.timespan.stop`
+                    #       moved to `weewx.engine.StdArchive._catchup`.
+                    if accumulator:
                         self._updateHiLo(accumulator, cursor)
 
                     # Then add the record to the archives:
