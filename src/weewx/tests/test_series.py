@@ -261,3 +261,351 @@ def test_get_aggregate_series_on_the_fly(config_dict):
         assert actual == pytest.approx(expected, abs=1e-6)
     assert data_vec[1] == 'inHg'
     assert data_vec[2] == 'group_pressure'
+
+expected_outTemp_min = [-1.009915, -0.420894, 0.174177, 0.775124, 1.381767, 1.993927, 2.611423,
+                        3.234072, 3.861688, 4.494087, 5.13108, 5.77248, 6.418095, 7.067735,
+                        7.721207, 8.378318, 9.038872, 9.702674, 10.369528, 11.039235, 11.711598,
+                        12.386417, 13.063491, 13.742621, 14.423606, 15.106242, 15.790329,
+                        16.475664, 17.162042, 17.849262, 18.537119]
+
+expected_outTemp_max = [39.283828, 39.875896, 40.315346, 41.077745, 41.687169, 42.30202,
+                        42.922115, 43.547271, 44.177302, 44.812021, 45.451241, 46.094772,
+                        46.742424, 47.394004, 48.04932, 48.708177, 49.370379, 50.035732,
+                        50.704037, 51.375097, 52.048713, 52.724684, 53.402812, 54.082894,
+                        54.76473, 55.448117, 56.132853, 56.818735, 57.50556, 58.193123,
+                        58.881223]
+
+expected_outTemp_count = [48, 47, 47, 48, 47, 47, 48, 47, 47, 48, 47, 47, 47, 46, 47, 47, 48,
+                          47, 47, 48, 47, 47, 48, 47, 47, 48, 47, 47, 48, 47, 47]
+
+expected_outTemp_not_null = [True] * 31
+
+expected_outTemp_first = [3.062017, 3.650397, 4.244847, 4.84519, 5.451248, 6.062842, 6.67979,
+                          7.301911, 7.929018, 8.560928, 7.757319, 9.838401, 10.483586, 11.132815,
+                          15.450449, 16.107041, 16.767106, 17.430446, 18.096867, 18.766171,
+                          19.438159, 20.112632, 20.78939, 21.468233, 22.148959, 22.831368,
+                          23.515256, 24.200421, 24.88666, 25.573769, 26.261546]
+
+expected_outTemp_last = [5.363008, 5.957333, 6.557555, 7.163496, 7.774976, 8.391815, 9.01383,
+                         9.640835, 10.272646, 10.909076, 11.549935, 12.195034, 12.844181,
+                         17.612037, 18.268555, 18.928549, 19.591823, 20.258182, 20.927428,
+                         21.599362, 22.273785, 22.950497, 23.629299, 24.309988, 24.992364,
+                         25.676223, 26.361363, 27.047582, 27.734676, 28.42244, 29.110673]
+
+expected_outTemp_firsttime = [1267432200, 1267518600, 1267605000, 1267691400, 1267777800,
+                              1267864200, 1267950600, 1268037000, 1268123400, 1268209800,
+                              1268298000, 1268382600, 1268469000, 1268555400, 1268638200,
+                              1268724600, 1268811000, 1268897400, 1268983800, 1269070200,
+                              1269156600, 1269243000, 1269329400, 1269415800, 1269502200,
+                              1269588600, 1269675000, 1269761400, 1269847800, 1269934200,
+                              1270020600]
+
+expected_outTemp_lasttime = [1267516800, 1267603200, 1267689600, 1267776000, 1267862400,
+                             1267948800, 1268035200, 1268121600, 1268208000, 1268294400,
+                             1268380800, 1268467200, 1268553600, 1268636400, 1268722800,
+                             1268809200, 1268895600, 1268982000, 1269068400, 1269154800,
+                             1269241200, 1269327600, 1269414000, 1269500400, 1269586800,
+                             1269673200, 1269759600, 1269846000, 1269932400, 1270018800,
+                             1270105200]
+
+expected_outTemp_maxtime = [1267484400, 1267570800, 1267659000, 1267743600, 1267830000,
+                            1267916400, 1268002800, 1268089200, 1268175600, 1268262000,
+                            1268348400, 1268434800, 1268521200, 1268607600, 1268694000,
+                            1268780400, 1268866800, 1268953200, 1269039600, 1269126000,
+                            1269212400, 1269298800, 1269385200, 1269471600, 1269558000,
+                            1269644400, 1269730800, 1269817200, 1269903600, 1269990000,
+                            1270076400]
+
+expected_outTemp_mintime = [1267441200, 1267527600, 1267614000, 1267700400, 1267786800,
+                            1267873200, 1267959600, 1268046000, 1268132400, 1268218800,
+                            1268305200, 1268391600, 1268478000, 1268564400, 1268650800,
+                            1268737200, 1268823600, 1268910000, 1268996400, 1269082800,
+                            1269169200, 1269255600, 1269342000, 1269428400, 1269514800,
+                            1269601200, 1269687600, 1269774000, 1269860400, 1269946800,
+                            1270033200]
+
+expected_outTemp_diff = [0.588252, 0.594325, 0.600222, 0.605941, 0.61148, 0.616839, 0.622015,
+                         0.627005, 0.631811, 0.63643, 0.640859, 0.645099, 0.649147, 4.767856,
+                         0.656518, 0.659994, 0.663274, 0.666359, 0.669246, 0.671934, 0.674423,
+                         0.676712, 0.678802, 0.680689, 0.682376, 0.683859, 0.68514, 0.686219,
+                         0.687094, 0.687764, 0.688233]
+
+expected_outTemp_tderiv = [6.808472e-06, 6.878762e-06, 6.947014e-06, 7.013206e-06, 7.077315e-06,
+                           7.13934e-06, 7.199248e-06, 7.257002e-06, 7.312627e-06, 7.366088e-06,
+                           7.41735e-06, 7.466424e-06, 7.513275e-06, 5.75828e-05, 7.598588e-06,
+                           7.638819e-06, 7.676782e-06, 7.712488e-06, 7.745903e-06, 7.777014e-06,
+                           7.805822e-06, 7.832315e-06, 7.856505e-06, 7.878345e-06, 7.89787e-06,
+                           7.915035e-06, 7.929861e-06, 7.94235e-06, 7.952477e-06, 7.960231e-06,
+                           7.96566e-06]
+
+@pytest.mark.parametrize('aggregate_type, expected_values, expected_unit', [
+    ('min', expected_outTemp_min, ('degree_F', 'group_temperature')),
+    ('max', expected_outTemp_max, ('degree_F', 'group_temperature')),
+    ('count', expected_outTemp_count, ('count', 'group_count')),
+    ('not_null', expected_outTemp_not_null, ('boolean', 'group_boolean')),
+    ('first', expected_outTemp_first, ('degree_F', 'group_temperature')),
+    ('last', expected_outTemp_last, ('degree_F', 'group_temperature')),
+    ('firsttime', expected_outTemp_firsttime, ('unix_epoch', 'group_time')),
+    ('lasttime', expected_outTemp_lasttime, ('unix_epoch', 'group_time')),
+    ('maxtime', expected_outTemp_maxtime, ('unix_epoch', 'group_time')),
+    ('mintime', expected_outTemp_mintime, ('unix_epoch', 'group_time')),
+    ('diff', expected_outTemp_diff, ('degree_F', 'group_temperature')),
+    ('tderiv', expected_outTemp_tderiv, ('degree_F', 'group_power')),
+])
+def test_get_series_archive_agg_outTemp(config_dict, aggregate_type, expected_values,
+                                        expected_unit):
+    """Test a series of 'outTemp', with daily aggregation, run against the main archive table.
+    Buckets of a day go through the per-bucket loop, and so through the daily summaries where
+    those know the aggregate type."""
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        start_vec, stop_vec, data_vec \
+            = weewx.xtypes.ArchiveTable.get_series('outTemp',
+                                                   TimeSpan(month_start_ts, month_stop_ts),
+                                                   db_manager,
+                                                   aggregate_type,
+                                                   24 * 3600)
+    # March has 31 days.
+    assert len(start_vec[0]) == 31
+    assert len(stop_vec[0]) == 31
+    assert len(data_vec[0]) == 31
+    for actual, expected in zip(data_vec[0], expected_values):
+        # The daily summaries return 'not_null' as 1, the archive table as True.
+        if actual is None or expected is None or isinstance(expected, bool):
+            assert actual == expected
+        else:
+            assert actual == pytest.approx(expected, abs=1e-6)
+    assert (data_vec[1], data_vec[2]) == expected_unit
+
+
+def test_get_series_archive_agg_query_count(config_dict):
+    """Regression test: a fast-path aggregated get_series() call should issue a small, constant
+    number of SQL queries, not one per aggregation bucket."""
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        call_count = [0]
+        orig_genSql = db_manager.genSql
+
+        def counting_genSql(*args, **kwargs):
+            call_count[0] += 1
+            return orig_genSql(*args, **kwargs)
+
+        db_manager.genSql = counting_genSql
+        try:
+            # Hourly aggregation over a month means about 744 buckets. The fast path should
+            # issue only a handful of queries, not one per bucket.
+            start_vec, stop_vec, data_vec \
+                = weewx.xtypes.ArchiveTable.get_series('outTemp',
+                                                       TimeSpan(month_start_ts, month_stop_ts),
+                                                       db_manager,
+                                                       'avg',
+                                                       3600)
+        finally:
+            db_manager.genSql = orig_genSql
+
+    assert len(data_vec[0]) > 100
+    assert call_count[0] < 10
+
+
+# Page spans used to exercise the paging logic of ArchiveTable.get_series(). A span of 1 second
+# results in one bucket per page. A span of 5000 seconds is not a multiple of either the archive
+# interval or the aggregation interval.
+page_spans = [1, 3600, 5000, 24 * 3600, weewx.xtypes.ArchiveTable.series_page_span]
+
+
+def _get_hourly_series(db_manager, obs_type, aggregate_type):
+    return weewx.xtypes.ArchiveTable.get_series(obs_type,
+                                                TimeSpan(month_start_ts, month_stop_ts),
+                                                db_manager,
+                                                aggregate_type,
+                                                3600)
+
+
+def _assert_series_equal(actual, expected):
+    for actual_vt, expected_vt in zip(actual, expected):
+        assert actual_vt[1:] == expected_vt[1:]
+        assert len(actual_vt[0]) == len(expected_vt[0])
+        for a, e in zip(actual_vt[0], expected_vt[0]):
+            if a is None or e is None:
+                assert a == e
+            else:
+                assert a == pytest.approx(e, abs=1e-6)
+
+
+def _force_per_bucket(m):
+    """Make ArchiveTable.get_series() calculate every bucket using get_aggregate()."""
+    m.setattr(weewx.xtypes.ArchiveTable, '_fast_aggregate_types', set())
+    m.setattr(weewx.xtypes.ArchiveTable, '_grouped_aggregate_types', set())
+
+
+# The aggregate types of the fast path, to compare with the per-bucket fallback.
+compared_types = sorted(weewx.xtypes.ArchiveTable._fast_aggregate_types
+                        | weewx.xtypes.ArchiveTable._grouped_aggregate_types)
+
+
+@pytest.mark.parametrize('obs_type', ['outTemp', 'rain', 'wind'])
+@pytest.mark.parametrize('aggregate_type', compared_types + ['cumulative'])
+def test_get_series_archive_agg_paged(config_dict, monkeypatch, obs_type, aggregate_type):
+    """The paged fast path of ArchiveTable.get_series() must give the same results as the
+    per-bucket fallback, no matter what the page span is."""
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        # First, get the reference results by forcing the per-bucket fallback.
+        with monkeypatch.context() as m:
+            _force_per_bucket(m)
+            expected = _get_hourly_series(db_manager, obs_type, aggregate_type)
+        # March has 31 days, less one hour for the DST change.
+        assert len(expected[0][0]) == 31 * 24 - 1
+
+        for page_span in page_spans:
+            with monkeypatch.context() as m:
+                m.setattr(weewx.xtypes.ArchiveTable, 'series_page_span', page_span)
+                actual = _get_hourly_series(db_manager, obs_type, aggregate_type)
+            _assert_series_equal(actual, expected)
+
+
+@pytest.mark.parametrize('page_span', page_spans)
+def test_get_series_archive_agg_page_bounds(config_dict, monkeypatch, page_span):
+    """The number of queries issued by the paged fast path should be about the timespan divided
+    by the page span, and no single query should return more than about a page of rows."""
+    monkeypatch.setattr(weewx.xtypes.ArchiveTable, 'series_page_span', page_span)
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        row_counts = []
+        orig_genSql = db_manager.genSql
+
+        def counting_genSql(*args, **kwargs):
+            row_counts.append(0)
+            for row in orig_genSql(*args, **kwargs):
+                row_counts[-1] += 1
+                yield row
+
+        db_manager.genSql = counting_genSql
+        try:
+            start_vec, stop_vec, data_vec = _get_hourly_series(db_manager, 'outTemp', 'avg')
+        finally:
+            db_manager.genSql = orig_genSql
+
+    n_buckets = len(data_vec[0])
+    assert n_buckets == 31 * 24 - 1
+    # Each page holds a whole number of hourly buckets: just enough to span page_span seconds.
+    buckets_per_page = max(1, -(-page_span // 3600))
+    expected_pages = n_buckets / buckets_per_page
+    assert expected_pages - 1 <= len(row_counts) <= expected_pages + 1
+    # No single query returns more than a page of rows.
+    assert max(row_counts) <= buckets_per_page * 3600 / interval + 1
+    if page_span == 24 * 3600:
+        assert 30 <= len(row_counts) <= 32
+
+
+def test_gen_pages():
+    """Test grouping buckets into pages."""
+    buckets = [TimeSpan(t, t + 10) for t in range(0, 100, 10)]
+    pages = list(weewx.xtypes.ArchiveTable._gen_pages(buckets, 25))
+    assert pages == [buckets[0:3], buckets[3:6], buckets[6:9], buckets[9:10]]
+    pages = list(weewx.xtypes.ArchiveTable._gen_pages(buckets, 1))
+    assert pages == [[b] for b in buckets]
+    pages = list(weewx.xtypes.ArchiveTable._gen_pages(buckets, 1000))
+    assert pages == [buckets]
+    assert list(weewx.xtypes.ArchiveTable._gen_pages([], 1000)) == []
+    # A bucket of a different length starts a new page.
+    buckets = [TimeSpan(0, 10), TimeSpan(10, 20), TimeSpan(20, 40), TimeSpan(40, 50),
+               TimeSpan(50, 55)]
+    pages = list(weewx.xtypes.ArchiveTable._gen_pages(buckets, 1000))
+    assert pages == [buckets[0:2], buckets[2:3], buckets[3:4], buckets[4:5]]
+
+
+@pytest.mark.parametrize('obs_type', ['outTemp', 'wind'])
+@pytest.mark.parametrize('aggregate_type',
+                         sorted(weewx.xtypes.ArchiveTable._grouped_aggregate_types))
+def test_get_series_archive_agg_dst(config_dict, monkeypatch, obs_type, aggregate_type):
+    """Where DST begins, one of the 3-hour buckets is only 2 hours long. The buckets after it
+    must still get the values of the per-bucket fallback."""
+    def get_series():
+        return weewx.xtypes.ArchiveTable.get_series(obs_type,
+                                                    TimeSpan(month_start_ts, month_stop_ts),
+                                                    db_manager,
+                                                    aggregate_type,
+                                                    3 * 3600)
+
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        with monkeypatch.context() as m:
+            _force_per_bucket(m)
+            expected = get_series()
+        start_vec, stop_vec = expected[0][0], expected[1][0]
+        assert sorted(set(b - a for a, b in zip(start_vec, stop_vec))) == [7200, 10800]
+        _assert_series_equal(get_series(), expected)
+
+
+@pytest.mark.parametrize('aggregate_type', compared_types)
+def test_get_series_archive_agg_empty(config_dict, monkeypatch, aggregate_type):
+    """With buckets of 15 minutes, and an archive row every 30 minutes, every other bucket is
+    empty. It must get the value of the per-bucket fallback."""
+    def get_series():
+        return weewx.xtypes.ArchiveTable.get_series('wind',
+                                                    TimeSpan(month_start_ts,
+                                                             month_start_ts + 7 * 24 * 3600),
+                                                    db_manager,
+                                                    aggregate_type,
+                                                    900)
+
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        with monkeypatch.context() as m:
+            _force_per_bucket(m)
+            expected = get_series()
+        _assert_series_equal(get_series(), expected)
+
+
+def test_get_series_archive_agg_grouped(config_dict):
+    """Where its SQL can aggregate, the database returns a row per bucket, rather than every
+    archive row."""
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        row_count = [0]
+        orig_genSql = db_manager.genSql
+
+        def counting_genSql(*args, **kwargs):
+            for row in orig_genSql(*args, **kwargs):
+                row_count[0] += 1
+                yield row
+
+        db_manager.genSql = counting_genSql
+        try:
+            start_vec, stop_vec, data_vec = _get_hourly_series(db_manager, 'outTemp', 'avg')
+        finally:
+            db_manager.genSql = orig_genSql
+
+    # An hour holds two archive rows.
+    assert 0 < row_count[0] <= len(data_vec[0])
+
+
+def test_get_series_archive_agg_whole_days(config_dict):
+    """Buckets of a day come from the daily summaries, as with get_aggregate(). The summaries
+    hold the extremes of the LOOP packets, which can fall between two archive records. One is
+    simulated here, and the series must show it."""
+    day_start = int(time.mktime((2010, 3, 10, 0, 0, 0, 0, 0, -1)))
+    # Between the archive records of 03:00 and 03:30
+    loop_time = day_start + 3 * 3600 + 1234
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        # Through a cursor: connection.execute() of weedb.sqlite commits at once, and the other
+        # tests would see the change.
+        with db_manager.connection.cursor() as cursor:
+            db_manager.connection.begin()
+            try:
+                cursor.execute("UPDATE archive_day_outTemp SET max = 200.0, maxtime = ? "
+                               "WHERE dateTime = ?", (loop_time, day_start))
+                start_vec, stop_vec, data_vec \
+                    = weewx.xtypes.ArchiveTable.get_series('outTemp',
+                                                           TimeSpan(month_start_ts,
+                                                                    month_stop_ts),
+                                                           db_manager,
+                                                           'maxtime',
+                                                           24 * 3600)
+            finally:
+                db_manager.connection.rollback()
+
+    assert start_vec[0][9] == day_start
+    assert data_vec[0][9] == loop_time
+
+
+def test_get_series_archive_agg_unknown_type(config_dict):
+    """A type that is not in the database should fall back to the per-bucket loop, which
+    raises UnknownAggregation because no XType can calculate it."""
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        with pytest.raises(weewx.UnknownAggregation):
+            _get_hourly_series(db_manager, 'fooBar', 'avg')

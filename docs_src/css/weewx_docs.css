@@ -234,7 +234,9 @@ p .symcode {
 .changed { background: #ffe0b0; }
 .added { background: #ccffcc; }
 
-/* override settings in material */
+/*
+ * In what follows, we override settings in material so that it matches our traditional look.
+ */
 
 .md-typeset table:not([class]) {
     border: none; /* no border on table, since we do it on cells */
@@ -303,4 +305,9 @@ p .symcode {
 
 .md-typeset__table {
     display: inherit; /* eliminate extra padding */
+}
+
+/* Class "hll" is what Material uses to highlight code blocks. Redefine it to the yellow we use. */
+.hll {
+    --md-code-hl-color--light: #ffff99;
 }

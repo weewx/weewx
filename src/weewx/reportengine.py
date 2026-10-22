@@ -70,7 +70,14 @@ MAPS = ((), (), (), MONTH_NAME_MAP, DAY_NAME_MAP)
 
 @contextmanager
 def set_cwd(new_cwd):
-    """Set the current working directory within a context manager"""
+    """Set the current working directory within a context manager
+
+    Args:
+        new_cwd (Path|str): The new working directory.
+
+    Yields:
+        Path|str: The new working directory.
+    """
     old_cwd = Path.cwd()
     try:
         os.chdir(new_cwd)
@@ -85,7 +92,14 @@ LOCALE_LOCK = threading.Lock()
 
 @contextmanager
 def set_locale(name):
-    """Set the locale within a context manager"""
+    """Set the locale within a context manager
+
+    Args:
+        name (str): The name of the locale to set.
+
+    Yields:
+        str: The name of the locale that was actually set.
+    """
     with LOCALE_LOCK:
         # Save the old locale
         saved_locale = locale.setlocale(locale.LC_ALL)
@@ -122,7 +136,13 @@ class StdReportEngine(threading.Thread):
     See below for examples of generators.
     """
 
-    def __init__(self, config_dict, stn_info, record=None, gen_ts=None, first_run=True):
+    def __init__(self,
+                 config_dict,
+                 stn_info,
+                 record=None,
+                 gen_ts=None,
+                 first_run=True,
+                 stop_event = None):
         """Initializer for the report engine.
 
         Args:
@@ -134,6 +154,7 @@ class StdReportEngine(threading.Thread):
                 [Optional; default is the last time in the database]
             first_run(bool): True if this is the first time the report engine has been
                 run.  If this is the case, then any 'one time' events should be done.
+            stop_event(threading.Event): When set, stop the reporting thread.
         """
         threading.Thread.__init__(self, name="ReportThread")
 
@@ -142,6 +163,7 @@ class StdReportEngine(threading.Thread):
         self.record = record
         self.gen_ts = gen_ts
         self.first_run = first_run
+        self.stop_event = stop_event
 
     def run(self, reports=None):
         """This is where the actual work gets done.
@@ -229,7 +251,10 @@ class StdReportEngine(threading.Thread):
                 if 'Generators' in skin_dict and 'generator_list' in skin_dict['Generators']:
                     for generator in weeutil.weeutil.option_as_list(
                             skin_dict['Generators']['generator_list']):
-
+                        # Return if we have been told to stop the thread.
+                        if self.stop_event and self.stop_event.is_set():
+                            log.debug("Stop event is set. Stopping generator '%s'", generator)
+                            return
                         try:
                             # Instantiate an instance of the class.
                             obj = weeutil.weeutil.get_object(generator)(
@@ -238,7 +263,8 @@ class StdReportEngine(threading.Thread):
                                 self.gen_ts,
                                 self.first_run,
                                 self.stn_info,
-                                self.record)
+                                self.record,
+                                self.stop_event)
                         except Exception as e:
                             log.error("Unable to instantiate generator '%s'", generator)
                             log.error("        ****  %s", e)
@@ -270,7 +296,15 @@ class StdReportEngine(threading.Thread):
 
 
 def build_skin_dict(config_dict, report):
-    """Find and build the skin_dict for the given report"""
+    """Find and build the skin_dict for the given report
+
+    Args:
+        config_dict (dict): The weewx configuration dictionary.
+        report (str): The name of the report.
+
+    Returns:
+        dict: The skin dictionary for the given report.
+    """
 
     #######################################################################
     # Start with the defaults in the defaults module. Because we will be modifying it, we need
@@ -469,13 +503,33 @@ def merge_lang(lang_spec, config_dict, report, skin_dict):
 class ReportGenerator:
     """Base class for all report generators."""
 
-    def __init__(self, config_dict, skin_dict, gen_ts, first_run, stn_info, record=None):
+    def __init__(self, config_dict,
+                 skin_dict,
+                 gen_ts,
+                 first_run,
+                 stn_info,
+                 record=None,
+                 stop_event=None):
+        """
+        Parameters:
+            config_dict(dict): The configuration dictionary.
+            skin_dict (ConfigObj): The skin dictionary with detailed information about
+                skins to be applied.
+            gen_ts (int): The generation timestamp in seconds since the epoch.
+            first_run (bool): Indicates whether this is the first run of the instance.
+            stn_info(StationInfo): An instance of weewx.station.StationInfo, with static
+                  station information.
+            record(dict|None): The current archive record [Optional; default is None]
+            stop_event (threading.Event|None): An optional threading event. If set, the
+             report generator should exit as soon as possible. Default is None.
+        """
         self.config_dict = config_dict
         self.skin_dict = skin_dict
         self.gen_ts = gen_ts
         self.first_run = first_run
         self.stn_info = stn_info
         self.record = record
+        self.stop_event = stop_event
         self.db_binder = weewx.manager.DBBinder(self.config_dict)
 
     def start(self):
@@ -506,9 +560,10 @@ class FtpGenerator(ReportGenerator):
 
         t1 = time.time()
         try:
-            local_root = Path(self.config_dict['WEEWX_ROOT'],
-                              self.skin_dict.get('HTML_ROOT',
-                                                 self.config_dict['StdReport']['HTML_ROOT']))
+            html_root = self.skin_dict.get('HTML_ROOT')
+            if not html_root:
+                html_root = self.config_dict['StdReport']['HTML_ROOT']
+            local_root = Path(self.config_dict['WEEWX_ROOT'], html_root)
             ftp_data = weeutil.ftpupload.FtpUpload(
                 server=self.skin_dict['server'],
                 user=self.skin_dict['user'],
@@ -525,7 +580,7 @@ class FtpGenerator(ReportGenerator):
                 encoding=self.skin_dict.get('ftp_encoding', 'utf-8'),
                 ciphers=self.skin_dict.get('ciphers')
             )
-        except KeyError:
+        except (KeyError, AttributeError):
             log.debug("ftpgenerator: FTP upload not requested. Skipped.")
             return
 
@@ -684,7 +739,10 @@ class ReportTiming:
         Processes raw line to produce 5 field line suitable for further
         processing.
 
-        raw_line: The raw line to be processed.
+        Args:
+            raw_line (str|list): The raw line to be processed.
+            skin_dict (dict): The skin dictionary.
+            dateTime (int|float): The timestamp to be used for the report.
         """
 
         # initialise some properties
@@ -750,6 +808,9 @@ class ReportTiming:
         (True|False, ERROR MESSAGE). First item is True is the line is valid
         otherwise False. ERROR MESSAGE is None if the line is valid otherwise a
         string containing a short error message.
+
+        Returns:
+            tuple(bool, str|None): A 2-way tuple (is_valid, error_message).
         """
 
         # set a list to hold our decoded ranges
@@ -761,11 +822,11 @@ class ReportTiming:
                 self.decode.append(field_set)
             # if we are this far then our line is valid so return True and no
             # error message
-            return (True, None)
+            return True, None
         except ValueError as e:
             # we picked up a ValueError in self.parse_field() so return False
             # and the error message
-            return (False, e)
+            return False, e
 
     def parse_field(self, field, span, names, mapp, is_rorl=False):
         """Return the set of valid values for a field.
@@ -775,15 +836,19 @@ class ReportTiming:
         parse sub-fields (e.g., lists of ranges). If a field is invalid a
         ValueError is raised.
 
-        field:   String containing the raw field to be parsed.
-        span:    Tuple representing the lower and upper numeric values the
-                 field may take. Format is (lower, upper).
-        names:   Tuple containing all valid named values for the field. For
-                 numeric only fields the tuple is empty.
-        mapp:    Tuple of 2 way tuples mapping named values to numeric
-                 equivalents. Format is ((name1, numeric1), ...
-                 (namex, numericx)). For numeric only fields the tuple is empty.
-        is_rorl: Is field part of a range or list. Either True or False.
+        Args:
+            field (str):   String containing the raw field to be parsed.
+            span (tuple):    Tuple representing the lower and upper numeric values the
+                     field may take. Format is (lower, upper).
+            names (tuple):   Tuple containing all valid named values for the field. For
+                     numeric only fields the tuple is empty.
+            mapp (tuple):    Tuple of 2 way tuples mapping named values to numeric
+                     equivalents. Format is ((name1, numeric1), ...
+                     (namex, numericx)). For numeric only fields the tuple is empty.
+            is_rorl (bool): Is field part of a range or list. Either True or False.
+
+        Returns:
+            set: The set of valid values for the field.
         """
 
         field = field.strip()
@@ -796,7 +861,7 @@ class ReportTiming:
             # its valid if it's within our span
             if span[0] <= int(_field) <= span[1]:
                 # it's valid so return the field itself as a set
-                return set((int(_field),))
+                return {int(_field)}
             else:
                 # invalid field value so raise ValueError
                 raise ValueError("Invalid field value '%s' in '%s'" % (field,
@@ -811,7 +876,7 @@ class ReportTiming:
                 # its valid if it's within our span
                 if span[0] <= int(_field) <= span[1]:
                     # it's valid so return the field itself as a set
-                    return set((int(_field),))
+                    return {int(_field)}
                 else:
                     # invalid field value so raise ValueError
                     raise ValueError("Invalid field value '%s' in '%s'" % (field,
@@ -877,10 +942,15 @@ class ReportTiming:
         triggered or None if the line is invalid or ts_hi is not valid.
         If ts_lo is not specified check for triggering on ts_hi only.
 
-        ts_hi:  Timestamp of latest time to be checked for triggering.
-        ts_lo:  Timestamp used for earliest time in range of times to be
-                checked for triggering. May be omitted in which case only
-                ts_hi is checked.
+        Args:
+            ts_hi (int|float):  Timestamp of latest time to be checked for triggering.
+            ts_lo (int|float|None):  Timestamp used for earliest time in range of times to be
+                    checked for triggering. May be omitted in which case only
+                    ts_hi is checked.
+
+        Returns:
+            bool|None: True if triggered, False if not triggered, None if the line is
+                invalid or ts_hi is not valid.
         """
 
         if self.is_valid and self.create_if_missing:

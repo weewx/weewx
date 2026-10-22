@@ -5,6 +5,7 @@
 #
 """Test restx services"""
 
+import configobj
 import http.client
 import os
 import queue
@@ -256,3 +257,86 @@ class TestAmbient:
             url += "&indoortempf=70.0"
         matcher = MatchRequest(url, 'weewx/%s' % weewx.__version__)
         return matcher
+
+
+class TestWunderground:
+    """Test the StdWunderground service setup. Regression test for PR #1145"""
+
+    station = 'KBZABCDEF3'
+    password = 'somepassword'
+
+    @staticmethod
+    def get_config_dict(wunderground_options):
+        """Build a configuration dictionary with a Wunderground section"""
+        config_dict = configobj.ConfigObj()
+        config_dict['StdRESTful'] = {}
+        config_dict['StdRESTful']['Wunderground'] = {'enable': True,
+                                                     'station': TestWunderground.station,
+                                                     'password': TestWunderground.password}
+        config_dict['StdRESTful']['Wunderground'].update(wunderground_options)
+        return config_dict
+
+    @staticmethod
+    def get_service(wunderground_options):
+        """Construct a StdWunderground service with thread starts and manager mocked"""
+        config_dict = TestWunderground.get_config_dict(wunderground_options)
+        engine = mock.Mock()
+        with mock.patch('weewx.manager.get_manager_dict_from_config',
+                        return_value=None):
+            with mock.patch.object(weewx.restx.AmbientThread, 'start') as archive_start:
+                with mock.patch.object(weewx.restx.AmbientLoopThread, 'start') as loop_start:
+                    service = weewx.restx.StdWunderground(engine, config_dict)
+        return service, archive_start, loop_start
+
+    def test_both_modes_with_rtfreq(self):
+        """Both modes with an explicit rtfreq: each thread gets its own endpoint"""
+        service, archive_start, loop_start = TestWunderground.get_service(
+            {'rapidfire': True, 'archive_post': True, 'rtfreq': 9})
+
+        assert service.archive_thread.server_url == weewx.restx.StdWunderground.pws_url
+        assert service.loop_thread.server_url == weewx.restx.StdWunderground.rf_url
+        assert service.loop_thread.rtfreq == 9.0
+        # The archive thread cannot accept rtfreq, so it must not have it set
+        assert not hasattr(service.archive_thread, 'rtfreq')
+        archive_start.assert_called_once()
+        loop_start.assert_called_once()
+
+    def test_rapidfire_only_with_rtfreq(self):
+        """Rapidfire-only remains the working configuration, with rtfreq honored"""
+        service, archive_start, loop_start = TestWunderground.get_service(
+            {'rapidfire': True, 'archive_post': False, 'rtfreq': 9})
+
+        assert not hasattr(service, 'archive_thread')
+        assert service.loop_thread.server_url == weewx.restx.StdWunderground.rf_url
+        assert service.loop_thread.rtfreq == 9.0
+        archive_start.assert_not_called()
+        loop_start.assert_called_once()
+
+    def test_both_modes_no_rtfreq(self):
+        """Both modes with no rtfreq: the rapidfire thread still gets rf_url"""
+        service, _archive_start, _loop_start = TestWunderground.get_service(
+            {'rapidfire': True, 'archive_post': True})
+
+        assert service.archive_thread.server_url == weewx.restx.StdWunderground.pws_url
+        assert service.loop_thread.server_url == weewx.restx.StdWunderground.rf_url
+
+    def test_archive_only(self):
+        """Archive-only posts to the PWS endpoint and ignores rtfreq"""
+        service, archive_start, loop_start = TestWunderground.get_service(
+            {'rapidfire': False, 'archive_post': True, 'rtfreq': 9})
+
+        assert not hasattr(service, 'loop_thread')
+        assert service.archive_thread.server_url == weewx.restx.StdWunderground.pws_url
+        assert not hasattr(service.archive_thread, 'rtfreq')
+        archive_start.assert_called_once()
+        loop_start.assert_not_called()
+
+    def test_user_server_url_is_respected(self):
+        """An explicit server_url overrides the default endpoint for both modes"""
+        custom_url = 'https://custom.example.com/updateweatherstation.php'
+        service, _archive_start, _loop_start = TestWunderground.get_service(
+            {'rapidfire': True, 'archive_post': True,
+             'server_url': custom_url, 'rtfreq': 9})
+
+        assert service.archive_thread.server_url == custom_url
+        assert service.loop_thread.server_url == custom_url

@@ -5,6 +5,8 @@
 #
 """List RESTful services and force uploads on demand."""
 
+import sys
+
 import weecfg
 import weectllib
 import weectllib.rest_actions
@@ -22,7 +24,7 @@ rest_usage = '\n     '.join((rest_list_usage, rest_run_usage))
 run_epilog = """In normal operation, WeeWX uploads to RESTful services only when a new archive
 record arrives. This command forces an upload of the most recent archive record,
 irrespective of the normal posting schedule. Use 'weectl rest list' to see the
-names of the configured services."""
+names of the configured RESTful services."""
 
 
 def add_subparser(subparsers):
@@ -30,12 +32,22 @@ def add_subparser(subparsers):
                                         usage=rest_usage,
                                         description='List RESTful services, or force an upload',
                                         help="List RESTful services, or force an upload.")
-    # In the following, the 'prog' argument is necessary to get a proper error message.
-    # See Python issue https://bugs.python.org/issue42297
-    action_parser = rest_parser.add_subparsers(dest='action',
-                                               prog='weectl rest',
-                                               title="Which action to take",
-                                               required=True)
+    # 1. The 'prog' argument is necessary to get a proper error message.
+    #    See Python issue https://bugs.python.org/issue42297
+    # 2. Python 3.6 does not have the "required" keyword. Catching the resultant "TypeError"
+    #    exception results in multiple subparsers, so we need to detect v3.6 before the call.
+    if sys.version_info[1] > 6:
+        action_parser = rest_parser.add_subparsers(dest='action',
+                                                   prog='weectl rest',
+                                                   title="Which action to take",
+                                                   required=True)
+    else:
+        # No "required" keyword for Python 3.6. Omit it. Things will work, but error message will
+        # be less helpful.
+        action_parser = rest_parser.add_subparsers(dest='action',
+                                                   prog='weectl rest',
+                                                   title="Which action to take")
+
 
     # ---------- Action 'list' ----------
     list_rest_parser = action_parser.add_parser('list',

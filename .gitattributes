@@ -1,0 +1,23 @@
+# Store every text file with LF in the repository, and check it out with LF on
+# every platform.
+#
+# Without this, the line endings a contributor gets depend on their local
+# core.autocrlf setting. On Windows the default hands out CRLF, which is fine
+# for editing but not for files that are read by something other than an editor:
+# a shell script with CRLF fails under dash with "Syntax error: end of file
+# unexpected", and a bash completion with CRLF registers itself for the command
+# name with a trailing carriage return, so it silently does nothing.
+* text=auto eol=lf
+
+# Binary files, so git never inspects or rewrites their contents.
+*.gif   binary
+*.ico   binary
+*.jpg   binary
+*.png   binary
+*.xcf   binary
+*.tar   binary
+*.tgz   binary
+*.zip   binary
+*.ttf   binary
+*.woff  binary
+*.woff2 binary

@@ -239,6 +239,11 @@ def get_manager_info(config_dict):
 
     Args:
         config_dict(dict): The configuration dictionary
+
+    Returns:
+        dict: A dictionary containing information about the archive database, including
+            db_name, table_name, version, units, first_ts, last_ts, sqlkeys, and
+            ts_count.
     """
 
     db_binding_wx = get_binding(config_dict)

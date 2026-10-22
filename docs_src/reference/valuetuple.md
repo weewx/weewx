@@ -51,3 +51,16 @@ body_temperature_vt = ValueTuple(98.6, "degree_F", "group_temperature")
 station_altitude_vt = ValueTuple(120.0, "meter", "group_altitude")
         
 ```
+
+## Two-way tuples
+
+As a convenience and for backwards compatibility, a 2-way tuple is accepted,
+although it makes assumptions about the unit group:
+
+| unit       | assumed unit group  |
+|:-----------|:--------------------|
+| `degree_C` | `group_temperature` |
+| `degree_F` | `group_temperature` |
+| `mm`       | `group_rain`        |
+| `cm`       | `group_rain`        |
+| `inch`     | `group_rain`        |

@@ -48,6 +48,8 @@ StandardError
 | `NoTableError`        | *N/A*              | `ProgrammingError` |         1146         | SELECT on non-existing database |
 | `NoTableError`        | `OperationalError` | `ProgrammingError` |         1146         | SELECT non-existing table       |
 | `NoColumnError`       | `OperationalError` | `OperationalError` |         1054         | SELECT non-existing column      |
+| `DatabaseLockedError` | *N/A*              | `OperationalError` |         1205         | Lock wait timeout               |
+| `DatabaseLockedError` | *N/A*              | `OperationalError` |         1213         | Deadlock                        |
 | `IntegrityError`      | `IntegrityError`   | `IntegrityError`   |         1062         | Duplicate key                   |
 
 ### V3.7 Exception hierarchy
@@ -67,4 +69,5 @@ StandardError
       |__NoColumnError
       |__BadPasswordError
       |__PermissionError
+      |__DatabaseLockedError
 ~~~

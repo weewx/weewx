@@ -106,7 +106,7 @@ class Manager:
             connection (weedb.Connection): A weedb connection to the database to be managed.
             table_name (str): The name of the table to be used in the database.
                 Default is 'archive'.
-            schema (dict): The schema to be used. Optional.
+            schema (dict|list|None): The schema to be used. Optional.
 
         Raises:
             weedb.NoDatabaseError: If the database does not exist and no schema has been
@@ -216,7 +216,7 @@ class Manager:
 
             table_name (str): The name of the table to be used in the database. Default
                 is 'archive'.
-            schema: The schema to be used.
+            schema (list|dict|None): The schema to be used.
         Returns:
             cls: An instantiated instance of class "cls".
         Raises:
@@ -345,7 +345,8 @@ class Manager:
 
         Args:
             obs_type(str): The observation type to check for existence.
-            timespan (tuple): A 2-way tuple with the start and stop time to be checked for data.
+            timespan (tuple[int|float, int|float]): A 2-way tuple with the start and stop time to
+                be checked for data.
 
         Returns:
             bool: True if the type is in the schema, and has some data within the given timespan.
@@ -391,16 +392,89 @@ class Manager:
         # With this check here we avoid the comparison within the `for` loop.
         if not isinstance(record_obj, dict): accumulator = None
 
-        # Determine if record_obj is just a single dictionary instance. If so, wrap it in
-        # something iterable (a list):
-        record_list = [record_obj] if isinstance(record_obj, dict) else record_obj
+        overall_min_ts = float('inf')  # A "big number"
+        overall_max_ts = 0
+        total_n = 0
 
-        min_ts = float('inf')  # A "big number"
+        for chunk in _gen_chunks(record_obj, 200):
+            n, min_ts, max_ts = self._add_with_retry(chunk, accumulator, progress_fn,
+                                                     log_success, log_failure, update, total_n)
+            total_n += n
+            overall_min_ts = min(overall_min_ts, min_ts)
+            overall_max_ts = max(overall_max_ts, max_ts)
+
+        # Update the cached timestamps. This has to sit outside the transaction context,
+        # in case an exception occurs.
+        if total_n > 0:
+            self.first_timestamp = overall_min_ts if self.first_timestamp is None \
+                else min(overall_min_ts, self.first_timestamp)
+            self.last_timestamp = overall_max_ts if self.last_timestamp is None \
+                else max(overall_max_ts, self.last_timestamp)
+
+        return total_n
+
+    def _add_with_retry(self, chunk, accumulator=None, progress_fn=None,
+                        log_success=True, log_failure=True, update=False, count=0):
+        """Add a chunk of records, retrying if a transient error occurs.
+
+        Args:
+            chunk(iterable[dict]): A chunk (batch) of records to be added.
+            accumulator(weewx.accum.Accum|None): An optional accumulator, used to update
+                the high/low statistics.
+            progress_fn (Callable[[float|int, int], None]|None): An optional function to be called
+                to show progress
+            log_success(bool): Log successfully added records.
+            log_failure(bool): Log records that could not be added.
+            update(bool): If a record already exists with the same timestamp, update it.
+            count(int): The number of records already processed before this chunk.
+
+        Returns:
+            tuple[int, float, float]: A three-way tuple (n, min_ts, max_ts), where n is the
+                number of records added, and min_ts, max_ts are the min and max timestamps
+                of the records in the chunk.
+        """
+        max_attempts = 5
+        retry_wait = 0.5
+        for attempt in range(max_attempts):
+            try:
+                return self._add_chunk(chunk, accumulator, progress_fn,
+                                       log_success, log_failure, update, count)
+            except weedb.OperationalError as e:
+                if is_transient_error(e) and attempt < max_attempts - 1:
+                    # Retry with exponential backoff.
+                    delay = retry_wait * 2 ** attempt
+                    log.warning("Database is locked (attempt %d/%d). Retrying in %.2f seconds...",
+                                attempt + 1, max_attempts, delay)
+                    time.sleep(delay)
+                    continue
+                raise
+        raise RuntimeError("Retry loop exited unexpectedly")
+
+    def _add_chunk(self, chunk, accumulator=None, progress_fn=None,
+                   log_success=True, log_failure=True, update=False, count=0):
+        """Add a chunk of records in a single transaction.
+
+        Args:
+            chunk(iterable[dict]): A chunk (batch) of records to be added.
+            accumulator(weewx.accum.Accum|None): An optional accumulator, used to update
+                the high/low statistics.
+            progress_fn (Callable[[float|int, int], None]|None): An optional function to be called
+                to show progress.
+            log_success(bool): Log successfully added records.
+            log_failure(bool): Log records that could not be added.
+            update(bool): If a record already exists with the same timestamp, update it.
+            count(int): The number of records already processed before this chunk.
+
+        Returns:
+            tuple[int, float, float]: A three-way tuple (n, min_ts, max_ts), where n is the
+                number of records added, and min_ts, max_ts are the min and max timestamps
+                of the records in the chunk.
+        """
+        n = 0
+        min_ts = float('inf')
         max_ts = 0
-        N = 0
         with weedb.Transaction(self.connection) as cursor:
-
-            for record in record_list:
+            for record in chunk:
                 try:
                     # If the accumulator time matches the record we are working with,
                     # use it to update the highs and lows.
@@ -412,29 +486,29 @@ class Manager:
                     # Then add the record to the archives:
                     self._addSingleRecord(record, cursor, log_success, log_failure, update)
 
-                    N += 1
-                    if progress_fn and N % 1000 == 0:
-                        progress_fn(record['dateTime'], N)
+                    n += 1
+                    if progress_fn and (count + n) % 1000 == 0:
+                        progress_fn(record['dateTime'], count + n)
 
                     min_ts = min(min_ts, record['dateTime'])
                     max_ts = max(max_ts, record['dateTime'])
-                except (weedb.IntegrityError, weedb.OperationalError) as e:
+                except weedb.IntegrityError as e:
                     if log_failure:
                         log.error("Unable to add record %s to database '%s': %s",
                                   timestamp_to_string(record['dateTime']),
                                   self.database_name, e)
-
-        # Update the cached timestamps. This has to sit outside the transaction context,
-        # in case an exception occurs.
-        self.first_timestamp = min_ts if self.first_timestamp is None else min(min_ts,
-                                                                               self.first_timestamp)
-        self.last_timestamp = max_ts if self.last_timestamp is None else max(max_ts,
-                                                                             self.last_timestamp)
-
-        return N
+        return n, min_ts, max_ts
 
     def _addSingleRecord(self, record, cursor, log_success=True, log_failure=True, update=False):
-        """Internal function for adding a single record to the main archive table."""
+        """Internal function for adding a single record to the main archive table.
+
+        Args:
+            record(dict): The record to be added.
+            cursor(weedb.Cursor): A database cursor to be used for the insert (or update).
+            log_success(bool): Log successfully added records.
+            log_failure(bool): Log records that could not be added.
+            update(bool): If a record already exists with the same timestamp, update it.
+        """
 
         if record['dateTime'] is None:
             if log_failure:
@@ -496,9 +570,9 @@ class Manager:
         an interval.
 
         Args:
-            startstamp (int|None): Exclusive start of the interval in epoch time. If 'None',
+            startstamp (int|float|None): Exclusive start of the interval in epoch time. If 'None',
                 then start at earliest archive record.
-            stopstamp (int|None): Inclusive end of the interval in epoch time. If 'None',
+            stopstamp (int|float|None): Inclusive end of the interval in epoch time. If 'None',
                 then end at last archive record.
 
         Yields:
@@ -608,7 +682,7 @@ class Manager:
 
         Args:
             sql (str): The SQL statement
-            sqlargs (tuple): A tuple containing the arguments for the SQL statement.
+            sqlargs (iterable[Any]): A tuple containing the arguments for the SQL statement.
 
         Yields:
             list: A row in the result set.
@@ -675,6 +749,9 @@ class Manager:
 
     def _check_unit_system(self, unit_system):
         """Check to make sure a unit system is the same as what's already in use in the database.
+
+        Args:
+            unit_system(int): The unit system to be checked, such as weewx.US.
         """
 
         if self.std_unit_system is not None:
@@ -777,7 +854,15 @@ class DBBinder:
     get_database = get_manager
 
     def bind_default(self, default_binding='wx_binding'):
-        """Returns a function that holds a default database binding."""
+        """Returns a function that holds a default database binding.
+
+        Args:
+            default_binding (str): The binding to be used if none is specified.
+
+        Returns:
+            callable: A function db_lookup(data_binding=None) that returns a Manager object
+                bound to data_binding, or to default_binding if data_binding is None.
+        """
 
         def db_lookup(data_binding=None):
             if data_binding is None:
@@ -960,7 +1045,12 @@ def drop_database_with_config(config_dict, data_binding,
 
 
 def show_progress(last_time, nrec=None):
-    """Utility function to show our progress"""
+    """Utility function to show our progress
+
+    Args:
+        last_time(int): The epoch time of the last record processed.
+        nrec(int|None): The number of records processed so far. If None, it will not be shown.
+    """
     if nrec:
         msg = "Records processed: %d; time: %s\r" \
               % (nrec, timestamp_to_string(last_time))
@@ -1110,7 +1200,11 @@ class DaySummaryManager(Manager):
         self._create_sync()
 
     def _initialize_day_tables(self, schema):
-        """Initialize the tables needed for the daily summary."""
+        """Initialize the tables needed for the daily summary.
+
+        Args:
+            schema(list|dict|None): The schema to be used.
+        """
 
         if schema is None:
             # Uninitialized, but no schema was supplied. Raise an exception
@@ -1126,7 +1220,7 @@ class DaySummaryManager(Manager):
             day_summaries_schemas = [(e, 'scalar') for e in self.sqlkeys if
                                      e not in ('dateTime', 'usUnits', 'interval')]
             import weewx.wxmanager
-            if type(self) == weewx.wxmanager.WXDaySummaryManager or 'windSpeed' in self.sqlkeys:
+            if type(self) is weewx.wxmanager.WXDaySummaryManager or 'windSpeed' in self.sqlkeys:
                 # For backwards compatibility, include 'wind'
                 day_summaries_schemas += [('wind', 'vector')]
 
@@ -1179,6 +1273,13 @@ class DaySummaryManager(Manager):
     def _addSingleRecord(self, record, cursor, log_success=True, log_failure=True, update=False):
         """Specialized version that updates the daily summaries, as well as the main archive
         table.
+
+        Args:
+            record(dict): The record to be added.
+            cursor(weedb.Cursor): A database cursor to be used for the insert (or update).
+            log_success(bool): Log successfully added records.
+            log_failure(bool): Log records that could not be added.
+            update(bool): If a record already exists with the same timestamp, update it.
         """
 
         # First let my superclass handle adding the record to the main archive table:
@@ -1207,7 +1308,12 @@ class DaySummaryManager(Manager):
                      self.database_name)
 
     def _updateHiLo(self, accumulator, cursor):
-        """Use the contents of an accumulator to update the daily hi/lows."""
+        """Use the contents of an accumulator to update the daily hi/lows.
+
+        Args:
+            accumulator(weewx.accum.Accum): The accumulator holding the high/low statistics.
+            cursor(weedb.Cursor): A database cursor to be used for the update.
+        """
 
         # Get the start-of-day for the timespan in the accumulator
         _sod_ts = weeutil.weeutil.startOfArchiveDay(accumulator.timespan.stop)
@@ -1457,9 +1563,9 @@ class DaySummaryManager(Manager):
         Args:
             start_d (datetime.date): First date in the tranche to be reweighted.
             last_d (datetime.date): Last date in the tranche to be reweighted.
-            weight_fn (function): A function used to calculate the weights for a record. Default is
-               _calc_weight().
-            progress_fn (function): A function to call to show progress. It will be called after every
+            weight_fn (Callable|None): A function used to calculate the weights for a record.
+                Default is _calc_weight().
+            progress_fn (Callable|None): A function to call to show progress. It will be called after every
                 update.
         """
 
@@ -1495,7 +1601,12 @@ class DaySummaryManager(Manager):
                 mark_d += datetime.timedelta(days=1)
 
     def _set_day_sums(self, day_accum, cursor):
-        """Replace the weighted sums for all types for a day. Don't touch the mins and maxes."""
+        """Replace the weighted sums for all types for a day. Don't touch the mins and maxes.
+
+        Args:
+            day_accum(weewx.accum.Accum): The accumulator holding a day's worth of statistics.
+            cursor(weedb.Cursor): A database cursor to be used for the update.
+        """
         for obs_type in day_accum:
             # Skip any types that are not in the daily summary schema
             if obs_type not in self.daykeys:
@@ -1652,7 +1763,14 @@ class DaySummaryManager(Manager):
             self._write_metadata('lastUpdate', str(int(lastUpdate)), cursor)
 
     def _calc_weight(self, record):
-        """Returns the weighting to be used, depending on the version of the daily summaries."""
+        """Returns the weighting to be used, depending on the version of the daily summaries.
+
+        Args:
+            record(dict): The record for which the weight is to be calculated.
+
+        Returns:
+            float: The weight to be used.
+        """
         if 'interval' not in record:
             raise ValueError("Missing value for record field 'interval'")
         elif record['interval'] <= 0:
@@ -1662,7 +1780,14 @@ class DaySummaryManager(Manager):
         return weight
 
     def _get_weight(self, record):
-        """Always returns a weight based on the field 'interval'."""
+        """Always returns a weight based on the field 'interval'.
+
+        Args:
+            record(dict): The record for which the weight is to be calculated.
+
+        Returns:
+            float: The weight to be used.
+        """
         if 'interval' not in record:
             raise ValueError("Missing value for record field 'interval'")
         elif record['interval'] <= 0:
@@ -1672,6 +1797,10 @@ class DaySummaryManager(Manager):
 
     def _read_metadata(self, key, cursor=None):
         """Obtain a value from the daily summary metadata table.
+
+        Args:
+            key(str): The name of the metadata field to be read.
+            cursor(Cursor|None): An optional cursor to use. If None, a cursor will be opened up.
 
         Returns:
             str|None: Value of the metadata field. Returns None if no value was found.
@@ -1695,6 +1824,42 @@ class DaySummaryManager(Manager):
         finally:
             if cursor is None:
                 _cursor.close()
+
+
+def is_transient_error(e):
+    """Return True if the exception is a transient error that can be retried."""
+    # We may come up with other transient errors in the future, but for now
+    # signal a database locked error.
+    return isinstance(e, weedb.DatabaseLockedError)
+
+
+def _gen_chunks(iterable, size):
+    """Generator that yields chunks of size 'size' from an iterable.
+
+    Args:
+        iterable(dict|list|tuple|iterable): The source of records to be chunked. If it is a
+            single dict, it is treated as a single record.
+        size(int): The maximum size of a chunk.
+
+    Yields:
+        list: A chunk (batch) of records, of length at most size.
+    """
+    # Check to make sure it isn't just a simple record.
+    # If so, wrap it in a list. That's your chunk.
+    if isinstance(iterable, dict):
+        yield [iterable]
+    elif isinstance(iterable, (list, tuple)):
+        for i in range(0, len(iterable), size):
+            yield iterable[i:i + size]
+    else:
+        chunk = []
+        for item in iterable:
+            chunk.append(item)
+            if len(chunk) >= size:
+                yield chunk
+                chunk = []
+        if chunk:
+            yield chunk
 
 
 if __name__ == '__main__':

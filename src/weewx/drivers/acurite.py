@@ -918,7 +918,16 @@ class Station:
 
     @staticmethod
     def _find_dev(vendor_id, product_id, device_id=None):
-        """Find the vendor and product ID on the USB."""
+        """Find the vendor and product ID on the USB.
+
+        Args:
+            vendor_id (int): The USB vendor ID to match.
+            product_id (int): The USB product ID to match.
+            device_id (str|None): The device filename to match. Optional.
+
+        Returns:
+            usb.Device|None: The matching USB device, or None if not found.
+        """
         for bus in usb.busses():
             for dev in bus.devices:
                 if dev.idVendor == vendor_id and dev.idProduct == product_id:

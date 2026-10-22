@@ -6,7 +6,7 @@
 """Package weewx, containing modules specific to the weewx runtime engine."""
 import time
 
-__version__ = "5.4.0"
+__version__ = "5.6.0"
 
 # Holds the program launch time in unix epoch seconds:
 # Useful for calculating 'uptime.'
@@ -142,6 +142,10 @@ class POST_LOOP:
     into this to access the console for things other than generating LOOP
     packet."""
 
+class SHUTDOWN:
+    """Event issued right as the engine shut downs, prior to the services shutDown method invocation. 
+    The event contains attribute 'error', a dictionary. If this shut down is due to an exception,
+    it contains the keys 'exception' and 'stacktrace', otherwise it is empty. """
 
 # =============================================================================
 #                       Service groups.

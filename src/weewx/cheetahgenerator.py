@@ -57,7 +57,6 @@ Example:
 
 """
 
-import datetime
 import json
 import logging
 import os.path
@@ -65,6 +64,8 @@ import time
 import unicodedata
 
 import Cheetah.Filters
+import Cheetah.NameMapper
+import Cheetah.Parser
 import Cheetah.Template
 
 import weedb
@@ -128,7 +129,14 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                    'SummaryByYear' : "%Y"}
 
     def __init__(self, config_dict, skin_dict, *args, **kwargs):
-        """Initialize an instance of CheetahGenerator"""
+        """Initialize an instance of CheetahGenerator
+
+        Args:
+            config_dict (dict): The weewx configuration dictionary.
+            skin_dict (ConfigObj): The skin dictionary.
+            *args: Additional positional arguments passed to the superclass ReportGenerator.
+            **kwargs: Additional keyword arguments passed to the superclass ReportGenerator.
+        """
         # Initialize my superclass
         weewx.reportengine.ReportGenerator.__init__(self, config_dict, skin_dict, *args, **kwargs)
 
@@ -173,7 +181,12 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                      ngen, self.skin_dict['REPORT_NAME'], elapsed_time)
 
     def init_extensions(self, gen_dict):
-        """Load the search list"""
+        """Load the search list
+
+        Args:
+            gen_dict (dict): The configuration dictionary for this generator, containing
+                options such as 'search_list' and 'search_list_extensions'.
+        """
 
         # Build the search list. Start with user extensions:
         search_list = weeutil.weeutil.option_as_list(gen_dict.get('search_list_extensions', []))
@@ -206,11 +219,15 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         """Generate one or more reports for the indicated section.  Each
         section in a period is a report.  A report has one or more templates.
 
-        section: A ConfigObj dictionary, holding the templates to be
-        generated.  Any subsections in the dictionary will be recursively
-        processed as well.
-        
-        gen_ts: The report will be current to this time.
+        Args:
+            section (ConfigObj): A ConfigObj dictionary, holding the templates to be
+                generated.  Any subsections in the dictionary will be recursively
+                processed as well.
+            section_name (str): The name of the section being processed.
+            gen_ts (int|None): The report will be current to this time.
+
+        Returns:
+            int: The number of files generated.
         """
 
         ngen = 0
@@ -268,6 +285,9 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         # Use the generator function
         for timespan in _spangen(start_ts, stop_ts):
+            if self.stop_event and self.stop_event.is_set():
+                log.debug("Stop event set. Stopping template '%s'", template)
+                return ngen
             start_tt = time.localtime(timespan.start)
             stop_tt = time.localtime(timespan.stop)
 
@@ -364,10 +384,10 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             else:
                 byte_string = unicode_string.encode(encoding)
 
-            # Finally, write the byte string to the target file
+            # Finally, write the byte string to the target file, by writing it to a temporary
+            # file first, then moving it over.
+            tmpname = _fullname + '.tmp'
             try:
-                # Write to a temporary file first
-                tmpname = _fullname + '.tmp'
                 # Open it in binary mode. We are writing a byte-string, not a string
                 with open(tmpname, mode='wb') as fd:
                     fd.write(byte_string)
@@ -381,12 +401,24 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     pass
 
             if weewx.debug >= 2:
-                log.debug("%s took %.2f s" % (template, time.time()-t1))
+                log.debug("%s took %.2f s", template, time.time()-t1)
 
         return ngen
 
     def _getSearchList(self, encoding, timespan, default_binding, section_name, file_name):
-        """Get the complete search list to be used by Cheetah."""
+        """Get the complete search list to be used by Cheetah.
+
+        Args:
+            encoding (str): The encoding to be used, such as 'html_entities'.
+            timespan (weeutil.weeutil.TimeSpan): The time period for which the search list
+                is valid.
+            default_binding (str): The default data binding to be used.
+            section_name (str): The name of the section being processed.
+            file_name (str): The name of the file being generated.
+
+        Returns:
+            list: The complete search list to be used by Cheetah.
+        """
 
         # Get the basic search list
         timespan_start_tt = time.localtime(timespan.start)
@@ -408,7 +440,15 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
     def _prepGen(self, report_dict):
         """Get the template, destination directory, encoding, and default
-        binding."""
+        binding.
+
+        Args:
+            report_dict (dict): The dictionary of options for this report.
+
+        Returns:
+            tuple(str, str, str, str): A 4-way tuple (template, destination_dir, encoding,
+                default_binding).
+        """
 
         # -------- Template ---------
         template = os.path.join(self.config_dict['WEEWX_ROOT'],
@@ -437,7 +477,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
         # ------ Default binding ---------
         default_binding = report_dict['data_binding']
 
-        return (template, destination_dir, encoding, default_binding)
+        return template, destination_dir, encoding, default_binding
 
 
 # =============================================================================
@@ -693,6 +733,12 @@ class PlotInfo(SearchList):
         """
         Given a plot name, return the set of observations in that plot.
         If there is no plot by the indicated name, return an empty set.
+
+        Args:
+            plot_name (str): The name of the plot.
+
+        Returns:
+            set: The set of observation names used by the plot.
         """
         obs = set()
         # If there is no [ImageGenerator] section, return the empty set.
@@ -757,7 +803,16 @@ class AssureUnicode(Cheetah.Filters.Filter):
     Unicode. """
 
     def filter(self, val, **kwargs):
-        """Convert the expression 'val' to a string (unicode)."""
+        """Convert the expression 'val' to a string (unicode).
+
+        Args:
+            val (str|bytes|object|None): The value to be converted.
+            **kwargs: Additional keyword arguments, such as 'rawExpr' holding the raw
+                Cheetah expression.
+
+        Returns:
+            str: The value converted to a string.
+        """
         if val is None:
             return u''
 

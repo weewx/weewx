@@ -1,5 +1,9 @@
+[![Python >=3.7](https://img.shields.io/badge/python-%3E%3D3.7-blue.svg)](https://www.python.org/downloads/)
 ![CI workflow](https://github.com/weewx/weewx/actions/workflows/ci.yaml/badge.svg)
 [![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+
 
 # [WeeWX](https://www.weewx.com)
 *Open source software for your weather station*
@@ -103,10 +107,10 @@ The code lives in a git repository:
 
 [https://github.com/weewx/weewx](https://github.com/weewx/weewx)
 
-See [Notes for WeeWX developers](https://weewx.com/docs/latest/devnotes/) to 
-learn about how to contribute to WeeWX. See the file 
-[PACKAGING.txt](PACKAGING.txt) for details about the process of creating a 
-release.
+If you wish to contribute to the project, please read the following:
+* [Notes for WeeWX developers](https://weewx.com/docs/latest/devnotes/) - detailed programming patterns and examples
+* [CONTRIBUTING.txt](CONTRIBUTING.txt) - basic information about the tools and processes for contributing code and documentation
+* [PACKAGING.txt](PACKAGING.txt) - details about the process of creating packages and releases
 
 ## Documentation and Support
 

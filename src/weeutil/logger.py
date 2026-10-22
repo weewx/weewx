@@ -86,7 +86,15 @@ else:
 
 
 def setup(process_name, config_dict=None):
-    """Set up the weewx logging facility"""
+    """Set up the weewx logging facility
+
+    Args:
+        process_name (str): The name of the process being logged. This will be used to
+            identify the process in each log entry.
+        config_dict (configobj.ConfigObj|dict|None): The configuration dictionary. If it
+            includes a 'Logging' section, it will be merged in with (and override) the
+            defaults. [Optional. Default is None.]
+    """
 
     global address, facility
 
@@ -162,9 +170,11 @@ def setup(process_name, config_dict=None):
 def log_traceback(log_fn, prefix=''):
     """Log the stack traceback into a logger.
 
-    log_fn: One of the logging.Logger logging functions, such as logging.Logger.warning.
-
-    prefix: A string, which will be put in front of each log entry. Default is no string.
+    Args:
+        log_fn (callable): One of the logging.Logger logging functions, such as
+            logging.Logger.warning.
+        prefix (str): A string, which will be put in front of each log entry. Default is no
+            string.
     """
     import traceback
     sfd = StringIO()
@@ -175,7 +185,12 @@ def log_traceback(log_fn, prefix=''):
 
 
 def _convert_from_string(section, key):
-    """If possible, convert any strings to an appropriate type."""
+    """If possible, convert any strings to an appropriate type.
+
+    Args:
+        section (configobj.Section): The ConfigObj section holding the value to be converted.
+        key (str): The key of the value to be converted.
+    """
     # Check to make sure it is a string
     if isinstance(section[key], str):
         if section[key].lower() == 'false':
