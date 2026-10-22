@@ -9,20 +9,13 @@ import decimal
 import re
 
 try:
-    # Typically supplied by the "mysqlclient" package.
+    # Typically supplied by the Debian package "python3-mysqldb", or the pip package "mysqlclient"
     import MySQLdb
 except ImportError:
-    # Typically supplied by the "pymysql" package, a pure-Python version.
+    # Typically supplied by the pip package "pymysql", a pure-Python version.
     import pymysql as MySQLdb
-    from pymysql import (DatabaseError as MySQLDatabaseError,
-                         InterfaceError as MySQLInterfaceError)
-else:
-    try:
-        from MySQLdb import (DatabaseError as MySQLDatabaseError,
-                              InterfaceError as MySQLInterfaceError)
-    except ImportError:
-        from _mysql_exceptions import (DatabaseError as MySQLDatabaseError,
-                                       InterfaceError as MySQLInterfaceError)
+
+from MySQLdb import (DatabaseError as MySQLDatabaseError, InterfaceError as MySQLInterfaceError)
 
 from weeutil.weeutil import to_bool, natural_compare
 import weedb

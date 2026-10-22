@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2021 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -25,6 +25,7 @@ import pytest
 import gen_fake_data
 import weewx
 import weewx.schemas.wview_small
+import weewx.schemas.wview_extended
 import weedb
 import weeutil.logger
 import weewx.manager
@@ -72,89 +73,86 @@ db_dict_mysql = {
 }
 
 
-class CommonWeightTests:
+@pytest.fixture(params=['sqlite', 'mysql'])
+def db_manager(request):
+    db_dict = db_dict_mysql if request.param == 'mysql' else db_dict_sqlite
+    manager = setup_database(db_dict)
+    try:
+        yield manager
+    finally:
+        manager.close()
+        try:
+            weedb.drop(db_dict)
+        except weedb.NoDatabaseError:
+            pass
+
+
+def check_weights(db_manager):
+    # check weights for scalar types
+    for key in db_manager.daykeys:
+        archive_key = key if key != 'wind' else 'windSpeed'
+        result1 = db_manager.getSql("SELECT COUNT(%s) FROM archive" % archive_key)
+        result2 = db_manager.getSql("SELECT SUM(count) FROM archive_day_%s;" % key)
+        assert result1 == result2
+        result3 = db_manager.getSql("SELECT COUNT(%s) * %d FROM archive"
+                                    % (archive_key, interval_secs))
+        result4 = db_manager.getSql("SELECT SUM(sumtime) FROM archive_day_%s" % key)
+        assert result3 == result4
+
+        result5 = db_manager.getSql("SELECT SUM(%s * `interval` * 60) FROM archive"
+                                    % archive_key)
+        result6 = db_manager.getSql("SELECT SUM(wsum) FROM archive_day_%s" % key)
+        if result5[0] is None:
+            assert result6[0] == 0.0
+        else:
+            assert result5[0] == pytest.approx(result6[0], abs=1e-3)
+    # check weights for vector types, for now that is just type wind
+    result7 = db_manager.getSql(
+        "SELECT SUM(xsum), SUM(ysum), SUM(dirsumtime) FROM archive_day_wind")
+    assert result7[0] == pytest.approx(5159022.5365, abs=1e-3)
+    assert result7[1] == pytest.approx(393601.3162, abs=1e-3)
+    assert result7[2] == 1040400
+
+
+class TestWeights:
     """Test that inserting records get the weighted sums right. Regression test for issue #623. """
 
-    def test_weights(self):
+    @staticmethod
+    def test_weights(db_manager):
         """Check that the weighted sums were done correctly."""
-        self.check_weights()
+        check_weights(db_manager)
 
-    def test_reweight(self):
+    @staticmethod
+    def test_reweight(db_manager):
         """Check that recalculating the weighted sums was done correctly"""
-        self.db_manager.recalculate_weights()
-        self.check_weights()
+        db_manager.recalculate_weights()
+        check_weights(db_manager)
 
-    def check_weights(self):
-        # check weights for scalar types
-        for key in self.db_manager.daykeys:
-            archive_key = key if key != 'wind' else 'windSpeed'
-            result1 = self.db_manager.getSql("SELECT COUNT(%s) FROM archive" % archive_key)
-            result2 = self.db_manager.getSql("SELECT SUM(count) FROM archive_day_%s;" % key)
-            assert result1 == result2
-            result3 = self.db_manager.getSql("SELECT COUNT(%s) * %d FROM archive"
-                                             % (archive_key, interval_secs))
-            result4 = self.db_manager.getSql("SELECT SUM(sumtime) FROM archive_day_%s" % key)
-            assert result3 == result4
-
-            result5 = self.db_manager.getSql("SELECT SUM(%s * `interval` * 60) FROM archive"
-                                             % archive_key)
-            result6 = self.db_manager.getSql("SELECT SUM(wsum) FROM archive_day_%s" % key)
-            if result5[0] is None:
-                assert result6[0] == 0.0
-            else:
-                assert result5[0] == pytest.approx(result6[0], abs=1e-3)
-        # check weights for vector types, for now that is just type wind
-        result7 = self.db_manager.getSql("SELECT SUM(xsum), SUM(ysum), SUM(dirsumtime) FROM archive_day_wind")
-        assert result7[0] == pytest.approx(5159022.5365, abs=1e-3)
-        assert result7[1] == pytest.approx(393601.3162, abs=1e-3)
-        assert result7[2] == 1040400
-
-
-class TestSqliteWeights(CommonWeightTests):
-    """Test using the SQLite database"""
-
-    def setup_method(self):
-        self.db_manager = setup_database(db_dict_sqlite)
-
-    # The patch test is done with sqlite only, because it is so much faster
-    def test_patch(self):
+    @staticmethod
+    def test_patch(db_manager):
         # Sanity check that the original database is at V4.0
-        assert self.db_manager.version == weewx.manager.DaySummaryManager.version
+        assert db_manager.version == weewx.manager.DaySummaryManager.version
 
         # Bugger up roughly half the database
-        with weedb.Transaction(self.db_manager.connection) as cursor:
-            for key in self.db_manager.daykeys:
+        with weedb.Transaction(db_manager.connection) as cursor:
+            for key in db_manager.daykeys:
                 sql_update = "UPDATE %s_day_%s SET wsum=sum, sumtime=count WHERE dateTime >?" \
-                             % (self.db_manager.table_name, key)
+                             % (db_manager.table_name, key)
                 cursor.execute(sql_update, (mid_ts,))
 
         # Force the patch (could use '2.0' or '3.0':
-        self.db_manager.version = '2.0'
+        db_manager.version = '2.0'
 
-        self.db_manager.patch_sums()
-        self.check_weights()
+        db_manager.patch_sums()
+        check_weights(db_manager)
 
         # Make sure the version was set to V4.0 after the patch
-        assert self.db_manager.version == weewx.manager.DaySummaryManager.version
-
-
-class TestMySQLWeights(CommonWeightTests):
-    """Test using the MySQL database"""
-
-    def setup_method(self):
-        try:
-            import MySQLdb
-        except ImportError:
-            try:
-                import pymysql as MySQLdb
-            except ImportError as e:
-                pytest.skip(str(e))
-
-        self.db_manager = setup_database(db_dict_mysql)
+        assert db_manager.version == weewx.manager.DaySummaryManager.version
 
 
 class TestRetry:
-    def test_locked_retry(self, tmp_path):
+    @staticmethod
+    def test_locked_retry(tmp_path):
         # Create a file-based database
         db_path = str(tmp_path / "test_retry.sdb")
         db_dict = {
@@ -207,6 +205,84 @@ class TestRetry:
         # Verify the record was added
         result = db_manager_retry.getSql("SELECT COUNT(*) FROM archive WHERE dateTime = ?", (record['dateTime'],))
         assert result[0] == 1
+
+
+class TestDaySummaryReads:
+    @pytest.fixture(params=[db_dict_sqlite, db_dict_mysql])
+    @staticmethod
+    def manager(request):
+        with weewx.manager.DaySummaryManager.open_with_create(
+                request.param, table_name='summary_read_test',
+                schema=weewx.schemas.wview_extended.schema) as manager:
+            yield manager
+            with weedb.Transaction(manager.connection) as cursor:
+                for table in manager.connection.tables():
+                    if table.startswith('summary_read_test'):
+                        cursor.drop_table(table)
+
+    @staticmethod
+    def test_read_summaries(manager, monkeypatch):
+        record = {'dateTime': start_ts, 'usUnits': weewx.US, 'interval': 60,
+                  'outTemp': 0.0, 'rain': 0.0, 'windSpeed': 4.0,
+                  'windDir': 270.0, 'windGust': 8.0, 'windGustDir': 280.0}
+        manager.addRecord(record)
+        sod_ts = weeutil.weeutil.startOfArchiveDay(start_ts)
+        manager.connection.execute(
+            "DELETE FROM summary_read_test_day_rain WHERE dateTime = ?", (sod_ts,))
+        expected = {}
+        for key in manager.daykeys:
+            row = manager.getSql("SELECT * FROM summary_read_test_day_%s WHERE dateTime = ?"
+                                 % key, (sod_ts,))
+            stats = weewx.accum.new_accumulator(key)
+            stats.setStats(row[1:] if row is not None else None)
+            expected[key] = stats.getStatsTuple()
+
+        with manager.connection.cursor() as cursor:
+            execute = cursor.execute
+            queries = []
+
+            def counted_execute(sql, sqlargs=()):
+                queries.append(sql)
+                return execute(sql, sqlargs)
+
+            monkeypatch.setattr(cursor, 'execute', counted_execute)
+            summary = manager._get_day_summary(sod_ts, cursor)
+            assert {key: summary[key].getStatsTuple() for key in summary} == expected
+            assert len(queries) <= 3
+            # A caller-supplied cursor must remain usable after the read.
+            cursor.execute("SELECT 1")
+            assert cursor.fetchone()[0] == 1
+
+        # No row for this day exists in any of the daily tables.
+        empty_summary = manager._get_day_summary(sod_ts - 86400)
+        assert set(empty_summary) == manager.daykeys
+        for key in empty_summary:
+            assert empty_summary[key].getStatsTuple() \
+                   == weewx.accum.new_accumulator(key).getStatsTuple()
+
+    @staticmethod
+    def test_no_summaries(manager):
+        manager.daykeys = set()
+        assert not manager._get_day_summary(start_ts)
+
+    @staticmethod
+    def test_many_summaries():
+        # SQLite normally allows at most 500 terms in a compound SELECT.
+        custom_keys = ['custom_%d' % index for index in range(501)]
+        large_schema = {
+            'table': schema['table'][:3] + [(key, 'REAL') for key in custom_keys],
+            'day_summaries': [(key, 'scalar') for key in custom_keys],
+        }
+        with weewx.manager.DaySummaryManager.open_with_create(
+                db_dict_sqlite, schema=large_schema) as manager:
+            record = dict(zip(custom_keys, range(len(custom_keys))))
+            record.update(dateTime=start_ts, usUnits=weewx.US, interval=60)
+            manager.addRecord(record)
+            summary = manager._get_day_summary(weeutil.weeutil.startOfArchiveDay(start_ts))
+            assert set(summary) == set(custom_keys)
+            for index, key in enumerate(custom_keys):
+                assert summary[key].count == 1
+                assert summary[key].sum == index
 
 
 def setup_database(db_dict):

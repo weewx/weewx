@@ -21,6 +21,56 @@ used small. [PR #1154](https://github.com/weewx/weewx/pull/1154).
 
 ### 5.x.y dd-Mmm-YYYY
 
+Fixed incorrect values in derived series and aggregates when an XType extension
+returns a value in a different unit system.
+[PR #1188](https://github.com/weewx/weewx/pull/1188).
+
+Fixed problem when `diff` or `tderiv` use a custom archive table name. Also
+fixed problem when they calculate differences in a range that has no usable
+records. [PR #1189](https://github.com/weewx/weewx/pull/1189).
+
+Fixed `unix_epoch_ns` conversions, which (wrongly) used microsecond scale.
+[PR #1190](https://github.com/weewx/weewx/pull/1190).
+
+Fixed problem with overlapping report runs using the wrong skin directory or 
+leaving the working directory changed.
+[PR #1191](https://github.com/weewx/weewx/pull/1191).
+
+Fixed monthly series and timestamp generation failing when the first boundary
+falls on the 29th, 30th, or 31st.
+[PR #1193](https://github.com/weewx/weewx/pull/1193).
+
+FTP uploads now exclude entire `.git`, `.svn`, `CVS`, `.idea`, and `__pycache__`
+directory trees.
+[PR #1192](https://github.com/weewx/weewx/pull/1192).
+
+Fixed `AltimeterToStationPressure` raising `AttributeError` and added inverse
+conversions for all supported altimeter algorithms.
+[PR #1194](https://github.com/weewx/weewx/pull/1194).
+
+Fixed wind vector counts failing under MySQL when `ONLY_FULL_GROUP_BY` is
+enabled, and under SQLite with empty intervals.
+[PR #1195](https://github.com/weewx/weewx/pull/1195).
+
+Fixed archive records being lost or daily summaries left stale after MySQL
+lock errors. Other summary write errors now roll back the archive transaction
+and propagate to the caller.
+[PR #1196](https://github.com/weewx/weewx/pull/1196).
+
+Fixed daily summaries being counted twice after re-importing archive records
+with --update, and stale daily extrema after corrections.
+[PR #1197](https://github.com/weewx/weewx/pull/1197).
+
+Reading daily summaries now combines queries for multiple observation types,
+reducing the number of required queries. This can lead to performance
+improvements particularly with remote databases.
+[PR #1170](https://github.com/weewx/weewx/pull/1170).
+
+Reduce database queries when iterating over archive records or calculating degree
+days. Nearest-record lookups now use the timestamp index instead of sorting all
+records in the search window.
+[PR #1168](https://github.com/weewx/weewx/pull/1168).
+
 Fixed a `TypeError` in aggregate type `vecavg` when there is no wind direction
 over an interval. [PR #1155](https://github.com/weewx/weewx/pull/1155).
 
@@ -980,7 +1030,7 @@ process. See the *Upgrading Guide*.
 ### 4.2.0 26-Oct-2020
 
 CHANGES COMING! This is the last release that will support the LaCrosse WS23xx,
-Oregon WMR200 and WMR300 stations. In the future, they will be published as
+Oregon WMR200, and WMR300 stations. In the future, they will be published as
 unsupported extensions.
 
 Made it easier to add new, derived types via `StdWXCalculate`. Fixes issue #491.
@@ -991,7 +1041,7 @@ system to add new aggregations that take an argument.
 Added the new data types in the `extended_wview` schema to the WeeWX types
 system. Fixes issue #613.
 
-Added ability to label left, right or both y-axes of graphs.  PR #610.
+Added ability to label left, right, or both y-axes of graphs.  PR #610.
 Fixes issue #609. Thanks to user Brent Fraser!
 
 Added units and labels for the lightning data types.
@@ -1290,7 +1340,7 @@ Fixes issue #329 (again).
 Fixed problem that prevented the wee_device --history option from
 working with the CC3000 driver.
 
-Fix incorrect `log_success` operation in ftp, rsync, copy
+Fix incorrect `log_success` operation in ftp, rsync, copy,
 and image generators. PR #373. Partial fix of issue #370.
 
 Fixed problem that could cause the WMR200 to crash WeeWX if the
@@ -2258,7 +2308,7 @@ in weewx.conf during new installations.
 
 Big update with lots of changes and lots of new features. The overall
 goal was to make it easier to write and install extensions. Adding
-custom databases, units, accumulators and many other little things
+custom databases, units, accumulators, and many other little things
 have been made easier.
 
 Skins and skin.conf continue to be 100% backwards compatible (since

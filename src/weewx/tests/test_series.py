@@ -436,12 +436,9 @@ def _force_per_bucket(m):
     m.setattr(weewx.xtypes.ArchiveTable, '_grouped_aggregate_types', set())
 
 
-# The aggregate types of the fast path, to compare with the per-bucket fallback. 'vecavg' is left
-# out, because get_aggregate() raises a TypeError for it in a calm bucket, i.e., one with a wind
-# speed of zero and no direction. The hour before 2010-03-13 00:00 is one.
-compared_types = sorted((weewx.xtypes.ArchiveTable._fast_aggregate_types
-                         | weewx.xtypes.ArchiveTable._grouped_aggregate_types)
-                        - {'vecavg'})
+# The aggregate types of the fast path, to compare with the per-bucket fallback.
+compared_types = sorted(weewx.xtypes.ArchiveTable._fast_aggregate_types
+                        | weewx.xtypes.ArchiveTable._grouped_aggregate_types)
 
 
 @pytest.mark.parametrize('obs_type', ['outTemp', 'rain', 'wind'])

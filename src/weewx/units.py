@@ -382,7 +382,7 @@ conversionDict = {
                           'degree_F'         : KtoF},
     'dublin_jd'        : {'unix_epoch'       : dublin_to_epoch,
                           'unix_epoch_ms'    : lambda x : dublin_to_epoch(x) * 1000,
-                          'unix_epoch_ns'    : lambda x : dublin_to_epoch(x) * 1e06},
+                          'unix_epoch_ns'    : lambda x : dublin_to_epoch(x) * 1e09},
     'foot'             : {'meter'            : lambda x : x * METER_PER_FOOT},
     'gallon'           : {'liter'            : lambda x : x * 3.78541,
                           'litre'            : lambda x : x * 3.78541,
@@ -485,13 +485,13 @@ conversionDict = {
                           'day'              : lambda x : x / SECS_PER_DAY},
     'unix_epoch'       : {'dublin_jd'        : epoch_to_dublin,
                           'unix_epoch_ms'    : lambda x : x * 1000,
-                          'unix_epoch_ns'    : lambda x : x * 1000000},
+                          'unix_epoch_ns'    : lambda x : x * 1000000000},
     'unix_epoch_ms'    : {'dublin_jd'        : lambda x: epoch_to_dublin(x / 1000.0),
                           'unix_epoch'       : lambda x : x / 1000,
-                          'unix_epoch_ns'    : lambda x : x * 1000},
-    'unix_epoch_ns'    : {'dublin_jd'        : lambda x: epoch_to_dublin(x / 1e6),
-                          'unix_epoch'       : lambda x : x / 1e06,
-                          'unix_epoch_ms'    : lambda x : x / 1000},
+                          'unix_epoch_ns'    : lambda x : x * 1000000},
+    'unix_epoch_ns'    : {'dublin_jd'        : lambda x: epoch_to_dublin(x / 1e9),
+                          'unix_epoch'       : lambda x : x / 1e09,
+                          'unix_epoch_ms'    : lambda x : x / 1000000},
     'watt'             : {'kilowatt'         : lambda x : x / 1000.0},
     'watt_hour'        : {'kilowatt_hour'    : lambda x : x / 1000.0,
                           'mega_joule'       : lambda x : x * 0.0036,
@@ -814,7 +814,7 @@ class Formatter:
             if val_t[1] == "unix_epoch_ms":
                 t /= 1000.0
             elif val_t[1] == "unix_epoch_ns":
-                t /= 1000000.0
+                t /= 1000000000.0
             if useThisFormat is None:
                 val_str = time.strftime(self.time_format_dict.get(context, DEFAULT_TIME_FORMAT),
                                         time.localtime(t))
