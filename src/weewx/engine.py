@@ -688,21 +688,28 @@ class StdArchive(StdService):
 
     def new_archive_record(self, event):
         """Called when a new archive record has arrived.
-        Put it in the archive database."""
+           Put it in the archive database.
+           
+        Args:
+            event.record(dict): the archive record
+            event.accumulator(weewx.accum.Accum): the corresponding
+                acculumator if any or `None` if not
+            event.origin(str): "hardware" or "software" depending on
+                the data source
+        """
 
-        # If requested, extract any extra information we can out of the accumulator and put it in
-        # the record. Not necessary in the case of software record generation because it has
-        # already been done.
+        # If requested, extract any extra information we can out of the 
+        # accumulator and put it in the record. Not necessary in the case 
+        # of software record generation because it has already been done.
+        # Note: `event.accumulator` is `None` if the accumulator is missing
+        #       or does not correspond to `event.record`. That is checked in
+        #       `_chatchup`.
         if self.record_augmentation \
                 and event.accumulator \
-                and event.record['dateTime'] == event.accumulator.timespan.stop \
                 and event.origin != 'software':
             event.accumulator.augmentRecord(event.record)
 
         # Save the record to the database
-        # Note: `addRecord` checks in `_add_chunk` whether the accumulator 
-        #       timespan and the record timestamp belong together. So we do 
-        #       not need to do it here.
         dbmanager = self.engine.db_binder.get_manager(self.data_binding)
         dbmanager.addRecord(event.record,
                             accumulator=event.accumulator,
@@ -727,18 +734,18 @@ class StdArchive(StdService):
             # interval. Reject any records that have a timestamp in the
             # future, but provide some lenience for clock drift.
 
-            # Note: `self.old_accumulator` may not belong to `record`, but
-            #       that is traditionally checked in the `new_archive_record`
-            #       and `weewx.manager.Manager.addRecord` methods. So it is
-            #       not done here.
+            # Note: `self.old_accumulator` may not belong to `record`. Only
+            #       include the accumulator if it corresponds to the record.
 
             for record in generator(lastgood_ts):
                 ts = record.get('dateTime')
                 if ts and ts < time.time() + self.archive_delay:
-                    self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
-                                                          record=record,
-                                                          origin='hardware',
-                                                          accumulator=self.old_accumulator))
+                    self.engine.dispatchEvent(weewx.Event(
+                        weewx.NEW_ARCHIVE_RECORD,
+                        record=record,
+                        origin='hardware',
+                        accumulator=self.old_accumulator if self.old_accumulator and record['dateTime'] == self.old_accumulator.timespan.stop else None
+                    ))
                 else:
                     log.warning("Ignore historical record: %s" % record)
         except weewx.HardwareError as e:
