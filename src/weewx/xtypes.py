@@ -409,11 +409,11 @@ class ArchiveTable(XType):
 
     # Set of SQL statements to be used for calculating aggregates from the main archive table.
     agg_sql_dict = {
-        'diff': "SELECT (b.%(sql_type)s - a.%(sql_type)s) FROM archive a, archive b "
-                "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive "
-                "WHERE dateTime <= %(stop)s) "
-                "AND a.dateTime = (SELECT MIN(dateTime) FROM archive "
-                "WHERE dateTime >= %(start)s);",
+        'diff': "SELECT (b.%(sql_type)s - a.%(sql_type)s) FROM %(table_name)s a, %(table_name)s b "
+                "WHERE b.dateTime = (SELECT MAX(dateTime) FROM %(table_name)s "
+                "WHERE dateTime >= %(start)s AND dateTime <= %(stop)s) "
+                "AND a.dateTime = (SELECT MIN(dateTime) FROM %(table_name)s "
+                "WHERE dateTime >= %(start)s AND dateTime <= %(stop)s);",
         'first': "SELECT %(sql_type)s FROM %(table_name)s "
                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
                  "AND %(sql_type)s IS NOT NULL ORDER BY dateTime ASC LIMIT 1",
@@ -438,11 +438,11 @@ class ArchiveTable(XType):
                     "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
                     "AND %(sql_type)s IS NOT NULL LIMIT 1",
         'tderiv': "SELECT (b.%(sql_type)s - a.%(sql_type)s) / (b.dateTime-a.dateTime) "
-                  "FROM archive a, archive b "
-                  "WHERE b.dateTime = (SELECT MAX(dateTime) FROM archive "
-                  "WHERE dateTime <= %(stop)s) "
-                  "AND a.dateTime = (SELECT MIN(dateTime) FROM archive "
-                  "WHERE dateTime >= %(start)s);",
+                  "FROM %(table_name)s a, %(table_name)s b "
+                  "WHERE b.dateTime = (SELECT MAX(dateTime) FROM %(table_name)s "
+                  "WHERE dateTime >= %(start)s AND dateTime <= %(stop)s) "
+                  "AND a.dateTime = (SELECT MIN(dateTime) FROM %(table_name)s "
+                  "WHERE dateTime >= %(start)s AND dateTime <= %(stop)s);",
         'gustdir': "SELECT windGustDir FROM %(table_name)s "
                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
                    "ORDER BY windGust DESC limit 1",
@@ -1173,7 +1173,7 @@ class DailySummaries(XType):
 
         Args:
             obs_type (str): The observation type to be evaluated for eligibility.
-            timespan (weeutil.weeutil.TimeSpan|tuple[int|float, int|float]) A tuple containing the start and end
+            timespan (weeutil.weeutil.TimeSpan|tuple[int|float, int|float]): A tuple containing the start and end
                 timestamps of the aggregation interval.
             db_manager (manager.Manager): The database manager object responsible for interacting
                 with the weather database.
@@ -1223,9 +1223,10 @@ class AggregateHeatCool(XType):
                 'cooldeg', or 'growdeg'.
             timespan (weeutil.weeutil.TimeSpan|tuple[int|float, int|float]) A tuple containing the start and end
                 timestamps of the aggregation interval.
-            aggregate_type (str): The type of aggregation to be done. Must be 'avg' or 'sum'.
+            aggregate_type (str): The type of aggregation to be done. Must be 'avg', 'sum',
+                or 'not_null'.
             db_manager (weewx.manager.Manager): An instance of weewx.manager.Manager or subclass.
-            option_dict (dict): Not used in this version.
+            option_dict (dict): Report options, including the degree-day bases in skin_dict.
 
         Returns:
              ValueTuple: A ValueTuple containing the result.
@@ -1255,19 +1256,32 @@ class AggregateHeatCool(XType):
 
         total = 0.0
         count = 0
-        for daySpan in weeutil.weeutil.genDaySpans(timespan[0], timespan[1]):
-            # Get the average temperature for the day as a value tuple:
-            Tavg_t = DailySummaries.get_aggregate('outTemp', daySpan, 'avg', db_manager)
-            # Make sure it's valid before including it in the aggregation:
-            if Tavg_t is not None and Tavg_t[0] is not None:
+        start = weeutil.weeutil.startOfDay(timespan[0])
+        # genDaySpans excludes the stop day throughout midnight's first second.
+        stop = weeutil.weeutil.archiveDaySpan(math.floor(timespan[1])).stop
+        if start < stop:
+            # Degree days include the whole first and last calendar days, even
+            # when the requested span ends partway through a day. Read those
+            # summaries together, preserving their interval-weighted means.
+            summary_span = weeutil.weeutil.TimeSpan(start, stop)
+            DailySummaries.check_eligibility('outTemp', summary_span, db_manager, 'avg')
+            rows = db_manager.genSql(
+                'SELECT wsum, sumtime FROM %s_day_outTemp '
+                'WHERE dateTime >= ? AND dateTime < ? ORDER BY dateTime' % db_manager.table_name,
+                summary_span)
+        else:
+            rows = ()
+        for weighted_sum, sumtime in rows:
+            if weighted_sum is not None and sumtime:
+                average = weighted_sum / sumtime
                 if aggregate_type == 'not_null':
                     return ValueTuple(True, 'boolean', 'group_boolean')
                 if obs_type == 'heatdeg':
-                    total += weewx.wxformulas.heating_degrees(Tavg_t[0], heatbase_t[0])
+                    total += weewx.wxformulas.heating_degrees(average, heatbase_t[0])
                 elif obs_type == 'cooldeg':
-                    total += weewx.wxformulas.cooling_degrees(Tavg_t[0], coolbase_t[0])
+                    total += weewx.wxformulas.cooling_degrees(average, coolbase_t[0])
                 else:
-                    total += weewx.wxformulas.cooling_degrees(Tavg_t[0], growbase_t[0])
+                    total += weewx.wxformulas.cooling_degrees(average, growbase_t[0])
 
                 count += 1
 
@@ -1338,7 +1352,7 @@ class XTypeTable(XType):
                 # Given a record, use the xtypes system to calculate a value:
                 try:
                     value = get_scalar(obs_type, record, db_manager)
-                    data_vec.append(value[0])
+                    data_vec.append(weewx.units.convertStd(value, std_unit_system)[0])
                 except weewx.CannotCalculate:
                     data_vec.append(None)
                 start_vec.append(record['dateTime'] - record['interval'] * 60)
@@ -1391,8 +1405,8 @@ class XTypeTable(XType):
             # Given a record, use the xtypes system to calculate a value. If the value cannot be
             # calculated a CannotCalculate exception will be raised. Be prepared to catch it.
             try:
-                # A ValueTuple will be returned, so use only the first element.
-                value = get_scalar(obs_type, record, db_manager)[0]
+                value_tuple = get_scalar(obs_type, record, db_manager)
+                value = weewx.units.convertStd(value_tuple, std_unit_system)[0]
             except weewx.CannotCalculate:
                 value = None
 
@@ -1447,7 +1461,7 @@ class WindVec(XType):
     }
 
     agg_sql_dict = {
-        'count': "SELECT COUNT(dateTime), usUnits FROM %(table_name)s "
+        'count': "SELECT COUNT(dateTime), MAX(usUnits) FROM %(table_name)s "
                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL",
         'first': "SELECT %(mag)s, %(dir)s, usUnits FROM %(table_name)s "
                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s  AND %(mag)s IS NOT NULL "
@@ -1594,6 +1608,8 @@ class WindVec(XType):
                 if row:
                     if aggregate_type == 'count':
                         value, std_unit_system = row
+                        if std_unit_system is None:
+                            std_unit_system = db_manager.std_unit_system
                     else:
                         magnitude, direction, std_unit_system = row
                         value = weeutil.weeutil.to_complex(magnitude, direction)

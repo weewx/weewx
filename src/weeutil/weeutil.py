@@ -794,6 +794,7 @@ def stampgen(startstamp, stopstamp, interval):
     if interval == 365.25 / 12 * 24 * 3600:
         # Interval is a nominal month. This algorithm is
         # necessary because not all months have the same length.
+        start_day = dt.day
         while dt <= stop_dt:
             t_tuple = dt.timetuple()
             yield time.mktime(t_tuple)
@@ -803,7 +804,8 @@ def stampgen(startstamp, stopstamp, interval):
             if month > 12:
                 month -= 12
                 year += 1
-            dt = dt.replace(year=year, month=month)
+            day = min(start_day, calendar.monthrange(year, month)[1])
+            dt = dt.replace(year=year, month=month, day=day)
     else:
         # This rather complicated algorithm is necessary (rather than just
         # doing some time stamp arithmetic) because of the possibility that DST
@@ -888,6 +890,7 @@ def intervalgen(start_ts, stop_ts, interval):
     if interval == 365.25 / 12 * 24 * 3600:
         # Interval is a nominal month. This algorithm is
         # necessary because not all months have the same length.
+        start_day = dt1.day
         while dt1 < stop_dt:
             t_tuple = dt1.timetuple()
             year = t_tuple[0]
@@ -896,7 +899,8 @@ def intervalgen(start_ts, stop_ts, interval):
             if month > 12:
                 month -= 12
                 year += 1
-            dt2 = min(dt1.replace(year=year, month=month), stop_dt)
+            day = min(start_day, calendar.monthrange(year, month)[1])
+            dt2 = min(dt1.replace(year=year, month=month, day=day), stop_dt)
             stamp1 = time.mktime(t_tuple)
             stamp2 = time.mktime(dt2.timetuple())
             yield TimeSpan(stamp1, stamp2)
