@@ -1,3 +1,8 @@
+#
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
 import contextlib
 import pathlib
 import threading
