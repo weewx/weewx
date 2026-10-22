@@ -1,19 +1,23 @@
 WeeWX change history
 --------------------
 
-### 5.6.0
+### 5.6.0 dd-Mmm-yyyy
+
+Added `weewx.jsongenerator.JSONGenerator`, which writes the data as JSON. Added
+the skin `Horizon`, which leverages the JSON data, allowing it to step backwards
+through the entire station history. The skin also includes various panels,
+including a forecast panel, and a climate page summary, all of which can be
+arranged in a custom order. 
+[PR #1128](https://github.com/weewx/weewx/issues/1128) and 
+[PR #1133](https://github.com/weewx/weewx/pull/1133). Huge thanks to user 
+Manuel!
 
 Improved the performance of `weewx.xtypes.ArchiveTable.get_series()` for
-aggregated series (such as hourly aggregation over a long timespan). Instead
-of issuing one SQL query per aggregation bucket, it now fetches the archive
-data in pages of about a week each, then calculates the aggregates in memory.
-This keeps both the number of queries and the memory used small.
-
-Where its SQL can, the database now aggregates each page itself, so it returns
-a row per bucket rather than every archive record. Buckets of a day or more
-come from the daily summaries again, as before.
-[PR #1154](https://github.com/weewx/weewx/pull/1154).
-
+aggregated series (such as hourly aggregation over a long timespan). Instead of
+issuing one SQL query per aggregation bucket, it now fetches the archive data in
+pages of about a week each, calculating the aggregate in the database where it
+can, otherwise in memory. This keeps both the number of queries and the memory
+used small. [PR #1154](https://github.com/weewx/weewx/pull/1154).
 
 ### 5.x.y dd-Mmm-YYYY
 

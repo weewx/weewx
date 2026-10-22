@@ -1,0 +1,27 @@
+## Copyright (c) 2026 Manuel Hilgert
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+#errorCatcher Echo
+#encoding UTF-8
+##
+## The climate page of the year in progress, written on every report cycle. The
+## panels are in climate.inc, which climate-%Y.html.tmpl uses for each year.
+#set global $climate_year = $year.dateTime.format("%Y")
+#set global $page_title = '{0} {1}'.format($gettext("Climate"), $climate_year)
+#set global $page_units = True
+<!DOCTYPE html>
+<html lang="$lang">
+  <head>
+    #include "head.inc"
+  </head>
+  <body>
+    <div class="page">
+      #include "masthead.inc"
+      #include "nav.inc"
+      <main class="board" id="content">
+        #include "climate.inc"
+      </main>
+      #include "footer.inc"
+    </div>
+    #include "scripts.inc"
+  </body>
+</html>

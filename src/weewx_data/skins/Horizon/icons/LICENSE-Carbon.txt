@@ -1,0 +1,19 @@
+The SVG files in this directory are from the IBM Carbon Design System.
+
+    https://github.com/carbon-design-system/carbon
+
+They are distributed under the Apache License, Version 2.0:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Each file has had its <title> and its transparent backing rectangle removed, and
+its whitespace collapsed. The paths themselves are unchanged.
+
+They came here by way of weewx-wdc by David Baetge, which uses the same set:
+
+    https://github.com/Daveiano/weewx-wdc
+
+The weather symbols in icons/forecast/ come from the same set. They are named
+here for what they show rather than for the code they came from: clear.svg,
+partly-cloudy-night.svg, thunderstorm.svg, and so on, which is the vocabulary
+WMO 4677 uses once it has been reduced to pictures.

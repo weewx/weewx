@@ -1,0 +1,106 @@
+## Copyright Tom Keffer, Matthew Wall
+## Copyright (c) 2026 Manuel Hilgert
+## Distributed under terms of GPLv3.  See LICENSE.txt for your rights.
+<?xml version="1.0"?>
+<rss version="2.0" 
+  xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:geo="http://www.w3.org/2003/01/geo/wgs84_pos#" >
+
+#set $timespans = [{"span": $day, "label": $gettext("Daily summary as of")}, {"span": $month, "label": $gettext("Monthly summary as of")}, {"span": $year, "label": $gettext("Yearly summary as of")}]
+
+#set $observations = $to_list($DisplayOptions.get('observations_rss', ['outTemp', 'inTemp', 'barometer', 'windSpeed', 'rain', 'rainRate']))
+#set $obs_type_sum = $to_list($DisplayOptions.get('obs_type_sum', ['rain']))
+#set $obs_type_max = $to_list($DisplayOptions.get('obs_type_max', ['rainRate']))
+
+  <channel>
+    <title>$gettext("Weather Conditions") : $station.location</title>
+    <link>$station.station_url</link>
+    <description>$gettext("Current conditions, and daily, monthly, and yearly summaries")</description>
+    <language>"$lang"</language>
+    <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
+
+    <lastBuildDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</lastBuildDate>
+    <docs>http://blogs.law.harvard.edu/tech/rss</docs>
+    <generator>weewx $station.version</generator>
+    <ttl>$current.interval.string('')</ttl>
+
+    <item>
+      <title>$gettext("Weather Conditions at") $current.dateTime</title>
+      <link>$station.station_url</link>
+      <description>
+#for $x in $observations
+  #if $getattr($current, $x).has_data
+    #if $x == 'windSpeed'
+        $obs.label.wind: $current.windSpeed $gettext("from") $current.windDir;
+    #else
+        $obs.label[$x]: $getattr($current, $x);
+    #end if
+  #end if
+#end for
+      </description>
+      <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
+      <geo:lat>$station.latitude_f</geo:lat>
+      <geo:long>$station.longitude_f</geo:long>
+      <content:encoded><![CDATA[
+      <p>
+      $obs.label.dateTime: $current.dateTime<br/>
+#for $x in $observations
+  #if $getattr($current, $x).has_data
+    #if $x == 'windSpeed'
+        $obs.label.wind: $current.windSpeed $gettext("from") $current.windDir;
+    #else
+        $obs.label[$x]: $getattr($current, $x)<br/>
+    #end if
+  #end if
+#end for
+      </p>
+      ]]></content:encoded>
+    </item>
+
+#for $timespan in $timespans
+    <item>
+      <title>$timespan['label'] $current.dateTime</title>
+      <link>$station.station_url</link>
+      <description>
+  #for $x in $observations
+    #if $getattr($timespan['span'], $x).has_data
+      #if $x == 'windSpeed'
+        $gettext("Max") $obs.label.wind: $timespan['span'].wind.max $gettext("from") $timespan['span'].wind.gustdir $gettext("at") $timespan['span'].wind.maxtime;
+      #elif $x in $obs_type_sum
+        $obs.label[$x]: $getattr($timespan['span'], $x).sum;
+      #elif $x in $obs_type_max
+        $gettext("Max") $obs.label[$x]: $getattr($timespan['span'], $x).max;
+      #else
+        $gettext("Min") $obs.label[$x]: $getattr($timespan['span'], $x).min $gettext("at") $getattr($timespan['span'], $x).mintime;
+        $gettext("Max") $obs.label[$x]: $getattr($timespan['span'], $x).max $gettext("at") $getattr($timespan['span'], $x).maxtime;
+      #end if
+    #end if
+  #end for
+      </description>
+      <pubDate>$current.dateTime.format("%a, %d %b %Y %H:%M:%S %Z")</pubDate>
+      <geo:lat>$station.latitude_f</geo:lat>
+      <geo:long>$station.longitude_f</geo:long>
+      <content:encoded><![CDATA[
+      <p>
+      $gettext($timespan['label']) $timespan['span'].dateTime.format("%d %b %Y")<br/>
+  #for $x in $observations
+    #if $getattr($timespan['span'], $x).has_data
+      #if $x == 'windSpeed'
+        $gettext("Max") $obs.label.wind: $timespan['span'].wind.max $gettext("from") $timespan['span'].wind.gustdir $gettext("at") $timespan['span'].wind.maxtime<br/>
+      #elif $x in $obs_type_sum
+        $obs.label[$x]: $getattr($timespan['span'], $x).sum<br/>
+      #elif $x in $obs_type_max
+        $gettext("Max") $obs.label[$x]: $getattr($timespan['span'], $x).max<br/>
+      #else
+        $gettext("Min") $obs.label[$x]: $getattr($timespan['span'], $x).min $gettext("at") $getattr($timespan['span'], $x).mintime<br/>
+        $gettext("Max") $obs.label[$x]: $getattr($timespan['span'], $x).max $gettext("at") $getattr($timespan['span'], $x).maxtime<br/>
+      #end if
+    #end if
+  #end for
+      </p>
+      ]]></content:encoded>
+    </item>
+#end for
+
+  </channel>
+</rss>
