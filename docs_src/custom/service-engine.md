@@ -500,19 +500,48 @@ When WeeWX calls the function, that your service bound to an event, WeeWX
 passes an instance of the class `Event` to it. It contains the following
 data:
 
+* for `STARTUP`:
+
+  That event is dispatched when WeeWX starts.
+
+  * `event.event_type`: `STARTUP`
+
+  There are no other attributes for this event.
+
+* for `PRE_LOOP`:
+
+  That event is dispatched at the beginning of the archive interval.
+
+  * `event.event_type`: `PRE_LOOP`
+
+  There are no other attributes for this event.
+  
 * for `NEW_LOOP_PACKET` and `CHECK_LOOP`:
+
+  Those events are dispatched every time a new LOOP packet arrives.
 
   * `event.event_type`: `NEW_LOOP_PACKET`
   * `event.packet`: the LOOP packet containing the measurements
 
+* for `POST_LOOP`:
+
+  That event is dispatched, when the archive interval ends. It triggers
+  archive record creation.
+
+  * `event.event_type`: `POST_LOOP`
+
+  There are no other attributes for this event.
+
 * for `NEW_ARCHIVE_RECORD`:
+
+  That event is dispatched after the archive record was built.
 
   * `event.event_type`: `NEW_ARCHIVE_RECORD`
   * `event.record`: the archive record
   * `event.accumulator`: an accumulator or `None` (from WeeWX 5.6 on)
   * `event.origin`: where the data come from; can be `hardware` or `software`
 
-  If you want the extract data from the accumulator, make sure to check
+  If you want to extract data from the accumulator, make sure to check
   the timespan first:
 
   ```Python
@@ -520,3 +549,13 @@ data:
               # your code here
               ...
   ```
+
+  If your service changes a value in the archive record, it may be necassary
+  to apply those changes to the accumulator as well. Please note, that it
+  is not possible to derive the correct accumulator values from the value
+  of the archive record alone.
+
+LOOP packets and archive records are passed through all the services in the
+order given in `weewx.conf`. Every function bound to `NEW_LOOP_PACKET`,
+`CHECK_LOOP`, and `NEW_ARCHIVE_RECORD` can change or add values. Those
+changes affect, what the following function calls see. So order matters.
