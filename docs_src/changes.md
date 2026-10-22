@@ -39,6 +39,10 @@ lock errors. Other summary write errors now roll back the archive transaction
 and propagate to the caller.
 [PR #1196](https://github.com/weewx/weewx/pull/1196).
 
+Fixed daily summaries being counted twice after re-importing archive records
+with --update, and stale daily extrema after corrections.
+[PR #1197](https://github.com/weewx/weewx/pull/1197).
+
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
 improvements particularly with remote databases.
