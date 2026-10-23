@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -743,23 +743,31 @@ class StdArchive(StdService):
 
     def new_archive_record(self, event):
         """Called when a new archive record has arrived.
-        Put it in the archive database.
-
-        event (weewx.Event): The event containing the new archive record.
+           Put it in the archive database.
+           
+        Args:
+            event.record(dict): the archive record
+            event.accumulator(weewx.accum.Accum): the corresponding
+                acculumator if any or `None` if not
+            event.origin(str): "hardware" or "software" depending on
+                the data source
         """
 
         # If requested, extract any extra information we can out of the accumulator and put it in
         # the record. Not necessary in the case of software record generation because it has
         # already been done.
+        # Note: `event.accumulator` is `None` if the accumulator is missing
+        #       or does not correspond to `event.record`. That is checked in
+        #       `_catchup`.
         if self.record_augmentation \
-                and self.old_accumulator \
-                and event.record['dateTime'] == self.old_accumulator.timespan.stop \
+                and event.accumulator \
                 and event.origin != 'software':
-            self.old_accumulator.augmentRecord(event.record)
+            event.accumulator.augmentRecord(event.record)
 
+        # Save the record to the database
         dbmanager = self.engine.db_binder.get_manager(self.data_binding)
         dbmanager.addRecord(event.record,
-                            accumulator=self.old_accumulator,
+                            accumulator=event.accumulator,
                             log_success=self.log_success,
                             log_failure=self.log_failure)
 
@@ -787,9 +795,19 @@ class StdArchive(StdService):
             for record in generator(lastgood_ts):
                 ts = record.get('dateTime')
                 if ts and ts < time.time() + self.archive_delay:
-                    self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
-                                                          record=record,
-                                                          origin='hardware'))
+                    # Note: `self.old_accumulator` may not belong to `record`. Only
+                    #  include it if it corresponds to the record.
+                    if (self.old_accumulator
+                            and record['dateTime'] == self.old_accumulator.timespan.stop):
+                        accumulator = self.old_accumulator
+                    else:
+                        accumulator = None
+                    self.engine.dispatchEvent(weewx.Event(
+                        weewx.NEW_ARCHIVE_RECORD,
+                        record=record,
+                        origin='hardware',
+                        accumulator=accumulator
+                    ))
                 else:
                     log.warning("Ignore historical record: %s" % record)
         except weewx.HardwareError as e:
@@ -804,7 +822,8 @@ class StdArchive(StdService):
         # Send out an event with the new record:
         self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
                                               record=record,
-                                              origin='software'))
+                                              origin='software',
+                                              accumulator=self.old_accumulator))
 
     def _new_accumulator(self, timestamp):
         start_ts = weeutil.weeutil.startOfInterval(timestamp,
