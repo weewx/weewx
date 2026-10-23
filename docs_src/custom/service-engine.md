@@ -496,57 +496,77 @@ In our case, the obvious place for our new service is in
 
 ## Event data
 
-When WeeWX calls the function, that your service bound to an event, WeeWX
-passes an instance of the class `Event` to it. It contains the following
-data:
+When WeeWX calls a function that your service has bound to an event, it
+passes an instance of the class `Event`. Every event has the attribute
+`event.event_type`. Depending on the event type, it may carry additional
+attributes, as shown below.
 
-* for `STARTUP`:
+### `STARTUP`
 
-  That event is dispatched when WeeWX starts.
+Dispatched when WeeWX starts.
 
-  * `event.event_type`: `STARTUP`
+| Attribute          | Description                                 |
+|--------------------|---------------------------------------------|
+| `event.event_type` | `STARTUP`                           |
 
-  There are no other attributes for this event.
 
-* for `PRE_LOOP`:
+### `PRE_LOOP`
 
-  That event is dispatched at the beginning of the archive interval.
+Dispatched at the beginning of the archive interval.
 
-  * `event.event_type`: `PRE_LOOP`
+| Attribute          | Description                                 |
+|--------------------|---------------------------------------------|
+| `event.event_type` | `PRE_LOOP`                           |
 
-  There are no other attributes for this event.
-  
-* for `NEW_LOOP_PACKET` and `CHECK_LOOP`:
 
-  Those events are dispatched every time a new LOOP packet arrives.
+### `NEW_LOOP_PACKET`
 
-  * `event.event_type`: `NEW_LOOP_PACKET`
-  * `event.packet`: the LOOP packet containing the measurements
+Dispatched every time a new LOOP packet arrives.
 
-* for `POST_LOOP`:
+| Attribute          | Description                                 |
+|--------------------|---------------------------------------------|
+| `event.event_type` | `NEW_LOOP_PACKET`                           |
+| `event.packet`     | The LOOP packet containing the measurements |
 
-  That event is dispatched, when the archive interval ends. It triggers
-  archive record creation.
+### `CHECK_LOOP`
 
-  * `event.event_type`: `POST_LOOP`
+Dispatched every time a new LOOP packet arrives. The engine uses this event to
+decide whether to break the inner LOOP cycle by raising an exception. 
 
-  There are no other attributes for this event.
+| Attribute          | Description                                 |
+|--------------------|---------------------------------------------|
+| `event.event_type` | `CHECK_LOOP`                                |
+| `event.packet`     | The LOOP packet containing the measurements |
 
-* for `NEW_ARCHIVE_RECORD`:
 
-  That event is dispatched after the archive record was built.
+### `POST_LOOP`
 
-  * `event.event_type`: `NEW_ARCHIVE_RECORD`
-  * `event.record`: the archive record
-  * `event.accumulator`: an accumulator or `None` (from WeeWX 5.6 on)
-  * `event.origin`: where the data come from; can be `hardware` or `software`
+Dispatched when the archive interval ends. It triggers archive record
+creation.
 
-  If your service changes a value in the archive record, it may be necassary
-  to apply those changes to the accumulator as well. Please note, that it
-  is not possible to derive the correct accumulator values from the value
-  of the archive record alone.
+| Attribute          | Description |
+|--------------------|-------------|
+| `event.event_type` | `POST_LOOP` |
+
+
+### `NEW_ARCHIVE_RECORD`
+
+Dispatched after the archive record has been built.
+
+| Attribute           | Description                                                          |
+|---------------------|----------------------------------------------------------------------|
+| `event.event_type`  | `NEW_ARCHIVE_RECORD`                                                 |
+| `event.record`      | The archive record                                                   |
+| `event.accumulator` | An accumulator, or `None` (from WeeWX 5.6 on)                        |
+| `event.origin`      | Where the data came from: `hardware` or `software`                   |
+
+If your service changes a value in the archive record, it may be necessary
+to apply the change to the accumulator as well. It is not possible to derive
+the correct accumulator values from the archive record alone.
+
+### Order of processing
 
 LOOP packets and archive records are passed through all the services in the
 order given in `weewx.conf`. Every function bound to `NEW_LOOP_PACKET`,
-`CHECK_LOOP`, and `NEW_ARCHIVE_RECORD` can change or add values. Those
-changes affect, what the following function calls see. So order matters.
+`CHECK_LOOP`, and `NEW_ARCHIVE_RECORD` can change or add values, and those
+changes are seen by the functions called after it. So order matters.
