@@ -541,15 +541,6 @@ data:
   * `event.accumulator`: an accumulator or `None` (from WeeWX 5.6 on)
   * `event.origin`: where the data come from; can be `hardware` or `software`
 
-  If you want to extract data from the accumulator, make sure to check
-  the timespan first:
-
-  ```Python
-          if event.accumulator and and event.record['dateTime'] == event.accumulator.timespan.stop:
-              # your code here
-              ...
-  ```
-
   If your service changes a value in the archive record, it may be necassary
   to apply those changes to the accumulator as well. Please note, that it
   is not possible to derive the correct accumulator values from the value
