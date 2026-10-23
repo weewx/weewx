@@ -60,6 +60,9 @@ Of several equal extremes, aggregate types `maxtime` and `mintime` now give the
 earliest when calculated from the archive table, as they already did from the
 daily summaries. [PR #1156](https://github.com/weewx/weewx/pull/1156).
 
+Fixed problem when plotting data whose y-value is very small and has a very 
+small range.
+
 
 ### 5.5.2 23-Sep-2026
 
