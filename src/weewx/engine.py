@@ -753,12 +753,12 @@ class StdArchive(StdService):
                 the data source
         """
 
-        # If requested, extract any extra information we can out of the 
-        # accumulator and put it in the record. Not necessary in the case 
-        # of software record generation because it has already been done.
+        # If requested, extract any extra information we can out of the accumulator and put it in
+        # the record. Not necessary in the case of software record generation because it has
+        # already been done.
         # Note: `event.accumulator` is `None` if the accumulator is missing
         #       or does not correspond to `event.record`. That is checked in
-        #       `_chatchup`.
+        #       `_catchup`.
         if self.record_augmentation \
                 and event.accumulator \
                 and event.origin != 'software':
@@ -792,18 +792,21 @@ class StdArchive(StdService):
             # records may not be on the same boundaries as the archive
             # interval. Reject any records that have a timestamp in the
             # future, but provide some lenience for clock drift.
-
-            # Note: `self.old_accumulator` may not belong to `record`. Only
-            #       include the accumulator if it corresponds to the record.
-
             for record in generator(lastgood_ts):
                 ts = record.get('dateTime')
                 if ts and ts < time.time() + self.archive_delay:
+                    # Note: `self.old_accumulator` may not belong to `record`. Only
+                    #  include it if it corresponds to the record.
+                    if (self.old_accumulator
+                            and record['dateTime'] == self.old_accumulator.timespan.stop):
+                        accumulator = self.old_accumulator
+                    else:
+                        accumulator = None
                     self.engine.dispatchEvent(weewx.Event(
                         weewx.NEW_ARCHIVE_RECORD,
                         record=record,
                         origin='hardware',
-                        accumulator=self.old_accumulator if self.old_accumulator and record['dateTime'] == self.old_accumulator.timespan.stop else None
+                        accumulator=accumulator
                     ))
                 else:
                     log.warning("Ignore historical record: %s" % record)
