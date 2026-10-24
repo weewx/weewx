@@ -331,8 +331,11 @@ class TimespanBinder:
                                             **self.option_dict)
 
     # Iterate over seasons in the time period:
-    def seasons(self):
-        season_type = self.option_dict.get('season_type', 'm')[0].lower()
+    def seasons(self, season_type=None):
+        # For `$seasonsyear(season_type='...').seasons` the season type is
+        # passed from the base tag. But `$alltime` does not take a parameter
+        # `season_type`. So it needs to be specified here instead.
+        season_type = (self.option_dict.get('season_type', 'm') if season_type is None else season_type)[0].lower()
         if season_type == 'm':
             # meteorological season
             def genSeasonSpans(start, stop):
