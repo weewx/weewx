@@ -5,51 +5,53 @@
 #
 """Manage a WeeWX database."""
 import argparse
+import copy
 
 import weecfg
 import weecfg.database
 import weectllib
 import weectllib.database_actions
+import weewx.manager
 from weeutil.weeutil import bcolors
 
 create_usage = f"""{bcolors.BOLD}weectl database create
-            [--config=FILENAME] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME] [--db-filename=FILENAME]
             [--dry-run] [-y]{bcolors.ENDC}"""
 drop_daily_usage = f"""{bcolors.BOLD}weectl database drop-daily
-            [--config=FILENAME] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME] [--db-filename=FILENAME]
             [--dry-run] [-y]{bcolors.ENDC}"""
 rebuild_usage = f"""{bcolors.BOLD}weectl database rebuild-daily [NAME...]
             [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
-            [--config=FILENAME] [--binding=BINDING-NAME] 
+            [--config=FILENAME] [--binding=BINDING-NAME] [--db-filename=FILENAME]
             [--dry-run] [-y]{bcolors.ENDC}"""
 add_column_usage = f"""{bcolors.BOLD}weectl database add-column NAME
             [--type=COLUMN-DEF]
-            [--config=FILENAME] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME] [--db-filename=FILENAME]
             [--dry-run] [-y]{bcolors.ENDC}"""
 rename_column_usage = f"""{bcolors.BOLD}weectl database rename-column FROM-NAME TO-NAME
-            [--config=FILENAME] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME] [--db-filename=FILENAME]
             [--dry-run] [-y]{bcolors.ENDC}"""
 drop_columns_usage = f"""{bcolors.BOLD}weectl database drop-columns NAME...
-            [--config=FILENAME] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME] [--db-filename=FILENAME]
             [--dry-run] [-y]{bcolors.ENDC}"""
 reconfigure_usage = f"""{bcolors.BOLD}weectl database reconfigure 
-            [--config=FILENAME] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME] [--db-filename=FILENAME]
             [--dry-run] [-y]{bcolors.ENDC}"""
 transfer_usage = f"""{bcolors.BOLD}weectl database transfer --dest-binding=BINDING-NAME
-            [--config=FILENAME] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME] [--db-filename=FILENAME]
             [--dry-run] [-y]{bcolors.ENDC}"""
 calc_missing_usage = f"""{bcolors.BOLD}weectl database calc-missing
             [--date=YYYY-mm-dd | [--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]
-            [--config=FILENAME] [--binding=BINDING-NAME] [--tranche=INT]
+            [--config=FILENAME] [--binding=BINDING-NAME] [--db-filename=FILENAME] [--tranche=INT]
             [--dry-run] [-y]{bcolors.ENDC}"""
 check_usage = f"""{bcolors.BOLD}weectl database check
-            [--config=FILENAME] [--binding=BINDING-NAME]{bcolors.ENDC}"""
+            [--config=FILENAME] [--binding=BINDING-NAME] [--db-filename=FILENAME]{bcolors.ENDC}"""
 update_usage = f"""{bcolors.BOLD}weectl database update
-            [--config=FILENAME] [--binding=BINDING-NAME]
+            [--config=FILENAME] [--binding=BINDING-NAME] [--db-filename=FILENAME]
             [--dry-run] [-y]{bcolors.ENDC}"""
 reweight_usage = f"""{bcolors.BOLD}weectl database reweight
             [[--date=YYYY-mm-dd] | [--from=YYYY-mm-dd] [--to=YYYY-mm-dd]]
-            [--config=FILENAME] [--binding=BINDING-NAME] 
+            [--config=FILENAME] [--binding=BINDING-NAME] [--db-filename=FILENAME]
             [--dry-run] [-y]{bcolors.ENDC}"""
 
 database_usage = '\n       '.join((create_usage,
@@ -93,6 +95,7 @@ def add_subparser(subparsers):
                                             description='Manages WeeWX databases',
                                             help="Manage WeeWX databases.",
                                             epilog=epilog)
+    database_parser.set_defaults(action_func=dispatch)
     # In the following, the 'prog' argument is necessary to get a proper error message.
     # See Python issue https://bugs.python.org/issue42297
     action_parser = database_parser.add_subparsers(dest='action',
@@ -107,7 +110,7 @@ def add_subparser(subparsers):
                                              epilog=epilog)
     _add_common_args(create_parser)
     create_parser.set_defaults(func=weectllib.dispatch)
-    create_parser.set_defaults(action_func=create_database)
+    create_parser.set_defaults(database_action=create_database)
 
     # ---------- Action 'drop-daily' ----------
     drop_daily_parser = action_parser.add_parser('drop-daily',
@@ -119,7 +122,7 @@ def add_subparser(subparsers):
                                                  epilog=epilog)
     _add_common_args(drop_daily_parser)
     drop_daily_parser.set_defaults(func=weectllib.dispatch)
-    drop_daily_parser.set_defaults(action_func=drop_daily)
+    drop_daily_parser.set_defaults(database_action=drop_daily)
 
     # ---------- Action 'rebuild-daily' ----------
     rebuild_parser = action_parser.add_parser('rebuild-daily',
@@ -148,7 +151,7 @@ def add_subparser(subparsers):
                                 help="Rebuild ending with this date.")
     _add_common_args(rebuild_parser)
     rebuild_parser.set_defaults(func=weectllib.dispatch)
-    rebuild_parser.set_defaults(action_func=rebuild_daily)
+    rebuild_parser.set_defaults(database_action=rebuild_daily)
 
     # ---------- Action 'add-column' ----------
     add_column_parser = action_parser.add_parser('add-column',
@@ -168,7 +171,7 @@ def add_subparser(subparsers):
                                    help="Any valid SQL column definition. Default is 'REAL'.")
     _add_common_args(add_column_parser)
     add_column_parser.set_defaults(func=weectllib.dispatch)
-    add_column_parser.set_defaults(action_func=add_column)
+    add_column_parser.set_defaults(database_action=add_column)
 
     # ---------- Action 'rename-column' ----------
     rename_column_parser = action_parser.add_parser('rename-column',
@@ -186,7 +189,7 @@ def add_subparser(subparsers):
                                       help="New name of the column.")
     _add_common_args(rename_column_parser)
     rename_column_parser.set_defaults(func=weectllib.dispatch)
-    rename_column_parser.set_defaults(action_func=rename_column)
+    rename_column_parser.set_defaults(database_action=rename_column)
 
     # ---------- Action 'drop-columns' ----------
     drop_columns_parser = action_parser.add_parser('drop-columns',
@@ -203,7 +206,7 @@ def add_subparser(subparsers):
                                           "More than one NAME can be specified.")
     _add_common_args(drop_columns_parser)
     drop_columns_parser.set_defaults(func=weectllib.dispatch)
-    drop_columns_parser.set_defaults(action_func=drop_columns)
+    drop_columns_parser.set_defaults(database_action=drop_columns)
 
     # ---------- Action 'reconfigure' ----------
     reconfigure_parser = action_parser.add_parser('reconfigure',
@@ -215,7 +218,7 @@ def add_subparser(subparsers):
                                                   epilog=epilog)
     _add_common_args(reconfigure_parser)
     reconfigure_parser.set_defaults(func=weectllib.dispatch)
-    reconfigure_parser.set_defaults(action_func=reconfigure_database)
+    reconfigure_parser.set_defaults(database_action=reconfigure_database)
 
     # ---------- Action 'transfer' ----------
     transfer_parser = action_parser.add_parser('transfer',
@@ -230,7 +233,7 @@ def add_subparser(subparsers):
                                       "database. Required.")
     _add_common_args(transfer_parser)
     transfer_parser.set_defaults(func=weectllib.dispatch)
-    transfer_parser.set_defaults(action_func=transfer_database)
+    transfer_parser.set_defaults(database_action=transfer_database)
 
     # ---------- Action 'calc-missing' ----------
     calc_missing_parser = action_parser.add_parser('calc-missing',
@@ -259,7 +262,7 @@ def add_subparser(subparsers):
                                           "of records at a time. Default is 10.")
     _add_common_args(calc_missing_parser)
     calc_missing_parser.set_defaults(func=weectllib.dispatch)
-    calc_missing_parser.set_defaults(action_func=calc_missing)
+    calc_missing_parser.set_defaults(database_action=calc_missing)
 
     # ---------- Action 'check' ----------
     check_parser = action_parser.add_parser('check',
@@ -273,8 +276,9 @@ def add_subparser(subparsers):
     check_parser.add_argument("--binding", metavar="BINDING-NAME",
                               default='wx_binding',
                               help="The data binding to use. Default is 'wx_binding'.")
+    _add_db_filename_arg(check_parser)
     check_parser.set_defaults(func=weectllib.dispatch)
-    check_parser.set_defaults(action_func=check)
+    check_parser.set_defaults(database_action=check)
 
     # ---------- Action 'update' ----------
     update_parser = action_parser.add_parser('update',
@@ -285,7 +289,7 @@ def add_subparser(subparsers):
 
     _add_common_args(update_parser)
     update_parser.set_defaults(func=weectllib.dispatch)
-    update_parser.set_defaults(action_func=update_database)
+    update_parser.set_defaults(database_action=update_database)
 
     # ---------- Action 'reweight' ----------
     reweight_parser = action_parser.add_parser('reweight',
@@ -308,7 +312,29 @@ def add_subparser(subparsers):
                                  help="Reweight ending with this date.")
     _add_common_args(reweight_parser)
     reweight_parser.set_defaults(func=weectllib.dispatch)
-    reweight_parser.set_defaults(action_func=reweight_daily)
+    reweight_parser.set_defaults(database_action=reweight_daily)
+
+
+def dispatch(config_dict, namespace):
+    """Apply the database filename override before invoking a database action.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+        namespace (argparse.Namespace): The parsed command line namespace.
+    """
+    if namespace.db_filename is not None:
+        if not namespace.db_filename:
+            raise SystemExit("--db-filename must not be empty.")
+        manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, namespace.binding)
+        database_dict = dict(manager_dict['database_dict'])
+        if database_dict['driver'] != 'weedb.sqlite':
+            raise SystemExit("--db-filename is only available for SQLite databases.")
+        database_dict['database_name'] = namespace.db_filename
+        if namespace.action != 'transfer':
+            # Override only this binding, even if another binding shares its database.
+            config_dict = copy.deepcopy(config_dict)
+            config_dict['DataBindings'][namespace.binding]['database_dict'] = database_dict
+    namespace.database_action(config_dict, namespace)
 
 
 # ------------------ Shims for calling database action functions ---------------- #
@@ -427,7 +453,8 @@ def transfer_database(config_dict, namespace):
                                                  dest_binding=namespace.dest_binding,
                                                  db_binding=namespace.binding,
                                                  dry_run=namespace.dry_run,
-                                                 no_confirm=namespace.yes)
+                                                 no_confirm=namespace.yes,
+                                                 db_filename=namespace.db_filename)
 
 
 def calc_missing(config_dict, namespace):
@@ -489,8 +516,22 @@ def _add_common_args(subparser):
                                 f'Default is "{weecfg.default_config_path}".')
     subparser.add_argument("--binding", metavar="BINDING-NAME", default='wx_binding',
                            help="The data binding to use. Default is 'wx_binding'.")
+    _add_db_filename_arg(subparser)
     subparser.add_argument('--dry-run',
                            action='store_true',
                            help='Print what would happen, but do not actually do it.')
     subparser.add_argument('-y', '--yes', action='store_true',
                            help="Don't ask for confirmation. Just do it.")
+
+
+def _add_db_filename_arg(subparser):
+    """Add the SQLite filename option, including for the read-only check action.
+
+    Args:
+        subparser (argparse.ArgumentParser): The subparser to add the option to.
+    """
+    subparser.add_argument('--db-filename',
+                           metavar='FILENAME',
+                           help='SQLite database filename, overriding the selected binding. '
+                                'Relative paths use the configured SQLITE_ROOT. '
+                                'For transfer, overrides only the source database.')
