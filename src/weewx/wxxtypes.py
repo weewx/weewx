@@ -525,7 +525,8 @@ class RainRater(weewx.xtypes.XType):
 
             # Trim any old packets:
             self.rain_events = [x for x in self.rain_events
-                                if x[0] >= packet['dateTime'] - self.rain_period]
+                                if x[0] >= packet['dateTime'] - max(self.rain_period,
+                                                                   self.retain_period)]
 
     def get_scalar(self, key, record, db_manager, **option_dict):
         """Calculate the rainRate"""
@@ -540,7 +541,7 @@ class RainRater(weewx.xtypes.XType):
 
             # Sum the rain events within the time window...
             rainsum = sum(x[1] for x in self.rain_events
-                          if x[0] > record['dateTime'] - self.rain_period)
+                          if record['dateTime'] - self.rain_period < x[0] <= record['dateTime'])
             # ...then divide by the period and scale to an hour
             val = 3600 * rainsum / self.rain_period
             # Get the unit and unit group for rainRate
@@ -551,7 +552,7 @@ class RainRater(weewx.xtypes.XType):
         """Initialize the rain event list"""
 
         # Beginning of the window
-        start_ts = stop_ts - self.retain_period
+        start_ts = stop_ts - max(self.rain_period, self.retain_period)
 
         # Query the database for only the events before what we already have
         if self.rain_events:
