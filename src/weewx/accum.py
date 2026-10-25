@@ -1,5 +1,6 @@
 #
 #    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2026 Manuel Hilgert <hilman2@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -98,11 +99,33 @@ DEFAULTS_INI = """
 """
 defaults_dict = weeutil.config.config_from_str(DEFAULTS_INI)
 
-accum_dict = ListOfDicts(defaults_dict['Accumulator'].dict())
+# The options from the [Accumulator] section of the configuration. They override the defaults.
+# initialize() refills this dictionary in place, rather than adding a new one each time it is
+# called.
+_config_options = {}
+
+accum_dict = ListOfDicts(_config_options, defaults_dict['Accumulator'].dict())
 
 
 class OutOfSpan(ValueError):
     """Raised when attempting to add a record outside the timespan held by an accumulator"""
+
+
+def _as_number(val):
+    """Convert an observation value to a float.
+
+    Args:
+        val (float|int|str|None): The value. Some stations deliver numbers as strings.
+
+    Returns:
+        float|None: The value as a float, or None if it is None, NaN, or not a number.
+    """
+    try:
+        val = to_float(val)
+    except ValueError:
+        return None
+    # NaN is the only value that is not equal to itself.
+    return val if val == val else None
 
 
 # ===============================================================================
@@ -231,14 +254,8 @@ class ScalarStats(FirstLastAccum):
         # Call my superclass's version:
         FirstLastAccum.addHiLo(self, val, ts)
 
-        # If necessary, convert to float. Be prepared to catch an exception if not possible.
-        try:
-            val = to_float(val)
-        except ValueError:
-            val = None
-
-        # Check for None and NaN:
-        if val is not None and val == val:
+        val = _as_number(val)
+        if val is not None:
             if self.min is None or val < self.min:
                 self.min = val
                 self.mintime = ts
@@ -253,14 +270,8 @@ class ScalarStats(FirstLastAccum):
         weight (float): The weight to be given the value.
         """
 
-        # If necessary, convert to float. Be prepared to catch an exception if not possible.
-        try:
-            val = to_float(val)
-        except ValueError:
-            val = None
-
-        # Check for None and NaN:
-        if val is not None and val == val:
+        val = _as_number(val)
+        if val is not None:
             self.sum += val
             self.count += 1
             self.wsum += val * weight
@@ -351,20 +362,9 @@ class VecStats:
         val (tuple): A vector value. It is a 2-way tuple (mag, dir).
         ts (float|int):  The timestamp.
         """
-        speed, dirN = val
-
-        # If necessary, convert to float. Be prepared to catch an exception if not possible.
-        try:
-            speed = to_float(speed)
-        except ValueError:
-            speed = None
-        try:
-            dirN = to_float(dirN)
-        except ValueError:
-            dirN = None
-
-        # Check for None and NaN:
-        if speed is not None and speed == speed:
+        speed = _as_number(val[0])
+        dirN = _as_number(val[1])
+        if speed is not None:
             if self.min is None or speed < self.min:
                 self.min = speed
                 self.mintime = ts
@@ -381,20 +381,9 @@ class VecStats:
         val (tuple): A vector value. It is a 2-way tuple (mag, dir)
         weight (float): The weight to be given the value.
         """
-        speed, dirN = val
-
-        # If necessary, convert to float. Be prepared to catch an exception if not possible.
-        try:
-            speed = to_float(speed)
-        except ValueError:
-            speed = None
-        try:
-            dirN = to_float(dirN)
-        except ValueError:
-            dirN = None
-
-        # Check for None and NaN:
-        if speed is not None and speed == speed:
+        speed = _as_number(val[0])
+        dirN = _as_number(val[1])
+        if speed is not None:
             self.sum += speed
             self.count += 1
             self.wsum += weight * speed
@@ -741,10 +730,31 @@ OBS_DEFAULTS = {
 
 
 def initialize(config_dict):
-    # Add the configuration dictionary to the beginning of the list of maps.
-    # This will cause it to override the defaults
-    global accum_dict
-    accum_dict.maps.insert(0, config_dict.get('Accumulator', {}))
+    """Use the [Accumulator] section of a configuration in place of the one used before.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+    """
+    _config_options.clear()
+    _config_options.update(config_dict.get('Accumulator', {}))
+    # Put the options at the front of accum_dict, so they override anything a driver or extension
+    # has prepended before.
+    accum_dict.maps[:] = [_config_options] \
+        + [options for options in accum_dict.maps if options is not _config_options]
+
+
+def _get_option(obs_type, option):
+    """Look up an accumulator option for an observation type.
+
+    Args:
+        obs_type (str): The observation type, such as 'outTemp'.
+        option (str): The option. One of 'accumulator', 'adder', 'merger', or 'extractor'.
+
+    Returns:
+        str: The nickname of the class or function to be used for the type.
+    """
+    obs_options = accum_dict.get(obs_type, OBS_DEFAULTS)
+    return obs_options.get(option, OBS_DEFAULTS[option])
 
 
 def new_accumulator(obs_type):
@@ -754,14 +764,8 @@ def new_accumulator(obs_type):
 
     Returns: An instance of a subclass of FirstLastAccum, appropriate for the type.
     """
-    global accum_dict
-    # Get the options for this type. Substitute the defaults if they have not been specified
-    obs_options = accum_dict.get(obs_type, OBS_DEFAULTS)
-    # Get the nickname of the accumulator. Default is 'scalar'
-    accum_nickname = obs_options.get('accumulator', 'scalar')
-    # Instantiate and return the accumulator.
-    # If we don't know this nickname, then fail hard with a KeyError
-    return ACCUM_TYPES[accum_nickname]()
+    # If we don't know the nickname, then fail hard with a KeyError
+    return ACCUM_TYPES[_get_option(obs_type, 'accumulator')]()
 
 
 def get_add_function(obs_type):
@@ -772,13 +776,7 @@ def get_add_function(obs_type):
     Returns: callable. A function appropriate for adding values of type 'obs_type' to an
     accumulator.
     """
-    global accum_dict
-    # Get the options for this type. Substitute the defaults if they have not been specified
-    obs_options = accum_dict.get(obs_type, OBS_DEFAULTS)
-    # Get the nickname of the adder. Default is 'add'
-    add_nickname = obs_options.get('adder', 'add')
-    # If we don't know this nickname, then fail hard with a KeyError
-    return ADD_FUNCTIONS[add_nickname]
+    return ADD_FUNCTIONS[_get_option(obs_type, 'adder')]
 
 
 def get_merge_function(obs_type):
@@ -788,13 +786,7 @@ def get_merge_function(obs_type):
 
     Returns: callable. A function appropriate for merging values of type 'obs_type'.
     """
-    global accum_dict
-    # Get the options for this type. Substitute the defaults if they have not been specified
-    obs_options = accum_dict.get(obs_type, OBS_DEFAULTS)
-    # Get the nickname of the merger. Default is 'minmax'
-    add_nickname = obs_options.get('merger', 'minmax')
-    # If we don't know this nickname, then fail hard with a KeyError
-    return MERGE_FUNCTIONS[add_nickname]
+    return MERGE_FUNCTIONS[_get_option(obs_type, 'merger')]
 
 
 def get_extract_function(obs_type):
@@ -805,10 +797,4 @@ def get_extract_function(obs_type):
     Returns: callable. A function appropriate for extracting values of type 'obs_type' from an
     accumulator.
     """
-    global accum_dict
-    # Get the options for this type. Substitute the defaults if they have not been specified
-    obs_options = accum_dict.get(obs_type, OBS_DEFAULTS)
-    # Get the nickname of the extractor. Default is 'avg'
-    add_nickname = obs_options.get('extractor', 'avg')
-    # If we don't know this nickname, then fail hard with a KeyError
-    return EXTRACT_FUNCTIONS[add_nickname]
+    return EXTRACT_FUNCTIONS[_get_option(obs_type, 'extractor')]
