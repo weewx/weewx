@@ -687,6 +687,15 @@ class CurrentObj:
 
     A supplied record belongs to the default binding unless record_binding
     identifies another source, as it does for TimespanBinder.records().
+
+    If record_is_complete is True, record contains every column of an archive
+    row, although values may be None. Missing observations are requested from
+    XTypes using this record without fetching the row again. The binding and
+    timestamp checks still apply. TimespanBinder.records() sets this flag.
+
+    The default is False because supplied records may be partial. If the
+    requested observation is missing, the archive row is fetched before trying
+    XTypes.
     """
 
     def __init__(self, db_lookup, data_binding, current_time,
