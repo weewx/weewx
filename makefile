@@ -157,15 +157,19 @@ test: src/weewx_data/
 	@$(PYTHON) -V >> $(BLDDIR)/test-results 2>&1;
 	@echo "----" >> $(BLDDIR)/test-results 2>&1;
 
-	@for f in $(SUITE); do \
+	@status=0; for f in $(SUITE); do \
   echo running $$f; \
   echo $$f >> $(BLDDIR)/test-results; \
-  PYTHONPATH="src:src/weewx_data/examples:src/weewx/tests" $(PYTEST) $$f >> $(BLDDIR)/test-results 2>&1; \
+  PYTHONPATH="src:src/weewx_data/examples:src/weewx/tests" $(PYTEST) $$f >> $(BLDDIR)/test-results 2>&1 || status=1; \
   echo >> $(BLDDIR)/test-results; \
-done
-	@grep "ERROR:\|FAIL:\|FAILURES" $(BLDDIR)/test-results || echo "no failures"
+done; \
+  if test $$status -ne 0; then \
+    grep "ERROR:\|FAIL:\|FAILURES\|ERRORS" $(BLDDIR)/test-results || true; \
+    echo "tests failed; see $(BLDDIR)/test-results"; \
+    exit $$status; \
+  fi
+	@echo "no failures"
 	@echo "see $(BLDDIR)/test-results for output from the tests"
-	@grep -q "ERROR:\|FAIL:\|FAILURES\|ERRORS" $(BLDDIR)/test-results && exit 1 || true
 
 test-setup:
 	src/weedb/tests/setup_mysql.sh
