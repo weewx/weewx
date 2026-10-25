@@ -193,8 +193,9 @@
         <td>
             The time derivative between the last and first value in the aggregation period. This is the
             difference in value divided by the difference in time.
-            Energy derivatives are returned as power. For other observations, the value is per
-            second in the observation's units. Temperature derivatives are not supported.
+            Energy, distance, rain and pressure derivatives are returned as power, speed,
+            rain rate and pressure rate, respectively. Derivatives of other observation
+            groups are not supported.
         </td>
     </tr>
     <tr>

@@ -3,9 +3,9 @@ WeeWX change history
 
 ### 5.x.y dd-Mmm-YYYY
 
-Fixed energy derivatives raising TypeError for missing or single samples.
-Unsupported temperature derivatives now raise UnknownAggregation instead of
-returning incorrect units.
+Fixed `tderiv` raising `TypeError` for missing energy samples and returning
+incorrect units for non-energy observations. It now supports energy, distance,
+rain and pressure. Other observation groups raise `UnknownAggregation`.
 [PR #1199](https://github.com/weewx/weewx/pull/1199).
 
 Fixed incorrect values in derived series and aggregates when an XType extension

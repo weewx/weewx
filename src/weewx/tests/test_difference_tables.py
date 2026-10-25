@@ -51,9 +51,11 @@ def test_difference_and_derivative_use_only_selected_table_and_interval(database
             manager.connection.execute('CREATE TABLE archive (dateTime INTEGER PRIMARY KEY, rain REAL)')
             for stamp, rain in [(STAMP, 100), (STAMP + 300, 101)]:
                 manager.connection.execute('INSERT INTO archive VALUES (?, ?)', (stamp, rain))
-        for aggregate, expected in [('diff', 5), ('tderiv', 5 / 300)]:
-            assert weewx.xtypes.get_aggregate('rain', (STAMP, STAMP + 300),
-                                               aggregate, manager).value == pytest.approx(expected)
+        for aggregate, expected in [('diff', 5), ('tderiv', 60)]:
+            result = weewx.xtypes.get_aggregate('rain', (STAMP, STAMP + 300), aggregate, manager)
+            if aggregate == 'tderiv':
+                result = weewx.units.convert(result, 'mm_per_hour')
+            assert result.value == pytest.approx(expected)
             assert weewx.xtypes.get_aggregate('rain', (STAMP + 600, STAMP + 3600),
                                                aggregate, manager).value is None
         assert weewx.xtypes.get_aggregate('rain', (STAMP + 200, STAMP + 400),
