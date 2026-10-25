@@ -1,5 +1,6 @@
 #
 #    Copyright (c) 2009-2025 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2026 Manuel Hilgert <hilman2@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -170,17 +171,24 @@ class Connection(weedb.Connection):
             table_list.append(str(row[0]))
         return table_list
 
-    @guard
     def genSchemaOf(self, table):
         """Return a summary of the schema of the specified table.
         
-        If the table does not exist, an exception of type weedb.OperationalError is raised."""
-        for row in self.connection.execute("""PRAGMA table_info(%s);""" % table):
+        If the table does not exist, the generator yields no rows."""
+        for row in self._get_schema(table):
             if row[2].upper().startswith('CHAR'):
                 coltype = 'STR'
             else:
                 coltype = str(row[2]).upper()
             yield (row[0], str(row[1]), coltype, not to_bool(row[3]), row[4], to_bool(row[5]))
+
+    @guard
+    def _get_schema(self, table):
+        # A decorator on genSchemaOf only wraps generator creation. Fetch all
+        # schema rows here so guard covers the database operations.
+        with self.cursor() as cursor:
+            cursor.execute("""PRAGMA table_info(%s);""" % table)
+            return cursor.fetchall()
 
     def columnsOf(self, table):
         """Return a list of columns in the specified table. If the table does not exist,
