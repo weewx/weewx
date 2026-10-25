@@ -19,6 +19,20 @@ def test_make_propagates_pytest_status_without_log_markers(tmp_path, exit_code):
         assert b'no failures' not in result.stdout
 
 
+@pytest.mark.parametrize('marker', ['FAILURES', 'ERRORS'])
+def test_make_accepts_passing_pytest_with_error_words_in_filename(tmp_path, marker):
+    root = pathlib.Path(__file__).resolve().parents[3]
+    suite = tmp_path / ('test_%s.py' % marker)
+    suite.write_text('def test_success():\n    assert True\n')
+    result = subprocess.run(['make', 'test', 'SUITE=' + str(suite),
+                             'BLDDIR=' + str(tmp_path / 'build'), 'PYTHON=' + sys.executable,
+                             'PYTEST=' + sys.executable + ' -m pytest -q'], cwd=str(root),
+                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    assert result.returncode == 0, result.stdout.decode()
+    assert b'no failures' in result.stdout
+    assert '1 passed' in (tmp_path / 'build' / 'test-results').read_text()
+
+
 def test_make_keeps_running_remaining_suites_after_failure(tmp_path):
     root = pathlib.Path(__file__).resolve().parents[3]
     runner = tmp_path / 'runner.py'
