@@ -19,7 +19,6 @@ two LOOP packets carry 0 and 20 degrees C. The resulting archive record has an a
 a daily summary that shows a low of 0 and a high of 20 must have come from the accumulator.
 """
 
-import copy
 import socket
 
 import configobj
@@ -59,10 +58,6 @@ def archive_engine(tmp_path, monkeypatch):
         'Databases': {
             name: {'driver': 'weedb.sqlite', 'database_name': str(tmp_path / (name + '.sdb'))}
             for name in ['primary', 'secondary']}})
-    # StdArchive calls weewx.accum.initialize(), which adds the configuration to the module-level
-    # 'accum_dict'. Every test creates its own StdArchive, so work on a copy that monkeypatch
-    # restores afterwards. Otherwise the entries would pile up across tests.
-    monkeypatch.setattr(weewx.accum, 'accum_dict', copy.deepcopy(weewx.accum.accum_dict))
     # The engine sets a process-wide socket timeout. Restore it when the test is done, so that
     # other test modules are not affected.
     previous_timeout = socket.getdefaulttimeout()
@@ -92,10 +87,10 @@ def feed_loop_interval(engine, unit_system=weewx.METRICWX):
     """Run one pass of the engine's LOOP cycle, for the interval ending at BASE_TIME + 600.
 
     The packets at offsets 310 and 590 fall into the interval and carry 0 and 20 degrees C. The
-    packet at 620 belongs to the next interval. It makes StdArchive move the full accumulator to
-    'old_accumulator'. Because 620 is past the end of the archive delay (600 + 15), CHECK_LOOP
-    raises BreakLoop, just as it would in the real engine. The caller then dispatches POST_LOOP,
-    or inspects 'old_accumulator' first.
+    packet at 620 belongs to the next interval. Because 620 is past the end of the archive delay
+    (600 + 15), CHECK_LOOP raises BreakLoop, just as it would in the real engine. The caller then
+    dispatches POST_LOOP, or inspects the accumulator of the interval first. Until POST_LOOP
+    archives the interval, its accumulator is in archive.periods.open[BASE_TIME + 600].
 
     Args:
         engine (weewx.engine.DummyEngine): The engine from the fixture.
@@ -167,7 +162,7 @@ def test_secondary_database_keeps_loop_extremes(archive_engine, monkeypatch,
     # Bound last, so it runs after StdArchive has saved the record to the primary database.
     engine.bind(weewx.NEW_ARCHIVE_RECORD, save_secondary)
     feed_loop_interval(engine, unit_system)
-    accumulator = archive.old_accumulator
+    accumulator = archive.periods.open[BASE_TIME + 600]
     original_stats = accumulator['outTemp'].getStatsTuple()
     engine.dispatchEvent(weewx.Event(weewx.POST_LOOP))
 
@@ -191,10 +186,10 @@ def test_secondary_database_keeps_loop_extremes(archive_engine, monkeypatch,
     # The accumulator was used by two databases. Neither may change it, or the second database
     # would get different statistics than the first.
     assert accumulator['outTemp'].getStatsTuple() == original_stats
-    assert archive.old_accumulator is None
+    assert BASE_TIME + 600 not in archive.periods.open
 
 
-def test_hardware_catchup_only_attaches_matching_accumulator(archive_engine):
+def test_hardware_catchup_only_attaches_matching_accumulator(archive_engine, monkeypatch):
     """During a hardware catchup, only the record that ends the interval gets the accumulator.
 
     A console can deliver several records in one catchup, and not all of them belong to the
@@ -203,10 +198,14 @@ def test_hardware_catchup_only_attaches_matching_accumulator(archive_engine):
     interval.
     """
     engine, archive, events = archive_engine
-    feed_loop_interval(engine)
-    accumulator = archive.old_accumulator
+    archive.record_generation = 'hardware'
     timestamps = [BASE_TIME + offset for offset in [300, 599, 600, 900]]
-    archive._catchup(lambda since: (hardware_record(timestamp) for timestamp in timestamps))
+    monkeypatch.setattr(engine.console, 'genArchiveRecords',
+                        lambda since: (hardware_record(timestamp) for timestamp in timestamps),
+                        raising=False)
+    feed_loop_interval(engine)
+    accumulator = archive.periods.open[BASE_TIME + 600]
+    engine.dispatchEvent(weewx.Event(weewx.POST_LOOP))
     assert events == list(zip(timestamps, [None, None, accumulator, None]))
 
 
