@@ -427,6 +427,7 @@ class Manager:
         n = 0
         min_ts = float('inf')
         max_ts = 0
+        updated_timestamps = []
         with weedb.Transaction(self.connection) as cursor:
             for record in chunk:
                 try:
@@ -436,7 +437,9 @@ class Manager:
                         self._updateHiLo(accumulator, cursor)
 
                     # Then add the record to the archives:
-                    self._addSingleRecord(record, cursor, log_success, log_failure, update)
+                    result = self._addSingleRecord(record, cursor, log_success, log_failure, update)
+                    if result == 'updated':
+                        updated_timestamps.append(record['dateTime'])
 
                     n += 1
                     if progress_fn and (count + n) % 1000 == 0:
@@ -449,10 +452,15 @@ class Manager:
                         log.error("Unable to add record %s to database '%s': %s",
                                   timestamp_to_string(record['dateTime']),
                                   self.database_name, e)
+            self._finish_chunk(updated_timestamps, cursor)
         return n, min_ts, max_ts
 
+    def _finish_chunk(self, updated_timestamps, cursor):
+        """Finish dependent writes before the archive transaction commits."""
+        pass
+
     def _addSingleRecord(self, record, cursor, log_success=True, log_failure=True, update=False):
-        """Internal function for adding a single record to the main archive table."""
+        """Add an archive record, returning 'inserted', 'updated', or 'unchanged'."""
 
         if record['dateTime'] is None:
             if log_failure:
@@ -485,6 +493,7 @@ class Manager:
                 log.info("Added record %s to database '%s'",
                          timestamp_to_string(record['dateTime']),
                          self.database_name)
+            return 'inserted'
 
         except weedb.IntegrityError:
             if not update:
@@ -496,6 +505,7 @@ class Manager:
             sql_update_stmt = "UPDATE %s SET %s WHERE dateTime = ? AND NOT (%s)" \
                               % (self.table_name, set_stmt, where_stmt)
             cursor.execute(sql_update_stmt, value_list + [record['dateTime'],] + value_list)
+            changed = cursor.rowcount > 0
             if log_success:
                 if cursor.rowcount > 0:
                     log.info("Updated record %s to database '%s'",
@@ -505,6 +515,7 @@ class Manager:
                     log.info("Unchanged record %s to database '%s'",
                              timestamp_to_string(record['dateTime']),
                              self.database_name)
+            return 'updated' if changed else 'unchanged'
 
     def _updateHiLo(self, accumulator, cursor):
         pass
@@ -1206,7 +1217,9 @@ class DaySummaryManager(Manager):
         """
 
         # First let my superclass handle adding the record to the main archive table:
-        super()._addSingleRecord(record, cursor, log_success, log_failure, update)
+        result = super()._addSingleRecord(record, cursor, log_success, log_failure, update)
+        if result != 'inserted':
+            return result
 
         # Get the start of day for the record:
         _sod_ts = weeutil.weeutil.startOfArchiveDay(record['dateTime'])
@@ -1219,7 +1232,7 @@ class DaySummaryManager(Manager):
             if log_failure:
                 log.info(e)
                 log.info('*** record ignored')
-            return
+            return result
 
         # Now add to the daily summary for the appropriate day:
         _day_summary = self._get_day_summary(_sod_ts, cursor)
@@ -1229,6 +1242,29 @@ class DaySummaryManager(Manager):
             log.info("Added record %s to daily summary in '%s'",
                      timestamp_to_string(record['dateTime']),
                      self.database_name)
+        return result
+
+    def _finish_chunk(self, updated_timestamps, cursor):
+        """Rebuild changed days once per chunk, using the corrected archive records."""
+        if not updated_timestamps:
+            return
+        # Counts and sums can be adjusted, but replacing an extreme requires
+        # reading the day again. Rebuild from the archive, as rebuild-daily does.
+        days = {weeutil.weeutil.startOfArchiveDay(stamp) for stamp in updated_timestamps}
+        for day in sorted(days):
+            timespan = weeutil.weeutil.daySpan(day)
+            summary = weewx.accum.Accum(timespan, self.std_unit_system)
+            for record in self.genBatchRecords(timespan.start, timespan.stop):
+                try:
+                    weight = self._calc_weight(record)
+                except IntervalError:
+                    continue
+                summary.addRecord(record, weight=weight)
+            for key in self.daykeys:
+                if key not in summary:
+                    cursor.execute("DELETE FROM %s_day_%s WHERE dateTime = ?"
+                                   % (self.table_name, key), (day,))
+            self._set_day_summary(summary, None, cursor)
 
     def _updateHiLo(self, accumulator, cursor):
         """Use the contents of an accumulator to update the daily hi/lows."""
@@ -1675,14 +1711,14 @@ class DaySummaryManager(Manager):
             _qmarks = ','.join(len(_write_tuple) * '?')
             _sql_insert_str = ("INSERT INTO %s_day_%s VALUES(%s)"
                                % (self.table_name, _summary_type, _qmarks))
-            # ... and write to the database. In case the type doesn't appear in the database,
-            # be prepared to catch an exception:
+            # A failed summary write must abort the archive transaction as well.
             try:
                 cursor.execute("DELETE FROM %s_day_%s WHERE dateTime = ?"
                                % (self.table_name, _summary_type), (_sod,))
                 cursor.execute(_sql_insert_str, _write_tuple)
             except weedb.OperationalError as e:
                 log.error("Replace failed for database %s: %s", self.database_name, e)
+                raise
 
         # If requested, update the time of the last daily summary update:
         if lastUpdate is not None:

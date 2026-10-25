@@ -1,0 +1,1719 @@
+<!doctype html>
+<!--
+  An animated, interactive model of the weewxd core: how LOOP packets and archive
+  records travel from the driver through StdEngine's services into the database,
+  the RESTful uploaders and the report thread.
+
+  It is a simulation written in JavaScript, not a view of a running weewxd. The
+  event order, callback bindings and fallbacks follow the code in src/weewx/engine.py
+  and its neighbours. Values, formulas and file counts are simplified. Open it
+  directly in a browser; it needs nothing else.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WeeWX core data flow</title>
+<style>
+  :root {
+    --bg: #070b14; --bg2: #0c1322; --panel: #0f172a; --line: #1e293b; --line2: #334155;
+    --txt: #e2e8f0; --mute: #94a3b8; --dim: #64748b;
+    --STARTUP: #a78bfa; --PRE_LOOP: #60a5fa; --NEW_LOOP_PACKET: #22d3ee; --CHECK_LOOP: #facc15;
+    --END_ARCHIVE_PERIOD: #fb923c; --POST_LOOP: #f472b6; --NEW_ARCHIVE_RECORD: #4ade80; --SHUTDOWN: #f87171;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--txt);
+    font: 13px/1.4 ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif; }
+  code, .mono { font-family: ui-monospace, "JetBrains Mono", "Cascadia Code", Menlo, monospace; }
+  #app { display: grid; grid-template-rows: auto auto 1fr; height: 100vh; }
+  header { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 8px 14px;
+    background: linear-gradient(90deg, #0b1220, #111a2e 60%, #0b1220); border-bottom: 1px solid var(--line); }
+  header h1 { margin: 0 8px 0 0; font-size: 16px; font-weight: 650; letter-spacing: .2px; white-space: nowrap; }
+  header h1 span { background: linear-gradient(90deg, #22d3ee, #a78bfa 50%, #4ade80);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .ctl { display: flex; gap: 6px; align-items: center; }
+  .sep { width: 1px; height: 24px; background: var(--line2); }
+  button, select { background: #131d33; color: var(--txt); border: 1px solid var(--line2); border-radius: 7px;
+    padding: 5px 10px; font: inherit; cursor: pointer; }
+  button:hover:not(:disabled), select:hover { border-color: #22d3ee; }
+  button:disabled { opacity: .4; cursor: default; }
+  button.primary { background: #0e7490; border-color: #22d3ee; min-width: 92px; }
+  button.warn { border-color: #b45309; }
+  button.danger { border-color: #b91c1c; }
+  button.on { background: #7f1d1d; border-color: #f87171; }
+  button.pulse { animation: pulse 1.2s infinite; border-color: #facc15; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 4px #facc1544; } }
+  label { color: var(--mute); display: flex; gap: 5px; align-items: center; white-space: nowrap; }
+  input[type=range] { width: 110px; accent-color: #22d3ee; }
+  input[type=checkbox] { accent-color: #22d3ee; }
+  #speedVal { width: 38px; color: var(--txt); }
+  #narr { padding: 6px 14px; border-bottom: 1px solid var(--line); background: #0a1020; color: #cbd5e1;
+    min-height: 32px; display: flex; gap: 10px; align-items: center; }
+  #narr .tag { font-size: 11px; padding: 1px 7px; border-radius: 99px; border: 1px solid currentColor; white-space: nowrap; }
+  #narrText code { color: #f8fafc; background: #1e293b; padding: 0 4px; border-radius: 4px; }
+  #confBadge { margin-left: auto; color: #facc15; display: none; white-space: nowrap; }
+  main { display: grid; grid-template-columns: 1fr 380px; min-height: 0; }
+  #stage { position: relative; min-width: 0; min-height: 0; overflow: auto; }
+  svg#svg { display: block; width: 100%; height: 100%; min-width: 980px; }
+  aside { border-left: 1px solid var(--line); background: var(--bg2); display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  aside section { border-bottom: 1px solid var(--line); padding: 8px 12px; }
+  aside h2 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--dim); font-weight: 600; }
+  #stack { font: 12px/1.5 ui-monospace, monospace; min-height: 96px; }
+  #stack div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #stack div:last-child { color: #f8fafc; }
+  #threads { font: 12px/1.55 ui-monospace, monospace; }
+  #threads .row { display: flex; gap: 8px; align-items: center; }
+  #threads .dot { width: 8px; height: 8px; border-radius: 50%; background: #334155; flex: none; }
+  #threads .name { width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #threads .st { color: var(--mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #info { flex: 0 0 auto; max-height: 40%; overflow: auto; }
+  #info h3 { margin: 0 0 4px; font-size: 14px; }
+  #info .file { color: #22d3ee; font: 11.5px ui-monospace, monospace; margin-bottom: 6px; }
+  #info p { margin: 4px 0; color: #cbd5e1; }
+  #info ul { margin: 4px 0; padding-left: 18px; color: #cbd5e1; }
+  #info code { color: #f8fafc; background: #1e293b; padding: 0 4px; border-radius: 4px; font-size: 12px; }
+  #info .evs { display: flex; gap: 4px; flex-wrap: wrap; margin: 6px 0; }
+  #info .ev { font: 10.5px ui-monospace, monospace; padding: 1px 6px; border-radius: 99px; border: 1px solid; }
+  #logwrap { flex: 1; min-height: 120px; display: flex; flex-direction: column; padding-bottom: 0; }
+  #log { flex: 1; min-height: 0; overflow: auto; font: 11.2px/1.45 ui-monospace, monospace; color: #a5b4c8; padding-bottom: 8px; }
+  #log div { white-space: pre-wrap; word-break: break-all; }
+  #log .DEBUG { color: #64748b; } #log .INFO { color: #a5b4c8; } #log .WARNING { color: #fbbf24; }
+  #log .ERROR { color: #f87171; } #log .CRITICAL { color: #fff; background: #7f1d1d55; } #log .OUT { color: #67e8f9; }
+  #log .ts { color: #475569; }
+  /* SVG */
+  .box { fill: #0d1526; stroke: #1f2a40; stroke-width: 1.2; }
+  .box.hot { stroke: #22d3ee; }
+  .ttl { fill: #e2e8f0; font-size: 13px; font-weight: 650; }
+  .sub { fill: #94a3b8; font-size: 11px; }
+  .tiny { fill: #64748b; font-size: 10px; }
+  .mono { font-family: ui-monospace, Menlo, monospace; }
+  .clk { cursor: pointer; }
+  .clk:hover > .box, .clk:hover > rect.pill { stroke: #e2e8f0; }
+  .conn { fill: none; stroke: #1e293b; stroke-width: 2; }
+  .conn.lit { stroke: #475569; }
+  rect.pill { fill: #111b2f; stroke: #2a3954; stroke-width: 1.2; transition: fill .15s, stroke .15s; }
+  .pilltxt { fill: #e2e8f0; font-size: 12px; font-family: ui-monospace, Menlo, monospace; pointer-events: none; }
+  g.off { opacity: .32; }
+  g.unloaded { opacity: .08; }
+  .row-hl { transition: fill .25s; }
+  .glow { filter: url(#glow); }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1><span>WeeWX</span> · Core data flow</h1>
+    <div class="ctl">
+      <button id="btnPlay" class="primary" title="Space">⏸ Pause</button>
+      <label title="Key S"><input type="checkbox" id="chkStep"> Single step</label>
+      <button id="btnNext" disabled title="Key N">Next ⏭</button>
+      <label>Speed <input type="range" id="speed" min="-2" max="3" step="0.25" value="0.5"><span id="speedVal" class="mono">1.4×</span></label>
+    </div>
+    <div class="sep"></div>
+    <div class="ctl">
+      <button id="btnOutlier" class="warn" title="The next LOOP packet contains outTemp = 300 °F">Send outlier</button>
+      <button id="btnIOErr" class="danger" title="genLoopPackets() raises WeeWxIOError on the next packet">Driver error</button>
+      <button id="btnNet" title="All HTTP uploads fail">Disconnect internet</button>
+      <button id="btnRestart" title="SIGTERM → Terminate → systemd restarts weewxd">systemctl restart</button>
+    </div>
+    <div class="sep"></div>
+    <div class="ctl">
+      <label>station_type <select id="selStation"><option value="Simulator">Simulator</option><option value="Vantage">Vantage</option></select></label>
+      <label>target_unit <select id="selUnit"><option value="1">US</option><option value="17">METRICWX</option><option value="16">METRIC</option></select></label>
+      <label title="[StdCalibrate] [[Corrections]] outTemp = outTemp - 0.5"><input type="checkbox" id="chkCalib" checked> Correction</label>
+      <label title="[[Wunderground]] rapidfire = True"><input type="checkbox" id="chkRF"> WU rapidfire</label>
+      <label title="log_events = True: log every event"><input type="checkbox" id="chkLogEv"> log_events</label>
+    </div>
+  </header>
+  <div id="narr"><span class="tag" id="narrTag">—</span><span id="narrText">Starting …</span><span id="confBadge">⚠ weewx.conf changed · takes effect after <b>systemctl restart</b></span></div>
+  <main>
+    <div id="stage"><svg id="svg" viewBox="0 0 1500 960" preserveAspectRatio="xMidYMin meet"></svg></div>
+    <aside>
+      <section><h2>Call-Stack · MainThread</h2><div id="stack"></div></section>
+      <section><h2>Threads</h2><div id="threads"></div></section>
+      <section id="info"></section>
+      <section id="logwrap"><h2>Log (syslog) · stdout</h2><div id="log"></div></section>
+    </aside>
+  </main>
+</div>
+<script>
+'use strict';
+// =====================================================================================
+//  Animation clock. Everything runs on anim (ms), so pause and speed apply everywhere.
+// =====================================================================================
+const $ = s => document.querySelector(s);
+const NS = 'http://www.w3.org/2000/svg';
+const svg = $('#svg');
+let anim = 0, lastFrame = performance.now(), paused = false, speed = 1.4;
+let timers = [], tweens = [], frameHooks = [];
+class Abort extends Error {}
+function rafLoop(now) {
+  const dt = Math.min(64, now - lastFrame); lastFrame = now;
+  if (!paused) anim += dt * speed;
+  if (timers.length) {
+    const due = timers.filter(t => t.at <= anim);
+    if (due.length) { timers = timers.filter(t => t.at > anim); due.forEach(t => t.res()); }
+  }
+  for (const tw of tweens.slice()) {
+    const p = Math.min(1, (anim - tw.start) / tw.ms);
+    tw.fn(p);
+    if (p >= 1) { tweens.splice(tweens.indexOf(tw), 1); tw.res(); }
+  }
+  for (const h of frameHooks) h(now);
+  requestAnimationFrame(rafLoop);
+}
+const sleep = ms => new Promise((res, rej) => timers.push({ at: anim + ms, res, rej }));
+const tween = (ms, fn) => new Promise((res, rej) => {
+  if (ms <= 0) { fn(1); res(); return; }
+  tweens.push({ start: anim, ms, fn, res, rej });
+});
+const ease = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+// Single step: the MainThread stops before every callback.
+let stepMode = false, gateRes = null, gateRej = null;
+function gate(label) {
+  if (!stepMode) return Promise.resolve();
+  $('#btnNext').disabled = false;
+  narrate('Single step', `Next: <code>${label}</code>  (key N)`, '#facc15');
+  return new Promise((res, rej) => { gateRes = res; gateRej = rej; })
+    .finally(() => { $('#btnNext').disabled = true; });
+}
+function releaseGate() { if (gateRes) { const r = gateRes; gateRes = gateRej = null; r(); } }
+function abortAll() {
+  const t = timers, w = tweens; timers = []; tweens = [];
+  t.forEach(x => x.rej(new Abort())); w.forEach(x => x.rej(new Abort()));
+  if (gateRej) { const r = gateRej; gateRes = gateRej = null; r(new Abort()); }
+}
+
+// =====================================================================================
+//  Constants and units
+// =====================================================================================
+const EV = ['STARTUP', 'PRE_LOOP', 'NEW_LOOP_PACKET', 'CHECK_LOOP', 'END_ARCHIVE_PERIOD', 'POST_LOOP', 'NEW_ARCHIVE_RECORD', 'SHUTDOWN'];
+const EVC = Object.fromEntries(EV.map(e => [e, getComputedStyle(document.documentElement).getPropertyValue('--' + e).trim()]));
+// The version weewxd reports in the simulated log.
+const WEEWX_VERSION = '5.5.2';
+const LOOP_INT = 5, ARCH_INT = 60, ARCH_DELAY = 15, ALT_FT = 700, RETRY_WAIT = 60;
+const US = 1, METRIC = 16, METRICWX = 17, UNAME = { 1: 'US', 16: 'METRIC', 17: 'METRICWX' };
+const GRP = { outTemp: 'T', inTemp: 'T', dewpoint: 'T', windchill: 'T', heatindex: 'T', appTemp: 'T',
+  barometer: 'P', pressure: 'P', altimeter: 'P', windSpeed: 'S', windGust: 'S', rain: 'R', ET: 'R',
+  rainRate: 'RR', cloudbase: 'ALT', windrun: 'DIST', outHumidity: '%', windDir: '°', radiation: 'W',
+  consBatteryVoltage: 'V', interval: 'min' };
+const ULBL = { T: { 1: '°F', 16: '°C', 17: '°C' }, P: { 1: 'inHg', 16: 'mbar', 17: 'mbar' },
+  S: { 1: 'mph', 16: 'km/h', 17: 'm/s' }, R: { 1: 'in', 16: 'cm', 17: 'mm' }, RR: { 1: 'in/h', 16: 'cm/h', 17: 'mm/h' },
+  ALT: { 1: 'ft', 16: 'm', 17: 'm' }, DIST: { 1: 'mi', 16: 'km', 17: 'km' } };
+const FACT = { P: { 16: 33.8639, 17: 33.8639 }, S: { 16: 1.609344, 17: 0.44704 }, R: { 16: 2.54, 17: 25.4 },
+  RR: { 16: 2.54, 17: 25.4 }, ALT: { 16: 0.3048, 17: 0.3048 }, DIST: { 16: 1.609344, 17: 1.609344 } };
+function toUS(v, g, u) { if (v == null || u === US) return v; if (g === 'T') return v * 1.8 + 32; return FACT[g] ? v / FACT[g][u] : v; }
+function fromUS(v, g, u) { if (v == null || u === US) return v; if (g === 'T') return (v - 32) / 1.8; return FACT[g] ? v * FACT[g][u] : v; }
+function convertDict(rec, to) {
+  const out = {};
+  for (const k in rec) out[k] = (k === 'dateTime' || k === 'usUnits') ? rec[k] : fromUS(toUS(rec[k], GRP[k], rec.usUnits), GRP[k], to);
+  out.usUnits = to; return out;
+}
+function unitOf(k, u) { const g = GRP[k]; if (!g) return ''; return ULBL[g] ? ULBL[g][u] : (g === 'min' ? 'min' : g); }
+function decOf(k, u) {
+  const g = GRP[k];
+  return ({ T: 1, S: 1, ALT: 0, DIST: 2, '%': 0, '°': 0, W: 0, V: 2, min: 0 })[g] ??
+    ({ P: { 1: 3, 16: 1, 17: 1 }, R: { 1: 2, 16: 2, 17: 1 }, RR: { 1: 2, 16: 2, 17: 1 } })[g]?.[u] ?? 2;
+}
+function fmt(k, v, u) {
+  if (v === undefined) return '';
+  if (v === null) return 'None';
+  if (k === 'dateTime') return String(v);
+  if (k === 'usUnits') return `${v} (${UNAME[v]})`;
+  return Number(v).toFixed(decOf(k, u));
+}
+const pad = n => String(n).padStart(2, '0');
+const hms = ts => { const d = new Date(ts * 1000); return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
+const tzName = (() => { try { return new Intl.DateTimeFormat('en-GB', { timeZoneName: 'short' }).formatToParts(new Date()).find(p => p.type === 'timeZoneName').value; } catch { return ''; } })();
+const tsStr = ts => { const d = new Date(ts * 1000); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${hms(ts)} ${tzName} (${ts})`; };
+const startOfInterval = (ts, iv) => Math.floor((ts - 1) / iv) * iv; // weeutil.startOfInterval: a timestamp on a boundary belongs to the interval it ends
+
+// =====================================================================================
+//  SVG helpers
+// =====================================================================================
+function el(tag, attrs = {}, parent = svg, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+const defs = el('defs');
+defs.innerHTML = `
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="bigglow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="7"/></filter>
+  <linearGradient id="busg" x1="0" x2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset=".5" stop-color="#a78bfa"/><stop offset="1" stop-color="#4ade80"/></linearGradient>
+  <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="3" height="6" fill="#fb923c22"/></pattern>
+  <radialGradient id="cloudg"><stop offset="0" stop-color="#1e3a5f"/><stop offset="1" stop-color="#0d1526"/></radialGradient>`;
+const L = { bg: el('g'), conn: el('g'), stat: el('g'), dyn: el('g') };
+
+function box(x, y, w, h, title, sub, id, parent = L.stat) {
+  const g = el('g', { class: 'clk', 'data-id': id }, parent);
+  el('rect', { x, y, width: w, height: h, rx: 10, class: 'box' }, g);
+  if (title) el('text', { x: x + 10, y: y + 18, class: 'ttl' }, g, title);
+  if (sub) el('text', { x: x + 10, y: y + 33, class: 'sub mono' }, g, sub);
+  if (id) g.addEventListener('click', e => { e.stopPropagation(); showInfo(id); });
+  return g;
+}
+const connEls = {};
+function conn(id, d) { const p = el('path', { d, class: 'conn', id }, L.conn); connEls[id] = p; return p; }
+
+// Particle along a path (data flow).
+async function flow(pathId, color, ms = 500, { reverse = false, r = 4.5, label = null } = {}) {
+  const p = connEls[pathId]; if (!p) return;
+  const len = p.getTotalLength();
+  const g = el('g', { class: 'glow' }, L.dyn);
+  const p0 = p.getPointAtLength(reverse ? len : 0);
+  const c = el('circle', { r, fill: color, cx: p0.x, cy: p0.y }, g);
+  const tl = label ? el('text', { class: 'tiny mono', fill: color, 'font-size': 10 }, g, label) : null;
+  p.classList.add('lit'); p.style.stroke = color + '88';
+  try {
+    await tween(ms, t => {
+      const q = p.getPointAtLength(len * ease(reverse ? 1 - t : t));
+      c.setAttribute('cx', q.x); c.setAttribute('cy', q.y);
+      if (tl) { tl.setAttribute('x', q.x + 7); tl.setAttribute('y', q.y - 6); }
+    });
+  } finally { g.remove(); p.classList.remove('lit'); p.style.stroke = ''; }
+}
+function flowPts(pts, color, ms, r = 4) { // Particle through free points, without a fixed connector
+  const g = el('g', { class: 'glow' }, L.dyn); const c = el('circle', { r, fill: color, cx: pts[0][0], cy: pts[0][1] }, g);
+  const segs = []; let tot = 0;
+  for (let i = 1; i < pts.length; i++) { const d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); segs.push(d); tot += d; }
+  return tween(ms, t => {
+    let s = ease(t) * tot, i = 0;
+    while (i < segs.length - 1 && s > segs[i]) { s -= segs[i]; i++; }
+    const f = segs[i] ? s / segs[i] : 1, a = pts[i], b = pts[i + 1];
+    c.setAttribute('cx', a[0] + (b[0] - a[0]) * f); c.setAttribute('cy', a[1] + (b[1] - a[1]) * f);
+  }).finally(() => g.remove());
+}
+function ripple(x, y, color, r0 = 6, r1 = 30, ms = 500) {
+  const c = el('circle', { cx: x, cy: y, r: r0, fill: 'none', stroke: color, 'stroke-width': 2 }, L.dyn);
+  tween(ms, t => { c.setAttribute('r', r0 + (r1 - r0) * t); c.setAttribute('opacity', 1 - t); }).finally(() => c.remove()).catch(() => {});
+}
+function flashRect(r, color, ms = 600) {
+  r.style.stroke = color; r.style.filter = 'url(#glow)';
+  sleep(ms).then(() => { r.style.stroke = ''; r.style.filter = ''; }, () => {});
+}
+
+// =====================================================================================
+//  Layout
+// =====================================================================================
+const BUS_Y = 350, BUS_X0 = 212, BUS_X1 = 1480;
+const GROUPS = [
+  { key: 'prep_services', x: 230, w: 138 },
+  { key: 'process_services', x: 380, w: 180 },
+  { key: 'xtype_services', x: 572, w: 190 },
+  { key: 'archive_services', x: 774, w: 152 },
+  { key: 'restful_services', x: 938, w: 200 },
+  { key: 'report_services', x: 1150, w: 162 },
+];
+// Order = load order (weewx.all_service_groups, then the list in weewx.conf)
+const SVC_DEFS = [
+  { id: 'StdTimeSynch', g: 0, mod: 'weewx.engine' },
+  { id: 'StdConvert', g: 1, mod: 'weewx.engine' },
+  { id: 'StdCalibrate', g: 1, mod: 'weewx.engine' },
+  { id: 'StdQC', g: 1, mod: 'weewx.engine' },
+  { id: 'StdWXCalculate', g: 1, mod: 'weewx.wxservices' },
+  { id: 'StdWXXTypes', g: 2, mod: 'weewx.wxxtypes' },
+  { id: 'StdPressureCooker', g: 2, mod: 'weewx.wxxtypes' },
+  { id: 'StdRainRater', g: 2, mod: 'weewx.wxxtypes' },
+  { id: 'StdDelta', g: 2, mod: 'weewx.wxxtypes' },
+  { id: 'StdArchive', g: 3, mod: 'weewx.engine' },
+  { id: 'StdStationRegistry', g: 4, mod: 'weewx.restx', proto: 'StationRegistry', host: 'weewx.com/register', interval: 86400 },
+  { id: 'StdWunderground', g: 4, mod: 'weewx.restx', proto: 'Wunderground-PWS', host: 'weatherstation.wunderground.com' },
+  { id: 'StdPWSweather', g: 4, mod: 'weewx.restx', proto: 'PWSWeather', host: 'pwsupdate.pwsweather.com' },
+  { id: 'StdCWOP', g: 4, mod: 'weewx.restx', proto: 'CWOP', host: 'cwop.aprs.net:14580', interval: 600 },
+  { id: 'StdWOW', g: 4, mod: 'weewx.restx', proto: 'WOW', host: 'wow.metoffice.gov.uk' },
+  { id: 'StdWOWBE', g: 4, mod: 'weewx.restx', proto: 'WOW-BE', host: 'wow.meteo.be' },
+  { id: 'StdAWEKAS', g: 4, mod: 'weewx.restx', proto: 'AWEKAS', host: 'data.awekas.at' },
+  { id: 'StdPrint', g: 5, mod: 'weewx.engine' },
+  { id: 'StdReport', g: 5, mod: 'weewx.engine' },
+];
+const SVC = Object.fromEntries(SVC_DEFS.map(d => [d.id, d]));
+{ const cnt = {}; for (const d of SVC_DEFS) { d.i = cnt[d.g] = (cnt[d.g] ?? -1) + 1; const G = GROUPS[d.g];
+  d.x = G.x + 16; d.w = G.w - 24; d.y = 106 + d.i * 27; d.h = 22; d.rail = G.x + 8; } }
+
+// Background grid
+for (let x = 0; x <= 1500; x += 30) el('line', { x1: x, y1: 0, x2: x, y2: 960, stroke: '#0c1424', 'stroke-width': 1 }, L.bg);
+for (let y = 0; y <= 960; y += 30) el('line', { x1: 0, y1: y, x2: 1500, y2: y, stroke: '#0c1424', 'stroke-width': 1 }, L.bg);
+
+// ---------- weewxd ----------
+const gWeewxd = box(20, 12, 180, 82, 'weewxd', 'main() · while True', 'weewxd');
+const tWeewxd = el('text', { x: 30, y: 62, class: 'sub mono' }, gWeewxd, 'PID 4711');
+const tWeewxd2 = el('text', { x: 30, y: 80, class: 'tiny mono' }, gWeewxd, '');
+// ---------- Station ----------
+const gStation = box(20, 110, 180, 110, 'Weather station', 'Hardware (console)', 'station');
+el('rect', { x: 34, y: 152, width: 152, height: 56, rx: 6, fill: '#0a2a1f', stroke: '#14532d' }, gStation);
+const tLcd1 = el('text', { x: 44, y: 176, fill: '#86efac', 'font-size': 20, class: 'mono' }, gStation, '--.-°F');
+const tLcd2 = el('text', { x: 44, y: 198, fill: '#4ade80', 'font-size': 11, class: 'mono' }, gStation, '');
+const stationLed = el('circle', { cx: 178, cy: 162, r: 4, fill: '#14532d' }, gStation);
+// ---------- Driver ----------
+const gDriver = box(20, 234, 180, 152, 'Driver', 'weewx.drivers.simulator', 'driver');
+const DRV_ROWS = ['loader()', 'genLoopPackets()', 'genArchiveRecords()', 'genStartupRecords()', 'getTime()/setTime()', 'closePort()'];
+const drvRow = {};
+DRV_ROWS.forEach((n, i) => {
+  const r = el('rect', { x: 28, y: 286 + i * 18 - 12, width: 164, height: 16, rx: 3, fill: 'transparent', class: 'row-hl' }, gDriver);
+  el('text', { x: 34, y: 286 + i * 18, class: 'sub mono' }, gDriver, n);
+  drvRow[n.split('(')[0].split('/')[0]] = r;
+});
+drvRow.setTime = drvRow.getTime;
+function hlDriver(name, color, ms = 500) { const r = drvRow[name]; if (!r) return; r.style.fill = color + '33'; sleep(ms).then(() => r.style.fill = 'transparent', () => {}); }
+// ---------- Engine header ----------
+const gEng = box(220, 12, 1260, 46, null, null, 'engine');
+el('text', { x: 234, y: 32, class: 'ttl' }, gEng, 'weewx.engine.StdEngine');
+el('text', { x: 234, y: 49, class: 'sub mono' }, gEng, 'callbacks = {event_type: [callback, …]}   ·   dispatchEvent(event): calls callbacks[event.event_type] one after another');
+const tEngState = el('text', { x: 1466, y: 32, class: 'sub mono', 'text-anchor': 'end' }, gEng, '');
+const tEngState2 = el('text', { x: 1466, y: 49, class: 'tiny mono', 'text-anchor': 'end' }, gEng, '');
+// ---------- Groups and pills ----------
+const pillEls = {};
+GROUPS.forEach((G, gi) => {
+  const g = box(G.x, 80, G.w, 238, null, null, 'group:' + G.key);
+  el('text', { x: G.x + 10, y: 97, class: 'tiny mono', fill: '#7c8aa5' }, g, G.key);
+  el('line', { x1: G.x + 8, y1: 106, x2: G.x + 8, y2: BUS_Y, stroke: '#1e293b', 'stroke-width': 2 }, L.conn);
+});
+for (const d of SVC_DEFS) {
+  const g = el('g', { class: 'clk unloaded', 'data-id': d.id }, L.stat);
+  el('line', { x1: d.rail, y1: d.y + 11, x2: d.x, y2: d.y + 11, stroke: '#1e293b', 'stroke-width': 2 }, g);
+  const r = el('rect', { x: d.x, y: d.y, width: d.w, height: d.h, rx: 6, class: 'pill' }, g);
+  el('text', { x: d.x + 7, y: d.y + 15, class: 'pilltxt' }, g, d.id);
+  const dots = el('g', {}, g);
+  let tog = null;
+  if (d.g === 4) {
+    tog = el('g', { class: 'clk' }, g);
+    el('rect', { x: d.x + d.w - 26, y: d.y + 5, width: 20, height: 12, rx: 6, fill: '#1e293b', stroke: '#334155' }, tog);
+    el('circle', { cx: d.x + d.w - 20, cy: d.y + 11, r: 4, fill: '#64748b' }, tog);
+    tog.addEventListener('click', e => { e.stopPropagation(); NEWCONF.rest[d.id] = !NEWCONF.rest[d.id]; drawToggles(); confChanged(); });
+  }
+  g.addEventListener('click', e => { e.stopPropagation(); showInfo(d.id); });
+  g.addEventListener('mouseenter', () => hoverSvc(d.id, true));
+  g.addEventListener('mouseleave', () => hoverSvc(d.id, false));
+  pillEls[d.id] = { g, r, dots, tog };
+}
+function drawToggles() {
+  for (const d of SVC_DEFS) {
+    const t = pillEls[d.id].tog; if (!t) continue;
+    const on = NEWCONF.rest[d.id];
+    t.children[0].setAttribute('fill', on ? '#14532d' : '#1e293b');
+    t.children[1].setAttribute('cx', d.x + d.w - (on ? 12 : 20));
+    t.children[1].setAttribute('fill', on ? '#4ade80' : '#64748b');
+  }
+}
+function drawDots(engine) {
+  for (const d of SVC_DEFS) {
+    const P = pillEls[d.id]; P.dots.innerHTML = '';
+    if (!engine) continue;
+    const evs = EV.filter(e => (engine.callbacks[e] || []).some(cb => cb.svc.id === d.id));
+    const right = d.x + d.w - (P.tog ? 32 : 8);
+    evs.forEach((e, i) => el('circle', { cx: right - (evs.length - 1 - i) * 7, cy: d.y + 11, r: 3, fill: EVC[e] }, P.dots));
+  }
+}
+function pillState(id, state) { // 'unloaded' | 'off' | 'on'
+  const g = pillEls[id].g; g.classList.toggle('unloaded', state === 'unloaded'); g.classList.toggle('off', state === 'off');
+}
+function pillHot(id, color) {
+  const r = pillEls[id].r;
+  if (color) { r.style.stroke = color; r.style.fill = color + '30'; r.style.filter = 'url(#glow)'; }
+  else { r.style.stroke = ''; r.style.fill = ''; r.style.filter = ''; }
+}
+// ---------- Bus ----------
+el('line', { x1: BUS_X0, y1: BUS_Y, x2: BUS_X1, y2: BUS_Y, stroke: '#16213a', 'stroke-width': 14, 'stroke-linecap': 'round' }, L.conn);
+const busLine = el('line', { x1: BUS_X0, y1: BUS_Y, x2: BUS_X1, y2: BUS_Y, stroke: 'url(#busg)', 'stroke-width': 2.5, opacity: .55 }, L.conn);
+const gBusLbl = el('g', { class: 'clk', 'data-id': 'bus' }, L.stat);
+el('rect', { x: 1324, y: 328, width: 156, height: 14, fill: 'transparent' }, gBusLbl);
+el('text', { x: 1478, y: 338, class: 'tiny mono', 'text-anchor': 'end' }, gBusLbl, 'dispatchEvent() →');
+gBusLbl.addEventListener('click', () => showInfo('bus'));
+// ---------- Legend ----------
+const gLeg = box(1324, 80, 156, 238, null, null, 'legend');
+el('text', { x: 1334, y: 97, class: 'tiny mono', fill: '#7c8aa5' }, gLeg, 'Events · Callbacks');
+const legRows = {};
+EV.forEach((e, i) => {
+  const y = 116 + i * 25;
+  const g = el('g', { class: 'clk' }, gLeg);
+  const bg = el('rect', { x: 1330, y: y - 11, width: 144, height: 20, rx: 5, fill: 'transparent' }, g);
+  el('circle', { cx: 1340, cy: y - 1, r: 5, fill: EVC[e] }, g);
+  el('text', { x: 1349, y: y + 3, class: 'mono', 'font-size': 9.6, fill: '#cbd5e1' }, g, e);
+  const n = el('text', { x: 1474, y: y + 3, class: 'mono', 'font-size': 10.5, fill: '#64748b', 'text-anchor': 'end' }, g, '');
+  g.addEventListener('mouseenter', () => hoverEvent(e, true)); g.addEventListener('mouseleave', () => hoverEvent(e, false));
+  g.addEventListener('click', ev => { ev.stopPropagation(); showInfo('ev:' + e); });
+  legRows[e] = { bg, n };
+});
+function drawLegendCounts(engine) { for (const e of EV) legRows[e].n.textContent = engine ? (engine.callbacks[e] || []).length : ''; }
+function hoverEvent(e, on) {
+  if (!engine) return;
+  for (const cb of engine.callbacks[e] || []) pillHot(cb.svc.id, on ? EVC[e] : null);
+}
+function hoverSvc(id, on) {
+  if (!engine) return;
+  for (const e of EV) if ((engine.callbacks[e] || []).some(cb => cb.svc.id === id)) legRows[e].bg.setAttribute('fill', on ? EVC[e] + '22' : 'transparent');
+}
+
+// ---------- Lifecycle ----------
+const gLife = box(20, 392, 180, 380, 'StdEngine.run()', null, 'lifecycle');
+const LIFE = [
+  ['STARTUP', 0, 426], ['PRE_LOOP', 0, 476], ['NEW_LOOP_PACKET', 0, 526], ['CHECK_LOOP', 0, 572],
+  ['END_ARCHIVE_PERIOD', 1, 614], ['POST_LOOP', 0, 666], ['NEW_ARCHIVE_RECORD', 1, 708], ['SHUTDOWN', 0, 752]];
+const lifeEls = {};
+{
+  const a = (d, txt, tx, ty) => { el('path', { d, fill: 'none', stroke: '#334155', 'stroke-width': 1.5, 'marker-end': 'url(#arr)' }, gLife); if (txt) el('text', { x: tx, y: ty, class: 'tiny mono' }, gLife, txt); };
+  defs.insertAdjacentHTML('beforeend', '<marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#475569"/></marker>');
+  a('M60,436 V462'); a('M60,486 V512', 'for packet in', 66, 500); a('M60,536 V558');
+  a('M150,566 C178,566 178,532 150,532', null); el('text', { x: 157, y: 552, class: 'tiny mono' }, gLife, '↻');
+  a('M70,582 V600'); el('text', { x: 82, y: 596, class: 'tiny mono' }, gLife, 'nested');
+  a('M184,578 C198,606 198,640 184,662'); el('text', { x: 176, y: 645, class: 'tiny mono', fill: '#f472b6', 'text-anchor': 'end' }, gLife, 'raise BreakLoop');
+  a('M70,676 V694'); el('text', { x: 82, y: 690, class: 'tiny mono' }, gLife, 'nested');
+  a('M34,662 C22,640 22,500 34,480'); el('text', { transform: 'translate(29,600) rotate(-90)', class: 'tiny mono' }, gLife, 'while True');
+  for (const [e, ind, y] of LIFE) {
+    const x = 34 + ind * 18, w = 150 - ind * 18;
+    const r = el('rect', { x, y: y - 11, width: w, height: 20, rx: 10, fill: '#0f1a2e', stroke: EVC[e] + '66', 'stroke-width': 1.2 }, gLife);
+    el('text', { x: x + 9, y: y + 3.5, class: 'mono', 'font-size': 10.5, fill: EVC[e] }, gLife, e);
+    lifeEls[e] = r;
+  }
+}
+const lifeStack = [];
+function lifeSet() {
+  const cur = lifeStack[lifeStack.length - 1];
+  for (const e of EV) { const r = lifeEls[e]; const on = lifeStack.includes(e);
+    r.setAttribute('fill', e === cur ? EVC[e] + '40' : on ? EVC[e] + '18' : '#0f1a2e');
+    r.style.filter = e === cur ? 'url(#glow)' : ''; }
+}
+
+// ---------- Packet card ----------
+const CARD_FIELDS = ['dateTime', 'usUnits', 'interval', 'outTemp', 'outHumidity', 'inTemp', 'barometer', 'pressure', 'altimeter',
+  'windSpeed', 'windDir', 'windGust', 'rain', 'rainRate', 'radiation', 'consBatteryVoltage',
+  'dewpoint', 'windchill', 'heatindex', 'appTemp', 'cloudbase', 'ET', 'windrun'];
+const gCard = box(230, 385, 330, 387, null, null, 'card');
+const tCardTitle = el('text', { x: 242, y: 404, class: 'ttl mono', 'font-size': 12.5 }, gCard, 'event.packet');
+const tCardSub = el('text', { x: 242, y: 419, class: 'tiny mono' }, gCard, '');
+const cardRows = {};
+CARD_FIELDS.forEach((k, i) => {
+  const y = 438 + i * 14.6;
+  const bg = el('rect', { x: 236, y: y - 10.5, width: 318, height: 14, rx: 3, fill: 'transparent', class: 'row-hl' }, gCard);
+  const kt = el('text', { x: 244, y, class: 'mono', 'font-size': 11, fill: '#94a3b8' }, gCard, k);
+  const vt = el('text', { x: 440, y, class: 'mono', 'font-size': 11, fill: '#e2e8f0', 'text-anchor': 'end' }, gCard, '');
+  const ut = el('text', { x: 446, y, class: 'mono', 'font-size': 10, fill: '#64748b' }, gCard, '');
+  const who = el('text', { x: 548, y, class: 'mono', 'font-size': 9, fill: '#64748b', 'text-anchor': 'end' }, gCard, '');
+  cardRows[k] = { bg, kt, vt, ut, who };
+});
+const card = {
+  snap: null, obj: null,
+  show(obj, title, sub) {
+    this.obj = obj; this.snap = { ...obj };
+    tCardTitle.textContent = title; tCardSub.textContent = (sub || '').length > 54 ? sub.slice(0, 53) + '…' : (sub || '');
+    for (const k of CARD_FIELDS) { const R = cardRows[k]; R.who.textContent = ''; R.bg.setAttribute('fill', 'transparent'); }
+    this.render();
+  },
+  render() {
+    const o = this.obj; if (!o) return;
+    for (const k of CARD_FIELDS) {
+      const R = cardRows[k], has = k in o;
+      R.vt.textContent = has ? fmt(k, o[k], o.usUnits) : '—';
+      R.vt.setAttribute('fill', !has ? '#334155' : o[k] === null ? '#f87171' : '#e2e8f0');
+      R.kt.setAttribute('fill', has ? '#94a3b8' : '#334155');
+      R.ut.textContent = has && o[k] !== null ? unitOf(k, o.usUnits) : '';
+    }
+  },
+  update(obj, who, color) { // highlights what the callback changed
+    if (obj !== this.obj) this.obj = obj;
+    const before = this.snap;
+    let n = 0;
+    for (const k of CARD_FIELDS) {
+      const was = before ? before[k] : undefined, now = obj[k];
+      if (was !== now && !(was == null && now == null && (k in before) === (k in obj))) {
+        n++; const R = cardRows[k];
+        R.bg.setAttribute('fill', color + '38'); R.who.textContent = who.replace(/^Std/, ''); R.who.setAttribute('fill', color);
+        sleep(900).then(() => R.bg.setAttribute('fill', 'transparent'), () => {});
+      }
+    }
+    this.snap = { ...obj }; this.render(); return n;
+  },
+};
+
+// ---------- xtypes ----------
+const gX = box(572, 385, 190, 387, 'weewx.xtypes.xtypes', 'search order ↓', 'xtypes');
+const XT = [
+  ['WindVecDaily', 'windvec (days)', false], ['WindVec', 'windvec, windgustvec', false], ['AggregateHeatCool', 'heatdeg, cooldeg', false],
+  ['DailySummaries', 'aggregates over days', false], ['ArchiveTable', 'columns of the archive table', false], ['XTypeTable', 'series of derived types', false],
+  ['WXXTypes', 'dewpoint, windchill, heatindex, appTemp, cloudbase, windrun …', true], ['ETXType', 'ET', true],
+  ['PressureCooker', 'pressure, altimeter, barometer', true], ['RainRater', 'rainRate', true], ['Delta', 'rain from totalRain', true]];
+const xtEls = {};
+XT.forEach(([n, d, svcReg], i) => {
+  const y = 440 + i * 29.5;
+  const g = el('g', {}, gX);
+  const r = el('rect', { x: 580, y: y - 13, width: 174, height: 27, rx: 5, fill: '#101a2d', stroke: '#1f2a40' }, g);
+  el('text', { x: 588, y: y + 1, class: 'mono', 'font-size': 11, fill: '#e2e8f0' }, g, n);
+  el('text', { x: 588, y: y + 11.5, class: 'mono', 'font-size': 8.6, fill: '#64748b' }, g, d.length > 34 ? d.slice(0, 33) + '…' : d);
+  xtEls[n] = { g, r, svcReg };
+});
+function xtRegistered(on) { for (const [n, , reg] of XT) if (reg) xtEls[n].g.style.opacity = on ? 1 : .15; }
+const XT_SCALAR = { dewpoint: 'WXXTypes', windchill: 'WXXTypes', heatindex: 'WXXTypes', appTemp: 'WXXTypes', cloudbase: 'WXXTypes',
+  windrun: 'WXXTypes', ET: 'ETXType', pressure: 'PressureCooker', altimeter: 'PressureCooker', barometer: 'PressureCooker', rainRate: 'RainRater' };
+async function xtProbe(kind, handlers, color) { // shows the list being searched until the first hit
+  const hs = new Set(handlers); const last = Math.max(...XT.map(([n], i) => hs.has(n) ? i : -1));
+  for (let i = 0; i <= last; i++) {
+    const n = XT[i][0], r = xtEls[n].r, hit = hs.has(n);
+    r.setAttribute('stroke', hit ? color : '#7f1d1d'); r.setAttribute('fill', hit ? color + '33' : '#1a1020');
+    await sleep(hit ? 70 : 28);
+  }
+  await sleep(250);
+  XT.forEach(([n]) => { xtEls[n].r.setAttribute('stroke', '#1f2a40'); xtEls[n].r.setAttribute('fill', '#101a2d'); });
+}
+
+// ---------- Accumulator ----------
+const gAcc = box(774, 385, 152, 150, 'Accum', 'weewx.accum', 'accum');
+const tAccSpan = el('text', { x: 784, y: 436, class: 'mono', 'font-size': 10.5, fill: '#cbd5e1' }, gAcc, '');
+el('rect', { x: 784, y: 444, width: 132, height: 10, rx: 5, fill: '#1e293b' }, gAcc);
+const accBar = el('rect', { x: 784, y: 444, width: 0, height: 10, rx: 5, fill: '#22d3ee' }, gAcc);
+const tAcc1 = el('text', { x: 784, y: 470, class: 'mono', 'font-size': 10.5, fill: '#94a3b8' }, gAcc, '');
+const tAcc2 = el('text', { x: 784, y: 485, class: 'mono', 'font-size': 10.5, fill: '#94a3b8' }, gAcc, '');
+el('line', { x1: 784, y1: 494, x2: 916, y2: 494, stroke: '#1e293b' }, gAcc);
+el('text', { x: 784, y: 509, class: 'tiny mono' }, gAcc, 'old_accumulator');
+const tAccOld = el('text', { x: 784, y: 524, class: 'mono', 'font-size': 10.5, fill: '#64748b' }, gAcc, 'None');
+// ---------- Database ----------
+const gDB = box(774, 548, 152, 224, 'Database', 'DaySummaryManager', 'db');
+{ const cx = 850, cy = 598;
+  el('ellipse', { cx, cy: cy + 26, rx: 34, ry: 9, fill: '#0b2135', stroke: '#22d3ee55' }, gDB);
+  el('rect', { x: cx - 34, y: cy, width: 68, height: 26, fill: '#0b2135' }, gDB);
+  el('line', { x1: cx - 34, y1: cy, x2: cx - 34, y2: cy + 26, stroke: '#22d3ee55' }, gDB);
+  el('line', { x1: cx + 34, y1: cy, x2: cx + 34, y2: cy + 26, stroke: '#22d3ee55' }, gDB);
+  el('ellipse', { cx, cy, rx: 34, ry: 9, fill: '#123a57', stroke: '#22d3ee88' }, gDB); }
+const dbCyl = gDB.querySelectorAll('ellipse')[1];
+el('text', { x: 850, y: 621, class: 'tiny mono', 'text-anchor': 'middle', fill: '#7dd3fc' }, gDB, 'weewx.sdb');
+const tDB = [0, 1, 2, 3, 4, 5].map(i => el('text', { x: 784, y: 652 + i * 19, class: 'mono', 'font-size': 10.5, fill: '#94a3b8' }, gDB, ''));
+// ---------- RESTful ----------
+const gRest = box(938, 385, 200, 290, 'RESTful threads', 'queue.Queue → RESTThread', 'rest');
+const REST_ROWS = [...SVC_DEFS.filter(d => d.g === 4).map(d => d.id), 'WU-RF'];
+const restEls = {};
+REST_ROWS.forEach((id, i) => {
+  const y = 442 + i * 29;
+  const g = el('g', { class: 'clk' }, gRest);
+  const nm = id === 'WU-RF' ? 'WU rapidfire' : SVC[id].proto.replace('-PWS', '');
+  el('text', { x: 946, y: y + 4, class: 'mono', 'font-size': 10.5, fill: '#cbd5e1' }, g, nm);
+  const slots = [0, 1, 2, 3, 4].map(j => el('rect', { x: 1052 + j * 11, y: y - 6, width: 9, height: 12, rx: 2, fill: '#1e293b' }, g));
+  const dot = el('circle', { cx: 1121, cy: y, r: 5, fill: '#334155' }, g);
+  const more = el('text', { x: 1108, y: y + 14, class: 'mono', 'font-size': 8.5, fill: '#fbbf24', 'text-anchor': 'end' }, g, '');
+  g.addEventListener('click', e => { e.stopPropagation(); showInfo('rest'); });
+  restEls[id] = { g, slots, dot, more, y };
+});
+el('text', { x: 1052, y: 427, class: 'tiny mono' }, gRest, 'Queue');
+el('text', { x: 1112, y: 427, class: 'tiny mono' }, gRest, 'Thr');
+const gCloud = box(938, 688, 200, 84, null, null, 'cloud');
+el('path', { d: 'M990,756 a16,16 0 0,1 4,-30 a24,24 0 0,1 44,-10 a20,20 0 0,1 38,14 a15,15 0 0,1 -2,26 z', fill: 'url(#cloudg)', stroke: '#38bdf8', 'stroke-width': 1.3 }, gCloud);
+el('text', { x: 1034, y: 744, class: 'ttl', 'text-anchor': 'middle', 'font-size': 12 }, gCloud, 'Internet');
+const tCloud = el('text', { x: 1038, y: 765, class: 'tiny mono', 'text-anchor': 'middle' }, gCloud, '');
+// ---------- Reports ----------
+const gRep = box(1150, 385, 330, 387, 'StdReportEngine', 'threading.Thread · weewx.reportengine', 'report');
+const tRepState = el('text', { x: 1160, y: 437, class: 'mono', 'font-size': 10.5, fill: '#64748b' }, gRep, 'not started');
+const REPORTS = [
+  { id: 'SeasonsReport', skin: 'Seasons', gens: ['CheetahGenerator', 'ImageGenerator', 'CopyGenerator'] },
+  { id: 'SmartphoneReport', skin: 'Smartphone', gens: ['CheetahGenerator', 'ImageGenerator', 'CopyGenerator'] },
+  { id: 'MobileReport', skin: 'Mobile', gens: ['CheetahGenerator', 'ImageGenerator', 'CopyGenerator'] },
+  { id: 'StandardReport', skin: 'Standard', gens: ['CheetahGenerator', 'ImageGenerator', 'CopyGenerator'] },
+  { id: 'FTP', skin: 'Ftp', gens: ['FtpGenerator'] },
+  { id: 'RSYNC', skin: 'Rsync', gens: ['RsyncGenerator'] }];
+el('text', { x: 1160, y: 456, class: 'tiny mono' }, gRep, '[StdReport]');
+const repEls = {};
+REPORTS.forEach((R, i) => {
+  const y = 474 + i * 18;
+  const g = el('g', { class: 'clk' }, gRep);
+  const bg = el('rect', { x: 1156, y: y - 12, width: 150, height: 17, rx: 4, fill: 'transparent' }, g);
+  const chk = el('text', { x: 1162, y, class: 'mono', 'font-size': 11, fill: '#4ade80' }, g, '');
+  el('text', { x: 1178, y, class: 'mono', 'font-size': 11, fill: '#cbd5e1' }, g, R.id);
+  g.addEventListener('click', e => { e.stopPropagation(); NEWCONF.reports[R.id] = !NEWCONF.reports[R.id]; drawReportToggles(); confChanged(); showInfo('report'); });
+  repEls[R.id] = { bg, chk };
+});
+function drawReportToggles() { for (const R of REPORTS) { const on = NEWCONF.reports[R.id]; repEls[R.id].chk.textContent = on ? '✓' : '✗'; repEls[R.id].chk.setAttribute('fill', on ? '#4ade80' : '#64748b'); } }
+el('text', { x: 1320, y: 456, class: 'tiny mono' }, gRep, 'generator_list');
+const GENS = ['CheetahGenerator', 'ImageGenerator', 'CopyGenerator', 'FtpGenerator', 'RsyncGenerator'];
+const genEls = {};
+GENS.forEach((n, i) => {
+  const y = 474 + i * 21;
+  const r = el('rect', { x: 1316, y: y - 13, width: 156, height: 19, rx: 5, fill: '#101a2d', stroke: '#1f2a40' }, gRep);
+  const t = el('text', { x: 1324, y: y + 1, class: 'mono', 'font-size': 10.5, fill: '#cbd5e1' }, gRep, n);
+  genEls[n] = { r, t };
+});
+// public_html
+el('rect', { x: 1160, y: 584, width: 310, height: 104, rx: 8, fill: '#0a1222', stroke: '#1f2a40' }, gRep);
+el('text', { x: 1170, y: 601, class: 'sub mono' }, gRep, 'public_html/');
+const FILES = ['index.html', 'statistics.html', 'telemetry.html', 'celestial.html', 'tabular.html', 'rss.xml',
+  'NOAA-2026-10.txt', 'NOAA-2026.txt', 'daytempdew.png', 'daybarometer.png', 'dayrain.png', 'daywind.png',
+  'weektempdew.png', 'monthtempdew.png', 'yeartempdew.png', 'seasons.css', 'seasons.js', 'favicon.ico'];
+const fileEls = {};
+FILES.forEach((f, i) => {
+  const col = i % 3, row = Math.floor(i / 3), x = 1168 + col * 101, y = 615 + row * 12.5;
+  const t = el('text', { x, y, class: 'mono', 'font-size': 9.4, fill: '#334155' }, gRep, f);
+  fileEls[f] = t;
+});
+function touchFile(f, color) { const t = fileEls[f]; if (!t) return; t.setAttribute('fill', color); t.style.filter = 'url(#glow)'; sleep(700).then(() => { t.setAttribute('fill', '#94a3b8'); t.style.filter = ''; }, () => {}); }
+// Web server
+const gWeb = el('g', { class: 'clk' }, gRep);
+el('rect', { x: 1160, y: 700, width: 310, height: 62, rx: 8, fill: '#0a1222', stroke: '#1f2a40' }, gWeb);
+el('text', { x: 1170, y: 718, class: 'sub mono' }, gWeb, 'Web server');
+const tWeb = el('text', { x: 1170, y: 736, class: 'tiny mono' }, gWeb, 'local: nginx/apache serves public_html');
+const tWeb2 = el('text', { x: 1170, y: 752, class: 'tiny mono' }, gWeb, 'remote: only via FTP/RSYNC report');
+gWeb.addEventListener('click', e => { e.stopPropagation(); showInfo('web'); });
+
+// ---------- Timeline ----------
+const gTL = box(230, 790, 1250, 160, 'Archive period', null, 'timeline');
+const TLX0 = 260, TLX1 = 1450;
+const tlDyn = el('g', {}, gTL);
+// ---------- Clock ----------
+const gClock = box(20, 790, 180, 160, 'Station time', null, 'clock');
+const tClock = el('text', { x: 30, y: 848, class: 'mono', 'font-size': 30, fill: '#f8fafc' }, gClock, '--:--:--');
+const tClockD = el('text', { x: 30, y: 870, class: 'sub mono' }, gClock, '');
+const tClock2 = el('text', { x: 30, y: 898, class: 'tiny mono' }, gClock, `archive_interval = ${ARCH_INT} s`);
+const tClock3 = el('text', { x: 30, y: 914, class: 'tiny mono' }, gClock, `archive_delay    = ${ARCH_DELAY} s`);
+const tClock4 = el('text', { x: 30, y: 930, class: 'tiny mono' }, gClock, `LOOP every ${LOOP_INT} s  (demo)`);
+
+// ---------- Connectors ----------
+conn('c_st_drv', 'M110,220 V236');
+conn('c_drv_bus', 'M192,304 H204 Q212,304 212,316 V350');
+conn('c_ts_drv', `M${SVC.StdTimeSynch.x},117 H222 V358 H192`);
+conn('c_catchup', `M192,322 H218 V68 H850 V${SVC.StdArchive.y}`);
+conn('c_arch_acc', `M850,${SVC.StdArchive.y + 22} V385`);
+conn('c_acc_db', 'M850,535 V548');
+conn('c_arch_db', `M800,${SVC.StdArchive.y + 22} V370 H768 V600 H774`);
+conn('c_wx_xt', `M${SVC.StdWXCalculate.x + SVC.StdWXCalculate.w},${SVC.StdWXCalculate.y + 11} H566 V372 H667 V385`);
+conn('c_xt_db', 'M762,700 H774');
+conn('c_rest_down', 'M1038,318 V385');
+conn('c_rest_db', 'M938,600 H926');
+conn('c_rest_cloud', 'M1038,675 V688');
+conn('c_rep_down', `M1231,318 V385`);
+conn('c_rep_xt', 'M1156,520 H1144 V781 H667 V772');
+conn('c_gen_html', 'M1394,567 V584');
+conn('c_html_web', 'M1315,688 V700');
+conn('c_web_cloud', 'M1160,740 H1144 V730 H1138');
+conn('c_print', `M${SVC.StdPrint.x + SVC.StdPrint.w},${SVC.StdPrint.y + 11} H1318 V325 H1480`);
+
+// =====================================================================================
+//  Panels: narration, log, stack, threads
+// =====================================================================================
+function narrate(tag, html, color = '#94a3b8') {
+  const t = $('#narrTag'); t.textContent = tag; t.style.color = color;
+  $('#narrText').innerHTML = html;
+}
+const logEl = $('#log');
+// Follow the log unless the user has scrolled up. Layout changes do not fire scroll events, so this survives panels resizing.
+let logFollow = true;
+logEl.addEventListener('scroll', () => { logFollow = logEl.scrollTop + logEl.clientHeight >= logEl.scrollHeight - 30; });
+function syslog(level, logger, msg) {
+  const d = new Date(hw.now * 1000);
+  const mon = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getMonth()];
+  const div = document.createElement('div'); div.className = level;
+  const prefix = `${mon} ${String(d.getDate()).padStart(2, ' ')} ${hms(hw.now)} `;
+  div.innerHTML = `<span class="ts">${prefix}</span>` + (level === 'OUT'
+    ? escapeHtml(msg)
+    : escapeHtml(`weewxd[${PID}] ${level} ${logger}: ${msg}`));
+  logEl.appendChild(div);
+  while (logEl.childNodes.length > 400) logEl.removeChild(logEl.firstChild);
+  if (logFollow) logEl.scrollTop = logEl.scrollHeight;
+}
+const escapeHtml = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+const log = {
+  debug: (l, m) => syslog('DEBUG', l, m), info: (l, m) => syslog('INFO', l, m), warning: (l, m) => syslog('WARNING', l, m),
+  error: (l, m) => syslog('ERROR', l, m), critical: (l, m) => syslog('CRITICAL', l, m), out: m => syslog('OUT', '', m) };
+
+const stack = [];
+function renderStack() {
+  $('#stack').innerHTML = stack.map((s, i) => `<div style="padding-left:${i * 10}px;color:${s.c || ''}">${i ? '└ ' : ''}${escapeHtml(s.n)}</div>`).join('');
+}
+async function call(name, fn, c) {
+  stack.push({ n: name, c }); renderStack();
+  try { return await fn(); } finally { stack.pop(); renderStack(); }
+}
+const THREADS = {};
+function thread(name, state, color = '#334155') { THREADS[name] = { state, color }; renderThreads(); }
+function renderThreads() {
+  $('#threads').innerHTML = Object.entries(THREADS).map(([n, t]) =>
+    `<div class="row"><span class="dot" style="background:${t.color};box-shadow:0 0 6px ${t.color}"></span><span class="name">${n}</span><span class="st">${escapeHtml(t.state)}</span></div>`).join('');
+}
+
+// =====================================================================================
+//  Model: hardware, driver, accumulator, database
+// =====================================================================================
+class WeeWxIOError extends Error {} class InitializationError extends Error {}
+class NotImplementedError extends Error {} class BreakLoop extends Error {} class OutOfSpan extends Error {}
+class Terminate extends Error {}
+const rnd = (a = 1) => (Math.random() - .5) * 2 * a;
+
+// The station keeps measuring while weewxd is down. The Vantage logger keeps storing archive records.
+class StationHW {
+  constructor(type) {
+    this.type = type;
+    this.now = Math.floor(Date.now() / 1000 / LOOP_INT) * LOOP_INT;
+    this.w = { t: 0, h: 0, b: 0, ws: 0, wd: 0 }; this.raining = false; this.samples = []; this.logger = [];
+    this.clockError = type === 'Vantage' ? 7.4 : 0.42; this.outlier = false;
+  }
+  sample(ts) {
+    const d = new Date(ts * 1000), h = d.getHours() + d.getMinutes() / 60, day = Math.sin(2 * Math.PI * (h - 9) / 24);
+    const w = this.w;
+    w.t = Math.max(-2, Math.min(2, w.t + rnd(.08))); w.h = Math.max(-6, Math.min(6, w.h + rnd(.4)));
+    w.b = Math.max(-.03, Math.min(.03, w.b + rnd(.0015))); w.ws = Math.max(-3, Math.min(5, w.ws + rnd(.6))); w.wd = (w.wd + rnd(6)) % 360;
+    if (Math.random() < (this.raining ? .05 : .02)) this.raining = !this.raining;
+    const outTemp = 54 + 9 * day + w.t, outHumidity = Math.max(8, Math.min(100, 68 - 16 * day + w.h));
+    const windSpeed = Math.max(0, 5 + w.ws + rnd(1.2));
+    const s = {
+      dateTime: ts, usUnits: US, outTemp, inTemp: 70.5 + day * .8 + rnd(.05), outHumidity,
+      barometer: 30.02 + .06 * Math.sin(ts / 21600) + w.b, windSpeed, windDir: (230 + w.wd + rnd(12) + 360) % 360,
+      windGust: windSpeed + 1 + Math.abs(rnd(3)), rain: this.raining && Math.random() < .55 ? .01 : 0,
+      radiation: h > 6.5 && h < 19 ? Math.max(0, 780 * Math.sin(Math.PI * (h - 6.5) / 12.5) + rnd(20)) : 0,
+      consBatteryVoltage: 4.62 + rnd(.01) };
+    if (this.outlier) { s.outTemp = 300; this.outlier = false; }
+    return s;
+  }
+  advance(sec) {
+    for (let t = this.now + LOOP_INT; t <= this.now + sec; t += LOOP_INT) {
+      this.samples.push(this.sample(t));
+      if (this.type === 'Vantage' && t % ARCH_INT === 0) this.logger.push(this.hwRecord(t));
+    }
+    this.now += sec;
+    if (this.samples.length > 3000) this.samples.splice(0, 1000);
+    if (this.logger.length > 500) this.logger.splice(0, 100);
+  }
+  hwRecord(stop) { // How the Vantage logger delivers its archive records (no console voltage)
+    const ss = this.samples.filter(s => s.dateTime > stop - ARCH_INT && s.dateTime <= stop); if (!ss.length) return null;
+    const avg = k => ss.reduce((a, s) => a + s[k], 0) / ss.length;
+    let x = 0, y = 0; ss.forEach(s => { x += s.windSpeed * Math.sin(s.windDir * Math.PI / 180); y += s.windSpeed * Math.cos(s.windDir * Math.PI / 180); });
+    const rain = ss.reduce((a, s) => a + s.rain, 0);
+    return { dateTime: stop, usUnits: US, interval: ARCH_INT / 60, outTemp: avg('outTemp'), inTemp: avg('inTemp'), outHumidity: avg('outHumidity'),
+      barometer: avg('barometer'), windSpeed: avg('windSpeed'), windDir: (Math.atan2(x, y) * 180 / Math.PI + 360) % 360,
+      windGust: Math.max(...ss.map(s => s.windGust)), rain, rainRate: rain * 3600 / ARCH_INT, radiation: avg('radiation') };
+  }
+  current() { return this.samples[this.samples.length - 1]; }
+}
+
+class Driver {
+  constructor(hw) { this.hw = hw; this.vantage = hw.type === 'Vantage'; this.rainBuf = []; }
+  get module() { return this.vantage ? 'weewx.drivers.vantage' : 'weewx.drivers.simulator'; }
+  get archive_interval() { if (!this.vantage) throw new NotImplementedError('archive_interval'); return ARCH_INT; }
+  async *genLoopPackets() {
+    while (true) {
+      thread('MainThread', `${this.vantage ? 'Vantage' : 'Simulator'}.genLoopPackets(): waiting for packet`, '#22d3ee');
+      await sleep(LOOP_VIS);
+      if (pendingIOError) {
+        pendingIOError = false; hlDriver('genLoopPackets', '#f87171', 900);
+        ripple(110, 304, '#f87171', 8, 60, 700);
+        throw new WeeWxIOError(this.vantage ? 'Max retries exceeded while getting LOOP data' : 'simulated I/O error');
+      }
+      this.hw.advance(LOOP_INT);
+      const s = this.hw.current();
+      stationBlink();
+      hlDriver('genLoopPackets', '#22d3ee', 400);
+      await flow('c_st_drv', '#22d3ee', 180);
+      const p = { dateTime: s.dateTime, usUnits: US };
+      for (const k of ['outTemp', 'outHumidity', 'inTemp', 'barometer']) p[k] = s[k];
+      if (!this.vantage) p.pressure = s.barometer - .745;
+      for (const k of ['windSpeed', 'windDir', 'windGust', 'rain']) p[k] = s[k];
+      if (this.vantage) { // The Vantage computes rain rate, dewpoint, heat index and wind chill itself.
+        this.rainBuf.push([s.dateTime, s.rain]); this.rainBuf = this.rainBuf.filter(([t]) => t > s.dateTime - 900);
+        p.rainRate = this.rainBuf.reduce((a, [, r]) => a + r, 0) * 4;
+        const d = calc.dewpoint(s.outTemp, s.outHumidity); p.dewpoint = d; p.heatindex = calc.heatindex(s.outTemp, s.outHumidity); p.windchill = calc.windchill(s.outTemp, s.windSpeed);
+      }
+      p.radiation = s.radiation; p.consBatteryVoltage = s.consBatteryVoltage;
+      await flow('c_drv_bus', '#22d3ee', 220);
+      yield p;
+    }
+  }
+  async *genArchiveRecords(since) {
+    if (!this.vantage) throw new NotImplementedError('genArchiveRecords');
+    hlDriver('genArchiveRecords', '#4ade80', 700);
+    for (const r of this.hw.logger.filter(r => r && r.dateTime > (since ?? 0))) yield { ...r };
+  }
+  async *genStartupRecords(since) {
+    if (!this.vantage) throw new NotImplementedError('genStartupRecords');
+    hlDriver('genStartupRecords', '#4ade80', 900);
+    for (const r of this.hw.logger.filter(r => r && r.dateTime > (since ?? 0))) yield { ...r };
+  }
+  getTime() { return this.hw.now + this.hw.clockError; }
+  setTime() { if (!this.vantage) throw new NotImplementedError('setTime'); this.hw.clockError = 0; }
+  closePort() { hlDriver('closePort', '#f87171', 800); }
+}
+function stationBlink() { stationLed.setAttribute('fill', '#4ade80'); sleep(160).then(() => stationLed.setAttribute('fill', '#14532d'), () => {}); updateLcd(); }
+function updateLcd() { const s = hw.current(); if (!s) return; tLcd1.textContent = `${s.outTemp.toFixed(1)}°F`; tLcd2.textContent = `${Math.round(s.outHumidity)}%  ${s.barometer.toFixed(2)}"  ${s.windSpeed.toFixed(0)}mph`; }
+
+// Formulas (simplified, US units), roughly as in weewx.wxformulas
+const calc = {
+  dewpoint(T, RH) { if (T == null || !RH) return null; const c = (T - 32) / 1.8, g = 17.27 * c / (237.7 + c) + Math.log(RH / 100); return (237.7 * g / (17.27 - g)) * 1.8 + 32; },
+  windchill(T, V) { if (T == null || V == null) return null; if (T >= 50 || V <= 3) return T; const v = Math.pow(V, .16); return 35.74 + .6215 * T - 35.75 * v + .4275 * T * v; },
+  heatindex(T, RH) {
+    if (T == null || RH == null) return null; if (T < 40) return T;
+    let hi = .5 * (T + 61 + (T - 68) * 1.2 + RH * .094); if (hi < 80) return hi;
+    return -42.379 + 2.04901523 * T + 10.14333127 * RH - .22475541 * T * RH - 6.83783e-3 * T * T - 5.481717e-2 * RH * RH + 1.22874e-3 * T * T * RH + 8.5282e-4 * T * RH * RH - 1.99e-6 * T * T * RH * RH; },
+  appTemp(T, RH, V) { if (T == null || RH == null || V == null) return null; const c = (T - 32) / 1.8, e = RH / 100 * 6.105 * Math.exp(17.27 * c / (237.7 + c)); return (c + .33 * e - .7 * V * .44704 - 4) * 1.8 + 32; },
+  cloudbase(T, RH) { const d = calc.dewpoint(T, RH); if (d == null) return null; return (T - d) / 4.4 * 1000 + ALT_FT; },
+  altimeter(P) { if (P == null) return null; const mb = P * 33.8639, h = ALT_FT * .3048, k = .190284;
+    return ((mb - .3) * Math.pow(1 + (Math.pow(1013.25, k) * .0065 / 288) * (h / Math.pow(mb - .3, k)), 1 / k)) / 33.8639; },
+};
+
+class Accum {
+  constructor(start, stop) { this.start = start; this.stop = stop; this.st = {}; this.n = 0; this.unit = null; this.wx = 0; this.wy = 0; }
+  addRecord(p, add_hilo = true) {
+    if (!(p.dateTime > this.start && p.dateTime <= this.stop)) throw new OutOfSpan();
+    if (this.unit == null) this.unit = p.usUnits;
+    this.n++;
+    for (const k in p) {
+      if (k === 'dateTime' || k === 'usUnits' || p[k] == null) continue;
+      const s = this.st[k] ??= { min: Infinity, max: -Infinity, sum: 0, cnt: 0, last: null };
+      if (add_hilo) { s.min = Math.min(s.min, p[k]); s.max = Math.max(s.max, p[k]); }
+      s.sum += p[k]; s.cnt++; s.last = p[k];
+    }
+    if (p.windSpeed != null && p.windDir != null) { this.wx += p.windSpeed * Math.sin(p.windDir * Math.PI / 180); this.wy += p.windSpeed * Math.cos(p.windDir * Math.PI / 180); }
+  }
+  extract(k) { // Extractors as in [Accumulator]: sum, max, last, otherwise avg
+    const s = this.st[k]; if (!s) return null;
+    if (k === 'rain' || k === 'ET') return s.sum;
+    if (k === 'windGust') return s.max;
+    if (k === 'consBatteryVoltage') return s.last;
+    if (k === 'windDir') return (Math.atan2(this.wx, this.wy) * 180 / Math.PI + 360) % 360;
+    return s.sum / s.cnt;
+  }
+  getRecord() { const r = { dateTime: this.stop, usUnits: this.unit }; for (const k in this.st) r[k] = this.extract(k); return r; }
+  augmentRecord(r) { const added = []; for (const k in this.st) if (!(k in r)) { r[k] = this.extract(k); added.push(k); } return added; }
+}
+
+class Database {
+  constructor(unit) { this.rows = []; this.day = {}; this.unit = unit; this.created = false; this.name = 'weewx.sdb'; }
+  lastGoodStamp() { return this.rows.length ? this.rows[this.rows.length - 1].dateTime : null; }
+  addRecord(rec, accum) {
+    this.rows.push(rec);
+    for (const k in rec) {
+      if (k === 'dateTime' || k === 'usUnits' || k === 'interval' || rec[k] == null) continue;
+      const d = this.day[k] ??= { min: Infinity, max: -Infinity, sum: 0, count: 0 };
+      d.min = Math.min(d.min, rec[k]); d.max = Math.max(d.max, rec[k]); d.sum += rec[k]; d.count++;
+    }
+    if (accum) for (const k in accum.st) { // _updateHiLo: extremes from the LOOP packets
+      const d = this.day[k]; const s = accum.st[k]; if (!d || !isFinite(s.min)) continue;
+      d.min = Math.min(d.min, s.min); d.max = Math.max(d.max, s.max);
+    }
+    if (this.rows.length > 1500) this.rows.splice(0, 500);
+    drawDB();
+  }
+}
+function drawDB() {
+  const r = db.rows[db.rows.length - 1], d = db.day.outTemp, u = db.unit;
+  let gaps = 0; for (let i = 1; i < db.rows.length; i++) if (db.rows[i].dateTime - db.rows[i - 1].dateTime > ARCH_INT) gaps++;
+  tDB[0].textContent = `archive: ${db.rows.length} rows`;
+  tDB[1].textContent = r ? `last: ${hms(r.dateTime)}` : 'last: —';
+  tDB[2].textContent = r && r.outTemp != null ? `outTemp ${fmt('outTemp', r.outTemp, u)}${unitOf('outTemp', u)}` : '';
+  tDB[3].textContent = 'archive_day_outTemp';
+  tDB[4].textContent = d ? `min ${fmt('outTemp', d.min, u)} max ${fmt('outTemp', d.max, u)}` : '—';
+  tDB[5].textContent = gaps ? `gaps: ${gaps}` : '';
+  tDB[5].setAttribute('fill', '#fb923c');
+}
+
+class Queue {
+  constructor() { this.items = []; this.waiters = []; }
+  put(x) { const w = this.waiters.shift(); if (w) w(x); else this.items.push(x); }
+  get() { return this.items.length ? Promise.resolve(this.items.shift()) : new Promise(r => this.waiters.push(r)); }
+  qsize() { return this.items.length; }
+}
+
+// =====================================================================================
+//  Engine and dispatch
+// =====================================================================================
+const LOOP_VIS = 420, TOK_SPEED = 2.4, CB_MIN = 160;
+let engine = null, hw = null, db = null, CONF = null, NEWCONF = null, PID = 4711;
+let pendingIOError = false, netDown = false, pendingTerminate = false;
+const tokens = [];
+function makeToken(type) {
+  const g = el('g', {}, L.dyn);
+  el('circle', { r: 16, fill: EVC[type], opacity: .25, filter: 'url(#bigglow)' }, g);
+  el('circle', { r: 8, fill: EVC[type], class: 'glow' }, g);
+  el('circle', { r: 3, fill: '#fff' }, g);
+  const t = el('text', { y: -14, class: 'mono', 'font-size': 10.5, fill: EVC[type], 'text-anchor': 'middle' }, g, type);
+  const tok = { g, t, x: BUS_X0, type, setX(x) { this.x = x; g.setAttribute('transform', `translate(${x},${BUS_Y})`); } };
+  tok.setX(BUS_X0);
+  tokens.forEach(o => o.g.setAttribute('opacity', .3));
+  tokens.push(tok); return tok;
+}
+function dropToken(tok) { tok.g.remove(); tokens.splice(tokens.indexOf(tok), 1); if (tokens.length) tokens[tokens.length - 1].g.setAttribute('opacity', 1); }
+async function moveTok(tok, x) {
+  const x0 = tok.x, dx = Math.abs(x - x0); if (dx < 1) return;
+  await tween(Math.max(60, dx / TOK_SPEED), t => tok.setX(x0 + (x - x0) * ease(t)));
+}
+async function sparkTo(id, color) {
+  const d = SVC[id];
+  await flowPts([[d.rail, BUS_Y], [d.rail, d.y + 11], [d.x + 6, d.y + 11]], color, 150, 3.5);
+}
+
+async function dispatchEvent(eng, ev) {
+  const cbs = (eng.callbacks[ev.type] || []).slice();
+  const color = EVC[ev.type];
+  lifeStack.push(ev.type); lifeSet();
+  if (CONF.log_events) log.debug('weewx.engine', `Event type: ${ev.type}` + (ev.packet ? ` | packet: {dateTime: ${ev.packet.dateTime}, …}` : '') + (ev.record ? ` | record: {dateTime: ${ev.record.dateTime}, …}; origin: ${ev.origin}` : ''));
+  if (ev.packet) card.show(ev.packet, `event.packet  ·  ${ev.type}`, `Callbacks: ${cbs.map(c => c.svc.id.replace(/^Std/, '')).join(' → ') || '—'}`);
+  if (ev.record) card.show(ev.record, `event.record  ·  origin='${ev.origin}'`, `Callbacks: ${cbs.map(c => c.svc.id.replace(/^Std/, '')).join(' → ')}`);
+  if (!cbs.length) narrate(ev.type, `<code>dispatchEvent(${ev.type})</code>: no core service has bound a callback. The event is a hook for extensions.`, color);
+  const tok = makeToken(ev.type);
+  tEngState.textContent = `dispatchEvent(${ev.type})`; tEngState.setAttribute('fill', color);
+  tEngState2.textContent = `nesting ${tokens.length} · ${cbs.length} callback(s)`;
+  try {
+    await call(`dispatchEvent(${ev.type})`, async () => {
+      for (const cb of cbs) {
+        await moveTok(tok, SVC[cb.svc.id].rail);
+        await gate(`${cb.svc.id}.${cb.name}(event)`);
+        await call(`${cb.svc.id}.${cb.name}(event)`, async () => {
+          await sparkTo(cb.svc.id, color);
+          pillHot(cb.svc.id, color);
+          const t0 = anim;
+          try { await cb.fn(ev); }
+          finally { pillHot(cb.svc.id, null); }
+          if (ev.packet) card.update(ev.packet, cb.svc.id, color);
+          else if (ev.record) card.update(ev.record, cb.svc.id, color);
+          if (anim - t0 < CB_MIN) await sleep(CB_MIN - (anim - t0));
+        }, color);
+      }
+      await moveTok(tok, BUS_X1);
+    }, color);
+  } finally {
+    dropToken(tok); lifeStack.pop(); lifeSet();
+    const up = lifeStack[lifeStack.length - 1];
+    tEngState.textContent = up ? `dispatchEvent(${up})` : ''; tEngState.setAttribute('fill', up ? EVC[up] : '#94a3b8');
+    tEngState2.textContent = up ? `nesting ${tokens.length}` : '';
+  }
+}
+
+class Svc { constructor(engine, id) { this.engine = engine; this.id = id; } bind(type, name, fn) { this.engine.bind(type, this, name, fn.bind(this)); } async shutDown() {} }
+
+class StdTimeSynch extends Svc {
+  constructor(e) { super(e, 'StdTimeSynch'); this.last_synch_ts = 0; this.clock_check = 14400; this.max_drift = 5;
+    this.bind('STARTUP', 'startup', this.do_sync); this.bind('PRE_LOOP', 'pre_loop', this.do_sync); }
+  async do_sync() {
+    const now = hw.now;
+    if (now - this.last_synch_ts < this.clock_check) {
+      narrate('StdTimeSynch', `Last clock check ${now - this.last_synch_ts} s ago, <code>clock_check</code> = 14400 s → nothing to do.`, EVC.PRE_LOOP);
+      return;
+    }
+    this.last_synch_ts = now;
+    narrate('StdTimeSynch', '<code>console.getTime()</code>: compare the station clock with the system time.', EVC.STARTUP);
+    hlDriver('getTime', '#a78bfa', 900);
+    await flow('c_ts_drv', '#a78bfa', 420);
+    const diff = this.engine.console.getTime() - hw.now;
+    log.info('weewx.engine', `Clock error is ${diff.toFixed(2)} seconds (positive is fast)`);
+    if (Math.abs(diff) > this.max_drift) {
+      try {
+        this.engine.console.setTime();
+        narrate('StdTimeSynch', `Off by ${diff.toFixed(1)} s > <code>max_drift</code> = 5 s → <code>console.setTime()</code>`, EVC.STARTUP);
+        await flow('c_ts_drv', '#a78bfa', 380);
+      } catch (e) { if (!(e instanceof NotImplementedError)) throw e; log.debug('weewx.engine', 'Station does not support setting the time'); }
+    }
+    await sleep(200);
+  }
+}
+class StdConvert extends Svc {
+  constructor(e) { super(e, 'StdConvert'); this.target = CONF.target_unit;
+    log.info('weewx.engine', `StdConvert target unit is 0x${this.target.toString(16)}`);
+    this.bind('NEW_LOOP_PACKET', 'new_loop_packet', ev => this.conv(ev, 'packet')); this.bind('NEW_ARCHIVE_RECORD', 'new_archive_record', ev => this.conv(ev, 'record')); }
+  async conv(ev, key) {
+    if (ev[key].usUnits === this.target) { narrate('StdConvert', `<code>usUnits</code> is already ${UNAME[this.target]} (= target_unit) → no conversion.`, EVC[ev.type]); return; }
+    ev[key] = convertDict(ev[key], this.target);
+    narrate('StdConvert', `${UNAME[US]} → ${UNAME[this.target]}: <code>converter.convertDict()</code> builds a new dict and replaces <code>event.${key}</code>.`, EVC[ev.type]);
+    await sleep(220);
+  }
+}
+class StdCalibrate extends Svc {
+  constructor(e) { super(e, 'StdCalibrate'); this.corr = CONF.calib ? { outTemp: 'outTemp - 0.5' } : {};
+    this.bind('NEW_LOOP_PACKET', 'new_loop_packet', this.loop); this.bind('NEW_ARCHIVE_RECORD', 'new_archive_record', this.arch); }
+  apply(o) { for (const k in this.corr) if (o[k] != null) o[k] = o[k] - .5; }
+  async loop(ev) {
+    if (!Object.keys(this.corr).length) { narrate('StdCalibrate', 'No <code>[[Corrections]]</code> configured.', EVC[ev.type]); return; }
+    this.apply(ev.packet); narrate('StdCalibrate', `<code>eval("outTemp - 0.5", packet)</code>: correction in the packet's unit system (${UNAME[ev.packet.usUnits]}).`, EVC[ev.type]);
+  }
+  async arch(ev) {
+    if (!Object.keys(this.corr).length) return;
+    if (ev.origin === 'software') { narrate('StdCalibrate', "origin='software': the record comes from LOOP packets that were already corrected → no second correction.", EVC[ev.type]); return; }
+    this.apply(ev.record); narrate('StdCalibrate', "origin='hardware': apply the correction to the station's record.", EVC[ev.type]);
+  }
+}
+const QC_MINMAX = { barometer: [26, 32.5, 'P'], pressure: [24, 34.5, 'P'], outTemp: [-40, 120, 'T'], inTemp: [10, 120, 'T'], outHumidity: [0, 100], windSpeed: [0, 120, 'S'], rain: [0, 10, 'R'] };
+class StdQC extends Svc {
+  constructor(e) { super(e, 'StdQC'); this.bind('NEW_LOOP_PACKET', 'new_loop_packet', ev => this.qc(ev, ev.packet, 'LOOP')); this.bind('NEW_ARCHIVE_RECORD', 'new_archive_record', ev => this.qc(ev, ev.record, 'Archive')); }
+  async qc(ev, o, type) {
+    let bad = 0;
+    for (const k in QC_MINMAX) {
+      if (o[k] == null) continue;
+      const [a, b, g] = QC_MINMAX[k]; const lo = g ? fromUS(a, g, o.usUnits) : a, hi = g ? fromUS(b, g, o.usUnits) : b;
+      if (!(lo <= o[k] && o[k] <= hi)) {
+        log.warning('weewx.qc', `${tsStr(o.dateTime)} ${type} value '${k}' ${+o[k].toFixed(3)} outside limits (${+lo.toFixed(3)}, ${+hi.toFixed(3)})`);
+        o[k] = null; bad++;
+      }
+    }
+    if (bad) { narrate('StdQC', `<code>[[MinMax]]</code> violated → value set to <code>None</code> (the outlier reaches neither the accumulator nor the database).`, '#f87171'); ripple(SVC.StdQC.x + 60, SVC.StdQC.y + 11, '#f87171', 8, 40); await sleep(500); }
+    else narrate('StdQC', 'All values within <code>[StdQC] [[MinMax]]</code>.', EVC[ev.type]);
+  }
+}
+const CALCS = ['pressure', 'altimeter', 'appTemp', 'barometer', 'cloudbase', 'dewpoint', 'ET', 'heatindex', 'rainRate', 'windchill', 'windrun'];
+class StdWXCalculate extends Svc {
+  constructor(e) { super(e, 'StdWXCalculate'); this.rainBuf = [];
+    this.bind('NEW_LOOP_PACKET', 'new_loop_packet', ev => this.do_calculations(ev, ev.packet, true));
+    this.bind('NEW_ARCHIVE_RECORD', 'new_archive_record', ev => this.do_calculations(ev, ev.record, false)); }
+  async do_calculations(ev, o, isLoop) {
+    if (isLoop && o.rain != null) { this.rainBuf.push([o.dateTime, toUS(o.rain, 'R', o.usUnits)]); this.rainBuf = this.rainBuf.filter(([t]) => t > o.dateTime - 900); }
+    const u = o.usUnits, g = k => toUS(o[k], GRP[k], u);
+    const todo = CALCS.filter(k => o[k] == null); // prefer_hardware: only calculate when the hardware delivers nothing
+    if (!todo.length) return;
+    const handlers = [...new Set(todo.map(k => XT_SCALAR[k]))];
+    narrate('StdWXCalculate', `prefer_hardware, missing from the ${isLoop ? 'packet' : 'record'}: <code>${todo.join(', ')}</code> → <code>weewx.xtypes.get_scalar()</code>`, EVC[ev.type]);
+    await flow('c_wx_xt', EVC[ev.type], 260);
+    const needDB = !isLoop || todo.includes('pressure');
+    await Promise.all([xtProbe('scalar', handlers, EVC[ev.type]), needDB ? sleep(120).then(() => flow('c_xt_db', '#7dd3fc', 200)) : null]);
+    const T = g('outTemp'), RH = o.outHumidity, V = g('windSpeed');
+    const val = {
+      pressure: () => g('barometer') != null ? g('barometer') - .745 : undefined, // the real one uses the temperature from 12 h ago, read from the DB
+      barometer: () => g('pressure') != null ? g('pressure') + .745 : undefined,
+      altimeter: () => calc.altimeter(o.pressure != null ? g('pressure') : (g('barometer') != null ? g('barometer') - .745 : null)),
+      appTemp: () => calc.appTemp(T, RH, V), cloudbase: () => calc.cloudbase(T, RH), dewpoint: () => calc.dewpoint(T, RH),
+      heatindex: () => calc.heatindex(T, RH), windchill: () => calc.windchill(T, V),
+      rainRate: () => this.rainBuf.reduce((a, [, r]) => a + r, 0) * 3600 / 900,
+      ET: () => isLoop ? null : Math.max(0, (o.radiation ?? 0) * 2.1e-7 * (o.interval ?? 1)), // CannotCalculate in LOOP: no interval
+      windrun: () => isLoop ? null : (V ?? 0) * (o.interval ?? 1) / 60,
+    };
+    for (const k of todo) { const v = val[k](); if (v !== undefined) o[k] = fromUS(v, GRP[k], u); }
+  }
+}
+class StdXTypeSvc extends Svc { // only register their XType in weewx.xtypes.xtypes, no events
+  constructor(e, id) { super(e, id); }
+}
+class StdArchive extends Svc {
+  constructor(e) {
+    super(e, 'StdArchive');
+    this.record_generation = 'hardware'; this.archive_delay = ARCH_DELAY; this.loop_hilo = true; this.record_augmentation = true;
+    this.end_archive_period_ts = null; this.end_archive_delay_ts = null; this.accumulator = null; this.old_accumulator = null;
+    log.info('weewx.engine', 'Archive will use data binding wx_binding');
+    log.info('weewx.engine', "Record generation will be attempted in 'hardware'");
+    try { this.archive_interval = e.console.archive_interval; this.ival_msg = '(specified by hardware)'; }
+    catch (x) { if (!(x instanceof NotImplementedError)) throw x; this.archive_interval = ARCH_INT; this.ival_msg = '(specified in weewx configuration)'; }
+    log.info('weewx.engine', `Using archive interval of ${this.archive_interval} seconds ${this.ival_msg}`);
+    this.bind('STARTUP', 'startup', this.startup); this.bind('PRE_LOOP', 'pre_loop', this.pre_loop);
+    this.bind('NEW_LOOP_PACKET', 'new_loop_packet', this.new_loop_packet); this.bind('CHECK_LOOP', 'check_loop', this.check_loop);
+    this.bind('POST_LOOP', 'post_loop', this.post_loop); this.bind('NEW_ARCHIVE_RECORD', 'new_archive_record', this.new_archive_record);
+  }
+  async startup() {
+    narrate('StdArchive.startup', '<code>db_binder.get_manager(initialize=True)</code>, <code>backfill_day_summary()</code>, then catch up from the station memory.', EVC.STARTUP);
+    await flow('c_arch_db', EVC.STARTUP, 380);
+    if (!db.created) { db.created = true; log.info('weewx.manager', `Created and initialized table 'archive' in database '${db.name}'`); log.info('weewx.manager', `Created daily summary tables`); }
+    log.info('weewx.engine', `Using binding 'wx_binding' to database '${db.name}'`);
+    log.info('weewx.manager', 'Starting backfill of daily summaries');
+    ripple(850, 608, '#7dd3fc', 10, 40); await sleep(300);
+    await this._catchup(this.engine.console.genStartupRecords.bind(this.engine.console), 'genStartupRecords');
+  }
+  async pre_loop() {
+    if (!this.end_archive_period_ts) {
+      const now = hw.now; // engine._get_console_time()
+      const start = startOfInterval(now, this.archive_interval);
+      this.end_archive_period_ts = start + this.archive_interval;
+      this.end_archive_delay_ts = this.end_archive_period_ts + this.archive_delay;
+      narrate('StdArchive.pre_loop', `First round: period ends at <code>${hms(this.end_archive_period_ts)}</code>, loop breaks from <code>${hms(this.end_archive_delay_ts)}</code> (end + archive_delay).`, EVC.PRE_LOOP);
+    }
+    this.old_accumulator = null; drawAccum(); drawTimeline();
+  }
+  newAccum(ts) { const s = startOfInterval(ts, this.archive_interval); return new Accum(s, s + this.archive_interval); }
+  async new_loop_packet(ev) {
+    if (!this.accumulator) this.accumulator = this.newAccum(ev.packet.dateTime);
+    await flow('c_arch_acc', EVC.NEW_LOOP_PACKET, 200);
+    try { this.accumulator.addRecord(ev.packet, this.loop_hilo); narrate('StdArchive', `<code>accumulator.addRecord(packet)</code>: update min/max/sum per observation (${this.accumulator.n} packets).`, EVC.NEW_LOOP_PACKET); }
+    catch (x) {
+      if (!(x instanceof OutOfSpan)) throw x;
+      narrate('StdArchive', `Packet ${hms(ev.packet.dateTime)} is after <code>${hms(this.accumulator.stop)}</code> → <code>OutOfSpan</code>. Swap accumulators: old → <code>old_accumulator</code>, a new one takes the packet.`, EVC.END_ARCHIVE_PERIOD);
+      [this.old_accumulator, this.accumulator] = [this.accumulator, this.newAccum(ev.packet.dateTime)];
+      ripple(850, 460, '#fb923c', 10, 50, 600);
+      this.accumulator.addRecord(ev.packet, this.loop_hilo);
+      await sleep(350);
+    }
+    drawAccum(); drawTimeline(ev.packet.dateTime);
+  }
+  async check_loop(ev) {
+    const ts = ev.packet.dateTime;
+    if (ts > this.end_archive_period_ts) {
+      narrate('StdArchive.check_loop', `<code>${hms(ts)}</code> &gt; end_archive_period_ts <code>${hms(this.end_archive_period_ts)}</code> → <code>END_ARCHIVE_PERIOD</code>`, EVC.END_ARCHIVE_PERIOD);
+      await dispatchEvent(this.engine, { type: 'END_ARCHIVE_PERIOD', packet: ev.packet, end: this.end_archive_period_ts });
+      const s = startOfInterval(ts, this.archive_interval); this.end_archive_period_ts = s + this.archive_interval;
+    }
+    if (ts >= this.end_archive_delay_ts) {
+      narrate('StdArchive.check_loop', `<code>${hms(ts)}</code> ≥ end_archive_delay_ts <code>${hms(this.end_archive_delay_ts)}</code> → <code>raise BreakLoop</code>. The driver had ${this.archive_delay} s to finish writing its record.`, EVC.POST_LOOP);
+      ripple(SVC.StdArchive.x + 60, SVC.StdArchive.y + 11, EVC.POST_LOOP, 10, 60, 700);
+      await sleep(450);
+      throw new BreakLoop();
+    }
+    drawTimeline(ts);
+  }
+  async post_loop() {
+    if (this.old_accumulator) {
+      try { await this._catchup(this.engine.console.genArchiveRecords.bind(this.engine.console), 'genArchiveRecords'); }
+      catch (x) {
+        if (!(x instanceof NotImplementedError)) throw x;
+        narrate('StdArchive.post_loop', "<code>genArchiveRecords()</code> → <code>NotImplementedError</code>: the driver has no memory. Fall back to <code>_software_catchup()</code>.", EVC.POST_LOOP);
+        hlDriver('genArchiveRecords', '#f87171', 700);
+        await flow('c_catchup', '#f87171', 420, { reverse: true });
+        await this._software_catchup();
+      }
+      this.old_accumulator = null; drawAccum();
+    } else narrate('StdArchive.post_loop', 'No <code>old_accumulator</code> (started between end of period and archive_delay) → nothing to archive.', EVC.POST_LOOP);
+    this.end_archive_delay_ts = this.end_archive_period_ts + this.archive_delay;
+    drawTimeline();
+  }
+  async _software_catchup() {
+    await flow('c_arch_acc', EVC.NEW_ARCHIVE_RECORD, 300, { reverse: true });
+    const rec = this.old_accumulator.getRecord(); rec.interval = this.archive_interval / 60;
+    narrate('StdArchive._software_catchup', `<code>old_accumulator.getRecord()</code> → archive record ${hms(rec.dateTime)} from ${this.old_accumulator.n} LOOP packets, <code>origin='software'</code>.`, EVC.NEW_ARCHIVE_RECORD);
+    await call('StdArchive._software_catchup()', () => dispatchEvent(this.engine, { type: 'NEW_ARCHIVE_RECORD', record: rec, origin: 'software' }));
+  }
+  async _catchup(gen, name) {
+    const lastgood = db.lastGoodStamp();
+    let n = 0;
+    try {
+      for await (const rec of gen(lastgood)) {
+        if (n === 0) narrate(`StdArchive._catchup`, `<code>console.${name}(lastGoodStamp=${lastgood ? hms(lastgood) : 'None'})</code> returns records from the station memory, <code>origin='hardware'</code>.`, EVC.NEW_ARCHIVE_RECORD);
+        n++;
+        await flow('c_catchup', EVC.NEW_ARCHIVE_RECORD, 520);
+        if (rec.dateTime < hw.now + this.archive_delay)
+          await call(`StdArchive._catchup(${name})`, () => dispatchEvent(this.engine, { type: 'NEW_ARCHIVE_RECORD', record: rec, origin: 'hardware' }));
+        else log.warning('weewx.engine', `Ignore historical record: ${rec.dateTime}`);
+      }
+    } catch (x) {
+      if (x instanceof NotImplementedError && name === 'genStartupRecords') {
+        narrate('StdArchive._catchup', `<code>genStartupRecords()</code> → <code>NotImplementedError</code>. The ${CONF.station} has no data memory, so data from the downtime is lost.`, EVC.STARTUP);
+        hlDriver('genStartupRecords', '#f87171', 700); await sleep(500); return;
+      }
+      throw x;
+    }
+    if (n === 0 && name === 'genStartupRecords') narrate('StdArchive._catchup', 'Station memory holds nothing new.', EVC.STARTUP);
+  }
+  async new_archive_record(ev) {
+    const oa = this.old_accumulator;
+    if (this.record_augmentation && oa && ev.record.dateTime === oa.stop && ev.origin !== 'software') {
+      const added = oa.augmentRecord(ev.record);
+      if (added.length) {
+        narrate('StdArchive', `<code>old_accumulator.augmentRecord()</code> adds what the hardware record lacks: <code>${added.join(', ')}</code>`, EVC.NEW_ARCHIVE_RECORD);
+        await flow('c_arch_acc', EVC.NEW_ARCHIVE_RECORD, 280, { reverse: true });
+        card.update(ev.record, 'augment', '#a78bfa');
+      }
+    }
+    narrate('StdArchive', `<code>dbmanager.addRecord(record, accumulator=old_accumulator)</code>: one row in <code>archive</code>, plus daily summaries with the LOOP extremes (<code>_updateHiLo</code>).`, EVC.NEW_ARCHIVE_RECORD);
+    const rec = { ...ev.record };
+    await Promise.all([flow('c_arch_db', EVC.NEW_ARCHIVE_RECORD, 380), oa ? flow('c_acc_db', '#22d3ee', 380) : null]);
+    if (db.unit == null) db.unit = rec.usUnits;
+    db.addRecord(rec, oa);
+    ripple(850, 608, EVC.NEW_ARCHIVE_RECORD, 10, 44, 600);
+    dbCyl.setAttribute('fill', '#14532d'); sleep(300).then(() => dbCyl.setAttribute('fill', '#123a57'), () => {});
+    log.info('weewx.manager', `Added record ${tsStr(rec.dateTime)} to database '${db.name}'`);
+    log.info('weewx.manager', `Added record ${tsStr(rec.dateTime)} to daily summary in '${db.name}'`);
+    await sleep(200);
+  }
+  async shutDown() {}
+}
+
+class StdRESTful extends Svc {
+  constructor(e, id) {
+    super(e, id); const d = SVC[id]; this.proto = d.proto;
+    this.enabled = !!CONF.rest[id];
+    if (!this.enabled) { log.info('weewx.restx', `${id.replace(/^Std/, '')}: Posting not enabled.`); return; }
+    this.queue = new Queue(); this.thr = new RESTThread(id, d.proto, d.host, this.queue, d.interval);
+    this.bind('NEW_ARCHIVE_RECORD', 'new_archive_record', this.new_archive_record);
+    if (id === 'StdWunderground' && CONF.rapidfire) {
+      this.loop_queue = new Queue(); this.thrRF = new RESTThread('WU-RF', 'Wunderground-RF', 'rtupdate.wunderground.com', this.loop_queue, null, true);
+      this.bind('NEW_LOOP_PACKET', 'new_loop_packet', this.new_loop_packet);
+    }
+  }
+  start() { if (this.thr) this.thr.start(); if (this.thrRF) this.thrRF.start(); }
+  async new_archive_record(ev) {
+    narrate(this.id, `<code>archive_queue.put(event.record)</code>: just enqueue and return at once. The upload runs in its own thread, so a slow server does not hold up the engine.`, EVC.NEW_ARCHIVE_RECORD);
+    await flowPts([[SVC[this.id].x + SVC[this.id].w / 2, SVC[this.id].y + 22], [1038, 330], [1038, 385], [1052, restEls[this.id].y]], EVC.NEW_ARCHIVE_RECORD, 300, 3.5);
+    this.queue.put({ ...ev.record }); drawQueue(this.id, this.queue);
+  }
+  async new_loop_packet(ev) {
+    await flowPts([[SVC[this.id].x + SVC[this.id].w / 2, SVC[this.id].y + 22], [1038, 330], [1038, 385], [1052, restEls['WU-RF'].y]], EVC.NEW_LOOP_PACKET, 220, 3);
+    this.loop_queue.put({ ...ev.packet }); drawQueue('WU-RF', this.loop_queue);
+  }
+  async shutDown() {
+    if (this.queue) { this.queue.put(null); drawQueue(this.id, this.queue); }
+    if (this.loop_queue) { this.loop_queue.put(null); }
+  }
+}
+function drawQueue(id, q) {
+  const E = restEls[id]; const n = q.items.filter(x => x !== null).length;
+  E.slots.forEach((s, i) => s.setAttribute('fill', i < n ? (id === 'WU-RF' ? '#22d3ee' : '#4ade80') : '#1e293b'));
+  E.more.textContent = n > 5 ? `+${n - 5} backlog` : '';
+}
+class RESTThread {
+  constructor(id, proto, host, q, post_interval, loop = false) { this.id = id; this.proto = proto; this.host = host; this.queue = q; this.post_interval = post_interval; this.lastpost = 0; this.loop = loop; this.max_tries = 3; this.epoch = EPOCH_ID; }
+  start() { this.run().catch(e => { if (!(e instanceof Abort)) console.error(e); }); }
+  state(s, c) { thread(this.proto, s, c); restEls[this.id].dot.setAttribute('fill', c); }
+  async run() {
+    this.state('waiting: queue.get()', '#334155');
+    while (true) {
+      const rec = await this.queue.get(); if (this.epoch !== EPOCH_ID) return;
+      drawQueue(this.id, this.queue);
+      if (rec === null) { this.state('stopped (None from the queue)', '#1e293b'); return; }
+      const ts = rec.dateTime, when = tsStr(ts);
+      if (this.post_interval && ts - this.lastpost < this.post_interval) {
+        log.debug('weewx.restx', `${this.proto}: wait interval (${ts - this.lastpost} < ${this.post_interval}) has not passed for record ${when}`);
+        this.state(`skipped: post_interval ${this.post_interval} s`, '#64748b'); await sleep(250); this.state('waiting: queue.get()', '#334155'); continue;
+      }
+      this.lastpost = ts;
+      this.state('process_record(): get_record()', '#fbbf24');
+      if (!this.loop) await flow('c_rest_db', '#7dd3fc', 260, { reverse: true }); // hourRain, rain24, dayRain via SQL
+      this.state('post_with_retries()', '#fbbf24');
+      let ok = false;
+      for (let n = 1; n <= this.max_tries; n++) {
+        await flowPts([[1121, restEls[this.id].y], [1130, restEls[this.id].y], [1130, 680], [1038, 715]], '#38bdf8', 320, 3.2);
+        if (!netDown) { ok = true; break; }
+        log.debug('weewx.restx', `${this.proto}: Failed upload attempt ${n}: <urlopen error [Errno -3] Temporary failure in name resolution>`);
+        this.state(`attempt ${n}/${this.max_tries} failed, retry_wait 5 s`, '#f87171');
+        await sleep(this.loop ? 300 : 900);
+      }
+      if (ok) {
+        tCloud.textContent = `→ ${this.host}`; ripple(1038, 728, '#38bdf8', 8, 34, 450);
+        if (!this.loop) log.info('weewx.restx', `${this.proto}: Published record ${when}`);
+      } else log.error('weewx.restx', `${this.proto}: Failed to publish record ${when}: Failed upload after ${this.max_tries} tries`);
+      this.state('waiting: queue.get()', '#334155');
+    }
+  }
+}
+class StdPrint extends Svc {
+  constructor(e) { super(e, 'StdPrint'); this.bind('NEW_LOOP_PACKET', 'new_loop_packet', this.p('LOOP:  ', 'packet')); this.bind('NEW_ARCHIVE_RECORD', 'new_archive_record', this.p('REC:   ', 'record')); }
+  p(prefix, key) {
+    return async ev => {
+      const o = ev[key]; flow('c_print', EVC[ev.type], 260).catch(() => {});
+      const parts = Object.keys(o).sort().map(k => `'${k}': ${o[k] == null ? 'None' : k === 'dateTime' || k === 'usUnits' ? o[k] : +(+o[k]).toFixed(4)}`);
+      log.out(`${prefix} ${tsStr(o.dateTime)} {${parts.join(', ')}}`);
+    };
+  }
+}
+class StdReport extends Svc {
+  constructor(e) { super(e, 'StdReport'); this.max_wait = 600; this.thread = null; this.launch_time = null; this.record = null; this.stop = { set: false };
+    log.info('weewx.engine', "'pyephem' detected, extended almanac data is available");
+    this.bind('NEW_ARCHIVE_RECORD', 'new_archive_record', this.new_archive_record); this.bind('POST_LOOP', 'launch_report_thread', this.launch_report_thread); }
+  async new_archive_record(ev) { this.record = ev.record; narrate('StdReport', '<code>self.record = event.record</code>: keep the record for the report thread.', EVC.NEW_ARCHIVE_RECORD); }
+  async launch_report_thread() {
+    if (this.thread && this.thread.alive) {
+      log.info('weewx.engine', 'Launch of report thread aborted: existing report thread still running');
+      narrate('StdReport', 'The previous report thread is still running (younger than max_wait = 600 s) → no new start.', '#fbbf24'); return;
+    }
+    narrate('StdReport', `<code>StdReportEngine(…, first_run=${!this.launch_time ? 'True' : 'False'}).start()</code>: reports run in their own thread, the engine returns to the LOOP at once.`, EVC.POST_LOOP);
+    await flow('c_rep_down', EVC.POST_LOOP, 300);
+    this.thread = new ReportThread(this.record, !this.launch_time, this.stop); this.thread.start(); this.launch_time = hw.now;
+  }
+  async shutDown() {
+    if (this.thread) { log.info('weewx.engine', 'Shutting down StdReport thread'); this.stop.set = true; if (!this.thread.alive) log.debug('weewx.engine', 'StdReport thread has been terminated'); }
+  }
+}
+class ReportThread {
+  constructor(record, first_run, stop) { this.record = record; this.first_run = first_run; this.stop = stop; this.alive = false; this.epoch = EPOCH_ID; }
+  start() { this.alive = true; this.run().catch(e => { if (!(e instanceof Abort)) console.error(e); }).finally(() => { this.alive = false; }); }
+  st(s, c = '#a78bfa') { thread('ReportThread', s, c); tRepState.textContent = s; tRepState.setAttribute('fill', c); }
+  async run() {
+    gRep.querySelector('rect').classList.add('hot');
+    for (const R of REPORTS) {
+      if (this.epoch !== EPOCH_ID) return;
+      if (!CONF.reports[R.id]) { log.debug('weewx.reportengine', `Report '${R.id}' not enabled. Skipping.`); continue; }
+      if (this.stop.set) break;
+      repEls[R.id].bg.setAttribute('fill', '#a78bfa22');
+      this.st(`${R.id}: build_skin_dict()`);
+      await sleep(200);
+      log.debug('weewx.reportengine', `Running generators for report '${R.id}' in directory '/etc/weewx/skins/${R.skin}' with locale ''`);
+      for (const G of R.gens) {
+        if (this.stop.set) { log.debug('weewx.reportengine', `Stop event is set. Stopping generator '${G}'`); break; }
+        await this.gen(R, G);
+      }
+      repEls[R.id].bg.setAttribute('fill', 'transparent');
+    }
+    gRep.querySelector('rect').classList.remove('hot');
+    this.st(this.stop.set ? 'stopped (stop_event)' : 'done, thread finished', '#334155');
+  }
+  async gen(R, G) {
+    const E = genEls[G]; E.r.setAttribute('stroke', '#a78bfa'); E.r.setAttribute('fill', '#a78bfa22');
+    const t0 = anim;
+    try {
+      if (G === 'CheetahGenerator') {
+        this.st(`${R.id}: CheetahGenerator, templates + tags`);
+        const files = ['index.html', 'statistics.html', 'telemetry.html', 'celestial.html', 'tabular.html', 'rss.xml', 'NOAA-2026-10.txt', 'NOAA-2026.txt'];
+        for (const f of files.slice(0, R.id === 'SeasonsReport' ? 8 : 2)) {
+          await flow('c_rep_xt', '#a78bfa', 380, { label: f.includes('NOAA') ? '$month.outTemp.max' : '$day.outTemp.max' });
+          await xtProbe('aggregate', [f.includes('NOAA') ? 'DailySummaries' : 'DailySummaries'], '#a78bfa');
+          flow('c_xt_db', '#7dd3fc', 160).catch(() => {});
+          await flow('c_gen_html', '#a78bfa', 120); touchFile(f, '#c4b5fd');
+        }
+        log.info('weewx.cheetahgenerator', `Generated ${R.id === 'SeasonsReport' ? 8 : 2} files for report ${R.id} in ${((anim - t0) / 2400).toFixed(2)} seconds`);
+      } else if (G === 'ImageGenerator') {
+        this.st(`${R.id}: ImageGenerator, xtypes.get_series()`);
+        const imgs = this.first_run ? ['daytempdew.png', 'daybarometer.png', 'dayrain.png', 'daywind.png', 'weektempdew.png', 'monthtempdew.png', 'yeartempdew.png'] : ['daytempdew.png', 'daybarometer.png', 'dayrain.png', 'daywind.png'];
+        for (const f of imgs) {
+          await flow('c_rep_xt', '#e879f9', 300, { label: 'get_series' });
+          await xtProbe('series', [f.startsWith('year') ? 'DailySummaries' : 'ArchiveTable'], '#e879f9');
+          await flow('c_gen_html', '#e879f9', 110); touchFile(f, '#f0abfc');
+        }
+        const n = this.first_run ? 52 : 14;
+        log.info('weewx.imagegenerator', `Generated ${n} images for report ${R.id} in ${((anim - t0) / 2400).toFixed(2)} seconds`);
+      } else if (G === 'CopyGenerator') {
+        this.st(`${R.id}: CopyGenerator, ${this.first_run ? 'copy_once + copy_always' : 'copy_always only'}`);
+        const fs = this.first_run ? ['seasons.css', 'seasons.js', 'favicon.ico'] : [];
+        for (const f of fs) { await flow('c_gen_html', '#94a3b8', 140); touchFile(f, '#e2e8f0'); }
+        if (!fs.length) await sleep(150);
+        log.debug('weewx.reportengine', `Copied ${fs.length ? 7 : 0} files to /var/www/html/weewx`);
+      } else if (G === 'FtpGenerator' || G === 'RsyncGenerator') {
+        this.st(`${R.id}: ${G} → web server`);
+        await flow('c_html_web', '#fbbf24', 300);
+        await flow('c_web_cloud', '#fbbf24', 300);
+        if (netDown) log.error('weewx.reportengine', `${G === 'FtpGenerator' ? 'ftpgenerator' : 'rsyncgenerator'}: Upload failed: network unreachable`);
+        else { tWeb2.textContent = `remote: uploaded ${hms(hw.now)}`; log.info('weewx.reportengine', `${G === 'FtpGenerator' ? 'ftpgenerator: Ftp\'d 23 files' : 'rsyncgenerator: rsync\'d 23 files (148,312 bytes)'} in 1.84 seconds`); }
+      }
+    } finally { E.r.setAttribute('stroke', '#1f2a40'); E.r.setAttribute('fill', '#101a2d'); }
+  }
+}
+
+let EPOCH_ID = 0;
+class Engine {
+  constructor() { this.callbacks = {}; this.services = []; this.console = null; }
+  bind(type, svc, name, fn) { (this.callbacks[type] ||= []).push({ svc, name, fn }); }
+  async init() {
+    await call('StdEngine.__init__(config_dict)', async () => {
+      narrate('StdEngine.__init__', 'Create the <code>DBBinder</code>, load the driver via <code>loader()</code>, then instantiate the services in group order. Each service binds its callbacks in its constructor.', '#94a3b8');
+      gDriver.querySelector('.sub').textContent = CONF.station === 'Vantage' ? 'weewx.drivers.vantage' : 'weewx.drivers.simulator';
+      log.info('weewx.engine', `Loading station type ${CONF.station} (${CONF.station === 'Vantage' ? 'weewx.drivers.vantage' : 'weewx.drivers.simulator'})`);
+      hlDriver('loader', '#94a3b8', 700); await sleep(500);
+      this.console = new Driver(hw);
+      for (const d of SVC_DEFS) {
+        let s;
+        switch (d.id) {
+          case 'StdTimeSynch': s = new StdTimeSynch(this); break;
+          case 'StdConvert': s = new StdConvert(this); break;
+          case 'StdCalibrate': s = new StdCalibrate(this); break;
+          case 'StdQC': s = new StdQC(this); break;
+          case 'StdWXCalculate': s = new StdWXCalculate(this); break;
+          case 'StdArchive': s = new StdArchive(this); break;
+          case 'StdPrint': s = new StdPrint(this); break;
+          case 'StdReport': s = new StdReport(this); break;
+          default: s = d.g === 4 ? new StdRESTful(this, d.id) : new StdXTypeSvc(this, d.id);
+        }
+        this.services.push(s);
+        const bound = EV.some(e => (this.callbacks[e] || []).some(cb => cb.svc === s));
+        pillState(d.id, bound || d.g === 2 ? 'on' : 'off');
+        if (d.g === 2) { const reg = { StdWXXTypes: ['WXXTypes', 'ETXType'], StdPressureCooker: ['PressureCooker'], StdRainRater: ['RainRater'], StdDelta: ['Delta'] }[d.id];
+          reg.forEach(n => { xtEls[n].g.style.opacity = 1; flashRect(xtEls[n].r, '#a78bfa', 500); }); }
+        drawDots(this); drawLegendCounts(this);
+        ripple(d.x + 10, d.y + 11, '#94a3b8', 4, 22, 380);
+        await sleep(110);
+      }
+      for (const s of this.services) if (s.start) s.start();
+    });
+  }
+  async run() {
+    await call('StdEngine.run()', async () => {
+      try {
+        await dispatchEvent(this, { type: 'STARTUP' });
+        log.info('weewx.engine', 'Starting main packet loop.');
+        while (true) {
+          checkTerminate();
+          await dispatchEvent(this, { type: 'PRE_LOOP' });
+          try {
+            for await (const packet of this.console.genLoopPackets()) {
+              checkTerminate();
+              thread('MainThread', 'dispatchEvent(NEW_LOOP_PACKET)', '#22d3ee');
+              await dispatchEvent(this, { type: 'NEW_LOOP_PACKET', packet });
+              await dispatchEvent(this, { type: 'CHECK_LOOP', packet });
+            }
+          } catch (e) {
+            if (!(e instanceof BreakLoop)) throw e;
+            thread('MainThread', 'dispatchEvent(POST_LOOP)', '#f472b6');
+            await dispatchEvent(this, { type: 'POST_LOOP' });
+          }
+        }
+      } catch (e) {
+        if (e instanceof Abort) throw e;
+        log.info('weewx.engine', 'Main loop exiting. Shutting engine down.');
+        await this.shutDown(e);
+        throw e;
+      }
+    });
+  }
+  async shutDown(exc) {
+    narrate('StdEngine.shutDown', `Exception <code>${exc.constructor.name}</code>: send <code>SHUTDOWN</code>, then <code>shutDown()</code> on all services in reverse order, close the port and the database.`, EVC.SHUTDOWN);
+    try { await dispatchEvent(this, { type: 'SHUTDOWN', error: exc }); } catch (e) { if (e instanceof Abort) throw e; }
+    while (this.services.length) {
+      const s = this.services[this.services.length - 1];
+      await call(`${s.id}.shutDown()`, async () => { pillHot(s.id, EVC.SHUTDOWN); await s.shutDown(); await sleep(70); pillHot(s.id, null); pillState(s.id, 'unloaded'); });
+      this.services.pop();
+    }
+    this.callbacks = {}; drawDots(null); drawLegendCounts(null); xtRegistered(false);
+    this.console.closePort(); await sleep(250);
+  }
+}
+function checkTerminate() { if (pendingTerminate) { pendingTerminate = false; log.info('__main__', 'Received signal TERM (15).'); throw new Terminate(); } }
+
+// =====================================================================================
+//  Accumulator and timeline display
+// =====================================================================================
+function drawAccum() {
+  const A = engine?.services.find(s => s.id === 'StdArchive');
+  const a = A?.accumulator, o = A?.old_accumulator;
+  if (!a) { tAccSpan.textContent = 'accumulator = None'; accBar.setAttribute('width', 0); tAcc1.textContent = ''; tAcc2.textContent = ''; }
+  else {
+    const u = a.unit ?? CONF.target_unit;
+    tAccSpan.textContent = `(${hms(a.start)}, ${hms(a.stop)}]`;
+    accBar.setAttribute('width', Math.min(132, 132 * a.n / (ARCH_INT / LOOP_INT)));
+    const s = a.st.outTemp;
+    tAcc1.textContent = `n=${a.n}  outTemp Ø ${s ? fmt('outTemp', s.sum / s.cnt, u) : '—'}`;
+    tAcc2.textContent = s ? `min ${fmt('outTemp', s.min, u)}  max ${fmt('outTemp', s.max, u)}` : '';
+  }
+  tAccOld.textContent = o ? `until ${hms(o.stop)} · n=${o.n}` : 'None';
+  tAccOld.setAttribute('fill', o ? '#fb923c' : '#64748b');
+}
+const tlPkts = [];
+function drawTimeline(curTs) {
+  const A = engine?.services.find(s => s.id === 'StdArchive'); if (!A || !A.end_archive_period_ts) return;
+  if (curTs && !tlPkts.includes(curTs)) { tlPkts.push(curTs); if (tlPkts.length > 60) tlPkts.shift(); }
+  tlDyn.innerHTML = '';
+  const end = A.end_archive_delay_ts - A.archive_delay; // during archive_delay this still shows the old period
+  const t0 = end - A.archive_interval - 20, t1 = end + A.archive_delay + 25;
+  const X = ts => TLX0 + (ts - t0) / (t1 - t0) * (TLX1 - TLX0);
+  const y = 868;
+  el('line', { x1: TLX0, y1: y, x2: TLX1, y2: y, stroke: '#334155', 'stroke-width': 2 }, tlDyn);
+  el('rect', { x: X(end - A.archive_interval), y: y - 24, width: X(end) - X(end - A.archive_interval), height: 48, rx: 6, fill: '#22d3ee10', stroke: '#22d3ee55' }, tlDyn);
+  el('rect', { x: X(end), y: y - 24, width: X(end + A.archive_delay) - X(end), height: 48, fill: 'url(#hatch)', stroke: '#fb923c66' }, tlDyn);
+  el('text', { x: (X(end - A.archive_interval) + X(end)) / 2, y: y - 30, class: 'tiny mono', 'text-anchor': 'middle', fill: '#67e8f9' }, tlDyn, `archive period (${hms(end - A.archive_interval)}, ${hms(end)}]  →  one archive record`);
+  el('text', { x: (X(end) + X(end + A.archive_delay)) / 2, y: y - 30, class: 'tiny mono', 'text-anchor': 'middle', fill: '#fdba74' }, tlDyn, 'archive_delay');
+  for (const [ts, lbl, c, dy] of [[end, 'end_archive_period_ts', '#fb923c', 52], [end + A.archive_delay, 'end_archive_delay_ts → BreakLoop', '#f472b6', 66]]) {
+    el('line', { x1: X(ts), y1: y - 28, x2: X(ts), y2: y + dy - 10, stroke: c, 'stroke-dasharray': '3 3' }, tlDyn);
+    el('text', { x: X(ts), y: y + dy, class: 'tiny mono', 'text-anchor': 'middle', fill: c }, tlDyn, lbl);
+  }
+  for (let ts = Math.ceil(t0 / 10) * 10; ts <= t1; ts += 10) {
+    el('line', { x1: X(ts), y1: y + 22, x2: X(ts), y2: y + 26, stroke: '#334155' }, tlDyn);
+    if (ts % 20 === 0) el('text', { x: X(ts), y: y + 36, class: 'tiny mono', 'text-anchor': 'middle', fill: '#475569' }, tlDyn, hms(ts).slice(3));
+  }
+  for (const ts of tlPkts) if (ts >= t0 && ts <= t1) {
+    const inOld = ts <= end;
+    el('circle', { cx: X(ts), cy: y, r: ts === curTs ? 6 : 4, fill: inOld ? '#22d3ee' : '#a78bfa', class: ts === curTs ? 'glow' : '' }, tlDyn);
+  }
+  if (curTs) el('text', { x: X(curTs), y: y - 10, class: 'tiny mono', 'text-anchor': 'middle', fill: '#f8fafc' }, tlDyn, '▼');
+  for (const r of db.rows.slice(-4)) if (r.dateTime >= t0 && r.dateTime <= t1)
+    el('rect', { x: X(r.dateTime) - 5, y: y - 5, width: 10, height: 10, fill: '#4ade80', transform: `rotate(45 ${X(r.dateTime)} ${y})` }, tlDyn);
+  el('text', { x: TLX1, y: 806, class: 'tiny mono', 'text-anchor': 'end' }, tlDyn, '● LOOP packet (cyan: current period, violet: already in the new accumulator)   ◆ archive record in the DB');
+}
+frameHooks.push(() => {
+  if (!hw) return;
+  tClock.textContent = hms(hw.now);
+  const d = new Date(hw.now * 1000); tClockD.textContent = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}  ${tzName}`;
+});
+
+// =====================================================================================
+//  weewxd: process with its restart loop
+// =====================================================================================
+async function weewxdMain() {
+  PID = 4711 + Math.floor(Math.random() * 3000);
+  tWeewxd.textContent = `PID ${PID} · running`; tWeewxd2.textContent = '/etc/weewx/weewx.conf';
+  thread('MainThread', 'weewxd.main()', '#94a3b8');
+  log.info('__main__', `Initializing weewxd version ${WEEWX_VERSION}`);
+  log.info('__main__', 'Using Python 3.12.3 (main) [GCC 13.3.0]');
+  log.info('__main__', 'Using configuration file /etc/weewx/weewx.conf');
+  log.info('__main__', 'Debug: 0');
+  await call('weewxd.main()', async () => {
+    while (true) {
+      try {
+        log.info('__main__', `Starting up weewx version ${WEEWX_VERSION}`);
+        engine = new Engine();
+        await engine.init();
+        await engine.run();
+      } catch (e) {
+        if (e instanceof Abort) throw e;
+        if (e instanceof WeeWxIOError) {
+          log.critical('__main__', `Caught WeeWxIOError: ${e.message}`);
+          log.critical('__main__', `    ****  Waiting ${RETRY_WAIT.toFixed(1)} seconds then retrying...`);
+          narrate('weewxd', `<code>except WeeWxIOError</code>: wait <code>retry_wait</code> = ${RETRY_WAIT} s, then a brand-new <code>StdEngine</code>. The station keeps measuring.`, '#f87171');
+          gWeewxd.querySelector('rect').style.stroke = '#f87171';
+          thread('MainThread', `time.sleep(${RETRY_WAIT})`, '#f87171');
+          for (let s = RETRY_WAIT; s > 0; s -= LOOP_INT) { tWeewxd.textContent = `retry in ${s} s`; hw.advance(LOOP_INT); updateLcd(); await sleep(130); }
+          gWeewxd.querySelector('rect').style.stroke = ''; tWeewxd.textContent = `PID ${PID} · running`;
+          log.info('__main__', 'retrying...');
+          continue;
+        }
+        if (e instanceof Terminate) {
+          log.info('__main__', `Terminating weewx version ${WEEWX_VERSION}`);
+          throw e;
+        }
+        log.critical('__main__', 'Caught unrecoverable exception:'); log.critical('__main__', `    ****  ${e}`); console.error(e);
+        throw e;
+      }
+    }
+  });
+}
+async function processLifecycle() {
+  // systemd: starts weewxd, and starts it again after a restart.
+  while (true) {
+    try { await weewxdMain(); }
+    catch (e) {
+      if (e instanceof Abort) throw e;
+      if (!(e instanceof Terminate)) { narrate('weewxd', 'Unexpected error, see the browser console.', '#f87171'); return; }
+    }
+    tWeewxd.textContent = 'stopped'; thread('MainThread', 'process exited', '#1e293b');
+    for (const k of Object.keys(THREADS)) if (k !== 'MainThread') delete THREADS[k];
+    renderThreads();
+    narrate('systemd', 'weewxd has exited. systemd starts the service again with the new <code>weewx.conf</code>.', '#94a3b8');
+    await sleep(1200); hw.advance(10); updateLcd();
+    applyConf();
+    log.out('systemd[1]: Started weewx.service - WeeWX weather system.');
+  }
+}
+
+// =====================================================================================
+//  Configuration and controls
+// =====================================================================================
+function defaultConf() {
+  return { station: 'Simulator', target_unit: US, calib: true, rapidfire: false, log_events: false,
+    rest: { StdStationRegistry: false, StdWunderground: true, StdPWSweather: false, StdCWOP: true, StdWOW: false, StdWOWBE: false, StdAWEKAS: true },
+    reports: { SeasonsReport: true, SmartphoneReport: false, MobileReport: false, StandardReport: false, FTP: false, RSYNC: false } };
+}
+const cloneConf = c => JSON.parse(JSON.stringify(c));
+function confChanged() { $('#confBadge').style.display = JSON.stringify(CONF) !== JSON.stringify(NEWCONF) ? 'inline' : 'none'; $('#btnRestart').classList.toggle('pulse', JSON.stringify(CONF) !== JSON.stringify(NEWCONF)); }
+function applyConf() {
+  const stationChanged = NEWCONF.station !== CONF.station, unitChanged = NEWCONF.target_unit !== CONF.target_unit;
+  CONF = cloneConf(NEWCONF);
+  if (stationChanged) { const t = hw.now; hw = new StationHW(CONF.station); hw.now = t; hw.advance(LOOP_INT); log.out(`Demo: new station (${CONF.station}) connected.`); }
+  if (unitChanged) { db = new Database(null); drawDB(); log.out('Demo: target_unit changed → new database (for real: weectl database reconfigure).'); }
+  EPOCH_ID++;
+  confChanged();
+}
+function boot() {
+  abortAll();
+  for (const t of tokens.slice()) dropToken(t);
+  stack.length = 0; renderStack(); lifeStack.length = 0; lifeSet();
+  for (const k in THREADS) delete THREADS[k];
+  L.dyn.innerHTML = ''; tlPkts.length = 0;
+  CONF = defaultConf(); NEWCONF = cloneConf(CONF); EPOCH_ID++;
+  syncControls();
+  hw = new StationHW(CONF.station); hw.advance(LOOP_INT); updateLcd();
+  db = new Database(null); drawDB(); drawAccum();
+  SVC_DEFS.forEach(d => pillState(d.id, 'unloaded')); xtRegistered(false);
+  drawToggles(); drawReportToggles(); drawDots(null); drawLegendCounts(null);
+  processLifecycle().catch(e => { if (!(e instanceof Abort)) console.error(e); });
+}
+function syncControls() {
+  $('#selStation').value = NEWCONF.station; $('#selUnit').value = String(NEWCONF.target_unit);
+  $('#chkCalib').checked = NEWCONF.calib; $('#chkRF').checked = NEWCONF.rapidfire; $('#chkLogEv').checked = NEWCONF.log_events;
+}
+function setPaused(p) { paused = p; $('#btnPlay').textContent = p ? '▶ Play' : '⏸ Pause'; }
+$('#btnPlay').onclick = () => setPaused(!paused);
+$('#chkStep').onchange = e => { stepMode = e.target.checked; if (!stepMode) releaseGate(); };
+$('#btnNext').onclick = releaseGate;
+const speedIn = $('#speed');
+speedIn.oninput = () => { speed = Math.pow(2, +speedIn.value) * 1; $('#speedVal').textContent = (speed < 1 ? speed.toFixed(2) : speed.toFixed(1)) + '×'; };
+speedIn.oninput();
+$('#btnOutlier').onclick = () => { hw.outlier = true; narrate('Outlier', 'The next LOOP packet contains <code>outTemp = 300 °F</code>. Watch <code>StdQC</code>.', '#fbbf24'); };
+$('#btnIOErr').onclick = () => { pendingIOError = true; narrate('Driver error', 'On the next packet <code>genLoopPackets()</code> raises <code>WeeWxIOError</code>.', '#f87171'); };
+$('#btnNet').onclick = () => { netDown = !netDown; $('#btnNet').classList.toggle('on', netDown); $('#btnNet').textContent = netDown ? 'Reconnect internet' : 'Disconnect internet'; tCloud.textContent = netDown ? 'unreachable' : ''; };
+$('#btnRestart').onclick = () => { pendingTerminate = true; narrate('systemctl restart', 'SIGTERM → <code>sigTERMhandler</code> raises <code>Terminate</code> → the engine shuts down cleanly.', '#94a3b8'); };
+$('#selStation').onchange = e => { NEWCONF.station = e.target.value; confChanged(); };
+$('#selUnit').onchange = e => { NEWCONF.target_unit = +e.target.value; confChanged(); };
+$('#chkCalib').onchange = e => { NEWCONF.calib = e.target.checked; confChanged(); };
+$('#chkRF').onchange = e => { NEWCONF.rapidfire = e.target.checked; confChanged(); };
+$('#chkLogEv').onchange = e => { NEWCONF.log_events = e.target.checked; CONF.log_events = e.target.checked; confChanged(); };
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.code === 'Space') { e.preventDefault(); setPaused(!paused); }
+  if (e.key === 'n' || e.key === 'N') releaseGate();
+  if (e.key === 's' || e.key === 'S') { const c = $('#chkStep'); c.checked = !c.checked; c.onchange({ target: c }); }
+});
+svg.addEventListener('click', () => showInfo('intro'));
+document.querySelectorAll('button').forEach(b => b.addEventListener('click', () => b.blur()));
+
+// =====================================================================================
+//  Explanations
+// =====================================================================================
+const evPills = evs => `<div class="evs">${evs.map(e => `<span class="ev" style="color:${EVC[e]};border-color:${EVC[e]}">${e}</span>`).join('')}</div>`;
+const INFO = {
+  intro: { t: 'How to read this', f: 'src/weewx/engine.py · src/weewxd.py', h: `
+    <p>At the top is the <b>engine</b> with its event bus, the long horizontal line. Each event travels as a glowing dot from left to right and stops at every service that has bound a callback for it. The order is fixed: first the service groups in the order of <code>all_service_groups</code>, then within a group the order given in <code>weewx.conf</code>.</p>
+    <p>Below is what the services set in motion: the accumulator and the database, the <code>xtypes</code> system, the upload threads and the report thread. The threads keep running in parallel to the MainThread.</p>
+    <p>Click any element to see its details here. Hover over an event in the legend to see its subscribers. Single step pauses before every callback.</p>
+    <p>Demo time lapse: <code>archive_interval</code> = ${ARCH_INT} s instead of 300 s, one LOOP packet every ${LOOP_INT} s. The mechanics are the same.</p>` },
+  weewxd: { t: 'weewxd', f: 'src/weewxd.py', h: `<p>The process. <code>main()</code> builds a <code>StdEngine</code> in an endless loop and calls <code>engine.run()</code>. When an exception comes out, its type decides what happens next:</p>
+    <ul><li><code>WeeWxIOError</code>, <code>InitializationError</code>: wait <code>retry_wait</code> (60 s), then a new engine.</li><li><code>weedb.CannotConnectError</code>: 60 s, <code>OperationalError</code>: 120 s, <code>OSError</code>: 10 s.</li><li><code>Terminate</code> (SIGTERM): exit, systemd takes over.</li><li>anything else: exit.</li></ul>
+    <p>Try "Driver error" and "systemctl restart".</p>` },
+  station: { t: 'Weather station (hardware)', f: '—', h: `<p>Measures independently of weewx. A Vantage stores archive records in its own logger, even while weewxd is down. The simulator has no memory.</p>` },
+  driver: { t: 'Driver', f: 'src/weewx/drivers/simulator.py · vantage.py', h: `<p>Loaded via <code>loader(config_dict, engine)</code> from the module named in <code>[Simulator] driver</code> or <code>[Vantage] driver</code>.</p>
+    <ul><li><code>genLoopPackets()</code>: a generator that yields LOOP packets forever (dicts with <code>dateTime</code>, <code>usUnits</code> and observations).</li>
+    <li><code>genArchiveRecords(since_ts)</code>: records from the station's memory. The simulator raises <code>NotImplementedError</code>.</li>
+    <li><code>genStartupRecords(since_ts)</code>: the same at startup (catch-up).</li>
+    <li><code>archive_interval</code>, <code>getTime()</code>, <code>setTime()</code>, <code>closePort()</code>.</li></ul>
+    <p>A Vantage computes <code>dewpoint</code>, <code>heatindex</code>, <code>windchill</code> and <code>rainRate</code> itself, the simulator does not. Watch <code>StdWXCalculate</code> to see the difference.</p>` },
+  engine: { t: 'StdEngine', f: 'src/weewx/engine.py', h: `<p>Holds the driver (<code>console</code>), the <code>DBBinder</code>, the <code>StationInfo</code> and the list of services. <code>bind(event_type, callback)</code> appends callbacks to <code>self.callbacks[event_type]</code>, <code>dispatchEvent(event)</code> calls them one after another, synchronously.</p>
+    <p>Everything in the MainThread is sequential. A callback that blocks stalls the whole LOOP. That is why uploads and reports hand their work to separate threads.</p>` },
+  bus: { t: 'dispatchEvent()', f: 'src/weewx/engine.py', h: `<p><code>for callback in self.callbacks[event.event_type]: callback(event)</code>. That is the whole bus. A callback may modify or replace <code>event.packet</code>, and the callbacks after it see the result. That is why <code>StdConvert</code> runs before <code>StdArchive</code>.</p>
+    <p>If a callback raises, the chain stops. That is how <code>StdArchive.check_loop()</code> ends the packet loop with <code>BreakLoop</code>.</p>` },
+  lifecycle: { t: 'StdEngine.run()', f: 'src/weewx/engine.py', h: `<pre style="font-size:11.5px;color:#cbd5e1;margin:0">dispatch(STARTUP)
+while True:
+    dispatch(PRE_LOOP)
+    try:
+        for packet in console.genLoopPackets():
+            dispatch(NEW_LOOP_PACKET, packet)
+            dispatch(CHECK_LOOP, packet)
+    except BreakLoop:
+        dispatch(POST_LOOP)</pre><p>END_ARCHIVE_PERIOD and NEW_ARCHIVE_RECORD are not sent by <code>run()</code>. <code>StdArchive</code> sends them, nested inside another dispatch.</p>` },
+  card: { t: 'The packet on the bus', f: 'event.packet / event.record', h: `<p>Shows the dict that is currently passing through the callbacks. Highlighted: what the last callback changed, with its name on the right. <span style="color:#f87171">None</span> means the key is set, but the value is invalid or could not be calculated. "—" means the key is missing.</p>` },
+  xtypes: { t: 'weewx.xtypes', f: 'src/weewx/xtypes.py', h: `<p>A list of <code>XType</code> objects. <code>get_scalar()</code>, <code>get_series()</code> and <code>get_aggregate()</code> ask them in order. An object that does not know the type raises <code>UnknownType</code>, and the next one gets its turn.</p>
+    <ul><li><code>weewx.xtypes</code> appends the top six on import.</li><li>The <code>xtype_services</code> register the rest at startup. They bind no events.</li></ul>
+    <p>Users: <code>StdWXCalculate</code> (derived values), the tags in templates (<code>$day.outTemp.max</code>), the plots (<code>get_series</code>).</p>` },
+  accum: { t: 'Accumulator', f: 'src/weewx/accum.py', h: `<p>Collects the LOOP packets of one archive period <code>(start, stop]</code>: per observation type min, max, sum, count and last value, plus a vector for wind.</p>
+    <p>When a packet arrives after <code>stop</code>, <code>addRecord()</code> raises <code>OutOfSpan</code>. <code>StdArchive</code> moves the accumulator to <code>old_accumulator</code> and starts a new one. In POST_LOOP the old one either becomes the archive record (<code>getRecord()</code>) or fills gaps in a hardware record (<code>augmentRecord()</code>). Its extremes go into the daily summaries.</p>` },
+  db: { t: 'Database', f: 'src/weewx/manager.py', h: `<p><code>DBBinder.get_manager('wx_binding')</code> returns a <code>DaySummaryManager</code>. <code>addRecord(record, accumulator)</code> writes one row to <code>archive</code> and updates the <code>archive_day_*</code> tables. With <code>loop_hilo = True</code> the LOOP extremes are used, not just the averages.</p>
+    <p>Readers are <code>xtypes</code>, the RESTful threads (<code>dayRain</code>, <code>rain24</code>) and the reports. Each thread opens its own manager for this.</p>` },
+  rest: { t: 'RESTful uploads', f: 'src/weewx/restx.py', h: `<p>Every uploader comes in two parts. The service (<code>StdRESTful</code>) binds <code>NEW_ARCHIVE_RECORD</code> and only puts the record into a <code>queue.Queue</code>. A <code>RESTThread</code> takes it from there, adds rain totals from the database (<code>get_record()</code>), builds the URL and sends it with <code>post_with_retries()</code> (<code>max_tries</code> = 3, <code>retry_wait</code> = 5 s).</p>
+    <p>Without configuration the service binds nothing: "Posting not enabled". The switches on the pills change <code>weewx.conf</code> and take effect after a restart. CWOP posts at most every 600 s, StationRegistry once a day.</p>
+    <p>"Disconnect internet" shows the engine carrying on while the queues fill up.</p>` },
+  cloud: { t: 'Internet', f: '—', h: `<p>Upload destinations. The MainThread never waits for them.</p>` },
+  report: { t: 'Reports', f: 'src/weewx/reportengine.py', h: `<p><code>StdReport</code> remembers the record on NEW_ARCHIVE_RECORD and starts a <code>StdReportEngine</code> thread on POST_LOOP. If the previous thread is still running (and younger than <code>max_wait</code> = 600 s), this run is skipped.</p>
+    <p>The thread walks through all reports in <code>[StdReport]</code>, skips those with <code>enable = false</code>, honours <code>report_timing</code> and calls the skin's <code>generator_list</code>: <code>CheetahGenerator</code> (templates, tags via <code>xtypes</code>), <code>ImageGenerator</code> (plots via <code>get_series</code>), <code>CopyGenerator</code> (static files, <code>copy_once</code> only on the first run). <code>FtpGenerator</code> and <code>RsyncGenerator</code> upload <code>public_html</code>.</p>
+    <p>Click a report to toggle <code>enable</code>, effective after a restart.</p>` },
+  web: { t: 'Web server', f: '—', h: `<p>weewx has no web server of its own. Locally, nginx or Apache serves <code>public_html</code>. For a remote server there are the <code>FTP</code> and <code>RSYNC</code> reports.</p>` },
+  timeline: { t: 'Archive period and archive_delay', f: 'src/weewx/engine.py', h: `<p>The period ends at <code>end_archive_period_ts</code>. The first packet after that triggers <code>END_ARCHIVE_PERIOD</code> and already goes into the new accumulator. The loop keeps running for another <code>archive_delay</code> seconds, though, so that a station with its own memory can finish writing its record. Only then comes <code>BreakLoop</code>.</p>` },
+  clock: { t: 'Station time', f: '—', h: `<p>The simulated clock. It jumps ${LOOP_INT} s with every LOOP packet and keeps running while weewxd is down.</p>` },
+  legend: { t: 'Events', f: 'src/weewx/__init__.py', h: `<p>The number on the right is how many callbacks are currently bound to the event. Hover to highlight the services.</p>` },
+};
+const SVC_INFO = {
+  StdTimeSynch: [['STARTUP', 'PRE_LOOP'], 'engine.py', `<p>Every <code>clock_check</code> seconds (14400) it reads the station clock and sets it if it is off by more than <code>max_drift</code> (5 s).</p>`],
+  StdConvert: [['NEW_LOOP_PACKET', 'NEW_ARCHIVE_RECORD'], 'engine.py', `<p>Converts packets and records to <code>target_unit</code> (default US). If the packet is already in that unit system, nothing happens. Otherwise <code>event.packet</code> is replaced by a new dict. All later services and the database only ever see <code>target_unit</code>.</p><p>Try <code>target_unit = METRICWX</code>, then restart.</p>`],
+  StdCalibrate: [['NEW_LOOP_PACKET', 'NEW_ARCHIVE_RECORD'], 'engine.py', `<p>Evaluates the expressions in <code>[StdCalibrate] [[Corrections]]</code> with <code>eval()</code> in the context of the packet. Archive records with <code>origin='software'</code> are not corrected again, because they come from LOOP packets that were already corrected.</p>`],
+  StdQC: [['NEW_LOOP_PACKET', 'NEW_ARCHIVE_RECORD'], 'engine.py · qc.py', `<p>Checks against <code>[StdQC] [[MinMax]]</code>. The limits are converted to the packet's unit system. Values outside become <code>None</code> and are logged.</p><p>Try "Send outlier".</p>`],
+  StdWXCalculate: [['NEW_LOOP_PACKET', 'NEW_ARCHIVE_RECORD'], 'wxservices.py', `<p>Adds derived observations according to <code>[StdWXCalculate] [[Calculations]]</code>: pressure, altimeter, appTemp, barometer, cloudbase, dewpoint, ET, heatindex, humidex, inDewpoint, maxSolarRad, rainRate, windchill, windrun. The default is <code>prefer_hardware</code>: only calculate when the packet has no value.</p><p>The math does not happen here but in <code>weewx.xtypes.get_scalar()</code>. <code>CannotCalculate</code> sets the value to <code>None</code>, as with ET and windrun in LOOP packets (no <code>interval</code>).</p>`],
+  StdWXXTypes: [[], 'wxxtypes.py', `<p>Binds no event. At startup it appends <code>WXXTypes</code> and <code>ETXType</code> to <code>weewx.xtypes.xtypes</code>.</p>`],
+  StdPressureCooker: [[], 'wxxtypes.py', `<p>Registers <code>PressureCooker</code>, which converts between pressure, barometer and altimeter. To get pressure from barometer it needs the temperature from 12 hours ago, read from the database.</p>`],
+  StdRainRater: [[], 'wxxtypes.py', `<p>Registers <code>RainRater</code>: <code>rainRate</code> from the rain amounts of the last <code>rain_period</code> (900 s).</p>`],
+  StdDelta: [[], 'wxxtypes.py', `<p>Registers <code>Delta</code>, which turns cumulative counters into differences, for example <code>rain</code> from <code>totalRain</code>.</p>`],
+  StdArchive: [['STARTUP', 'PRE_LOOP', 'NEW_LOOP_PACKET', 'CHECK_LOOP', 'POST_LOOP', 'NEW_ARCHIVE_RECORD'], 'engine.py', `<p>The heart of the core:</p><ul>
+    <li><b>STARTUP</b>: create the database, backfill the daily summaries, catch up from the station's memory (<code>genStartupRecords</code>).</li>
+    <li><b>PRE_LOOP</b>: set the end of the period and the time to break the loop.</li>
+    <li><b>NEW_LOOP_PACKET</b>: add the packet to the accumulator.</li>
+    <li><b>CHECK_LOOP</b>: after the end of the period send <code>END_ARCHIVE_PERIOD</code>, after <code>archive_delay</code> raise <code>BreakLoop</code>.</li>
+    <li><b>POST_LOOP</b>: <code>record_generation = hardware</code> tries <code>genArchiveRecords()</code>. On <code>NotImplementedError</code> it builds the record from the accumulator instead. Both paths send <code>NEW_ARCHIVE_RECORD</code>.</li>
+    <li><b>NEW_ARCHIVE_RECORD</b>: fill gaps (<code>augmentRecord</code>) and store.</li></ul>`],
+  StdPrint: [['NEW_LOOP_PACKET', 'NEW_ARCHIVE_RECORD'], 'engine.py', `<p>Prints every packet and every record to stdout (<code>LOOP:</code>, <code>REC:</code>). Shown in cyan in the log.</p>`],
+  StdReport: [['NEW_ARCHIVE_RECORD', 'POST_LOOP'], 'engine.py', INFO.report.h],
+};
+function showInfo(id) {
+  let I = INFO[id], evs = null;
+  if (id.startsWith('ev:')) {
+    const e = id.slice(3), subs = engine ? (engine.callbacks[e] || []).map(c => `${c.svc.id}.${c.name}`) : [];
+    I = { t: e, f: 'src/weewx/__init__.py', h: `<p>Bound callbacks in call order:</p><ul>${subs.map(s => `<li><code>${s}</code></li>`).join('') || '<li>none</li>'}</ul>` };
+  } else if (SVC_INFO[id]) {
+    const [b, f, h] = SVC_INFO[id], d = SVC[id];
+    I = { t: `${d.mod}.${id}`, f: `src/weewx/${f}`, h }; evs = b;
+  } else if (SVC[id] && SVC[id].g === 4) {
+    const d = SVC[id];
+    I = { t: `weewx.restx.${id}`, f: 'src/weewx/restx.py', h: `<p>Protocol <code>${d.proto}</code> → <code>${d.host}</code>.${d.interval ? ` <code>post_interval</code> = ${d.interval} s.` : ''}</p>` + INFO.rest.h };
+    evs = id === 'StdWunderground' ? ['NEW_ARCHIVE_RECORD', 'NEW_LOOP_PACKET (rapidfire)'] : ['NEW_ARCHIVE_RECORD'];
+  } else if (id.startsWith('group:')) {
+    const g = id.slice(6);
+    I = { t: g, f: 'weewx.conf [Engine] [[Services]]', h: `<p>Service group. Order of the groups: <code>${['prep_services', 'data_services', 'process_services', 'xtype_services', 'archive_services', 'restful_services', 'report_services'].join(' → ')}</code>. <code>data_services</code> is empty by default. Extensions that add data to the packet hook in there.</p>` };
+  }
+  if (!I) return;
+  $('#info').innerHTML = `<h2>Details</h2><h3>${I.t}</h3><div class="file">${I.f}</div>` +
+    (evs ? (evs.length ? evPills(evs.map(e => e.split(' ')[0])) : '<div class="file" style="color:#64748b">binds no events</div>') : '') + I.h;
+}
+
+// =====================================================================================
+showInfo('intro');
+requestAnimationFrame(rafLoop);
+boot();
+</script>
+</body>
+</html>
