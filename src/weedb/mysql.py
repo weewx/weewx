@@ -1,11 +1,13 @@
 #
 #    Copyright (c) 2009-2025 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2026 Manuel Hilgert <hilman2@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
 """weedb driver for the MySQL database"""
 
 import decimal
+import logging
 import re
 
 try:
@@ -20,11 +22,14 @@ from MySQLdb import (DatabaseError as MySQLDatabaseError, InterfaceError as MySQ
 from weeutil.weeutil import to_bool, natural_compare
 import weedb
 
+log = logging.getLogger(__name__)
+
 DEFAULT_ENGINE = 'INNODB'
 
 exception_map = {
     1007: weedb.DatabaseExistsError,
     1008: weedb.NoDatabaseError,
+    1040: weedb.CannotConnectError,
     1044: weedb.PermissionError,
     1045: weedb.BadPasswordError,
     1049: weedb.NoDatabaseError,
@@ -33,6 +38,7 @@ exception_map = {
     1091: weedb.NoColumnError,
     1062: weedb.IntegrityError,
     1146: weedb.NoTableError,
+    1203: weedb.CannotConnectError,
     1205: weedb.DatabaseLockedError,
     1213: weedb.DatabaseLockedError,
     1927: weedb.CannotConnectError,
@@ -41,6 +47,7 @@ exception_map = {
     2005: weedb.CannotConnectError,
     2006: weedb.DisconnectError,
     2013: weedb.DisconnectError,
+    4031: weedb.DisconnectError,
     None: weedb.DatabaseError
 }
 
@@ -261,7 +268,13 @@ class Cursor(weedb.Cursor):
         # Convert sql_tuple to a plain old tuple, just in case it actually
         # derives from tuple, but overrides the string conversion (as is the
         # case with a TimeSpan object):
-        self.cursor.execute(updated_sql, tuple(sql_tuple))
+        parameters = tuple(sql_tuple)
+        try:
+            self.cursor.execute(updated_sql, parameters)
+        except (MySQLDatabaseError, MySQLInterfaceError):
+            log.debug("SQL execution failed: %s; parameters: %r",
+                      sql_string, parameters, exc_info=True)
+            raise
 
         return self
 

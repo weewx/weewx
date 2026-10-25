@@ -3,6 +3,9 @@ WeeWX change history
 
 ### 5.x.y dd-Mmm-YYYY
 
+Recover from MySQL idle disconnects and global connection limits. Failed
+MySQL queries now include the SQL statement and parameters in debug logs.
+
 Fixed incorrect values in derived series and aggregates when an XType extension
 returns a value in a different unit system.
 [PR #1188](https://github.com/weewx/weewx/pull/1188).
