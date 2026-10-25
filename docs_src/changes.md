@@ -46,6 +46,9 @@ with --update, and stale daily extrema after corrections.
 Reduced database queries when reports iterate over derived observation values
 in archive records. [PR #1201](https://github.com/weewx/weewx/pull/1201).
 
+Fixed calculated `rainRate`. Under certain circumstances, some packets could be
+missed. [PR #1198](https://github.com/weewx/weewx/pull/1198).
+
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
 improvements particularly with remote databases.
