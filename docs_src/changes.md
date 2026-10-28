@@ -3,6 +3,10 @@ WeeWX change history
 
 ### 5.x.y dd-Mmm-YYYY
 
+Fixed `diff` and `tderiv` returning missing values when the first or last archive
+record has no value for the observation. They now use the first and last
+non-null values in the aggregation period.
+
 Fixed incorrect values in derived series and aggregates when an XType extension
 returns a value in a different unit system.
 [PR #1188](https://github.com/weewx/weewx/pull/1188).

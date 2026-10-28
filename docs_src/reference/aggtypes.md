@@ -32,7 +32,7 @@
     </tr>
     <tr>
         <td class="first_col code">diff</td>
-        <td>The difference between the last and first value in the aggregation period.
+        <td>The difference between the last and first non-null value in the aggregation period.
         </td>
     </tr>
     <tr>
@@ -191,8 +191,8 @@
     <tr>
         <td class="first_col code">tderiv</td>
         <td>
-            The time derivative between the last and first value in the aggregation period. This is the
-            difference in value divided by the difference in time.
+            The time derivative between the last and first non-null value in the aggregation period.
+            This is the difference in value divided by the difference in their timestamps.
         </td>
     </tr>
     <tr>
