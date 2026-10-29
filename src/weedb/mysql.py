@@ -15,7 +15,8 @@ except ImportError:
     # Typically supplied by the pip package "pymysql", a pure-Python version.
     import pymysql as MySQLdb
 
-from MySQLdb import (DatabaseError as MySQLDatabaseError, InterfaceError as MySQLInterfaceError)
+MySQLDatabaseError = MySQLdb.DatabaseError
+MySQLInterfaceError = MySQLdb.InterfaceError
 
 from weeutil.weeutil import to_bool, natural_compare
 import weedb
