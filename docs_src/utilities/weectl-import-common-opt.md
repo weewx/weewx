@@ -69,7 +69,7 @@ weectl import --import-config=/directory/import.conf
 
 ### `--update` and `--updatedelete`
 
-Without either option, records with timestamps already in the archive remain
+Without an update option, records with timestamps already in the archive remain
 unchanged. `--update` replaces existing fields when the import supplies a value,
 including zero. Missing numeric values and empty text fields preserve the
 existing value.
