@@ -603,6 +603,14 @@ make test-clean
 If you add additional unit tests, they should put any transient files in
 `/var/tmp/weewx-test` &mdash; do not write to the source tree.
 
+Tests in `src/weewx/tests` use the fixtures in `conftest.py` to run against
+both SQLite and MySQL. Use `database` for tests that create their own schema
+and data. It supplies connection options for a database that does not yet
+exist and removes the database after each test. Use `config_dict` for tests
+that need the generated weather data, which is kept for reuse between runs.
+Both fixtures get their backend and connection settings from `build_config`
+and `testgen.conf`.
+
 
 ## Git work flow
 
