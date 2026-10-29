@@ -14,9 +14,12 @@ import os
 import sqlite3
 import pytest
 from sqlite3 import IntegrityError, OperationalError
+from weeutil.weeutil import get_test_dir
+
+test_dir = get_test_dir()
 
 # This database should be somewhere where you have write permissions:
-sqdb1 = '/var/tmp/sqdb1.sdb'
+sqdb1 = os.path.join(test_dir, 'sqdb1.sdb')
 # This database should be somewhere where you do NOT have write permissions:
 sqdb2 = '/usr/local/sqdb2.sdb'
 
