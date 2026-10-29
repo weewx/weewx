@@ -176,7 +176,7 @@ class ArchiveAggregation:
                 target = nearest[0]
         if target is not None and self.max_shift is not None and abs(target[0] - stamp) > self.max_shift:
             return None
-        return target[0] if target is not None else None
+        return target
 
     def prepare(self, archive):
         """Build all planned updates before any archive record can be changed.
@@ -190,11 +190,12 @@ class ArchiveAggregation:
             return
         self._load_targets(archive, first, last)
         for stamp, data in self.connection.execute('SELECT stamp, data FROM readings ORDER BY stamp'):
-            target = self._match(stamp)
-            if target is None:
+            match = self._match(stamp)
+            if match is None:
                 self.counts['unmatched'] += 1
                 continue
-            if (self.source.first_ts is not None and target <= self.source.first_ts) \
+            target, start = match
+            if (self.source.first_ts is not None and start < self.source.first_ts) \
                     or (self.source.last_ts is not None and target > self.source.last_ts):
                 self.counts['outside_range'] += 1
                 continue
@@ -207,7 +208,12 @@ class ArchiveAggregation:
                 reading = json.loads(data)
                 if reading['usUnits'] != units:
                     raise weeimport.weeimport.WeeImportFieldError('Unit systems differ at destination %s.' % target)
-                present.update(field for field in self.fields if reading[field] is not None)
+                observations = {field for field in self.fields if reading[field] is not None}
+                if reading.get('windSpeed') is None:
+                    observations.discard('windDir')
+                if reading.get('windSpeed') is None and reading.get('windGust') is None:
+                    observations.discard('windGustDir')
+                present.update(observations)
                 # Explicit timestamp alignment changes labels, not the order of samples.
                 reading['dateTime'] = target if self.alignment != 'interval' else reading['dateTime']
                 accumulator.addRecord(reading, weight=1)
@@ -215,9 +221,11 @@ class ArchiveAggregation:
             if not samples or not present:
                 continue
             result = accumulator.getRecord()
-            values = {field: result[field] for field in self.fields if field in present and field in result}
-            if set(values) != present:
-                raise weeimport.weeimport.WeeImportFieldError('Accumulator did not produce mapped fields at %s: %s' % (target, ', '.join(sorted(present - set(values)))))
+            if not present.issubset(result):
+                raise weeimport.weeimport.WeeImportFieldError('Accumulator did not produce mapped fields at %s: %s' % (target, ', '.join(sorted(present - set(result)))))
+            values = {field: result[field] for field in self.fields if field in present and result[field] is not None}
+            if not values:
+                continue
             for field, value in values.items():
                 if isinstance(value, float) and not math.isfinite(value):
                     raise weeimport.weeimport.WeeImportFieldError('Aggregation overflow for %s at %s.' % (field, target))
@@ -268,7 +276,10 @@ def run(source):
         try:
             source.period_no = 1
             for period in source.period_generator():
-                raw = source.get_raw_data(period)
+                try:
+                    raw = source.get_raw_data(period)
+                except weeimport.weeimport.WeeImportDecodeError as error:
+                    raise weeimport.weeimport.WeeImportIOError('Cannot decode import period %s: %s' % (period, error)) from error
                 mapped = source.map_raw_data(raw, source.archive_unit_sys)
                 aggregation.stage(mapped)
                 aggregation.counts['duplicates'] += len(source.period_duplicates)

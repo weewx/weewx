@@ -395,3 +395,57 @@ def test_cancelling_the_preview_leaves_the_archive_unchanged(import_configuratio
     before = dump(import_configuration)
     source.run()
     assert dump(import_configuration) == before
+
+
+@pytest.mark.parametrize('alignment', ['interval', 'nearest', 'previous', 'next'])
+def test_date_limit_never_replaces_a_complete_interval_with_a_partial_total(
+        import_configuration, tmp_path, alignment):
+    rows = 'stamp,temperature,amount\n' + ''.join(
+        '%d,60,0.1\n' % (STAMP + offset) for offset in (60, 120, 180, 240, 300))
+    source = import_source(import_configuration, tmp_path, rows,
+                           options={'alignment': alignment, 'max_shift': '300'})
+    source.first_ts = STAMP + 120
+    source.last_ts = STAMP + 3600
+    before = dump(import_configuration)
+    source.run()
+    assert dump(import_configuration) == before
+
+
+@pytest.mark.parametrize('speed,gust,direction,gust_direction', [
+    ('', '', 90, 100), ('0', '0', 180, 180), ('', '10', 90, 180)])
+def test_wind_directions_require_corresponding_measurements(
+        import_configuration, tmp_path, speed, gust, direction, gust_direction):
+    with weewx.manager.open_manager_with_config(import_configuration, 'wx_binding') as manager:
+        manager.addRecord({'dateTime': STAMP, 'usUnits': weewx.US, 'interval': 5,
+                           'windSpeed': 5, 'windDir': 90, 'windGust': 8, 'windGustDir': 100},
+                          update=True)
+    fields = {'dateTime': ['stamp', 'unix_epoch'], 'windSpeed': ['speed', 'mile_per_hour'],
+              'windDir': ['direction', 'degree_compass'], 'windGust': ['gust', 'mile_per_hour'],
+              'windGustDir': ['gust_direction', 'degree_compass']}
+    source = import_source(import_configuration, tmp_path,
+                           'stamp,speed,direction,gust,gust_direction\n%d,%s,180,%s,180\n' % (
+                               STAMP, speed, gust), fields=fields)
+    source.run()
+    with weewx.manager.open_manager_with_config(import_configuration, 'wx_binding') as manager:
+        record = manager.getRecord(STAMP)
+        assert record['windDir'] == direction
+        assert record['windGustDir'] == gust_direction
+        assert record['windSpeed'] == (5 if speed == '' else 0)
+        assert record['windGust'] == (8 if gust == '' else float(gust))
+
+
+def test_undecodable_source_period_aborts_cleanly_before_writing(import_configuration, tmp_path):
+    source = import_source(import_configuration, tmp_path,
+                           'stamp,temperature,amount\n%d,10,0\n' % STAMP)
+    source.period_generator = lambda: iter([1, 2])
+
+    def get_data(period):
+        if period == 2:
+            raise weeimport.weeimport.WeeImportDecodeError('Invalid encoding in second period')
+        return [{'stamp': str(STAMP), 'temperature': '10', 'amount': '0'}]
+
+    source.get_raw_data = get_data
+    before = dump(import_configuration)
+    with pytest.raises(weeimport.weeimport.WeeImportIOError, match='Invalid encoding'):
+        source.run()
+    assert dump(import_configuration) == before

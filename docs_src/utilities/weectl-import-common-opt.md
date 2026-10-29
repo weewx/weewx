@@ -82,7 +82,8 @@ weectl import --import-config=/directory/import.conf --updateagg --dry-run
 The preview shows the old and proposed values for the first 20 target rows,
 with counts for all target rows, unmatched readings, readings outside the date
 limits and duplicate timestamps. All import periods are checked before any
-updates are written. Running without `--dry-run` asks for confirmation after
+updates are written. An unavailable or undecodable source period aborts the
+import; it is not skipped. Running without `--dry-run` asks for confirmation after
 the preview; `--no-prompt` accepts it. Updates use the usual database batches,
 so a write failure can leave earlier batches committed.
 
@@ -124,7 +125,9 @@ The archive must contain that target row, and `outTemp` must be non-NULL there.
 An equally close pair of target timestamps stops `nearest` alignment before
 updates are written. The `--date`, `--from` and `--to` filters apply to source
 readings and to target timestamps: an update cannot cross the selected date
-limits. As with other imports, the beginning is exclusive and the end inclusive.
+limits. Target intervals that start before the beginning of the selected range
+are skipped in every alignment mode, even if their timestamps are in range.
+As with other imports, the beginning is exclusive and the end inclusive.
 
 #### Choosing how observations are combined
 
@@ -153,11 +156,16 @@ lists the other extractors and how to configure text fields.
 
 Wind uses WeeWX's vector and gust handling. Map `windSpeed` together with
 `windDir`, `windGust` or `windGustDir`. Only mapped fields are updated, even
-when the wind accumulator computes additional fields.
+when the wind accumulator computes additional fields. A direction needs a
+corresponding speed measurement; an undefined aggregate preserves the stored
+value.
 
 Missing values, including empty text, do not clear existing observations.
 A field with no non-missing inputs keeps its stored value; zero is a value.
-Duplicate source timestamps retain the first reading, including across import
+Aggregates replace existing values using only the imported readings. Missing
+samples are not reconstructed: a source that starts or ends partway through an
+interval can supply only a partial total. Check source coverage before applying
+totals. Duplicate source timestamps retain the first reading, including across import
 periods. `first` and `last` follow timestamp order. Non-finite inputs or
 aggregates stop the import before updates are written. Derived observations
 are not calculated in this mode, and import `lastUpdate` metadata is unchanged.
