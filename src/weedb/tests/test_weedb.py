@@ -9,6 +9,7 @@ For this test to work, MySQL user 'weewx' must have full access to database 'tes
     mysql> grant select, update, create, delete, drop, insert on test.* to weewx@localhost;
 """
 
+import os
 import pytest
 
 import weedb
@@ -221,6 +222,8 @@ class TestSqlite(Common):
             assert _v is None
 
 
+@pytest.mark.skipif(os.environ.get('WEEWX_TEST_MYSQL', '1') == '0',
+                    reason="MySQL testing disabled via WEEWX_TEST_MYSQL=0")
 class TestMySQL(Common):
 
     def setup_method(self):

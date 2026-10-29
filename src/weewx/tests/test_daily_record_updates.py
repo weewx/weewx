@@ -1,32 +1,10 @@
 from unittest import mock
 
-import pytest
-
 import weedb
 import weewx
 import weewx.manager
 import weewx.units
 import weewx.xtypes
-
-
-@pytest.fixture(params=['sqlite', 'mysql'])
-def database(request, tmp_path):
-    if request.param == 'sqlite':
-        yield {'driver': 'weedb.sqlite', 'database_name': str(tmp_path / 'archive.sdb')}
-    else:
-        config = {'driver': 'weedb.mysql', 'database_name': 'test_scratch',
-                  'host': 'localhost', 'user': 'weewx', 'password': 'weewx'}
-        try:
-            weedb.drop(config)
-        except weedb.NoDatabaseError:
-            pass
-        try:
-            yield config
-        finally:
-            try:
-                weedb.drop(config)
-            except weedb.NoDatabaseError:
-                pass
 
 
 SCHEMA = [('dateTime', 'INTEGER NOT NULL PRIMARY KEY'), ('usUnits', 'INTEGER NOT NULL'),

@@ -12,7 +12,9 @@ import configobj
 import pytest
 
 import gen_fake_data
+import weedb
 import weeutil.logger
+import weewx.manager
 from parameters import synthetic_dict, alt_dict
 
 log = logging.getLogger(__name__)
@@ -32,6 +34,8 @@ def build_config(request):
     """Generate a config file set to use a particular database type
     (such as 'sqlite' or 'mysql')."""
     db_type = request.param
+    if db_type == 'mysql' and os.environ.get('WEEWX_TEST_MYSQL', '1') == '0':
+        pytest.skip("MySQL testing disabled via WEEWX_TEST_MYSQL=0")
 
     # Find the configuration file. It's assumed to be in the same directory as me:
     config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")
@@ -52,6 +56,31 @@ def build_config(request):
     weewx_config['DataBindings']['alt_binding']['database'] = "alt_" + db_type
 
     yield weewx_config
+
+
+@pytest.fixture
+def database(build_config, tmp_path):
+    """Yield connection options for a new database, removing it after each test."""
+    database_name = build_config['DataBindings']['wx_binding']['database']
+    db_dict = weewx.manager.get_database_dict_from_config(build_config, database_name)
+
+    # Keep databases created by individual tests separate from the generated data.
+    if db_dict['driver'] == 'weedb.sqlite':
+        db_dict['database_name'] = str(tmp_path / 'archive.sdb')
+    else:
+        db_dict['database_name'] = 'test_weedb'
+
+    try:
+        weedb.drop(db_dict)
+    except weedb.NoDatabaseError:
+        pass
+    try:
+        yield db_dict
+    finally:
+        try:
+            weedb.drop(db_dict)
+        except weedb.NoDatabaseError:
+            pass
 
 
 @pytest.fixture(scope="session")
