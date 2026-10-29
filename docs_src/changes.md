@@ -20,6 +20,7 @@ come from the daily summaries again, as before.
 Added `weectl import --updateagg` to aggregate readings into existing archive
 intervals using WeeWX accumulators, with configurable timestamp alignment and
 a preview before writing.
+[PR #1218](https://github.com/weewx/weewx/pull/1218).
 
 Fixed incorrect values in derived series and aggregates when an XType extension
 returns a value in a different unit system.
