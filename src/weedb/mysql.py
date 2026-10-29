@@ -1,6 +1,5 @@
 #
 #    Copyright (c) 2009-2025 Tom Keffer <tkeffer@gmail.com>
-#    Copyright (c) 2026 Manuel Hilgert <hilman2@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -180,8 +179,6 @@ class Connection(weedb.Connection):
 
     @guard
     def _get_schema(self, table):
-        # A decorator on genSchemaOf only wraps generator creation. Fetch all
-        # schema rows here so guard covers the database operations.
         with self.connection.cursor() as cursor:
             cursor.execute("""SHOW COLUMNS IN %s;""" % table)
             return cursor.fetchall()
