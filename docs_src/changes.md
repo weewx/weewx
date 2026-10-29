@@ -3,6 +3,11 @@ WeeWX change history
 
 ### 5.x.y dd-Mmm-YYYY
 
+Fixed `tderiv` raising `TypeError` for missing energy samples and returning
+incorrect units for non-energy observations. It now supports energy, distance,
+rain and pressure. Other observation groups raise `UnknownAggregation`.
+[PR #1199](https://github.com/weewx/weewx/pull/1199).
+
 Fixed incorrect values in derived series and aggregates when an XType extension
 returns a value in a different unit system.
 [PR #1188](https://github.com/weewx/weewx/pull/1188).

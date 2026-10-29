@@ -387,6 +387,36 @@ class ArchiveTable(XType):
                   "AND windSpeed is not null"
     }
 
+    # A derivative changes the physical dimension, so retaining the observation's
+    # unit would give incorrect report conversions and labels. SQL divides by
+    # seconds; hourly result units therefore require a factor of 3600.
+    tderiv_dict = {
+        'group_energy': ('group_power', {
+            'watt_second': ('watt', 1),
+            'watt_hour': ('watt', 3600),
+            'kilowatt_hour': ('kilowatt', 3600),
+            'mega_joule': ('watt', 1000000),
+        }),
+        'group_distance': ('group_speed', {
+            'meter': ('meter_per_second', 1),
+            'km': ('km_per_hour', 3600),
+            'mile': ('mile_per_hour', 3600),
+            'astronomical_unit': ('meter_per_second', 149597870700),
+        }),
+        'group_rain': ('group_rainrate', {
+            'mm': ('mm_per_hour', 3600),
+            'cm': ('cm_per_hour', 3600),
+            'inch': ('inch_per_hour', 3600),
+        }),
+        'group_pressure': ('group_pressurerate', {
+            'mbar': ('mbar_per_hour', 3600),
+            'hPa': ('hPa_per_hour', 3600),
+            'kPa': ('kPa_per_hour', 3600),
+            'mmHg': ('mmHg_per_hour', 3600),
+            'inHg': ('inHg_per_hour', 3600),
+        }),
+    }
+
     valid_aggregate_types = {'sum', 'count', 'avg', 'max', 'min'}.union(agg_sql_dict.keys())
 
     # noinspection Annotator
@@ -467,19 +497,18 @@ class ArchiveTable(XType):
         u, g = weewx.units.getStandardUnitType(db_manager.std_unit_system, obs_type,
                                                aggregate_type)
 
-        # Time derivatives have special rules. For example, the time derivative of watt-hours is
-        # watts, scaled by the number of seconds in an hour. The unit group also changes to
-        # group_power.
-        if aggregate_type == 'tderiv':
-            if u == 'watt_second':
-                u = 'watt'
-            elif u == 'watt_hour':
-                u = 'watt'
-                value *= 3600
-            elif u == 'kilowatt_hour':
-                u = 'kilowatt'
-                value *= 3600
-            g = 'group_power'
+        # An unused database has no known unit system, so its result units remain
+        # indeterminate. Otherwise, reject derivatives without a corresponding
+        # rate unit instead of returning a value labeled with the original unit.
+        if aggregate_type == 'tderiv' and db_manager.std_unit_system is not None:
+            source_group = 'group_energy' if g == 'group_energy2' else g
+            try:
+                g, unit_dict = ArchiveTable.tderiv_dict[source_group]
+                u, scale = unit_dict[u]
+            except KeyError:
+                raise weewx.UnknownAggregation(aggregate_type)
+            if value is not None:
+                value *= scale
 
         # Form the ValueTuple and return it:
         return weewx.units.ValueTuple(value, u, g)
