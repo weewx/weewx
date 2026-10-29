@@ -34,6 +34,8 @@ def build_config(request):
     """Generate a config file set to use a particular database type
     (such as 'sqlite' or 'mysql')."""
     db_type = request.param
+    if db_type == 'mysql' and os.environ.get('WEEWX_TEST_MYSQL', '1') == '0':
+        pytest.skip("MySQL testing disabled via WEEWX_TEST_MYSQL=0")
 
     # Find the configuration file. It's assumed to be in the same directory as me:
     config_path = os.path.join(os.path.dirname(__file__), "testgen.conf")

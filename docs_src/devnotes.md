@@ -590,6 +590,11 @@ done by a `make` target:
 
     make test-setup
 
+If a MySQL/MariaDB server is not available or not configured, you can skip
+running the MySQL tests by setting `WEEWX_TEST_MYSQL=0`:
+
+    WEEWX_TEST_MYSQL=0 make test
+
 To run all unit tests (do not run this as root!):
 ```
 make test
