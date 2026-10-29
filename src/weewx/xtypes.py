@@ -1,5 +1,6 @@
 #
 #    Copyright (c) 2019-2026 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2026 Manuel Hilgert <hilman2@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -337,9 +338,11 @@ class ArchiveTable(XType):
     agg_sql_dict = {
         'diff': "SELECT (b.%(sql_type)s - a.%(sql_type)s) FROM %(table_name)s a, %(table_name)s b "
                 "WHERE b.dateTime = (SELECT MAX(dateTime) FROM %(table_name)s "
-                "WHERE dateTime >= %(start)s AND dateTime <= %(stop)s) "
+                "WHERE dateTime >= %(start)s AND dateTime <= %(stop)s "
+                "AND %(sql_type)s IS NOT NULL) "
                 "AND a.dateTime = (SELECT MIN(dateTime) FROM %(table_name)s "
-                "WHERE dateTime >= %(start)s AND dateTime <= %(stop)s);",
+                "WHERE dateTime >= %(start)s AND dateTime <= %(stop)s "
+                "AND %(sql_type)s IS NOT NULL);",
         'first': "SELECT %(sql_type)s FROM %(table_name)s "
                  "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
                  "AND %(sql_type)s IS NOT NULL ORDER BY dateTime ASC LIMIT 1",
@@ -366,9 +369,11 @@ class ArchiveTable(XType):
         'tderiv': "SELECT (b.%(sql_type)s - a.%(sql_type)s) / (b.dateTime-a.dateTime) "
                   "FROM %(table_name)s a, %(table_name)s b "
                   "WHERE b.dateTime = (SELECT MAX(dateTime) FROM %(table_name)s "
-                  "WHERE dateTime >= %(start)s AND dateTime <= %(stop)s) "
+                  "WHERE dateTime >= %(start)s AND dateTime <= %(stop)s "
+                  "AND %(sql_type)s IS NOT NULL) "
                   "AND a.dateTime = (SELECT MIN(dateTime) FROM %(table_name)s "
-                  "WHERE dateTime >= %(start)s AND dateTime <= %(stop)s);",
+                  "WHERE dateTime >= %(start)s AND dateTime <= %(stop)s "
+                  "AND %(sql_type)s IS NOT NULL);",
         'gustdir': "SELECT windGustDir FROM %(table_name)s "
                    "WHERE dateTime > %(start)s AND dateTime <= %(stop)s "
                    "ORDER BY windGust DESC limit 1",
