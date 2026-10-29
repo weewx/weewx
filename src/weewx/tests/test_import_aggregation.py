@@ -270,11 +270,12 @@ def test_update_only_manager_does_not_insert_or_change_empty_archive_caches(tmp_
         assert manager.std_unit_system is None
 
 
-def test_update_aggregation_flag_is_exclusive_with_update(monkeypatch):
+@pytest.mark.parametrize('other', ['--update', '--updatedelete'])
+def test_update_aggregation_flag_is_exclusive_with_update(monkeypatch, other):
     parser = argparse.ArgumentParser()
     weectllib.import_cmd.add_subparser(parser.add_subparsers())
     with pytest.raises(SystemExit) as rejected:
-        parser.parse_args(['import','--import-config','input.conf','--update','--updateagg'])
+        parser.parse_args(['import', '--import-config', 'input.conf', other, '--updateagg'])
     assert rejected.value.code == 2
     calls = []
     monkeypatch.setattr(weectllib.import_actions, 'obs_import',
@@ -398,17 +399,23 @@ def test_cancelling_the_preview_leaves_the_archive_unchanged(import_configuratio
 
 
 @pytest.mark.parametrize('alignment', ['interval', 'nearest', 'previous', 'next'])
+@pytest.mark.parametrize('beginning,expected', [(STAMP + 120, 0.5), (STAMP, 1.0)])
 def test_date_limit_never_replaces_a_complete_interval_with_a_partial_total(
-        import_configuration, tmp_path, alignment):
+        import_configuration, tmp_path, alignment, beginning, expected):
     rows = 'stamp,temperature,amount\n' + ''.join(
-        '%d,60,0.1\n' % (STAMP + offset) for offset in (60, 120, 180, 240, 300))
+        '%d,62,0.2\n' % (STAMP + offset) for offset in (60, 120, 180, 240, 300))
+    if beginning == STAMP:
+        rows = 'stamp,temperature,amount\n%d,62,1.0\n' % (STAMP + 300)
     source = import_source(import_configuration, tmp_path, rows,
                            options={'alignment': alignment, 'max_shift': '300'})
-    source.first_ts = STAMP + 120
+    source.first_ts = beginning
     source.last_ts = STAMP + 3600
     before = dump(import_configuration)
     source.run()
-    assert dump(import_configuration) == before
+    if beginning != STAMP:
+        assert dump(import_configuration) == before
+    with weewx.manager.open_manager_with_config(import_configuration, 'wx_binding') as manager:
+        assert manager.getRecord(STAMP + 300)['rain'] == pytest.approx(expected)
 
 
 @pytest.mark.parametrize('speed,gust,direction,gust_direction', [
@@ -449,3 +456,22 @@ def test_undecodable_source_period_aborts_cleanly_before_writing(import_configur
     with pytest.raises(weeimport.weeimport.WeeImportIOError, match='Invalid encoding'):
         source.run()
     assert dump(import_configuration) == before
+
+
+def test_missing_peak_direction_preserves_the_stored_value(import_configuration, tmp_path):
+    with weewx.manager.open_manager_with_config(import_configuration, 'wx_binding') as manager:
+        manager.addRecord({'dateTime': STAMP, 'usUnits': weewx.US, 'interval': 5,
+                           'windSpeed': 5, 'windDir': 90, 'windGust': 8, 'windGustDir': 100},
+                          update=True)
+    fields = {'dateTime': ['stamp', 'unix_epoch'], 'windSpeed': ['speed', 'mile_per_hour'],
+              'windDir': ['direction', 'degree_compass'], 'windGust': ['gust', 'mile_per_hour'],
+              'windGustDir': ['gust_direction', 'degree_compass']}
+    source = import_source(import_configuration, tmp_path,
+                           'stamp,speed,direction,gust,gust_direction\n%d,10,,8,180\n' % STAMP,
+                           fields=fields)
+    source.run()
+    with weewx.manager.open_manager_with_config(import_configuration, 'wx_binding') as manager:
+        record = manager.getRecord(STAMP)
+        assert record['windGust'] == 10
+        assert record['windGustDir'] == 100
+        assert record['windDir'] == 90

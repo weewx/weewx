@@ -14,7 +14,7 @@ import_usage = f"""{bcolors.BOLD}weectl import --help
        weectl import --import-config=IMPORT_CONFIG_FILE
                      [--config=CONFIG_FILE]
                      [[--date=YYYY-mm-dd] | [[--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]]
-                     [--update | --updateagg]
+                     [--update | --updatedelete | --updateagg]
                      [--dry-run][--verbose]
                      [--no-prompt][--suppress-warnings]{bcolors.ENDC}
 """
@@ -66,7 +66,11 @@ def add_subparser(subparsers):
     update_options = import_parser.add_mutually_exclusive_group()
     update_options.add_argument('--update',
                                 action='store_true',
-                                help='Allow imported data to update existing database records.')
+                                help='Update existing records, preserving values for missing import data.')
+    update_options.add_argument('--updatedelete',
+                                dest='update_delete',
+                                action='store_true',
+                                help='Update existing records, allowing missing imported values to clear them.')
     update_options.add_argument('--updateagg',
                                 dest='update_aggregate',
                                 action='store_true',
@@ -95,6 +99,7 @@ def import_func(config_dict, namespace):
                                         from_datetime=namespace.from_datetime,
                                         to_datetime=namespace.to_datetime,
                                         update=namespace.update,
+                                        update_delete=namespace.update_delete,
                                         update_aggregate=namespace.update_aggregate,
                                         verbose=namespace.verbose,
                                         no_prompt=namespace.no_prompt,

@@ -304,6 +304,19 @@ def setup_database(db_dict):
     return db_manager
 
 
+def test_update_nulls_policy_preserves_or_clears_existing_observations(db_manager):
+    stamp, temperature, interval = db_manager.getSql(
+        'SELECT dateTime, outTemp, `interval` FROM archive WHERE outTemp IS NOT NULL ORDER BY dateTime LIMIT 1')
+    count = db_manager.getSql('SELECT SUM(count) FROM archive_day_outTemp')[0]
+    missing = {'dateTime': stamp, 'usUnits': weewx.US, 'interval': interval, 'outTemp': None}
+    db_manager.addRecord(missing, update=True, update_nulls=False)
+    assert db_manager.getRecord(stamp)['outTemp'] == temperature
+    assert db_manager.getSql('SELECT SUM(count) FROM archive_day_outTemp')[0] == count
+    db_manager.addRecord(missing, update=True)
+    assert db_manager.getRecord(stamp)['outTemp'] is None
+    assert db_manager.getSql('SELECT SUM(count) FROM archive_day_outTemp')[0] == count - 1
+
+
 def test_update_only_never_inserts_and_preserves_interval_metadata(db_manager):
     cached = db_manager.first_timestamp, db_manager.last_timestamp, db_manager.std_unit_system
     count = db_manager.getSql('SELECT COUNT(*) FROM archive')[0]
@@ -345,3 +358,19 @@ def test_aggregation_updates_native_archive_and_summaries(db_manager, tmp_path):
     assert db_manager.getSql('SELECT COUNT(*) FROM archive')[0] == count
     assert db_manager.getSql('SELECT SUM(rain) FROM archive')[0] == pytest.approx(
         db_manager.getSql('SELECT SUM(sum) FROM archive_day_rain')[0])
+
+
+def test_update_only_and_null_policy_work_together(db_manager):
+    stamp, temperature, interval = db_manager.getSql(
+        'SELECT dateTime, outTemp, `interval` FROM archive WHERE outTemp IS NOT NULL ORDER BY dateTime LIMIT 1')
+    count = db_manager.getSql('SELECT SUM(count) FROM archive_day_outTemp')[0]
+    record = {'dateTime': stamp, 'usUnits': weewx.US, 'outTemp': None, 'rain': 0}
+    db_manager.addRecord(record, update_only=True, update_nulls=False)
+    existing = db_manager.getRecord(stamp)
+    assert existing['outTemp'] == temperature
+    assert existing['rain'] == 0
+    assert existing['interval'] == interval
+    assert db_manager.getSql('SELECT SUM(count) FROM archive_day_outTemp')[0] == count
+    db_manager.addRecord(record, update_only=True)
+    assert db_manager.getRecord(stamp)['outTemp'] is None
+    assert db_manager.getSql('SELECT SUM(count) FROM archive_day_outTemp')[0] == count - 1

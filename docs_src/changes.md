@@ -17,6 +17,11 @@ come from the daily summaries again, as before.
 
 ### 5.x.y dd-Mmm-YYYY
 
+Added `weectl import --updatedelete` to clear mapped missing values explicitly.
+`--update` now preserves existing values for missing import data. Dry runs no
+longer advance import metadata.
+[PR #1217](https://github.com/weewx/weewx/pull/1217).
+
 Added `weectl import --updateagg` to aggregate readings into existing archive
 intervals using WeeWX accumulators, with configurable timestamp alignment and
 a preview before writing.
