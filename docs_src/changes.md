@@ -17,6 +17,10 @@ come from the daily summaries again, as before.
 
 ### 5.x.y dd-Mmm-YYYY
 
+Added `weectl import --updateagg` to aggregate readings into existing archive
+intervals using WeeWX accumulators, with configurable timestamp alignment and
+a preview before writing.
+
 Fixed incorrect values in derived series and aggregates when an XType extension
 returns a value in a different unit system.
 [PR #1188](https://github.com/weewx/weewx/pull/1188).

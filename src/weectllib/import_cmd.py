@@ -14,7 +14,7 @@ import_usage = f"""{bcolors.BOLD}weectl import --help
        weectl import --import-config=IMPORT_CONFIG_FILE
                      [--config=CONFIG_FILE]
                      [[--date=YYYY-mm-dd] | [[--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]]
-                     [--update]
+                     [--update | --updateagg]
                      [--dry-run][--verbose]
                      [--no-prompt][--suppress-warnings]{bcolors.ENDC}
 """
@@ -63,9 +63,14 @@ def add_subparser(subparsers):
                                dest='to_datetime',
                                help=f'Import data up until this date or date-time. Format '
                                     f'is YYYY-mm-dd[THH:MM].')
-    import_parser.add_argument('--update',
-                               action='store_true',
-                               help=f'Allow imported data to update existing database records.')
+    update_options = import_parser.add_mutually_exclusive_group()
+    update_options.add_argument('--update',
+                                action='store_true',
+                                help='Allow imported data to update existing database records.')
+    update_options.add_argument('--updateagg',
+                                dest='update_aggregate',
+                                action='store_true',
+                                help='Aggregate imported readings into existing archive intervals.')
     import_parser.add_argument('--verbose',
                                action='store_true',
                                help=f'Print and log useful extra output.')
@@ -90,6 +95,7 @@ def import_func(config_dict, namespace):
                                         from_datetime=namespace.from_datetime,
                                         to_datetime=namespace.to_datetime,
                                         update=namespace.update,
+                                        update_aggregate=namespace.update_aggregate,
                                         verbose=namespace.verbose,
                                         no_prompt=namespace.no_prompt,
                                         suppress_warning=namespace.suppress_warnings)

@@ -186,7 +186,11 @@ class Source:
 
         # process our command line options
         self.dry_run = kwargs['dry_run']
-        self.update = kwargs['update']
+        self.update_aggregate = kwargs.get('update_aggregate', False)
+        if self.update_aggregate:
+            self.calc_missing = False
+        self.aggregation_options = import_config_dict.get('UpdateAggregation', {})
+        self.update = kwargs['update'] or self.update_aggregate
         self.verbose = kwargs['verbose']
         self.no_prompt = kwargs['no_prompt']
         self.suppress_warning = kwargs['suppress_warning']
@@ -338,6 +342,10 @@ class Source:
         records, getting the raw data, mapping the data and saving the data for
         each period.
         """
+
+        if self.update_aggregate:
+            import weeimport.aggregate
+            return weeimport.aggregate.run(self)
 
         # setup a counter to count the periods of records
         self.period_no = 1
@@ -801,8 +809,10 @@ class Source:
                            "Check data source or field mapping." % (_raw_units,
                                                                     _raw_units)
                     raise weewx.UnitError(_msg)
-            # interval
-            if 'interval' in self.map.keys() and 'source_field' in self.map['interval']:
+            # The destination archive supplies interval metadata in aggregation mode.
+            if self.update_aggregate:
+                _rec['interval'] = None
+            elif 'interval' in self.map.keys() and 'source_field' in self.map['interval']:
                 # We have a map for interval so try to get the raw data. If
                 # it's not there raise an error.
                 try:
