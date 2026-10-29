@@ -69,6 +69,10 @@ daily summaries. [PR #1156](https://github.com/weewx/weewx/pull/1156).
 Fixed problem when plotting data whose y-value is very small and has a very 
 small range.
 
+Translate database errors raised while reading table schemas. SQLite schema
+locks now reach the existing retry handlers during database initialization.
+[PR #1208](https://github.com/weewx/weewx/pull/1208).
+
 
 ### 5.5.2 23-Sep-2026
 
