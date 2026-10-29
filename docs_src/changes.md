@@ -17,6 +17,10 @@ come from the daily summaries again, as before.
 
 ### 5.x.y dd-Mmm-YYYY
 
+Added `weectl import --updatedelete` to clear mapped missing values explicitly.
+`--update` now preserves existing values for missing import data. Dry runs no
+longer advance import metadata.
+
 Fixed incorrect values in derived series and aggregates when an XType extension
 returns a value in a different unit system.
 [PR #1188](https://github.com/weewx/weewx/pull/1188).
