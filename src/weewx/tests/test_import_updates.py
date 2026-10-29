@@ -186,3 +186,18 @@ def test_default_add_record_accepts_legacy_manager_overrides(tmp_path, method):
     schema = [('dateTime', 'INTEGER PRIMARY KEY'), ('usUnits', 'INTEGER'), ('outTemp', 'REAL')]
     with legacy.open_with_create(database, schema=schema) as manager:
         assert manager.addRecord({'dateTime': STAMP, 'usUnits': weewx.US, 'outTemp': 60}) == 1
+
+
+@pytest.mark.parametrize('tranche', [1, 10])
+def test_normal_csv_import_accepts_a_legacy_manager(import_configuration, tmp_path, monkeypatch, tranche):
+    class LegacyManager(weewx.manager.DaySummaryManager):
+        def _addSingleRecord(self, record, cursor, log_success=True, log_failure=True, update=False):
+            return super()._addSingleRecord(record, cursor, log_success, log_failure, update)
+
+    monkeypatch.setattr(weewx.manager, 'LegacyImportManager', LegacyManager, raising=False)
+    import_configuration['DataBindings']['wx_binding']['manager'] = 'weewx.manager.LegacyImportManager'
+    source = import_source(import_configuration, tmp_path,
+                           'stamp,temperature,amount\n%d,61,0\n' % (STAMP + 300), tranche=tranche)
+    source.run()
+    with weewx.manager.open_manager_with_config(import_configuration, 'wx_binding') as manager:
+        assert manager.getRecord(STAMP + 300)['outTemp'] == 61
