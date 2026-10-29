@@ -395,10 +395,11 @@ class Manager:
         overall_max_ts = 0
         total_n = 0
 
+        update_kwargs = {} if update_nulls else {'update_nulls': False}
         for chunk in _gen_chunks(record_obj, 200):
             n, min_ts, max_ts = self._add_with_retry(chunk, accumulator, progress_fn,
                                                      log_success, log_failure, update, total_n,
-                                                     update_nulls=update_nulls)
+                                                     **update_kwargs)
             total_n += n
             overall_min_ts = min(overall_min_ts, min_ts)
             overall_max_ts = max(overall_max_ts, max_ts)
@@ -437,11 +438,12 @@ class Manager:
         """
         max_attempts = 5
         retry_wait = 0.5
+        update_kwargs = {} if update_nulls else {'update_nulls': False}
         for attempt in range(max_attempts):
             try:
                 return self._add_chunk(chunk, accumulator, progress_fn,
                                        log_success, log_failure, update, count,
-                                       update_nulls=update_nulls)
+                                       **update_kwargs)
             except weedb.OperationalError as e:
                 if is_transient_error(e) and attempt < max_attempts - 1:
                     # Retry with exponential backoff.
@@ -479,6 +481,7 @@ class Manager:
         min_ts = float('inf')
         max_ts = 0
         updated_timestamps = []
+        update_kwargs = {} if update_nulls else {'update_nulls': False}
         with weedb.Transaction(self.connection) as cursor:
             for record in chunk:
                 try:
@@ -489,7 +492,7 @@ class Manager:
 
                     # Then add the record to the archives:
                     result = self._addSingleRecord(record, cursor, log_success, log_failure, update,
-                                                   update_nulls=update_nulls)
+                                                   **update_kwargs)
                     if result == 'updated':
                         updated_timestamps.append(record['dateTime'])
 
@@ -1313,7 +1316,7 @@ class DaySummaryManager(Manager):
 
         # First let my superclass handle adding the record to the main archive table:
         result = super()._addSingleRecord(record, cursor, log_success, log_failure, update,
-                                            update_nulls=update_nulls)
+                                         update_nulls=update_nulls)
         if result != 'inserted':
             return result
 

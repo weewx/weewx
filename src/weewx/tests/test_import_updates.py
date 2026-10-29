@@ -151,3 +151,38 @@ def test_import_update_flags_are_mutually_exclusive_and_dispatched(monkeypatch):
     weectllib.import_cmd.import_func({}, namespace)
     assert calls[0]['update_delete'] is True
     assert calls[0]['update'] is False
+
+
+def test_delete_preserves_missing_trailing_csv_cells(import_configuration, tmp_path):
+    source = import_source(import_configuration, tmp_path,
+                           'stamp,temperature,amount\n%d,61\n' % STAMP, update_delete=True)
+    source.run()
+    with weewx.manager.open_manager_with_config(import_configuration, 'wx_binding') as manager:
+        record = manager.getRecord(STAMP)
+        assert record['outTemp'] == 61
+        assert record['rain'] == 0.25
+
+
+@pytest.mark.parametrize('method', ['_add_with_retry', '_add_chunk', '_addSingleRecord'])
+def test_default_add_record_accepts_legacy_manager_overrides(tmp_path, method):
+    def add_single(self, record, cursor, log_success=True, log_failure=True, update=False):
+        return weewx.manager.Manager._addSingleRecord(
+            self, record, cursor, log_success, log_failure, update)
+
+    def add_chunk(self, chunk, accumulator=None, progress_fn=None,
+                  log_success=True, log_failure=True, update=False, count=0):
+        return weewx.manager.Manager._add_chunk(
+            self, chunk, accumulator, progress_fn, log_success, log_failure, update, count)
+
+    def add_with_retry(self, chunk, accumulator=None, progress_fn=None,
+                       log_success=True, log_failure=True, update=False, count=0):
+        return weewx.manager.Manager._add_with_retry(
+            self, chunk, accumulator, progress_fn, log_success, log_failure, update, count)
+
+    overrides = {'_add_with_retry': add_with_retry, '_add_chunk': add_chunk,
+                 '_addSingleRecord': add_single}
+    legacy = type('LegacyManager', (weewx.manager.Manager,), {method: overrides[method]})
+    database = {'driver': 'weedb.sqlite', 'database_name': str(tmp_path / 'legacy.sdb')}
+    schema = [('dateTime', 'INTEGER PRIMARY KEY'), ('usUnits', 'INTEGER'), ('outTemp', 'REAL')]
+    with legacy.open_with_create(database, schema=schema) as manager:
+        assert manager.addRecord({'dateTime': STAMP, 'usUnits': weewx.US, 'outTemp': 60}) == 1
