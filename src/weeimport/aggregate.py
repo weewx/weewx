@@ -99,8 +99,10 @@ class ArchiveAggregation:
         """Convert and quality-check a mapped period without changing the archive.
 
         Args:
-            records (Iterable[dict]): Records returned by the source's mapper.
+            records (Iterable[dict]|None): Mapped records, or None for an empty period.
         """
+        if records is None:
+            return
         for record in records:
             converted = weeimport.weeimport.to_std_system(record, self.source.archive_unit_sys)
             self.source.qc(converted, 'Archive')
@@ -178,6 +180,20 @@ class ArchiveAggregation:
             return None
         return target
 
+    def _within_date_limits(self, target, start):
+        first = self.source.first_ts
+        last = self.source.last_ts
+        if (first is not None and start < first) or (last is not None and target > last):
+            return False
+        # Explicit alignment can draw samples from outside the stored interval.
+        if self.alignment in ('nearest', 'next') and first is not None \
+                and target - self.max_shift <= first:
+            return False
+        if self.alignment in ('nearest', 'previous') and last is not None \
+                and target + self.max_shift > last:
+            return False
+        return True
+
     def prepare(self, archive):
         """Build all planned updates before any archive record can be changed.
 
@@ -195,8 +211,7 @@ class ArchiveAggregation:
                 self.counts['unmatched'] += 1
                 continue
             target, start = match
-            if (self.source.first_ts is not None and start < self.source.first_ts) \
-                    or (self.source.last_ts is not None and target > self.source.last_ts):
+            if not self._within_date_limits(target, start):
                 self.counts['outside_range'] += 1
                 continue
             self.connection.execute('INSERT INTO matched VALUES (?, ?, ?)', (target, stamp, data))

@@ -407,7 +407,7 @@ def test_date_limit_never_replaces_a_complete_interval_with_a_partial_total(
     if beginning == STAMP:
         rows = 'stamp,temperature,amount\n%d,62,1.0\n' % (STAMP + 300)
     source = import_source(import_configuration, tmp_path, rows,
-                           options={'alignment': alignment, 'max_shift': '300'})
+                           options={'alignment': alignment, 'max_shift': '299'})
     source.first_ts = beginning
     source.last_ts = STAMP + 3600
     before = dump(import_configuration)
@@ -475,3 +475,65 @@ def test_missing_peak_direction_preserves_the_stored_value(import_configuration,
         assert record['windGust'] == 10
         assert record['windGustDir'] == 100
         assert record['windDir'] == 90
+
+
+@pytest.mark.parametrize('dry_run', [False, True])
+@pytest.mark.parametrize('filtered', [False, True])
+def test_no_mapped_records_is_a_noop(import_configuration, tmp_path, capsys, dry_run, filtered):
+    rows = 'stamp,temperature,amount\n'
+    if filtered:
+        rows += '%d,60,0\n' % STAMP
+    source = import_source(import_configuration, tmp_path, rows, dry_run=dry_run)
+    if filtered:
+        source.first_ts = STAMP + 300
+        source.last_ts = STAMP + 600
+    before = dump(import_configuration)
+    source.run()
+    assert dump(import_configuration) == before
+    assert '0 unique readings; 0 existing archive intervals' in capsys.readouterr().out
+
+
+@pytest.mark.parametrize('empty_position', [0, 1, 2])
+def test_empty_period_does_not_discard_other_periods(import_configuration, tmp_path, empty_position):
+    source = import_source(import_configuration, tmp_path, 'stamp,temperature,amount\n')
+    periods = [[{'stamp': str(STAMP - 30), 'temperature': '50', 'amount': '0.1'}],
+               [{'stamp': str(STAMP), 'temperature': '70', 'amount': '0.2'}]]
+    periods.insert(empty_position, [])
+    source.period_generator = lambda: iter(periods)
+    source.get_raw_data = lambda period: period
+    source.run()
+    with weewx.manager.open_manager_with_config(import_configuration, 'wx_binding') as manager:
+        assert manager.getRecord(STAMP)['outTemp'] == 60
+        assert manager.getRecord(STAMP)['rain'] == pytest.approx(0.3)
+
+
+@pytest.mark.parametrize('alignment,last,shift', [
+    ('previous', STAMP, 299), ('nearest', STAMP + 60, 150)])
+def test_alignment_window_cannot_extend_past_the_end_date(
+        import_configuration, tmp_path, alignment, last, shift):
+    rows = 'stamp,temperature,amount\n' + ''.join(
+        '%d,60,0.2\n' % (STAMP + offset) for offset in (0, 60, 120, 180, 240))
+    source = import_source(import_configuration, tmp_path, rows,
+                           options={'alignment': alignment, 'max_shift': str(shift)})
+    source.first_ts = STAMP - 300
+    source.last_ts = last
+    before = dump(import_configuration)
+    source.run()
+    assert dump(import_configuration) == before
+
+
+@pytest.mark.parametrize('alignment', ['nearest', 'next'])
+def test_alignment_window_cannot_reach_the_excluded_beginning(
+        import_configuration, tmp_path, alignment):
+    with weewx.manager.open_manager_with_config(import_configuration, 'wx_binding') as manager:
+        manager.addRecord({'dateTime': STAMP + 300, 'usUnits': weewx.US, 'interval': 5,
+                           'windSpeed': 1}, update=True)
+    source = import_source(import_configuration, tmp_path,
+                           'stamp,temperature,amount\n%d,62,0.2\n%d,62,0.2\n' % (
+                               STAMP - 300, STAMP - 240),
+                           options={'alignment': alignment, 'max_shift': '600', 'anchor': 'windSpeed'})
+    source.first_ts = STAMP - 300
+    source.last_ts = STAMP + 3600
+    before = dump(import_configuration)
+    source.run()
+    assert dump(import_configuration) == before

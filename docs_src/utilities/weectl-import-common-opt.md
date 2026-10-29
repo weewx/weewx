@@ -158,7 +158,12 @@ updates are written. The `--date`, `--from` and `--to` filters apply to source
 readings and to target timestamps: an update cannot cross the selected date
 limits. Target intervals that start before the beginning of the selected range
 are skipped in every alignment mode, even if their timestamps are in range.
-As with other imports, the beginning is exclusive and the end inclusive.
+For explicit alignment the full configured shift window must also fit: `next`
+requires `target - max_shift` after the beginning, `previous` requires
+`target + max_shift` at or before the end, and `nearest` requires both. This
+conservative check can skip a target even if a neighbouring archive row would
+shorten its actual matching window. Skipped readings count as outside date
+limits. As with other imports, the beginning is exclusive and the end inclusive.
 
 #### Choosing how observations are combined
 
