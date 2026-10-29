@@ -1298,7 +1298,7 @@ class Source:
                         if not self.dry_run:
                             # add the record only if it is not a dry run
                             archive.addRecord(_tranche, update=self.update,
-                                              update_nulls=self.update_delete)
+                                              update_nulls=self.update_delete or not self.update)
                         # add our the dateTime for each record in our tranche
                         # to the dry run set
                         for _trec in _tranche:
@@ -1317,7 +1317,7 @@ class Source:
                     if not self.dry_run:
                         # add the record only if it is not a dry run
                         archive.addRecord(_tranche, update=self.update,
-                                              update_nulls=self.update_delete)
+                                              update_nulls=self.update_delete or not self.update)
                     # add our the dateTime for each record in our tranche to
                     # the dry run set
                     for _trec in _tranche:
