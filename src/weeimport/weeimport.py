@@ -186,7 +186,12 @@ class Source:
 
         # process our command line options
         self.dry_run = kwargs['dry_run']
-        self.update = kwargs['update']
+        self.update_aggregate = kwargs.get('update_aggregate', False)
+        if self.update_aggregate:
+            self.calc_missing = False
+        self.aggregation_options = import_config_dict.get('UpdateAggregation', {})
+        self.update_delete = kwargs.get('update_delete', False)
+        self.update = kwargs['update'] or self.update_delete or self.update_aggregate
         self.verbose = kwargs['verbose']
         self.no_prompt = kwargs['no_prompt']
         self.suppress_warning = kwargs['suppress_warning']
@@ -339,6 +344,10 @@ class Source:
         each period.
         """
 
+        if self.update_aggregate:
+            import weeimport.aggregate
+            return weeimport.aggregate.run(self)
+
         # setup a counter to count the periods of records
         self.period_no = 1
         # obtain the lastUpdate metadata value before we import anything
@@ -445,7 +454,7 @@ class Source:
             # the timestamp of the youngest record imported and the value of
             # lastUpdate from before we started
             new_last_update = max_with_none((last_update, self.latest_ts))
-            if new_last_update is not None:
+            if not self.dry_run and new_last_update is not None:
                 self.dbm._write_metadata('lastUpdate', str(int(new_last_update)))
             # If necessary, calculate  any missing derived fields and provide
             # the user with suitable summary output.
@@ -801,8 +810,10 @@ class Source:
                            "Check data source or field mapping." % (_raw_units,
                                                                     _raw_units)
                     raise weewx.UnitError(_msg)
-            # interval
-            if 'interval' in self.map.keys() and 'source_field' in self.map['interval']:
+            # The destination archive supplies interval metadata in aggregation mode.
+            if self.update_aggregate:
+                _rec['interval'] = None
+            elif 'interval' in self.map.keys() and 'source_field' in self.map['interval']:
                 # We have a map for interval so try to get the raw data. If
                 # it's not there raise an error.
                 try:
@@ -991,9 +1002,9 @@ class Source:
                                 # unit conversion will be done in bulk later
                                 _rec[_field] = _value
                     else:
-                        # no it's not in our record, so set the field in our
-                        # output to None
-                        _rec[_field] = None
+                        # An absent source column does not request deletion of an existing value.
+                        if not self.update_delete:
+                            _rec[_field] = None
                         # now warn the user about this field if we have not
                         # already done so
                         if self.map[_field]['source_field'] not in _warned:
@@ -1008,8 +1019,11 @@ class Source:
                             if not self.suppress_warning:
                                 print(_msg)
                             log.info(_msg)
-                            _msg = "         WeeWX field '%s' will be "\
-                                   "set to 'None' in these records." % _field
+                            if self.update_delete:
+                                _msg = "         Existing WeeWX field '%s' will be left unchanged." % _field
+                            else:
+                                _msg = "         WeeWX field '%s' will be "\
+                                       "set to 'None' in these records." % _field
                             if not self.suppress_warning:
                                 print(_msg)
                             log.info(_msg)
@@ -1278,6 +1292,10 @@ class Source:
                 for _rec in records:
                     # convert our record
                     _conv_rec = to_std_system(_rec, self.archive_unit_sys)
+                    if self.update:
+                        for field in _conv_rec:
+                            if _conv_rec[field] == '':
+                                _conv_rec[field] = None
                     # perform any required QC checks
                     self.qc(_conv_rec, 'Archive')
                     # add the record to our tranche and increment our count
@@ -1289,7 +1307,8 @@ class Source:
                         # add the record only if it is not a dry run
                         if not self.dry_run:
                             # add the record only if it is not a dry run
-                            archive.addRecord(_tranche, update=self.update)
+                            archive.addRecord(_tranche, update=self.update,
+                                              update_nulls=self.update_delete or not self.update)
                         # add our the dateTime for each record in our tranche
                         # to the dry run set
                         for _trec in _tranche:
@@ -1307,7 +1326,8 @@ class Source:
                     # we do so process them
                     if not self.dry_run:
                         # add the record only if it is not a dry run
-                        archive.addRecord(_tranche, update=self.update)
+                        archive.addRecord(_tranche, update=self.update,
+                                              update_nulls=self.update_delete or not self.update)
                     # add our the dateTime for each record in our tranche to
                     # the dry run set
                     for _trec in _tranche:

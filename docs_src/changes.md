@@ -22,6 +22,16 @@ back. Each archive period now has its own accumulator.
 
 ### 5.x.y dd-Mmm-YYYY
 
+Added `weectl import --updatedelete` to clear mapped missing values explicitly.
+`--update` now preserves existing values for missing import data. Dry runs no
+longer advance import metadata.
+[PR #1217](https://github.com/weewx/weewx/pull/1217).
+
+Added `weectl import --updateagg` to aggregate readings into existing archive
+intervals using WeeWX accumulators, with configurable timestamp alignment and
+a preview before writing.
+[PR #1218](https://github.com/weewx/weewx/pull/1218).
+
 Fixed incorrect values in derived series and aggregates when an XType extension
 returns a value in a different unit system.
 [PR #1188](https://github.com/weewx/weewx/pull/1188).
