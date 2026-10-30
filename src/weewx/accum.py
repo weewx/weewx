@@ -1,6 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
-#    Copyright (c) 2026 Manuel Hilgert <hilman2@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -99,33 +98,14 @@ DEFAULTS_INI = """
 """
 defaults_dict = weeutil.config.config_from_str(DEFAULTS_INI)
 
-# The options from the [Accumulator] section of the configuration. They override the defaults.
-# initialize() refills this dictionary in place, rather than adding a new one each time it is
-# called.
+# The options from the [Accumulator] section of the configuration.
 _config_options = {}
-
+# They go in front, allowing overrides of the defaults
 accum_dict = ListOfDicts(_config_options, defaults_dict['Accumulator'].dict())
 
 
 class OutOfSpan(ValueError):
     """Raised when attempting to add a record outside the timespan held by an accumulator"""
-
-
-def _as_number(val):
-    """Convert an observation value to a float.
-
-    Args:
-        val (float|int|str|None): The value. Some stations deliver numbers as strings.
-
-    Returns:
-        float|None: The value as a float, or None if it is None, NaN, or not a number.
-    """
-    try:
-        val = to_float(val)
-    except ValueError:
-        return None
-    # NaN is the only value that is not equal to itself.
-    return val if val == val else None
 
 
 # ===============================================================================
@@ -730,31 +710,18 @@ OBS_DEFAULTS = {
 
 
 def initialize(config_dict):
-    """Use the [Accumulator] section of a configuration in place of the one used before.
+    """Save the [Accumulator] section of the configuration dictionary.
 
     Args:
         config_dict (dict): The configuration dictionary.
     """
+    global _config_options, accum_dict
     _config_options.clear()
     _config_options.update(config_dict.get('Accumulator', {}))
     # Put the options at the front of accum_dict, so they override anything a driver or extension
     # has prepended before.
     accum_dict.maps[:] = [_config_options] \
         + [options for options in accum_dict.maps if options is not _config_options]
-
-
-def _get_option(obs_type, option):
-    """Look up an accumulator option for an observation type.
-
-    Args:
-        obs_type (str): The observation type, such as 'outTemp'.
-        option (str): The option. One of 'accumulator', 'adder', 'merger', or 'extractor'.
-
-    Returns:
-        str: The nickname of the class or function to be used for the type.
-    """
-    obs_options = accum_dict.get(obs_type, OBS_DEFAULTS)
-    return obs_options.get(option, OBS_DEFAULTS[option])
 
 
 def new_accumulator(obs_type):
@@ -798,3 +765,35 @@ def get_extract_function(obs_type):
     accumulator.
     """
     return EXTRACT_FUNCTIONS[_get_option(obs_type, 'extractor')]
+
+
+def _as_number(val):
+    """Convert an observation value to a float.
+
+    Args:
+        val (float|int|str|None): The value. Some stations deliver numbers as strings.
+
+    Returns:
+        float|None: The value as a float, or None if it is None, NaN, or not a number.
+    """
+    try:
+        val = to_float(val)
+    except ValueError:
+        return None
+    # NaN is the only value that is not equal to itself.
+    return val if val == val else None
+
+
+def _get_option(obs_type, option):
+    """Look up an accumulator option for an observation type.
+
+    Args:
+        obs_type (str): The observation type, such as 'outTemp'.
+        option (str): The option. One of 'accumulator', 'adder', 'merger', or 'extractor'.
+
+    Returns:
+        str: The nickname of the class or function to be used for the type.
+    """
+    global accum_dict
+    obs_options = accum_dict.get(obs_type, OBS_DEFAULTS)
+    return obs_options.get(option, OBS_DEFAULTS[option])
