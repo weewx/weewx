@@ -306,6 +306,14 @@ def reconfigure_database(config_dict,
     # Now modify the database name
     new_database_dict['database_name'] = manager_dict['database_dict']['database_name'] + '_new'
 
+    # Get the unit system of the old archive:
+    with weewx.manager.Manager.open(manager_dict['database_dict']) as old_dbmanager:
+        old_unit_system = old_dbmanager.std_unit_system
+
+    if old_unit_system is None:
+        print("Old database has not been initialized. Nothing to be done.")
+        return
+
     # First check and see if the new database already exists. If it does, check
     # with the user whether it's ok to delete it.
     try:
@@ -320,14 +328,6 @@ def reconfigure_database(config_dict,
         else:
             print("Nothing done.")
             return
-
-    # Get the unit system of the old archive:
-    with weewx.manager.Manager.open(manager_dict['database_dict']) as old_dbmanager:
-        old_unit_system = old_dbmanager.std_unit_system
-
-    if old_unit_system is None:
-        print("Old database has not been initialized. Nothing to be done.")
-        return
 
     # Get the unit system of the new archive:
     try:
@@ -350,11 +350,12 @@ def reconfigure_database(config_dict,
     ans = y_or_n("Are you sure you wish to proceed (y/n)? ", noprompt=no_confirm)
     if ans == 'y':
         t1 = time.time()
-        weewx.manager.reconfig(manager_dict['database_dict'],
-                               new_database_dict,
-                               new_unit_system=target_unit_system,
-                               new_schema=manager_dict['schema'],
-                               dry_run=dry_run)
+        # reconfig() initializes the destination even during a dry run.
+        if not dry_run:
+            weewx.manager.reconfig(manager_dict['database_dict'],
+                                   new_database_dict,
+                                   new_unit_system=target_unit_system,
+                                   new_schema=manager_dict['schema'])
         tdiff = time.time() - t1
         print("Database '%s' copied to '%s' in %.2f seconds."
               % (manager_dict['database_dict']['database_name'],
@@ -368,7 +369,8 @@ def transfer_database(config_dict,
                       dest_binding=None,
                       db_binding='wx_binding',
                       dry_run=False,
-                      no_confirm=False):
+                      no_confirm=False,
+                      db_filename=None):
     """Transfer 'archive' data from one database to another
 
     Args:
@@ -378,6 +380,7 @@ def transfer_database(config_dict,
             'wx_binding'.
         dry_run (bool): True to not actually do anything. Default is False.
         no_confirm (bool): True to not ask for confirmation. Default is False.
+        db_filename (str|None): Override the source SQLite filename. Default is None.
     """
 
     # do we have enough to go on, must have a dest binding
@@ -387,6 +390,10 @@ def transfer_database(config_dict,
 
     # get manager dict for our source binding
     src_manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, db_binding)
+    if db_filename is not None:
+        # The destination may use the same binding, so keep its settings separate.
+        src_manager_dict['database_dict'] = dict(src_manager_dict['database_dict'])
+        src_manager_dict['database_dict']['database_name'] = db_filename
     # get manager dict for our dest binding
     try:
         dest_manager_dict = weewx.manager.get_manager_dict_from_config(config_dict, dest_binding)
@@ -427,7 +434,6 @@ def transfer_database(config_dict,
             print("Nothing done. Aborting.")
             return
 
-        # not a dry run, actually do the transfer
         ans = y_or_n("Transfer %s records from source database '%s' "
                      "to destination database '%s' (y/n)? "
                      % (num_recs, src_manager.database_name,
@@ -435,6 +441,10 @@ def transfer_database(config_dict,
                      noprompt=no_confirm)
         if ans == 'n':
             print("Nothing done.")
+            return
+
+        if dry_run:
+            print("Dry run: no records transferred.")
             return
 
         t1 = time.time()
@@ -448,18 +458,17 @@ def transfer_database(config_dict,
                 print("Transferring, this may take a while.... ")
                 sys.stdout.flush()
 
-                if not dry_run:
-                    # This could generate a *lot* of log entries. Temporarily disable logging
-                    # for events at or below INFO
-                    logging.disable(logging.INFO)
+                # This could generate a *lot* of log entries. Temporarily disable logging
+                # for events at or below INFO
+                logging.disable(logging.INFO)
 
-                    # do the transfer, should be quick as it's done as a
-                    # single transaction
-                    nrecs = dest_manager.addRecord(src_manager.genBatchRecords(),
-                                                   progress_fn=weewx.manager.show_progress)
+                # do the transfer, should be quick as it's done as a
+                # single transaction
+                nrecs = dest_manager.addRecord(src_manager.genBatchRecords(),
+                                               progress_fn=weewx.manager.show_progress)
 
-                    # Remove the temporary restriction
-                    logging.disable(logging.NOTSET)
+                # Remove the temporary restriction
+                logging.disable(logging.NOTSET)
 
                 tdiff = time.time() - t1
                 print("\nCompleted.")
