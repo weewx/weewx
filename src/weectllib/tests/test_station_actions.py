@@ -20,6 +20,8 @@ import weewxd
 
 weewxd_path = weewxd.__file__
 
+test_dir = weeutil.weeutil.get_test_dir()
+
 # For the tests, use the version of weewx.conf that comes with WeeWX.
 with weeutil.weeutil.get_resource_fd('weewx_data', 'weewx.conf') as fd:
     CONFIG_DICT = configobj.ConfigObj(fd, encoding='utf-8', file_error=True)
@@ -281,7 +283,7 @@ class TestCreateStation:
     def test_create_default(self):
         """Test creating a new station"""
         # Get a temporary directory to create it in
-        with tempfile.TemporaryDirectory(dir='/var/tmp') as weewx_root:
+        with tempfile.TemporaryDirectory(dir=test_dir) as weewx_root:
             # We have not run 'pip', so the only copy of weewxd.py is the one in the repository.
             # Create a station using the defaults
             weectllib.station_actions.station_create(weewx_root=weewx_root, no_prompt=True)
@@ -316,7 +318,7 @@ class TestReconfigureStation:
     def test_reconfigure(self):
         """Test reconfiguring a station"""
         # Get a temporary directory to create a station in
-        with tempfile.TemporaryDirectory(dir='/var/tmp') as weewx_root:
+        with tempfile.TemporaryDirectory(dir=test_dir) as weewx_root:
             # Create a station using the defaults
             weectllib.station_actions.station_create(weewx_root=weewx_root, no_prompt=True)
 

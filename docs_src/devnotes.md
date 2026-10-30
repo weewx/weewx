@@ -605,8 +605,13 @@ To clean up after running tests:
 make test-clean
 ```
 
-If you add additional unit tests, they should put any transient files in
-`/var/tmp/weewx-test` &mdash; do not write to the source tree.
+If you add additional unit tests, they should put any transient files in the
+directory returned by `weeutil.weeutil.get_test_dir()` (or specified by the
+`$WEEWX_TEST_DIR` environment variable, or use pytest's `tmp_path` fixture) &mdash;
+do not hardcode `/var/tmp` and do not write to the source tree. `make test` and
+the test suite check `$WEEWX_TEST_DIR`, then `$TMPDIR/weewx-test` if `$TMPDIR` is
+set, defaulting to `/var/tmp/weewx-test` (or `tempfile.gettempdir()/weewx-test`).
+`make test-clean` will remove all files in that directory.
 
 Tests in `src/weewx/tests` use the fixtures in `conftest.py` to run against
 both SQLite and MySQL. Use `database` for tests that create their own schema
