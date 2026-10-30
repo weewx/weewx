@@ -1,6 +1,5 @@
 #
 #    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
-#    Copyright (c) 2026 Manuel Hilgert <hilman2@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -596,7 +595,7 @@ class ArchivePeriods:
                 Default is True.
 
         Returns:
-            bool: True if the packet was added. False if its period has already been handed out.
+            bool: True if the packet was added. False if its accumulator has already been handed out.
         """
         stop_ts = self.stop_of(packet['dateTime'])
         if self.last_stop_ts is not None and stop_ts <= self.last_stop_ts:
@@ -616,7 +615,7 @@ class ArchivePeriods:
         return min(self.open) if self.open else None
 
     def pop_ended(self, now_ts):
-        """Remove the periods that have ended by a given time, and return their accumulators.
+        """Remove the periods that have ended by a given time and return their accumulators.
 
         Args:
             now_ts (int|float): The time. A period has ended once now_ts is past its stop time.
@@ -637,13 +636,12 @@ class ArchivePeriods:
 class StdArchive(StdService):
     """Service that archives LOOP and archive data in the SQL databases."""
 
-    # LOOP packets are collected by ArchivePeriods, one accumulator per archive period. The main
-    # loop is broken archive_delay seconds after the end of a period, so packets that arrive late
-    # still count. Then every period that has ended is archived: either the station
-    # supplies the archive record from its memory (hardware generation), or the record is
-    # extracted from the accumulator (software generation). Either way, the accumulator of the
-    # period travels with the record on the NEW_ARCHIVE_RECORD event. It supplies the LOOP highs
-    # and lows for the daily summaries.
+    # LOOP packets are collected by an instance of class ArchivePeriods, one accumulator per
+    # archive period. The main loop is broken archive_delay seconds after the end of a period,
+    # so packets that arrive late can still be counted. Then every period that has ended is
+    # archived: either the station supplies the archive record from its memory (hardware
+    # generation), or the record is extracted from the accumulator (software generation). Either
+    # way, the accumulator of the period travels with the record on the NEW_ARCHIVE_RECORD event.
 
     def __init__(self, engine, config_dict):
         super().__init__(engine, config_dict)
@@ -667,14 +665,11 @@ class StdArchive(StdService):
         self.end_archive_period_ts = None
         # The timestamp that marks the end of the archive period, plus a delay
         self.end_archive_delay_ts = None
-        # The timestamp of the latest LOOP packet. It is the clock that decides which periods have
-        # ended, since another service may break the loop in the middle of a period. It is the
-        # latest rather than the largest timestamp, so that a single packet from the future does
-        # not stop the clock after the station has corrected it.
+        # The timestamp of the latest LOOP packet.
         self.latest_packet_ts = None
-        # The stop time of the archive period whose late packets were last reported as ignored.
-        # It keeps the log to one line per period.
-        self.ignored_stop_ts = None
+        # The stop time of the archive period whose late packets were last reported to the log.
+        # This avoids lots of nearly identical log warnings.
+        self.last_late_warning = None
 
         if self.record_generation == 'software':
             self.archive_interval = software_interval
@@ -770,12 +765,13 @@ class StdArchive(StdService):
         packet_ts = event.packet['dateTime']
         self.latest_packet_ts = packet_ts
         if not self.periods.add_packet(event.packet, add_hilo=self.loop_hilo):
+            # The packet is too late! Log a warning if we haven't already
             stop_ts = self.periods.stop_of(packet_ts)
-            if stop_ts != self.ignored_stop_ts:
-                self.ignored_stop_ts = stop_ts
-                log.info("Ignore LOOP packets for archive period ending %s: "
-                         "it has already been archived",
-                         weeutil.weeutil.timestamp_to_string(stop_ts))
+            if stop_ts != self.last_late_warning:
+                self.last_late_warning = stop_ts
+                log.warning("Ignore LOOP packets for archive period ending %s: "
+                            "they have been already archived",
+                            weeutil.weeutil.timestamp_to_string(stop_ts))
 
     def check_loop(self, event):
         """Called after any loop packets have been processed. This is the opportunity
@@ -811,10 +807,12 @@ class StdArchive(StdService):
 
         _event (weewx.Event): Not used.
         """
+        # Get all the accumulators of the periods that have ended. If no LOOP packets have been
+        # processed, then self.latest_packet_ts will be None. In that case, there will be no
+        # accumulators to archive.
         ended = self.periods.pop_ended(self.latest_packet_ts) \
             if self.latest_packet_ts is not None else []
-        # Nothing has ended if another service broke the loop in the middle of a period, or right
-        # after startup, if the first packets already belong to the next period.
+        # Archive any resultant accumulators.
         if ended:
             self._archive(ended)
 
