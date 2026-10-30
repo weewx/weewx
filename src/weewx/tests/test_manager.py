@@ -300,3 +300,16 @@ def setup_database(db_dict):
                                                         day_phase_offset=0.0))
 
     return db_manager
+
+
+def test_update_nulls_policy_preserves_or_clears_existing_observations(db_manager):
+    stamp, temperature, interval = db_manager.getSql(
+        'SELECT dateTime, outTemp, `interval` FROM archive WHERE outTemp IS NOT NULL ORDER BY dateTime LIMIT 1')
+    count = db_manager.getSql('SELECT SUM(count) FROM archive_day_outTemp')[0]
+    missing = {'dateTime': stamp, 'usUnits': weewx.US, 'interval': interval, 'outTemp': None}
+    db_manager.addRecord(missing, update=True, update_nulls=False)
+    assert db_manager.getRecord(stamp)['outTemp'] == temperature
+    assert db_manager.getSql('SELECT SUM(count) FROM archive_day_outTemp')[0] == count
+    db_manager.addRecord(missing, update=True)
+    assert db_manager.getRecord(stamp)['outTemp'] is None
+    assert db_manager.getSql('SELECT SUM(count) FROM archive_day_outTemp')[0] == count - 1
