@@ -14,6 +14,11 @@ a row per bucket rather than every archive record. Buckets of a day or more
 come from the daily summaries again, as before.
 [PR #1154](https://github.com/weewx/weewx/pull/1154).
 
+LOOP packet data are no longer lost when packets arrive out of order, arrive
+only once per archive interval, or come from a station clock that has been set
+back. Each archive period now has its own accumulator. 
+[PR #1209](https://github.com/weewx/weewx/pull/1209).
+
 
 ### 5.x.y dd-Mmm-YYYY
 
