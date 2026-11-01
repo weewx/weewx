@@ -1,5 +1,6 @@
 #
 #    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2026 Manuel Hilgert <hilman2@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -62,6 +63,33 @@ def isolate_locale():
             locale.setlocale(locale.LC_ALL, orig_lc)
         except locale.Error:
             locale.setlocale(locale.LC_ALL, 'C')
+
+# The expected results of the German report hold the abbreviations used by glibc. The C library
+# on macOS uses different ones. For example, it writes "Nov." for "Nov", "Juni" for "Jun", and
+# "Mo." for "Mo". The two tables can also change independently of WeeWX. The spelling they pick
+# is not what these tests are about, so fixture german_abbreviations supplies glibc's spelling
+# on every platform.
+GERMAN_ABBREVIATED_MONTHS = ('Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun',
+                             'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez')
+GERMAN_ABBREVIATED_DAYS = ('Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So')
+
+
+@pytest.fixture(autouse=True)
+def german_abbreviations(monkeypatch):
+    """Expand %b and %a from the tables above whenever the German locale is active."""
+    original_strftime = time.strftime
+
+    def strftime(format_string, time_tuple=None):
+        if time_tuple is None:
+            time_tuple = time.localtime()
+        # The report engine changes the locale from report to report, so check on every call.
+        if locale.getlocale(locale.LC_TIME)[0] == 'de_DE':
+            month_name = GERMAN_ABBREVIATED_MONTHS[time_tuple[1] - 1]
+            day_name = GERMAN_ABBREVIATED_DAYS[time_tuple[6]]
+            format_string = format_string.replace('%b', month_name).replace('%a', day_name)
+        return original_strftime(format_string, time_tuple)
+
+    monkeypatch.setattr(time, 'strftime', strftime)
 
 # These tests also test the examples in the 'example' subdirectory.
 # Patch PYTHONPATH to find them.
