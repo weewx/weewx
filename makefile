@@ -45,7 +45,8 @@ TMPDIR?=/var/tmp
 ifdef WEEWX_TEST_DIR
   TESTDIR := $(WEEWX_TEST_DIR)
 else
-  TESTDIR := $(TMPDIR)/weewx-test
+  # Strip any trailing slash off of TMPDIR
+  TESTDIR := $(patsubst %/,%,$(TMPDIR))/weewx-test
   export WEEWX_TEST_DIR := $(TESTDIR)
 endif
 
