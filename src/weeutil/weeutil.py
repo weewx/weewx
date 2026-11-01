@@ -19,7 +19,6 @@ import math
 import os
 import re
 import shutil
-import tempfile
 import time
 from collections import ChainMap
 
@@ -1943,6 +1942,7 @@ def get_test_dir():
     Checks WEEWX_TEST_DIR, then TMPDIR/weewx-test, then /var/tmp/weewx-test
     (if writable), falling back to tempfile.gettempdir()/weewx-test.
     """
+    import tempfile
     test_dir = os.environ.get('WEEWX_TEST_DIR')
     if not test_dir:
         base = os.environ.get('TMPDIR') or (
