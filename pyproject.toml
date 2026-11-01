@@ -59,12 +59,14 @@ Issues = "https://github.com/weewx/weewx/issues"
 Wiki = "https://github.com/weewx/weewx/wiki"
 Support = "https://groups.google.com/g/weewx-user"
 
+# Install development dependencies with "pip install -e . --group dev"
 [dependency-groups]
 dev = [
     "cryptography",
     "zensical",
     "poetry",
     "pytest",
+    "mysqlclient",
 ]
 
 [project.scripts]
@@ -100,8 +102,9 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-# Make pytest use importlib instead of manipulating sys.path. This makes imports more predictable.
-addopts = "--import-mode=importlib"
+# -ra shows extra test summary info (skips, fails, errors) with reasons.
+# --import-mode causes pytest to use importlib instead of manipulating sys.path. This makes imports more predictable.
+addopts = "-ra --import-mode=importlib"
 # Include the source directories in the import root
 pythonpath = [
     "src",
