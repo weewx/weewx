@@ -16,6 +16,8 @@ import shutil
 import sys
 import time
 
+import pytest
+
 import parameters
 import weeutil.config
 import weeutil.logger
@@ -39,9 +41,27 @@ log = logging.getLogger(__name__)
 os.environ['TZ'] = 'America/Los_Angeles'
 time.tzset()
 
-# Explicitly set LANG to the US locale. Some of the tests require it.
-os.environ['LANG'] = "en_US.UTF-8"
-locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+@pytest.fixture(autouse=True)
+def isolate_locale():
+    """Explicitly set LANG and LC_ALL to US locale for template tests, restoring afterwards."""
+    orig_lc = locale.setlocale(locale.LC_ALL)
+    orig_lang = os.environ.get('LANG')
+    try:
+        os.environ['LANG'] = "en_US.UTF-8"
+        try:
+            locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+        except locale.Error:
+            pass
+        yield
+    finally:
+        if orig_lang is not None:
+            os.environ['LANG'] = orig_lang
+        else:
+            os.environ.pop('LANG', None)
+        try:
+            locale.setlocale(locale.LC_ALL, orig_lc)
+        except locale.Error:
+            locale.setlocale(locale.LC_ALL, 'C')
 
 # These tests also test the examples in the 'example' subdirectory.
 # Patch PYTHONPATH to find them.
