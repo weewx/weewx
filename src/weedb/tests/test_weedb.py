@@ -10,13 +10,20 @@ For this test to work, MySQL user 'weewx' must have full access to database 'tes
 """
 
 import os
+import os.path
 import pytest
 
 import weedb
 import weedb.sqlite
-from weeutil.weeutil import version_compare
+from weeutil.weeutil import version_compare, get_test_dir
 
-sqlite_db_dict = {'database_name': '/var/tmp/test.sdb', 'driver': 'weedb.sqlite', 'timeout': '2'}
+test_dir = get_test_dir()
+
+sqlite_db_dict = {
+    'database_name': os.path.join(test_dir, 'test.sdb'),
+    'driver': 'weedb.sqlite',
+    'timeout': '2'
+}
 mysql_db_dict = {'database_name': 'test_weewx1', 'user': 'weewx1', 'password': 'weewx1',
                  'driver': 'weedb.mysql'}
 

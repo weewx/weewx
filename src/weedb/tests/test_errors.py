@@ -9,11 +9,18 @@ import sys
 import pytest
 
 import weedb
+from weeutil.weeutil import get_test_dir
 
 #
 # For these tests to work, the database for sqdb1 must in a place where you have write permissions,
 # and the database for sqdb2 must be in a place where you do NOT have write permissions
-sqdb1_dict = {'database_name': '/var/tmp/weewx-test/sqdb1.sdb', 'driver': 'weedb.sqlite', 'timeout': '2'}
+test_dir = get_test_dir()
+
+sqdb1_dict = {
+    'database_name': os.path.join(test_dir, 'sqdb1.sdb'),
+    'driver': 'weedb.sqlite',
+    'timeout': '2'
+}
 sqdb2_dict = {'database_name': '/usr/local/sqdb2.sdb', 'driver': 'weedb.sqlite', 'timeout': '2'}
 mysql1_dict = {'database_name': 'test_weewx1', 'user': 'weewx1', 'password': 'weewx1', 'driver': 'weedb.mysql'}
 mysql2_dict = {'database_name': 'test_weewx1', 'user': 'weewx2', 'password': 'weewx2', 'driver': 'weedb.mysql'}

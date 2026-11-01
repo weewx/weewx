@@ -15,6 +15,7 @@ import gen_fake_data
 import weedb
 import weeutil.logger
 import weewx.manager
+from weeutil.weeutil import get_test_dir
 from parameters import synthetic_dict, alt_dict
 
 log = logging.getLogger(__name__)
@@ -52,6 +53,7 @@ def build_config(request):
         raise
 
     # Patch the config file so that the two bindings use the appropriate database:
+    weewx_config['WEEWX_ROOT'] = get_test_dir()
     weewx_config['DataBindings']['wx_binding']['database'] = "archive_" + db_type
     weewx_config['DataBindings']['alt_binding']['database'] = "alt_" + db_type
 

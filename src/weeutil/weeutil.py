@@ -19,6 +19,7 @@ import math
 import os
 import re
 import shutil
+import tempfile
 import time
 from collections import ChainMap
 
@@ -1934,6 +1935,23 @@ def get_resource_fd(package, resource):
     else:
         # For later versions...
         return importlib_resources.files(package).joinpath(resource).open('r') # novermin
+
+
+def get_test_dir():
+    """Return a path to a unified directory for transient test files.
+
+    Checks WEEWX_TEST_DIR, then TMPDIR/weewx-test, then /var/tmp/weewx-test
+    (if writable), falling back to tempfile.gettempdir()/weewx-test.
+    """
+    test_dir = os.environ.get('WEEWX_TEST_DIR')
+    if not test_dir:
+        base = os.environ.get('TMPDIR') or (
+            '/var/tmp' if os.path.isdir('/var/tmp') and os.access('/var/tmp', os.W_OK)
+            else tempfile.gettempdir()
+        )
+        test_dir = os.path.join(base, 'weewx-test')
+    os.makedirs(test_dir, exist_ok=True)
+    return test_dir
 
 
 if __name__ == '__main__':
