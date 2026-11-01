@@ -232,7 +232,7 @@ also decide whether the daily summary optimization can be used
 ([details below](#daily-summaries)). If not, it will use the regular
 archive table.
 
-## Daily summaries {#daily-summaries}
+## Daily summaries
 
 This section builds on the section [*The database*](custom/introduction.md#the-database)
 in the *Customization Guide*. Read it first.
@@ -563,27 +563,13 @@ now = datetime.datetime()
 
 ## Unit tests
 
-The code that exercises the code is located in a directory called `tests` in
-each of the component directories.
+Unit tests for each module are located in a directory called `tests` under each
+module's directory.
 
-Prerequisites for running the core tests include:
+The development dependencies can easily be installed into a virtual
+environment by using the following pip command:
 
-    MySQL >= 8.0
-    Python >= 3.7
-    configobj>=5.0
-    cryptography
-    CT3>=3.1
-    ephem>=4.1
-    Pillow>=5.2
-    PyMySQL
-    pyserial>=3.4
-    pytest
-    pyusb>=1.0.2
-
-When using a pip virtual environment, these can easily be installed into the
-environment by using the file `dev_requirements.txt` located in the repository:
-
-    pip install -r dev_requirements.txt
+    pip install -e . --group dev
 
 MySQL must be set up with specific users with specific permissions.  This can be
 done by a `make` target:
@@ -683,13 +669,17 @@ WebStorm](http://www.jetbrains.com/webstorm/) is excellent, particularly
 if you are using a framework such as Node.js or Express.js.
 
 ## Directory Structure
+- `docs_src/`: Source documentation mostly in Markdown.
+- `src/weecfg/`: Utilities for working with `configobj` configuration files.
+- `src/weectllib`: Actions and commands used by the `weectl` utility.
+- `src/weedb/`: Database abstraction layer.
+- `src/weeimport`: Utilities used by the `weectl import` utility.
+- `src/weeplot/`: Plotting and image generation code.
+- `src/weeutil/`: General-purpose utility modules used across the project.
 - `src/weewx/`: The core WeeWX engine and services.
 - `src/weewx/drivers/`: Drivers for various weather station hardware.
-- `src/weecfg/`: Utilities for working with `configobj` configuration files.
-- `src/weeutil/`: General-purpose utility modules used across the project.
-- `src/weedb/`: Database abstraction layer.
-- `src/weeplot/`: Plotting and image generation code.
-- `docs_src/`: Source documentation in Markdown or other formats.
+- `src/weewx/schemas`: The database schemas used by WeeWX.
+- `src/weewx_data`: Resources used by WeeWX, including skins and the configuration file.
 
 ## Testing Framework
 - **Pytest**: The project uses `pytest` as its primary testing framework.
