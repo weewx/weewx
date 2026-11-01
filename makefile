@@ -42,6 +42,12 @@ PYTHON?=python3
 PYTEST?=pytest
 
 TMPDIR?=/var/tmp
+ifdef WEEWX_TEST_DIR
+  TESTDIR := $(WEEWX_TEST_DIR)
+else
+  TESTDIR := $(TMPDIR)/weewx-test
+  export WEEWX_TEST_DIR := $(TESTDIR)
+endif
 
 all: help
 
@@ -177,7 +183,6 @@ test-setup:
 test-setup-ci:
 	MYSQL_NO_OPTS=1 src/weedb/tests/setup_mysql.sh
 
-TESTDIR=/var/tmp/weewx-test
 MYSQLCLEAN="drop database test_weewx;\n\
 drop database test_alt_weewx;\n\
 drop database test_sim;\n\
