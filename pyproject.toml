@@ -98,3 +98,12 @@ exclude = [
 requires = ["poetry-core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "--import-mode=importlib"
+pythonpath = [
+    "src",
+    "src/weewx_data/examples",
+    "src/weewx/tests",
+]
+
