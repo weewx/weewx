@@ -98,3 +98,14 @@ exclude = [
 requires = ["poetry-core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.pytest.ini_options]
+minversion = "7.0"
+# Make pytest use importlib instead of manipulating sys.path. This makes imports more predictable.
+addopts = "--import-mode=importlib"
+# Include the source directories in the import root
+pythonpath = [
+    "src",
+    "src/weewx_data/examples",
+    "src/weewx/tests",
+]
+
