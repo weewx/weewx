@@ -257,8 +257,7 @@ def test_get_aggregate_series_on_the_fly(config_dict):
                                       aggregate_type='avg',
                                       aggregate_interval=6 * 3600)
 
-    for actual, expected in zip(data_vec[0], expected_aggregate_vapor_pressures):
-        assert actual == pytest.approx(expected, abs=1e-6)
+    assert data_vec[0] == pytest.approx(expected_aggregate_vapor_pressures, abs=1e-6)
     assert data_vec[1] == 'inHg'
     assert data_vec[2] == 'group_pressure'
 
@@ -278,7 +277,7 @@ expected_outTemp_max = [39.283828, 39.875896, 40.315346, 41.077745, 41.687169, 4
 expected_outTemp_count = [48, 47, 47, 48, 47, 47, 48, 47, 47, 48, 47, 47, 47, 46, 47, 47, 48,
                           47, 47, 48, 47, 47, 48, 47, 47, 48, 47, 47, 48, 47, 47]
 
-expected_outTemp_not_null = [True] * 31
+expected_outTemp_not_null = [1] * 31
 
 expected_outTemp_first = [3.062017, 3.650397, 4.244847, 4.84519, 5.451248, 6.062842, 6.67979,
                           7.301911, 7.929018, 8.560928, 7.757319, 9.838401, 10.483586, 11.132815,
@@ -367,12 +366,7 @@ def test_get_series_archive_agg(config_dict, aggregate_type, obs_type, expected_
     assert len(start_vec[0]) == 31
     assert len(stop_vec[0]) == 31
     assert len(data_vec[0]) == 31
-    for actual, expected in zip(data_vec[0], expected_values):
-        # The daily summaries return 'not_null' as 1, the archive table as True.
-        if actual is None or expected is None or isinstance(expected, bool):
-            assert actual == expected
-        else:
-            assert actual == pytest.approx(expected, abs=1e-6)
+    assert data_vec[0] == pytest.approx(expected_values, abs=1e-6)
     assert (data_vec[1], data_vec[2]) == expected_unit
 
 
@@ -419,14 +413,24 @@ def _get_hourly_series(db_manager, obs_type, aggregate_type):
 
 
 def _assert_series_equal(actual, expected):
+    """
+    Compares two sequences of value tuples for equality within a tolerance.
+
+    Args:
+        actual (list[tuple]): List of actual value tuples (value, unit, unit_group). The first
+            element (value) is a series.
+        expected (list[tuple]): List of expected value tuples (value, unit, unit_group). The first
+            element (value) is a series.
+
+    """
+    # Compare the two lists, element by element
     for actual_vt, expected_vt in zip(actual, expected):
-        assert actual_vt[1:] == expected_vt[1:]
-        assert len(actual_vt[0]) == len(expected_vt[0])
-        for a, e in zip(actual_vt[0], expected_vt[0]):
-            if a is None or e is None:
-                assert a == e
-            else:
-                assert a == pytest.approx(e, abs=1e-6)
+        # Compare the data series
+        assert actual_vt[0] == pytest.approx(expected_vt[0], abs=1e-6)
+        # Compare the unit
+        assert actual_vt[1] == expected_vt[1]
+        # Compare the unit group
+        assert actual_vt[2] == expected_vt[2]
 
 
 def _force_per_bucket(m):
