@@ -1,5 +1,6 @@
 #
 #    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2026 Manuel Hilgert <hilman2@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -1027,6 +1028,30 @@ def test_ListOfDicts():
     assert '3' in s
     assert '6' in s
     assert '11' not in s
+
+
+def test_ListOfDicts_with_a_map_that_cannot_list_its_keys():
+    class EndsInTemp:
+        def __getitem__(self, key):
+            if key.endswith('Temp'):
+                return 'group_temperature'
+            raise KeyError(key)
+
+        def __contains__(self, key):
+            return key.endswith('Temp')
+
+    lod = ListOfDicts({'a': 1})
+    lod.extend(EndsInTemp())
+    lod.extend({'b': 2, 'a': 3})
+
+    # The map answers lookups...
+    assert lod['fooTemp'] == 'group_temperature'
+    assert 'fooTemp' in lod
+    assert lod.get('foo') is None
+    # ... and iteration passes over it, without losing the keys of the maps behind it.
+    assert dict(lod) == {'a': 1, 'b': 2}
+    assert len(lod) == 2
+    assert set(lod.keys()) == {'a', 'b'}
 
 
 def test_KeyDict():

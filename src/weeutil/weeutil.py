@@ -1,5 +1,6 @@
 #
 #    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2026 Manuel Hilgert <hilman2@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -1756,11 +1757,32 @@ def move_with_timestamp(path):
 
 
 class ListOfDicts(ChainMap):
+    """A ChainMap whose maps need only answer lookups.
+
+    A map does not have to be a dictionary. It can be an object that works out the value
+    from the key, e.g., a unit group from the name of an observation type. Such an object
+    has __getitem__() and __contains__(), but no __iter__(), because it cannot list the
+    keys it answers for. A lookup reaches it as usual, while iteration, dict(), len() and
+    .keys() cover only the maps that can list their keys.
+    """
+
     def extend(self, m):
         self.maps.append(m)
 
     def prepend(self, m):
         self.maps.insert(0, m)
+
+    def __iter__(self):
+        # ChainMap iterates over every map. For a map without __iter__(), Python would
+        # fall back on calling __getitem__() with 0, 1, 2 ..., which is not a key.
+        keys = {}
+        for mapping in reversed(self.maps):
+            if is_iterable(mapping):
+                keys.update(dict.fromkeys(mapping))
+        return iter(keys)
+
+    def __len__(self):
+        return sum(1 for _ in self)
 
 
 class KeyDict(dict):
