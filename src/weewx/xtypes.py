@@ -1,5 +1,6 @@
 #
 #    Copyright (c) 2019-2026 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2026 Manuel Hilgert <hilman2@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -553,12 +554,12 @@ class ArchiveTable(XType):
         """Group consecutive aggregation buckets into pages.
 
         Buckets are accumulated into a page until the page spans at least `page_span` seconds,
-        or until the next bucket differs in length. Each page holds at least one bucket, so a
-        bucket is never split across pages.
+        until the next bucket differs in length, or until it does not start where the last bucket
+        stopped. Each page holds at least one bucket, so a bucket is never split across pages.
 
         Args:
-            buckets (list[weeutil.weeutil.TimeSpan]): The bucket time spans, sorted ascending and
-                non-overlapping.
+            buckets (list[weeutil.weeutil.TimeSpan]): The bucket time spans, sorted ascending.
+                Neighbors can overlap, because weeutil.weeutil.intervalgen() works in local time.
             page_span (int|float): The target length of a page, in seconds.
 
         Yields:
@@ -566,9 +567,13 @@ class ArchiveTable(XType):
         """
         page = []
         for bucket in buckets:
-            # The GROUP BY of _gen_grouped_aggregates() needs buckets of one length. They differ
-            # where DST begins or ends, and at the end of the series.
-            if page and bucket[1] - bucket[0] != page[0][1] - page[0][0]:
+            # The GROUP BY of _gen_grouped_aggregates() puts a page on a grid of start + n * step,
+            # so a page needs buckets of one length, each starting where the last one stopped.
+            # Lengths differ where DST begins or ends, and at the end of the series. Where DST
+            # begins, intervalgen() can also yield two buckets of the same length that overlap.
+            # On one page, the second one and all that follow would be off the grid.
+            if page and (bucket[1] - bucket[0] != page[0][1] - page[0][0]
+                         or bucket[0] != page[-1][1]):
                 yield page
                 page = []
             page.append(bucket)
@@ -592,8 +597,8 @@ class ArchiveTable(XType):
         Args:
             obs_type (str): The observation type to be aggregated.
             aggregate_type (str): The type of aggregation. Must be in `_fast_aggregate_types`.
-            buckets (list[weeutil.weeutil.TimeSpan]): The time spans of the aggregation buckets.
-                These should be ascending and non-overlapping.
+            buckets (list[weeutil.weeutil.TimeSpan]): The time spans of the aggregation buckets,
+                sorted ascending. See `_gen_pages()` about buckets that overlap.
             db_manager (weewx.manager.Manager): An open database manager.
             page_span (int|float): The target length of a page, in seconds.
 
@@ -698,8 +703,8 @@ class ArchiveTable(XType):
         Args:
             obs_type (str): The observation type to be aggregated.
             aggregate_type (str): The type of aggregation. Must be in `_grouped_aggregate_types`.
-            buckets (list[weeutil.weeutil.TimeSpan]): The time spans of the aggregation buckets.
-                These should be ascending, non-overlapping, and without gaps.
+            buckets (list[weeutil.weeutil.TimeSpan]): The time spans of the aggregation buckets,
+                sorted ascending. See `_gen_pages()` about buckets that overlap.
             db_manager (weewx.manager.Manager): An open database manager.
             page_span (int|float): The target length of a page, in seconds.
 
