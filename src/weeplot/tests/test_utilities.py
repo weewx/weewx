@@ -38,6 +38,7 @@ def test_scale():
     assert scale(-17.0, -5.0, (0, None, .1), 10) == (0.00000, 1.00000, 0.20000)
     assert scale(5.0, 17.0, (None, 1, .1), 10) == (0.00000, 1.00000, 0.20000)
     assert scale(5.0, 17.0, (0, 1, None)) == (0.00000, 1.00000, 0.20000)
+    assert scale(3.222222222222222e-05, 3.222222222222222e-05, (None, None, None), 10) == (3.22e-05, 3.255e-05, 5e-08)
 
 def test_scaletime():
     """test function scaletime()"""

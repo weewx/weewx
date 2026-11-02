@@ -22,6 +22,11 @@ back. Each archive period now has its own accumulator.
 
 ### 5.x.y dd-Mmm-YYYY
 
+Fixed `tderiv` raising `TypeError` for missing energy samples and returning
+incorrect units for non-energy observations. It now supports energy, distance,
+rain and pressure. Other observation groups raise `UnknownAggregation`.
+[PR #1199](https://github.com/weewx/weewx/pull/1199).
+
 Fixed incorrect values in derived series and aggregates when an XType extension
 returns a value in a different unit system.
 [PR #1188](https://github.com/weewx/weewx/pull/1188).
@@ -62,6 +67,12 @@ Fixed daily summaries being counted twice after re-importing archive records
 with --update, and stale daily extrema after corrections.
 [PR #1197](https://github.com/weewx/weewx/pull/1197).
 
+Reduced database queries when reports iterate over derived observation values
+in archive records. [PR #1201](https://github.com/weewx/weewx/pull/1201).
+
+Fixed calculated `rainRate`. Under certain circumstances, some packets could be
+missed. [PR #1198](https://github.com/weewx/weewx/pull/1198).
+
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
 improvements particularly with remote databases.
@@ -78,6 +89,13 @@ over an interval. [PR #1155](https://github.com/weewx/weewx/pull/1155).
 Of several equal extremes, aggregate types `maxtime` and `mintime` now give the
 earliest when calculated from the archive table, as they already did from the
 daily summaries. [PR #1156](https://github.com/weewx/weewx/pull/1156).
+
+Fixed problem when plotting data whose y-value is very small and has a very 
+small range.
+
+Translate database errors raised while reading table schemas. SQLite schema
+locks now reach the existing retry handlers during database initialization.
+[PR #1208](https://github.com/weewx/weewx/pull/1208).
 
 
 ### 5.5.2 23-Sep-2026

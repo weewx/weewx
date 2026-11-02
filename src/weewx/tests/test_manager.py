@@ -64,27 +64,13 @@ db_dict_sqlite = {
     # 'database_name': 'testmgr.sdb',
 }
 
-db_dict_mysql = {
-    'host': 'localhost',
-    'user': 'weewx',
-    'password': 'weewx',
-    'database_name': 'test_scratch',
-    'driver': 'weedb.mysql',
-}
-
-
-@pytest.fixture(params=['sqlite', 'mysql'])
-def db_manager(request):
-    db_dict = db_dict_mysql if request.param == 'mysql' else db_dict_sqlite
-    manager = setup_database(db_dict)
+@pytest.fixture
+def db_manager(database):
+    manager = setup_database(database)
     try:
         yield manager
     finally:
         manager.close()
-        try:
-            weedb.drop(db_dict)
-        except weedb.NoDatabaseError:
-            pass
 
 
 def check_weights(db_manager):
@@ -208,17 +194,13 @@ class TestRetry:
 
 
 class TestDaySummaryReads:
-    @pytest.fixture(params=[db_dict_sqlite, db_dict_mysql])
+    @pytest.fixture
     @staticmethod
-    def manager(request):
+    def manager(database):
         with weewx.manager.DaySummaryManager.open_with_create(
-                request.param, table_name='summary_read_test',
+                database, table_name='summary_read_test',
                 schema=weewx.schemas.wview_extended.schema) as manager:
             yield manager
-            with weedb.Transaction(manager.connection) as cursor:
-                for table in manager.connection.tables():
-                    if table.startswith('summary_read_test'):
-                        cursor.drop_table(table)
 
     @staticmethod
     def test_read_summaries(manager, monkeypatch):

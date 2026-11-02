@@ -9,11 +9,18 @@ import sys
 import pytest
 
 import weedb
+from weeutil.weeutil import get_test_dir
 
 #
 # For these tests to work, the database for sqdb1 must in a place where you have write permissions,
 # and the database for sqdb2 must be in a place where you do NOT have write permissions
-sqdb1_dict = {'database_name': '/var/tmp/weewx-test/sqdb1.sdb', 'driver': 'weedb.sqlite', 'timeout': '2'}
+test_dir = get_test_dir()
+
+sqdb1_dict = {
+    'database_name': os.path.join(test_dir, 'sqdb1.sdb'),
+    'driver': 'weedb.sqlite',
+    'timeout': '2'
+}
 sqdb2_dict = {'database_name': '/usr/local/sqdb2.sdb', 'driver': 'weedb.sqlite', 'timeout': '2'}
 mysql1_dict = {'database_name': 'test_weewx1', 'user': 'weewx1', 'password': 'weewx1', 'driver': 'weedb.mysql'}
 mysql2_dict = {'database_name': 'test_weewx1', 'user': 'weewx2', 'password': 'weewx2', 'driver': 'weedb.mysql'}
@@ -41,22 +48,19 @@ else:
              "Change the permissions and try again." % sqdb2_dict['database_name'])
 
 
+TEST_MYSQL = os.environ.get('WEEWX_TEST_MYSQL', '1') != '0'
+
+
 class TestErrors:
 
     @pytest.fixture(autouse=True)
     def setup(self):
         """Drop the old databases, in preparation for running a test."""
-        try:
-            import MySQLdb
-        except ImportError:
+        if TEST_MYSQL:
             try:
-                import pymysql as MySQLdb
-            except ImportError as e:
-                pytest.skip(str(e))
-        try:
-            weedb.drop(mysql1_dict)
-        except weedb.NoDatabase:
-            pass
+                weedb.drop(mysql1_dict)
+            except weedb.NoDatabase:
+                pass
         try:
             weedb.drop(sqdb1_dict)
         except weedb.NoDatabase:
@@ -68,6 +72,7 @@ class TestErrors:
         with pytest.raises(weedb.CannotConnectError):
             weedb.connect(mysql_dict)
 
+    @pytest.mark.skipif(not TEST_MYSQL, reason="MySQL testing disabled via WEEWX_TEST_MYSQL=0")
     def test_bad_password(self):
         mysql_dict = dict(mysql1_dict)
         mysql_dict['password'] = 'badpw'
@@ -75,15 +80,17 @@ class TestErrors:
             weedb.connect(mysql_dict)
 
     def test_drop_nonexistent_database(self):
-        with pytest.raises(weedb.NoDatabase):
-            weedb.drop(mysql1_dict)
+        if TEST_MYSQL:
+            with pytest.raises(weedb.NoDatabase):
+                weedb.drop(mysql1_dict)
         with pytest.raises(weedb.NoDatabase):
             weedb.drop(sqdb1_dict)
 
     def test_drop_nopermission(self):
-        weedb.create(mysql1_dict)
-        with pytest.raises(weedb.PermissionError):
-            weedb.drop(mysql2_dict)
+        if TEST_MYSQL:
+            weedb.create(mysql1_dict)
+            with pytest.raises(weedb.PermissionError):
+                weedb.drop(mysql2_dict)
         weedb.create(sqdb1_dict)
         # Can't really test this one without setting up a file where
         # we have no write permission
@@ -91,25 +98,29 @@ class TestErrors:
             weedb.drop(sqdb2_dict)
 
     def test_create_nopermission(self):
-        with pytest.raises(weedb.PermissionError):
-            weedb.create(mysql2_dict)
+        if TEST_MYSQL:
+            with pytest.raises(weedb.PermissionError):
+                weedb.create(mysql2_dict)
         with pytest.raises(weedb.PermissionError):
             weedb.create(sqdb2_dict)
 
     def test_double_db_create(self):
-        weedb.create(mysql1_dict)
-        with pytest.raises(weedb.DatabaseExists):
+        if TEST_MYSQL:
             weedb.create(mysql1_dict)
+            with pytest.raises(weedb.DatabaseExists):
+                weedb.create(mysql1_dict)
         weedb.create(sqdb1_dict)
         with pytest.raises(weedb.DatabaseExists):
             weedb.create(sqdb1_dict)
 
     def test_open_nonexistent_database(self):
-        with pytest.raises(weedb.OperationalError):
-            connect = weedb.connect(mysql1_dict)
+        if TEST_MYSQL:
+            with pytest.raises(weedb.OperationalError):
+                connect = weedb.connect(mysql1_dict)
         with pytest.raises(weedb.OperationalError):
             connect = weedb.connect(sqdb1_dict)
 
+    @pytest.mark.skipif(not TEST_MYSQL, reason="MySQL testing disabled via WEEWX_TEST_MYSQL=0")
     def test_select_nonexistent_database(self):
         mysql_dict = dict(mysql1_dict)
         mysql_dict.pop('database_name')
@@ -135,7 +146,8 @@ class TestErrors:
             cursor.close()
             connect.close()
 
-        test(mysql1_dict)
+        if TEST_MYSQL:
+            test(mysql1_dict)
         test(sqdb1_dict)
 
     def test_double_table_create(self):
@@ -149,7 +161,8 @@ class TestErrors:
             cursor.close()
             connect.close()
 
-        test(mysql1_dict)
+        if TEST_MYSQL:
+            test(mysql1_dict)
         test(sqdb1_dict)
 
     def test_select_nonexistent_column(self):
@@ -163,7 +176,8 @@ class TestErrors:
             cursor.close()
             connect.close()
 
-        test(mysql1_dict)
+        if TEST_MYSQL:
+            test(mysql1_dict)
         test(sqdb1_dict)
 
     def test_duplicate_key(self):
@@ -178,6 +192,7 @@ class TestErrors:
             cursor.close()
             connect.close()
 
-        test(mysql1_dict)
+        if TEST_MYSQL:
+            test(mysql1_dict)
         test(sqdb1_dict)
 

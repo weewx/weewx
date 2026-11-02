@@ -13,6 +13,7 @@ import pytest
 import weedb
 import weewx
 import weewx.manager
+import weewx.units
 import weewx.xtypes
 from parameters import synthetic_dict
 from weeutil.weeutil import TimeSpan
@@ -103,14 +104,18 @@ def examine_object(weewx_dict, aggregate_obj):
                                                        'lasttime', db_manager)
             assert last_time_vt[0] == stop_ts
 
-            # Use 'dateTime' to check 'diff' and 'tderiv'. The calculations are super easy.
             diff_vt = aggregate_obj.get_aggregate('dateTime', TimeSpan(start_ts, stop_ts),
                                                   'diff', db_manager)
             assert diff_vt[0] == stop_ts - start_ts
 
-            tderiv_vt = aggregate_obj.get_aggregate('dateTime', TimeSpan(start_ts, stop_ts),
+            first_pressure = db_manager.getRecord(start_ts)['barometer']
+            last_pressure = db_manager.getRecord(stop_ts)['barometer']
+            tderiv_vt = aggregate_obj.get_aggregate('barometer', TimeSpan(start_ts, stop_ts),
                                                     'tderiv', db_manager)
-            assert tderiv_vt[0] == pytest.approx(1.0)
+            tderiv_vt = weewx.units.convertStd(tderiv_vt, weewx.US)
+            expected_rate = (last_pressure - first_pressure) / ((stop_ts - start_ts) / 3600)
+            assert tderiv_vt[0] == pytest.approx(expected_rate)
+            assert tderiv_vt[1:] == ('inHg_per_hour', 'group_pressurerate')
 
 
 def test_AggregateDaily(config_dict):
