@@ -62,10 +62,11 @@ still a manual operation.  This is the process for doing a release:
      2. make stage-all
 10. Move files on the server from staging to production
      1. make release-all
-11. If the minor version changes, update doc links in the website repository
+11. If the minor version changes, update docs in the repository `weewx-website`
      1. change URL= in docs/*.html
      2. change version in docs/weedocs.js
      3. change symlink docs/latest
+     4. Upload the updated website
 12. Announce the release to the weewx user's group.
 
 

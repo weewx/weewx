@@ -42,6 +42,13 @@ PYTHON?=python3
 PYTEST?=pytest
 
 TMPDIR?=/var/tmp
+ifdef WEEWX_TEST_DIR
+  TESTDIR := $(WEEWX_TEST_DIR)
+else
+  # Strip any trailing slash off of TMPDIR
+  TESTDIR := $(patsubst %/,%,$(TMPDIR))/weewx-test
+  export WEEWX_TEST_DIR := $(TESTDIR)
+endif
 
 all: help
 
@@ -147,25 +154,10 @@ done
 ###############################################################################
 ## testing targets
 
-# if no suite is specified, find all the pytest files in the source tree
-SUITE?=`find src -name "test_*.py"`
+# if no suite is specified, run all tests under src
+SUITE?=src
 test: src/weewx_data/
-	@rm -f $(BLDDIR)/test-results
-	@mkdir -p $(BLDDIR)
-	@echo "Python interpreter and version in use:" >> $(BLDDIR)/test-results 2>&1;
-	@$(PYTHON) -c "import sys;print(sys.executable)" >> $(BLDDIR)/test-results 2>&1;
-	@$(PYTHON) -V >> $(BLDDIR)/test-results 2>&1;
-	@echo "----" >> $(BLDDIR)/test-results 2>&1;
-
-	@for f in $(SUITE); do \
-  echo running $$f; \
-  echo $$f >> $(BLDDIR)/test-results; \
-  PYTHONPATH="src:src/weewx_data/examples:src/weewx/tests" $(PYTEST) $$f >> $(BLDDIR)/test-results 2>&1; \
-  echo >> $(BLDDIR)/test-results; \
-done
-	@grep "ERROR:\|FAIL:\|FAILURES" $(BLDDIR)/test-results || echo "no failures"
-	@echo "see $(BLDDIR)/test-results for output from the tests"
-	@grep -q "ERROR:\|FAIL:\|FAILURES\|ERRORS" $(BLDDIR)/test-results && exit 1 || true
+	$(PYTEST) $(SUITE)
 
 test-setup:
 	src/weedb/tests/setup_mysql.sh
@@ -173,7 +165,6 @@ test-setup:
 test-setup-ci:
 	MYSQL_NO_OPTS=1 src/weedb/tests/setup_mysql.sh
 
-TESTDIR=/var/tmp/weewx-test
 MYSQLCLEAN="drop database test_weewx;\n\
 drop database test_alt_weewx;\n\
 drop database test_sim;\n\

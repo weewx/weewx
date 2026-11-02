@@ -197,11 +197,10 @@ class Connection(weedb.Connection):
             table_list.append(str(row[0]))
         return table_list
 
-    @guard
     def genSchemaOf(self, table):
         """Return a summary of the schema of the specified table.
         
-        If the table does not exist, an exception of type weedb.OperationalError is raised.
+        If the table does not exist, the generator yields no rows.
 
         Args:
             table(str): The name of the table to be examined.
@@ -210,12 +209,20 @@ class Connection(weedb.Connection):
             tuple: A 6-way tuple: (column_number, column_name, column_type, can_be_null,
                 default_value, is_primary_key).
         """
-        for row in self.connection.execute("""PRAGMA table_info(%s);""" % table):
+        for row in self._get_schema(table):
             if row[2].upper().startswith('CHAR'):
                 coltype = 'STR'
             else:
                 coltype = str(row[2]).upper()
             yield (row[0], str(row[1]), coltype, not to_bool(row[3]), row[4], to_bool(row[5]))
+
+    @guard
+    def _get_schema(self, table):
+        # A decorator on genSchemaOf only wraps generator creation. Fetch all
+        # schema rows here so guard covers the database operations.
+        with self.cursor() as cursor:
+            cursor.execute("""PRAGMA table_info(%s);""" % table)
+            return cursor.fetchall()
 
     def columnsOf(self, table):
         """Return a list of columns in the specified table. If the table does not exist,

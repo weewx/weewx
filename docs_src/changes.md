@@ -1,7 +1,7 @@
 WeeWX change history
 --------------------
 
-### 5.6.0 dd-Mmm-yyyy
+### 5.7.0 dd-Mmm-YYYY
 
 Added `weewx.jsongenerator.JSONGenerator`, which writes the data as JSON. Added
 the skin `Horizon`, which leverages the JSON data, allowing it to step backwards
@@ -12,14 +12,29 @@ arranged in a custom order.
 [PR #1133](https://github.com/weewx/weewx/pull/1133). Huge thanks to user 
 Manuel!
 
-Improved the performance of `weewx.xtypes.ArchiveTable.get_series()` for
-aggregated series (such as hourly aggregation over a long timespan). Instead of
-issuing one SQL query per aggregation bucket, it now fetches the archive data in
-pages of about a week each, calculating the aggregate in the database where it
-can, otherwise in memory. This keeps both the number of queries and the memory
-used small. [PR #1154](https://github.com/weewx/weewx/pull/1154).
+### 5.6.0 02-Nov-2026
 
-### 5.x.y dd-Mmm-YYYY
+Improved the performance of `weewx.xtypes.ArchiveTable.get_series()` for
+aggregated series (such as hourly aggregation over a long timespan). Instead
+of issuing one SQL query per aggregation bucket, it now fetches the archive
+data in pages of about a week each, then calculates the aggregates in memory.
+This keeps both the number of queries and the memory used small.
+
+Where its SQL can, the database now aggregates each page itself, so it returns
+a row per bucket rather than every archive record. Buckets of a day or more
+come from the daily summaries again, as before.
+[PR #1154](https://github.com/weewx/weewx/pull/1154).
+
+LOOP packet data are no longer lost when packets arrive out of order, arrive
+only once per archive interval, or come from a station clock that has been set
+back. Each archive period now has its own accumulator. 
+[PR #1209](https://github.com/weewx/weewx/pull/1209).
+
+
+Fixed `tderiv` raising `TypeError` for missing energy samples and returning
+incorrect units for non-energy observations. It now supports energy, distance,
+rain and pressure. Other observation groups raise `UnknownAggregation`.
+[PR #1199](https://github.com/weewx/weewx/pull/1199).
 
 Fixed incorrect values in derived series and aggregates when an XType extension
 returns a value in a different unit system.
@@ -61,6 +76,12 @@ Fixed daily summaries being counted twice after re-importing archive records
 with --update, and stale daily extrema after corrections.
 [PR #1197](https://github.com/weewx/weewx/pull/1197).
 
+Reduced database queries when reports iterate over derived observation values
+in archive records. [PR #1201](https://github.com/weewx/weewx/pull/1201).
+
+Fixed calculated `rainRate`. Under certain circumstances, some packets could be
+missed. [PR #1198](https://github.com/weewx/weewx/pull/1198).
+
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
 improvements particularly with remote databases.
@@ -77,6 +98,13 @@ over an interval. [PR #1155](https://github.com/weewx/weewx/pull/1155).
 Of several equal extremes, aggregate types `maxtime` and `mintime` now give the
 earliest when calculated from the archive table, as they already did from the
 daily summaries. [PR #1156](https://github.com/weewx/weewx/pull/1156).
+
+Fixed problem when plotting data whose y-value is very small and has a very 
+small range.
+
+Translate database errors raised while reading table schemas. SQLite schema
+locks now reach the existing retry handlers during database initialization.
+[PR #1208](https://github.com/weewx/weewx/pull/1208).
 
 
 ### 5.5.2 23-Sep-2026

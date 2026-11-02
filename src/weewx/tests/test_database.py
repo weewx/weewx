@@ -18,10 +18,6 @@ import weeutil.logger
 
 weeutil.logger.setup('weetest_database')
 
-archive_sqlite = {'database_name': '/var/tmp/weewx-test/weedb.sdb', 'driver': 'weedb.sqlite'}
-archive_mysql = {'database_name': 'test_weedb', 'user': 'weewx1', 'password': 'weewx1',
-                 'driver': 'weedb.mysql'}
-
 archive_schema = [('dateTime', 'INTEGER NOT NULL PRIMARY KEY'),
                   ('usUnits', 'INTEGER NOT NULL'),
                   ('interval', 'INTEGER NOT NULL'),
@@ -74,19 +70,6 @@ def genRecords():
         yield _record
 
 
-# A fixture that returns database dicts, first for sqlite, then for mysql.
-@pytest.fixture(scope="session",
-                params=[
-                    archive_sqlite,
-                    archive_mysql,
-                ])
-def archive_db_dict(request):
-    """Generate a config file set to use a particular database type
-    (such as 'sqlite' or 'mysql')."""
-    db_dict = request.param
-    yield db_dict
-
-
 def test_get_database_dict():
     config_snippet = '''
     WEEWX_ROOT = /home/weewx
@@ -105,56 +88,43 @@ def test_get_database_dict():
                              'driver': 'weedb.sqlite'}
 
 
-@pytest.fixture(autouse=True)
-def setup_teardown(archive_db_dict):
-    try:
-        weedb.drop(archive_db_dict)
-    except:
-        pass
-    yield
-    try:
-        weedb.drop(archive_db_dict)
-    except:
-        pass
-
-
-def populate_database(archive_db_dict):
+def populate_database(database):
     # Use a 'with' statement:
-    with weewx.manager.Manager.open_with_create(archive_db_dict,
+    with weewx.manager.Manager.open_with_create(database,
                                                 schema=archive_schema) as archive:
         archive.addRecord(genRecords())
 
 
-def test_open_no_archive(archive_db_dict):
+def test_open_no_archive(database):
     # Attempt to open a non-existent database results in an exception:
     with pytest.raises(weedb.NoDatabaseError):
-        weewx.manager.Manager.open(archive_db_dict)
+        weewx.manager.Manager.open(database)
 
 
-def test_open_unitialized_archive(archive_db_dict):
+def test_open_unitialized_archive(database):
     """Test creating the database, but not initializing it. Then try to open it."""
-    weedb.create(archive_db_dict)
+    weedb.create(database)
     with pytest.raises(weedb.ProgrammingError):
-        weewx.manager.Manager.open(archive_db_dict)
+        weewx.manager.Manager.open(database)
 
 
-def test_open_with_create_no_archive(archive_db_dict):
+def test_open_with_create_no_archive(database):
     """Test open_with_create of a non-existent database and without supplying a schema."""
     with pytest.raises(weedb.NoDatabaseError):
-        weewx.manager.Manager.open_with_create(archive_db_dict)
+        weewx.manager.Manager.open_with_create(database)
 
 
-def test_open_with_create_uninitialized(archive_db_dict):
+def test_open_with_create_uninitialized(database):
     """Test open_with_create with a database that exists, but has not been initialized and
     no schema has been supplied."""
-    weedb.create(archive_db_dict)
+    weedb.create(database)
     with pytest.raises(weedb.ProgrammingError):
-        weewx.manager.Manager.open_with_create(archive_db_dict)
+        weewx.manager.Manager.open_with_create(database)
 
 
-def test_create_archive(archive_db_dict):
+def test_create_archive(database):
     """Test open_with_create with a database that does not exist, while supplying a schema"""
-    with weewx.manager.Manager.open_with_create(archive_db_dict,
+    with weewx.manager.Manager.open_with_create(database,
                                                 schema=archive_schema) as archive:
         assert archive.connection.tables() == ['archive']
         assert archive.connection.columnsOf('archive') == ['dateTime', 'usUnits', 'interval',
@@ -162,7 +132,7 @@ def test_create_archive(archive_db_dict):
                                                            'inTemp', 'outTemp', 'windSpeed']
 
     # Now that the database exists, these should also succeed:
-    with weewx.manager.Manager.open(archive_db_dict) as archive:
+    with weewx.manager.Manager.open(database) as archive:
         assert archive.connection.tables() == ['archive']
         assert archive.connection.columnsOf('archive') == ['dateTime', 'usUnits', 'interval',
                                                            'barometer',
@@ -173,20 +143,20 @@ def test_create_archive(archive_db_dict):
         assert archive.std_unit_system is None
 
 
-def test_empty_archive(archive_db_dict):
-    with weewx.manager.Manager.open_with_create(archive_db_dict, schema=archive_schema) as archive:
+def test_empty_archive(database):
+    with weewx.manager.Manager.open_with_create(database, schema=archive_schema) as archive:
         assert archive.firstGoodStamp() is None
         assert archive.lastGoodStamp() is None
         assert archive.getRecord(123456789) is None
         assert archive.getRecord(123456789, max_delta=1800) is None
 
 
-def test_add_archive_records(archive_db_dict):
+def test_add_archive_records(database):
     # Add a bunch of records
-    populate_database(archive_db_dict)
+    populate_database(database)
 
     # Now test to see what's in there:
-    with weewx.manager.Manager.open(archive_db_dict) as archive:
+    with weewx.manager.Manager.open(database) as archive:
         assert archive.firstGoodStamp() == start_ts
         assert archive.lastGoodStamp() == stop_ts
         assert archive.std_unit_system == std_unit_system
@@ -213,12 +183,12 @@ def test_add_archive_records(archive_db_dict):
             archive.addRecord(metric_record)
 
 
-def test_get_records(archive_db_dict):
+def test_get_records(database):
     # Add a bunch of records
-    populate_database(archive_db_dict)
+    populate_database(database)
 
     # Now fetch them:
-    with weewx.manager.Manager.open(archive_db_dict) as archive:
+    with weewx.manager.Manager.open(database) as archive:
         # Test getSql on existing type:
         bar0 = archive.getSql("SELECT barometer FROM archive WHERE dateTime=?", (start_ts,))
         assert bar0[0] == barfunc(0)
@@ -271,7 +241,7 @@ def test_get_records(archive_db_dict):
         assert rec is None
 
     # Now try fetching them as vectors:
-    with weewx.manager.Manager.open(archive_db_dict) as archive:
+    with weewx.manager.Manager.open(database) as archive:
         # Return the values between start_ts and stop_ts, exclusive on the left,
         # inclusive on the right.
         # Recall that barvec returns a 3-way tuple of VectorTuples.
@@ -288,7 +258,7 @@ def test_get_records(archive_db_dict):
     # Start by setting up a generator function that will return the records to be
     # included in each aggregation
     gen = gen_included_recs(timevec, start_ts, stop_ts, 6 * interval)
-    with weewx.manager.Manager.open(archive_db_dict) as archive:
+    with weewx.manager.Manager.open(database) as archive:
         barvec = archive.getSqlVectors((start_ts, stop_ts), 'barometer', aggregate_type='avg',
                                        aggregate_interval=6 * interval)
         n_expected = int(nrecs / 6)
@@ -305,14 +275,14 @@ def test_get_records(archive_db_dict):
             assert expected_avg == pytest.approx(barvec[2][0][irec])
 
 
-def test_update(archive_db_dict):
+def test_update(database):
     # Add a bunch of records
-    populate_database(archive_db_dict)
+    populate_database(database)
     expected_rec = expected_record(3)
-    with weewx.manager.Manager.open_with_create(archive_db_dict,
+    with weewx.manager.Manager.open_with_create(database,
                                                 schema=archive_schema) as archive:
         archive.updateValue(expected_rec['dateTime'], 'outTemp', -1.0)
-    with weewx.manager.Manager.open_with_create(archive_db_dict,
+    with weewx.manager.Manager.open_with_create(database,
                                                 schema=archive_schema) as archive:
         rec = archive.getRecord(expected_rec['dateTime'])
     assert rec['outTemp'] == -1.0

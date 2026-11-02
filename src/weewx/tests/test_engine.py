@@ -44,6 +44,8 @@ except configobj.ConfigObjError:
     print("Error while parsing configuration file %s" % config_path, file=sys.stderr)
     raise
 
+config_dict['Databases']['archive_sqlite']['root'] = weeutil.weeutil.get_test_dir()
+
 weeutil.logger.setup('weetest_engine', config_dict)
 
 

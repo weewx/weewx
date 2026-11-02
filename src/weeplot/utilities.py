@@ -104,7 +104,7 @@ def scale(data_min, data_max, prescale=(None, None, None), nsteps=10):
         if min_interval is not None:
             step_out = min_interval * nsteps
         else:
-            step_out = 0.01 * round(abs(data_max), 2) if data_max else 0.1
+            step_out = 0.01 * round_sig(abs(data_max), 2) if data_max else 0.1
         if maxscale is not None:
             # maxscale if fixed. Move data_min.
             data_min = data_max - step_out
@@ -181,6 +181,20 @@ def scale(data_min, data_max, prescale=(None, None, None), nsteps=10):
                 pass
 
     return minscale, maxscale, interval
+
+
+def round_sig(num, sig_figs):
+    """Round to a given number of significant digits."""
+    if num == 0:
+        return 0
+
+    # Calculate the order of magnitude
+    magnitude = math.floor(math.log10(abs(num)))
+
+    # Determine how many decimal places are needed
+    decimals = sig_figs - int(magnitude) - 1
+
+    return round(num, decimals)
 
 
 def scaletime(tmin_ts, tmax_ts):

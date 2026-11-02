@@ -380,6 +380,13 @@ class Manager:
         Returns:
             int: The number of successful insertions.
         """
+        
+        # An accumulator is tied to a single archive interval. So, an accumulator can accompany a
+        # single record only, not a list of records. Correspondingly, make sure there is no
+        # accumulator if `record_obj` is a list. Checking here avoids the check within the `for`
+        # loop.
+        if not isinstance(record_obj, dict):
+            accumulator = None
 
         overall_min_ts = float('inf')  # A "big number"
         overall_max_ts = 0
@@ -468,7 +475,7 @@ class Manager:
                 try:
                     # If the accumulator time matches the record we are working with,
                     # use it to update the highs and lows.
-                    if accumulator and record['dateTime'] == accumulator.timespan.stop:
+                    if accumulator:
                         self._updateHiLo(accumulator, cursor)
 
                     # Then add the record to the archives:
