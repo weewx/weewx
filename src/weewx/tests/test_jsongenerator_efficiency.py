@@ -1,3 +1,8 @@
+#
+#    Copyright (c) 2026 Manuel Hilgert <hilman2@gmail.com>
+#
+#    See the file LICENSE.txt for your full rights.
+#
 """Check JSON output, update reuse, and memory bounds."""
 
 import builtins
@@ -19,7 +24,7 @@ import weewx.station
 def payloads(directory):
     result = {}
     for filename in sorted(directory.rglob('*.json')):
-        value = json.loads(filename.read_text())
+        value = json.loads(filename.read_text(encoding='utf-8'))
         if filename.name == 'index.json':
             value.pop('rebuilt', None)
         result[str(filename.relative_to(directory))] = value
@@ -132,7 +137,7 @@ def test_json_writer_avoids_per_value_writes(tmp_path, monkeypatch):
     monkeypatch.setattr(weewx.jsongenerator, 'open', counted_open, raising=False)
     data = {'unit': '°C', 'values': [None, 0, -1.5] * 1000}
     weewx.jsongenerator._write_json(str(filename), data)
-    assert filename.read_text() == json.dumps(data, ensure_ascii=False, separators=(',', ':'))
+    assert filename.read_text(encoding='utf-8') == json.dumps(data, ensure_ascii=False, separators=(',', ':'))
     assert len(writes) < 5, 'JSON writing still emitted thousands of separate fragments'
     assert not pathlib.Path(str(filename) + '.tmp').exists()
 
@@ -146,7 +151,7 @@ def test_json_writer_does_not_copy_the_whole_document(tmp_path):
         _, peak = tracemalloc.get_traced_memory()
     finally:
         tracemalloc.stop()
-    assert json.loads(filename.read_text()) == data
+    assert json.loads(filename.read_text(encoding='utf-8')) == data
     assert peak < 512 * 1024, 'JSON writing allocated a second copy of the document'
 
 
