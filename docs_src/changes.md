@@ -1,7 +1,7 @@
 WeeWX change history
 --------------------
 
-### 5.6.0
+### 5.6.0 02-Nov-2026
 
 Improved the performance of `weewx.xtypes.ArchiveTable.get_series()` for
 aggregated series (such as hourly aggregation over a long timespan). Instead
@@ -19,8 +19,6 @@ only once per archive interval, or come from a station clock that has been set
 back. Each archive period now has its own accumulator. 
 [PR #1209](https://github.com/weewx/weewx/pull/1209).
 
-
-### 5.x.y dd-Mmm-YYYY
 
 Fixed `tderiv` raising `TypeError` for missing energy samples and returning
 incorrect units for non-energy observations. It now supports energy, distance,
