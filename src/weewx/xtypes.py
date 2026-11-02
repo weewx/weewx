@@ -59,7 +59,7 @@ class XType:
                 is to be calculated.
             db_manager (weewx.manager.Manager): An open database manager
             aggregate_type (str|None): The type of aggregation to be used, if any
-            aggregate_interval (float|int): The aggregation interval, if aggregation is used
+            aggregate_interval (float|int|str): The aggregation interval, if aggregation is used
             option_dict(dict): A dictionary containing optional values
           """
         raise weewx.UnknownType
@@ -136,7 +136,7 @@ def get_series(obs_type, timespan, db_manager, aggregate_type=None, aggregate_in
             to be calculated.
         db_manager (weewx.manager.Manager): An open database manager
         aggregate_type (str|None): The type of aggregation to be used, if any
-        aggregate_interval (float|int): The aggregation interval, if aggregation is used
+        aggregate_interval (float|int|str): The aggregation interval, if aggregation is used
         option_dict (dict): A dictionary containing optional values
 
     Returns:
@@ -272,7 +272,7 @@ class ArchiveTable(XType):
                 which the series is to be calculated.
             db_manager (weewx.manager.Manager): An open database manager.
             aggregate_type (str|None): The type of aggregation to be used, if any.
-            aggregate_interval (float|int): The aggregation interval, if aggregation is used.
+            aggregate_interval (float|int|str): The aggregation interval, if aggregation is used.
             option_dict (dict): A dictionary containing optional values.
 
         Returns:
@@ -1346,7 +1346,7 @@ class XTypeTable(XType):
             db_manager (weewx.manager.Manager): An open database manager.
             aggregate_type (str|None): The type of aggregation to be used. This version does not
                 support aggregation, so it must be None.
-            aggregate_interval (float|int): The aggregation interval, if aggregation is used.
+            aggregate_interval (float|int|str): The aggregation interval, if aggregation is used.
             option_dict (dict): A dictionary containing optional values.
 
         Returns:
@@ -1524,7 +1524,7 @@ class WindVec(XType):
                 is to be calculated.
             db_manager (weewx.manager.Manager): An open database manager.
             aggregate_type (str|None): The type of aggregation to be used, if any.
-            aggregate_interval (float|int): The aggregation interval, if aggregation is used.
+            aggregate_interval (float|int|str): The aggregation interval, if aggregation is used.
             option_dict (dict): A dictionary containing optional values.
 
         Returns:
