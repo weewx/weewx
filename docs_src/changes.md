@@ -1,6 +1,17 @@
 WeeWX change history
 --------------------
 
+### 5.7.0 dd-Mmm-YYYY
+
+Added `weewx.jsongenerator.JSONGenerator`, which writes the data as JSON. Added
+the skin `Horizon`, which leverages the JSON data, allowing it to step backwards
+through the entire station history. The skin also includes various panels,
+including a forecast panel, and a climate page summary, all of which can be
+arranged in a custom order. 
+[PR #1128](https://github.com/weewx/weewx/issues/1128) and 
+[PR #1133](https://github.com/weewx/weewx/pull/1133). Huge thanks to user 
+Manuel!
+
 ### 5.6.0 02-Nov-2026
 
 Improved the performance of `weewx.xtypes.ArchiveTable.get_series()` for

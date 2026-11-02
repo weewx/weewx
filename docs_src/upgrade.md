@@ -42,6 +42,38 @@ upgrade the configuration file `/etc/weewx/other.conf`:
 sudo weectl station upgrade --config=/etc/weewx/other.conf
 ```
 
+## Upgrading to V5.6
+
+### New skin *Horizon*
+
+Version 5.6 includes a new experimental report generator, the JSON generator,
+and a skin that takes advantage of it, the *Horizon* skin.
+
+By default, upgrading an earlier WeeWX installation will not include the
+*Horizon* skin. Two steps are needed to add it. First, add the following lines
+to `[StdReport]`.
+
+``` ini
+[StdReport]
+    [[HorizonReport]]
+        skin = Horizon
+        enable = true
+        HTML_ROOT = public_html/horizon
+```
+
+You will also need to install the templates, Javascript files, and other 
+miscellaneous pieces used by the skin. This can be done by the command
+
+    weectl station upgrade --what skins
+
+!!! NOTE 
+    This command will not only install *Horizon*, but will also upgrade the
+    other skins. However, it keeps a copy of your old versions. See 
+    [weectl station upgrade](./utilities/weectl-station.md#what-option).
+
+The next reporting cycle will then generate its files to `public_html/horizon`.
+
+
 ## Upgrading to V5.5
 
 ### Signature of `ReportGenerator` has changed

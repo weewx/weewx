@@ -1,0 +1,9 @@
+Moon images: NASA's Scientific Visualization Studio
+Moon Phase and Libration, 2026 - https://svs.gsfc.nasa.gov/5587/
+
+Works of the US federal government are in the public domain (17 U.S.C. Sec. 105).
+Rendered from Lunar Reconnaissance Orbiter elevation data.
+
+32 frames, one for each 1/32 of the synodic month (29.530588 days). The phase is
+right in any year. The libration, the slight rocking that shows a little around the
+limb, was computed for 2026 and drifts thereafter by an amount nobody will see.
