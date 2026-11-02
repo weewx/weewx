@@ -58,7 +58,7 @@ def managers():
 def test_record_iteration_reuses_rows_from_its_binding(managers, binding):
     manager = managers[binding or 'wx_binding']
     statements = []
-    manager.connection.connection.set_trace_callback(statements.append)
+    manager.connection.connection.set_trace_callback(lambda statement:statements.append(statement))
     binder = weewx.tags.TimespanBinder(weeutil.weeutil.TimeSpan(0, 900),
                                       lambda name: managers[name or 'wx_binding'],
                                       data_binding=binding,
@@ -117,7 +117,7 @@ def test_degree_days_batch_weighted_days(units, first_date,
             {'driver': 'weedb.sqlite', 'database_name': ':memory:'}, schema=schema) as manager:
         manager.addRecord(records, log_success=False)
         statements = []
-        manager.connection.connection.set_trace_callback(statements.append)
+        manager.connection.connection.set_trace_callback(lambda statement: statements.append(statement))
         options = {'skin_dict': {'Units': {'DegreeDays': {
             'heating_base': ('18', 'degree_C'), 'cooling_base': ('22', 'degree_C'),
             'growing_base': ('10', 'degree_C')}}}}
