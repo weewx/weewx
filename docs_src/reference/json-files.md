@@ -74,7 +74,10 @@ The top-level JSON object contains the keys **`version`** and **`units`**:
 
   * **`groups`** (*object*): Maps each observation type (e.g. `outTemp`,
     `barometer`, `windSpeed`) to its WeeWX unit group (e.g.
-    `group_temperature`, `group_pressure`, `group_speed`).
+    `group_temperature`, `group_pressure`, `group_speed`). An extension can add
+    an object to `weewx.units.obs_group_dict` that works out the unit group from
+    the name of a type. Such an object cannot list its types, so they appear
+    here only if a series under `[[JSONFiles]]` uses them.
   * **`systems`** (*object*): Maps each standard unit system name (`US`,
     `METRIC`, `METRICWX`) to a dictionary, which maps unit groups (e.g.,
     `group_temperature`) to its corresponding unit in that system 

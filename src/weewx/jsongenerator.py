@@ -159,10 +159,15 @@ class JSONGenerator(weewx.reportengine.ReportGenerator):
         if not self.first_run and os.path.exists(meta_file):
             return
 
+        # The observation type of every series, for the unit groups in the unit table.
+        obs_types = {accumulateLeaves(self.plot_dict[group_name][line_name])
+                     .get('data_type', line_name)
+                     for group_name in self.plot_dict.sections
+                     for line_name in self.plot_dict[group_name].sections}
         try:
             _write_json(meta_file,
                         {'version': META_VERSION,
-                         'units': _unit_choices(self.converter)})
+                         'units': _unit_choices(self.converter, obs_types)})
         except OSError as e:
             log.error("Unable to save to file '%s': %s", meta_file, e)
 
@@ -927,7 +932,7 @@ def _linear(convert, from_unit, to_unit):
     return [round(factor, 12), round(at_zero, 12)]
 
 
-def _unit_choices(converter):
+def _unit_choices(converter, obs_types):
     """Build the unit table that lets the JavaScript show values in another unit.
 
     The archive files hold values in the skin's units. To offer Fahrenheit next to
@@ -939,6 +944,7 @@ def _unit_choices(converter):
 
     Args:
         converter (weewx.units.Converter): The converter the report was rendered with.
+        obs_types (Iterable[str]): The observation types of the series in the plot groups.
 
     Returns:
         dict: Three keys. 'groups' maps an observation type to its unit group.
@@ -976,8 +982,17 @@ def _unit_choices(converter):
         if pairs:
             convert[from_unit] = pairs
 
+    # dict() gets only the observation types that weewx.units.obs_group_dict can list.
+    # A map in it can also be an object that works out the unit group from the name of
+    # an observation type, and that cannot list any names. So ask for the observation
+    # types of the series by name. Otherwise, their charts could not change unit system.
+    groups = dict(weewx.units.obs_group_dict)
+    for obs_type in obs_types:
+        if obs_type in weewx.units.obs_group_dict:
+            groups[obs_type] = weewx.units.obs_group_dict[obs_type]
+
     return {
-        'groups': dict(weewx.units.obs_group_dict),
+        'groups': groups,
         'systems': by_system,
         'convert': convert
     }

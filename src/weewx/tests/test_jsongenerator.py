@@ -232,6 +232,31 @@ class TestMetaJson:
         assert units['groups']['outTemp'] == 'group_temperature'
         assert 'degree_F' in units['convert'][written]
 
+    def test_groups_hold_a_series_only_a_lookup_knows(self, config_dict, tmp_path,
+                                                      monkeypatch):
+        """An object in obs_group_dict can answer for a name, but cannot list names."""
+
+        class EndsInPoint:
+            def __getitem__(self, obs_type):
+                if obs_type.endswith('point'):
+                    return 'group_temperature'
+                raise KeyError(obs_type)
+
+            def __contains__(self, obs_type):
+                return obs_type.endswith('point')
+
+        # Only the object still knows 'dewpoint'. Nothing at all knows 'soilMoist4', the
+        # type of the plot group 'nothing'.
+        monkeypatch.delitem(weewx.units.obs_group_dict.maps[0], 'dewpoint')
+        monkeypatch.delitem(weewx.units.obs_group_dict.maps[0], 'soilMoist4')
+        monkeypatch.setattr(weewx.units.obs_group_dict, 'maps',
+                            weewx.units.obs_group_dict.maps + [EndsInPoint()])
+
+        groups = self.meta_json(run_generator(config_dict, tmp_path))['units']['groups']
+        assert groups['dewpoint'] == 'group_temperature'
+        assert groups['outTemp'] == 'group_temperature'
+        assert 'soilMoist4' not in groups
+
 
 class TestDayNight:
 
