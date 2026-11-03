@@ -19,6 +19,10 @@ only once per archive interval, or come from a station clock that has been set
 back. Each archive period now has its own accumulator. 
 [PR #1209](https://github.com/weewx/weewx/pull/1209).
 
+Fixed `weewxd` exiting if an extension dispatches a `NEW_ARCHIVE_RECORD` event
+without attribute `accumulator`. This only affected 5.6.0b1.
+[PR #1227](https://github.com/weewx/weewx/pull/1227).
+
 Fixed `tderiv` raising `TypeError` for missing energy samples and returning
 incorrect units for non-energy observations. It now supports energy, distance,
 rain and pressure. Other observation groups raise `UnknownAggregation`.

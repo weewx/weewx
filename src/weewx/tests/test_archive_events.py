@@ -219,6 +219,25 @@ def test_startup_records_have_no_accumulator(archive_engine, monkeypatch):
     assert events == [(BASE_TIME + 300, None)]
 
 
+@pytest.mark.parametrize('augmentation', [True, False])
+@pytest.mark.parametrize('attributes', [{}, {'origin': 'hardware'}, {'origin': 'software'}])
+def test_record_without_accumulator_attribute(archive_engine, augmentation, attributes):
+    """An extension can dispatch a NEW_ARCHIVE_RECORD event of its own, without an accumulator.
+
+    Before version 5.6, the event had no such attribute. A record from an event like this must be
+    saved as if the accumulator were None, so its daily summary only knows the archive record.
+    """
+    engine, archive, _events = archive_engine
+    archive.record_augmentation = augmentation
+    record = {'dateTime': BASE_TIME + 600, 'usUnits': weewx.METRICWX, 'interval': 5,
+              'outTemp': 10, 'inTemp': 21}
+    # Call StdArchive directly, because the callback in the fixture relies on the attribute.
+    archive.new_archive_record(weewx.Event(weewx.NEW_ARCHIVE_RECORD, record=record, **attributes))
+    manager = engine.db_binder.get_manager('wx_binding')
+    assert manager.getRecord(BASE_TIME + 600)['outTemp'] == pytest.approx(10)
+    assert manager.getSql('SELECT min, max FROM archive_day_outTemp') == pytest.approx((10, 10))
+
+
 def test_loop_hilo_disabled_keeps_statistics_unavailable(archive_engine):
     """With loop_hilo=False, the accumulator still arrives, but without highs and lows.
 
