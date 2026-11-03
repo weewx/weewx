@@ -44,9 +44,9 @@ Fixed monthly series and timestamp generation failing when the first boundary
 falls on the 29th, 30th, or 31st.
 [PR #1193](https://github.com/weewx/weewx/pull/1193).
 
-Fixed aggregated series when two buckets overlap where DST begins, as buckets
-of 45 minutes do. Values of the buckets after the overlap, up to a week of them,
-could be wrong. This only affected 5.6.0b1.
+Fixed wrong values in a series with an `aggregate_interval` such as 45 minutes.
+The values could be off for up to a week after DST began. This only affected
+5.6.0b1.
 [PR #1226](https://github.com/weewx/weewx/pull/1226).
 
 FTP uploads now exclude entire `.git`, `.svn`, `CVS`, `.idea`, and `__pycache__`
