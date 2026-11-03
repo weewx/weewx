@@ -692,8 +692,10 @@ class ArchiveTable(XType):
         """Calculate a series of aggregates, letting the database aggregate a page of buckets
         at a time.
 
-        The query for a page is the one get_aggregate() uses for a single bucket, plus a GROUP BY
-        that splits the page into its buckets. So the values are those of get_aggregate().
+        The query for a page is the one ArchiveTable.get_aggregate() uses for a single bucket, plus
+        a GROUP BY that splits the page into its buckets. So the values are those of
+        ArchiveTable.get_aggregate(). They can differ from those of weewx.xtypes.get_aggregate(),
+        which first offers a bucket to every XType earlier in the list, such as DailySummaries.
 
         Args:
             obs_type (str): The observation type to be aggregated.

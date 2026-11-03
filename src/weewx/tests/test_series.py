@@ -13,6 +13,8 @@ import time
 import pytest
 
 import weewx
+import weewx.accum
+import weewx.manager
 import weewx.units
 import weewx.wxformulas
 import weewx.xtypes
@@ -604,6 +606,48 @@ def test_get_series_archive_agg_whole_days(config_dict):
 
     assert start_vec[0][9] == day_start
     assert data_vec[0][9] == loop_time
+
+
+@pytest.mark.parametrize('aggregate_type, loop_value', [('min', 0), ('max', 20)])
+def test_get_series_archive_agg_short_bucket_is_stable(aggregate_type, loop_value):
+    """A bucket shorter than a day comes from the archive table, so its value must not change when
+    the next archive record arrives. A single get_aggregate() shows the daily summaries for that
+    bucket as long as it ends on the last record in the database, then falls back to the archive
+    table. So its value does change."""
+    schema = [('dateTime', 'INTEGER NOT NULL PRIMARY KEY'), ('usUnits', 'INTEGER NOT NULL'),
+              ('interval', 'INTEGER NOT NULL'), ('outTemp', 'REAL')]
+    start = int(time.mktime((2024, 1, 1, 0, 0, 0, 0, 0, -1)))
+    bucket = TimeSpan(start, start + 3600)
+    timespan = TimeSpan(start, start + 2 * 3600)
+
+    def new_record(timestamp):
+        return {'dateTime': timestamp, 'usUnits': weewx.METRICWX, 'interval': 5, 'outTemp': 10}
+
+    def get_first_value():
+        return weewx.xtypes.get_series('outTemp', timespan, db_manager,
+                                       aggregate_type, 3600)[2][0][0]
+
+    # The archive record has an average of 10, so only its accumulator knows about 0 and 20.
+    accumulator = weewx.accum.Accum(TimeSpan(start + 3300, start + 3600))
+    for offset, temperature in [(3301, 0), (3599, 20)]:
+        accumulator.addRecord({'dateTime': start + offset, 'usUnits': weewx.METRICWX,
+                               'outTemp': temperature})
+
+    with weewx.manager.DaySummaryManager.open_with_create({'driver': 'weedb.sqlite',
+                                                           'database_name': ':memory:'},
+                                                          schema=schema) as db_manager:
+        db_manager.addRecord(new_record(start + 300), log_success=False)
+        db_manager.addRecord(new_record(start + 3600), accumulator=accumulator, log_success=False)
+        assert weewx.xtypes.get_aggregate('outTemp', bucket, aggregate_type,
+                                          db_manager)[0] == loop_value
+        before = get_first_value()
+
+        db_manager.addRecord(new_record(start + 3900), log_success=False)
+        assert weewx.xtypes.get_aggregate('outTemp', bucket, aggregate_type,
+                                          db_manager)[0] == 10
+        after = get_first_value()
+
+    assert before == after == 10
 
 
 def test_get_series_archive_agg_unknown_type(config_dict):
