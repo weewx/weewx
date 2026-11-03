@@ -48,6 +48,10 @@ Fixed daily summaries being counted twice after re-importing archive records
 with --update, and stale daily extrema after corrections.
 [PR #1197](https://github.com/weewx/weewx/pull/1197).
 
+Fixed problem that prevented the date options of `weectl database` from
+accepting times of the form `YYYY-mm-ddTHH:MM`. That is, without seconds.
+[PR #1225](https://github.com/weewx/weewx/pull/1225).
+
 Reduced database queries when reports iterate over derived observation values
 in archive records. [PR #1201](https://github.com/weewx/weewx/pull/1201).
 

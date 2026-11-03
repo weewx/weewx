@@ -18,8 +18,8 @@ def parse_dates(date=None, from_date=None, to_date=None, as_datetime=False):
 
         Args:
             date(str|None): In the form YYYY-mm-dd
-            from_date(str|None): Any ISO 8601 acceptable date or datetime.
-            to_date(str|None): Any ISO 8601 acceptable date or datetime.
+            from_date(str|None): In a form accepted by parse_iso().
+            to_date(str|None): In a form accepted by parse_iso().
             as_datetime(bool): True, return a datetime.datetime object. Otherwise, return
                 a datetime.date object.
 
@@ -109,8 +109,26 @@ def parse_iso(date_str, as_datetime):
     """Parse a date string in ISO format.
 
     Works for all versions of Python.
+
+    Args:
+        date_str(str): In the form YYYY-mm-dd. If as_datetime is True, it can also hold a time,
+            in the form YYYY-mm-ddTHH:MM[:SS] or YYYY-mm-dd HH:MM[:SS].
+        as_datetime(bool): True, return a datetime.datetime object. Otherwise, return
+            a datetime.date object.
+
+    Returns:
+        datetime.datetime|datetime.date: The parsed date.
+
+    Raises:
+        ValueError: If date_str is not in one of these forms.
     """
-    for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
+    if as_datetime:
+        formats = ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S",
+                   "%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M")
+    else:
+        # A datetime.date cannot hold a time. Reject one, so that it does not silently get lost.
+        formats = ("%Y-%m-%d",)
+    for fmt in formats:
         try:
             dt = datetime.datetime.strptime(date_str, fmt)
             if not as_datetime:
