@@ -123,8 +123,6 @@ def parse_iso(date_str, as_datetime):
         ValueError: If date_str is not in one of these forms.
     """
     if as_datetime:
-        # There is no form with a UTC offset, because 'weectl database calc-missing' converts the
-        # result to a timestamp using time.mktime(), which would ignore the offset.
         formats = ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S",
                    "%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M")
     else:

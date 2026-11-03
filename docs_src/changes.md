@@ -48,11 +48,8 @@ Fixed daily summaries being counted twice after re-importing archive records
 with --update, and stale daily extrema after corrections.
 [PR #1197](https://github.com/weewx/weewx/pull/1197).
 
-The date options of `weectl database` now accept a fixed set of forms. Options
-`--from` and `--to` of action `calc-missing` take a date, or a date and a time
-in the form `YYYY-mm-ddTHH:MM`, with optional seconds, and with a `T` or a
-space. A UTC offset is no longer accepted, because it was ignored. Actions
-`rebuild-daily` and `reweight` take only a date.
+Fixed problem that prevented the date options of `weectl database` from
+accepting times of the form `YYYY-mm-ddTHH:MM`. That is, without seconds.
 [PR #1225](https://github.com/weewx/weewx/pull/1225).
 
 Reduced database queries when reports iterate over derived observation values
