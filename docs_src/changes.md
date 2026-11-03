@@ -78,6 +78,10 @@ Translate database errors raised while reading table schemas. SQLite schema
 locks now reach the existing retry handlers during database initialization.
 [PR #1208](https://github.com/weewx/weewx/pull/1208).
 
+Fixed `weectl` failing to start under Python 3.6 after a `pip` install. Module
+`importlib-resources` is now a dependency for that version of Python.
+[PR #1228](https://github.com/weewx/weewx/pull/1228).
+
 
 ### 5.5.2 23-Sep-2026
 
