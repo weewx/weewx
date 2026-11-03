@@ -78,6 +78,9 @@ Translate database errors raised while reading table schemas. SQLite schema
 locks now reach the existing retry handlers during database initialization.
 [PR #1208](https://github.com/weewx/weewx/pull/1208).
 
+Fixed `weectl debug` failing under Python 3.6 if option `--output` was not used.
+[PR #1229](https://github.com/weewx/weewx/pull/1229).
+
 
 ### 5.5.2 23-Sep-2026
 

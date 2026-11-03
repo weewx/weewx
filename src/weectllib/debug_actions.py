@@ -48,9 +48,9 @@ def debug(config_dict, output=None):
         # object" as the file descriptor
         sink = open(output, 'wt')
     else:
-        # Otherwise, use stdout. It's already open, so use a null context, so that
-        # we don't open it again
-        sink = contextlib.nullcontext(sys.stdout)
+        # Otherwise, use stdout. It's already open, and must stay open afterwards, so use a
+        # context manager that does not close it.
+        sink = _stdout_sink()
 
     with sink as fd:
         # system/OS info
@@ -63,6 +63,18 @@ def debug(config_dict, output=None):
         generate_archive_info(config_dict, fd)
         # generate our obfuscated weewx.conf
         generate_debug_conf(config_dict['config_path'], config_dict, fd)
+
+
+@contextlib.contextmanager
+def _stdout_sink():
+    """Provide stdout to a 'with' statement, without closing it at the end.
+
+    This does the job of contextlib.nullcontext(), which Python 3.6 does not have.
+
+    Yields:
+        typing.TextIO: The stdout stream.
+    """
+    yield sys.stdout
 
 
 def generate_sys_info(fd):
