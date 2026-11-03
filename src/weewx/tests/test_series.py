@@ -19,7 +19,7 @@ import weewx.units
 import weewx.wxformulas
 import weewx.xtypes
 from parameters import start_ts, stop_ts, interval
-from weeutil.weeutil import TimeSpan
+from weeutil.weeutil import TimeSpan, intervalgen
 
 month_start_tt = (2010, 3, 1, 0, 0, 0, 0, 0, -1)
 month_stop_tt = (2010, 4, 1, 0, 0, 0, 0, 0, -1)
@@ -514,6 +514,12 @@ def test_gen_pages():
                TimeSpan(50, 55)]
     pages = list(weewx.xtypes.ArchiveTable._gen_pages(buckets, 1000))
     assert pages == [buckets[0:2], buckets[2:3], buckets[3:4], buckets[4:5]]
+    # So does a bucket of the same length that does not start where the last one stopped, be it
+    # because the two overlap or because there is a gap.
+    buckets = [TimeSpan(0, 10), TimeSpan(10, 20), TimeSpan(15, 25), TimeSpan(25, 35),
+               TimeSpan(40, 50)]
+    pages = list(weewx.xtypes.ArchiveTable._gen_pages(buckets, 1000))
+    assert pages == [buckets[0:2], buckets[2:4], buckets[4:5]]
 
 
 @pytest.mark.parametrize('obs_type', ['outTemp', 'wind'])
@@ -536,6 +542,33 @@ def test_get_series_archive_agg_dst(config_dict, monkeypatch, obs_type, aggregat
         start_vec, stop_vec = expected[0][0], expected[1][0]
         assert sorted(set(b - a for a, b in zip(start_vec, stop_vec))) == [7200, 10800]
         _assert_series_equal(get_series(), expected)
+
+
+@pytest.mark.parametrize('obs_type, aggregate_type', [('outTemp', 'avg'),
+                                                      ('rain', 'sum'),
+                                                      ('outTemp', 'first')])
+def test_get_series_archive_agg_dst_overlap(config_dict, obs_type, aggregate_type):
+    """Where DST begins, intervalgen() can yield two buckets of the same length that overlap. The
+    two types of aggregation, 'first' by Python and the others by SQL, go wrong in different ways.
+    Each bucket must get the value of get_aggregate(), up to the end of a page several days after
+    the overlap, not only next to it."""
+    # In the time zone of the tests, DST began on 14-Mar-2010, at 02:00. Buckets of 45 minutes
+    # from 00:15 include one that stops at 03:30 PDT, and the next one starts at 03:15 PDT. So the
+    # archive record of 03:30 belongs to both. The page span is a week, which covers the series.
+    start = int(time.mktime((2010, 3, 14, 0, 15, 0, 0, 0, -1)))
+    timespan = TimeSpan(start, start + 5 * 24 * 3600)
+    buckets = list(intervalgen(timespan.start, timespan.stop, 2700))
+    assert [second.start - first.stop for first, second in zip(buckets, buckets[1:])
+            if second.start != first.stop] == [-900]
+
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        start_vec, stop_vec, data_vec = weewx.xtypes.get_series(obs_type, timespan, db_manager,
+                                                                aggregate_type, 2700)
+        expected = [weewx.xtypes.get_aggregate(obs_type, bucket, aggregate_type, db_manager)[0]
+                    for bucket in buckets]
+
+    assert list(zip(start_vec[0], stop_vec[0])) == [tuple(bucket) for bucket in buckets]
+    assert data_vec[0] == pytest.approx(expected, abs=1e-6)
 
 
 @pytest.mark.parametrize('aggregate_type', compared_types)

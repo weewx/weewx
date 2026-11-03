@@ -1,5 +1,6 @@
 #
 #    Copyright (c) 2019-2026 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2026 Manuel Hilgert <hilman2@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -552,13 +553,14 @@ class ArchiveTable(XType):
     def _gen_pages(buckets, page_span):
         """Group consecutive aggregation buckets into pages.
 
-        Buckets are accumulated into a page until the page spans at least `page_span` seconds,
-        or until the next bucket differs in length. Each page holds at least one bucket, so a
-        bucket is never split across pages.
+        Buckets are accumulated into a page. Each page is a run of buckets that can be queried from
+        the database in one go. Each page spans at least `page_span` seconds, or until the next
+        bucket differs in length, or until it does not start where the last bucket stopped.
+        Each page holds at least one bucket, so a bucket is never split across pages.
 
         Args:
-            buckets (list[weeutil.weeutil.TimeSpan]): The bucket time spans, sorted ascending and
-                non-overlapping.
+            buckets (list[weeutil.weeutil.TimeSpan]): The bucket time spans, sorted ascending.
+                Neighbors can overlap.
             page_span (int|float): The target length of a page, in seconds.
 
         Yields:
@@ -566,9 +568,18 @@ class ArchiveTable(XType):
         """
         page = []
         for bucket in buckets:
-            # The GROUP BY of _gen_grouped_aggregates() needs buckets of one length. They differ
-            # where DST begins or ends, and at the end of the series.
-            if page and bucket[1] - bucket[0] != page[0][1] - page[0][0]:
+            # _gen_grouped_aggregates() has the database group a page's rows with
+            # GROUP BY (dateTime - start - 1) / step, where start and step come from the first
+            # bucket. Therefore, bucket i of the page is assumed to be (start + i*step, start +
+            # (i+1)*step]. For this to work, every bucket on a page must have the same length and begin
+            # where the previous one ended.
+            # For this to all work, we need to start a new page when:
+            #   - the length changes. This happens at DST transitions, and for a shorter final
+            #     bucket (harmless on a page, but split off anyway for simplicity), or
+            #   - a bucket does not begin where the last one ended. At the start of DST,
+            #     intervalgen() can yield two equal-length buckets that overlap.
+            if page and (bucket[1] - bucket[0] != page[0][1] - page[0][0]
+                         or bucket[0] != page[-1][1]):
                 yield page
                 page = []
             page.append(bucket)
@@ -592,8 +603,8 @@ class ArchiveTable(XType):
         Args:
             obs_type (str): The observation type to be aggregated.
             aggregate_type (str): The type of aggregation. Must be in `_fast_aggregate_types`.
-            buckets (list[weeutil.weeutil.TimeSpan]): The time spans of the aggregation buckets.
-                These should be ascending and non-overlapping.
+            buckets (list[weeutil.weeutil.TimeSpan]): The time spans of the aggregation buckets,
+                sorted ascending. See `_gen_pages()` about buckets that overlap.
             db_manager (weewx.manager.Manager): An open database manager.
             page_span (int|float): The target length of a page, in seconds.
 
@@ -700,8 +711,8 @@ class ArchiveTable(XType):
         Args:
             obs_type (str): The observation type to be aggregated.
             aggregate_type (str): The type of aggregation. Must be in `_grouped_aggregate_types`.
-            buckets (list[weeutil.weeutil.TimeSpan]): The time spans of the aggregation buckets.
-                These should be ascending, non-overlapping, and without gaps.
+            buckets (list[weeutil.weeutil.TimeSpan]): The time spans of the aggregation buckets,
+                sorted ascending. See `_gen_pages()` about buckets that overlap.
             db_manager (weewx.manager.Manager): An open database manager.
             page_span (int|float): The target length of a page, in seconds.
 
