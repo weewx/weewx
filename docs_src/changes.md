@@ -19,7 +19,6 @@ only once per archive interval, or come from a station clock that has been set
 back. Each archive period now has its own accumulator. 
 [PR #1209](https://github.com/weewx/weewx/pull/1209).
 
-
 Fixed `tderiv` raising `TypeError` for missing energy samples and returning
 incorrect units for non-energy observations. It now supports energy, distance,
 rain and pressure. Other observation groups raise `UnknownAggregation`.
@@ -94,6 +93,9 @@ small range.
 Translate database errors raised while reading table schemas. SQLite schema
 locks now reach the existing retry handlers during database initialization.
 [PR #1208](https://github.com/weewx/weewx/pull/1208).
+
+Fixed problem that prevented the utility `weectl debug` from running under
+Python 3.6.
 
 
 ### 5.5.2 23-Sep-2026
