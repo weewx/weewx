@@ -36,11 +36,15 @@ Linux Package Managers](https://packaging.python.org/en/latest/guides/installing
 
     ```{ .shell .copy }
     sudo yum update
-    sudo yum install python3-importlib-resources
     sudo yum install python3-pip -y
-    sudo yum install python3-venv -y
     ```
-    _Tested with Rocky 8.7._
+    _Tested with Rocky 8.9._
+
+    _Redhat 8 comes with Python 3.6 and an old version of `pip`. In the virtual
+    environment below, first run `python3 -m pip install --upgrade pip`, then
+    install WeeWX with `python3 -m pip install --prefer-binary weewx`. Otherwise,
+    `pip` tries to build some of the dependencies from source, which requires
+    many other development packages._
 
 === "Redhat 9"
 

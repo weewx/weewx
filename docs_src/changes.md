@@ -64,6 +64,10 @@ Fixed daily summaries being counted twice after re-importing archive records
 with --update, and stale daily extrema after corrections.
 [PR #1197](https://github.com/weewx/weewx/pull/1197).
 
+Fixed problem that prevented the date options of `weectl database` from
+accepting times of the form `YYYY-mm-ddTHH:MM`. That is, without seconds.
+[PR #1225](https://github.com/weewx/weewx/pull/1225).
+
 Reduced database queries when reports iterate over derived observation values
 in archive records. [PR #1201](https://github.com/weewx/weewx/pull/1201).
 
@@ -96,6 +100,10 @@ locks now reach the existing retry handlers during database initialization.
 
 Fixed problem that prevented the utility `weectl debug` from running under
 Python 3.6.
+
+Fixed `weectl` failing to start under Python 3.6 after a `pip` install. Module
+`importlib-resources` is now a dependency for that version of Python.
+[PR #1228](https://github.com/weewx/weewx/pull/1228).
 
 
 ### 5.5.2 23-Sep-2026
