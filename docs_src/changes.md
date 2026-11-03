@@ -3,6 +3,11 @@ WeeWX change history
 
 ### 5.x.y dd-Mmm-YYYY
 
+Fixed `diff` and `tderiv` returning missing values when the first or last archive
+record has no value for the observation. They now use the first and last
+non-null values in the aggregation period.
+[PR #1210](https://github.com/weewx/weewx/pull/1210).
+
 Fixed `tderiv` raising `TypeError` for missing energy samples and returning
 incorrect units for non-energy observations. It now supports energy, distance,
 rain and pressure. Other observation groups raise `UnknownAggregation`.
