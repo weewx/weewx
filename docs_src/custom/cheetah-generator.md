@@ -546,13 +546,13 @@ Here are some examples:
     </tbody>
 </table>
 
-There are two kinds of seasons: meterological and astronomical. The
-meteorological season always starts at the 1st of March, June, September,
-and December. The astronomical season starts at equinox or solstice.
-There is an optional parameter `season_type` for `$season` and `$seasonyear`
-to specify, which one of them is to be used. Set it to `meteorological`
-(the default if not provided) or `astronomical`. Both words can be
-abbreviated.
+#### Meteorological vs astronomical seasons
+
+Tags `$season` and `$seasonsyear` take an optional parameter `seeason_type`: the
+kind of season. There are two kinds: meterological and astronomical. The
+meteorological season always starts at the 1st of March, June, September, and
+December. The astronomical season starts at equinox or solstice. Set it to
+`meteorological` (the default) or `astronomical`. Both words can be abbreviated.
 
 ### Unit conversion options
 
@@ -1270,9 +1270,13 @@ It is possible to iterate over the following:
         <td>Iterate by months</td>
     </tr>
     <tr>
-        <td class="code first_col">.seasons</td>
-        <td>Iterate by seasons. Depending on the parameter `season_type` of
-        `$seasonyear`, meteorological or astronomical seasons are returned.</td>
+        <td class="code first_col">.seasons(season_type=<em>str</em>)
+        </td>
+        <td>Iterate by seasons. Set parameter 
+            <a href="#meteorological-vs-astronomical-seasons"><span class="code">season_type</span></a> 
+            to "<span class="code">m</span>" for meteorological seasons,
+            "<span class="code">a</span>" for astronomical seasons. Default is 
+            "<span class="code">m</span>".</td>
     </tr>
     <tr>
         <td class="code first_col">.years</td>
