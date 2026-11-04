@@ -3,6 +3,10 @@ WeeWX change history
 
 ### 5.x.y dd-Mmm-YYYY
 
+Predefined season type in `weewx.conf`. Possibility to set the season type
+in `$alltime.seasons` by parameter.
+[PR #1206](https://github.com/weewx/weewx/pull/1206)
+
 Fixed `diff` and `tderiv` returning missing values when the first or last archive
 record has no value for the observation. They now use the first and last
 non-null values in the aggregation period.

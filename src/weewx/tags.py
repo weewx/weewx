@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -101,8 +101,9 @@ class TimeBinder:
             **self.option_dict)
 
     def season(self, data_binding=None, seasons_ago=0, years_ago=0, lat=None, lon=None,
-               season_type='m'):
+               season_type=None):
         years_ago, seasons_ago = seasons_ago // 4 + years_ago, seasons_ago % 4
+        if not season_type: season_type = self.option_dict.get('season_type','meteorological')
         if season_type[0].lower() == 'm':
             # meteorological season
             time_dt = time.localtime(self.report_time)
@@ -144,11 +145,11 @@ class TimeBinder:
                 end_of_season = weeutil.weeutil.startOfDay(alm.next_equinox.unix_epoch.raw)
         else:
             raise ValueError("season type can be 'meteorological' or 'astronomical'")
+        self.option_dict['season_type'] = season_type
         return TimespanBinder(
             weeutil.weeutil.TimeSpan(start_of_season, end_of_season),
             self.db_lookup, data_binding=data_binding,
             context='season', formatter=self.formatter, converter=self.converter,
-            season_type=season_type,
             **self.option_dict)
 
     def year(self, data_binding=None, years_ago=0):
@@ -177,8 +178,10 @@ class TimeBinder:
             context='rainyear', formatter=self.formatter, converter=self.converter,
             **self.option_dict)
 
-    def seasonsyear(self, data_binding=None, years_ago=0, lat=None, lon=None, season_type='m'):
+    def seasonsyear(self, data_binding=None, years_ago=0, lat=None, lon=None, season_type=None):
         """ meteorological or astronomical seasons year """
+        if not season_type:
+            season_type = self.option_dict.get('season_type','meteorological')
         if lat is None: lat = self.option_dict.get('lat', 0.0)
         if lon is None: lon = self.option_dict.get('lon', 0.0)
         if season_type[0].lower() == 'm':
@@ -209,11 +212,11 @@ class TimeBinder:
                     alm.next_vernal_equinox.unix_epoch.raw)
         else:
             raise ValueError("season type can be 'meteorological' or 'astronomical'")
+        self.option_dict['season_type'] = season_type
         return TimespanBinder(
             weeutil.weeutil.TimeSpan(start_of_seasons_year, end_of_seasons_year),
             self.db_lookup, data_binding=data_binding,
             context='seasonsyear', formatter=self.formatter, converter=self.converter,
-            season_type=season_type,
             **self.option_dict)
 
     def span(self, data_binding=None, time_delta=0, hour_delta=0, day_delta=0, week_delta=0,

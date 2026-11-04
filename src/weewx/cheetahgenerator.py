@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    Class Gettext is Copyright (C) 2021 Johanna Karen Roedenbeck
 #
@@ -573,6 +573,7 @@ class Stats(SearchList):
             converter=self.generator.converter,
             week_start=self.generator.stn_info.week_start,
             rain_year_start=self.generator.stn_info.rain_year_start,
+            season_type=self.generator.stn_info.season_type,
             lat = self.generator.stn_info.latitude_f,
             lon = self.generator.stn_info.longitude_f,
             trend=trend_dict,
