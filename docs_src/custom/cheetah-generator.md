@@ -1276,7 +1276,11 @@ It is possible to iterate over the following:
             <a href="#meteorological-vs-astronomical-seasons"><span class="code">season_type</span></a> 
             to "<span class="code">m</span>" for meteorological seasons,
             "<span class="code">a</span>" for astronomical seasons. Default is 
-            "<span class="code">m</span>".</td>
+            "<span class="code">m</span>". Not necessary together with
+            <span class="code">$seasonyear(season_type=<em>str</em></span>, 
+            as the season type specified there is also valid for the
+            iterator. If no season type is specified here and in the
+            base tag, the season type from the configuration is used.</td>
     </tr>
     <tr>
         <td class="code first_col">.years</td>
