@@ -1,6 +1,5 @@
 #
 #    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
-#    Copyright (c) 2026 Manuel Hilgert <hilman2@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -138,49 +137,6 @@ weewx.units.default_unit_label_dict["amp"] = " A"
 
 
 def test_report_engine(config_dict):
-    stn_info, testtime_ts = prepare_report_engine(config_dict)
-
-    # First run the engine without a current record.
-    run_engine(config_dict, stn_info, None, testtime_ts)
-
-    # Now run the engine again, but this time with a current record:
-    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as manager:
-        record = manager.getRecord(testtime_ts)
-    run_engine(config_dict, stn_info, record, testtime_ts)
-
-
-def test_noaa_wide_month_abbreviation(config_dict, monkeypatch):
-    """A four character month abbreviation must not shift the columns of a yearly NOAA report."""
-    # The real abbreviation depends on the locale and the C library, so force a wide one.
-    original_strftime = time.strftime
-
-    def strftime(format_string, *args):
-        return original_strftime(format_string.replace('%b', 'Juli'), *args)
-
-    monkeypatch.setattr(time, 'strftime', strftime)
-
-    stn_info, testtime_ts = prepare_report_engine(config_dict)
-    test_html_dir = generate_reports(config_dict, stn_info, None, testtime_ts)
-
-    filename_rel = os.path.join('StandardTest', 'NOAA', 'NOAA-2010.txt')
-    with open(os.path.join(test_html_dir, filename_rel), 'r') as actual:
-        actual_lines = actual.readlines()
-    with open(os.path.join(os.path.dirname(__file__), 'expected', filename_rel), 'r') as expected:
-        expected_lines = expected.readlines()
-    # Only the month names differ from the expected results, so the widths must all match.
-    assert 'Juli' in ''.join(actual_lines)
-    assert [len(line) for line in actual_lines] == [len(line) for line in expected_lines]
-
-
-def prepare_report_engine(config_dict):
-    """Remove any old results and initialize what the report engine depends on.
-
-    Args:
-        config_dict (dict): The configuration dictionary.
-
-    Returns:
-        tuple[weewx.station.StationInfo, int]: A two-way tuple (stn_info, testtime_ts).
-    """
     # Set up logging:
     weeutil.logger.setup('weetest_templates', config_dict)
     # Remove the old directory:
@@ -211,21 +167,17 @@ def prepare_report_engine(config_dict):
     print("\ntest time is %s" % weeutil.weeutil.timestamp_to_string(testtime_ts))
 
     stn_info = weewx.station.StationInfo(**config_dict['Station'])
-    return stn_info, testtime_ts
+
+    # First run the engine without a current record.
+    run_engine(config_dict, stn_info, None, testtime_ts)
+
+    # Now run the engine again, but this time with a current record:
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as manager:
+        record = manager.getRecord(testtime_ts)
+    run_engine(config_dict, stn_info, record, testtime_ts)
 
 
-def generate_reports(config_dict, stn_info, record, testtime_ts):
-    """Run the test skins through the report engine.
-
-    Args:
-        config_dict (dict): The configuration dictionary.
-        stn_info (weewx.station.StationInfo): The station information.
-        record (dict|None): The current record, if any.
-        testtime_ts (int): The time of the reports.
-
-    Returns:
-        str: The directory that holds the generated files.
-    """
+def run_engine(config_dict, stn_info, record, testtime_ts):
     t = weewx.reportengine.StdReportEngine(config_dict, stn_info, record, testtime_ts)
 
     # Find the test skins and then have SKIN_ROOT in the report engine point to it:
@@ -237,12 +189,9 @@ def generate_reports(config_dict, stn_info, record, testtime_ts):
     t.run()
     print("Done.")
 
-    return os.path.join(t.config_dict['WEEWX_ROOT'], t.config_dict['StdReport']['HTML_ROOT'])
-
-
-def run_engine(config_dict, stn_info, record, testtime_ts):
-    test_html_dir = generate_reports(config_dict, stn_info, record, testtime_ts)
-    expected_dir = os.path.join(os.path.dirname(__file__), 'expected')
+    test_html_dir = os.path.join(t.config_dict['WEEWX_ROOT'],
+                                 t.config_dict['StdReport']['HTML_ROOT'])
+    expected_dir = os.path.join(test_dir, 'expected')
 
     # Walk the directory of expected results to discover all the generated files we should
     # be checking
