@@ -1,5 +1,6 @@
 #
 #    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2026 Manuel Hilgert <hilman2@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -94,9 +95,13 @@ def set_locale(name):
             yield locale.setlocale(locale.LC_ALL, name)
         except locale.Error as e:
             # That didn't work. Set to the default locale.
-            loc = locale.setlocale(locale.LC_ALL, '')
-            log.debug("Unable to set locale '%s': %s. Using default locale instead ('%s').",
-                      name, e, loc)
+            try:
+                loc = locale.setlocale(locale.LC_ALL, '')
+            except locale.Error:
+                # The environment can name a locale that is not installed. Nothing above us
+                # catches this, so raising would end the report run. Stay in the current locale.
+                loc = saved_locale
+            log.debug("Unable to set locale '%s': %s. Using locale '%s' instead.", name, e, loc)
             yield loc
         finally:
             locale.setlocale(locale.LC_ALL, saved_locale)
