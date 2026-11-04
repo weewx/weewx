@@ -19,6 +19,11 @@ only once per archive interval, or come from a station clock that has been set
 back. Each archive period now has its own accumulator. 
 [PR #1209](https://github.com/weewx/weewx/pull/1209).
 
+Fixed `diff` and `tderiv` returning missing values when the first or last archive
+record has no value for the observation. They now use the first and last
+non-null values in the aggregation period.
+[PR #1210](https://github.com/weewx/weewx/pull/1210).
+
 Fixed `tderiv` raising `TypeError` for missing energy samples and returning
 incorrect units for non-energy observations. It now supports energy, distance,
 rain and pressure. Other observation groups raise `UnknownAggregation`.
@@ -104,6 +109,10 @@ Python 3.6.
 Fixed `weectl` failing to start under Python 3.6 after a `pip` install. Module
 `importlib-resources` is now a dependency for that version of Python.
 [PR #1228](https://github.com/weewx/weewx/pull/1228).
+
+Month abbreviations of four characters, such as `Juli` on macOS, no longer shift
+the columns of the summary rows in yearly NOAA reports.
+[PR #1221](https://github.com/weewx/weewx/pull/1221).
 
 
 ### 5.5.2 23-Sep-2026
