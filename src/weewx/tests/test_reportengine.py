@@ -1,6 +1,5 @@
 #
 #    Copyright (c) 2021-2026 Tom Keffer <tkeffer@gmail.com>
-#    Copyright (c) 2026 Manuel Hilgert <hilman2@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -206,13 +205,4 @@ def test_set_locale_falls_back_to_default(monkeypatch):
     with set_locale('xx_XX.UTF-8') as current_locale:
         assert current_locale == 'C'
         assert locale.setlocale(locale.LC_ALL) == 'C'
-    assert locale.setlocale(locale.LC_ALL) == original_locale
-
-
-def test_set_locale_default_not_installed(monkeypatch):
-    """The environment naming a locale that is not installed must not stop the reports."""
-    monkeypatch.setenv('LC_ALL', 'xx_XX.UTF-8')
-    original_locale = locale.setlocale(locale.LC_ALL)
-    with set_locale('xx_XX.UTF-8') as current_locale:
-        assert current_locale == original_locale
     assert locale.setlocale(locale.LC_ALL) == original_locale

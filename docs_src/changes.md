@@ -95,10 +95,6 @@ Month abbreviations of four characters, such as `Juli` on macOS, no longer shift
 the columns of the summary rows in yearly NOAA reports.
 [PR #1221](https://github.com/weewx/weewx/pull/1221).
 
-Reports no longer stop if `lang` is not a valid locale and the environment names
-a locale that is not installed. They now use the current locale.
-[PR #1221](https://github.com/weewx/weewx/pull/1221).
-
 
 ### 5.5.2 23-Sep-2026
 
