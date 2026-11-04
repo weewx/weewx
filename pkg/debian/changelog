@@ -1,3 +1,6 @@
+weewx (5.6.0b1-1) unstable; urgency=low
+  * Various bug fixes and performance enhancements
+ -- Tom Keffer (Author of WeeWX) <tkeffer@gmail.com>  Mon, 02 Nov 2026 06:45:15 -0800
 weewx (5.5.2-1) unstable; urgency=low
   * Fix problem that prevented `weectl` from running under Python 3.6.
   * Fix version check problem when packaging.

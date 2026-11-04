@@ -42,6 +42,26 @@ upgrade the configuration file `/etc/weewx/other.conf`:
 sudo weectl station upgrade --config=/etc/weewx/other.conf
 ```
 
+## Upgrading to V5.6
+
+### XTypes with their own `get_aggregate()`
+
+V5.6 calculates a series directly from the archive table if its
+`aggregate_interval` is shorter than a day and its `aggregate_type` is a common
+one, such as `avg`, `sum`, `min`, or `max`. It no longer calls `get_aggregate()`
+for each time period of the series. This leads to big performance improvements.
+
+However, there is a possible side effect. If you have written an XType that sits
+in front of `ArchiveTable` in the list `weewx.xtypes.xtypes`, and whose
+`get_aggregate()` calculates its own value for an observation type in the
+archive table, it will no longer be called. For example, a series of hourly
+`max` values now holds the value from the archive table, not the value from your
+XType. A tag such as `$day.outTemp.max` still calls your XType. To change the
+series as well, add a `get_series()` method to your XType.
+
+Surveying the web, we have found two extensions that are affected.
+
+
 ## Upgrading to V5.5
 
 ### Signature of `ReportGenerator` has changed

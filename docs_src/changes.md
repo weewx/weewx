@@ -1,7 +1,23 @@
 WeeWX change history
 --------------------
 
-### 5.x.y dd-Mmm-YYYY
+### 5.6.0 02-Nov-2026
+
+Improved the performance of `weewx.xtypes.ArchiveTable.get_series()` for
+aggregated series (such as hourly aggregation over a long timespan). Instead
+of issuing one SQL query per aggregation bucket, it now fetches the archive
+data in pages of about a week each, then calculates the aggregates in memory.
+This keeps both the number of queries and the memory used small.
+
+Where its SQL can, the database now aggregates each page itself, so it returns
+a row per bucket rather than every archive record. Buckets of a day or more
+come from the daily summaries again, as before.
+[PR #1154](https://github.com/weewx/weewx/pull/1154).
+
+LOOP packet data are no longer lost when packets arrive out of order, arrive
+only once per archive interval, or come from a station clock that has been set
+back. Each archive period now has its own accumulator. 
+[PR #1209](https://github.com/weewx/weewx/pull/1209).
 
 Predefined season type in `weewx.conf`. Possibility to set the season type
 in `$alltime.seasons` by parameter.
@@ -90,6 +106,9 @@ small range.
 Translate database errors raised while reading table schemas. SQLite schema
 locks now reach the existing retry handlers during database initialization.
 [PR #1208](https://github.com/weewx/weewx/pull/1208).
+
+Fixed problem that prevented the utility `weectl debug` from running under
+Python 3.6.
 
 Fixed `weectl` failing to start under Python 3.6 after a `pip` install. Module
 `importlib-resources` is now a dependency for that version of Python.

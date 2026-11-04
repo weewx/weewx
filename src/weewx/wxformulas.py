@@ -100,7 +100,7 @@ def windchillMetric(T_C, V_kph):
         T (float|None): Temperature in Celsius
         V (float|None): Wind speed in kph
     
-    Returns
+    Returns:
         float|None: wind chill in Celsius, or None if it cannot be calculated
     """
 
@@ -237,7 +237,15 @@ def cooling_degrees(t, base):
 def altimeter_pressure_US(SP_inHg, Z_foot, algorithm='aaASOS'):
     """Calculate the altimeter pressure, given the raw, station pressure in inHg and the altitude
     in feet.
-        
+
+    Args:
+        SP_inHg (float|None): Station pressure in inHg.
+        Z_foot (float|int|None): Altitude in feet.
+        algorithm (str): The algorithm to use. Default is 'aaASOS'.
+
+    Returns:
+        float|None: The altimeter pressure in inHg, or None if it cannot be calculated.
+
     Examples:
     >>> print("%.2f" % altimeter_pressure_US(28.0, 0.0))
     28.00
@@ -255,6 +263,14 @@ def altimeter_pressure_US(SP_inHg, Z_foot, algorithm='aaASOS'):
 def altimeter_pressure_Metric(SP_mbar, Z_meter, algorithm='aaASOS'):
     """Convert from (uncorrected) station pressure to altitude-corrected
     pressure.
+
+    Args:
+        SP_mbar (float|None): Station pressure in mbar.
+        Z_meter (float|int|None): Altitude in meters.
+        algorithm (str): The algorithm to use. Default is 'aaASOS'.
+
+    Returns:
+        float|None: The altimeter pressure in mbar, or None if it cannot be calculated.
 
     Examples:
     >>> print("%.1f" % altimeter_pressure_Metric(948.08, 0.0))
@@ -279,13 +295,13 @@ def _etterm(elev_meter, t_C):
 def sealevel_pressure_Metric(sp_mbar, elev_meter, t_C):
     """Convert station pressure to sea level pressure.  This implementation was copied from wview.
 
-    sp_mbar - station pressure in millibars
+    Args:
+        sp_mbar (float|None): station pressure in millibars
+        elev_meter (float|int|None): station elevation in meters
+        t_C (float|None): temperature in degrees Celsius
 
-    elev_meter - station elevation in meters
-
-    t_C - temperature in degrees Celsius
-
-    bp - sea level pressure (barometer) in millibars
+    Returns:
+        float|None: sea level pressure (barometer) in millibars
     """
     if sp_mbar is None or elev_meter is None or t_C is None:
         return None
@@ -306,7 +322,17 @@ def sealevel_pressure_US(sp_inHg, elev_foot, t_F):
 
 
 def calculate_delta(newtotal, oldtotal, delta_key='rain'):
-    """Calculate the differential given two cumulative measurements."""
+    """Calculate the differential given two cumulative measurements.
+
+    Args:
+        newtotal (float|None): The new cumulative total.
+        oldtotal (float|None): The old cumulative total.
+        delta_key (str): The name of the observation type, used for log messages.
+
+    Returns:
+        float|None: The difference (newtotal - oldtotal), or None if a counter reset was
+            detected, or either input was None.
+    """
     if newtotal is not None and oldtotal is not None:
         if newtotal >= oldtotal:
             delta = newtotal - oldtotal
@@ -325,13 +351,15 @@ def solar_rad_Bras(lat, lon, altitude_m, ts=None, nfac=2):
     """Calculate maximum solar radiation using Bras method
     http://www.ecy.wa.gov/programs/eap/models.html
 
-    lat, lon - latitude and longitude in decimal degrees
+    Args:
+        lat (float): latitude in decimal degrees
+        lon (float): longitude in decimal degrees
+        altitude_m (float|int): altitude in meters
+        ts (float|int|None): timestamp as unix epoch
+        nfac (float|int): atmospheric turbidity (2=clear, 4-5=smoggy)
 
-    altitude_m - altitude in meters
-
-    ts - timestamp as unix epoch
-
-    nfac - atmospheric turbidity (2=clear, 4-5=smoggy)
+    Returns:
+        float|None: Maximum solar radiation in W/m^2, or None if it cannot be calculated.
 
     Example:
 
@@ -392,13 +420,15 @@ def solar_rad_RS(lat, lon, altitude_m, ts=None, atc=0.8):
     Ryan-Stolzenbach, MIT 1972
     http://www.ecy.wa.gov/programs/eap/models.html
 
-    lat, lon - latitude and longitude in decimal degrees
+    Args:
+        lat (float): latitude in decimal degrees
+        lon (float): longitude in decimal degrees
+        altitude_m (float|int): altitude in meters
+        ts (float|int|None): time as unix epoch
+        atc (float): atmospheric transmission coefficient (0.7-0.91)
 
-    altitude_m - altitude in meters
-
-    ts - time as unix epoch
-
-    atc - atmospheric transmission coefficient (0.7-0.91)
+    Returns:
+        float|None: Maximum solar radiation in W/m^2, or None if it cannot be calculated.
 
     Example:
 
@@ -455,11 +485,13 @@ def solar_rad_RS(lat, lon, altitude_m, ts=None, atc=0.8):
 def cloudbase_Metric(t_C, rh, altitude_m):
     """Calculate the cloud base in meters
 
-    t_C - temperature in degrees Celsius
+    Args:
+        t_C (float|None): temperature in degrees Celsius
+        rh (float|None): relative humidity [0-100]
+        altitude_m (float|int|None): altitude in meters
 
-    rh - relative humidity [0-100]
-
-    altitude_m - altitude in meters
+    Returns:
+        float|None: The cloud base in meters, or None if it cannot be calculated.
     """
     dp_C = dewpointC(t_C, rh)
     if dp_C is None:
@@ -471,11 +503,13 @@ def cloudbase_Metric(t_C, rh, altitude_m):
 def cloudbase_US(t_F, rh, altitude_ft):
     """Calculate the cloud base in feet
 
-    t_F - temperature in degrees Fahrenheit
+    Args:
+        t_F (float|None): temperature in degrees Fahrenheit
+        rh (float|None): relative humidity [0-100]
+        altitude_ft (float|int|None): altitude in feet
 
-    rh - relative humidity [0-100]
-
-    altitude_ft - altitude in feet
+    Returns:
+        float|None: The cloud base in feet, or None if it cannot be calculated.
     """
     dp_F = dewpointF(t_F, rh)
     if dp_F is None:
@@ -519,9 +553,12 @@ def humidexC(t_C, rh):
 def humidexF(t_F, rh):
     """Calculate the humidex in degree Fahrenheit
 
-    t_F - temperature in degree Fahrenheit
+    Args:
+        t_F (float|None): temperature in degree Fahrenheit
+        rh (float|None): relative humidity [0-100]
 
-    rh - relative humidity [0-100]
+    Returns:
+        float|None: Humidex in degree Fahrenheit, or None if it cannot be calculated.
     """
     if t_F is None:
         return None
@@ -532,11 +569,14 @@ def humidexF(t_F, rh):
 def apptempC(t_C, rh, ws_mps):
     """Calculate the apparent temperature in degree Celsius
 
-    t_C - temperature in degree Celsius
+    Args:
+        t_C (float|None): temperature in degree Celsius
+        rh (float|None): relative humidity [0-100]
+        ws_mps (float|None): wind speed in meters per second
 
-    rh - relative humidity [0-100]
-
-    ws_mps - wind speed in meters per second
+    Returns:
+        float|None: The apparent temperature in degree Celsius, or None if it cannot be
+            calculated.
 
     http://www.bom.gov.au/info/thermal_stress/#atapproximation
       AT = Ta + 0.33*e - 0.70*ws - 4.00
@@ -571,11 +611,14 @@ def apptempC(t_C, rh, ws_mps):
 def apptempF(t_F, rh, ws_mph):
     """Calculate apparent temperature in degree Fahrenheit
 
-    t_F - temperature in degree Fahrenheit
+    Args:
+        t_F (float|None): temperature in degree Fahrenheit
+        rh (float|None): relative humidity [0-100]
+        ws_mph (float|None): wind speed in miles per hour
 
-    rh - relative humidity [0-100]
-
-    ws_mph - wind speed in miles per hour
+    Returns:
+        float|None: The apparent temperature in degree Fahrenheit, or None if it cannot be
+            calculated.
     """
     if t_F is None:
         return None
@@ -590,7 +633,17 @@ def apptempF(t_F, rh, ws_mph):
 
 
 def beaufort(ws_kts):
-    """Return the beaufort number given a wind speed in knots"""
+    """Return the beaufort number given a wind speed in knots
+
+    Args:
+        ws_kts (float|complex|None): Wind speed in knots. Can also be a complex number,
+            representing a wind vector.
+
+    Returns:
+        int|complex|None: The Beaufort number corresponding to the wind speed, or None if
+            ws_kts is None. If the input was a complex number, the result will also be a
+            complex number, with the same phase.
+    """
     if ws_kts is None:
         return None
     mag_knts = abs(ws_kts)
@@ -637,7 +690,13 @@ weewx.units.default_unit_format_dict['beaufort'] = "%d"
 
 def equation_of_time(doy):
     """Equation of time in minutes. Plus means sun leads local time.
-    
+
+    Args:
+        doy (int): Day of year [1-366]
+
+    Returns:
+        float: Equation of time in minutes.
+
     Example (1 October):
     >>> print("%.4f" % equation_of_time(274))
     0.1889
@@ -648,12 +707,14 @@ def equation_of_time(doy):
 
 def hour_angle(t_utc, longitude, doy):
     """Solar hour angle at a given time in radians.
-    
-    t_utc: The time in UTC.
-    longitude: the longitude in degrees
-    doy: The day of year
-    
-    Returns hour angle in radians. 0 <= omega < 2*pi
+
+    Args:
+        t_utc (float): The time in UTC.
+        longitude (float): the longitude in degrees
+        doy (int): The day of year
+
+    Returns:
+        float: hour angle in radians. 0 <= omega < 2*pi
     
     Example:
     >>> print("%.4f radians" % hour_angle(15.5, -16.25, 274))
@@ -670,7 +731,13 @@ def hour_angle(t_utc, longitude, doy):
 
 def solar_declination(doy):
     """Solar declination for the day of the year in radians
-    
+
+    Args:
+        doy (int): Day of year [1-366]
+
+    Returns:
+        float: Solar declination in radians.
+
     Example (1 October is the 274th day of the year):
     >>> print("%.6f" % solar_declination(274))
     -0.075274
@@ -680,16 +747,16 @@ def solar_declination(doy):
 
 def sun_radiation(doy, latitude_deg, longitude_deg, tod_utc, interval):
     """Extraterrestrial radiation. Radiation at the top of the atmosphere
-    
-    doy: Day-of-year
 
-    latitude_deg, longitude_deg: Lat and lon in degrees
+    Args:
+        doy (int): Day-of-year
+        latitude_deg (float): Latitude in degrees
+        longitude_deg (float): Longitude in degrees
+        tod_utc (float): Time-of-day (UTC) at the end of the interval in hours (0-24)
+        interval (float|int): The time interval over which the radiation is to be calculated in hours
 
-    tod_utc: Time-of-day (UTC) at the end of the interval in hours (0-24)
-
-    interval: The time interval over which the radiation is to be calculated in hours
-
-    Returns the (average?) solar radiation over the time interval in MJ/m^2/hr
+    Returns:
+        float: The (average?) solar radiation over the time interval in MJ/m^2/hr
     
     Example:
     >>> print("%.3f" % sun_radiation(doy=274, latitude_deg=16.217,
@@ -727,18 +794,20 @@ def sun_radiation(doy, latitude_deg, longitude_deg, tod_utc, interval):
 def longwave_radiation(Tmin_C, Tmax_C, ea, Rs, Rso, rh):
     """Calculate the net long-wave radiation.
     Ref: http://www.fao.org/docrep/x0490e/x0490e00.htm Eqn 39
-    
-    Tmin_C: Minimum temperature during the calculation period
-    Tmax_C: Maximum temperature during the calculation period
-    ea: Actual vapor pressure in kPa
-    Rs: Measured radiation. See below for units.
-    Rso: Calculated clear-wky radiation. See below for units.
-    rh: Relative humidity in percent
+
+    Args:
+        Tmin_C (float): Minimum temperature during the calculation period
+        Tmax_C (float): Maximum temperature during the calculation period
+        ea (float): Actual vapor pressure in kPa
+        Rs (float): Measured radiation. See below for units.
+        Rso (float): Calculated clear-wky radiation. See below for units.
+        rh (float): Relative humidity in percent
     
     Because the formula uses the ratio of Rs to Rso, their actual units do not matter,
     so long as they use the same units.
-    
-    Returns back radiation in MJ/m^2/day
+
+    Returns:
+        float: back radiation in MJ/m^2/day
     
     Example:
     >>> print("%.1f mm/day" % longwave_radiation(Tmin_C=19.1, Tmax_C=25.1, ea=2.1,

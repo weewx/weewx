@@ -1,3 +1,5 @@
+* Mon Nov 02 2026 Tom Keffer (Author of WeeWX) <tkeffer@gmail.com> - 5.6.0b1-1
+- Various bug fixes and performance enhancements
 * Wed Sep 23 2026 Tom Keffer (Author of WeeWX) <tkeffer@gmail.com> - 5.5.2-1
 - Fix problem that prevented `weectl` from running under Python 3.6.
 - Fix version check problem when packaging.

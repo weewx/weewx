@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -56,7 +56,7 @@ class StdEngine:
     def __init__(self, config_dict):
         """Initialize an instance of StdEngine.
         
-        config_dict: The configuration dictionary. """
+        config_dict (configobj.ConfigObj): The configuration dictionary. """
 
         # Set a default socket time out, in case FTP or HTTP hang:
         timeout = int(config_dict.get('socket_timeout', 20))
@@ -90,7 +90,10 @@ class StdEngine:
         self.loadServices(config_dict)
 
     def setupStation(self, config_dict):
-        """Set up the weather station hardware."""
+        """Set up the weather station hardware.
+
+        config_dict (configobj.ConfigObj): The configuration dictionary.
+        """
 
         # Get the hardware type from the configuration dictionary. This will be
         # a string such as "VantagePro"
@@ -114,7 +117,10 @@ class StdEngine:
             raise InitializationError(ex)
 
     def loadServices(self, config_dict):
-        """Set up the services to be run."""
+        """Set up the services to be run.
+
+        config_dict (configobj.ConfigObj): The configuration dictionary.
+        """
 
         # Make sure all service groups are lists (if there's just a single entry, ConfigObj
         # will parse it as a string if it did not have a trailing comma).
@@ -220,7 +226,13 @@ class StdEngine:
             raise exception
 
     def bind(self, event_type, callback):
-        """Binds an event to a callback function."""
+        """Binds an event to a callback function.
+
+        event_type (weewx.Event): The type of event to bind to, e.g., weewx.NEW_LOOP_PACKET.
+
+        callback (callable): The function to be called. It must accept a single argument,
+        an instance of weewx.Event.
+        """
 
         # Each event type has a list of callback functions to be called.
         # If we have not seen the event type yet, then create an empty list,
@@ -228,7 +240,10 @@ class StdEngine:
         self.callbacks.setdefault(event_type, []).append(callback)
 
     def dispatchEvent(self, event):
-        """Call all registered callbacks for an event."""
+        """Call all registered callbacks for an event.
+
+        event (weewx.Event): The event to be dispatched.
+        """
         # See if any callbacks have been registered for this event type:
         if event.event_type in self.callbacks:
             if self.log_events:
@@ -239,7 +254,10 @@ class StdEngine:
                 callback(event)
 
     def shutDown(self, exception=None):
-        """Run when an engine shutdown is requested."""
+        """Run when an engine shutdown is requested.
+
+        exception (BaseException|None): The exception, if any, that caused the shutdown.
+        """
 
         # Send out an event saying the engine is shutting down.
         error = {}
@@ -360,7 +378,10 @@ class StdConvert(StdService):
         log.info("StdConvert target unit is 0x%x", self.target_unit)
 
     def new_loop_packet(self, event):
-        """Do unit conversions for a LOOP packet"""
+        """Do unit conversions for a LOOP packet
+
+        event (weewx.Event): The event containing the LOOP packet to be converted.
+        """
         # No need to do anything if the packet is already in the target
         # unit system
         if event.packet['usUnits'] == self.target_unit:
@@ -373,7 +394,10 @@ class StdConvert(StdService):
         event.packet = converted_packet
 
     def new_archive_record(self, event):
-        """Do unit conversions for an archive record."""
+        """Do unit conversions for an archive record.
+
+        event (weewx.Event): The event containing the archive record to be converted.
+        """
         # No need to do anything if the record is already in the target
         # unit system
         if event.record['usUnits'] == self.target_unit:
@@ -443,7 +467,10 @@ class StdCalibrate(StdService):
         self.bind(weewx.NEW_ARCHIVE_RECORD, self.new_archive_record)
 
     def new_loop_packet(self, event):
-        """Apply a calibration correction to a LOOP packet"""
+        """Apply a calibration correction to a LOOP packet
+
+        event (weewx.Event): The event containing the LOOP packet to be corrected.
+        """
         for obs_type in self.corrections:
             # If no directives were specified (self.which is empty), then always do the correction.
             # If a directive has been specified, do the correction if 'loop' is in the directive.
@@ -458,7 +485,10 @@ class StdCalibrate(StdService):
                     log.error("StdCalibrate value error in LOOP packet %s", e)
 
     def new_archive_record(self, event):
-        """Apply a calibration correction to an archive packet"""
+        """Apply a calibration correction to an archive packet
+
+        event (weewx.Event): The event containing the archive record to be corrected.
+        """
         for obs_type in self.corrections:
             # If a record was software-generated, then the correction has presumably been
             # already applied in the LOOP packet. So, unless told otherwise, do not do the
@@ -518,15 +548,100 @@ class StdQC(StdService):
 
 
 # ==============================================================================
+#                    Class ArchivePeriods
+# ==============================================================================
+
+class ArchivePeriods:
+    """The archive periods that are still collecting LOOP packets.
+
+    Each period has its own accumulator, and every packet lands in the period its timestamp
+    belongs to, whatever order the packets arrive in. A period keeps collecting until
+    pop_ended() hands its accumulator out. After that, packets for the period are refused.
+    """
+
+    def __init__(self, archive_interval):
+        """Initialize an instance of ArchivePeriods.
+
+        Args:
+            archive_interval (int): The length of an archive period in seconds.
+        """
+        self.archive_interval = archive_interval
+        # The accumulators of the periods that are still collecting, keyed by their stop time.
+        # Normally there are one or two: the current period and, until it is handed out, the one
+        # before.
+        self.open = {}
+        # The stop time of the newest period handed out by pop_ended(), or None if there is none.
+        self.last_stop_ts = None
+
+    def stop_of(self, timestamp):
+        """Return the stop time of the archive period that includes a timestamp.
+
+        Args:
+            timestamp (int|float): The timestamp. A timestamp exactly on a boundary belongs to the
+                period that stops there.
+
+        Returns:
+            int: The stop time of the period.
+        """
+        return weeutil.weeutil.startOfInterval(timestamp, self.archive_interval) \
+            + self.archive_interval
+
+    def add_packet(self, packet, add_hilo=True):
+        """Add a LOOP packet to the accumulator of the period it belongs to.
+
+        Args:
+            packet (dict): The LOOP packet. It must have keys 'dateTime' and 'usUnits'.
+            add_hilo (bool): True to include the packet in the highs and lows. False otherwise.
+                Default is True.
+
+        Returns:
+            bool: True if the packet was added. False if its accumulator has already been handed out.
+        """
+        stop_ts = self.stop_of(packet['dateTime'])
+        if self.last_stop_ts is not None and stop_ts <= self.last_stop_ts:
+            return False
+        if stop_ts not in self.open:
+            timespan = weeutil.weeutil.TimeSpan(stop_ts - self.archive_interval, stop_ts)
+            self.open[stop_ts] = weewx.accum.Accum(timespan)
+        self.open[stop_ts].addRecord(packet, add_hilo=add_hilo)
+        return True
+
+    def oldest_stop_ts(self):
+        """Return the stop time of the oldest period that is still collecting.
+
+        Returns:
+            int|None: The stop time, or None if no period is collecting.
+        """
+        return min(self.open) if self.open else None
+
+    def pop_ended(self, now_ts):
+        """Remove the periods that have ended by a given time and return their accumulators.
+
+        Args:
+            now_ts (int|float): The time. A period has ended once now_ts is past its stop time.
+
+        Returns:
+            list[weewx.accum.Accum]: The accumulators of the ended periods, oldest first.
+        """
+        ended = sorted(stop_ts for stop_ts in self.open if stop_ts < now_ts)
+        if ended:
+            self.last_stop_ts = ended[-1]
+        return [self.open.pop(stop_ts) for stop_ts in ended]
+
+
+# ==============================================================================
 #                    Class StdArchive
 # ==============================================================================
 
 class StdArchive(StdService):
     """Service that archives LOOP and archive data in the SQL databases."""
 
-    # This service manages an "accumulator", which records high/lows and
-    # averages of LOOP packets over an archive period. At the end of the
-    # archive period it then emits an archive record.
+    # LOOP packets are collected by an instance of class ArchivePeriods, one accumulator per
+    # archive period. The main loop is broken archive_delay seconds after the end of a period,
+    # so packets that arrive late can still be counted. Then every period that has ended is
+    # archived: either the station supplies the archive record from its memory (hardware
+    # generation), or the record is extracted from the accumulator (software generation). Either
+    # way, the accumulator of the period travels with the record on the NEW_ARCHIVE_RECORD event.
 
     def __init__(self, engine, config_dict):
         super().__init__(engine, config_dict)
@@ -550,11 +665,11 @@ class StdArchive(StdService):
         self.end_archive_period_ts = None
         # The timestamp that marks the end of the archive period, plus a delay
         self.end_archive_delay_ts = None
-        # The accumulator to be used for the current archive period
-        self.accumulator = None
-        # The accumulator that was used for the last archive period. Set to None after it has
-        # been processed.
-        self.old_accumulator = None
+        # The timestamp of the latest LOOP packet.
+        self.latest_packet_ts = None
+        # The stop time of the archive period whose late packets were last reported to the log.
+        # This avoids lots of nearly identical log warnings.
+        self.last_late_warning = None
 
         if self.record_generation == 'software':
             self.archive_interval = software_interval
@@ -587,6 +702,8 @@ class StdArchive(StdService):
 
         log.debug("Use LOOP data in hi/low calculations: %d", self.loop_hilo)
 
+        self.periods = ArchivePeriods(self.archive_interval)
+
         weewx.accum.initialize(config_dict)
 
         self.bind(weewx.STARTUP, self.startup)
@@ -598,7 +715,10 @@ class StdArchive(StdService):
 
     def startup(self, _unused):
         """Called when the engine is starting up. Main task is to set up the database, backfill it,
-        then perform a catch-up if the hardware supports it. """
+        then perform a catch-up if the hardware supports it.
+
+        _unused (weewx.Event): Not used.
+        """
 
         # This will create the database if it doesn't exist:
         dbmanager = self.engine.db_binder.get_manager(self.data_binding, initialize=True)
@@ -624,7 +744,10 @@ class StdArchive(StdService):
                 pass
 
     def pre_loop(self, _event):
-        """Called before the main packet loop is entered."""
+        """Called before the main packet loop is entered.
+
+        _event (weewx.Event): Not used.
+        """
 
         # If this is the initial time through the loop, then the end of
         # the archive and delay periods need to be primed:
@@ -633,30 +756,29 @@ class StdArchive(StdService):
             start_archive_period_ts = weeutil.weeutil.startOfInterval(now, self.archive_interval)
             self.end_archive_period_ts = start_archive_period_ts + self.archive_interval
             self.end_archive_delay_ts = self.end_archive_period_ts + self.archive_delay
-        self.old_accumulator = None
 
     def new_loop_packet(self, event):
-        """Called when A new LOOP record has arrived."""
+        """Called when A new LOOP record has arrived.
 
-        # Do we have an accumulator at all? If not, create one:
-        if not self.accumulator:
-            self.accumulator = self._new_accumulator(event.packet['dateTime'])
-
-        # Try adding the LOOP packet to the existing accumulator. If the
-        # timestamp is outside the timespan of the accumulator, an exception
-        # will be thrown:
-        try:
-            self.accumulator.addRecord(event.packet, add_hilo=self.loop_hilo)
-        except weewx.accum.OutOfSpan:
-            # Shuffle accumulators:
-            (self.old_accumulator, self.accumulator) = \
-                (self.accumulator, self._new_accumulator(event.packet['dateTime']))
-            # Try again:
-            self.accumulator.addRecord(event.packet, add_hilo=self.loop_hilo)
+        event (weewx.Event): The event containing the new LOOP packet.
+        """
+        packet_ts = event.packet['dateTime']
+        self.latest_packet_ts = packet_ts
+        if not self.periods.add_packet(event.packet, add_hilo=self.loop_hilo):
+            # The packet is too late! Log a warning if we haven't already
+            stop_ts = self.periods.stop_of(packet_ts)
+            if stop_ts != self.last_late_warning:
+                self.last_late_warning = stop_ts
+                log.warning("Ignore LOOP packets for archive period ending %s: "
+                            "they have been already archived",
+                            weeutil.weeutil.timestamp_to_string(stop_ts))
 
     def check_loop(self, event):
         """Called after any loop packets have been processed. This is the opportunity
-        to break the main loop by throwing an exception."""
+        to break the main loop by throwing an exception.
+
+        event (weewx.Event): The event containing the LOOP packet just processed.
+        """
         # Is this the end of the archive period? If so, dispatch an
         # END_ARCHIVE_PERIOD event
         if event.packet['dateTime'] > self.end_archive_period_ts:
@@ -671,55 +793,94 @@ class StdArchive(StdService):
         if event.packet['dateTime'] >= self.end_archive_delay_ts:
             raise BreakLoop
 
+        # Normally the test above is the one that breaks the loop. But if the station clock is
+        # set back, the packets fall behind end_archive_delay_ts, and periods would pile up in
+        # memory without ever being archived. So also break if, by the packet timestamps, the
+        # delay of the oldest collecting period is over.
+        oldest_stop_ts = self.periods.oldest_stop_ts()
+        if oldest_stop_ts is not None \
+                and event.packet['dateTime'] >= oldest_stop_ts + self.archive_delay:
+            raise BreakLoop
+
     def post_loop(self, _event):
-        """The main packet loop has ended, so process the old accumulator."""
-        # If weewx happens to startup in the small time interval between the end of
-        # the archive interval and the end of the archive delay period, then
-        # there will be no old accumulator. Check for this.
-        if self.old_accumulator:
-            # If the user has requested software generation, then do that:
-            if self.record_generation == 'software':
-                self._software_catchup()
-            elif self.record_generation == 'hardware':
-                # Otherwise, try to honor hardware generation. An exception
-                # will be raised if the console does not support it. In that
-                # case, fall back to software generation.
-                try:
-                    self._catchup(self.engine.console.genArchiveRecords)
-                except NotImplementedError:
-                    self._software_catchup()
-            else:
-                raise ValueError("Unknown station record generation value %s"
-                                 % self.record_generation)
-            self.old_accumulator = None
+        """The main packet loop has ended, so archive the periods that have ended.
+
+        _event (weewx.Event): Not used.
+        """
+        # Get all the accumulators of the periods that have ended. If no LOOP packets have been
+        # processed, then self.latest_packet_ts will be None. In that case, there will be no
+        # accumulators to archive.
+        ended = self.periods.pop_ended(self.latest_packet_ts) \
+            if self.latest_packet_ts is not None else []
+        # Archive any resultant accumulators.
+        if ended:
+            self._archive(ended)
 
         # Set the time of the next break loop:
         self.end_archive_delay_ts = self.end_archive_period_ts + self.archive_delay
 
+    def _archive(self, ended):
+        """Emit archive records for the periods that have ended.
+
+        Args:
+            ended (list[weewx.accum.Accum]): The accumulators of the ended periods, oldest first.
+        """
+        if self.record_generation == 'hardware':
+            accumulators = {accumulator.timespan.stop: accumulator for accumulator in ended}
+            # The console raises NotImplementedError if it has no archive memory. Then fall back
+            # to software generation.
+            try:
+                self._catchup(self.engine.console.genArchiveRecords, accumulators)
+                return
+            except NotImplementedError:
+                pass
+        for accumulator in ended:
+            self._software_record(accumulator)
+
     def new_archive_record(self, event):
         """Called when a new archive record has arrived.
-        Put it in the archive database."""
+           Put it in the archive database.
+           
+        Args:
+            event.record(dict): the archive record
+            event.accumulator(weewx.accum.Accum): the corresponding
+                acculumator if any or `None` if not
+            event.origin(str): "hardware" or "software" depending on
+                the data source
+        """
 
         # If requested, extract any extra information we can out of the accumulator and put it in
         # the record. Not necessary in the case of software record generation because it has
         # already been done.
+        # Note: `event.accumulator` is `None` if the accumulator is missing, or does not correspond
+        # to `event.record`. An event dispatched by an extension may not have the attribute at all,
+        # Check for its existence.
+        accumulator = getattr(event, 'accumulator', None)
         if self.record_augmentation \
-                and self.old_accumulator \
-                and event.record['dateTime'] == self.old_accumulator.timespan.stop \
+                and accumulator \
                 and event.origin != 'software':
-            self.old_accumulator.augmentRecord(event.record)
+            accumulator.augmentRecord(event.record)
 
+        # Save the record to the database
         dbmanager = self.engine.db_binder.get_manager(self.data_binding)
         dbmanager.addRecord(event.record,
-                            accumulator=self.old_accumulator,
+                            accumulator=accumulator,
                             log_success=self.log_success,
                             log_failure=self.log_failure)
 
-    def _catchup(self, generator):
+    def _catchup(self, generator, accumulators=None):
         """Pull any unarchived records off the console and archive them.
         
         If the hardware does not support hardware archives, an exception of
-        type NotImplementedError will be thrown."""
+        type NotImplementedError will be thrown.
+
+        generator (callable): A generator function that yields archive records (e.g.,
+        self.engine.console.genStartupRecords or genArchiveRecords).
+
+        accumulators (dict|None): The accumulators of the periods being archived, keyed by their
+        stop time. A record gets the accumulator whose stop time matches its timestamp, otherwise
+        None. Default is None, which gives every record None.
+        """
 
         dbmanager = self.engine.db_binder.get_manager(self.data_binding)
         # Find out when the database was last updated.
@@ -735,33 +896,34 @@ class StdArchive(StdService):
             for record in generator(lastgood_ts):
                 ts = record.get('dateTime')
                 if ts and ts < time.time() + self.archive_delay:
-                    self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
-                                                          record=record,
-                                                          origin='hardware'))
+                    # A console can deliver records of other intervals in the same catchup.
+                    # Only a record that ends a period being archived gets its accumulator.
+                    accumulator = accumulators.get(ts) if accumulators else None
+                    self.engine.dispatchEvent(weewx.Event(
+                        weewx.NEW_ARCHIVE_RECORD,
+                        record=record,
+                        origin='hardware',
+                        accumulator=accumulator
+                    ))
                 else:
                     log.warning("Ignore historical record: %s" % record)
         except weewx.HardwareError as e:
             log.error("Internal error detected. Catchup abandoned")
             log.error("**** %s" % e)
 
-    def _software_catchup(self):
-        # Extract a record out of the old accumulator. 
-        record = self.old_accumulator.getRecord()
+    def _software_record(self, accumulator):
+        """Extract an archive record out of an accumulator, and send it out.
+
+        accumulator (weewx.accum.Accum): The accumulator of a period that has ended.
+        """
+        record = accumulator.getRecord()
         # Add the archive interval
         record['interval'] = self.archive_interval / 60
         # Send out an event with the new record:
         self.engine.dispatchEvent(weewx.Event(weewx.NEW_ARCHIVE_RECORD,
                                               record=record,
-                                              origin='software'))
-
-    def _new_accumulator(self, timestamp):
-        start_ts = weeutil.weeutil.startOfInterval(timestamp,
-                                                   self.archive_interval)
-        end_ts = start_ts + self.archive_interval
-
-        # Instantiate a new accumulator
-        new_accumulator = weewx.accum.Accum(weeutil.weeutil.TimeSpan(start_ts, end_ts))
-        return new_accumulator
+                                              origin='software',
+                                              accumulator=accumulator))
 
 
 # ==============================================================================
@@ -852,6 +1014,7 @@ class StdPrint(StdService):
 class StdReport(StdService):
     """Launches a separate thread to do reporting."""
 
+    # noinspection unused-imports
     def __init__(self, engine, config_dict):
         super().__init__(engine, config_dict)
         self.max_wait = int(config_dict['StdReport'].get('max_wait', 600))
@@ -876,7 +1039,10 @@ class StdReport(StdService):
         self.record = event.record
 
     def launch_report_thread(self, _event):
-        """Called after the packet LOOP. Processes any new data."""
+        """Called after the packet LOOP. Processes any new data.
+
+        _event (weewx.Event): Not used.
+        """
         import weewx.reportengine
         # Do not launch the reporting thread if an old one is still alive.
         # To guard against a zombie thread (alive, but doing nothing) launch

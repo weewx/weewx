@@ -450,7 +450,7 @@ There are several _aggregation periods_ that can be used:
         <td class="first_col code">$season</td>
         <td>This season</td>
         <td class="code">$season.outTemp.avg</td>
-        <td>The average temparature this season so far</td>
+        <td>The average temperature this season so far</td>
     </tr>
     <tr>
         <td class="first_col code">$year</td>
@@ -539,7 +539,7 @@ Here are some examples:
         <td>The maximum temperature last year.</td>
     </tr>
     <tr>
-        <td class="first_col code"$seasonsyear(years_ago=<em>y</em></td>
+        <td class="first_col code">$seasonsyear(years_ago=<em>y</em>)</td>
         <td class="code">$seasonsyear(years_ago=1).outTemp.max</td>
         <td>The maximum temperature of the previous seasons year</td>
     </tr>

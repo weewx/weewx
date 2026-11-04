@@ -58,7 +58,21 @@ class TimeBinder:
     # What follows is the list of time period attributes:
 
     def trend(self, time_delta=None, time_grace=None, data_binding=None):
-        """Returns a TrendObj that is bound to the trend parameters."""
+        """Returns a TrendObj that is bound to the trend parameters.
+
+        Args:
+            time_delta (int|float|str|None): The time difference over which the trend is to
+                be calculated. [Optional. Default is to use the value in option_dict, or
+                10800 seconds (3 hours) if that is not available.]
+            time_grace (int|float|str|None): A "grace" period, in case the nominal delta time
+                does not exactly correspond with the archive record. [Optional. Default is to
+                use the value in option_dict, or 300 seconds if that is not available.]
+            data_binding (str|None): The data binding to be used. [Optional. If not given, the
+                default binding will be used.]
+
+        Returns:
+            TrendObj: An instance of TrendObj, bound to the trend parameters.
+        """
         if time_delta is None:
             time_delta = self.option_dict['trend'].get('time_delta', 10800)
         time_delta = weeutil.weeutil.nominal_spans(time_delta)
@@ -179,7 +193,24 @@ class TimeBinder:
             **self.option_dict)
 
     def seasonsyear(self, data_binding=None, years_ago=0, lat=None, lon=None, season_type=None):
-        """ meteorological or astronomical seasons year """
+        """ meteorological or astronomical seasons year
+
+        Args:
+            data_binding (str|None): The data binding to be used. [Optional. If not given, the
+                default binding will be used.]
+            years_ago (int): The number of years ago the seasons year should be for. [Optional.
+                Default is 0, that is, the current seasons year.]
+            lat (float|None): The latitude to be used to determine the seasons. [Optional. If not
+                given, the value in option_dict will be used, or 0.0 if that is not available.]
+            lon (float|None): The longitude to be used to determine the seasons. [Optional. If
+                not given, the value in option_dict will be used, or 0.0 if that is not
+                available.]
+            season_type (str): The type of season to use. Either 'meteorological' or
+                'astronomical'. Only the first letter is significant. [Optional. Default is 'm'.]
+
+        Returns:
+            TimespanBinder: An instance of TimespanBinder, bound to the seasons year.
+        """
         if not season_type:
             season_type = self.option_dict.get('season_type','meteorological')
         if lat is None: lat = self.option_dict.get('lat', 0.0)
@@ -263,25 +294,23 @@ class TimespanBinder:
                  **option_dict):
         """Initialize an instance of TimespanBinder.
 
-        timespan: An instance of weeutil.Timespan with the time span over which the statistics are
-        to be calculated.
-
-        db_lookup: A function with call signature db_lookup(data_binding), which returns a database
-        manager and where data_binding is an optional binding name. If not given, then a default
-        binding will be used.
-
-        data_binding: If non-None, then use this data binding.
-
-        context: A tag name for the timespan. This is something like 'current', 'day', 'week', etc.
-        This is used to pick an appropriate time label.
-
-        formatter: An instance of weewx.units.Formatter() holding the formatting information to be
-        used. [Optional. If not given, the default Formatter will be used.]
-
-        converter: An instance of weewx.units.Converter() holding the target unit information to be
-        used. [Optional. If not given, the default Converter will be used.]
-
-        option_dict: Other options which can be used to customize calculations. [Optional.]
+        Args:
+            timespan (tuple[int|float, int|float]|TimeSpan): An instance of weeutil.Timespan
+                with the time span over which the statistics are to be calculated.
+            db_lookup (function|None): A function with call signature db_lookup(data_binding),
+                which returns a database manager and where data_binding is an optional binding
+                name. If not given, then a default binding will be used.
+            data_binding (str|None): If non-None, then use this data binding.
+            context (str): A tag name for the timespan. This is something like 'current', 'day',
+                'week', etc. This is used to pick an appropriate time label.
+            formatter (weewx.units.Formatter|None): An instance of weewx.units.Formatter() holding
+                the formatting information to be used. [Optional. If not given, the default
+                Formatter will be used.]
+            converter (weewx.units.Converter|None): An instance of weewx.units.Converter() holding
+                the target unit information to be used. [Optional. If not given, the default
+                Converter will be used.]
+            option_dict (dict|None): Other options which can be used to customize calculations.
+                [Optional.]
         """
 
         self.timespan = timespan
@@ -377,7 +406,7 @@ class TimespanBinder:
     @staticmethod
     def _seqGenerator(genSpanFunc, timespan, *args, **option_dict):
         """Generator function that returns TimespanBinder for the appropriate timespans"""
-        for span in genSpanFunc(timespan.start, timespan.stop):
+        for span in genSpanFunc(timespan[0], timespan[1]):
             yield TimespanBinder(span, *args, **option_dict)
 
     # Return the start time of the time period as a ValueHelper
@@ -403,7 +432,14 @@ class TimespanBinder:
     dateTime = start
 
     def check_for_data(self, sql_expr):
-        """Check whether the given sql expression returns any data"""
+        """Check whether the given sql expression returns any data
+
+        Args:
+            sql_expr (str): The SQL expression to be checked.
+
+        Returns:
+            bool: True if the expression returns data, False otherwise.
+        """
         db_manager = self.db_lookup(self.data_binding)
         try:
             val = weewx.xtypes.get_aggregate(sql_expr, self.timespan, 'not_null', db_manager)
@@ -421,9 +457,12 @@ class TimespanBinder:
         """Return a helper object that binds the database, a time period, and the given observation
         type.
 
-        obs_type: An observation type, such as 'outTemp', or 'heatDeg'
+        Args:
+            obs_type (str): An observation type, such as 'outTemp', or 'heatDeg'
 
-        returns: An instance of class ObservationBinder."""
+        Returns:
+            ObservationBinder: An instance of class ObservationBinder.
+        """
 
         if obs_type in IGNORE_ATTR:
             raise AttributeError(obs_type)
@@ -447,7 +486,10 @@ class ObservationBinder:
     an instance of AggTypeBinder and returns it.
     """
 
-    def __init__(self, obs_type, timespan, db_lookup, data_binding, context,
+    def __init__(self, obs_type,
+                 timespan,
+                 db_lookup,
+                 data_binding, context,
                  formatter=None,
                  converter=None,
                  **option_dict):
@@ -456,12 +498,12 @@ class ObservationBinder:
         Args:
             obs_type (str): A string with the stats type (e.g., 'outTemp') for which the query is
                 to be done.
-            timespan (weeutil.weeutil.TimeSpan): An instance of TimeSpan holding the time period
+            timespan (tuple[int|float, int|float]): A timespan holding the time period
                 over which the query is to be run.
             db_lookup (function|None): A function with call signature db_lookup(data_binding),
                 which returns a database manager and where data_binding is an optional binding
                 name. If not given, then a default binding will be used.
-            data_binding (str): If non-None, then use this data binding.
+            data_binding (str|None): If non-None, then use this data binding.
             context (str): A tag name for the timespan. This is something like 'current', 'day',
                 'week', etc. This is used to find an appropriate label, if necessary.
             formatter (weewx.units.Formatter|None): An instance of weewx.units.Formatter() holding
@@ -530,7 +572,7 @@ class ObservationBinder:
         Args:
             aggregate_type (str or None): The type of aggregation to use, if any. Default is None
                 (no aggregation).
-            aggregate_interval (str or None): The aggregation interval in seconds. Default is
+            aggregate_interval (int|float|None): The aggregation interval in seconds. Default is
                 None (no aggregation).
             time_series (str): What to include for the time series. Either 'start', 'stop', or
                 'both'.
@@ -610,6 +652,13 @@ class AggTypeBinder:
 
         In this example, self.aggregate_type would be 'max_ge', and val would be the tuple
         (90.0, 'degree_F').
+
+        Args:
+            *args: If given, the first argument is used as 'val' in option_dict.
+            **kwargs: Other options, which will be added to option_dict.
+
+        Returns:
+            AggTypeBinder: self, so the result can be used in a chained tag expression.
         """
         if len(args):
             self.option_dict['val'] = args[0]
@@ -622,7 +671,11 @@ class AggTypeBinder:
         return str(vh)
 
     def _do_query(self):
-        """Run a query against the databases, using the given aggregation type."""
+        """Run a query against the databases, using the given aggregation type.
+
+        Returns:
+            weewx.units.ValueHelper: The result of the query.
+        """
         try:
             # Get the appropriate database manager
             db_manager = self.db_lookup(self.data_binding)
@@ -667,7 +720,19 @@ class RecordBinder:
         self.record = record
 
     def current(self, timestamp=None, max_delta=None, data_binding=None):
-        """Return a CurrentObj"""
+        """Return a CurrentObj
+
+        Args:
+            timestamp (float|int|None): The time for which the record is desired. [Optional. If not
+                given, the report time will be used.]
+            max_delta (int|None): The record must be within this many seconds of timestamp.
+                [Optional. If not given, there is no limit.]
+            data_binding (str|None): The data binding to be used. [Optional. If not given, the
+                default binding will be used.]
+
+        Returns:
+            CurrentObj: An instance of CurrentObj, bound to the desired time.
+        """
         if timestamp is None:
             timestamp = self.report_time
         return CurrentObj(self.db_lookup, data_binding, current_time=timestamp,
@@ -734,7 +799,14 @@ class CurrentObj:
         self.record_is_complete = record_is_complete
 
     def __getattr__(self, obs_type):
-        """Return the given observation type."""
+        """Return the given observation type.
+
+        Args:
+            obs_type (str): An observation type, such as 'outTemp'.
+
+        Returns:
+            weewx.units.ValueHelper: The value of the observation type, wrapped in a ValueHelper.
+        """
 
         if obs_type in IGNORE_ATTR:
             raise AttributeError(obs_type)
@@ -803,9 +875,22 @@ class TrendObj:
                  nowtime, formatter, converter, **option_dict):
         """Initialize a Trend object
 
-        time_delta: The time difference over which the trend is to be calculated
-
-        time_grace: A time within this amount is accepted.
+        Args:
+            time_delta (int|float): The time difference over which the trend is to be
+                calculated.
+            time_grace (int|float|None): A time within this amount is accepted.
+            db_lookup (function|None): A function with call signature db_lookup(data_binding),
+                which returns a database manager and where data_binding is an optional binding
+                name. If not given, then a default binding will be used.
+            data_binding (str|None): The data binding to be used. [Optional. If not given, the
+                default binding will be used.]
+            nowtime (float|int): The time around which the trend is to be calculated.
+            formatter (weewx.units.Formatter): An instance of weewx.units.Formatter() holding
+                the formatting information to be used.
+            converter (weewx.units.Converter): An instance of weewx.units.Converter() holding
+                the target unit information to be used.
+            option_dict (dict|None): Other options which can be used to customize calculations.
+                [Optional.]
         """
         self.time_delta_val = time_delta
         self.time_grace_val = time_grace
@@ -824,7 +909,15 @@ class TrendObj:
                                                   self.converter)
 
     def __getattr__(self, obs_type):
-        """Return the trend for the given observation type."""
+        """Return the trend for the given observation type.
+
+        Args:
+            obs_type (str): An observation type, such as 'outTemp'.
+
+        Returns:
+            weewx.units.ValueHelper: The trend for the observation type, wrapped in a
+                ValueHelper.
+        """
         if obs_type in IGNORE_ATTR:
             raise AttributeError(obs_type)
 

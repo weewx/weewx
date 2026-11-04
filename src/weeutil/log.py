@@ -28,7 +28,12 @@ def log_open(log_label='weewx'):
 
 
 def log_upto(log_level=None):
-    """Set what level of logging we want."""
+    """Set what level of logging we want.
+
+    Args:
+        log_level (int|str|None): Either a syslog level (e.g., syslog.LOG_INFO), or a string.
+            Valid strings are given by the keys of log_levels. If None, syslog.LOG_INFO is used.
+    """
     if log_level is None:
         log_level = syslog.LOG_INFO
     elif isinstance(log_level, str):
@@ -85,10 +90,11 @@ def logcrt(msg, prefix=None):
 def log_traceback(prefix='', log_level=None):
     """Log the stack traceback into syslog.
 
-    prefix: A string, which will be put in front of each log entry. Default is no string.
-
-    log_level: Either a syslog level (e.g., syslog.LOG_INFO), or a string. Valid strings
-    are given by the keys of log_levels.
+    Args:
+        prefix (str): A string, which will be put in front of each log entry. Default is no
+            string.
+        log_level (int|str|None): Either a syslog level (e.g., syslog.LOG_INFO), or a string.
+            Valid strings are given by the keys of log_levels.
     """
     if log_level is None:
         log_level = syslog.LOG_INFO
@@ -102,7 +108,12 @@ def log_traceback(prefix='', log_level=None):
 
 
 def _get_file_root():
-    """Figure out who is the caller of the logging function"""
+    """Figure out who is the caller of the logging function
+
+    Returns:
+        str: The root of the file name (without the ".py" suffix) of the caller of the
+            logging function.
+    """
 
     # Get the stack:
     tb = traceback.extract_stack()

@@ -37,8 +37,8 @@ class RsyncUpload:
         After initializing, call method run() to perform the upload.
 
         Args:
-            local_root (str): Path to the local directory to be transferred. Required.
-            remote_root (str): The root of its destination. Required.
+            local_root (str|Path): Path to the local directory to be transferred. Required.
+            remote_root (str|Path): The root of its destination. Required.
             server (str): The remote server to which the files are to be uploaded.
             user (str|None): The username that is to be used. [Optional, maybe]
             delete (bool): delete remote files that don't match with local files.
