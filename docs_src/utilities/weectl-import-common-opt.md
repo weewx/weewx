@@ -9,6 +9,7 @@ usage: weectl import --help
        weectl import --import-config=IMPORT_CONFIG_FILE
                      [--config=CONFIG_FILE]
                      [[--date=YYYY-mm-dd] | [[--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]]
+                     [--update | --updatedelete]
                      [--dry-run][--verbose]
                      [--no-prompt][--suppress-warnings]
 
@@ -27,6 +28,8 @@ optional arguments:
   --to YYYY-mm-dd[THH:MM]
                         Import data up until this date or date-time. Format is YYYY-mm-
                         dd[THH:MM].
+  --update              Update existing records, preserving missing imported values.
+  --updatedelete        Update existing records, allowing missing values to clear fields.
   --verbose             Print and log useful extra output.
   --no-prompt           Do not prompt. Accept relevant defaults and all y/n prompts.
   --suppress-warnings   Suppress warnings to stdout. Warnings are still logged.
@@ -62,6 +65,34 @@ into a working directory and then modifying the copy to suit your needs. The
 ```
 weectl import --import-config=/directory/import.conf
 ```
+
+### `--update` and `--updatedelete`
+
+Without either option, records with timestamps already in the archive remain
+unchanged. `--update` replaces existing fields when the import supplies a value,
+including zero. Missing numeric values and empty text fields preserve the
+existing value.
+
+Use `--updatedelete` when missing imported values should clear existing fields
+to SQL NULL. It implies updates and cannot be combined with `--update`. It
+clears field values, not archive rows. Unmapped fields and mapped columns absent
+from a source row remain unchanged. Both options can also insert new timestamps.
+
+For example, if a stored temperature is 60 and its imported cell is empty,
+`--update` keeps 60; `--updatedelete` stores NULL. A temperature of zero replaces
+60 with either option.
+
+Preview the import first:
+
+```sh
+weectl import --import-config=/directory/import.conf --updatedelete --dry-run
+```
+
+Run it again without `--dry-run` to apply the import. Daily summaries are
+rebuilt from the changed archive records. Values rejected during conversion or
+quality control also become missing values and are subject to this policy.
+When clearing derived observations, set `calc_missing = False` in the import
+source section; otherwise the normal post-import calculation may fill them again.
 
 ### `--dry-run`
 
