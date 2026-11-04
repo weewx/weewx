@@ -134,7 +134,7 @@ class FtpUpload:
                     # parameter. Be prepared to catch the TypeError that may 
                     # occur with python 3.8 and earlier.
                     try:
-                        ftp_server = ftplib.FTP_TLS(encoding=self.encoding)
+                        ftp_server = ftplib.FTP_TLS(encoding=self.encoding) # novermin
                     except TypeError:
                         # we likely have python 3.8 or earlier, so try again
                         # without encoding
@@ -152,7 +152,7 @@ class FtpUpload:
                 # Be prepared to catch the TypeError that may occur with 
                 # python 3.8 and earlier.
                 try:
-                    ftp_server = ftplib.FTP(encoding=self.encoding)
+                    ftp_server = ftplib.FTP(encoding=self.encoding) # novermin
                 except TypeError:
                     # we likely have python 3.8 or earlier, so try again
                     # without encoding
@@ -172,7 +172,10 @@ class FtpUpload:
                 log.debug("Connected to %s", self.server)
 
             # Walk the local directory structure
-            for (dirpath, unused_dirnames, filenames) in os.walk(self.local_root):
+            for (dirpath, dirnames, filenames) in os.walk(self.local_root):
+
+                # Prune excluded directories so os.walk cannot visit their descendants.
+                dirnames[:] = [name for name in dirnames if not _skip_this_dir(name)]
 
                 # Strip out the common local root directory. What is left
                 # will be the relative directory both locally and remotely.

@@ -11,6 +11,7 @@
 # It uses two MySQL users, weewx1 and weewx2. The companion
 # script "setup_mysql.sh" will set them up with the necessary permissions.
 #
+import os
 import pytest
 
 try:
@@ -26,6 +27,9 @@ else:
         from MySQLdb import IntegrityError, ProgrammingError, OperationalError
     except ImportError:
         from _mysql_exceptions import IntegrityError, ProgrammingError, OperationalError
+
+if os.environ.get('WEEWX_TEST_MYSQL', '1') == '0':
+    pytest.skip("MySQL testing disabled via WEEWX_TEST_MYSQL=0", allow_module_level=True)
 
 
 def get_error(e):

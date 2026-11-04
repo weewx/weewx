@@ -72,6 +72,10 @@ class PermissionError(OperationalError):
     """Lacking necessary permissions."""
 
 
+class DatabaseLockedError(OperationalError):
+    """Database is locked."""
+
+
 # For backwards compatibility:
 DatabaseExists = DatabaseExistsError
 NoDatabase = NoDatabaseError

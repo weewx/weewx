@@ -42,6 +42,46 @@ upgrade the configuration file `/etc/weewx/other.conf`:
 sudo weectl station upgrade --config=/etc/weewx/other.conf
 ```
 
+## Upgrading to V5.5
+
+### Signature of `ReportGenerator` has changed
+
+The signature of `ReportGenerator.__init__` has changed and now takes a
+`stop_event` argument. This is an event flag, which is set when the WeeWX engine
+wants to terminate the report thread. Generators should look to this flag and
+finish immediately if it is set.
+
+This is unlikely to affect the average user, or even the average extension
+writer. It only affects anyone who has written a custom generator and, even
+then, only if you have created a custom `__init__` function. Surveying the
+web, we have found only one instance of this. Still, we document it here.
+
+<div class="wide-table">
+  <table>
+    <tr class="first_row">
+      <td style='width:50%'>V5.4 and earlier</td>
+      <td>V5.5 and later</td>
+    </tr>
+    <tr class="tty">
+      <td>    def __init__(self, config_dict,<br/>
+                 skin_dict,<br/>
+                 gen_ts,<br/>
+                 first_run,<br/>
+                 stn_info,<br/>
+                 record=None):
+      <td>    def __init__(self, config_dict,<br/>
+                 skin_dict,<br/>
+                 gen_ts,<br/>
+                 first_run,<br/>
+                 stn_info,<br/>
+                 record=None<span class="changed">,<br/>
+                 stop_event=None</span>):
+</td>
+    </tr>
+  </table>
+</div>
+
+
 ## Upgrading to V5.2
 
 ### Python 3.7 or later is now required

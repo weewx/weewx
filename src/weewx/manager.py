@@ -380,16 +380,56 @@ class Manager:
             int: The number of successful insertions.
         """
 
-        # Determine if record_obj is just a single dictionary instance. If so, wrap it in
-        # something iterable (a list):
-        record_list = [record_obj] if isinstance(record_obj, dict) else record_obj
+        overall_min_ts = float('inf')  # A "big number"
+        overall_max_ts = 0
+        total_n = 0
 
-        min_ts = float('inf')  # A "big number"
+        for chunk in _gen_chunks(record_obj, 200):
+            n, min_ts, max_ts = self._add_with_retry(chunk, accumulator, progress_fn,
+                                                     log_success, log_failure, update, total_n)
+            total_n += n
+            overall_min_ts = min(overall_min_ts, min_ts)
+            overall_max_ts = max(overall_max_ts, max_ts)
+
+        # Update the cached timestamps. This has to sit outside the transaction context,
+        # in case an exception occurs.
+        if total_n > 0:
+            self.first_timestamp = overall_min_ts if self.first_timestamp is None \
+                else min(overall_min_ts, self.first_timestamp)
+            self.last_timestamp = overall_max_ts if self.last_timestamp is None \
+                else max(overall_max_ts, self.last_timestamp)
+
+        return total_n
+
+    def _add_with_retry(self, chunk, accumulator=None, progress_fn=None,
+                        log_success=True, log_failure=True, update=False, count=0):
+        """Add a chunk of records, retrying if a transient error occurs."""
+        max_attempts = 5
+        retry_wait = 0.5
+        for attempt in range(max_attempts):
+            try:
+                return self._add_chunk(chunk, accumulator, progress_fn,
+                                       log_success, log_failure, update, count)
+            except weedb.OperationalError as e:
+                if is_transient_error(e) and attempt < max_attempts - 1:
+                    # Retry with exponential backoff.
+                    delay = retry_wait * 2 ** attempt
+                    log.warning("Database is locked (attempt %d/%d). Retrying in %.2f seconds...",
+                                attempt + 1, max_attempts, delay)
+                    time.sleep(delay)
+                    continue
+                raise
+        raise RuntimeError("Retry loop exited unexpectedly")
+
+    def _add_chunk(self, chunk, accumulator=None, progress_fn=None,
+                   log_success=True, log_failure=True, update=False, count=0):
+        """Add a chunk of records in a single transaction."""
+        n = 0
+        min_ts = float('inf')
         max_ts = 0
-        N = 0
+        updated_timestamps = []
         with weedb.Transaction(self.connection) as cursor:
-
-            for record in record_list:
+            for record in chunk:
                 try:
                     # If the accumulator time matches the record we are working with,
                     # use it to update the highs and lows.
@@ -397,31 +437,30 @@ class Manager:
                         self._updateHiLo(accumulator, cursor)
 
                     # Then add the record to the archives:
-                    self._addSingleRecord(record, cursor, log_success, log_failure, update)
+                    result = self._addSingleRecord(record, cursor, log_success, log_failure, update)
+                    if result == 'updated':
+                        updated_timestamps.append(record['dateTime'])
 
-                    N += 1
-                    if progress_fn and N % 1000 == 0:
-                        progress_fn(record['dateTime'], N)
+                    n += 1
+                    if progress_fn and (count + n) % 1000 == 0:
+                        progress_fn(record['dateTime'], count + n)
 
                     min_ts = min(min_ts, record['dateTime'])
                     max_ts = max(max_ts, record['dateTime'])
-                except (weedb.IntegrityError, weedb.OperationalError) as e:
+                except weedb.IntegrityError as e:
                     if log_failure:
                         log.error("Unable to add record %s to database '%s': %s",
                                   timestamp_to_string(record['dateTime']),
                                   self.database_name, e)
+            self._finish_chunk(updated_timestamps, cursor)
+        return n, min_ts, max_ts
 
-        # Update the cached timestamps. This has to sit outside the transaction context,
-        # in case an exception occurs.
-        self.first_timestamp = min_ts if self.first_timestamp is None else min(min_ts,
-                                                                               self.first_timestamp)
-        self.last_timestamp = max_ts if self.last_timestamp is None else max(max_ts,
-                                                                             self.last_timestamp)
-
-        return N
+    def _finish_chunk(self, updated_timestamps, cursor):
+        """Finish dependent writes before the archive transaction commits."""
+        pass
 
     def _addSingleRecord(self, record, cursor, log_success=True, log_failure=True, update=False):
-        """Internal function for adding a single record to the main archive table."""
+        """Add an archive record, returning 'inserted', 'updated', or 'unchanged'."""
 
         if record['dateTime'] is None:
             if log_failure:
@@ -454,6 +493,7 @@ class Manager:
                 log.info("Added record %s to database '%s'",
                          timestamp_to_string(record['dateTime']),
                          self.database_name)
+            return 'inserted'
 
         except weedb.IntegrityError:
             if not update:
@@ -465,6 +505,7 @@ class Manager:
             sql_update_stmt = "UPDATE %s SET %s WHERE dateTime = ? AND NOT (%s)" \
                               % (self.table_name, set_stmt, where_stmt)
             cursor.execute(sql_update_stmt, value_list + [record['dateTime'],] + value_list)
+            changed = cursor.rowcount > 0
             if log_success:
                 if cursor.rowcount > 0:
                     log.info("Updated record %s to database '%s'",
@@ -474,6 +515,7 @@ class Manager:
                     log.info("Unchanged record %s to database '%s'",
                              timestamp_to_string(record['dateTime']),
                              self.database_name)
+            return 'updated' if changed else 'unchanged'
 
     def _updateHiLo(self, accumulator, cursor):
         pass
@@ -548,9 +590,15 @@ class Manager:
             if max_delta:
                 time_start_ts = timestamp - max_delta
                 time_stop_ts = timestamp + max_delta
-                _cursor.execute("SELECT * FROM %s WHERE dateTime>=? AND dateTime<=? "
-                                "ORDER BY ABS(dateTime-?) ASC LIMIT 1" % self.table_name,
-                                (time_start_ts, time_stop_ts, timestamp))
+                # Only the nearest timestamp on either side can win. Find both
+                # through the primary key instead of sorting the entire window.
+                _cursor.execute(
+                    "SELECT * FROM %(table)s WHERE dateTime IN ("
+                    "SELECT MAX(dateTime) FROM %(table)s WHERE dateTime>=? AND dateTime<=? "
+                    "UNION ALL "
+                    "SELECT MIN(dateTime) FROM %(table)s WHERE dateTime>? AND dateTime<=?) "
+                    "ORDER BY ABS(dateTime-?), dateTime LIMIT 1" % {'table': self.table_name},
+                    (time_start_ts, timestamp, timestamp, time_stop_ts, timestamp))
             else:
                 _cursor.execute("SELECT * FROM %s WHERE dateTime=?"
                                 % self.table_name, (timestamp,))
@@ -1169,7 +1217,9 @@ class DaySummaryManager(Manager):
         """
 
         # First let my superclass handle adding the record to the main archive table:
-        super()._addSingleRecord(record, cursor, log_success, log_failure, update)
+        result = super()._addSingleRecord(record, cursor, log_success, log_failure, update)
+        if result != 'inserted':
+            return result
 
         # Get the start of day for the record:
         _sod_ts = weeutil.weeutil.startOfArchiveDay(record['dateTime'])
@@ -1182,7 +1232,7 @@ class DaySummaryManager(Manager):
             if log_failure:
                 log.info(e)
                 log.info('*** record ignored')
-            return
+            return result
 
         # Now add to the daily summary for the appropriate day:
         _day_summary = self._get_day_summary(_sod_ts, cursor)
@@ -1192,6 +1242,29 @@ class DaySummaryManager(Manager):
             log.info("Added record %s to daily summary in '%s'",
                      timestamp_to_string(record['dateTime']),
                      self.database_name)
+        return result
+
+    def _finish_chunk(self, updated_timestamps, cursor):
+        """Rebuild changed days once per chunk, using the corrected archive records."""
+        if not updated_timestamps:
+            return
+        # Counts and sums can be adjusted, but replacing an extreme requires
+        # reading the day again. Rebuild from the archive, as rebuild-daily does.
+        days = {weeutil.weeutil.startOfArchiveDay(stamp) for stamp in updated_timestamps}
+        for day in sorted(days):
+            timespan = weeutil.weeutil.daySpan(day)
+            summary = weewx.accum.Accum(timespan, self.std_unit_system)
+            for record in self.genBatchRecords(timespan.start, timespan.stop):
+                try:
+                    weight = self._calc_weight(record)
+                except IntervalError:
+                    continue
+                summary.addRecord(record, weight=weight)
+            for key in self.daykeys:
+                if key not in summary:
+                    cursor.execute("DELETE FROM %s_day_%s WHERE dateTime = ?"
+                                   % (self.table_name, key), (day,))
+            self._set_day_summary(summary, None, cursor)
 
     def _updateHiLo(self, accumulator, cursor):
         """Use the contents of an accumulator to update the daily hi/lows."""
@@ -1578,16 +1651,29 @@ class DaySummaryManager(Manager):
         _cursor = cursor or self.connection.cursor()
 
         try:
-            # For each observation type, execute the SQL query and hand the results on to the
-            # accumulator.
-            for _day_key in self.daykeys:
-                _cursor.execute(
-                    "SELECT * FROM %s_day_%s WHERE dateTime = ?" % (self.table_name, _day_key),
-                    (_day_accum.timespan.start,))
-                _row = _cursor.fetchone()
-                # If the date does not exist in the database yet then _row will be None.
-                _stats_tuple = _row[1:] if _row is not None else None
-                _day_accum.set_stats(_day_key, _stats_tuple)
+            # Combine reads to avoid a network round trip for each observation type.
+            # UNION ALL requires matching column counts, so group scalar and vector
+            # statistics separately. Initialize missing rows to empty statistics.
+            summary_groups = {}
+            for day_key in self.daykeys:
+                _day_accum.set_stats(day_key, None)
+                summary_size = len(_day_accum[day_key].getStatsTuple())
+                summary_groups.setdefault(summary_size, []).append(day_key)
+
+            for summary_keys in summary_groups.values():
+                # Keep below SQLite's limit on terms in a compound SELECT, even
+                # for installations with hundreds of custom observation types.
+                for chunk in _gen_chunks(summary_keys, 200):
+                    selects = []
+                    sql_args = []
+                    for day_key in chunk:
+                        table_name = "%s_day_%s" % (self.table_name, day_key)
+                        selects.append("SELECT ?, %s.* FROM %s WHERE dateTime = ?"
+                                       % (table_name, table_name))
+                        sql_args.extend((day_key, _day_accum.timespan.start))
+                    _cursor.execute(" UNION ALL ".join(selects), sql_args)
+                    for row in _cursor:
+                        _day_accum.set_stats(row[0], row[2:])
 
             return _day_accum
         finally:
@@ -1625,14 +1711,14 @@ class DaySummaryManager(Manager):
             _qmarks = ','.join(len(_write_tuple) * '?')
             _sql_insert_str = ("INSERT INTO %s_day_%s VALUES(%s)"
                                % (self.table_name, _summary_type, _qmarks))
-            # ... and write to the database. In case the type doesn't appear in the database,
-            # be prepared to catch an exception:
+            # A failed summary write must abort the archive transaction as well.
             try:
                 cursor.execute("DELETE FROM %s_day_%s WHERE dateTime = ?"
                                % (self.table_name, _summary_type), (_sod,))
                 cursor.execute(_sql_insert_str, _write_tuple)
             except weedb.OperationalError as e:
                 log.error("Replace failed for database %s: %s", self.database_name, e)
+                raise
 
         # If requested, update the time of the last daily summary update:
         if lastUpdate is not None:
@@ -1682,6 +1768,33 @@ class DaySummaryManager(Manager):
         finally:
             if cursor is None:
                 _cursor.close()
+
+
+def is_transient_error(e):
+    """Return True if the exception is a transient error that can be retried."""
+    # We may come up with other transient errors in the future, but for now
+    # signal a database locked error.
+    return isinstance(e, weedb.DatabaseLockedError)
+
+
+def _gen_chunks(iterable, size):
+    """Generator that yields chunks of size 'size' from an iterable."""
+    # Check to make sure it isn't just a simple record.
+    # If so, wrap it in a list. That's your chunk.
+    if isinstance(iterable, dict):
+        yield [iterable]
+    elif isinstance(iterable, (list, tuple)):
+        for i in range(0, len(iterable), size):
+            yield iterable[i:i + size]
+    else:
+        chunk = []
+        for item in iterable:
+            chunk.append(item)
+            if len(chunk) >= size:
+                yield chunk
+                chunk = []
+        if chunk:
+            yield chunk
 
 
 if __name__ == '__main__':

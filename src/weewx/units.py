@@ -11,6 +11,7 @@
 # The doctest examples work under Python 3 only!!
 #
 
+import collections
 import json
 import locale
 import logging
@@ -382,7 +383,7 @@ conversionDict = {
                           'degree_F'         : KtoF},
     'dublin_jd'        : {'unix_epoch'       : dublin_to_epoch,
                           'unix_epoch_ms'    : lambda x : dublin_to_epoch(x) * 1000,
-                          'unix_epoch_ns'    : lambda x : dublin_to_epoch(x) * 1e06},
+                          'unix_epoch_ns'    : lambda x : dublin_to_epoch(x) * 1e09},
     'foot'             : {'meter'            : lambda x : x * METER_PER_FOOT},
     'gallon'           : {'liter'            : lambda x : x * 3.78541,
                           'litre'            : lambda x : x * 3.78541,
@@ -485,13 +486,13 @@ conversionDict = {
                           'day'              : lambda x : x / SECS_PER_DAY},
     'unix_epoch'       : {'dublin_jd'        : epoch_to_dublin,
                           'unix_epoch_ms'    : lambda x : x * 1000,
-                          'unix_epoch_ns'    : lambda x : x * 1000000},
+                          'unix_epoch_ns'    : lambda x : x * 1000000000},
     'unix_epoch_ms'    : {'dublin_jd'        : lambda x: epoch_to_dublin(x / 1000.0),
                           'unix_epoch'       : lambda x : x / 1000,
-                          'unix_epoch_ns'    : lambda x : x * 1000},
-    'unix_epoch_ns'    : {'dublin_jd'        : lambda x: epoch_to_dublin(x / 1e6),
-                          'unix_epoch'       : lambda x : x / 1e06,
-                          'unix_epoch_ms'    : lambda x : x / 1000},
+                          'unix_epoch_ns'    : lambda x : x * 1000000},
+    'unix_epoch_ns'    : {'dublin_jd'        : lambda x: epoch_to_dublin(x / 1e9),
+                          'unix_epoch'       : lambda x : x / 1e09,
+                          'unix_epoch_ms'    : lambda x : x / 1000000},
     'watt'             : {'kilowatt'         : lambda x : x / 1000.0},
     'watt_hour'        : {'kilowatt_hour'    : lambda x : x / 1000.0,
                           'mega_joule'       : lambda x : x * 0.0036,
@@ -528,7 +529,7 @@ complex_conversions = {
     'polar': lambda c: weeutil.weeutil.Polar.from_complex(c) if c is not None else None,
 }
 
-class ValueTuple(tuple):
+class ValueTuple(collections.namedtuple('ValueTuple', ['value', 'unit', 'group'])):
     """
     A value, along with the unit it is in, can be represented by a 3-way tuple called a value
     tuple. All weewx routines can accept a simple unadorned 3-way tuple as a value tuple, but they
@@ -546,20 +547,7 @@ class ValueTuple(tuple):
     It is also valid to have a unit type of None (meaning there is no information about the unit
     the value is in). In this case, you won't be able to convert it to another unit.
     """
-    def __new__(cls, *args):
-        return tuple.__new__(cls, args)
-
-    @property
-    def value(self):
-        return self[0]
-
-    @property
-    def unit(self):
-        return self[1]
-
-    @property
-    def group(self):
-        return self[2]
+    __slots__ = ()
 
     # ValueTuples have some modest math abilities: subtraction and addition.
     def __sub__(self, other):
@@ -779,7 +767,7 @@ class Formatter:
             if val_t[1] == "unix_epoch_ms":
                 t /= 1000.0
             elif val_t[1] == "unix_epoch_ns":
-                t /= 1000000.0
+                t /= 1000000000.0
             if useThisFormat is None:
                 val_str = time.strftime(self.time_format_dict.get(context, DEFAULT_TIME_FORMAT),
                                         time.localtime(t))
@@ -988,14 +976,16 @@ class Converter:
     def getTargetUnit(self, obs_type, agg_type=None):
         """Given an observation type and an aggregation type, return the 
         target unit type and group, or (None, None) if they cannot be determined.
+
+        Args:
+            obs_type(str): An observation type ('outTemp', 'rain', etc.)
+
+            agg_type(str|None): Type of aggregation ('mintime', 'count', etc.)
+            [Optional. default is no aggregation]
         
-        obs_type: An observation type ('outTemp', 'rain', etc.)
-        
-        agg_type: Type of aggregation ('mintime', 'count', etc.)
-        [Optional. default is no aggregation]
-        
-        returns: A 2-way tuple holding the unit type and the unit group
-        or (None, None) if they cannot be determined.
+        Returns:
+            tuple[str|None, str|None]: A 2-way tuple containing the unit type
+                and unit group, or `(None, None)` if they cannot be determined.
         """
         unit_group = _getUnitGroup(obs_type, agg_type)
         if unit_group in self.group_unit_dict:
@@ -1531,15 +1521,15 @@ def getStandardUnitType(target_std_unit_system, obs_type, agg_type=None):
         (None, None)
 
     Args:
-        target_std_unit_system (int): A standardized unit system. If None, then
+        target_std_unit_system (int|None): A standardized unit system. If None, then
             the output units are indeterminate, so (None, None) is returned.
 
         obs_type (str): An observation type, e.g., 'outTemp'
 
-        agg_type (str): An aggregation type, e.g., 'mintime', or 'avg'.
+        agg_type (str|None): An aggregation type, e.g., 'mintime', or 'avg'.
     
     Returns:
-         tuple. A 2-way tuple containing the target units, and the target group.
+         tuple(int|None, str|None). A 2-way tuple containing the target units, and the target group.
     """
 
     if target_std_unit_system is not None:

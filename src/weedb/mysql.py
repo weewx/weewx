@@ -9,20 +9,14 @@ import decimal
 import re
 
 try:
-    # Typically supplied by the "mysqlclient" package.
+    # Typically supplied by the Debian package "python3-mysqldb", or the pip package "mysqlclient"
     import MySQLdb
 except ImportError:
-    # Typically supplied by the "pymysql" package, a pure-Python version.
+    # Typically supplied by the pip package "pymysql", a pure-Python version.
     import pymysql as MySQLdb
-    from pymysql import (DatabaseError as MySQLDatabaseError,
-                         InterfaceError as MySQLInterfaceError)
-else:
-    try:
-        from MySQLdb import (DatabaseError as MySQLDatabaseError,
-                              InterfaceError as MySQLInterfaceError)
-    except ImportError:
-        from _mysql_exceptions import (DatabaseError as MySQLDatabaseError,
-                                       InterfaceError as MySQLInterfaceError)
+
+MySQLDatabaseError = MySQLdb.DatabaseError
+MySQLInterfaceError = MySQLdb.InterfaceError
 
 from weeutil.weeutil import to_bool, natural_compare
 import weedb
@@ -40,6 +34,8 @@ exception_map = {
     1091: weedb.NoColumnError,
     1062: weedb.IntegrityError,
     1146: weedb.NoTableError,
+    1205: weedb.DatabaseLockedError,
+    1213: weedb.DatabaseLockedError,
     1927: weedb.CannotConnectError,
     2002: weedb.CannotConnectError,
     2003: weedb.CannotConnectError,
@@ -163,41 +159,36 @@ class Connection(weedb.Connection):
                 table_list.append(str(row[0]))
         return table_list
 
-    @guard
     def genSchemaOf(self, table):
         """Return a summary of the schema of the specified table.
         
-        If the table does not exist, an exception of type weedb.OperationalError is raised."""
+        If the table does not exist, an exception of type weedb.NoTableError is raised."""
 
+        for irow, row in enumerate(self._get_schema(table)):
+            colname = str(row[0])
+            if row[1].upper() == 'DOUBLE':
+                coltype = 'REAL'
+            elif row[1].upper().startswith('INT'):
+                coltype = 'INTEGER'
+            elif row[1].upper().startswith('CHAR'):
+                coltype = 'STR'
+            else:
+                coltype = str(row[1]).upper()
+            is_primary = True if row[3] == 'PRI' else False
+            can_be_null = False if row[2] == '' else to_bool(row[2])
+            yield (irow, colname, coltype, can_be_null, row[4], is_primary)
+
+    @guard
+    def _get_schema(self, table):
         with self.connection.cursor() as cursor:
-            # If the table does not exist, this will raise a MySQL ProgrammingError exception,
-            # which gets converted to a weedb.OperationalError exception by the guard decorator
             cursor.execute("""SHOW COLUMNS IN %s;""" % table)
-            irow = 0
-            while True:
-                row = cursor.fetchone()
-                if row is None:
-                    break
-                # Append this column to the list of columns.
-                colname = str(row[0])
-                if row[1].upper() == 'DOUBLE':
-                    coltype = 'REAL'
-                elif row[1].upper().startswith('INT'):
-                    coltype = 'INTEGER'
-                elif row[1].upper().startswith('CHAR'):
-                    coltype = 'STR'
-                else:
-                    coltype = str(row[1]).upper()
-                is_primary = True if row[3] == 'PRI' else False
-                can_be_null = False if row[2] == '' else to_bool(row[2])
-                yield (irow, colname, coltype, can_be_null, row[4], is_primary)
-                irow += 1
+            return cursor.fetchall()
 
     @guard
     def columnsOf(self, table):
         """Return a list of columns in the specified table. 
         
-        If the table does not exist, an exception of type weedb.OperationalError is raised."""
+        If the table does not exist, an exception of type weedb.NoTableError is raised."""
         column_list = [row[1] for row in self.genSchemaOf(table)]
         return column_list
 

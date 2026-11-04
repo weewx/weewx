@@ -8,12 +8,13 @@
 
 # Python imports
 import gc
+import importlib
 import logging
 import math
 import socket
-import sys
 import threading
 import time
+import traceback
 
 # weewx imports:
 import weeutil.config
@@ -100,18 +101,11 @@ class StdEngine:
 
         log.info("Loading station type %s (%s)", station_type, driver)
 
-        # Import the driver:
-        __import__(driver)
-
         # Open up the weather station, wrapping it in a try block in case
         # of failure.
         try:
-            # This is a bit of Python wizardry. First, find the driver module
-            # in sys.modules.
-            driver_module = sys.modules[driver]
-            # Find the function 'loader' within the module:
+            driver_module = importlib.import_module(driver)
             loader_function = getattr(driver_module, 'loader')
-            # Call it with the configuration dictionary as the only argument:
             self.console = loader_function(config_dict, self)
         except Exception as ex:
             log.error("Import of driver failed: %s (%s)", ex, type(ex))
@@ -158,10 +152,10 @@ class StdEngine:
                     # Append it to the list of open services.
                     self.service_obj.append(obj)
                     log.debug("Finished loading service %s", svc)
-        except Exception:
+        except Exception as exception:
             # An exception occurred. Shut down any running services, then
             # reraise the exception.
-            self.shutDown()
+            self.shutDown(exception)
             raise
 
     def run(self):
@@ -216,10 +210,14 @@ class StdEngine:
                     # Send out an event saying the packet LOOP is done:
                     self.dispatchEvent(weewx.Event(weewx.POST_LOOP))
 
-        finally:
+        # We are catching BaseException so that we can capture the exception and pass it services
+        # via the SHUTDOWN event. We will then reraise it so that weewxd can handle it.
+        # Although not the same as a finally block, this is the only way to capture the exception.
+        except BaseException as exception:
             # The main loop has exited. Shut the engine down.
             log.info("Main loop exiting. Shutting engine down.")
-            self.shutDown()
+            self.shutDown(exception)
+            raise exception
 
     def bind(self, event_type, callback):
         """Binds an event to a callback function."""
@@ -240,8 +238,20 @@ class StdEngine:
                 # Call the function with the event as an argument:
                 callback(event)
 
-    def shutDown(self):
+    def shutDown(self, exception=None):
         """Run when an engine shutdown is requested."""
+
+        # Send out an event saying the engine is shutting down.
+        error = {}
+        if exception:
+            error = {
+                "exception": exception,
+                "stacktrace": traceback.format_exc()
+            }
+        try:
+            self.dispatchEvent(weewx.Event(weewx.SHUTDOWN, error=error))
+        except:
+            pass
 
         # Shut down all the services
         while self.service_obj:
@@ -848,6 +858,7 @@ class StdReport(StdService):
         self.thread = None
         self.launch_time = None
         self.record = None
+        self.stop_event = threading.Event()
 
         # check if pyephem is installed and make a suitable log entry
         try:
@@ -883,7 +894,8 @@ class StdReport(StdService):
             self.thread = weewx.reportengine.StdReportEngine(self.config_dict,
                                                              self.engine.stn_info,
                                                              self.record,
-                                                             first_run=not self.launch_time)
+                                                             first_run=not self.launch_time,
+                                                             stop_event=self.stop_event)
             self.thread.start()
             self.launch_time = time.time()
         except threading.ThreadError:
@@ -893,6 +905,9 @@ class StdReport(StdService):
     def shutDown(self):
         if self.thread:
             log.info("Shutting down StdReport thread")
+            # Ask the thread to stop
+            self.stop_event.set()
+            # Wait up to 20 seconds, clean up, then return
             self.thread.join(20.0)
             if self.thread.is_alive():
                 log.error("Unable to shut down StdReport thread")
@@ -900,3 +915,4 @@ class StdReport(StdService):
                 log.debug("StdReport thread has been terminated")
         self.thread = None
         self.launch_time = None
+        self.stop_event = None

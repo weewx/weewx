@@ -16,17 +16,22 @@ trust weewx.com, and know where to find the WeeWX releases.
 1.  Configure `yum` to use `epel-release`, since some of the Python modules
     required by WeeWX are in that respository.
     ```{.shell .copy}
-    sudo dnf config-manager --set-enabled crb
     sudo dnf -y install epel-release
     ```
 
-2. Tell your system to trust weewx.com:
+2. Enable `crb`. For Rocky 8, substitute `powertools` for `crb`:
+    ```{.shell .copy}
+    # For Rocky 8, substitute "powertools" for "crb":
+    sudo dnf config-manager --set-enabled crb
+    ```
+
+3. Tell your system to trust weewx.com:
 
     ```{.shell .copy}
     sudo rpm --import https://weewx.com/keys.html
     ```
 
-3. Tell `yum` where to find the WeeWX repository.
+4. Tell `yum` where to find the WeeWX repository.
 
     ```{.shell .copy}
     curl -s https://weewx.com/yum/weewx.repo | \

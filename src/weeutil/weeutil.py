@@ -12,6 +12,7 @@
 
 import calendar
 import cmath
+import collections
 import datetime
 import importlib
 import math
@@ -163,32 +164,27 @@ def _ord_to_ts(ord_date):
 # "weekSpans", etc. They are generally not used between two random times. 
 # ===============================================================================
 
-class TimeSpan(tuple):
+class TimeSpan(collections.namedtuple('TimeSpanBase', ['start', 'stop'])):
     """Represents a time span, exclusive on the left, inclusive on the right."""
 
-    def __new__(cls, *args):
-        if args[0] > args[1]:
-            raise ValueError("start time (%d) is greater than stop time (%d)" % (args[0], args[1]))
-        return tuple.__new__(cls, args)
+    # We do not need new attributes.
+    __slots__ = ()
 
-    @property
-    def start(self):
-        return self[0]
-
-    @property
-    def stop(self):
-        return self[1]
+    def __new__(cls, start, stop):
+        if start > stop:
+            raise ValueError("start time (%d) is greater than stop time (%d)" % (start, stop))
+        return super(TimeSpan, cls).__new__(cls, start, stop)
 
     @property
     def length(self):
-        return self[1] - self[0]
+        return self.stop - self.start
 
     def includesArchiveTime(self, timestamp):
         """Test whether the span includes a timestamp, exclusive on the left,
         inclusive on the right.
 
         Args:
-            timestamp(float): The timestamp to be tested.
+            timestamp(float|int): The timestamp to be tested.
 
         Returns:
              bool: True if the span includes the time timestamp, otherwise False.
@@ -197,17 +193,12 @@ class TimeSpan(tuple):
         return self.start < timestamp <= self.stop
 
     def includes(self, span):
+        """Test whether another TimeSpan lies wholly within me."""
         return self.start <= span.start <= self.stop and self.start <= span.stop <= self.stop
-
-    def __eq__(self, other):
-        return self.start == other.start and self.stop == other.stop
 
     def __str__(self):
         return "[%s -> %s]" % (timestamp_to_string(self.start),
                                timestamp_to_string(self.stop))
-
-    def __hash__(self):
-        return hash(self.start) ^ hash(self.stop)
 
 
 nominal_intervals = {
@@ -239,18 +230,13 @@ def nominal_spans(label):
         7200
         >>> print(nominal_spans('120M'))
         7200
-        >>> print(nominal_spans(None))
-        None
 
     Args:
-        label(str|float|int|None): A time, possibly with a duration suffix.
+        label(str|float|int): A time, possibly with a duration suffix.
 
     Returns:
-        int|float|None:
+        int|float:
     """
-    if label is None:
-        return None
-
     if isinstance(label, str):
         label = duration_synonyms.get(label.lower(), label)
         if label.endswith('M'):
@@ -808,6 +794,7 @@ def stampgen(startstamp, stopstamp, interval):
     if interval == 365.25 / 12 * 24 * 3600:
         # Interval is a nominal month. This algorithm is
         # necessary because not all months have the same length.
+        start_day = dt.day
         while dt <= stop_dt:
             t_tuple = dt.timetuple()
             yield time.mktime(t_tuple)
@@ -817,7 +804,8 @@ def stampgen(startstamp, stopstamp, interval):
             if month > 12:
                 month -= 12
                 year += 1
-            dt = dt.replace(year=year, month=month)
+            day = min(start_day, calendar.monthrange(year, month)[1])
+            dt = dt.replace(year=year, month=month, day=day)
     else:
         # This rather complicated algorithm is necessary (rather than just
         # doing some time stamp arithmetic) because of the possibility that DST
@@ -902,6 +890,7 @@ def intervalgen(start_ts, stop_ts, interval):
     if interval == 365.25 / 12 * 24 * 3600:
         # Interval is a nominal month. This algorithm is
         # necessary because not all months have the same length.
+        start_day = dt1.day
         while dt1 < stop_dt:
             t_tuple = dt1.timetuple()
             year = t_tuple[0]
@@ -910,7 +899,8 @@ def intervalgen(start_ts, stop_ts, interval):
             if month > 12:
                 month -= 12
                 year += 1
-            dt2 = min(dt1.replace(year=year, month=month), stop_dt)
+            day = min(start_day, calendar.monthrange(year, month)[1])
+            dt2 = min(dt1.replace(year=year, month=month, day=day), stop_dt)
             stamp1 = time.mktime(t_tuple)
             stamp2 = time.mktime(dt2.timetuple())
             yield TimeSpan(stamp1, stamp2)
@@ -1071,6 +1061,22 @@ def genMonthSpans(start_ts, stop_ts):
 
 
 def genYearSpans(start_ts, stop_ts):
+    """
+    Generates year-long time spans between two given timestamps.
+
+    This function yields `TimeSpan` objects, each representing a full year
+    within the range specified by `start_ts` and `stop_ts`. If the `stop_ts`
+    timestamp corresponds to the exact start of a year (January 1, 00:00:00),
+    it adjusts to include only years prior to the `stop_ts`.
+
+    Args:
+        start_ts (int|float|None): Starting timestamp.
+        stop_ts (int|float|None): Stopping timestamp.
+
+    Yields:
+        TimeSpan: Representations of year-long intervals between `start_ts`
+        and `stop_ts`.
+    """
     if None in (start_ts, stop_ts):
         return
     _start_date = datetime.date.fromtimestamp(start_ts)
@@ -1915,7 +1921,7 @@ def get_resource_path(package, resource):
         return importlib_resources.path(package, resource)
     else:
         # For later versions...
-        return importlib_resources.as_file(importlib_resources.files(package).joinpath(resource))
+        return importlib_resources.as_file(importlib_resources.files(package).joinpath(resource)) # novermin
 
 
 def get_resource_fd(package, resource):
@@ -1927,7 +1933,25 @@ def get_resource_fd(package, resource):
         return importlib_resources.open_text(package, resource)
     else:
         # For later versions...
-        return importlib_resources.files(package).joinpath(resource).open('r')
+        return importlib_resources.files(package).joinpath(resource).open('r') # novermin
+
+
+def get_test_dir():
+    """Return a path to a unified directory for transient test files.
+
+    Checks WEEWX_TEST_DIR, then TMPDIR/weewx-test, then /var/tmp/weewx-test
+    (if writable), falling back to tempfile.gettempdir()/weewx-test.
+    """
+    import tempfile
+    test_dir = os.environ.get('WEEWX_TEST_DIR')
+    if not test_dir:
+        base = os.environ.get('TMPDIR') or (
+            '/var/tmp' if os.path.isdir('/var/tmp') and os.access('/var/tmp', os.W_OK)
+            else tempfile.gettempdir()
+        )
+        test_dir = os.path.join(base, 'weewx-test')
+    os.makedirs(test_dir, exist_ok=True)
+    return test_dir
 
 
 if __name__ == '__main__':

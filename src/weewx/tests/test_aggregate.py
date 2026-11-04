@@ -13,6 +13,7 @@ import pytest
 import weedb
 import weewx
 import weewx.manager
+import weewx.units
 import weewx.xtypes
 from parameters import synthetic_dict
 from weeutil.weeutil import TimeSpan
@@ -103,14 +104,18 @@ def examine_object(weewx_dict, aggregate_obj):
                                                        'lasttime', db_manager)
             assert last_time_vt[0] == stop_ts
 
-            # Use 'dateTime' to check 'diff' and 'tderiv'. The calculations are super easy.
             diff_vt = aggregate_obj.get_aggregate('dateTime', TimeSpan(start_ts, stop_ts),
                                                   'diff', db_manager)
             assert diff_vt[0] == stop_ts - start_ts
 
-            tderiv_vt = aggregate_obj.get_aggregate('dateTime', TimeSpan(start_ts, stop_ts),
+            first_pressure = db_manager.getRecord(start_ts)['barometer']
+            last_pressure = db_manager.getRecord(stop_ts)['barometer']
+            tderiv_vt = aggregate_obj.get_aggregate('barometer', TimeSpan(start_ts, stop_ts),
                                                     'tderiv', db_manager)
-            assert tderiv_vt[0] == pytest.approx(1.0)
+            tderiv_vt = weewx.units.convertStd(tderiv_vt, weewx.US)
+            expected_rate = (last_pressure - first_pressure) / ((stop_ts - start_ts) / 3600)
+            assert tderiv_vt[0] == pytest.approx(expected_rate)
+            assert tderiv_vt[1:] == ('inHg_per_hour', 'group_pressurerate')
 
 
 def test_AggregateDaily(config_dict):
@@ -333,3 +338,41 @@ def test_last_wind(config_dict):
         assert value[0] == pytest.approx(expected)
         assert value[1] == 'mile_per_hour'
         assert value[2] == 'group_speed'
+
+
+def test_vecavg_calm(config_dict):
+    """Test 'vecavg' over an interval where no wind speed has a direction."""
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        # The hour before 13-Mar-2010 00:00:00 was chosen because its first wind speed is null,
+        # and its second is calm: zero, without a direction.
+        stop_ts = time.mktime((2010, 3, 13, 0, 0, 0, 0, 0, -1))
+        start_ts = stop_ts - 3600
+        # Check the premise of the test
+        results = [tuple(x) for x in db_manager.genSql("SELECT windSpeed, windDir FROM archive "
+                                                       "WHERE dateTime > ? AND dateTime <= ? "
+                                                       "ORDER BY dateTime ASC",
+                                                       (start_ts, stop_ts))]
+        assert results == [(None, None), (0.0, None)]
+        value = weewx.xtypes.ArchiveTable.get_aggregate('wind', TimeSpan(start_ts, stop_ts),
+                                                        'vecavg', db_manager)
+        assert value[0] is None
+
+
+def test_extreme_time_ties(config_dict):
+    """Of equal extremes, 'maxtime' and 'mintime' should give the earliest, as the daily
+    summaries do."""
+    with weewx.manager.open_manager_with_config(config_dict, 'wx_binding') as db_manager:
+        # The hour before 1-Mar-2010 16:00:00 was chosen because it holds two records, both
+        # without rain.
+        stop_ts = time.mktime((2010, 3, 1, 16, 0, 0, 0, 0, -1))
+        start_ts = stop_ts - 3600
+        # Check the premise of the test
+        results = [tuple(x) for x in db_manager.genSql("SELECT dateTime, rain FROM archive "
+                                                       "WHERE dateTime > ? AND dateTime <= ? "
+                                                       "ORDER BY dateTime ASC",
+                                                       (start_ts, stop_ts))]
+        assert results == [(stop_ts - 1800, 0.0), (stop_ts, 0.0)]
+        for aggregate_type in ('maxtime', 'mintime'):
+            value = weewx.xtypes.ArchiveTable.get_aggregate('rain', TimeSpan(start_ts, stop_ts),
+                                                            aggregate_type, db_manager)
+            assert value[0] == stop_ts - 1800

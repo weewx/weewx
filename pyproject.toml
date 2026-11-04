@@ -10,7 +10,7 @@
 #
 [project]
 name = "weewx"
-version = "5.4.0"
+version = "5.5.2"
 description = "The WeeWX weather software system."
 authors = [
     {name = "Tom Keffer", email = "tkeffer@gmail.com"},
@@ -49,6 +49,8 @@ dependencies = [
     "PyMySQL>=1.0",
     "pyserial>=3.4",
     "pyusb>=1.0.2",
+    # Python 3.6 does not have module importlib.resources:
+    "importlib-resources>=3.3; python_version < '3.7'",
 ]
 
 [project.urls]
@@ -59,12 +61,14 @@ Issues = "https://github.com/weewx/weewx/issues"
 Wiki = "https://github.com/weewx/weewx/wiki"
 Support = "https://groups.google.com/g/weewx-user"
 
+# Install development dependencies with "pip install -e . --group dev"
 [dependency-groups]
 dev = [
     "cryptography",
     "zensical",
     "poetry",
     "pytest",
+    "mysqlclient",
 ]
 
 [project.scripts]
@@ -97,4 +101,16 @@ exclude = [
 [build-system]
 requires = ["poetry-core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+# -ra shows extra test summary info (skips, fails, errors) with reasons.
+# --import-mode causes pytest to use importlib instead of manipulating sys.path. This makes imports more predictable.
+addopts = "-ra --import-mode=importlib"
+# Include the source directories in the import root
+pythonpath = [
+    "src",
+    "src/weewx_data/examples",
+    "src/weewx/tests",
+]
 

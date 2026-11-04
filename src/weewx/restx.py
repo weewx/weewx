@@ -637,12 +637,17 @@ class StdWunderground(StdRESTful):
         do_archive_post = to_bool(_ambient_dict.pop('archive_post',
                                                     not do_rapidfire_post))
 
+        # Each mode posts to its own endpoint, and rtfreq applies only to the
+        # rapidfire thread, since AmbientThread does not accept it.
+        user_server_url = _ambient_dict.pop('server_url', None)
+        rtfreq = _ambient_dict.pop('rtfreq', 2.5)
+
         if do_archive_post:
-            _ambient_dict.setdefault('server_url', StdWunderground.pws_url)
             self.archive_queue = queue.Queue()
             self.archive_thread = AmbientThread(
                 self.archive_queue,
                 _manager_dict,
+                server_url=user_server_url or StdWunderground.pws_url,
                 protocol_name="Wunderground-PWS",
                 essentials=_essentials_dict,
                 **_ambient_dict)
@@ -652,19 +657,19 @@ class StdWunderground(StdRESTful):
                      _ambient_dict['station'])
 
         if do_rapidfire_post:
-            _ambient_dict.setdefault('server_url', StdWunderground.rf_url)
             _ambient_dict.setdefault('log_success', False)
             _ambient_dict.setdefault('log_failure', False)
             _ambient_dict.setdefault('max_backlog', 0)
             _ambient_dict.setdefault('max_tries', 1)
-            _ambient_dict.setdefault('rtfreq', 2.5)
             self.cached_values = CachedValues()
             self.loop_queue = queue.Queue()
             self.loop_thread = AmbientLoopThread(
                 self.loop_queue,
                 _manager_dict,
+                server_url=user_server_url or StdWunderground.rf_url,
                 protocol_name="Wunderground-RF",
                 essentials=_essentials_dict,
+                rtfreq=rtfreq,
                 **_ambient_dict)
             self.loop_thread.start()
             self.bind(weewx.NEW_LOOP_PACKET, self.new_loop_packet)
@@ -1279,7 +1284,11 @@ class CWOPThread(RESTThread):
 
         # Time:
         _time_tt = time.gmtime(record['dateTime'])
-        _time_str = time.strftime("@%d%H%Mz", _time_tt)
+        # Data Type Identifier '/' = position with timestamp, no APRS
+        # messaging. An unattended weather station cannot answer APRS
+        # messages, so it should not advertise itself as messaging-capable
+        # by using '@' (position with timestamp, WITH messaging).
+        _time_str = time.strftime("/%d%H%Mz", _time_tt)
 
         # Position:
         _lat_str = weeutil.weeutil.latlon_string(self.latitude,

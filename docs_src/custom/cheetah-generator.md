@@ -427,7 +427,7 @@ There are several _aggregation periods_ that can be used:
     </tr>
     <tr>
         <td class="first_col code">$yesterday</td>
-        <td>Yesterday. Synonym for <span class="code">$day($days_ago=1)</span>.
+        <td>Yesterday. Synonym for <span class="code">$day(days_ago=1)</span>.
         </td>
         <td class="code">$yesterday.outTemp.maxtime</td>
         <td>The time of the max temperature yesterday.</td>
@@ -1420,7 +1420,7 @@ and overriding units. [Click here](../examples/tag.htm) for the results.
         <td>Max temperature</td>
         <td>Time</td>
       </tr>
-#for $hour in $day($days_ago=1).hours
+#for $hour in $day(days_ago=1).hours
       <tr>
         <td>$hour.start.format("%H:%M")-$hour.end.format("%H:%M")</td>
         <td>$hour.outTemp.max ($hour.outTemp.max.degree_C)</td>
@@ -1430,7 +1430,7 @@ and overriding units. [Click here](../examples/tag.htm) for the results.
       <caption>
         <p>
           Hourly max temperatures yesterday<br/>
-          $day($days_ago=1).start.format("%d-%b-%Y")
+          $day(days_ago=1).start.format("%d-%b-%Y")
         </p>
       </caption>
     </table>

@@ -282,7 +282,25 @@ class ExtensionEngine:
                     os.makedirs(os.path.dirname(destination_path))
                 except OSError:
                     pass
-                shutil.copy(source_path, destination_path)
+                # Copy to a temporary file, then rename it into place, so
+                # that the destination is replaced atomically. Overwriting
+                # it in place would truncate it under a running weewxd,
+                # which may have the old copy open or memory-mapped (a
+                # mapped file, such as a .bsp ephemeris, kills the process
+                # with SIGBUS when truncated underneath it).
+                tmp_fd, tmp_path = tempfile.mkstemp(
+                    dir=os.path.dirname(destination_path),
+                    prefix=os.path.basename(destination_path) + '.tmp')
+                os.close(tmp_fd)
+                try:
+                    shutil.copy(source_path, tmp_path)
+                    os.replace(tmp_path, destination_path)
+                except BaseException:
+                    try:
+                        os.unlink(tmp_path)
+                    except OSError:
+                        pass
+                    raise
             N += 1
 
         if self.dry_run:

@@ -36,11 +36,15 @@ Linux Package Managers](https://packaging.python.org/en/latest/guides/installing
 
     ```{ .shell .copy }
     sudo yum update
-    sudo yum install python3-importlib-resources
     sudo yum install python3-pip -y
-    sudo yum install python3-venv -y
     ```
-    _Tested with Rocky 8.7._
+    _Tested with Rocky 8.9._
+
+    _Redhat 8 comes with Python 3.6 and an old version of `pip`. In the virtual
+    environment below, first run `python3 -m pip install --upgrade pip`, then
+    install WeeWX with `python3 -m pip install --prefer-binary weewx`. Otherwise,
+    `pip` tries to build some of the dependencies from source, which requires
+    many other development packages._
 
 === "Redhat 9"
 
@@ -315,6 +319,22 @@ WeeWX must be restarted for the changes to take effect.
     ```
 
 
+## Command-line completion
+
+If you use bash, it can complete `weectl` subcommands and options for you.
+To install the completion for your own account, use this:
+
+```{ .shell .copy }
+sh ~/weewx-data/scripts/setup-bash-completion.sh
+```
+
+If you wish to install it for every user on the system add `sudo` in front: 
+
+```{ .shell .copy }
+sudo sh ~/weewx-data/scripts/setup-bash-completion.sh
+```
+
+
 ## Upgrade
 
 Get the latest release using `pip`:
@@ -378,6 +398,12 @@ If you installed a daemon configuration, remove it:
 
 ```{ .shell .copy }
 sudo sh ~/weewx-data/scripts/setup-daemon.sh uninstall
+```
+
+If you installed the bash completion, remove it as well:
+
+```{ .shell .copy }
+sh ~/weewx-data/scripts/setup-bash-completion.sh uninstall
 ```
 
 To delete the applications and code, remove the WeeWX virtual environment:

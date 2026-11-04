@@ -99,6 +99,11 @@ more likely), then only the generation of reports will be affected &mdash;
 the main thread will continue downloading data off the instrument and
 putting them in the database.
 
+To see these pieces at work, open the [animated model of the core data
+flow](devnotes/core-dataflow.html). It follows LOOP packets and archive
+records from the driver through the services into the database, the
+RESTful uploaders and the report thread.
+
 ## Units
 
 In general, there are three different areas where the unit system makes
@@ -227,7 +232,7 @@ also decide whether the daily summary optimization can be used
 ([details below](#daily-summaries)). If not, it will use the regular
 archive table.
 
-## Daily summaries {#daily-summaries}
+## Daily summaries
 
 This section builds on the section [*The database*](custom/introduction.md#the-database)
 in the *Customization Guide*. Read it first.
@@ -558,32 +563,23 @@ now = datetime.datetime()
 
 ## Unit tests
 
-The code that exercises the code is located in a directory called `tests` in
-each of the component directories.
+Unit tests for each module are located in a directory called `tests` under each
+module's directory.
 
-Prerequisites for running the core tests include:
+The development dependencies can easily be installed into a virtual
+environment by using the following pip command:
 
-    MySQL >= 8.0
-    Python >= 3.7
-    configobj>=5.0
-    cryptography
-    CT3>=3.1
-    ephem>=4.1
-    Pillow>=5.2
-    PyMySQL
-    pyserial>=3.4
-    pytest
-    pyusb>=1.0.2
-
-When using a pip virtual environment, these can easily be installed into the
-environment by using the file `dev_requirements.txt` located in the repository:
-
-    pip install -r dev_requirements.txt
+    pip install -e . --group dev
 
 MySQL must be set up with specific users with specific permissions.  This can be
 done by a `make` target:
 
     make test-setup
+
+If a MySQL/MariaDB server is not available or not configured, you can skip
+running the MySQL tests by setting `WEEWX_TEST_MYSQL=0`:
+
+    WEEWX_TEST_MYSQL=0 make test
 
 To run all unit tests (do not run this as root!):
 ```
@@ -595,8 +591,21 @@ To clean up after running tests:
 make test-clean
 ```
 
-If you add additional unit tests, they should put any transient files in
-`/var/tmp/weewx-test` &mdash; do not write to the source tree.
+If you add additional unit tests, they should put any transient files in the
+directory returned by `weeutil.weeutil.get_test_dir()` (or specified by the
+`$WEEWX_TEST_DIR` environment variable, or use pytest's `tmp_path` fixture) &mdash;
+do not hardcode `/var/tmp` and do not write to the source tree. `make test` and
+the test suite check `$WEEWX_TEST_DIR`, then `$TMPDIR/weewx-test` if `$TMPDIR` is
+set, defaulting to `/var/tmp/weewx-test` (or `tempfile.gettempdir()/weewx-test`).
+`make test-clean` will remove all files in that directory.
+
+Tests in `src/weewx/tests` use the fixtures in `conftest.py` to run against
+both SQLite and MySQL. Use `database` for tests that create their own schema
+and data. It supplies connection options for a database that does not yet
+exist and removes the database after each test. Use `config_dict` for tests
+that need the generated weather data, which is kept for reuse between runs.
+Both fixtures get their backend and connection settings from `build_config`
+and `testgen.conf`.
 
 
 ## Git work flow
@@ -660,13 +669,17 @@ WebStorm](http://www.jetbrains.com/webstorm/) is excellent, particularly
 if you are using a framework such as Node.js or Express.js.
 
 ## Directory Structure
+- `docs_src/`: Source documentation mostly in Markdown.
+- `src/weecfg/`: Utilities for working with `configobj` configuration files.
+- `src/weectllib`: Actions and commands used by the `weectl` utility.
+- `src/weedb/`: Database abstraction layer.
+- `src/weeimport`: Utilities used by the `weectl import` utility.
+- `src/weeplot/`: Plotting and image generation code.
+- `src/weeutil/`: General-purpose utility modules used across the project.
 - `src/weewx/`: The core WeeWX engine and services.
 - `src/weewx/drivers/`: Drivers for various weather station hardware.
-- `src/weecfg/`: Utilities for working with `configobj` configuration files.
-- `src/weeutil/`: General-purpose utility modules used across the project.
-- `src/weedb/`: Database abstraction layer.
-- `src/weeplot/`: Plotting and image generation code.
-- `docs_src/`: Source documentation in Markdown or other formats.
+- `src/weewx/schemas`: The database schemas used by WeeWX.
+- `src/weewx_data`: Resources used by WeeWX, including skins and the configuration file.
 
 ## Testing Framework
 - **Pytest**: The project uses `pytest` as its primary testing framework.

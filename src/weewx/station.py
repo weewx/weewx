@@ -37,9 +37,9 @@ class StationInfo:
             except KeyError as e:
                 raise weewx.ViolatedPrecondition("Value 'altitude' needs a unit (%s)" % e)
 
-        if console and hasattr(console, 'hardware_name'):
+        try:
             self.hardware = console.hardware_name
-        else:
+        except (AttributeError, NotImplementedError):
             self.hardware = stn_dict.get('station_type', 'Unknown')
 
         if console and hasattr(console, 'rain_year_start'):

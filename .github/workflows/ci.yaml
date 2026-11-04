@@ -50,5 +50,4 @@ jobs:
       with:
         name: test-results
         path: |
-          build/test-results
           /var/tmp/weewx-test/weewx-ci.log

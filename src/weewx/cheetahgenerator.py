@@ -66,6 +66,8 @@ import unicodedata
 
 import Cheetah.Filters
 import Cheetah.Template
+import Cheetah.NameMapper
+import Cheetah.Parser
 
 import weedb
 import weeutil.logger
@@ -268,6 +270,9 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
 
         # Use the generator function
         for timespan in _spangen(start_ts, stop_ts):
+            if self.stop_event and self.stop_event.is_set():
+                log.debug("Stop event set. Stopping template '%s'", template)
+                return ngen
             start_tt = time.localtime(timespan.start)
             stop_tt = time.localtime(timespan.stop)
 
@@ -364,10 +369,10 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
             else:
                 byte_string = unicode_string.encode(encoding)
 
-            # Finally, write the byte string to the target file
+            # Finally, write the byte string to the target file, by writing it to a temporary
+            # file first, then moving it over.
+            tmpname = _fullname + '.tmp'
             try:
-                # Write to a temporary file first
-                tmpname = _fullname + '.tmp'
                 # Open it in binary mode. We are writing a byte-string, not a string
                 with open(tmpname, mode='wb') as fd:
                     fd.write(byte_string)
@@ -381,7 +386,7 @@ class CheetahGenerator(weewx.reportengine.ReportGenerator):
                     pass
 
             if weewx.debug >= 2:
-                log.debug("%s took %.2f s" % (template, time.time()-t1))
+                log.debug("%s took %.2f s", template, time.time()-t1)
 
         return ngen
 
