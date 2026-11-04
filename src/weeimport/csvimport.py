@@ -263,6 +263,11 @@ class CSVSource(weeimport.Source):
         # create a dictionary CSV reader, using the first line as the set of keys
         _csv_reader = csv.DictReader(_clean_data, delimiter=self.delimiter)
 
+        if self.update_delete:
+            # DictReader pads short rows with None; an explicit empty cell is ''.
+            return ({key: value for key, value in row.items() if value is not None}
+                    for row in _csv_reader)
+
         # return our CSV dict reader
         return _csv_reader
 

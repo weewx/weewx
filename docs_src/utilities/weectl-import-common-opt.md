@@ -9,6 +9,7 @@ usage: weectl import --help
        weectl import --import-config=IMPORT_CONFIG_FILE
                      [--config=CONFIG_FILE]
                      [[--date=YYYY-mm-dd] | [[--from=YYYY-mm-dd[THH:MM]] [--to=YYYY-mm-dd[THH:MM]]]]
+                     [--update | --updatedelete | --updateagg]
                      [--dry-run][--verbose]
                      [--no-prompt][--suppress-warnings]
 
@@ -27,6 +28,9 @@ optional arguments:
   --to YYYY-mm-dd[THH:MM]
                         Import data up until this date or date-time. Format is YYYY-mm-
                         dd[THH:MM].
+  --update              Update existing records, preserving missing imported values.
+  --updatedelete        Update existing records, allowing missing values to clear fields.
+  --updateagg           Aggregate imported readings into existing archive intervals.
   --verbose             Print and log useful extra output.
   --no-prompt           Do not prompt. Accept relevant defaults and all y/n prompts.
   --suppress-warnings   Suppress warnings to stdout. Warnings are still logged.
@@ -62,6 +66,145 @@ into a working directory and then modifying the copy to suit your needs. The
 ```
 weectl import --import-config=/directory/import.conf
 ```
+
+### `--update` and `--updatedelete`
+
+Without an update option, records with timestamps already in the archive remain
+unchanged. `--update` replaces existing fields when the import supplies a value,
+including zero. Missing numeric values and empty text fields preserve the
+existing value.
+
+Use `--updatedelete` when missing imported values should clear existing fields
+to SQL NULL. It implies updates and cannot be combined with `--update`. It
+clears field values, not archive rows. Unmapped fields and mapped columns absent
+from a source row remain unchanged. Both options can also insert new timestamps.
+
+For example, if a stored temperature is 60 and its imported cell is empty,
+`--update` keeps 60; `--updatedelete` stores NULL. A temperature of zero replaces
+60 with either option.
+
+Preview the import first:
+
+```sh
+weectl import --import-config=/directory/import.conf --updatedelete --dry-run
+```
+
+Run it again without `--dry-run` to apply the import. Daily summaries are
+rebuilt from the changed archive records. Values rejected during conversion or
+quality control also become missing values and are subject to this policy.
+When clearing derived observations, set `calc_missing = False` in the import
+source section; otherwise the normal post-import calculation may fill them again.
+
+### `--updateagg`
+
+`--updateagg` combines imported readings for each existing archive interval,
+then updates the mapped observations in that row. For example, six temperature
+readings within a five-minute archive interval become one average. Rainfall
+amounts are summed instead. The archive row's timestamp, unit system, interval
+and unmapped observations stay unchanged. Missing target rows are never inserted.
+This option cannot be combined with `--update` or `--updatedelete`.
+
+Preview the results before applying them:
+
+```sh
+weectl import --import-config=/directory/import.conf --updateagg --dry-run
+```
+
+The preview shows the old and proposed values for the first 20 target rows,
+with counts for all target rows, unmatched readings, readings outside the date
+limits and duplicate timestamps. All import periods are checked before any
+updates are written. An unavailable or undecodable source period aborts the
+import; it is not skipped. Running without `--dry-run` asks for confirmation after
+the preview; `--no-prompt` accepts it. Updates use the usual database batches,
+so a write failure can leave earlier batches committed.
+
+#### Choosing archive intervals
+
+By default a reading belongs to the archive interval that contains its time.
+An archive row at 12:05 with `interval = 5` covers times after 12:00 through
+12:05, including 12:05. Each row's stored interval is used, including when
+intervals vary or cross midnight or a daylight saving transition. The import
+source's `interval` setting is ignored in this mode.
+
+Readings in gaps are counted as unmatched and skipped. Overlapping archive
+intervals stop the import before updates are written. If an earlier import
+created extra archive rows, an `anchor` can restrict the target rows to those
+with a non-NULL value in a chosen observation, such as `outTemp`. The extra
+rows are not removed by this option.
+
+To match labels that differ slightly from the intended archive timestamp, add
+`[[UpdateAggregation]]` inside the source section of the import configuration:
+
+```ini
+[CSV]
+    # Other CSV settings and FieldMap go here.
+    [[UpdateAggregation]]
+        alignment = nearest
+        max_shift = 15
+        anchor = outTemp
+```
+
+For example, a reading stamped 12:05:06 can then update the 12:05 archive row.
+The archive must contain that target row, and `outTemp` must be non-NULL there.
+
+| Setting | Values and default |
+|---------|--------------------|
+| `alignment` | `interval` (default), `nearest`, `previous` or `next`. The latter three match an archive timestamp rather than the interval it ends. `previous` and `next` include an exact match. |
+| `max_shift` | Maximum distance in seconds between reading and target timestamps. Must be finite and non-negative. Required for `nearest`, `previous` and `next`; omitted by default for `interval`. Readings beyond it are unmatched. |
+| `anchor` | An archive column whose value must be non-NULL in each target row. Default is to consider every archive row. |
+
+An equally close pair of target timestamps stops `nearest` alignment before
+updates are written. The `--date`, `--from` and `--to` filters apply to source
+readings and to target timestamps: an update cannot cross the selected date
+limits. Target intervals that start before the beginning of the selected range
+are skipped in every alignment mode, even if their timestamps are in range.
+For explicit alignment the full configured shift window must also fit: `next`
+requires `target - max_shift` after the beginning, `previous` requires
+`target + max_shift` at or before the end, and `nearest` requires both. This
+conservative check can skip a target even if a neighbouring archive row would
+shorten its actual matching window. Skipped readings count as outside date
+limits. As with other imports, the beginning is exclusive and the end inclusive.
+
+#### Choosing how observations are combined
+
+Aggregation uses the WeeWX
+[accumulator settings](../reference/weewx-options/accumulator.md) in
+`weewx.conf`. The standard observation types have defaults: temperature and
+pressure are averaged, rain and ET are summed, and running counters such as
+`dayRain` use the last reading. Averages give each non-missing sample equal
+weight; the spacing between readings does not change that weight. Input
+conversion and quality control take place before aggregation.
+
+Every custom observation must have an explicit `extractor` in `[Accumulator]`,
+even when its units have been registered. For a cumulative energy meter whose
+reading should be kept at the end of an interval, add to `weewx.conf`:
+
+```ini
+[Accumulator]
+    [[energyprod]]
+        extractor = last
+```
+
+Use `avg` for instantaneous power readings or `sum` for separate amounts
+produced during each source interval. The field must exist in the archive
+schema and have the usual import unit mapping. The accumulator reference
+lists the other extractors and how to configure text fields.
+
+Wind uses WeeWX's vector and gust handling. Map `windSpeed` together with
+`windDir`, `windGust` or `windGustDir`. Only mapped fields are updated, even
+when the wind accumulator computes additional fields. A direction needs a
+corresponding speed measurement; an undefined aggregate preserves the stored
+value.
+
+Missing values, including empty text, do not clear existing observations.
+A field with no non-missing inputs keeps its stored value; zero is a value.
+Aggregates replace existing values using only the imported readings. Missing
+samples are not reconstructed: a source that starts or ends partway through an
+interval can supply only a partial total. Check source coverage before applying
+totals. Duplicate source timestamps retain the first reading, including across import
+periods. `first` and `last` follow timestamp order. Non-finite inputs or
+aggregates stop the import before updates are written. Derived observations
+are not calculated in this mode, and import `lastUpdate` metadata is unchanged.
 
 ### `--dry-run`
 

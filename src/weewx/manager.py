@@ -360,7 +360,9 @@ class Manager:
                   progress_fn=None,
                   log_success=True,
                   log_failure=True,
-                  update=False):
+                  update=False,
+                  update_nulls=True,
+                  update_only=False):
         """
         Commit a single record or a collection of records to the archive.
 
@@ -368,14 +370,18 @@ class Manager:
             record_obj (typing.Iterable[dict] | dict): Either a data record, or an iterable that can return
                 data records. Each data record must look like a dictionary, where the keys are the
                 SQL types and the values are the values to be stored in the database.
-            accumulator (weewx.accum.Accum): An optional accumulator. If given, the record
+            accumulator (weewx.accum.Accum|None): An optional accumulator. If given, the record
                 will be added to the accumulator.
-            progress_fn (function): This function will be called every 1000 insertions. It should
+            progress_fn (Callable[[int|float, int], None]|None): Called every 1000 records. It should
                 have the signature fn(time, N) where time is the unix epoch time, and N is the
                 insertion count.
             log_success (bool): Set to True to have successful insertions logged.
             log_failure (bool): Set to True to have unsuccessful insertions logged
-            update (bool): Update database if timestamp is already present
+            update (bool): Update database if timestamp is already present.
+            update_nulls (bool): Allow None values to clear columns when updating.
+                False preserves those columns. Inserts still store explicit None values.
+            update_only (bool): Update existing timestamps without inserting missing records.
+                Implies update=True. Other columns need not be present in the supplied record.
 
         Returns:
             int: The number of successful insertions.
@@ -392,9 +398,13 @@ class Manager:
         overall_max_ts = 0
         total_n = 0
 
+        update_kwargs = {} if update_nulls else {'update_nulls': False}
+        if update_only:
+            update_kwargs['update_only'] = True
         for chunk in _gen_chunks(record_obj, 200):
             n, min_ts, max_ts = self._add_with_retry(chunk, accumulator, progress_fn,
-                                                     log_success, log_failure, update, total_n)
+                                                     log_success, log_failure, update, total_n,
+                                                     **update_kwargs)
             total_n += n
             overall_min_ts = min(overall_min_ts, min_ts)
             overall_max_ts = max(overall_max_ts, max_ts)
@@ -410,7 +420,8 @@ class Manager:
         return total_n
 
     def _add_with_retry(self, chunk, accumulator=None, progress_fn=None,
-                        log_success=True, log_failure=True, update=False, count=0):
+                        log_success=True, log_failure=True, update=False, count=0,
+                        update_nulls=True, update_only=False):
         """Add a chunk of records, retrying if a transient error occurs.
 
         Args:
@@ -423,6 +434,9 @@ class Manager:
             log_failure(bool): Log records that could not be added.
             update(bool): If a record already exists with the same timestamp, update it.
             count(int): The number of records already processed before this chunk.
+            update_nulls (bool): Allow None values to clear columns when updating.
+                False preserves those columns. Inserts still store explicit None values.
+            update_only (bool): Update existing timestamps without inserting records.
 
         Returns:
             tuple[int, float, float]: A three-way tuple (n, min_ts, max_ts), where n is the
@@ -431,10 +445,14 @@ class Manager:
         """
         max_attempts = 5
         retry_wait = 0.5
+        update_kwargs = {} if update_nulls else {'update_nulls': False}
+        if update_only:
+            update_kwargs['update_only'] = True
         for attempt in range(max_attempts):
             try:
                 return self._add_chunk(chunk, accumulator, progress_fn,
-                                       log_success, log_failure, update, count)
+                                       log_success, log_failure, update, count,
+                                       **update_kwargs)
             except weedb.OperationalError as e:
                 if is_transient_error(e) and attempt < max_attempts - 1:
                     # Retry with exponential backoff.
@@ -447,7 +465,8 @@ class Manager:
         raise RuntimeError("Retry loop exited unexpectedly")
 
     def _add_chunk(self, chunk, accumulator=None, progress_fn=None,
-                   log_success=True, log_failure=True, update=False, count=0):
+                   log_success=True, log_failure=True, update=False, count=0,
+                   update_nulls=True, update_only=False):
         """Add a chunk of records in a single transaction.
 
         Args:
@@ -460,6 +479,9 @@ class Manager:
             log_failure(bool): Log records that could not be added.
             update(bool): If a record already exists with the same timestamp, update it.
             count(int): The number of records already processed before this chunk.
+            update_nulls (bool): Allow None values to clear columns when updating.
+                False preserves those columns. Inserts still store explicit None values.
+            update_only (bool): Update existing timestamps without inserting records.
 
         Returns:
             tuple[int, float, float]: A three-way tuple (n, min_ts, max_ts), where n is the
@@ -470,6 +492,9 @@ class Manager:
         min_ts = float('inf')
         max_ts = 0
         updated_timestamps = []
+        update_kwargs = {} if update_nulls else {'update_nulls': False}
+        if update_only:
+            update_kwargs['update_only'] = True
         with weedb.Transaction(self.connection) as cursor:
             for record in chunk:
                 try:
@@ -479,7 +504,10 @@ class Manager:
                         self._updateHiLo(accumulator, cursor)
 
                     # Then add the record to the archives:
-                    result = self._addSingleRecord(record, cursor, log_success, log_failure, update)
+                    result = self._addSingleRecord(record, cursor, log_success, log_failure, update,
+                                                   **update_kwargs)
+                    if result == 'missing':
+                        continue
                     if result == 'updated':
                         updated_timestamps.append(record['dateTime'])
 
@@ -501,8 +529,9 @@ class Manager:
         """Finish dependent writes before the archive transaction commits."""
         pass
 
-    def _addSingleRecord(self, record, cursor, log_success=True, log_failure=True, update=False):
-        """Add an archive record, returning 'inserted', 'updated', or 'unchanged'.
+    def _addSingleRecord(self, record, cursor, log_success=True, log_failure=True, update=False,
+                         update_nulls=True, update_only=False):
+        """Add a record, returning 'inserted', 'updated', 'unchanged', or 'missing'.
 
         Args:
             record(dict): The record to be added.
@@ -510,12 +539,21 @@ class Manager:
             log_success(bool): Log successfully added records.
             log_failure(bool): Log records that could not be added.
             update(bool): If a record already exists with the same timestamp, update it.
+            update_nulls (bool): Allow None values to clear columns when updating.
+                False preserves those columns. Inserts still store explicit None values.
+            update_only (bool): Update existing timestamps without inserting records.
         """
 
         if record['dateTime'] is None:
             if log_failure:
                 log.error("Archive record with null time encountered")
             raise weewx.ViolatedPrecondition("Manager record with null time encountered.")
+
+        if update_only:
+            cursor.execute("SELECT 1 FROM %s WHERE dateTime = ?" % self.table_name,
+                           (record['dateTime'],))
+            if cursor.fetchone() is None:
+                return 'missing'
 
         # Check to make sure the incoming record is in the same unit system as the records already
         # in the database:
@@ -537,35 +575,38 @@ class Manager:
         q_str = ','.join('?' * len(key_list))
         # Form the SQL insert statement:
         sql_insert_stmt = "INSERT INTO %s (%s) VALUES (%s)" % (self.table_name, k_str, q_str)
-        try:
-            cursor.execute(sql_insert_stmt, value_list)
-            if log_success:
-                log.info("Added record %s to database '%s'",
+        if not update_only:
+            try:
+                cursor.execute(sql_insert_stmt, value_list)
+                if log_success:
+                    log.info("Added record %s to database '%s'",
+                             timestamp_to_string(record['dateTime']), self.database_name)
+                return 'inserted'
+            except weedb.IntegrityError:
+                if not update:
+                    raise
+        # Filter only UPDATEs; explicit NULLs in new rows retain their INSERT semantics.
+        if not update_nulls:
+            key_list = [key for key in key_list if record[key] is not None]
+            value_list = [record[key] for key in key_list]
+        set_stmt = ', '.join(["%s=?" % k for k in key_list])
+        # Use the appropriate NULL-safe equality operator
+        eq = "<=>" if self.connection.dbtype == "mysql" else "IS"
+        where_stmt = ' AND '.join(["%s %s ?" % (k, eq) for k in key_list])
+        sql_update_stmt = "UPDATE %s SET %s WHERE dateTime = ? AND NOT (%s)" \
+                          % (self.table_name, set_stmt, where_stmt)
+        cursor.execute(sql_update_stmt, value_list + [record['dateTime'],] + value_list)
+        changed = cursor.rowcount > 0
+        if log_success:
+            if cursor.rowcount > 0:
+                log.info("Updated record %s to database '%s'",
                          timestamp_to_string(record['dateTime']),
                          self.database_name)
-            return 'inserted'
-
-        except weedb.IntegrityError:
-            if not update:
-                raise
-            set_stmt = ', '.join(["%s=?" % k for k in key_list])
-            # Use the appropriate NULL-safe equality operator
-            eq = "<=>" if self.connection.dbtype == "mysql" else "IS"
-            where_stmt = ' AND '.join(["%s %s ?" % (k, eq) for k in key_list])
-            sql_update_stmt = "UPDATE %s SET %s WHERE dateTime = ? AND NOT (%s)" \
-                              % (self.table_name, set_stmt, where_stmt)
-            cursor.execute(sql_update_stmt, value_list + [record['dateTime'],] + value_list)
-            changed = cursor.rowcount > 0
-            if log_success:
-                if cursor.rowcount > 0:
-                    log.info("Updated record %s to database '%s'",
-                             timestamp_to_string(record['dateTime']),
-                             self.database_name)
-                else:
-                    log.info("Unchanged record %s to database '%s'",
-                             timestamp_to_string(record['dateTime']),
-                             self.database_name)
-            return 'updated' if changed else 'unchanged'
+            else:
+                log.info("Unchanged record %s to database '%s'",
+                         timestamp_to_string(record['dateTime']),
+                         self.database_name)
+        return 'updated' if changed else 'unchanged'
 
     def _updateHiLo(self, accumulator, cursor):
         pass
@@ -1281,7 +1322,8 @@ class DaySummaryManager(Manager):
         for column_name in column_names:
             cursor.drop_table(f"{self.table_name}_day_{column_name}")
 
-    def _addSingleRecord(self, record, cursor, log_success=True, log_failure=True, update=False):
+    def _addSingleRecord(self, record, cursor, log_success=True, log_failure=True, update=False,
+                         update_nulls=True, update_only=False):
         """Specialized version that updates the daily summaries, as well as the main archive
         table.
 
@@ -1291,10 +1333,14 @@ class DaySummaryManager(Manager):
             log_success(bool): Log successfully added records.
             log_failure(bool): Log records that could not be added.
             update(bool): If a record already exists with the same timestamp, update it.
+            update_nulls (bool): Allow None values to clear columns when updating.
+                False preserves those columns. Inserts still store explicit None values.
+            update_only (bool): Update existing timestamps without inserting records.
         """
 
         # First let my superclass handle adding the record to the main archive table:
-        result = super()._addSingleRecord(record, cursor, log_success, log_failure, update)
+        result = super()._addSingleRecord(record, cursor, log_success, log_failure, update,
+                                         update_nulls=update_nulls, update_only=update_only)
         if result != 'inserted':
             return result
 
