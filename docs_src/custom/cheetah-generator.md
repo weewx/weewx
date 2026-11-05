@@ -467,10 +467,10 @@ There are several _aggregation periods_ that can be used:
         <td>The total rainfall for this rain year. </td>
     </tr>
     <tr>
-        <td class="first_col code">$seasonsyear</td>
+        <td class="first_col code">$seasonyear</td>
         <td>From the beginning of the last spring to the beginning of the
             next spring, observing hemisphere</td>
-        <td class="code">$seasonsyear.outTemp.min</td>
+        <td class="code">$seasonyear.outTemp.min</td>
         <td>The minimum temperature during that time</td>
     </tr>
     <tr>
@@ -539,8 +539,8 @@ Here are some examples:
         <td>The maximum temperature last year.</td>
     </tr>
     <tr>
-        <td class="first_col code">$seasonsyear(years_ago=<em>y</em>)</td>
-        <td class="code">$seasonsyear(years_ago=1).outTemp.max</td>
+        <td class="first_col code">$seasonyear(years_ago=<em>y</em>)</td>
+        <td class="code">$seasonyear(years_ago=1).outTemp.max</td>
         <td>The maximum temperature of the previous seasons year</td>
     </tr>
     </tbody>
@@ -1276,7 +1276,11 @@ It is possible to iterate over the following:
             <a href="#meteorological-vs-astronomical-seasons"><span class="code">season_type</span></a> 
             to "<span class="code">m</span>" for meteorological seasons,
             "<span class="code">a</span>" for astronomical seasons. Default is 
-            "<span class="code">m</span>".</td>
+            "<span class="code">m</span>". Not necessary together with
+            <span class="code">$seasonyear(season_type=<em>str</em></span>, 
+            as the season type specified there is also valid for the
+            iterator. If no season type is specified here and in the
+            base tag, the season type from the configuration is used.</td>
     </tr>
     <tr>
         <td class="code first_col">.years</td>

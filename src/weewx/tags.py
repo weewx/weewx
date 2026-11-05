@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -115,8 +115,9 @@ class TimeBinder:
             **self.option_dict)
 
     def season(self, data_binding=None, seasons_ago=0, years_ago=0, lat=None, lon=None,
-               season_type='m'):
+               season_type=None):
         years_ago, seasons_ago = seasons_ago // 4 + years_ago, seasons_ago % 4
+        if not season_type: season_type = self.option_dict.get('season_type','meteorological')
         if season_type[0].lower() == 'm':
             # meteorological season
             time_dt = time.localtime(self.report_time)
@@ -162,7 +163,7 @@ class TimeBinder:
             weeutil.weeutil.TimeSpan(start_of_season, end_of_season),
             self.db_lookup, data_binding=data_binding,
             context='season', formatter=self.formatter, converter=self.converter,
-            season_type=season_type,
+            passed_season_type=season_type,
             **self.option_dict)
 
     def year(self, data_binding=None, years_ago=0):
@@ -191,7 +192,7 @@ class TimeBinder:
             context='rainyear', formatter=self.formatter, converter=self.converter,
             **self.option_dict)
 
-    def seasonsyear(self, data_binding=None, years_ago=0, lat=None, lon=None, season_type='m'):
+    def seasonyear(self, data_binding=None, years_ago=0, lat=None, lon=None, season_type=None):
         """ meteorological or astronomical seasons year
 
         Args:
@@ -210,6 +211,8 @@ class TimeBinder:
         Returns:
             TimespanBinder: An instance of TimespanBinder, bound to the seasons year.
         """
+        if not season_type:
+            season_type = self.option_dict.get('season_type','meteorological')
         if lat is None: lat = self.option_dict.get('lat', 0.0)
         if lon is None: lon = self.option_dict.get('lon', 0.0)
         if season_type[0].lower() == 'm':
@@ -243,8 +246,8 @@ class TimeBinder:
         return TimespanBinder(
             weeutil.weeutil.TimeSpan(start_of_seasons_year, end_of_seasons_year),
             self.db_lookup, data_binding=data_binding,
-            context='seasonsyear', formatter=self.formatter, converter=self.converter,
-            season_type=season_type,
+            context='seasonyear', formatter=self.formatter, converter=self.converter,
+            passed_season_type=season_type,
             **self.option_dict)
 
     def span(self, data_binding=None, time_delta=0, hour_delta=0, day_delta=0, week_delta=0,
@@ -288,6 +291,7 @@ class TimespanBinder:
     def __init__(self, timespan, db_lookup, data_binding=None, context='current',
                  formatter=None,
                  converter=None,
+                 passed_season_type=None,
                  **option_dict):
         """Initialize an instance of TimespanBinder.
 
@@ -306,6 +310,8 @@ class TimespanBinder:
             converter (weewx.units.Converter|None): An instance of weewx.units.Converter() holding
                 the target unit information to be used. [Optional. If not given, the default
                 Converter will be used.]
+            passed_season_type (str): If created by `$season` or `$seasonyear`, the season type
+                used there.
             option_dict (dict|None): Other options which can be used to customize calculations.
                 [Optional.]
         """
@@ -316,6 +322,7 @@ class TimespanBinder:
         self.context = context
         self.formatter = formatter or weewx.units.Formatter()
         self.converter = converter or weewx.units.Converter()
+        self.passed_season_type = passed_season_type
         self.option_dict = option_dict
 
     # Iterate over all records in the time period:
@@ -330,13 +337,15 @@ class TimespanBinder:
     def spans(self, context='day', interval=10800):
         for span in weeutil.weeutil.intervalgen(self.timespan.start, self.timespan.stop, interval):
             yield TimespanBinder(span, self.db_lookup, self.data_binding,
-                                 context, self.formatter, self.converter, **self.option_dict)
+                                 context, self.formatter, self.converter, 
+                                 self.passed_season_type, **self.option_dict)
 
     # Iterate over hours in the time period:
     def hours(self):
         return TimespanBinder._seqGenerator(weeutil.weeutil.genHourSpans, self.timespan,
                                             self.db_lookup, self.data_binding,
                                             'hour', self.formatter, self.converter,
+                                            self.passed_season_type,
                                             **self.option_dict)
 
     # Iterate over days in the time period:
@@ -344,6 +353,7 @@ class TimespanBinder:
         return TimespanBinder._seqGenerator(weeutil.weeutil.genDaySpans, self.timespan,
                                             self.db_lookup, self.data_binding,
                                             'day', self.formatter, self.converter,
+                                            self.passed_season_type,
                                             **self.option_dict)
 
     # Iterate over months in the time period:
@@ -351,6 +361,7 @@ class TimespanBinder:
         return TimespanBinder._seqGenerator(weeutil.weeutil.genMonthSpans, self.timespan,
                                             self.db_lookup, self.data_binding,
                                             'month', self.formatter, self.converter,
+                                            self.passed_season_type,
                                             **self.option_dict)
 
     # Iterate over years in the time period:
@@ -358,14 +369,15 @@ class TimespanBinder:
         return TimespanBinder._seqGenerator(weeutil.weeutil.genYearSpans, self.timespan,
                                             self.db_lookup, self.data_binding,
                                             'year', self.formatter, self.converter,
+                                            self.passed_season_type,
                                             **self.option_dict)
 
     # Iterate over seasons in the time period:
     def seasons(self, season_type=None):
-        # For `$seasonsyear(season_type='...').seasons` the season type is
+        # For `$seasonyear(season_type='...').seasons` the season type is
         # passed from the base tag. But `$alltime` does not take a parameter
         # `season_type`. So it needs to be specified here instead.
-        season_type = (self.option_dict.get('season_type', 'm') if season_type is None else season_type)[0].lower()
+        season_type = ((self.option_dict.get('season_type','meteorological') if self.passed_season_type is None else self.passed_season_type) if season_type is None else season_type)[0].lower()
         if season_type == 'm':
             # meteorological season
             def genSeasonSpans(start, stop):
@@ -397,6 +409,7 @@ class TimespanBinder:
         return TimespanBinder._seqGenerator(genSeasonSpans, self.timespan,
                                             self.db_lookup, self.data_binding,
                                             'season', self.formatter, self.converter,
+                                            season_type,
                                             **self.option_dict)
 
     # Static method used to implement the iteration:
