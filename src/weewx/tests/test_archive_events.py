@@ -209,6 +209,51 @@ def test_hardware_catchup_only_attaches_matching_accumulator(archive_engine, mon
     assert events == list(zip(timestamps, [None, None, accumulator, None]))
 
 
+# 'timing' selects when the console delivers its record for the interval ending BASE_TIME + 600:
+#   on_time:   in the catchup at the end of that interval.
+#   late:      only in the next catchup, as a console does whose clock is behind the computer
+#              by more than archive_delay.
+#   unaligned: in time, but with a timestamp that is not on the interval boundary, as some
+#              drivers do. Such a record never matches an accumulator, and is not late.
+@pytest.mark.parametrize('timing', ['on_time', 'late', 'unaligned'])
+def test_late_hardware_record_is_reported(archive_engine, monkeypatch, caplog, timing):
+    """A record that arrives after its interval has been archived is reported in the log."""
+    engine, archive, events = archive_engine
+    archive.record_generation = 'hardware'
+    # The records the console holds, oldest first. The test adds to it between the two catchups.
+    on_console = [] if timing == 'late' else [BASE_TIME + (599 if timing == 'unaligned' else 600)]
+    monkeypatch.setattr(engine.console, 'genArchiveRecords',
+                        lambda since: (hardware_record(timestamp) for timestamp in on_console
+                                       if timestamp > (since or 0)),
+                        raising=False)
+    feed_loop_interval(engine)
+    engine.dispatchEvent(weewx.Event(weewx.POST_LOOP))
+    if timing == 'late':
+        on_console.append(BASE_TIME + 600)
+
+    # Run the interval ending BASE_TIME + 900. Its first packet, at offset 620, came with
+    # feed_loop_interval(). The packet at 920 is past the archive delay and breaks the loop.
+    engine.dispatchEvent(weewx.Event(weewx.PRE_LOOP))
+    for offset in [890, 920]:
+        packet = {'dateTime': BASE_TIME + offset, 'usUnits': weewx.METRICWX, 'outTemp': 0}
+        engine.dispatchEvent(weewx.Event(weewx.NEW_LOOP_PACKET, packet=packet))
+        try:
+            engine.dispatchEvent(weewx.Event(weewx.CHECK_LOOP, packet=packet))
+        except weewx.engine.BreakLoop:
+            assert offset == 920
+    engine.dispatchEvent(weewx.Event(weewx.POST_LOOP))
+
+    warnings = [record.getMessage() for record in caplog.records
+                if 'arrived late' in record.getMessage()]
+    if timing == 'late':
+        assert events == [(BASE_TIME + 600, None)]
+        assert len(warnings) == 1
+        assert '(%d)' % (BASE_TIME + 600) in warnings[0]
+    else:
+        assert len(events) == 1
+        assert warnings == []
+
+
 def test_startup_records_have_no_accumulator(archive_engine, monkeypatch):
     """Records from the startup catchup get None, because no LOOP data has been seen yet."""
     engine, archive, events = archive_engine

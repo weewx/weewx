@@ -670,6 +670,9 @@ class StdArchive(StdService):
         # The stop time of the archive period whose late packets were last reported to the log.
         # This avoids lots of nearly identical log warnings.
         self.last_late_warning = None
+        # The stop times of the archive periods in the last hardware catchup. If the station
+        # delivers a record for one of them in a later catchup, the record was not ready in time.
+        self.previous_stop_ts = set()
 
         if self.record_generation == 'software':
             self.archive_interval = software_interval
@@ -831,6 +834,7 @@ class StdArchive(StdService):
             # to software generation.
             try:
                 self._catchup(self.engine.console.genArchiveRecords, accumulators)
+                self.previous_stop_ts = set(accumulators)
                 return
             except NotImplementedError:
                 pass
@@ -899,6 +903,16 @@ class StdArchive(StdService):
                     # A console can deliver records of other intervals in the same catchup.
                     # Only a record that ends a period being archived gets its accumulator.
                     accumulator = accumulators.get(ts) if accumulators else None
+                    if ts in self.previous_stop_ts:
+                        # The station did not have this record when its period was archived, or
+                        # it would be in the database by now. The accumulator of the period has
+                        # been discarded since. This happens every time if the station clock is
+                        # behind the computer by more than archive_delay.
+                        log.warning("Archive record for archive period ending %s arrived late, "
+                                    "so it has no LOOP data. The station clock may be behind "
+                                    "the computer by more than archive_delay. "
+                                    "See [StdTimeSynch].",
+                                    weeutil.weeutil.timestamp_to_string(ts))
                     self.engine.dispatchEvent(weewx.Event(
                         weewx.NEW_ARCHIVE_RECORD,
                         record=record,
