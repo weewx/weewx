@@ -19,6 +19,10 @@ only once per archive interval, or come from a station clock that has been set
 back. Each archive period now has its own accumulator. 
 [PR #1209](https://github.com/weewx/weewx/pull/1209).
 
+WeeWX now logs a warning when the station delivers an archive record too late to
+include LOOP data. The usual cause is a station clock that is behind the computer.
+[PR #1230](https://github.com/weewx/weewx/pull/1230).
+
 Fixed `diff` and `tderiv` returning missing values when the first or last archive
 record has no value for the observation. They now use the first and last
 non-null values in the aggregation period.
