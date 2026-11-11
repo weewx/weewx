@@ -1848,7 +1848,12 @@ def deep_copy_path(path, dest_dir):
     """Copy a path to a destination, making any subdirectories along the way.
     The source path is relative to the current directory.
 
-    Returns the number of files copied
+    Args:
+        path(str): Path to source file or directory.
+        dest_dir(str): Destination directory.
+
+    Returns:
+        int: Number of files copied.
     """
 
     ncopy = 0
