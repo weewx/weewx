@@ -22,14 +22,17 @@ import shutil
 import time
 from collections import ChainMap
 
-# importlib.resources is 3.7 or later, importlib_resources is the backport
 try:
-    import importlib.resources as importlib_resources
-except:
     import importlib_resources
+except ImportError:
+    # Python 3.6 backport:
+    import importlib.resources as importlib_resources
 
 # For backwards compatibility:
-from weeutil.config import accumulateLeaves, search_up
+import weeutil.config
+
+accumulateLeaves = weeutil.config.accumulateLeaves
+search_up = weeutil.config.search_up
 
 
 def convertToFloat(seq):
