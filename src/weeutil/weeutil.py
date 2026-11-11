@@ -1864,10 +1864,18 @@ def deep_copy_path(path, dest_dir):
         d = os.path.dirname(os.path.join(dest_dir, path))
         # Make the destination directory:
         os.makedirs(d, exist_ok=True)
-        # This version of copy does not copy over modification time,
-        # so it will look like a new file, causing it to be (for
-        # example) ftp'd to the server:
-        shutil.copy(path, d)
+        dest_file = os.path.join(d, os.path.basename(path))
+        # Remove any existing destination file first in case it was previously
+        # copied from a read-only source (such as an immutable package store),
+        # which would otherwise cause open(dest_file, 'wb') to fail with
+        # PermissionError:
+        try:
+            os.unlink(dest_file)
+        except (FileNotFoundError, OSError):
+            pass
+        # copyfile copies contents without propagating read-only file permissions
+        # and without preserving mtime:
+        shutil.copyfile(path, dest_file)
         ncopy += 1
     return ncopy
 
