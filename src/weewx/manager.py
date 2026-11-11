@@ -595,15 +595,27 @@ class Manager:
                 # The two lookups are wrapped in the derived table "nearest",
                 # because MySQL and MariaDB otherwise evaluate the UNION once
                 # for every row of the archive table.
-                _cursor.execute(
-                    "SELECT * FROM %(table)s WHERE dateTime IN ("
-                    "SELECT nearest.dateTime FROM ("
-                    "SELECT MAX(dateTime) AS dateTime FROM %(table)s "
-                    "WHERE dateTime>=? AND dateTime<=? "
-                    "UNION ALL "
-                    "SELECT MIN(dateTime) FROM %(table)s "
-                    "WHERE dateTime>? AND dateTime<=?) AS nearest) "
-                    "ORDER BY ABS(dateTime-?), dateTime LIMIT 1" % {'table': self.table_name},
+                _cursor.execute("""
+                    SELECT *
+                    FROM %(table)s
+                    WHERE dateTime IN (
+                        SELECT nearest.dateTime
+                        FROM (
+                            SELECT MAX(dateTime) AS dateTime
+                            FROM %(table)s
+                            WHERE dateTime >= ? AND dateTime <= ?
+                    
+                            UNION ALL
+                    
+                            SELECT MIN(dateTime)
+                            FROM %(table)s
+                            WHERE dateTime > ? AND dateTime <= ?
+                        ) AS nearest
+                    )
+                    ORDER BY ABS(dateTime - ?), dateTime
+                    LIMIT 1;                
+                    """
+% {'table': self.table_name},
                     (time_start_ts, timestamp, timestamp, time_stop_ts, timestamp))
             else:
                 _cursor.execute("SELECT * FROM %s WHERE dateTime=?"
