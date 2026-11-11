@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -21,15 +21,19 @@ import re
 import shutil
 import time
 from collections import ChainMap
+from contextlib import contextmanager
 
-# importlib.resources is 3.7 or later, importlib_resources is the backport
 try:
-    import importlib.resources as importlib_resources
-except:
     import importlib_resources
+except ImportError:
+    # Python 3.6 backport:
+    import importlib.resources as importlib_resources
 
 # For backwards compatibility:
-from weeutil.config import accumulateLeaves, search_up
+import weeutil.config
+
+accumulateLeaves = weeutil.config.accumulateLeaves
+search_up = weeutil.config.search_up
 
 
 def convertToFloat(seq):
@@ -1730,6 +1734,17 @@ def max_with_none(x_seq):
     return xmax
 
 
+@contextmanager
+def set_cwd(new_cwd):
+    """Set the current working directory within a context manager"""
+    old_cwd = os.getcwd()
+    try:
+        os.chdir(new_cwd)
+        yield new_cwd
+    finally:
+        os.chdir(old_cwd)
+
+
 def move_with_timestamp(path):
     """Save a file or directory to a path with a timestamp."""
     # Sometimes the target has a trailing '/'. This will take care of it:
@@ -1848,7 +1863,12 @@ def deep_copy_path(path, dest_dir):
     """Copy a path to a destination, making any subdirectories along the way.
     The source path is relative to the current directory.
 
-    Returns the number of files copied
+    Args:
+        path(str): Path to source file or directory.
+        dest_dir(str): Destination directory.
+
+    Returns:
+        int: Number of files copied.
     """
 
     ncopy = 0
@@ -1864,10 +1884,18 @@ def deep_copy_path(path, dest_dir):
         d = os.path.dirname(os.path.join(dest_dir, path))
         # Make the destination directory:
         os.makedirs(d, exist_ok=True)
-        # This version of copy does not copy over modification time,
-        # so it will look like a new file, causing it to be (for
-        # example) ftp'd to the server:
-        shutil.copy(path, d)
+        dest_file = os.path.join(d, os.path.basename(path))
+        # Remove any existing destination file first in case it was previously
+        # copied from a read-only source (such as an immutable package store),
+        # which would otherwise cause open(dest_file, 'wb') to fail with
+        # PermissionError:
+        try:
+            os.unlink(dest_file)
+        except (FileNotFoundError, OSError):
+            pass
+        # copyfile copies contents without propagating read-only file permissions
+        # and without preserving mtime:
+        shutil.copyfile(path, dest_file)
         ncopy += 1
     return ncopy
 

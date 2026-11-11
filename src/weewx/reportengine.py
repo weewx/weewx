@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -27,7 +27,7 @@ import weeutil.weeutil
 import weewx.defaults
 import weewx.manager
 import weewx.units
-from weeutil.weeutil import getFileName, to_bool, to_int, dict_search
+from weeutil.weeutil import getFileName, to_bool, to_int, dict_search, set_cwd
 
 log = logging.getLogger(__name__)
 
@@ -66,24 +66,6 @@ SPANS = (MINUTES, HOURS, DOM, MONTHS, DOW)
 NAMES = ((), (), (), MONTH_NAMES, DAY_NAMES)
 # list of name maps for CRON like fields
 MAPS = ((), (), (), MONTH_NAME_MAP, DAY_NAME_MAP)
-
-
-@contextmanager
-def set_cwd(new_cwd):
-    """Set the current working directory within a context manager
-
-    Args:
-        new_cwd (Path|str): The new working directory.
-
-    Yields:
-        Path|str: The new working directory.
-    """
-    old_cwd = Path.cwd()
-    try:
-        os.chdir(new_cwd)
-        yield new_cwd
-    finally:
-        os.chdir(old_cwd)
 
 
 # Setting a locale is not thread safe, so we need a lock
