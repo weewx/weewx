@@ -1084,3 +1084,41 @@ def test_natural_compare():
     assert natural_compare('10foo', '1foo') == 1
     assert natural_compare('10foo', '10foo') == 0
     assert natural_compare('10foo', '11foo') == -1
+
+
+def test_deep_copy_path_readonly_source(tmp_path):
+    """Test that deep_copy_path can copy read-only source files and overwrite them on subsequent runs."""
+    from weeutil.weeutil import deep_copy_path
+
+    src_dir = tmp_path / "src"
+    src_dir.mkdir()
+    sub_dir = src_dir / "css"
+    sub_dir.mkdir()
+    src_file = sub_dir / "style.css"
+    src_file.write_text("body { color: blue; }")
+    os.chmod(src_file, 0o444)
+
+    dest_dir = tmp_path / "dest"
+    dest_dir.mkdir()
+
+    cwd = os.getcwd()
+    try:
+        os.chdir(src_dir)
+        # Initial copy of directory with read-only file
+        n = deep_copy_path("css", str(dest_dir))
+        assert n == 1
+        copied = dest_dir / "css" / "style.css"
+        assert copied.exists()
+        assert copied.read_text() == "body { color: blue; }"
+
+        # Subsequent copy overwriting existing file
+        os.chmod(src_file, 0o644)
+        src_file.write_text("body { color: red; }")
+        os.chmod(src_file, 0o444)
+
+        n2 = deep_copy_path("css", str(dest_dir))
+        assert n2 == 1
+        assert copied.read_text() == "body { color: red; }"
+    finally:
+        os.chdir(cwd)
+
