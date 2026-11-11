@@ -1,3 +1,6 @@
+weewx (5.6.0b2-1) unstable; urgency=low
+  * More bug fixes and performance enhancements
+ -- Tom Keffer (Author of WeeWX) <tkeffer@gmail.com>  Wed, 11 Nov 2026 11:02:11 -0800
 weewx (5.6.0b1-1) unstable; urgency=low
   * Various bug fixes and performance enhancements
  -- Tom Keffer (Author of WeeWX) <tkeffer@gmail.com>  Mon, 02 Nov 2026 06:45:15 -0800
