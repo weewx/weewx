@@ -1101,9 +1101,7 @@ def test_deep_copy_path_readonly_source(tmp_path):
     dest_dir = tmp_path / "dest"
     dest_dir.mkdir()
 
-    cwd = os.getcwd()
-    try:
-        os.chdir(src_dir)
+    with set_cwd(src_dir):
         # Initial copy of directory with read-only file
         n = deep_copy_path("css", str(dest_dir))
         assert n == 1
@@ -1119,6 +1117,3 @@ def test_deep_copy_path_readonly_source(tmp_path):
         n2 = deep_copy_path("css", str(dest_dir))
         assert n2 == 1
         assert copied.read_text() == "body { color: red; }"
-    finally:
-        os.chdir(cwd)
-

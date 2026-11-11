@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -21,6 +21,7 @@ import re
 import shutil
 import time
 from collections import ChainMap
+from contextlib import contextmanager
 
 try:
     import importlib_resources
@@ -1731,6 +1732,17 @@ def max_with_none(x_seq):
         elif x is not None:
             xmax = max(x, xmax)
     return xmax
+
+
+@contextmanager
+def set_cwd(new_cwd):
+    """Set the current working directory within a context manager"""
+    old_cwd = os.getcwd()
+    try:
+        os.chdir(new_cwd)
+        yield new_cwd
+    finally:
+        os.chdir(old_cwd)
 
 
 def move_with_timestamp(path):
