@@ -548,7 +548,7 @@ Here are some examples:
 
 #### Meteorological vs astronomical seasons
 
-Tags `$season` and `$seasonsyear` take an optional parameter `seeason_type`: the
+Tags `$season` and `$seasonyear` take an optional parameter `season_type`: the
 kind of season. There are two kinds: meterological and astronomical. The
 meteorological season always starts at the 1st of March, June, September, and
 December. The astronomical season starts at equinox or solstice. Set it to
@@ -1272,15 +1272,12 @@ It is possible to iterate over the following:
     <tr>
         <td class="code first_col">.seasons(season_type=<em>str</em>)
         </td>
-        <td>Iterate by seasons. Set parameter 
-            <a href="#meteorological-vs-astronomical-seasons"><span class="code">season_type</span></a> 
-            to "<span class="code">m</span>" for meteorological seasons,
-            "<span class="code">a</span>" for astronomical seasons. Default is 
-            "<span class="code">m</span>". Not necessary together with
-            <span class="code">$seasonyear(season_type=<em>str</em></span>, 
-            as the season type specified there is also valid for the
-            iterator. If no season type is specified here and in the
-            base tag, the season type from the configuration is used.</td>
+        <td>Iterate by seasons. Parameter <a
+        href="#meteorological-vs-astronomical-seasons"><span
+        class="code">season_type</span></a> overrides values from <span
+        class="code">$seasonyear(season_type=<em>str</em>)</span> or (if not applicable),
+        the configuration file. Set to <span class="code">meteorological</span>" (the
+        default) or "<span class="code">astronomical</span>".</td>
     </tr>
     <tr>
         <td class="code first_col">.years</td>
