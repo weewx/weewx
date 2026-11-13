@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com>
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com>
 #
 #    See the file LICENSE.txt for your full rights.
 #
@@ -46,6 +46,11 @@ class StationInfo:
             self.rain_year_start = getattr(console, 'rain_year_start')
         else:
             self.rain_year_start = int(stn_dict.get('rain_year_start', 1))
+
+        if console and hasattr(console, 'season_type'):
+            self.season_type = getattr(console, 'season_type')
+        else:
+            self.season_type = stn_dict.get('season_type','meteorological')
 
         self.latitude_f      = float(stn_dict['latitude'])
         self.longitude_f     = float(stn_dict['longitude'])

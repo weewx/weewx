@@ -18,6 +18,10 @@ only once per archive interval, or come from a station clock that has been set
 back. Each archive period now has its own accumulator. 
 [PR #1209](https://github.com/weewx/weewx/pull/1209).
 
+Predefined season type in `weewx.conf`. Possibility to set the season type
+in `$alltime.seasons` by parameter.
+[PR #1206](https://github.com/weewx/weewx/pull/1206)
+
 Fixed `diff` and `tderiv` returning missing values when the first or last archive
 record has no value for the observation. They now use the first and last
 non-null values in the aggregation period.
