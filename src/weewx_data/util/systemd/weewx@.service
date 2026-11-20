@@ -1,3 +1,13 @@
+#
+# If altered, this file needs to be put into place
+# where your operating system expects it.  Typically
+# this would be under /etc/systemd/system.
+#
+# Simplest way to make it take effect is a reboot
+# or to run 'sudo systemd daemon reload' and then
+# 'sudo systemctl restart weewx'
+#
+
 # systemd service template file for running multiple instances of weewxd
 #
 # Each instance XXX must have its own config, database, and HTML_ROOT:
