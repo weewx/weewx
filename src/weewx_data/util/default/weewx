@@ -1,3 +1,12 @@
+#
+# This file is typically only necessary on init.d based operating
+# systems and is commonly installed as /etc/default/weewx
+#
+# This file is 'not' used on systemd-based operating systems
+#
+# Weewx needs to be restarted for these settings to take effect.
+#
+
 # WeeWX parameters that are used in startup and init scripts
 WEEWX_PYTHON=python3
 WEEWX_PYTHON_ARGS=
