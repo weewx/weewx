@@ -1,7 +1,7 @@
 WeeWX change history
 --------------------
 
-### 5.6.0b2 11-Nov-2026
+### 5.6.0 21-Nov-2026
 
 Improved the performance of `weewx.xtypes.ArchiveTable.get_series()` for
 aggregated series (such as hourly aggregation over a long timespan). Instead of
