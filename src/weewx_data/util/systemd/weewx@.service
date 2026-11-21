@@ -4,7 +4,7 @@
 # this would be under /etc/systemd/system.
 #
 # Simplest way to make it take effect is a reboot
-# or to run 'sudo systemd daemon reload' and then
+# or to run 'sudo systemd daemon-reload' and then
 # 'sudo systemctl restart weewx'
 #
 
