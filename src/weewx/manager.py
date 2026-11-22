@@ -388,6 +388,13 @@ class Manager:
         if not isinstance(record_obj, dict):
             accumulator = None
 
+        # An accumulator is tied to a single archive interval. So, an accumulator can accompany a
+        # single record only, not a list of records. Correspondingly, make sure there is no
+        # accumulator if `record_obj` is a list. Checking here avoids the check within the `for`
+        # loop.
+        if not isinstance(record_obj, dict):
+            accumulator = None
+
         overall_min_ts = float('inf')  # A "big number"
         overall_max_ts = 0
         total_n = 0
