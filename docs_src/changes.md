@@ -82,6 +82,12 @@ in archive records. [PR #1201](https://github.com/weewx/weewx/pull/1201).
 Fixed calculated `rainRate`. Under certain circumstances, some packets could be
 missed. [PR #1198](https://github.com/weewx/weewx/pull/1198).
 
+Added a release-independent `stable` suite to the APT repository, retaining
+`buster` for existing installations. Debian installation instructions now use a
+deb822 source file with `Architectures: all`, including on ARM64 systems.
+[Issue #1146](https://github.com/weewx/weewx/issues/1146).
+[PR #1173](https://github.com/weewx/weewx/pull/1173).
+
 Reading daily summaries now combines queries for multiple observation types,
 reducing the number of required queries. This can lead to performance
 improvements particularly with remote databases.
