@@ -388,6 +388,13 @@ class Manager:
         if not isinstance(record_obj, dict):
             accumulator = None
 
+        # An accumulator is tied to a single archive interval. So, an accumulator can accompany a
+        # single record only, not a list of records. Correspondingly, make sure there is no
+        # accumulator if `record_obj` is a list. Checking here avoids the check within the `for`
+        # loop.
+        if not isinstance(record_obj, dict):
+            accumulator = None
+
         overall_min_ts = float('inf')  # A "big number"
         overall_max_ts = 0
         total_n = 0
@@ -642,12 +649,30 @@ class Manager:
                 time_stop_ts = timestamp + max_delta
                 # Only the nearest timestamp on either side can win. Find both
                 # through the primary key instead of sorting the entire window.
-                _cursor.execute(
-                    "SELECT * FROM %(table)s WHERE dateTime IN ("
-                    "SELECT MAX(dateTime) FROM %(table)s WHERE dateTime>=? AND dateTime<=? "
-                    "UNION ALL "
-                    "SELECT MIN(dateTime) FROM %(table)s WHERE dateTime>? AND dateTime<=?) "
-                    "ORDER BY ABS(dateTime-?), dateTime LIMIT 1" % {'table': self.table_name},
+                # The two lookups are wrapped in the derived table "nearest",
+                # because MySQL and MariaDB otherwise evaluate the UNION once
+                # for every row of the archive table.
+                _cursor.execute("""
+                    SELECT *
+                    FROM %(table)s
+                    WHERE dateTime IN (
+                        SELECT nearest.dateTime
+                        FROM (
+                            SELECT MAX(dateTime) AS dateTime
+                            FROM %(table)s
+                            WHERE dateTime >= ? AND dateTime <= ?
+                    
+                            UNION ALL
+                    
+                            SELECT MIN(dateTime)
+                            FROM %(table)s
+                            WHERE dateTime > ? AND dateTime <= ?
+                        ) AS nearest
+                    )
+                    ORDER BY ABS(dateTime - ?), dateTime
+                    LIMIT 1;                
+                    """
+% {'table': self.table_name},
                     (time_start_ts, timestamp, timestamp, time_stop_ts, timestamp))
             else:
                 _cursor.execute("SELECT * FROM %s WHERE dateTime=?"

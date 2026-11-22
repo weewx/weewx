@@ -1,10 +1,9 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com> and Matthew Wall
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com> and Matthew Wall
 #
 #    See the file LICENSE.txt for your rights.
 #
 """Debug command actions"""
-import contextlib
 import os
 import platform
 import sys
@@ -19,7 +18,21 @@ import weewx
 import weewx.manager
 import weewx.units
 import weewx.xtypes
-from weeutil.weeutil import timestamp_to_string, TimeSpan, bcolors
+from weeutil.weeutil import timestamp_to_string
+
+try:
+    from contextlib import nullcontext
+except ImportError:
+    # Python 3.6 does not have nullcontext. Provide it.
+    class nullcontext:
+        def __init__(self, s=None):
+            self.s = s
+
+        def __enter__(self):
+            return self.s
+
+        def __exit__(self, *excinfo):
+            pass
 
 # keys/setting names to obfuscate in weewx.conf, key value will be obfuscated
 # if the key starts any element in the list. Can add additional string elements
@@ -50,7 +63,7 @@ def debug(config_dict, output=None):
     else:
         # Otherwise, use stdout. It's already open, so use a null context, so that
         # we don't open it again
-        sink = contextlib.nullcontext(sys.stdout)
+        sink = nullcontext(sys.stdout)
 
     with sink as fd:
         # system/OS info

@@ -852,18 +852,19 @@ class StdArchive(StdService):
         # If requested, extract any extra information we can out of the accumulator and put it in
         # the record. Not necessary in the case of software record generation because it has
         # already been done.
-        # Note: `event.accumulator` is `None` if the accumulator is missing
-        #       or does not correspond to `event.record`. That is checked in
-        #       `_catchup`.
+        # Note: `event.accumulator` is `None` if the accumulator is missing, or does not correspond
+        # to `event.record`. An event dispatched by an extension may not have the attribute at all,
+        # Check for its existence.
+        accumulator = getattr(event, 'accumulator', None)
         if self.record_augmentation \
-                and event.accumulator \
+                and accumulator \
                 and event.origin != 'software':
-            event.accumulator.augmentRecord(event.record)
+            accumulator.augmentRecord(event.record)
 
         # Save the record to the database
         dbmanager = self.engine.db_binder.get_manager(self.data_binding)
         dbmanager.addRecord(event.record,
-                            accumulator=event.accumulator,
+                            accumulator=accumulator,
                             log_success=self.log_success,
                             log_failure=self.log_failure)
 

@@ -244,11 +244,11 @@ def add_subparser(subparsers):
                                      metavar="YYYY-mm-dd",
                                      help="Calculate for this date only.")
     calc_missing_parser.add_argument("--from",
-                                     metavar="YYYY-mm-ddTHH:MM:SS",
+                                     metavar="YYYY-mm-dd[THH:MM]",
                                      dest='from_date',
                                      help="Calculate starting with this datetime.")
     calc_missing_parser.add_argument("--to",
-                                     metavar="YYYY-mm-ddTHH:MM:SS",
+                                     metavar="YYYY-mm-dd[THH:MM]",
                                      dest='to_date',
                                      help="Calculate ending with this datetime.")
     calc_missing_parser.add_argument("--tranche",

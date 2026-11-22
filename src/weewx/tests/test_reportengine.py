@@ -5,6 +5,7 @@
 #
 """Test algorithms in the Report Engine"""
 
+import locale
 import logging
 from pathlib import Path
 
@@ -14,7 +15,7 @@ import weeutil.config
 import weeutil.logger
 import weeutil.weeutil
 import weewx
-from weewx.reportengine import build_skin_dict
+from weewx.reportengine import build_skin_dict, set_locale
 
 log = logging.getLogger(__name__)
 weewx.debug = 1
@@ -196,3 +197,12 @@ def test_global_override_log_specs(config_dict):
     config_dict['log_success'] = False
     skin_dict = build_skin_dict(config_dict, 'SeasonsReport')
     assert not skin_dict['log_success']
+
+
+def test_set_locale_falls_back_to_default(monkeypatch):
+    monkeypatch.setenv('LC_ALL', 'C')
+    original_locale = locale.setlocale(locale.LC_ALL)
+    with set_locale('xx_XX.UTF-8') as current_locale:
+        assert current_locale == 'C'
+        assert locale.setlocale(locale.LC_ALL) == 'C'
+    assert locale.setlocale(locale.LC_ALL) == original_locale

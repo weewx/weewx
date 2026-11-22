@@ -467,10 +467,10 @@ There are several _aggregation periods_ that can be used:
         <td>The total rainfall for this rain year. </td>
     </tr>
     <tr>
-        <td class="first_col code">$seasonsyear</td>
+        <td class="first_col code">$seasonyear</td>
         <td>From the beginning of the last spring to the beginning of the
             next spring, observing hemisphere</td>
-        <td class="code">$seasonsyear.outTemp.min</td>
+        <td class="code">$seasonyear.outTemp.min</td>
         <td>The minimum temperature during that time</td>
     </tr>
     <tr>
@@ -539,20 +539,20 @@ Here are some examples:
         <td>The maximum temperature last year.</td>
     </tr>
     <tr>
-        <td class="first_col code">$seasonsyear(years_ago=<em>y</em>)</td>
-        <td class="code">$seasonsyear(years_ago=1).outTemp.max</td>
+        <td class="first_col code">$seasonyear(years_ago=<em>y</em>)</td>
+        <td class="code">$seasonyear(years_ago=1).outTemp.max</td>
         <td>The maximum temperature of the previous seasons year</td>
     </tr>
     </tbody>
 </table>
 
-There are two kinds of seasons: meterological and astronomical. The
-meteorological season always starts at the 1st of March, June, September,
-and December. The astronomical season starts at equinox or solstice.
-There is an optional parameter `season_type` for `$season` and `$seasonsyear`
-to specify, which one of them is to be used. Set it to `meteorological`
-(the default if not provided) or `astronomical`. Both words can be
-abbreviated.
+#### Meteorological vs astronomical seasons
+
+Tags `$season` and `$seasonyear` take an optional parameter `season_type`: the
+kind of season. There are two kinds: meterological and astronomical. The
+meteorological season always starts at the 1st of March, June, September, and
+December. The astronomical season starts at equinox or solstice. Set it to
+`meteorological` (the default) or `astronomical`. Both words can be abbreviated.
 
 ### Unit conversion options
 
@@ -1270,9 +1270,14 @@ It is possible to iterate over the following:
         <td>Iterate by months</td>
     </tr>
     <tr>
-        <td class="code first_col">.seasons</td>
-        <td>Iterate by seasons. Depending on the parameter `season_type` of
-        `$seasonsyear`, meteorological or astronomical seasons are returned.</td>
+        <td class="code first_col">.seasons(season_type=<em>str</em>)
+        </td>
+        <td>Iterate by seasons. Parameter <a
+        href="#meteorological-vs-astronomical-seasons"><span
+        class="code">season_type</span></a> overrides values from <span
+        class="code">$seasonyear(season_type=<em>str</em>)</span> or (if not applicable),
+        the configuration file. Set to <span class="code">meteorological</span>" (the
+        default) or "<span class="code">astronomical</span>".</td>
     </tr>
     <tr>
         <td class="code first_col">.years</td>

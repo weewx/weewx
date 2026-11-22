@@ -1,7 +1,6 @@
 #errorCatcher Echo
 #set $YM="%Y %m"
 #set $D="  %d"
-#set $M=" %b"
 #set $NODAY=" N/A"
 #set $Temp="%6.1f"
 #set $Wind="%6.1f"
@@ -39,6 +38,11 @@ $("%6d" % $T[0])#slurp
 #def ShowFloat($R)
 $("%6.2f" % $R[0])#slurp
 #end def
+## A month abbreviation goes in the four wide DAY column. Pad it, but do not cut it, because some
+## locales can only tell the months apart by the end of it, such as "Thg 1" and "Thg 10".
+#def ShowMonth($T)
+$("%4s" % $T.format("%b"," N/A"))#slurp
+#end def
                      CLIMATOLOGICAL SUMMARY for year $year_name
 
 
@@ -60,7 +64,7 @@ $month.dateTime.format($YM)
 #end if
 #end for
 ------------------------------------------------------------------------------------------------
-        $year.outTemp.meanmax.format($Temp,$NONE,add_label=False) $year.outTemp.meanmin.format($Temp,$NONE,add_label=False) $year.outTemp.avg.format($Temp,$NONE,add_label=False) $year.heatdeg.sum.format($Temp,$NONE,add_label=False) $year.cooldeg.sum.format($Temp,$NONE,add_label=False)  $year.outTemp.max.format($Temp,$NONE,add_label=False) $year.outTemp.maxtime.format($M,$NODAY)  $year.outTemp.min.format($Temp,$NONE,add_label=False) $year.outTemp.mintime.format($M,$NODAY) $year.outTemp.max_ge($Hot).format($Count,$NONE,add_label=False) $year.outTemp.max_le($Cold).format($Count,$NONE,add_label=False) $year.outTemp.min_le($Cold).format($Count,$NONE,add_label=False) $year.outTemp.min_le($VeryCold).format($Count,$NONE,add_label=False)
+        $year.outTemp.meanmax.format($Temp,$NONE,add_label=False) $year.outTemp.meanmin.format($Temp,$NONE,add_label=False) $year.outTemp.avg.format($Temp,$NONE,add_label=False) $year.heatdeg.sum.format($Temp,$NONE,add_label=False) $year.cooldeg.sum.format($Temp,$NONE,add_label=False)  $year.outTemp.max.format($Temp,$NONE,add_label=False) $ShowMonth($year.outTemp.maxtime)  $year.outTemp.min.format($Temp,$NONE,add_label=False) $ShowMonth($year.outTemp.mintime) $year.outTemp.max_ge($Hot).format($Count,$NONE,add_label=False) $year.outTemp.max_le($Cold).format($Count,$NONE,add_label=False) $year.outTemp.min_le($Cold).format($Count,$NONE,add_label=False) $year.outTemp.min_le($VeryCold).format($Count,$NONE,add_label=False)
 
 
                   PRECIPITATION ($unit.label.rain.strip())
@@ -77,7 +81,7 @@ $month.dateTime.format($YM)
 #end if
 #end for
 ------------------------------------------------
-        $year.rain.sum.format($Rain,$NONE,add_label=False) $year.rain.maxsum.format($Rain,$NONE,add_label=False)  $year.rain.maxsumtime.format($M,$NODAY) $year.rain.sum_ge($Trace).format($Count,$NONE,add_label=False) $year.rain.sum_ge($SomeRain).format($Count,$NONE,add_label=False) $year.rain.sum_ge($Soak).format($Count,$NONE,add_label=False)
+        $year.rain.sum.format($Rain,$NONE,add_label=False) $year.rain.maxsum.format($Rain,$NONE,add_label=False)  $ShowMonth($year.rain.maxsumtime) $year.rain.sum_ge($Trace).format($Count,$NONE,add_label=False) $year.rain.sum_ge($SomeRain).format($Count,$NONE,add_label=False) $year.rain.sum_ge($Soak).format($Count,$NONE,add_label=False)
 
 
            WIND SPEED ($unit.label.windSpeed.strip())
@@ -93,4 +97,4 @@ $month.dateTime.format($YM)
 #end if
 #end for
 -----------------------------------
-        $year.wind.avg.format($Wind,$NONE,add_label=False) $year.wind.max.format($Wind,$NONE,add_label=False)   $year.wind.maxtime.format($M,$NODAY) $year.wind.vecdir.format($Dir,$NONE,add_label=False)
+        $year.wind.avg.format($Wind,$NONE,add_label=False) $year.wind.max.format($Wind,$NONE,add_label=False)   $ShowMonth($year.wind.maxtime) $year.wind.vecdir.format($Dir,$NONE,add_label=False)
