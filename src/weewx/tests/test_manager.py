@@ -194,8 +194,8 @@ class TestRetry:
 
 
 class TestDaySummaryReads:
-    @staticmethod
     @pytest.fixture
+    @staticmethod
     def manager(database):
         with weewx.manager.DaySummaryManager.open_with_create(
                 database, table_name='summary_read_test',
