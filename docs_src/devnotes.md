@@ -75,7 +75,7 @@ To meet these goals, the following strategies were used:
 While WeeWX is nowhere near as fast at generating images and HTML as its
 predecessor, *wview* (this is partially because WeeWX uses
 fancier fonts and a much more powerful templating engine), it is fast
-enough for all platforms but the slowest. I run it regularly on a 500
+enough for all platforms but the slowest. I run it regularly on a 32-bit 500
 MHz machine where generating the 9 images used in the *Current
 Conditions* page takes just under 2 seconds (compared with 0.4 seconds
 for wview).

@@ -219,7 +219,7 @@ class Almanac:
                 present time will be used.
             lat (float): Observer's latitude in degrees.
             lon (float): Observer's longitude in degrees.
-            altitude: (float|None) Observer's elevation in **meters**. [Optional. Default
+            altitude (float|None): Observer's elevation in **meters**. [Optional. Default
                 is 0 (sea level)]
             temperature (float|None): Observer's temperature in **degrees Celsius**.
                 [Optional. Default is 15.0]
@@ -269,6 +269,9 @@ class Almanac:
             horizon: The horizon angle in degrees
             temperature: The observer's temperature (used to calculate refraction)
             pressure: The observer's pressure (used to calculate refraction) 
+
+        Returns:
+            Almanac: A copy of this Almanac instance, with the named arguments overridden.
         """
         # Make a copy of myself.       
         almanac = copy.copy(self)
@@ -282,7 +285,15 @@ class Almanac:
         return almanac
 
     def separation(self, body1, body2):
-        """ calculate angular distance of 2 heavenly bodies """
+        """ calculate angular distance of 2 heavenly bodies
+
+        Args:
+            body1 (str): The name of the first heavenly body (e.g., 'sun').
+            body2 (str): The name of the second heavenly body (e.g., 'moon').
+
+        Returns:
+            ValueHelper: The angular separation between the two bodies.
+        """
         for almanac in almanacs:
             try:
                 return almanac.separation(body1, body2)
@@ -361,7 +372,17 @@ class PyEphemAlmanacType(AlmanacType):
         return True
 
     def get_almanac_data(self, almanac_obj, attr):
-        """ calculate attribute """
+        """ calculate attribute
+
+            Args:
+                almanac_obj (Almanac): instance of class Almanac
+                attr (str): attribute to calculate. Typically something like 'sunrise',
+                or 'moon_fullness'
+
+            Returns:
+                float|int|str|weewx.units.ValueHelper|AlmanacBinder: The requested almanac
+                    data, depending on the attribute.
+        """
         time_djd = timestamp_to_djd(almanac_obj.time_ts)
         if attr=='sunrise':
             return almanac_obj.sun.rise
@@ -499,7 +520,11 @@ class AlmanacBinder:
 
     @property
     def visible(self):
-        """Calculate how long the body has been visible today"""
+        """Calculate how long the body has been visible today
+
+        Returns:
+            weewx.units.ValueHelper: The length of time the body has been visible today.
+        """
         ephem_body = _get_ephem_body(self.heavenly_body)
         observer = _get_observer(self.almanac, self.sod_djd)
         try:
@@ -518,7 +543,14 @@ class AlmanacBinder:
                                        converter=self.almanac.converter)
 
     def visible_change(self, days_ago=1):
-        """Change in visibility of the heavenly body compared to 'days_ago'."""
+        """Change in visibility of the heavenly body compared to 'days_ago'.
+
+        Args:
+            days_ago (int): The number of days ago to compare to. [Optional. Default is 1]
+
+        Returns:
+            weewx.units.ValueHelper: The change in visible time.
+        """
         # Visibility for today, as a ValueTuple
         today_visible = self.visible
         # The time to compare to
@@ -541,7 +573,14 @@ class AlmanacBinder:
         raise AttributeError(self.heavenly_body)
     
     def __getattr__(self, attr):
-        """Get the requested observation, such as when the body will rise."""
+        """Get the requested observation, such as when the body will rise.
+
+        Args:
+            attr (str): The name of the observation to be retrieved.
+
+        Returns:
+            weewx.units.ValueHelper|float: The requested observation value.
+        """
 
         # Don't try any attributes that start with a double underscore, or any of these
         # special names: they are used by the Python language:

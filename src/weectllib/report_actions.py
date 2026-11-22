@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com> and Matthew Wall
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com> and Matthew Wall
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -24,7 +24,7 @@ def list_reports(config_dict):
 
     # Print a header
     print(
-        f"\n{bcolors.BOLD}{'Report' : >20}  {'Skin':<12} {'Enabled':^8} {'Units':^8} {'Language':^8}{bcolors.ENDC}")
+        f"\n{bcolors.BOLD}{'Report' : >22}  {'Skin':<16} {'Enabled':^8} {'Units':^8} {'Language':^8}{bcolors.ENDC}")
 
     # Then go through all the reports:
     for report in config_dict['StdReport'].sections:
@@ -34,7 +34,7 @@ def list_reports(config_dict):
         # Fetch and build the skin_dict:
         try:
             skin_dict = weewx.reportengine.build_skin_dict(config_dict, report)
-        except SyntaxError as e:
+        except SyntaxError:
             unit_system = "N/A"
             lang = "N/A"
             skin = "N/A"
@@ -43,7 +43,7 @@ def list_reports(config_dict):
             lang = skin_dict.get("lang", "N/A")
             skin = skin_dict.get('skin', "Unknown")
 
-        print(f"{report : >20}  {skin:<12} {'Y' if enabled else 'N':^8} "
+        print(f"{report : >22}  {skin:<16} {'Y' if enabled else 'N':^8} "
               f"{unit_system:^8} {lang:^8}")
 
 

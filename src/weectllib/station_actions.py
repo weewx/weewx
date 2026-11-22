@@ -50,7 +50,45 @@ def station_create(weewx_root=None,
                    no_prompt=False,
                    dry_run=False):
     """Create a brand-new station data area at weewx_root, then equip it with a
-    configuration file."""
+    configuration file.
+
+    Args:
+        weewx_root (str|None): Path to the station data area to be created. Default is
+            None, which uses a default location.
+        rel_config_path (str|None): Path to the configuration file, relative to
+            weewx_root. Default is None, which uses "weewx.conf".
+        driver (str|None): The driver to use. Default is None, which uses the simulator.
+        location (str|None): A description of the station. Default is None.
+        altitude (str|None): The station altitude, with units, separated by a comma.
+            Default is None.
+        latitude (str|None): The station latitude, in decimal degrees. Default is None.
+        longitude (str|None): The station longitude, in decimal degrees. Default is None.
+        register (str|None): 'y' to register this station in the weewx registry, 'n'
+            otherwise. Default is None.
+        station_url (str|None): Unique URL to be used if registering the station.
+            Default is None.
+        unit_system (str|None): The unit system to use ('us', 'metricwx', or 'metric').
+            Default is None.
+        skin_root (str|None): Where to put the skins, relative to WEEWX_ROOT. Default
+            is None.
+        sqlite_root (str|None): Where to put the SQLite database, relative to
+            WEEWX_ROOT. Default is None.
+        html_root (str|None): Where to put the generated HTML and images, relative to
+            WEEWX_ROOT. Default is None.
+        examples_root (str|None): Where to put the examples, relative to WEEWX_ROOT.
+            Default is None.
+        user_root (str|None): Where to put the user extensions, relative to WEEWX_ROOT.
+            Default is None.
+        dist_config_path (str|None): Use this configuration file as the new
+            configuration file, instead of the one from package resources. Default is
+            None.
+        no_prompt (bool): True to not prompt. Use default values. Default is False.
+        dry_run (bool): True to print what would happen, but not actually do it.
+            Default is False.
+
+    Returns:
+        configobj.ConfigObj: The newly created configuration dictionary.
+    """
 
     if dry_run:
         print("This is a dry run. Nothing will actually be done.")
@@ -155,7 +193,42 @@ def station_reconfigure(config_dict,
                         no_prompt=False,
                         no_backup=False,
                         dry_run=False):
-    """Reconfigure an existing station"""
+    """Reconfigure an existing station
+
+    Args:
+        config_dict (configobj.ConfigObj): The configuration dictionary.
+        driver (str|None): The new driver to use. Default is None, which uses the old
+            driver.
+        location (str|None): A new description for the station. Default is None, which
+            uses the old description.
+        altitude (str|None): The new station altitude, with units, separated by a
+            comma. Default is None, which uses the old altitude.
+        latitude (str|None): The new station latitude, in decimal degrees. Default is
+            None, which uses the old latitude.
+        longitude (str|None): The new station longitude, in decimal degrees. Default is
+            None, which uses the old longitude.
+        register (str|None): 'y' to register this station in the weewx registry, 'n'
+            otherwise. Default is None, which uses the old value.
+        station_url (str|None): A new unique URL to be used if registering the station.
+            Default is None, which uses the old URL.
+        unit_system (str|None): The new unit system to use ('us', 'metricwx', or
+            'metric'). Default is None, which uses the old unit system.
+        weewx_root (str|None): A new path to the WeeWX station data area. Default is
+            None, which uses the old path.
+        skin_root (str|None): New location where to find the skins, relative to
+            WEEWX_ROOT. Default is None, which uses the old location.
+        sqlite_root (str|None): New location where to find the SQLite database,
+            relative to WEEWX_ROOT. Default is None, which uses the old location.
+        html_root (str|None): New location where to put the generated HTML and images,
+            relative to WEEWX_ROOT. Default is None, which uses the old location.
+        user_root (str|None): New location where to find the user extensions, relative
+            to WEEWX_ROOT. Default is None, which uses the old location.
+        no_prompt (bool): True to not prompt. Use default values. Default is False.
+        no_backup (bool): True to not backup the old configuration file. Default is
+            False.
+        dry_run (bool): True to print what would happen, but not actually do it.
+            Default is False.
+    """
 
     if weewx_root:
         config_dict['WEEWX_ROOT_CONFIG'] = weewx_root
@@ -198,7 +271,33 @@ def config_config(config_dict,
                   html_root=None,
                   user_root=None,
                   no_prompt=False):
-    """Set the various options in a configuration file"""
+    """Set the various options in a configuration file
+
+    Args:
+        config_dict (configobj.ConfigObj): The configuration dictionary.
+        config_path (str): Path to the configuration file.
+        driver (str|None): The driver to use. Default is None.
+        location (str|None): A description of the station. Default is None.
+        altitude (str|None): The station altitude, with units. Default is None.
+        latitude (str|None): The station latitude, in decimal degrees. Default is None.
+        longitude (str|None): The station longitude, in decimal degrees. Default is
+            None.
+        register (str|None): 'y' to register this station in the weewx registry, 'n'
+            otherwise. Default is None.
+        station_url (str|None): Unique URL to be used if registering the station.
+            Default is None.
+        unit_system (str|None): The unit system to use ('us', 'metricwx', or 'metric').
+            Default is None.
+        skin_root (str|None): Where to put the skins, relative to WEEWX_ROOT. Default
+            is None.
+        sqlite_root (str|None): Where to put the SQLite database, relative to
+            WEEWX_ROOT. Default is None.
+        html_root (str|None): Where to put the generated HTML and images, relative to
+            WEEWX_ROOT. Default is None.
+        user_root (str|None): Where to put the user extensions, relative to WEEWX_ROOT.
+            Default is None.
+        no_prompt (bool): True to not prompt. Use default values. Default is False.
+    """
     print(f"Processing configuration file {config_path}")
     config_location(config_dict, location=location, no_prompt=no_prompt)
     config_altitude(config_dict, altitude=altitude, no_prompt=no_prompt)
@@ -210,7 +309,13 @@ def config_config(config_dict,
 
 
 def config_location(config_dict, location=None, no_prompt=False):
-    """Set the location option. """
+    """Set the location option.
+
+    Args:
+        config_dict (configobj.ConfigObj): The configuration dictionary.
+        location (str|None): A description of the station. Default is None.
+        no_prompt (bool): True to not prompt. Use default values. Default is False.
+    """
     if 'Station' not in config_dict:
         return
 
@@ -346,7 +451,14 @@ def config_latlon(config_dict, latitude=None, longitude=None, no_prompt=False):
 
 
 def config_units(config_dict, unit_system=None, no_prompt=False):
-    """Determine the unit system to use"""
+    """Determine the unit system to use
+
+    Args:
+        config_dict (configobj.ConfigObj): The configuration dictionary.
+        unit_system (str|None): The unit system to use ('us', 'metricwx', or 'metric').
+            Default is None.
+        no_prompt (bool): True to not prompt. Use default values. Default is False.
+    """
 
     default_unit_system = None
     try:
@@ -473,7 +585,16 @@ def config_driver(config_dict, driver=None, no_prompt=False):
 
 
 def config_registry(config_dict, register=None, station_url=None, no_prompt=False):
-    """Configure whether to include the station in the weewx.com registry."""
+    """Configure whether to include the station in the weewx.com registry.
+
+    Args:
+        config_dict (configobj.ConfigObj): The configuration dictionary.
+        register (str|None): 'y' to register this station in the weewx registry, 'n'
+            otherwise. Default is None.
+        station_url (str|None): Unique URL to be used if registering the station.
+            Default is None.
+        no_prompt (bool): True to not prompt. Use default values. Default is False.
+    """
 
     try:
         config_dict['Station']
@@ -532,7 +653,19 @@ def config_registry(config_dict, register=None, station_url=None, no_prompt=Fals
 
 
 def config_roots(config_dict, skin_root=None, html_root=None, sqlite_root=None, user_root=None):
-    """Set the location of various root directories in the configuration dictionary."""
+    """Set the location of various root directories in the configuration dictionary.
+
+    Args:
+        config_dict (configobj.ConfigObj): The configuration dictionary.
+        skin_root (str|None): Where to put the skins, relative to WEEWX_ROOT. Default
+            is None.
+        html_root (str|None): Where to put the generated HTML and images, relative to
+            WEEWX_ROOT. Default is None.
+        sqlite_root (str|None): Where to put the SQLite database, relative to
+            WEEWX_ROOT. Default is None.
+        user_root (str|None): Where to put the user extensions, relative to WEEWX_ROOT.
+            Default is None.
+    """
 
     if user_root:
         config_dict['USER_ROOT'] = user_root
@@ -559,7 +692,13 @@ def config_roots(config_dict, skin_root=None, html_root=None, sqlite_root=None, 
 
 
 def copy_skins(config_dict, dry_run=False):
-    """Copy any missing skins from the resource package to the skins directory"""
+    """Copy any missing skins from the resource package to the skins directory
+
+    Args:
+        config_dict (dict): A configuration dictionary.
+        dry_run (bool): True to not actually do anything. Just show what would happen.
+            Default is False.
+    """
     if 'StdReport' not in config_dict:
         return
 
@@ -625,7 +764,16 @@ def copy_examples(config_dict, examples_root=None, dry_run=False, force=False):
 
 
 def copy_user(config_dict, user_root=None, dry_run=False):
-    """Copy the user directory to USER_ROOT"""
+    """Copy the user directory to USER_ROOT
+
+    Args:
+        config_dict (dict): A configuration dictionary.
+        user_root (str|None): Where to put the user extensions, relative to
+            WEEWX_ROOT. Default is None, which uses USER_ROOT from config_dict, or
+            'bin/user'.
+        dry_run (bool): True to not actually do anything. Just show what would happen.
+            Default is False.
+    """
 
     # If the user didn't specify a value, use a default
     if not user_root:
@@ -760,7 +908,26 @@ def copy_util(config_path, config_dict, dry_run=False, force=False):
 
 def station_upgrade(config_dict, dist_config_path=None, examples_root=None,
                     skin_root=None, what=None, no_confirm=False, no_backup=False, dry_run=False):
-    """Upgrade the user data for the configuration file found at config_path"""
+    """Upgrade the user data for the configuration file found at config_path
+
+    Args:
+        config_dict (dict): A configuration dictionary.
+        dist_config_path (str|None): Use this configuration file as the new
+            configuration file, instead of the one from package resources. Default is
+            None.
+        examples_root (str|None): Where to put the examples, relative to WEEWX_ROOT.
+            Default is None.
+        skin_root (str|None): Where to put the skins, relative to WEEWX_ROOT. Default
+            is None.
+        what (tuple[str]|None): What to upgrade. Some combination of 'config',
+            'examples', 'skins', and 'util'. Default is None, which upgrades
+            'config', 'examples', and 'util'.
+        no_confirm (bool): True to not ask for confirmation. Default is False.
+        no_backup (bool): True to not backup the old configuration file. Default is
+            False.
+        dry_run (bool): True to print what would happen, but not actually do it.
+            Default is False.
+    """
 
     if what is None:
         what = ('config', 'examples', 'util')
@@ -820,7 +987,15 @@ def station_upgrade(config_dict, dist_config_path=None, examples_root=None,
 
 
 def upgrade_skins(config_dict, skin_root=None, dry_run=False):
-    """Make a backup of the old skins, then copy over new skins."""
+    """Make a backup of the old skins, then copy over new skins.
+
+    Args:
+        config_dict (dict): A configuration dictionary.
+        skin_root (str|None): Where to find the skins, relative to WEEWX_ROOT. Default
+            is None, which uses the value of SKIN_ROOT from config_dict, or 'skins'.
+        dry_run (bool): True to not actually do anything. Just show what would happen.
+            Default is False.
+    """
 
     if not skin_root:
         try:

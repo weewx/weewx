@@ -107,10 +107,10 @@ The code lives in a git repository:
 
 [https://github.com/weewx/weewx](https://github.com/weewx/weewx)
 
-See [Notes for WeeWX developers](https://weewx.com/docs/latest/devnotes/) to 
-learn about how to contribute to WeeWX. See the file 
-[PACKAGING.txt](PACKAGING.txt) for details about the process of creating a 
-release.
+If you wish to contribute to the project, please read the following:
+* [Notes for WeeWX developers](https://weewx.com/docs/latest/devnotes/) - detailed programming patterns and examples
+* [CONTRIBUTING.txt](CONTRIBUTING.txt) - basic information about the tools and processes for contributing code and documentation
+* [PACKAGING.txt](PACKAGING.txt) - details about the process of creating packages and releases
 
 ## Documentation and Support
 

@@ -7,19 +7,20 @@
 """Convenience functions for ConfigObj"""
 
 import configobj
-from configobj import Section
 
 
 def search_up(d, k, *default):
     """Search a ConfigObj dictionary for a key. If it's not found, try my parent, and so on
     to the root.
 
-    d: An instance of configobj.Section
+    Args:
+        d (configobj.Section): An instance of configobj.Section
+        k (str): A key to be searched for. If not found in d, it's parent will be searched
+        *default (Any): If the key is not found, then the default is returned. If no default
+            is given, then an AttributeError exception is raised.
 
-    k: A key to be searched for. If not found in d, it's parent will be searched
-
-    default: If the key is not found, then the default is returned. If no default is given,
-    then an AttributeError exception is raised.
+    Returns:
+        Any: The value of the key, or the default if the key was not found.
 
     Example:
 
@@ -59,10 +60,13 @@ def accumulateLeaves(d, max_level=99):
     This routine is useful for specifying defaults near the root node,
     then having them overridden in the leaf nodes of a ConfigObj.
 
-    d: instance of a configobj.Section (i.e., a section of a ConfigObj)
+    Args:
+        d (configobj.Section): instance of a configobj.Section (i.e., a section of a ConfigObj)
+        max_level (int): The maximum number of levels to search upwards. Default is 99.
 
-    Returns: a dictionary with all the accumulated scalars, up to max_level deep,
-    going upwards
+    Returns:
+        configobj.ConfigObj: a dictionary with all the accumulated scalars, up to max_level deep,
+            going upwards
 
     Example: Supply a default color=blue, size=10. The section "dayimage" overrides the former:
 
@@ -105,6 +109,10 @@ def patch_config(self_config, indict):
     """The ConfigObj merge does not transfer over parentage, nor comments. This function
     fixes these limitations.
 
+    Args:
+        self_config (configobj.ConfigObj): The ConfigObj that indict was merged into.
+        indict (configobj.ConfigObj): The ConfigObj that was merged into self_config.
+
     Example:
     >>> import sys
     >>> from io import StringIO
@@ -127,8 +135,8 @@ def patch_config(self_config, indict):
     ['[Section1]', 'option1 = bar', '# This is a Section2 comment', '[[Section2]]', 'option2 = foo']
     """
     for key in self_config:
-        if isinstance(self_config[key], Section) \
-                and key in indict and isinstance(indict[key], Section):
+        if isinstance(self_config[key], configobj.Section) \
+                and key in indict and isinstance(indict[key], configobj.Section):
             self_config[key].parent = self_config
             self_config[key].main = self_config.main
             self_config.comments[key] = indict.comments[key]
@@ -140,6 +148,10 @@ def comment_scalar(a_dict, key):
     """Comment out a scalar in a ConfigObj object.
 
     Convert an entry into a comment, sticking it at the beginning of the section.
+
+    Args:
+        a_dict (configobj.Section): The ConfigObj section holding the scalar.
+        key (str): The name of the scalar to be commented out.
 
     Returns: 0 if nothing was done.
              1 if the ConfigObj object was changed.
@@ -173,6 +185,10 @@ def comment_scalar(a_dict, key):
 def delete_scalar(a_dict, key):
     """Delete a scalar in a ConfigObj object.
 
+    Args:
+        a_dict (configobj.Section): The ConfigObj section holding the scalar.
+        key (str): The name of the scalar to be deleted.
+
     Returns: 0 if nothing was done.
              1 if the scalar was deleted
     """
@@ -186,7 +202,12 @@ def delete_scalar(a_dict, key):
 
 def conditional_merge(a_dict, b_dict):
     """Merge fields from b_dict into a_dict, but only if they do not yet
-    exist in a_dict"""
+    exist in a_dict
+
+    Args:
+        a_dict (configobj.Section): The ConfigObj section into which b_dict is merged.
+        b_dict (configobj.Section): The ConfigObj section to be merged into a_dict.
+    """
     # Go through each key in b_dict
     for k in b_dict:
         if isinstance(b_dict[k], dict):
@@ -217,7 +238,21 @@ def config_from_str(input_str):
 
 
 def deep_copy(old_dict, parent=None, depth=None, main=None):
-    """Return a deep copy of a ConfigObj"""
+    """Return a deep copy of a ConfigObj
+
+    Args:
+        old_dict (configobj.ConfigObj|configobj.Section): The ConfigObj, or section thereof,
+            to be copied.
+        parent (configobj.Section|None): The parent of the new copy. If None, the parent of
+            old_dict will be used. [Optional. Used internally during recursion.]
+        depth (int|None): The depth of the new copy. If None, the depth of old_dict will be
+            used. [Optional. Used internally during recursion.]
+        main (configobj.ConfigObj|None): The top-level ConfigObj of the new copy. If None,
+            the main of old_dict will be used. [Optional. Used internally during recursion.]
+
+    Returns:
+        configobj.ConfigObj|configobj.Section: A deep copy of old_dict.
+    """
 
     # Is this a copy starting from the top level?
     if isinstance(old_dict, configobj.ConfigObj):

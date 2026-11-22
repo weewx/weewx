@@ -79,8 +79,24 @@ def initialize(config_dict):
 
     return config_dict['WEEWX_ROOT'], root_dict['USER_DIR']
 
-def start_app(log_label, log_name, config_option, config_arg):
-    """Read the config file and log various bits of information"""
+def start_app(log_label,
+              log_name,
+              config_option,
+              config_arg):
+    """Read the config file and log various bits of information
+
+    Args:
+        log_label (str): A label to be used when announcing the startup, and when setting up
+            the logger.
+        log_name (str): The name to be used for the logger.
+        config_option (str|None): A path to the configuration file, typically from a --config
+            option. None if no option was specified.
+        config_arg (str|None): A possible command-line argument specifying the configuration file.
+
+    Returns:
+        tuple[str, configobj.ConfigObj, logging.Logger]: The path to the configuration file,
+            the configuration dictionary, and the logger.
+    """
 
     try:
         config_path, config_dict = weecfg.read_config(config_option, [config_arg])

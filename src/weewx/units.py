@@ -600,7 +600,7 @@ class Formatter:
                 label (e.g., " inHg")
             time_format_dict (dict): Key is a context (e.g., 'week'), value is a
                 strftime format (e.g., "%d-%b-%Y %H:%M").
-            ordinate_names(list): A list containing ordinal compass names (e.g., ['N', 'NNE', etc.]
+            ordinate_names(list[str]): A list containing ordinal compass names (e.g., ['N', 'NNE', etc.]
             deltatime_format_dict (dict): Key is a context (e.g., 'week'), value is a deltatime
                 format string (e.g., "%(minute)d%(minute_label)s, %(second)d%(second_label)s")
         """
@@ -613,7 +613,14 @@ class Formatter:
 
     @staticmethod
     def fromSkinDict(skin_dict):
-        """Factory static method to initialize from a skin dictionary."""
+        """Factory static method to initialize from a skin dictionary.
+
+        Args:
+            skin_dict (dict): The skin dictionary.
+
+        Returns:
+            Formatter: An instance of Formatter, initialized using the skin dictionary.
+        """
         try:
             unit_format_dict = skin_dict['Units']['StringFormats']
         except KeyError:
@@ -633,7 +640,7 @@ class Formatter:
             ordinate_names = weeutil.weeutil.option_as_list(
                 skin_dict['Units']['Ordinates']['directions'])
         except KeyError:
-            ordinate_names = {}
+            ordinate_names = []
 
         try:
             deltatime_format_dict = skin_dict['Units']['DeltaTimeFormats']
@@ -647,7 +654,14 @@ class Formatter:
                          deltatime_format_dict)
 
     def get_format_string(self, unit):
-        """Return a suitable format string."""
+        """Return a suitable format string.
+
+        Args:
+            unit (str): The unit type (e.g., 'degree_F') for which a format string is required.
+
+        Returns:
+            str: The format string for the given unit.
+        """
 
         # First, try the (misnamed) custom unit format dictionary
         if unit in default_unit_format_dict:
@@ -668,6 +682,14 @@ class Formatter:
         (e.g., "foot"), the second a plural version ("feet"). If the parameter
         plural=False, then the singular version is returned. Otherwise, the
         plural version.
+
+        Args:
+            unit (str): The unit type (e.g., 'degree_F') for which a label is required.
+            plural (bool): True to return the plural version of the label, False for the
+                singular version.
+
+        Returns:
+            str: The label for the given unit.
         """
 
         # First, try the (misnamed) custom dictionary
@@ -727,7 +749,20 @@ class Formatter:
                    useThisFormat=None, None_string=None,
                    localize=True):
         """Similar to the function toString(), except that the value in val_t must be a
-        simple scalar."""
+        simple scalar.
+
+        Args:
+            val_t (tuple[float|None,str,str]|ValueTuple): A ValueTuple holding the scalar value to
+                be formatted.
+            context (str): A time context (eg, 'day').
+            addLabel (bool): True to add a unit label (eg, 'mbar'), False to not.
+            useThisFormat (str|None): An optional string or strftime format to be used.
+            None_string (str|None): A string to be used if the value val is None.
+            localize (bool): True to localize the results. False otherwise.
+
+        Returns:
+            str: The localized, formatted, and labeled value.
+        """
 
         if type(val_t) is UnknownObsType:
             return str(val_t)
@@ -819,7 +854,9 @@ class Formatter:
             context (str): The time context. Something like 'day', 'current', etc.
             format_string (str|None): An optional custom format string. Otherwise, an appropriate
                 string will be looked up in deltatime_format_dict.
-        Returns
+            None_string (str|None): An optional string to use if the value is None. Otherwise, an
+                appropriate string will be looked up in deltatime_format_dict.
+        Returns:
             str: The results formatted in a "long-form" time. This is something like
                 "2 hours, 14 minutes, 21 seconds".
         """
@@ -836,6 +873,8 @@ class Formatter:
         Args:
             val_t (ValueTuple): A ValueTuple containing the elapsed time.
             label_format (str): The formatting string.
+            None_string (str|None): An optional string to use if the value is None. Otherwise, an
+                appropriate string will be looked up in deltatime_format_dict.
 
         Returns:
             str: The formatted time as a string.
@@ -875,7 +914,7 @@ class Converter:
     def __init__(self, group_unit_dict=USUnits):
         """Initialize an instance of Converter
         
-        group_unit_dict: A dictionary holding the conversion information. 
+        group_unit_dict (dict): A dictionary holding the conversion information. 
         Key is a unit_group (eg, 'group_pressure'), value is the target
         unit type ('mbar')"""
 
@@ -883,7 +922,14 @@ class Converter:
 
     @staticmethod
     def fromSkinDict(skin_dict):
-        """Factory static method to initialize from a skin dictionary."""
+        """Factory static method to initialize from a skin dictionary.
+
+        Args:
+            skin_dict (dict): The skin dictionary.
+
+        Returns:
+            Converter: An instance of Converter, initialized using the skin dictionary.
+        """
         try:
             group_unit_dict = skin_dict['Units']['Groups']
         except KeyError:
@@ -892,16 +938,18 @@ class Converter:
 
     def convert(self, val_t):
         """Convert a value from a given unit type to the target type.
-        
-        val_t: A value tuple with the datum, a unit type, and a unit group
-        
-        returns: A value tuple in the new, target unit type. If the input
-        value tuple contains an unknown unit type an exception of type KeyError
-        will be thrown. If the input value tuple has either a unit
-        type of None, or a group type of None (but not both), then an
-        exception of type KeyError will be thrown. If both the
-        unit and group are None, then the original val_t will be
-        returned (i.e., no conversion is done).
+
+        Args:
+        val_t (tuple[float|None,str,str]): A value tuple with the datum, a unit type, and a unit group
+
+        Returns:
+        ValueTuple: A value tuple in the new, target unit type. If the input
+            value tuple contains an unknown unit type an exception of type KeyError
+            will be thrown. If the input value tuple has either a unit
+            type of None, or a group type of None (but not both), then an
+            exception of type KeyError will be thrown. If both the
+            unit and group are None, then the original val_t will be
+            returned (i.e., no conversion is done).
         
         Examples:
         >>> p_m = (1016.5, 'mbar', 'group_pressure')
@@ -949,6 +997,13 @@ class Converter:
         system (that is, it will not contain a 'usUnits' entry). This is
         because the conversion is general: it may not result in a standard
         unit system.
+
+        Args:
+            obs_dict (dict): A record to be converted. Must include the key 'usUnits'.
+
+        Returns:
+            dict: The observation dictionary, converted to the target unit system. It will not
+                include the key 'usUnits'.
         
         Example: convert a dictionary which is in the metric unit system
         into US units
@@ -979,9 +1034,8 @@ class Converter:
 
         Args:
             obs_type(str): An observation type ('outTemp', 'rain', etc.)
-
             agg_type(str|None): Type of aggregation ('mintime', 'count', etc.)
-            [Optional. default is no aggregation]
+                [Optional. default is no aggregation]
         
         Returns:
             tuple[str|None, str|None]: A 2-way tuple containing the unit type
@@ -992,7 +1046,7 @@ class Converter:
             unit_type = self.group_unit_dict[unit_group]
         else:
             unit_type = USUnits.get(unit_group)
-        return (unit_type, unit_group)
+        return unit_type, unit_group
 
 #==============================================================================
 #                         Standard Converters
@@ -1050,7 +1104,7 @@ class ValueHelper:
             addLabel (bool):  If True, add a unit label
             useThisFormat (str):  String with a format to be used when formatting the value.
                 If None, then a format will be supplied. Default is None.
-            None_string (str): A string to be used if the value is None. If None, then a default
+            None_string (str|None): A string to be used if the value is None. If None, then a default
                 string from skin.conf will be used. Default is None.
             localize (bool):  If True, localize the results. Default is True
             NONE_string (str): Supplied for backwards compatibility. Identical semantics to
@@ -1094,7 +1148,15 @@ class ValueHelper:
         return json.dumps(self.raw, cls=ComplexEncoder, **kwargs)
 
     def round(self, ndigits=None):
-        """Round the data part to ndigits decimal digits."""
+        """Round the data part to ndigits decimal digits.
+
+        Args:
+            ndigits (int|None): The number of decimal digits to round to. Default is None,
+                which means round to the nearest integer.
+
+        Returns:
+            ValueHelper: A new ValueHelper with the rounded value.
+        """
         # Create a new ValueTuple with the rounded data
         vt = ValueTuple(weeutil.weeutil.rounder(self.value_t[0], ndigits),
                         self.value_t[1],
@@ -1187,9 +1249,9 @@ class SeriesHelper:
         """Initializer
 
         Args:
-            start (ValueHelper): A ValueHelper holding the start times of the data. None if
+            start (ValueHelper|None): A ValueHelper holding the start times of the data. None if
                 there is no start series.
-            stop (ValueHelper): A ValueHelper holding the stop times of the data. None if
+            stop (ValueHelper|None): A ValueHelper holding the stop times of the data. None if
                 there is no stop series
             data (ValueHelper): A ValueHelper holding the data.
         """
@@ -1368,8 +1430,8 @@ class UnitInfoHelper:
     """Helper class used for the $unit template tag."""
     def __init__(self, formatter, converter):
         """
-        formatter: an instance of Formatter
-        converter: an instance of Converter
+        formatter (Formatter): an instance of Formatter
+        converter (Converter): an instance of Converter
         """
         self.unit_type = UnitHelper(converter)
         self.format    = FormatHelper(formatter, converter)
@@ -1416,7 +1478,7 @@ def getUnitGroup(obs_type, agg_type=None):
 
     Args:
         obs_type (str): An observation type (eg, 'barometer')
-        agg_type (str): An aggregation (eg, 'mintime', or 'avg'.)
+        agg_type (str|None): An aggregation (eg, 'mintime', or 'avg'.)
 
     Returns:
         str or None. The unit group or None if it cannot be determined.
@@ -1581,11 +1643,11 @@ class GenWithConvert:
 
     def __init__(self, input_generator, target_unit_system=weewx.METRIC):
         """Initialize an instance of GenWithConvert
-        
-        input_generator: An iterator which will return dictionary records.
-        
-        target_unit_system: The unit system the output of the generator should
-        use, or 'None' if it should leave the output unchanged."""
+
+        Args:
+            input_generator (iterator): An iterator which will return dictionary records.
+            target_unit_system (int|None): The unit system the output of the generator should
+                use, or 'None' if it should leave the output unchanged."""
         self.input_generator = input_generator
         self.target_unit_system = target_unit_system
 
@@ -1616,7 +1678,17 @@ def to_METRICWX(datadict):
     return to_std_system(datadict, weewx.METRICWX)
 
 def to_std_system(datadict, unit_system):
-    """Convert the units used in a dictionary to a target unit system."""
+    """Convert the units used in a dictionary to a target unit system.
+
+    Args:
+        datadict (dict): A dictionary record. Must contain a key 'usUnits' giving its current
+            unit system.
+        unit_system (int): The target standardized unit system (weewx.US, weewx.METRIC, or
+            weewx.METRICWX).
+
+    Returns:
+        dict: The dictionary record, converted to the target unit system.
+    """
     if datadict['usUnits'] == unit_system:
         # It's already in the unit system.
         return datadict
@@ -1677,7 +1749,11 @@ class ComplexEncoder(json.JSONEncoder):
 
 
 def get_default_formatter():
-    """Get a default formatter. Useful for the test suites."""
+    """Get a default formatter. Useful for the test suites.
+
+    Returns:
+        Formatter: A default instance of Formatter.
+    """
     import weewx.defaults
     weewx.defaults.defaults.interpolation = False
     formatter = Formatter(

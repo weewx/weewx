@@ -493,3 +493,80 @@ In our case, the obvious place for our new service is in
         restful_services = weewx.restx.StdStationRegistry, weewx.restx.StdWunderground, weewx.restx.StdPWSweather, weewx.restx.StdCWOP, weewx.restx.StdWOW, weewx.restx.StdAWEKAS
         report_services = weewx.engine.StdPrint, weewx.engine.StdReport
 ```
+
+## Event data
+
+When WeeWX calls a function that your service has bound to an event, it
+passes an instance of the class `Event`. Every event has the attribute
+`event.event_type`. Depending on the event type, it may carry additional
+attributes, as shown below.
+
+### `STARTUP`
+
+Dispatched when WeeWX starts.
+
+| Attribute          | Description                                 |
+|--------------------|---------------------------------------------|
+| `event.event_type` | `STARTUP`                           |
+
+
+### `PRE_LOOP`
+
+Dispatched at the beginning of the archive interval.
+
+| Attribute          | Description                                 |
+|--------------------|---------------------------------------------|
+| `event.event_type` | `PRE_LOOP`                           |
+
+
+### `NEW_LOOP_PACKET`
+
+Dispatched every time a new LOOP packet arrives.
+
+| Attribute          | Description                                 |
+|--------------------|---------------------------------------------|
+| `event.event_type` | `NEW_LOOP_PACKET`                           |
+| `event.packet`     | The LOOP packet containing the measurements |
+
+### `CHECK_LOOP`
+
+Dispatched every time a new LOOP packet arrives. The engine uses this event to
+decide whether to break the inner LOOP cycle by raising an exception. 
+
+| Attribute          | Description                                 |
+|--------------------|---------------------------------------------|
+| `event.event_type` | `CHECK_LOOP`                                |
+| `event.packet`     | The LOOP packet containing the measurements |
+
+
+### `POST_LOOP`
+
+Dispatched when the archive interval ends. It triggers archive record
+creation.
+
+| Attribute          | Description |
+|--------------------|-------------|
+| `event.event_type` | `POST_LOOP` |
+
+
+### `NEW_ARCHIVE_RECORD`
+
+Dispatched after the archive record has been built.
+
+| Attribute           | Description                                                          |
+|---------------------|----------------------------------------------------------------------|
+| `event.event_type`  | `NEW_ARCHIVE_RECORD`                                                 |
+| `event.record`      | The archive record                                                   |
+| `event.accumulator` | An accumulator, or `None` (from WeeWX 5.6 on)                        |
+| `event.origin`      | Where the data came from: `hardware` or `software`                   |
+
+If your service changes a value in the archive record, it may be necessary
+to apply the change to the accumulator as well. It is not possible to derive
+the correct accumulator values from the archive record alone.
+
+### Order of processing
+
+LOOP packets and archive records are passed through all the services in the
+order given in `weewx.conf`. Every function bound to `NEW_LOOP_PACKET`,
+`CHECK_LOOP`, and `NEW_ARCHIVE_RECORD` can change or add values, and those
+changes are seen by the functions called after it. So order matters.

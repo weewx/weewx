@@ -1,7 +1,26 @@
 WeeWX change history
 --------------------
 
-### 5.x.y dd-Mmm-YYYY
+### 5.6.0 21-Nov-2026
+
+Improved the performance of `weewx.xtypes.ArchiveTable.get_series()` for
+aggregated series (such as hourly aggregation over a long timespan). Instead of
+issuing one SQL query per aggregation period, it now fetches the archive data in
+pages of about a week each. When possible, aggregations are then performed for a
+whole page on the database itself. When not, aggregations are done in memory.
+This strategy keeps both the number of queries and the memory used small.
+Aggregation intervals of multiples of a day continue to come from the daily
+summaries, as before.
+[PR #1154](https://github.com/weewx/weewx/pull/1154).
+
+LOOP packet data are no longer lost when packets arrive out of order, arrive
+only once per archive interval, or come from a station clock that has been set
+back. Each archive period now has its own accumulator. 
+[PR #1209](https://github.com/weewx/weewx/pull/1209).
+
+Predefined season type in `weewx.conf`. Possibility to set the season type
+in `$alltime.seasons` by parameter.
+[PR #1206](https://github.com/weewx/weewx/pull/1206)
 
 Fixed `diff` and `tderiv` returning missing values when the first or last archive
 record has no value for the observation. They now use the first and last
@@ -9,17 +28,17 @@ non-null values in the aggregation period.
 [PR #1210](https://github.com/weewx/weewx/pull/1210).
 
 Fixed `tderiv` raising `TypeError` for missing energy samples and returning
-incorrect units for non-energy observations. It now supports energy, distance,
-rain and pressure. Other observation groups raise `UnknownAggregation`.
+incorrect units for non-energy observations. It now supports time deriviates of
+energy, distance, rain and pressure. Other observation groups raise
+`UnknownAggregation`.
 [PR #1199](https://github.com/weewx/weewx/pull/1199).
 
 Fixed incorrect values in derived series and aggregates when an XType extension
 returns a value in a different unit system.
 [PR #1188](https://github.com/weewx/weewx/pull/1188).
 
-Fixed problem when `diff` or `tderiv` use a custom archive table name. Also
-fixed problem when they calculate differences in a range that has no usable
-records. [PR #1189](https://github.com/weewx/weewx/pull/1189).
+Fixed problem when `diff` or `tderiv` use a custom archive table name.
+[PR #1189](https://github.com/weewx/weewx/pull/1189).
 
 Fixed `unix_epoch_ns` conversions, which (wrongly) used microsecond scale.
 [PR #1190](https://github.com/weewx/weewx/pull/1190).
@@ -50,7 +69,7 @@ and propagate to the caller.
 [PR #1196](https://github.com/weewx/weewx/pull/1196).
 
 Fixed daily summaries being counted twice after re-importing archive records
-with --update, and stale daily extrema after corrections.
+with `--update`, and stale daily extrema after corrections.
 [PR #1197](https://github.com/weewx/weewx/pull/1197).
 
 Fixed problem that prevented the date options of `weectl database` from
@@ -87,6 +106,9 @@ small range.
 Translate database errors raised while reading table schemas. SQLite schema
 locks now reach the existing retry handlers during database initialization.
 [PR #1208](https://github.com/weewx/weewx/pull/1208).
+
+Fixed problem that prevented the utility `weectl debug` from running under
+Python 3.6.
 
 Fixed `weectl` failing to start under Python 3.6 after a `pip` install. Module
 `importlib-resources` is now a dependency for that version of Python.

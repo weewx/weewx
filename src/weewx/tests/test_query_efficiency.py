@@ -58,7 +58,7 @@ def managers():
 def test_record_iteration_reuses_rows_from_its_binding(managers, binding):
     manager = managers[binding or 'wx_binding']
     statements = []
-    manager.connection.connection.set_trace_callback(statements.append)
+    manager.connection.connection.set_trace_callback(lambda statement:statements.append(statement))
     binder = weewx.tags.TimespanBinder(weeutil.weeutil.TimeSpan(0, 900),
                                       lambda name: managers[name or 'wx_binding'],
                                       data_binding=binding,
@@ -117,7 +117,7 @@ def test_degree_days_batch_weighted_days(units, first_date,
             {'driver': 'weedb.sqlite', 'database_name': ':memory:'}, schema=schema) as manager:
         manager.addRecord(records, log_success=False)
         statements = []
-        manager.connection.connection.set_trace_callback(statements.append)
+        manager.connection.connection.set_trace_callback(lambda statement: statements.append(statement))
         options = {'skin_dict': {'Units': {'DegreeDays': {
             'heating_base': ('18', 'degree_C'), 'cooling_base': ('22', 'degree_C'),
             'growing_base': ('10', 'degree_C')}}}}
@@ -199,6 +199,27 @@ def test_wide_nearest_lookup_does_not_scan_the_time_window(managers):
     finally:
         raw.set_progress_handler(None, 0)
     assert len(steps) < 50, 'Nearest lookup scanned and sorted the full time window'
+
+
+def test_nearest_lookup_does_not_scan_the_archive_on_mysql(database):
+    if database['driver'] != 'weedb.mysql':
+        pytest.skip('Requires the MySQL handler counters')
+    schema = [('dateTime', 'INTEGER NOT NULL PRIMARY KEY'), ('usUnits', 'INTEGER NOT NULL'),
+              ('interval', 'INTEGER NOT NULL'), ('outTemp', 'REAL')]
+    with weewx.manager.Manager.open_with_create(database, schema=schema) as manager:
+        manager.addRecord([{'dateTime': stamp, 'usUnits': weewx.METRICWX, 'interval': 5,
+                            'outTemp': 1} for stamp in range(300, 600300, 300)],
+                          log_success=False)
+
+        def rows_read():
+            # The Handler_read counters hold the number of rows that this
+            # connection has read from the storage engine.
+            return sum(int(row[1]) for row in
+                       manager.genSql("SHOW SESSION STATUS LIKE ?", ('Handler_read%',)))
+
+        before = rows_read()
+        assert manager.getRecord(300001, 600)['dateTime'] == 300000
+        assert rows_read() - before < 100, 'Nearest lookup read the archive table'
 
 
 def test_nearest_lookup_does_not_scan_the_archive_on_mysql(database):

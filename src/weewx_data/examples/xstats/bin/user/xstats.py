@@ -41,11 +41,15 @@ class ExtendedStatistics(SearchList):
     def get_extension_list(self, timespan, db_lookup):
         """Returns a search list extension with additions.
 
-        timespan: An instance of weeutil.weeutil.TimeSpan. This holds
-                  the start and stop times of the domain of valid times.
+        Args:
+            timespan (weeutil.weeutil.TimeSpan): An instance of weeutil.weeutil.TimeSpan.
+                This holds the start and stop times of the domain of valid times.
+            db_lookup (function): Function that returns a database manager given a
+                data binding.
 
-        db_lookup: Function that returns a database manager given a
-                   data binding.
+        Returns:
+            list[dict]: A list holding a single dictionary. The dictionary maps tag names
+                to their corresponding TimespanBinder objects.
         """
 
         # First, create a TimespanBinder object for all time. This one is easy

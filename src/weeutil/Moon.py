@@ -24,9 +24,16 @@ new_moon_2018 = 1516155420
 def moon_phase(year, month, day, hour=12):
     """Calculates the phase of the moon, given a year, month, day.
 
-    returns: a tuple. First value is an index into an array
-    of moon phases, such as Moon.moon_phases above. Second
-    value is the percent fullness of the moon.
+    Args:
+        year (int): The year.
+        month (int): The month.
+        day (int): The day of the month.
+        hour (int): The hour of the day, UTC. [Optional. Default is 12.]
+
+    Returns:
+        tuple[int, int]: a tuple. First value is an index into an array
+            of moon phases, such as Moon.moon_phases above. Second
+            value is the percent fullness of the moon.
     """
 
     # Convert to UTC

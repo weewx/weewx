@@ -1,3 +1,10 @@
+Licensing ---------------------------------------------------------------------
+
+By submitting changes to the codebase (including docs), you grant a license to
+distribute the changes under the project's license and represent that you have
+the right to do so.
+
+
 Languages and tools -----------------------------------------------------------
 
 WeeWX is writting in Python.  Skins contain template files, some of which are
@@ -11,6 +18,15 @@ who wants to contribute to the WeeWX code, and is very helpful for those who
 want to write extensions to WeeWX.  The notes include the project goals and
 strategies, descriptions of components, naming conventsions, code style, and
 many other things related to writing code for WeeWX.
+
+Machine-generated contributions, including LLM output, either in whole or in
+part, must be labelled as such.  This applies to code posted to the
+repositories as well as code posted to the mailing lists.
+
+Machine-generated code and documentation are not accepted in any of the WeeWX
+repositories without human review.
+
+Machine-generated translations must also pass human review.
 
 
 Version control ---------------------------------------------------------------

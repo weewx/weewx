@@ -164,6 +164,9 @@ class ExtensionEngine:
                 and it's assumed to be a tarfile.
             extra_args(list[str]|None): Extra arguments from the command line to pass to the
              extension installer.
+
+        Returns:
+            str: The name of the extension that was installed.
         """
         # Make a temporary directory into which to extract the file.
         with tempfile.TemporaryDirectory() as dir_name:
@@ -183,7 +186,16 @@ class ExtensionEngine:
         return extension_name
 
     def install_from_dir(self, extension_dir, extra_args):
-        """Install the extension whose components are in extension_dir"""
+        """Install the extension whose components are in extension_dir
+
+        Args:
+            extension_dir (str): Path to the directory holding the extension to be installed.
+            extra_args (list[str]|None): Extra arguments from the command line to pass to the
+                extension installer.
+
+        Returns:
+            str: The name of the extension that was installed.
+        """
         self.printer.out(f"Request to install extension found in directory {extension_dir}",
                          level=2)
 
@@ -311,7 +323,19 @@ class ExtensionEngine:
 
     @staticmethod
     def _gen_file_paths(weewx_root, extension_dir, file_list):
-        """Generate tuples of (source, destination) from a file_list"""
+        """Generate tuples of (source, destination) from a file_list
+
+        Args:
+            weewx_root (str): The path to the WeeWX root directory.
+            extension_dir (str): Path to the directory holding the extension being installed.
+            file_list (list[tuple]): A list of two-way tuples. The first element of each tuple is
+                the relative path to a destination directory, the second element is a list of
+                relative paths to files to be put in that directory.
+
+        Yields:
+            tuple: A two-way tuple (source_path, destination_path), the absolute paths to a
+                source file and its final destination.
+        """
 
         # Go through all the files used by the extension. A "source tuple" is something like
         # (bin/user, [bin/user/myext.py, bin/user/otherext.py]).
@@ -334,6 +358,9 @@ class ExtensionEngine:
         Args:
             skin_path (str): The path to the directory holding the skin.
             default_code (str): In the absence of a locale directory, what language to pick.
+
+        Returns:
+            str: The chosen language code.
         """
         languages = weecfg.get_languages(skin_path)
         code = weecfg.pick_language(languages, default_code)
@@ -341,8 +368,14 @@ class ExtensionEngine:
 
     def _inject_config(self, extension_config, extension_name):
         """Injects any additions to the configuration file that the extension might have.
-        
-        Returns True if it modified the config file, False otherwise.
+
+        Args:
+            extension_config (configobj.Section|dict): The configuration options to be injected,
+                as specified by the extension.
+            extension_name (str): The name of the extension.
+
+        Returns:
+            bool: True if it modified the config file, False otherwise.
         """
         self.printer.out("Adding sections to configuration file", level=2)
         # Make a copy, so we can modify the sections to fit the existing configuration
@@ -389,7 +422,11 @@ class ExtensionEngine:
         return save_config
 
     def _reorder(self, cfg):
-        """Reorder the resultant config_dict"""
+        """Reorder the resultant config_dict
+
+        Args:
+            cfg (dict): The configuration options that were injected by the extension.
+        """
         # Patch up the location of any reports so that they appear before FTP/RSYNC
 
         # First, find the FTP or RSYNC reports. This has to be done on the basis of the skin type,
@@ -538,6 +575,9 @@ class ExtensionEngine:
 
             report_errors (bool); If truthy, report an error. Otherwise, don't. In neither case will
                 an exception be raised.
+
+        Returns:
+            int: The number of directories deleted.
         """
         n_deleted = 0
         try:
@@ -561,42 +601,15 @@ class ExtensionEngine:
 
     @staticmethod
     def prepend_path(a_dict: dict, label: str, value: str) -> None:
-        """Prepend the value to every instance of the label in dict a_dict"""
+        """Prepend the value to every instance of the label in dict a_dict
+
+        Args:
+            a_dict (dict): The dictionary to be modified.
+            label (str): The key to search for.
+            value (str): The value to be prepended to the front of any value found under label.
+        """
         for k in a_dict:
             if isinstance(a_dict[k], dict):
                 ExtensionEngine.prepend_path(a_dict[k], label, value)
             elif k == label:
                 a_dict[k] = os.path.join(value, a_dict[k])
-
-    # def transfer(self, root_src_dir):
-    #     """For transfering contents of an old 'user' directory into the new one."""
-    #     if not os.path.isdir(root_src_dir):
-    #         sys.exit(f"{root_src_dir} is not a directory")
-    #     root_dst_dir = self.root_dict['USER_DIR']
-    #     self.printer.out(f"Transferring contents of {root_src_dir} to {root_dst_dir}", 1)
-    #     if self.dry_run:
-    #         self.printer.out(f"This is a {bcolors.BOLD}dry run{bcolors.ENDC}. "
-    #                         f"Nothing will actually be done.")
-    #
-    #     for dirpath, dirnames, filenames in os.walk(root_src_dir):
-    #         if os.path.basename(dirpath) in {'__pycache__', '.init'}:
-    #             self.printer.out(f"Skipping {dirpath}.", 3)
-    #             continue
-    #         dst_dir = dirpath.replace(root_src_dir, root_dst_dir, 1)
-    #         self.printer.out(f"Making directory {dst_dir}", 3)
-    #         if not self.dry_run:
-    #             os.makedirs(dst_dir, exist_ok=True)
-    #         for f in filenames:
-    #             if ".pyc" in f:
-    #                 self.printer.out(f"Skipping {f}", 3)
-    #                 continue
-    #             dst_file = os.path.join(dst_dir, f)
-    #             if os.path.exists(dst_file):
-    #                 self.printer.out(f"File {dst_file} already exists. Not replacing.", 2)
-    #             else:
-    #                 src_file = os.path.join(dirpath, f)
-    #                 self.printer.out(f"Copying file {src_file} to {dst_dir}", 3)
-    #                 if not self.dry_run:
-    #                     shutil.copy(src_file, dst_dir)
-    #     if self.dry_run:
-    #         self.printer.out("This was a dry run. Nothing was actually done")

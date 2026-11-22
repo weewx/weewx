@@ -24,7 +24,11 @@ log = logging.getLogger('weectl-rest')
 
 
 def list_rest(config_dict):
-    """List all configured RESTful services, along with whether they are enabled."""
+    """List all configured RESTful services, along with whether they are enabled.
+
+    Args:
+        config_dict (dict): The configuration dictionary.
+    """
 
     # Instantiate a dummy engine. This loads (and starts) all the configured services,
     # including the RESTful ones.
@@ -120,6 +124,11 @@ def run_rest(config_dict, services=None):
 def _build_service_map(engine, config_dict):
     """Build a list describing the configured RESTful services.
 
+    Args:
+        engine (weewx.engine.DummyEngine): The dummy engine, which has already loaded
+            and started all the configured services.
+        config_dict (dict): The configuration dictionary.
+
     Returns:
         list[tuple]: A list of 3-way tuples (svc_path, name, instance), where
             'svc_path' is the fully-qualified class path from the configuration file,
@@ -156,6 +165,12 @@ def _short_name(svc_path):
     """Derive a short, user-friendly name from a service class path.
 
     For example, 'weewx.restx.StdWunderground' becomes 'Wunderground'.
+
+    Args:
+        svc_path (str): The fully-qualified class path of a RESTful service.
+
+    Returns:
+        str: A short, user-friendly name for the service.
     """
     cls = svc_path.split('.')[-1]
     if cls.startswith('Std'):
@@ -175,6 +190,11 @@ def _force_post(name, inst, record):
     The post is done by calling the posting thread's process_record() directly. This
     bypasses the normal skip_this_post() checks (the 'stale' and 'post_interval'
     gates), so the upload happens regardless of when the last upload occurred.
+
+    Args:
+        name (str): A short, user-friendly name for the service.
+        inst (weewx.restx.StdRESTful): The loaded service instance.
+        record (dict): The archive record to be posted.
     """
     thread = inst.archive_thread
 
