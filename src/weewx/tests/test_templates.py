@@ -12,6 +12,7 @@ import locale
 import logging
 import os
 import os.path
+import re
 import shutil
 import sys
 import time
@@ -63,28 +64,45 @@ def isolate_locale():
         except locale.Error:
             locale.setlocale(locale.LC_ALL, 'C')
 
-# The expected results of the German report hold the abbreviations used by glibc. The C library
-# on macOS uses different ones. For example, it writes "Nov." for "Nov", "Juni" for "Jun", and
-# "Mo." for "Mo". The fixture `german_abbreviations` supplies glibc's spelling
-# on every platform.
+# The expected results hold the strings produced by glibc under Linux. The C library on macOS
+# differs. For example, for German it writes "Nov." for "Nov", "Juni" for "Jun", and "Mo." for
+# "Mo". For en_US, it formats %X as a 24-hour time ("00:00:00") instead of glibc's "12:00:00 AM".
+# The fixture `glibc_time_formats` (defined below) supplies glibc's spelling on every platform.
 GERMAN_ABBREVIATED_MONTHS = ('Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun',
                              'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez')
 GERMAN_ABBREVIATED_DAYS = ('Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So')
 
+# Matches a single strftime directive. Matching "%%" as a unit keeps a literal "%%X" intact.
+DIRECTIVE_RE = re.compile(r'%(.)')
+
 
 @pytest.fixture(autouse=True)
-def german_abbreviations(monkeypatch):
-    """Expand %b and %a from the tables above whenever the German locale is active."""
+def glibc_time_formats(monkeypatch):
+    """Make time.strftime() give glibc's results for locale-dependent directives on any platform."""
     original_strftime = time.strftime
 
     def strftime(format_string, time_tuple=None):
         if time_tuple is None:
             time_tuple = time.localtime()
         # The report engine changes the locale from report to report, so check on every call.
-        if locale.getlocale(locale.LC_TIME)[0] == 'de_DE':
-            month_name = GERMAN_ABBREVIATED_MONTHS[time_tuple[1] - 1]
-            day_name = GERMAN_ABBREVIATED_DAYS[time_tuple[6]]
-            format_string = format_string.replace('%b', month_name).replace('%a', day_name)
+        lang = locale.getlocale(locale.LC_TIME)[0]
+        if lang == 'de_DE':
+            replacements = {
+                'b': GERMAN_ABBREVIATED_MONTHS[time_tuple[1] - 1],
+                'a': GERMAN_ABBREVIATED_DAYS[time_tuple[6]],
+            }
+        elif lang == 'en_US':
+            # glibc: %x is "%m/%d/%Y", %X is "%r" (12-hour clock with AM/PM)
+            replacements = {
+                'x': '%m/%d/%Y',
+                'X': '%I:%M:%S %p',
+            }
+        else:
+            replacements = {}
+
+        if replacements:
+            format_string = DIRECTIVE_RE.sub(
+                lambda m: replacements.get(m.group(1), m.group(0)), format_string)
         return original_strftime(format_string, time_tuple)
 
     monkeypatch.setattr(time, 'strftime', strftime)
