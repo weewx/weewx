@@ -81,7 +81,7 @@ def glibc_time_formats(monkeypatch):
     """Make time.strftime() give glibc's results for locale-dependent directives on any platform."""
     original_strftime = time.strftime
 
-    def strftime(format_string, time_tuple=None):
+    def patched_strftime(format_string, time_tuple=None):
         if time_tuple is None:
             time_tuple = time.localtime()
         # The report engine changes the locale from report to report, so check on every call.
@@ -92,9 +92,8 @@ def glibc_time_formats(monkeypatch):
                 'a': GERMAN_ABBREVIATED_DAYS[time_tuple[6]],
             }
         elif lang == 'en_US':
-            # glibc: %x is "%m/%d/%Y", %X is "%r" (12-hour clock with AM/PM)
+            # glibc: %X uses 12-hour clock with AM/PM
             replacements = {
-                'x': '%m/%d/%Y',
                 'X': '%I:%M:%S %p',
             }
         else:
@@ -105,7 +104,7 @@ def glibc_time_formats(monkeypatch):
                 lambda m: replacements.get(m.group(1), m.group(0)), format_string)
         return original_strftime(format_string, time_tuple)
 
-    monkeypatch.setattr(time, 'strftime', strftime)
+    monkeypatch.setattr(time, 'strftime', patched_strftime)
 
 # These tests also test the examples in the 'example' subdirectory.
 # Patch PYTHONPATH to find them.
