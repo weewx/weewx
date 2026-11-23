@@ -1,4 +1,4 @@
-# [DisplayOptions]
+# [DisplayOptions] for the *Seasons* skin
 
 This section holds options that control what a skin displays, and in what
 order. Like [`[Extras]`](extras.md), the options are not interpreted by WeeWX
