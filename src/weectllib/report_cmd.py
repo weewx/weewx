@@ -1,5 +1,5 @@
 #
-#    Copyright (c) 2009-2024 Tom Keffer <tkeffer@gmail.com> and Matthew Wall
+#    Copyright (c) 2009-2026 Tom Keffer <tkeffer@gmail.com> and Matthew Wall
 #
 #    See the file LICENSE.txt for your rights.
 #
@@ -20,7 +20,19 @@ report_run_usage = f"""  {bcolors.BOLD}weectl report run [NAME ...]
             [--epoch=EPOCH_TIME | --date=YYYY-mm-dd --time=HH:MM]{bcolors.ENDC}
 """
 
-report_usage = '\n     '.join((report_list_usage, report_run_usage))
+report_enable_usage = f"""  {bcolors.BOLD}weectl report enable NAME
+            [--config=FILENAME]
+            [--no-backup]
+            [--dry-run]{bcolors.ENDC}
+"""
+report_disable_usage = f"""  {bcolors.BOLD}weectl report disable NAME
+            [--config=FILENAME]
+            [--no-backup]
+            [--dry-run]{bcolors.ENDC}
+"""
+
+report_usage = '\n     '.join((report_list_usage, report_run_usage,
+                              report_enable_usage, report_disable_usage))
 
 run_epilog = """You may specify either an epoch time (option --epoch), or a date and time combo 
 (options --date and --time together), but not both."""
@@ -29,8 +41,9 @@ run_epilog = """You may specify either an epoch time (option --epoch), or a date
 def add_subparser(subparsers):
     report_parser = subparsers.add_parser('report',
                                           usage=report_usage,
-                                          description='List or run WeeWX reports',
-                                          help="List or run WeeWX reports.")
+                                          description='List, run, enable, or '
+                                                      'disable WeeWX reports',
+                                          help="List, run, enable or disable WeeWX reports.")
     # In the following, the 'prog' argument is necessary to get a proper error message.
     # See Python issue https://bugs.python.org/issue42297
     action_parser = report_parser.add_subparsers(dest='action',
@@ -76,9 +89,43 @@ def add_subparser(subparsers):
     run_report_parser.set_defaults(func=weectllib.dispatch)
     run_report_parser.set_defaults(action_func=run_reports)
 
+    # ---------- Action 'enable' and 'disable' ----------
+    for action, usage, func in (('enable', report_enable_usage, enable_report),
+                                ('disable', report_disable_usage, disable_report)):
+        parser = action_parser.add_parser(action,
+                                          description=f"{action.capitalize()} a report",
+                                          usage=usage,
+                                          help=f'{action.capitalize()} a report')
+        parser.add_argument('--config',
+                            metavar='FILENAME',
+                            help=f'Path to configuration file. '
+                                 f'Default is "{weecfg.default_config_path}".')
+        parser.add_argument('--no-backup', action='store_true',
+                            help='Do not backup the old configuration file.')
+        parser.add_argument('--dry-run',
+                            action='store_true',
+                            help='Print what would happen, but do not actually do it.')
+        parser.add_argument('report',
+                            metavar='NAME',
+                            help=f"Report to {action}. Name is case sensitive.")
+        parser.set_defaults(func=weectllib.dispatch)
+        parser.set_defaults(action_func=func)
+
 
 def list_reports(config_dict, _):
     weectllib.report_actions.list_reports(config_dict)
+
+
+def enable_report(config_dict, namespace):
+    weectllib.report_actions.set_report_enable(config_dict, namespace.report, True,
+                                               dry_run=namespace.dry_run,
+                                               no_backup=namespace.no_backup)
+
+
+def disable_report(config_dict, namespace):
+    weectllib.report_actions.set_report_enable(config_dict, namespace.report, False,
+                                               dry_run=namespace.dry_run,
+                                               no_backup=namespace.no_backup)
 
 
 def run_reports(config_dict, namespace):

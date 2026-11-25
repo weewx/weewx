@@ -1,6 +1,12 @@
 WeeWX change history
 --------------------
 
+### 5.7.0 dd-MMM-YYYY
+
+Added the actions `weectl report enable NAME` and `weectl report disable NAME`.
+They turn a report on or off by setting option `enable` in the report's section
+of `weewx.conf`, without the need to edit the file by hand.
+
 ### 5.6.0 21-Nov-2026
 
 Improved the performance of `weewx.xtypes.ArchiveTable.get_series()` for

@@ -10,6 +10,7 @@ import socket
 import sys
 import time
 
+import weecfg
 import weewx
 import weewx.engine
 import weewx.manager
@@ -45,6 +46,38 @@ def list_reports(config_dict):
 
         print(f"{report : >22}  {skin:<16} {'Y' if enabled else 'N':^8} "
               f"{unit_system:^8} {lang:^8}")
+
+
+def set_report_enable(config_dict, name, enable, dry_run=False, no_backup=False):
+    """Enable or disable a report by setting option 'enable' in its section.
+
+    Args:
+        config_dict(configobj.ConfigObj): The configuration dictionary.
+        name(str): The name of the report. Case sensitive.
+        enable(bool): True to enable the report, False to disable it.
+        dry_run(bool): True to not actually save the configuration file.
+        no_backup(bool): True to not make a backup of the configuration file.
+    """
+    std_report = config_dict.get('StdReport', {})
+    sections = getattr(std_report, 'sections', [])
+    if name == 'Defaults' or name not in sections:
+        sys.exit(f"Unknown report '{name}'. Use 'weectl report list' to see the reports.")
+
+    state = 'enabled' if enable else 'disabled'
+    if to_bool(std_report[name].get('enable', True)) == enable:
+        print(f"Report '{name}' is already {state}. Nothing done.")
+        return
+
+    std_report[name]['enable'] = 'True' if enable else 'False'
+
+    if dry_run:
+        print(f"Report '{name}' would be {state}.")
+        return
+
+    backup_path = weecfg.save(config_dict, config_dict['config_path'], not no_backup)
+    print(f"Report '{name}' is now {state}.")
+    if backup_path:
+        print(f"Saved old configuration file as {backup_path}")
 
 
 def run_reports(config_dict,
