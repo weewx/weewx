@@ -1,3 +1,8 @@
+#
+# This file needs to be installed as /etc/logrotate.d/weewx for it to take effect.
+#
+
+#
 /var/log/weewx/*.log {
   weekly
   missingok
