@@ -9,6 +9,12 @@ of `weewx.conf`, without the need to edit the file by hand.
 
 ### 5.6.0 21-Nov-2026
 
+Added `--db-filename` to `weectl database` to select an alternate SQLite file
+without editing the configuration. Dry runs of `reconfigure` and `transfer`
+no longer create destination databases. `reconfigure` now checks the source
+before creating or deleting the destination.
+[PR #1165](https://github.com/weewx/weewx/pull/1165).
+
 Improved the performance of `weewx.xtypes.ArchiveTable.get_series()` for
 aggregated series (such as hourly aggregation over a long timespan). Instead of
 issuing one SQL query per aggregation period, it now fetches the archive data in

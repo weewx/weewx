@@ -66,46 +66,46 @@ _weectl() {
         fi
 
         case "$prev" in
-            --config) _weectl_complete_file; return 0 ;;
+            --config|--db-filename) _weectl_complete_file; return 0 ;;
             --binding) return 0 ;;
         esac
 
         case "$action" in
             create|drop-daily|reconfigure|update)
-                COMPREPLY=( $(compgen -W "--config --binding --dry-run -y --yes -h --help" -- "$cur") )
+                COMPREPLY=( $(compgen -W "--config --binding --db-filename --dry-run -y --yes -h --help" -- "$cur") )
                 ;;
             rebuild-daily|reweight)
                 case "$prev" in
                     --date|--from|--to) return 0 ;;
                 esac
-                COMPREPLY=( $(compgen -W "--date --from --to --config --binding --dry-run -y --yes -h --help" -- "$cur") )
+                COMPREPLY=( $(compgen -W "--date --from --to --config --binding --db-filename --dry-run -y --yes -h --help" -- "$cur") )
                 ;;
             add-column)
                 case "$prev" in
                     --type) return 0 ;;
                 esac
-                COMPREPLY=( $(compgen -W "--type --config --binding --dry-run -y --yes -h --help" -- "$cur") )
+                COMPREPLY=( $(compgen -W "--type --config --binding --db-filename --dry-run -y --yes -h --help" -- "$cur") )
                 ;;
             rename-column)
-                COMPREPLY=( $(compgen -W "--config --binding --dry-run -y --yes -h --help" -- "$cur") )
+                COMPREPLY=( $(compgen -W "--config --binding --db-filename --dry-run -y --yes -h --help" -- "$cur") )
                 ;;
             drop-columns)
-                COMPREPLY=( $(compgen -W "--config --binding --dry-run -y --yes -h --help" -- "$cur") )
+                COMPREPLY=( $(compgen -W "--config --binding --db-filename --dry-run -y --yes -h --help" -- "$cur") )
                 ;;
             transfer)
                 case "$prev" in
                     --dest-binding) return 0 ;;
                 esac
-                COMPREPLY=( $(compgen -W "--dest-binding --config --binding --dry-run -y --yes -h --help" -- "$cur") )
+                COMPREPLY=( $(compgen -W "--dest-binding --config --binding --db-filename --dry-run -y --yes -h --help" -- "$cur") )
                 ;;
             calc-missing)
                 case "$prev" in
                     --date|--from|--to|--tranche) return 0 ;;
                 esac
-                COMPREPLY=( $(compgen -W "--date --from --to --tranche --config --binding --dry-run -y --yes -h --help" -- "$cur") )
+                COMPREPLY=( $(compgen -W "--date --from --to --tranche --config --binding --db-filename --dry-run -y --yes -h --help" -- "$cur") )
                 ;;
             check)
-                COMPREPLY=( $(compgen -W "--config --binding -h --help" -- "$cur") )
+                COMPREPLY=( $(compgen -W "--config --binding --db-filename -h --help" -- "$cur") )
                 ;;
             *)
                 COMPREPLY=( $(compgen -W "${actions} -h --help" -- "$cur") )
